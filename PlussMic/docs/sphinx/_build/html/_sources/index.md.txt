@@ -19,6 +19,7 @@ This manual is organized the same way users usually approach the library:
 quickstart
 demo_catalog
 dataframe
+time_series_accessor_guide
 dataframe_display
 dataframe_api_reference
 column_ref_api_reference

@@ -24,7 +24,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
-#include "aux/transmit.h"
+#include "pluss/tils/aux/transmit.h"
 #include "loader/CsvLoader.h"
 #include "loader/Loader.h"
 #include "kindle/catalog.h"
@@ -32,6 +32,117 @@
 #include "table/display/Display.h"
 
 namespace pluss::table {
+
+namespace {
+
+pluss::Series pack_series_columns(const std::vector<pluss::Series>& cols,
+                                  std::string_view where,
+                                  bool force_matrix_2d = false) {
+  PLUSS_CHECK(!cols.empty(), std::string(where) + ": no Series payloads available");
+  if (cols.size() == 1 && !force_matrix_2d) {
+    return cols.front();
+  }
+
+  const auto rows = cols.front().numel();
+  auto head = cols.front().reshape({rows, 1});
+  std::vector<pluss::Series> tail;
+  tail.reserve(cols.size() > 0 ? cols.size() - 1 : 0);
+  for (std::size_t i = 1; i < cols.size(); ++i) {
+    PLUSS_CHECK(cols[i].numel() == rows, std::string(where) + ": Series payload length mismatch");
+    tail.push_back(cols[i].reshape({rows, 1}));
+  }
+  return tail.empty() ? head : head.unite(tail, 1);
+}
+
+pluss::Note pack_note_columns(const std::vector<pluss::Note>& cols,
+                              std::string_view where,
+                              bool force_matrix_2d = false) {
+  PLUSS_CHECK(!cols.empty(), std::string(where) + ": no Note payloads available");
+  if (cols.size() == 1 && !force_matrix_2d) {
+    return cols.front();
+  }
+
+  const auto rows = cols.front().numel();
+  for (std::size_t i = 1; i < cols.size(); ++i) {
+    PLUSS_CHECK(cols[i].numel() == rows, std::string(where) + ": Note payload length mismatch");
+  }
+
+  const std::int64_t nrows = rows;
+  const std::int64_t ncols = static_cast<std::int64_t>(cols.size());
+  const std::array<std::int64_t, 1> col_shape{nrows};
+  std::vector<std::vector<std::string_view>> vectors;
+  vectors.reserve(cols.size());
+  for (const auto& col : cols) {
+    vectors.push_back(col.reshape(std::span<const std::int64_t>(col_shape.data(), col_shape.size())).vector());
+  }
+
+  std::vector<std::string_view> flat(static_cast<std::size_t>(nrows * ncols));
+  for (std::int64_t r = 0; r < nrows; ++r) {
+    const auto row_off = static_cast<std::size_t>(r * ncols);
+    for (std::int64_t c = 0; c < ncols; ++c) {
+      flat[row_off + static_cast<std::size_t>(c)] = vectors[static_cast<std::size_t>(c)][static_cast<std::size_t>(r)];
+    }
+  }
+
+  const std::array<std::int64_t, 2> shape{nrows, ncols};
+  return pluss::coden::ops_internal::note_from_utf8(
+      std::span<const std::string_view>(flat.data(), flat.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+}
+
+pluss::Timeline pack_timeline_columns(const std::vector<pluss::Timeline>& cols,
+                                      std::string_view where,
+                                      bool force_matrix_2d = false) {
+  PLUSS_CHECK(!cols.empty(), std::string(where) + ": no Timeline payloads available");
+  if (cols.size() == 1 && !force_matrix_2d) {
+    return cols.front();
+  }
+
+  const auto rows = cols.front().numel();
+  std::vector<pluss::Series> epoch_cols;
+  epoch_cols.reserve(cols.size());
+  for (const auto& col : cols) {
+    PLUSS_CHECK(col.numel() == rows, std::string(where) + ": Timeline payload length mismatch");
+    epoch_cols.push_back(col.epoch_nanos().reshape({rows, 1}));
+  }
+
+  auto matrix = epoch_cols.front();
+  if (epoch_cols.size() > 1) {
+    std::vector<pluss::Series> tail(epoch_cols.begin() + 1, epoch_cols.end());
+    matrix = matrix.unite(tail, 1);
+  }
+  return pluss::Timeline::fromSeries(matrix);
+}
+
+} // namespace
+
+pluss::Series DataFrame::MatrixValues::as_series() const {
+  const auto& blocks = std::get<0>(*this);
+  PLUSS_CHECK(!blocks.empty(), "DataFrame::MatrixValues::as_series: no Series matrix block available");
+  PLUSS_CHECK(blocks.size() == 1, "DataFrame::MatrixValues::as_series: expected a single Series matrix block");
+  return blocks.front();
+}
+
+pluss::Note DataFrame::MatrixValues::as_note() const {
+  const auto& blocks = std::get<1>(*this);
+  PLUSS_CHECK(!blocks.empty(), "DataFrame::MatrixValues::as_note: no Note matrix block available");
+  PLUSS_CHECK(blocks.size() == 1, "DataFrame::MatrixValues::as_note: expected a single Note matrix block");
+  return blocks.front();
+}
+
+pluss::Timeline DataFrame::MatrixValues::as_timeline() const {
+  const auto& blocks = std::get<2>(*this);
+  PLUSS_CHECK(!blocks.empty(), "DataFrame::MatrixValues::as_timeline: no Timeline matrix block available");
+  PLUSS_CHECK(blocks.size() == 1, "DataFrame::MatrixValues::as_timeline: expected a single Timeline matrix block");
+  return blocks.front();
+}
+
+pluss::TimeIndex DataFrame::MatrixValues::as_timeindex() const {
+  const auto& blocks = std::get<3>(*this);
+  PLUSS_CHECK(!blocks.empty(), "DataFrame::MatrixValues::as_timeindex: no TimeIndex matrix block available");
+  PLUSS_CHECK(blocks.size() == 1, "DataFrame::MatrixValues::as_timeindex: expected a single TimeIndex matrix block");
+  return blocks.front();
+}
 
 namespace detail {
 
@@ -1507,6 +1618,7 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::Dat
 #include "table/ops/dataframe/DataFrameLifecycleAndIO.inc"
 #include "table/ops/dataframe/DataFrameCoreAndFeatures.inc"
 #include "table/ops/dataframe/DataFrameSelectionAndTransform.inc"
+#include "table/ops/dataframe/DataFrameTimeSeries.inc"
 #include "table/ops/dataframe/DataFrameGroupAndCombine.inc"
 #include "table/ops/dataframe/DataFrameMathMissingAndDescribe.inc"
 

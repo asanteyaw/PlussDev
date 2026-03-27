@@ -9,7 +9,7 @@ TEST_CASE("CodeN Note text/LaTeX conversion helpers are concrete", "[coden][patc
     REQUIRE(escaped.at(0) == "x\\_1 \\& 50\\% complete");
 
     auto mapped = pluss::make_note("alpha + beta <= gamma").text_to_latex(2);
-    const std::string latex = mapped.at(0);
+    const std::string latex = std::string(mapped.at(0));
     REQUIRE(latex.find("\\alpha") != std::string::npos);
     REQUIRE(latex.find("\\beta") != std::string::npos);
     REQUIRE(latex.find("\\leq") != std::string::npos);
@@ -25,7 +25,7 @@ TEST_CASE("CodeN Note text/LaTeX conversion helpers are concrete", "[coden][patc
         "Body: value is $x^2$.\n"
         "\\textbf{Bold words}.\n");
     auto plain = latex.latex_to_text();
-    const std::string out = plain.at(0);
+    const std::string out = std::string(plain.at(0));
     REQUIRE(out.find('\\') == std::string::npos);
     REQUIRE(out.find('$') == std::string::npos);
     REQUIRE(out.find("Body") != std::string::npos);
@@ -34,7 +34,7 @@ TEST_CASE("CodeN Note text/LaTeX conversion helpers are concrete", "[coden][patc
   SECTION("render_latex renders common math commands to readable output") {
     auto latex = pluss::make_note("$\\frac{1}{2}\\alpha + x^{2} - y_1$");
     auto rendered = latex.render_latex();
-    const std::string out = rendered.at(0);
+    const std::string out = std::string(rendered.at(0));
     REQUIRE(out.find("\\frac") == std::string::npos);
     REQUIRE(out.find("\\alpha") == std::string::npos);
     REQUIRE(out.find("(1)/(2)") != std::string::npos);

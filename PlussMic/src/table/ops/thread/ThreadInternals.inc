@@ -6,7 +6,8 @@ class ThreadImpl final : public pluss::msharp::RefCounted {
 public:
   ThreadImpl(Payload payload,
              std::optional<pluss::Series> validity_mask,
-             std::optional<pluss::Note> display_labels);
+             std::optional<pluss::Note> display_labels,
+             std::optional<std::string> display_name);
 
   Payload payload_;
   ThreadKind kind_{ThreadKind::Series};
@@ -14,6 +15,7 @@ public:
   std::string dtype_name_;
   std::optional<pluss::Series> validity_mask_;
   std::optional<pluss::Note> display_labels_;
+  std::optional<std::string> display_name_;
 };
 
 } // namespace detail
@@ -274,7 +276,8 @@ std::string infer_dtype_name(const Payload& payload) {
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask,
-    std::optional<pluss::Note> display_labels = std::nullopt);
+    std::optional<pluss::Note> display_labels = std::nullopt,
+    std::optional<std::string> display_name = std::nullopt);
 
 std::vector<std::int64_t> true_indices_from_mask(const pluss::Series& mask, std::int64_t expected_size) {
   const auto keep = bool_vec_from_series(mask, expected_size, "Thread::filter");
@@ -318,13 +321,15 @@ pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int
 
 detail::ThreadImpl::ThreadImpl(Payload payload,
                                std::optional<pluss::Series> validity_mask,
-                               std::optional<pluss::Note> display_labels)
+                               std::optional<pluss::Note> display_labels,
+                               std::optional<std::string> display_name)
     : payload_(std::move(payload)),
       kind_(infer_kind(payload_)),
       size_(infer_size(payload_)),
       dtype_name_(infer_dtype_name(payload_)),
       validity_mask_(std::move(validity_mask)),
-      display_labels_(std::move(display_labels)) {
+      display_labels_(std::move(display_labels)),
+      display_name_(std::move(display_name)) {
   validate_validity_mask(validity_mask_, size_);
   validate_display_labels(display_labels_, size_);
 }
@@ -334,13 +339,14 @@ namespace {
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask,
-    std::optional<pluss::Note> display_labels) {
+    std::optional<pluss::Note> display_labels,
+    std::optional<std::string> display_name) {
   return pluss::msharp::make_intrusive<detail::ThreadImpl>(
-      std::move(payload), std::move(validity_mask), std::move(display_labels));
+      std::move(payload), std::move(validity_mask), std::move(display_labels), std::move(display_name));
 }
 
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> clone_impl(const detail::ThreadImpl& src) {
-  return build_impl(src.payload_, src.validity_mask_, src.display_labels_);
+  return build_impl(src.payload_, src.validity_mask_, src.display_labels_, src.display_name_);
 }
 
 pluss::Series scalar_like_column(const pluss::Series& reference, double value) {
@@ -561,19 +567,48 @@ bool extract_numeric_value(const pluss::Series& s, std::int64_t idx, double& out
 }
 
 std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
-  switch (t.kind()) {
-    case ThreadKind::Series: {
-      if (is_numeric_series_type(t.as_series())) {
-        double value = 0.0;
-        if (extract_numeric_value(t.as_series(), row, value)) {
-          return std::to_string(value);
-        }
-      }
-      if (t.as_series().scalar_type() == pluss::codem::ScalarType::Bool) {
-        return t.as_series().to_vec<bool>(row) ? "true" : "false";
-      }
-      return "";
+  auto format_float = [](double value, int precision) {
+    std::ostringstream oss;
+    oss << std::setprecision(precision) << std::defaultfloat << value;
+    return oss.str();
+  };
+  auto series_scalar_string_at = [&](const pluss::Series& s, std::int64_t idx) -> std::string {
+    const auto* base = s.raw_data();
+    switch (s.scalar_type()) {
+      case pluss::codem::ScalarType::Bool:
+        return reinterpret_cast<const bool*>(base)[idx] ? "true" : "false";
+      case pluss::codem::ScalarType::Int8:
+        return std::to_string(static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[idx]));
+      case pluss::codem::ScalarType::Int16:
+        return std::to_string(reinterpret_cast<const std::int16_t*>(base)[idx]);
+      case pluss::codem::ScalarType::Int32:
+        return std::to_string(reinterpret_cast<const std::int32_t*>(base)[idx]);
+      case pluss::codem::ScalarType::Int64:
+        return std::to_string(reinterpret_cast<const std::int64_t*>(base)[idx]);
+      case pluss::codem::ScalarType::UInt8:
+        return std::to_string(static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[idx]));
+      case pluss::codem::ScalarType::UInt16:
+        return std::to_string(reinterpret_cast<const std::uint16_t*>(base)[idx]);
+      case pluss::codem::ScalarType::UInt32:
+        return std::to_string(reinterpret_cast<const std::uint32_t*>(base)[idx]);
+      case pluss::codem::ScalarType::UInt64:
+        return std::to_string(reinterpret_cast<const std::uint64_t*>(base)[idx]);
+      case pluss::codem::ScalarType::Float16:
+        return format_float(pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[idx]), 6);
+      case pluss::codem::ScalarType::BFloat16:
+        return format_float(pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[idx]), 6);
+      case pluss::codem::ScalarType::Float32:
+        return format_float(static_cast<double>(reinterpret_cast<const float*>(base)[idx]), 8);
+      case pluss::codem::ScalarType::Float64:
+        return format_float(reinterpret_cast<const double*>(base)[idx], 12);
+      default:
+        return "";
     }
+  };
+
+  switch (t.kind()) {
+    case ThreadKind::Series:
+      return series_scalar_string_at(t.as_series(), row);
     case ThreadKind::Note:
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:

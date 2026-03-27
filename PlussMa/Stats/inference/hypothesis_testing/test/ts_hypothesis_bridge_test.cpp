@@ -61,6 +61,21 @@ int main() {
     expect(std::abs(ts_arch.stat - inf_arch.stat) < 1e-12, "arch_lm bridge stat mismatch");
     expect(std::abs(ts_arch.pvalue - inf_arch.pvalue) < 1e-12, "arch_lm bridge pvalue mismatch");
 
+    const Series base = pluss::randn({2048}, cfg, 20260424ULL);
+    const Series err_a = base.add(1.0);
+    const Series err_b = base;
+    pluss::subsp::stats::ts::DmOptions dm_opt;
+    dm_opt.loss = pluss::subsp::stats::ts::DmLoss::Squared;
+    dm_opt.tail = pluss::subsp::stats::ts::DmTail::Right;
+    dm_opt.horizon = 1;
+    dm_opt.alpha = 0.01;
+
+    const auto ts_dm = pluss::subsp::stats::ts::dm_test(err_a, err_b, dm_opt, cfg);
+    const auto inf_dm = pluss::subsp::stats::inference::hypothesis::dm_test(err_a, err_b, dm_opt, cfg);
+
+    expect(std::abs(ts_dm.stat - inf_dm.stat) < 1e-12, "dm_test bridge stat mismatch");
+    expect(std::abs(ts_dm.pvalue - inf_dm.pvalue) < 1e-12, "dm_test bridge pvalue mismatch");
+
     std::cout << "ts_hypothesis_bridge_test passed\n";
     return 0;
   } catch (const std::exception& e) {

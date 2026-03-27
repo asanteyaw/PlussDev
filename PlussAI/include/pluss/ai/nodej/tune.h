@@ -37,7 +37,8 @@ StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates,
                            const TrainOptions& train_options = {},
                            const AssessOptions& assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
-                           TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto);
+                           TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
+                           std::int64_t max_parallel = 0);
 
 StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
                            std::int64_t trials,
@@ -47,6 +48,7 @@ StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
                            const AssessOptions& assess_options = {},
                            MetricKind objective_metric = MetricKind::Accuracy,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
-                           RandomState random = {});
+                           RandomState random = {},
+                           std::int64_t max_parallel = 0);
 
 } // namespace pluss::ai::nodej

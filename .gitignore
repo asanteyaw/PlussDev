@@ -129,3 +129,7 @@ Thumbs.db
 
 # Local ATen reference checkout (not part of PlussQit source)
 aten/
+
+# Trained model artifacts
+PlussAI/examples/NodeJ/trained_models/
+PlussAI/examples/NodeJ/trained_models/*.bin

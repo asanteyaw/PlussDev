@@ -460,6 +460,22 @@ void write_transform_spec(BinaryWriter& w, const TransformSpec& spec) {
       w.pod(static_cast<std::uint8_t>(o.include_bias ? 1U : 0U));
       break;
     }
+    case TransformKind::OrdinalEncoder: {
+      const auto& o = std::get<prep::OrdinalEncoderOptions>(spec.options);
+      w.pod(o.max_categories);
+      write_enum(w, o.overflow);
+      w.pod(static_cast<std::uint8_t>(o.include_unknown_bucket ? 1U : 0U));
+      w.pod(static_cast<std::uint8_t>(o.one_based ? 1U : 0U));
+      break;
+    }
+    case TransformKind::LabelEncoder: {
+      const auto& o = std::get<prep::LabelEncoderOptions>(spec.options);
+      w.pod(o.max_categories);
+      write_enum(w, o.overflow);
+      w.pod(static_cast<std::uint8_t>(o.include_unknown_bucket ? 1U : 0U));
+      w.pod(static_cast<std::uint8_t>(o.one_based ? 1U : 0U));
+      break;
+    }
   }
 }
 
@@ -583,6 +599,26 @@ bool read_transform_spec(BinaryReader& r, TransformSpec& spec) {
       spec.options = o;
       return true;
     }
+    case TransformKind::OrdinalEncoder: {
+      prep::OrdinalEncoderOptions o{};
+      std::uint8_t include = 0;
+      std::uint8_t one_based = 0;
+      if (!r.pod(o.max_categories) || !read_enum(r, o.overflow) || !r.pod(include) || !r.pod(one_based)) return false;
+      o.include_unknown_bucket = include != 0;
+      o.one_based = one_based != 0;
+      spec.options = o;
+      return true;
+    }
+    case TransformKind::LabelEncoder: {
+      prep::LabelEncoderOptions o{};
+      std::uint8_t include = 0;
+      std::uint8_t one_based = 0;
+      if (!r.pod(o.max_categories) || !read_enum(r, o.overflow) || !r.pod(include) || !r.pod(one_based)) return false;
+      o.include_unknown_bucket = include != 0;
+      o.one_based = one_based != 0;
+      spec.options = o;
+      return true;
+    }
   }
   return false;
 }
@@ -617,6 +653,10 @@ Status add_transform_from_spec(Flow& flow, const TransformSpec& spec) {
       return flow.add_threshold_binarizer(std::get<prep::ThresholdBinarizerOptions>(spec.options), spec.feature_route);
     case TransformKind::PolynomialLift:
       return flow.add_polynomial_lift(std::get<prep::PolynomialLiftOptions>(spec.options), spec.feature_route);
+    case TransformKind::OrdinalEncoder:
+      return flow.add_ordinal_encoder(std::get<prep::OrdinalEncoderOptions>(spec.options), spec.feature_route);
+    case TransformKind::LabelEncoder:
+      return flow.add_label_encoder(std::get<prep::LabelEncoderOptions>(spec.options), spec.feature_route);
   }
   return Status::invalid_argument("Unknown TransformKind in flow bundle.");
 }

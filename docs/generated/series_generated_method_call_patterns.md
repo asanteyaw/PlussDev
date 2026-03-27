@@ -30,7 +30,6 @@ For each generated method name, call it as shown below.
 - `auto y = x._to_sparse_bsr(...);`
 - `auto y = x._to_sparse_csc(...);`
 - `auto y = x._to_sparse_csr(...);`
-- `auto y = x._values(...);`
 - `auto y = x._version(...);`
 - `auto y = x.abs(...);`
 - `auto y = x.abs2(...);`
@@ -581,7 +580,6 @@ For each generated method name, call it as shown below.
 - `auto y = x.unsafe_split_with_sizes(...);`
 - `x.unsqueeze_(...);`
 - `auto y = x.unwrap(...);`
-- `auto y = x.values(...);`
 - `auto y = x.vdot(...);`
 - `auto y = x.view_as(...);`
 - `auto y = x.vsplit(...);`

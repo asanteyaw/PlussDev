@@ -26,7 +26,6 @@ _to_sparse_bsc
 _to_sparse_bsr
 _to_sparse_csc
 _to_sparse_csr
-_values
 _version
 abs
 abs_

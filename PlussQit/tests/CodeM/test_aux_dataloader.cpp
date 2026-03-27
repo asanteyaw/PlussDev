@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
 
 #include <cstdint>
 #include <filesystem>
@@ -214,12 +215,89 @@ TEST_CASE("aux scalar helpers provide concise scalar extraction", "[aux][scalars
   REQUIRE(pluss::as_I64(i) == 42);
 }
 
-TEST_CASE("aux pathing supports generic named roots", "[aux][pathing]") {
+TEST_CASE("aux pathing supports lean root+file API", "[aux][pathing]") {
   const auto custom = std::filesystem::temp_directory_path() / "pluss_aux_pathing_test";
-  pluss::loader::set_path_root("data", custom);
-  REQUIRE(pluss::loader::has_path_root("data"));
-  REQUIRE(pluss::loader::data_file("sample.csv") == (custom / "sample.csv"));
+  pluss::loader::set_root_path(custom);
+  std::error_code ec_got;
+  std::error_code ec_expected;
+  const auto got_root = std::filesystem::weakly_canonical(pluss::loader::root_path(), ec_got);
+  const auto expected_root = std::filesystem::weakly_canonical(custom, ec_expected);
+  REQUIRE_FALSE(ec_got);
+  REQUIRE_FALSE(ec_expected);
+  REQUIRE(got_root == expected_root);
+  REQUIRE(std::filesystem::path(pluss::loader::file_path("sample.csv").string()) == (custom / "sample.csv"));
 
-  pluss::loader::clear_path_root("data");
-  REQUIRE_FALSE(pluss::loader::has_path_root("data"));
+  const auto model_dir = pluss::loader::file_dir("trained_models", pluss::loader::PathOptions{
+                                                                       .create_dirs = true,
+                                                                   });
+  REQUIRE(std::filesystem::exists(std::filesystem::path(model_dir.string())));
+  REQUIRE(std::filesystem::path(model_dir.file("model.bin").string()) == (custom / "trained_models" / "model.bin"));
+  REQUIRE_THROWS(pluss::loader::file_path("../escape.txt").string());
+}
+
+TEST_CASE("aux pathing supports batch file path helpers", "[aux][pathing]") {
+  const auto custom = std::filesystem::temp_directory_path() / "pluss_aux_pathing_batch_test";
+  pluss::loader::set_root_path(custom);
+
+  const auto paths = pluss::loader::file_paths({
+      "all_data/housing.csv",
+      "some_other_data/prices.csv",
+      "all_other_data/fossils.xlsx",
+  });
+  REQUIRE(paths.size() == 3);
+  REQUIRE(std::filesystem::path(paths[0].string()) == (custom / "all_data" / "housing.csv"));
+  REQUIRE(std::filesystem::path(paths[1].string()) == (custom / "some_other_data" / "prices.csv"));
+  REQUIRE(std::filesystem::path(paths[2].string()) == (custom / "all_other_data" / "fossils.xlsx"));
+
+  const auto named = pluss::loader::file_path_map({
+      {"housing", "all_data/housing.csv"},
+      {"prices", "some_other_data/prices.csv"},
+      {"fossils", "all_other_data/fossils.xlsx"},
+  });
+  REQUIRE(named.size() == 3);
+  REQUIRE(std::filesystem::path(named.at("housing").string()) == (custom / "all_data" / "housing.csv"));
+  REQUIRE(std::filesystem::path(named.at("prices").string()) == (custom / "some_other_data" / "prices.csv"));
+  REQUIRE(std::filesystem::path(named.at("fossils").string()) == (custom / "all_other_data" / "fossils.xlsx"));
+
+  REQUIRE_THROWS(pluss::loader::file_path_map({
+      {"dup", "a.csv"},
+      {"dup", "b.csv"},
+  }));
+}
+
+TEST_CASE("aux URL context supports internet-rooted file helpers", "[aux][pathing][url]") {
+  const auto remote = pluss::loader::UrlContext::from_root(
+      "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/");
+
+  REQUIRE(remote.root() == "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main");
+  REQUIRE(remote.file_path("example5.csv").string() ==
+          "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/example5.csv");
+  REQUIRE(remote.file_path("/unit1/example6.csv").string() ==
+          "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/unit1/example6.csv");
+
+  const auto urls = remote.file_paths({
+      "example5.csv",
+      "unit1/example6.csv",
+  });
+  REQUIRE(urls.size() == 2);
+  REQUIRE(urls.at(0).string() ==
+          "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/example5.csv");
+  REQUIRE(urls.at(1).string() ==
+          "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/unit1/example6.csv");
+
+  const auto named = remote.file_path_map({
+      {"housing", "example5.csv"},
+      {"other", "unit1/example6.csv"},
+  });
+  REQUIRE(named.size() == 2);
+  REQUIRE(named.at("housing").string() ==
+          "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/example5.csv");
+  REQUIRE(named.at("other").string() ==
+          "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/unit1/example6.csv");
+
+  REQUIRE_THROWS(remote.file_path("../escape.csv"));
+  REQUIRE_THROWS(remote.file_path_map({
+      {"dup", "a.csv"},
+      {"dup", "b.csv"},
+  }));
 }

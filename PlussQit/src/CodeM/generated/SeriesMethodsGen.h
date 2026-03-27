@@ -91,9 +91,6 @@
   Series _to_sparse_csr(Args&&... args) const { return pluss::codem::_compat::invoke("_to_sparse_csr", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series _values(Args&&... args) const { return pluss::codem::_compat::invoke("_values", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series _version(Args&&... args) const { return pluss::codem::_compat::invoke("_version", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -394,15 +391,6 @@
   Series chalf(Args&&... args) const { return pluss::codem::_compat::invoke("chalf", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series cholesky(Args&&... args) const { return pluss::codem::_compat::invoke("cholesky", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series cholesky_inverse(Args&&... args) const { return pluss::codem::_compat::invoke("cholesky_inverse", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series cholesky_solve(Args&&... args) const { return pluss::codem::_compat::invoke("cholesky_solve", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series chunk(Args&&... args) const { return pluss::codem::_compat::invoke("chunk", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -512,9 +500,6 @@
 
   template <class... Args>
   Series dequantize(Args&&... args) const { return pluss::codem::_compat::invoke("dequantize", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series det(Args&&... args) const { return pluss::codem::_compat::invoke("det", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series detach(Args&&... args) const { return pluss::codem::_compat::invoke("detach", *this, std::forward<Args>(args)...); }
@@ -721,9 +706,6 @@
   Series& geometric_(Args&&... args) const { return pluss::codem::_compat::invoke_("geometric_", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series geqrf(Args&&... args) const { return pluss::codem::_compat::invoke("geqrf", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series ger(Args&&... args) const { return pluss::codem::_compat::invoke("ger", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -851,9 +833,6 @@
 
   template <class... Args>
   Series int_repr(Args&&... args) const { return pluss::codem::_compat::invoke("int_repr", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series inverse(Args&&... args) const { return pluss::codem::_compat::invoke("inverse", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series is_coalesced(Args&&... args) const { return pluss::codem::_compat::invoke("is_coalesced", *this, std::forward<Args>(args)...); }
@@ -1018,9 +997,6 @@
   Series logcumsumexp(Args&&... args) const { return pluss::codem::_compat::invoke("logcumsumexp", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series logdet(Args&&... args) const { return pluss::codem::_compat::invoke("logdet", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series logical_and(Args&&... args) const { return pluss::codem::_compat::invoke("logical_and", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1060,9 +1036,6 @@
   Series& lt_(Args&&... args) const { return pluss::codem::_compat::invoke_("lt_", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series lu_solve(Args&&... args) const { return pluss::codem::_compat::invoke("lu_solve", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series mH(Args&&... args) const { return pluss::codem::_compat::invoke("mH", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1088,12 +1061,6 @@
 
   template <class... Args>
   Series matrix_H(Args&&... args) const { return pluss::codem::_compat::invoke("matrix_H", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series matrix_exp(Args&&... args) const { return pluss::codem::_compat::invoke("matrix_exp", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series matrix_power(Args&&... args) const { return pluss::codem::_compat::invoke("matrix_power", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series max(Args&&... args) const { return pluss::codem::_compat::invoke("max", *this, std::forward<Args>(args)...); }
@@ -1264,12 +1231,6 @@
   Series numpy_T(Args&&... args) const { return pluss::codem::_compat::invoke("numpy_T", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series orgqr(Args&&... args) const { return pluss::codem::_compat::invoke("orgqr", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series ormqr(Args&&... args) const { return pluss::codem::_compat::invoke("ormqr", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series outer(Args&&... args) const { return pluss::codem::_compat::invoke("outer", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1283,9 +1244,6 @@
 
   template <class... Args>
   Series pin_memory(Args&&... args) const { return pluss::codem::_compat::invoke("pin_memory", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series pinverse(Args&&... args) const { return pluss::codem::_compat::invoke("pinverse", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series polygamma(Args&&... args) const { return pluss::codem::_compat::invoke("polygamma", *this, std::forward<Args>(args)...); }
@@ -1328,9 +1286,6 @@
 
   template <class... Args>
   Series q_zero_point(Args&&... args) const { return pluss::codem::_compat::invoke("q_zero_point", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series qr(Args&&... args) const { return pluss::codem::_compat::invoke("qr", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series qscheme(Args&&... args) const { return pluss::codem::_compat::invoke("qscheme", *this, std::forward<Args>(args)...); }
@@ -1394,9 +1349,6 @@
 
   template <class... Args>
   Series repeat_interleave(Args&&... args) const { return pluss::codem::_compat::invoke("repeat_interleave", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series& tracks_slope_(Args&&... args) const { return pluss::codem::_compat::invoke_("tracks_slope_", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series reshape_as(Args&&... args) const { return pluss::codem::_compat::invoke("reshape_as", *this, std::forward<Args>(args)...); }
@@ -1525,9 +1477,6 @@
   Series slice_scatter(Args&&... args) const { return pluss::codem::_compat::invoke("slice_scatter", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series slogdet(Args&&... args) const { return pluss::codem::_compat::invoke("slogdet", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series smm(Args&&... args) const { return pluss::codem::_compat::invoke("smm", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1609,9 +1558,6 @@
   Series sum_to_size(Args&&... args) const { return pluss::codem::_compat::invoke("sum_to_size", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series svd(Args&&... args) const { return pluss::codem::_compat::invoke("svd", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series swapaxes(Args&&... args) const { return pluss::codem::_compat::invoke("swapaxes", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1684,10 +1630,10 @@
   Series trace(Args&&... args) const { return pluss::codem::_compat::invoke("trace", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series& transpose_(Args&&... args) const { return pluss::codem::_compat::invoke_("transpose_", *this, std::forward<Args>(args)...); }
+  Series& tracks_slope_(Args&&... args) const { return pluss::codem::_compat::invoke_("tracks_slope_", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series triangular_solve(Args&&... args) const { return pluss::codem::_compat::invoke("triangular_solve", *this, std::forward<Args>(args)...); }
+  Series& transpose_(Args&&... args) const { return pluss::codem::_compat::invoke_("transpose_", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series tril(Args&&... args) const { return pluss::codem::_compat::invoke("tril", *this, std::forward<Args>(args)...); }
@@ -1742,9 +1688,6 @@
 
   template <class... Args>
   Series unwrap(Args&&... args) const { return pluss::codem::_compat::invoke("unwrap", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series values(Args&&... args) const { return pluss::codem::_compat::invoke("values", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series vdot(Args&&... args) const { return pluss::codem::_compat::invoke("vdot", *this, std::forward<Args>(args)...); }

@@ -3863,7 +3863,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "sparse_mask") return self;
     if (op == "smm") return self;
     if (op == "sspaddmm") return self;
-    if (op == "_indices" || op == "_values" || op == "indices" || op == "values" ||
+    if (op == "_indices" || op == "indices" ||
         op == "crow_indices" || op == "ccol_indices" || op == "col_indices" || op == "row_indices") return self.nonzero();
     if (op == "dense_dim" || op == "sparse_dim") return i64_scalar(0);
     if (op == "squeeze") {

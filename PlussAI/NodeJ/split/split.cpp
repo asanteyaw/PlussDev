@@ -1,4 +1,5 @@
 #include "pluss/ai/nodej/split.h"
+#include "pluss/tils.h"
 
 #include <algorithm>
 #include <chrono>
@@ -66,12 +67,50 @@ namespace {
   return seed;
 }
 
+class NumpyRandomState final {
+ public:
+  explicit NumpyRandomState(std::uint32_t seed) : mt_(seed) {}
+
+  [[nodiscard]] std::uint32_t rand_u32() { return mt_(); }
+
+  [[nodiscard]] std::int64_t randint_exclusive(std::int64_t high_exclusive) {
+    if (high_exclusive <= 0) return 0;
+    return static_cast<std::int64_t>(rk_interval_(static_cast<std::uint32_t>(high_exclusive - 1)));
+  }
+
+ private:
+  [[nodiscard]] std::uint32_t rk_interval_(std::uint32_t max_inclusive) {
+    // Match NumPy RandomState randint path (randomkit rk_interval).
+    std::uint32_t mask = max_inclusive;
+    mask |= mask >> 1;
+    mask |= mask >> 2;
+    mask |= mask >> 4;
+    mask |= mask >> 8;
+    mask |= mask >> 16;
+    for (;;) {
+      const std::uint32_t value = rand_u32() & mask;
+      if (value <= max_inclusive) return value;
+    }
+  }
+
+  std::mt19937 mt_;
+};
+
+template <class T>
+void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
+  if (values.size() < 2) return;
+  for (std::size_t i = values.size(); i > 1; --i) {
+    const std::size_t j = static_cast<std::size_t>(rng.randint_exclusive(static_cast<std::int64_t>(i)));
+    std::swap(values[i - 1], values[j]);
+  }
+}
+
 [[nodiscard]] std::vector<std::int64_t> make_indices(std::int64_t sample_count, const SplitOptions& options) {
   std::vector<std::int64_t> indices(static_cast<std::size_t>(sample_count));
   std::iota(indices.begin(), indices.end(), std::int64_t{0});
   if (options.shuffle) {
-    std::mt19937_64 rng(compose_seed(options.random));
-    std::shuffle(indices.begin(), indices.end(), rng);
+    NumpyRandomState rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+    shuffle_like_numpy(indices, rng);
   }
   return indices;
 }
@@ -131,20 +170,9 @@ namespace {
   return buckets;
 }
 
-template <class URBG>
-void shuffle_indices(std::vector<std::int64_t>& indices, URBG& rng) {
-  if (indices.size() < 2) return;
-  for (std::size_t i = indices.size(); i > 1; --i) {
-    std::uniform_int_distribution<std::size_t> dist(0, i - 1);
-    const std::size_t j = dist(rng);
-    std::swap(indices[i - 1], indices[j]);
-  }
-}
-
-template <class URBG>
 [[nodiscard]] std::vector<std::int64_t> approximate_mode(const std::vector<std::int64_t>& class_counts,
                                                          std::int64_t draws,
-                                                         URBG& rng) {
+                                                         NumpyRandomState& rng) {
   const std::size_t k = class_counts.size();
   std::vector<std::int64_t> out(k, 0);
   if (k == 0 || draws <= 0) return out;
@@ -156,7 +184,7 @@ template <class URBG>
   std::vector<double> remainder(k, 0.0);
   std::int64_t assigned = 0;
   for (std::size_t i = 0; i < k; ++i) {
-    continuous[i] = static_cast<double>(class_counts[i]) * static_cast<double>(draws) / static_cast<double>(total);
+    continuous[i] = (static_cast<double>(class_counts[i]) / static_cast<double>(total)) * static_cast<double>(draws);
     const auto floored = static_cast<std::int64_t>(std::floor(continuous[i]));
     out[i] = std::clamp<std::int64_t>(floored, 0, class_counts[i]);
     remainder[i] = continuous[i] - static_cast<double>(out[i]);
@@ -165,34 +193,25 @@ template <class URBG>
 
   std::int64_t need = draws - assigned;
   while (need > 0) {
-    double best = -1.0;
-    for (std::size_t i = 0; i < k; ++i) {
-      if (out[i] < class_counts[i]) {
-        best = std::max(best, remainder[i]);
+    std::vector<double> values = remainder;
+    std::sort(values.begin(), values.end());
+    values.erase(std::unique(values.begin(), values.end()), values.end());
+    std::reverse(values.begin(), values.end());
+    for (double value : values) {
+      std::vector<std::size_t> inds{};
+      inds.reserve(k);
+      for (std::size_t i = 0; i < k; ++i) {
+        if (remainder[i] == value) inds.push_back(i);
       }
-    }
-    if (best < 0.0) break;
-
-    std::vector<std::size_t> ties{};
-    ties.reserve(k);
-    constexpr double kTol = 1e-15;
-    for (std::size_t i = 0; i < k; ++i) {
-      if (out[i] < class_counts[i] && std::abs(remainder[i] - best) <= kTol) {
-        ties.push_back(i);
+      if (inds.empty()) continue;
+      const std::int64_t add_now = std::min<std::int64_t>(need, static_cast<std::int64_t>(inds.size()));
+      std::vector<std::size_t> pool = inds;
+      shuffle_like_numpy(pool, rng);
+      for (std::int64_t j = 0; j < add_now; ++j) {
+        ++out[pool[static_cast<std::size_t>(j)]];
       }
-    }
-    if (ties.empty()) break;
-
-    std::int64_t take = std::min<std::int64_t>(need, static_cast<std::int64_t>(ties.size()));
-    while (take > 0 && !ties.empty()) {
-      std::uniform_int_distribution<std::size_t> pick(0, ties.size() - 1);
-      const std::size_t pos = pick(rng);
-      const std::size_t cls = ties[pos];
-      ++out[cls];
-      ties[pos] = ties.back();
-      ties.pop_back();
-      --take;
-      --need;
+      need -= add_now;
+      if (need == 0) break;
     }
   }
 
@@ -232,8 +251,8 @@ StatusOr<IndexSplit> holdout_split(std::int64_t sample_count, const SplitOptions
   std::vector<std::int64_t> indices(static_cast<std::size_t>(sample_count));
   std::iota(indices.begin(), indices.end(), std::int64_t{0});
   if (options.shuffle) {
-    std::mt19937 rng(static_cast<std::uint32_t>(compose_seed(options.random)));
-    shuffle_indices(indices, rng);
+    NumpyRandomState rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+    shuffle_like_numpy(indices, rng);
   }
 
   std::vector<std::int64_t> train_indices{};
@@ -276,7 +295,7 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
     class_counts.push_back(static_cast<std::int64_t>(bucket.size()));
   }
 
-  std::mt19937 rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+  NumpyRandomState rng(static_cast<std::uint32_t>(compose_seed(options.random)));
   const std::vector<std::int64_t> per_class_train = approximate_mode(class_counts, train_total, rng);
 
   std::vector<std::int64_t> remaining_counts(class_counts.size(), 0);
@@ -293,7 +312,7 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
   for (std::size_t i = 0; i < buckets.size(); ++i) {
     auto bucket = buckets[i];
     if (options.shuffle) {
-      shuffle_indices(bucket, rng);
+      shuffle_like_numpy(bucket, rng);
     }
     const std::int64_t train_take = std::clamp<std::int64_t>(per_class_train[i], 0, static_cast<std::int64_t>(bucket.size()));
     const std::int64_t test_take = std::clamp<std::int64_t>(per_class_test[i], 0, static_cast<std::int64_t>(bucket.size()) - train_take);
@@ -306,8 +325,8 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
   }
 
   if (options.shuffle) {
-    shuffle_indices(train_indices, rng);
-    shuffle_indices(test_indices, rng);
+    shuffle_like_numpy(train_indices, rng);
+    shuffle_like_numpy(test_indices, rng);
   }
   return StatusOr<IndexSplit>(IndexSplit{
       .train_indices = make_index_series(train_indices),

@@ -2,7 +2,7 @@
 
 #include "pluss/config.h"
 #include "pluss/codem/codem.h"
-#include "aux/rng_seed.h"
+#include "pluss/tils/aux/rng_seed.h"
 
 #include <algorithm>
 #include <cstdint>

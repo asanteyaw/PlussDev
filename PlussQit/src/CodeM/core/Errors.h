@@ -109,6 +109,12 @@ template <class... Args>
     ::pluss::codem::throw_error((msg)); \
   } while (false)
 
+// Warn to stderr with call-site context and stack trace when available.
+#define PLUSS_WARN(msg)        \
+  do {                         \
+    ::pluss::codem::warn((msg)); \
+  } while (false)
+
 // Equality check with single evaluation of both operands.
 #define PLUSS_CHECK_EQ(a, b)   \
   do {                         \

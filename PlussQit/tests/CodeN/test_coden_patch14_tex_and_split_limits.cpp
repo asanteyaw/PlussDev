@@ -25,7 +25,7 @@ TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
   auto by_ws = ws.split_whitespace(1);
   REQUIRE(by_ws.offsets() == std::vector<std::int64_t>({0, 2, 4}));
   REQUIRE(by_ws.tokens().at(0) == "x");
-  REQUIRE(by_ws.tokens().at(1) == "y z");
+  REQUIRE(by_ws.tokens().at(1) == "y   z");
   REQUIRE(by_ws.tokens().at(2) == "m");
   REQUIRE(by_ws.tokens().at(3) == "n");
 }
@@ -48,7 +48,7 @@ TEST_CASE("CodeN TeX remover variants are concrete", "[coden][patch14]") {
                      .tex_remove_color()
                      .tex_remove_env_equation();
 
-  const std::string out = cleaned.at(0);
+  const std::string out = std::string(cleaned.at(0));
   REQUIRE(out.find("usepackage") == std::string::npos);
   REQUIRE(out.find("\\label") == std::string::npos);
   REQUIRE(out.find("\\ref") == std::string::npos);

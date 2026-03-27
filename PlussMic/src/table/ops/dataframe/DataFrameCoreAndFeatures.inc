@@ -39,7 +39,6 @@ std::int64_t DataFrame::nfeats() const { return static_cast<std::int64_t>(impl_r
 std::int64_t DataFrame::nfeatures() const { return nfeats(); }
 
 std::vector<Thread> DataFrame::features() const { return impl_ref_().columns_; }
-std::vector<Thread> DataFrame::values() const { return features(); }
 DataFrame::MatrixValues DataFrame::matrix() const {
   DataFrame::MatrixValues out{};
   auto& series_out = std::get<0>(out);
@@ -68,48 +67,17 @@ DataFrame::MatrixValues DataFrame::matrix() const {
     }
   }
 
-  const std::int64_t rows = ncases();
   if (!series_cols.empty()) {
-    pluss::Series packed = series_cols.front().reshape({rows, 1});
-    for (std::size_t i = 1; i < series_cols.size(); ++i) {
-      packed = packed.unite({series_cols[i].reshape({rows, 1})}, 1);
-    }
-    series_out.push_back(std::move(packed));
+    series_out.push_back(pack_series_columns(series_cols, "DataFrame::matrix(series)", /*force_matrix_2d=*/true));
   }
 
   if (!note_cols.empty()) {
-    const std::int64_t cols = static_cast<std::int64_t>(note_cols.size());
-    const std::array<std::int64_t, 1> note_shape_1d{rows};
-    std::vector<std::vector<std::string_view>> note_vectors{};
-    note_vectors.reserve(note_cols.size());
-    for (const auto& col : note_cols) {
-      note_vectors.push_back(col.reshape(std::span<const std::int64_t>(note_shape_1d.data(), note_shape_1d.size())).vector());
-    }
-
-    std::vector<std::string_view> flat(static_cast<std::size_t>(rows * cols));
-    for (std::int64_t r = 0; r < rows; ++r) {
-      const std::size_t r_off = static_cast<std::size_t>(r * cols);
-      for (std::int64_t c = 0; c < cols; ++c) {
-        flat[r_off + static_cast<std::size_t>(c)] = note_vectors[static_cast<std::size_t>(c)][static_cast<std::size_t>(r)];
-      }
-    }
-    const std::array<std::int64_t, 2> shape{rows, cols};
-    note_out.push_back(pluss::coden::ops_internal::note_from_utf8(
-        std::span<const std::string_view>(flat.data(), flat.size()),
-        std::span<const std::int64_t>(shape.data(), shape.size())));
+    note_out.push_back(pack_note_columns(note_cols, "DataFrame::matrix(note)", /*force_matrix_2d=*/true));
   }
 
   if (!timeline_cols.empty()) {
-    std::vector<pluss::Series> epoch_cols{};
-    epoch_cols.reserve(timeline_cols.size());
-    for (const auto& col : timeline_cols) {
-      epoch_cols.push_back(col.epoch_nanos().reshape({rows, 1}));
-    }
-    pluss::Series epoch_matrix = epoch_cols.front();
-    for (std::size_t i = 1; i < epoch_cols.size(); ++i) {
-      epoch_matrix = epoch_matrix.unite({epoch_cols[i]}, 1);
-    }
-    timeline_out.push_back(pluss::Timeline::fromSeries(epoch_matrix));
+    timeline_out.push_back(
+        pack_timeline_columns(timeline_cols, "DataFrame::matrix(timeline)", /*force_matrix_2d=*/true));
   }
 
   return out;
@@ -208,16 +176,18 @@ bool DataFrame::has_feature(std::string_view name) const {
 
 Thread DataFrame::features(std::string_view name) {
   const auto& src = impl_ref_();
-  const auto it = src.name_to_idx_.find(owned_name(name));
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + owned_name(name) + "'");
-  return src.columns_[it->second].with_display_labels(src.cases_);
+  const auto feature_name = owned_name(name);
+  const auto it = src.name_to_idx_.find(feature_name);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
+  return src.columns_[it->second].with_display_labels(src.cases_).with_display_name(std::move(feature_name));
 }
 
 Thread DataFrame::features(std::string_view name) const {
   const auto& src = impl_ref_();
-  const auto it = src.name_to_idx_.find(owned_name(name));
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + owned_name(name) + "'");
-  return src.columns_[it->second].with_display_labels(src.cases_);
+  const auto feature_name = owned_name(name);
+  const auto it = src.name_to_idx_.find(feature_name);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
+  return src.columns_[it->second].with_display_labels(src.cases_).with_display_name(std::move(feature_name));
 }
 
 ColumnRef DataFrame::feature_ref(std::string_view name) const {
@@ -230,6 +200,22 @@ DataFrame DataFrame::features(std::initializer_list<std::string_view> names) {
 
 DataFrame DataFrame::features(std::initializer_list<std::string_view> names) const {
   return select(names);
+}
+
+DataFrame DataFrame::features(std::span<const std::string_view> names) {
+  return select(names);
+}
+
+DataFrame DataFrame::features(std::span<const std::string_view> names) const {
+  return select(names);
+}
+
+DataFrame DataFrame::features(StackArray<std::string_view> names) {
+  return select(names.data().values);
+}
+
+DataFrame DataFrame::features(StackArray<std::string_view> names) const {
+  return select(names.data().values);
 }
 
 DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const {
@@ -248,6 +234,24 @@ DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const
     out_cols.push_back(src.columns_[it->second]);
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::select(std::span<const std::string_view> names) const {
+  const auto& src = impl_ref_();
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(names.size());
+  out_cols.reserve(names.size());
+
+  for (const auto n_sv : names) {
+    const auto n = owned_name(n_sv);
+    const auto it = src.name_to_idx_.find(n);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::select: unknown column '" + n + "'");
+    out_names.push_back(n);
+    out_cols.push_back(src.columns_[it->second]);
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::select_like(std::string_view needle, bool case_sensitive) const {

@@ -318,6 +318,34 @@ plussai_lymph_end_to_end_hour_workflow_showcase/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build
 .PHONY : plussai_lymph_end_to_end_hour_workflow_showcase/fast
 
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/rule
+
+# Convenience name for target.
+plussai_lymph_feature_transformer_workflow_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/rule
+.PHONY : plussai_lymph_feature_transformer_workflow_demo
+
+# fast build rule for target.
+plussai_lymph_feature_transformer_workflow_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build
+.PHONY : plussai_lymph_feature_transformer_workflow_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/rule
+
+# Convenience name for target.
+plussai_lymph_housing_ch2_end_to_end_notebook: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/rule
+.PHONY : plussai_lymph_housing_ch2_end_to_end_notebook
+
+# fast build rule for target.
+plussai_lymph_housing_ch2_end_to_end_notebook/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build
+.PHONY : plussai_lymph_housing_ch2_end_to_end_notebook/fast
+
 lymph_cv_tune_demo.o: lymph_cv_tune_demo.cpp.o
 .PHONY : lymph_cv_tune_demo.o
 
@@ -366,6 +394,30 @@ lymph_end_to_end_hour_workflow_showcase.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/lymph_end_to_end_hour_workflow_showcase.cpp.s
 .PHONY : lymph_end_to_end_hour_workflow_showcase.cpp.s
 
+lymph_feature_transformer_workflow_demo.o: lymph_feature_transformer_workflow_demo.cpp.o
+.PHONY : lymph_feature_transformer_workflow_demo.o
+
+# target to build an object file
+lymph_feature_transformer_workflow_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/lymph_feature_transformer_workflow_demo.cpp.o
+.PHONY : lymph_feature_transformer_workflow_demo.cpp.o
+
+lymph_feature_transformer_workflow_demo.i: lymph_feature_transformer_workflow_demo.cpp.i
+.PHONY : lymph_feature_transformer_workflow_demo.i
+
+# target to preprocess a source file
+lymph_feature_transformer_workflow_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/lymph_feature_transformer_workflow_demo.cpp.i
+.PHONY : lymph_feature_transformer_workflow_demo.cpp.i
+
+lymph_feature_transformer_workflow_demo.s: lymph_feature_transformer_workflow_demo.cpp.s
+.PHONY : lymph_feature_transformer_workflow_demo.s
+
+# target to generate assembly for a file
+lymph_feature_transformer_workflow_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/lymph_feature_transformer_workflow_demo.cpp.s
+.PHONY : lymph_feature_transformer_workflow_demo.cpp.s
+
 lymph_flow_demo.o: lymph_flow_demo.cpp.o
 .PHONY : lymph_flow_demo.o
 
@@ -389,6 +441,30 @@ lymph_flow_demo.s: lymph_flow_demo.cpp.s
 lymph_flow_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/lymph_flow_demo.cpp.s
 .PHONY : lymph_flow_demo.cpp.s
+
+lymph_housing_ch2_end_to_end_notebook.o: lymph_housing_ch2_end_to_end_notebook.cpp.o
+.PHONY : lymph_housing_ch2_end_to_end_notebook.o
+
+# target to build an object file
+lymph_housing_ch2_end_to_end_notebook.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/lymph_housing_ch2_end_to_end_notebook.cpp.o
+.PHONY : lymph_housing_ch2_end_to_end_notebook.cpp.o
+
+lymph_housing_ch2_end_to_end_notebook.i: lymph_housing_ch2_end_to_end_notebook.cpp.i
+.PHONY : lymph_housing_ch2_end_to_end_notebook.i
+
+# target to preprocess a source file
+lymph_housing_ch2_end_to_end_notebook.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/lymph_housing_ch2_end_to_end_notebook.cpp.i
+.PHONY : lymph_housing_ch2_end_to_end_notebook.cpp.i
+
+lymph_housing_ch2_end_to_end_notebook.s: lymph_housing_ch2_end_to_end_notebook.cpp.s
+.PHONY : lymph_housing_ch2_end_to_end_notebook.s
+
+# target to generate assembly for a file
+lymph_housing_ch2_end_to_end_notebook.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/lymph_housing_ch2_end_to_end_notebook.cpp.s
+.PHONY : lymph_housing_ch2_end_to_end_notebook.cpp.s
 
 lymph_multiclass_demo.o: lymph_multiclass_demo.cpp.o
 .PHONY : lymph_multiclass_demo.o
@@ -551,7 +627,9 @@ help:
 	@echo "... test"
 	@echo "... plussai_lymph_cv_tune_demo"
 	@echo "... plussai_lymph_end_to_end_hour_workflow_showcase"
+	@echo "... plussai_lymph_feature_transformer_workflow_demo"
 	@echo "... plussai_lymph_flow_demo"
+	@echo "... plussai_lymph_housing_ch2_end_to_end_notebook"
 	@echo "... plussai_lymph_multiclass_demo"
 	@echo "... plussai_lymph_online_demo"
 	@echo "... plussai_lymph_presets_demo"
@@ -564,9 +642,15 @@ help:
 	@echo "... lymph_end_to_end_hour_workflow_showcase.o"
 	@echo "... lymph_end_to_end_hour_workflow_showcase.i"
 	@echo "... lymph_end_to_end_hour_workflow_showcase.s"
+	@echo "... lymph_feature_transformer_workflow_demo.o"
+	@echo "... lymph_feature_transformer_workflow_demo.i"
+	@echo "... lymph_feature_transformer_workflow_demo.s"
 	@echo "... lymph_flow_demo.o"
 	@echo "... lymph_flow_demo.i"
 	@echo "... lymph_flow_demo.s"
+	@echo "... lymph_housing_ch2_end_to_end_notebook.o"
+	@echo "... lymph_housing_ch2_end_to_end_notebook.i"
+	@echo "... lymph_housing_ch2_end_to_end_notebook.s"
 	@echo "... lymph_multiclass_demo.o"
 	@echo "... lymph_multiclass_demo.i"
 	@echo "... lymph_multiclass_demo.s"

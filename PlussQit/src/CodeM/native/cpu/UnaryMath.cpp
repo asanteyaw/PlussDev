@@ -215,7 +215,6 @@ void exp(const Series& a, Series& out) {
 }
 
 DEFINE_UNARY(log, std::log(x), std::log(x))
-DEFINE_UNARY(sqrt, std::sqrt(x), std::sqrt(x))
 DEFINE_UNARY(sin, std::sin(x), std::sin(x))
 DEFINE_UNARY(cos, std::cos(x), std::cos(x))
 DEFINE_UNARY(tanh, std::tanh(x), std::tanh(x))

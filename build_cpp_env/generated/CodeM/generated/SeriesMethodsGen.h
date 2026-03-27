@@ -91,9 +91,6 @@
   Series _to_sparse_csr(Args&&... args) const { return pluss::codem::_compat::invoke("_to_sparse_csr", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series _values(Args&&... args) const { return pluss::codem::_compat::invoke("_values", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series _version(Args&&... args) const { return pluss::codem::_compat::invoke("_version", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1691,9 +1688,6 @@
 
   template <class... Args>
   Series unwrap(Args&&... args) const { return pluss::codem::_compat::invoke("unwrap", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
-  Series values(Args&&... args) const { return pluss::codem::_compat::invoke("values", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series vdot(Args&&... args) const { return pluss::codem::_compat::invoke("vdot", *this, std::forward<Args>(args)...); }

@@ -4,7 +4,7 @@ ColumnRef::ColumnRef(std::string name, Thread column)
 const std::string& ColumnRef::name() const noexcept { return name_; }
 const Thread& ColumnRef::thread() const noexcept { return column_; }
 pluss::Series ColumnRef::mean() const { return column_.mean(); }
-Thread ColumnRef::head(std::int64_t n) const { return column_.head(n); }
+Thread ColumnRef::head(std::int64_t n) const { return column_.head(n, false); }
 ThreadValue ColumnRef::value() const { return column_.value(); }
 Thread ColumnRef::values() const { return column_; }
 

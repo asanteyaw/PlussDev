@@ -1,12 +1,14 @@
 #pragma once
 
 #include "pluss/codem/codem.h"
+#include "pluss/codeh/codeh.h"
 #include "pluss/config.h"
 #include "pluss/export.h"
 
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -15,6 +17,74 @@ class Studio;
 }
 
 namespace pluss::subsp::stats::ts {
+
+enum class GapFillMode : std::uint8_t {
+  Forward = 0,
+  Backward = 1,
+  Zero = 2,
+  Constant = 3,
+};
+
+enum class ResampleOp : std::uint8_t {
+  Mean = 0,
+  Sum = 1,
+  Min = 2,
+  Max = 3,
+  First = 4,
+  Last = 5,
+  Count = 6,
+};
+
+struct ResampleResult {
+  std::optional<pluss::Timeline> labels{};
+  pluss::codem::Series values = pluss::codem::Series::undefined();
+};
+
+CODEM_API pluss::codem::Series returns(const pluss::codem::Series& x, std::int64_t periods = 1);
+CODEM_API pluss::codem::Series log_returns(const pluss::codem::Series& x, std::int64_t periods = 1);
+CODEM_API pluss::codem::Series diff(const pluss::codem::Series& x, std::int64_t periods = 1);
+CODEM_API pluss::codem::Series lag(const pluss::codem::Series& x, std::int64_t periods = 1);
+CODEM_API pluss::codem::Series lead(const pluss::codem::Series& x, std::int64_t periods = 1);
+CODEM_API pluss::codem::Series rolling_mean(const pluss::codem::Series& x,
+                                            std::int64_t window,
+                                            std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series rolling_std(const pluss::codem::Series& x,
+                                           std::int64_t window,
+                                           std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series rolling_sum(const pluss::codem::Series& x,
+                                           std::int64_t window,
+                                           std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series rolling_var(const pluss::codem::Series& x,
+                                           std::int64_t window,
+                                           std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series rolling_min(const pluss::codem::Series& x,
+                                           std::int64_t window,
+                                           std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series rolling_max(const pluss::codem::Series& x,
+                                           std::int64_t window,
+                                           std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series ema(const pluss::codem::Series& x, double alpha);
+CODEM_API pluss::codem::Series ewm_mean(const pluss::codem::Series& x, double alpha);
+CODEM_API pluss::codem::Series ewm_std(const pluss::codem::Series& x,
+                                       double alpha,
+                                       double epsilon = 1e-12);
+CODEM_API pluss::codem::Series expanding_mean(const pluss::codem::Series& x,
+                                              std::int64_t min_periods = 1);
+CODEM_API pluss::codem::Series expanding_std(const pluss::codem::Series& x,
+                                             std::int64_t min_periods = 1,
+                                             double epsilon = 1e-12);
+CODEM_API pluss::codem::Series zscore_rolling(const pluss::codem::Series& x,
+                                              std::int64_t window,
+                                              std::int64_t min_periods = 1,
+                                              double epsilon = 1e-12);
+CODEM_API pluss::codem::Series fill_gaps(const pluss::codem::Series& x,
+                                         GapFillMode mode = GapFillMode::Forward,
+                                         std::optional<double> constant = std::nullopt);
+CODEM_API ResampleResult resample(const pluss::TimeIndex& index,
+                                  const pluss::codem::Series& values,
+                                  std::string_view freq,
+                                  ResampleOp op = ResampleOp::Mean,
+                                  std::int64_t step = 1);
 
 enum class PartitionType : std::uint8_t {
   ExpandingWindow = 0,
@@ -346,6 +416,45 @@ struct KpssResult {
 CODEM_API KpssResult kpss_test(const pluss::codem::Series& y,
                                const KpssOptions& options = {},
                                pluss::codem::Config cfg = {});
+
+enum class DmLoss : std::uint8_t {
+  Squared = 0,
+  Absolute = 1,
+  Power = 2,
+};
+
+enum class DmTail : std::uint8_t {
+  Both = 0,
+  Left = 1,
+  Right = 2,
+};
+
+struct DmOptions {
+  std::int64_t horizon = 1;
+  std::int64_t max_lag = -1; // -1 uses horizon-1
+  DmLoss loss = DmLoss::Squared;
+  double loss_power = 2.0;
+  bool hln_adjust = true;
+  DmTail tail = DmTail::Both;
+  double alpha = 0.05;
+};
+
+struct DmResult {
+  double stat = 0.0;
+  double pvalue = 1.0;
+  double critical = 0.0;
+  bool reject = false;
+  std::int64_t horizon = 1;
+  std::int64_t lags = 0;
+  std::int64_t effective_n = 0;
+  double mean_diff = 0.0;
+  double lrv = 0.0;
+};
+
+CODEM_API DmResult dm_test(const pluss::codem::Series& err_a,
+                           const pluss::codem::Series& err_b,
+                           const DmOptions& options = {},
+                           pluss::codem::Config cfg = {});
 
 namespace plot {
 

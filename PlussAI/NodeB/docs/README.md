@@ -1,0 +1,3 @@
+# docs
+
+Scaffolded module directory for NodeB.

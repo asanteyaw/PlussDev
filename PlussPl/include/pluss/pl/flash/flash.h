@@ -3,7 +3,7 @@
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/pl/studio.h"
-#include "pluss/view/html_window.h"
+#include "pluss/tils/view/html_window.h"
 
 #include <algorithm>
 #include <cmath>

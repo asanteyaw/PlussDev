@@ -3,10 +3,12 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <cmath>
 #include <iomanip>
 #include <limits>
 #include <random>
+#include <numeric>
 #include <string_view>
 #include <string>
 #include <sstream>
@@ -14,6 +16,7 @@
 #include <unordered_set>
 #include <utility>
 #include <regex>
+#include <thread>
 
 #include "CodeN/core/TextArena.h"
 #include "CodeN/core/TokenBatchImpl.h"
@@ -29,6 +32,38 @@ static bool starts_with_sv(::std::string_view s, ::std::string_view prefix) {
 
 static bool ends_with_sv(::std::string_view s, ::std::string_view suffix) {
   return s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix;
+}
+
+static ::std::string ascii_lower_copy(::std::string_view s) {
+  ::std::string out(s);
+  ::std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
+    return static_cast<char>(::std::tolower(c));
+  });
+  return out;
+}
+
+static bool env_bool_flag(const char* key, bool default_value) {
+  const char* raw = ::std::getenv(key);
+  if (raw == nullptr || *raw == '\0') return default_value;
+  const ::std::string v = ascii_lower_copy(raw);
+  if (v == "0" || v == "off" || v == "false" || v == "no") return false;
+  if (v == "1" || v == "on" || v == "true" || v == "yes") return true;
+  return default_value;
+}
+
+static bool coden_reference_mode_enabled() {
+  const char* mode_raw = ::std::getenv("PLUSS_CODEN_EXECUTION_MODE");
+  if (mode_raw != nullptr && *mode_raw != '\0') {
+    const ::std::string mode = ascii_lower_copy(mode_raw);
+    if (mode == "reference" || mode == "ref" || mode == "legacy" || mode == "safe") return true;
+    if (mode == "optimized" || mode == "opt" || mode == "fast") return false;
+  }
+  return env_bool_flag("PLUSS_CODEN_REFERENCE_MODE", false);
+}
+
+static bool coden_count_fastpath_enabled() {
+  if (coden_reference_mode_enabled()) return false;
+  return env_bool_flag("PLUSS_CODEN_COUNT_FASTPATH", true);
 }
 
 static ::std::string regex_escape_text(::std::string_view s);
@@ -742,20 +777,83 @@ static void emit_char_ngrams(::std::string_view s, ::std::int64_t n, ::std::vect
 
 static void top_k_frequent(::std::span<const ::std::string> words, ::std::int64_t k, ::std::vector<::std::string>& out) {
   if (k <= 0 || words.empty()) return;
-  ::std::unordered_map<::std::string, ::std::int64_t> freq;
-  for (const auto& w : words) {
-    if (is_stopword(w)) continue;
-    ++freq[w];
+  if (!coden_count_fastpath_enabled()) {
+    ::std::unordered_map<::std::string, ::std::int64_t> freq;
+    for (const auto& w : words) {
+      if (is_stopword(w)) continue;
+      ++freq[w];
+    }
+    ::std::vector<::std::pair<::std::string, ::std::int64_t>> items;
+    items.reserve(freq.size());
+    for (auto& kv : freq) items.push_back(kv);
+    ::std::sort(items.begin(), items.end(), [](const auto& a, const auto& b) {
+      if (a.second != b.second) return a.second > b.second;
+      return a.first < b.first;
+    });
+    const ::std::size_t take = ::std::min<::std::size_t>(static_cast<::std::size_t>(k), items.size());
+    out.reserve(out.size() + take);
+    for (::std::size_t i = 0; i < take; ++i) out.push_back(items[i].first);
+    return;
   }
-  ::std::vector<::std::pair<::std::string, ::std::int64_t>> items;
-  items.reserve(freq.size());
-  for (auto& kv : freq) items.push_back(kv);
-  ::std::sort(items.begin(), items.end(), [](const auto& a, const auto& b) {
-    if (a.second != b.second) return a.second > b.second;
-    return a.first < b.first;
+
+  ::std::vector<::std::string_view> filtered;
+  filtered.reserve(words.size());
+  for (const auto& w : words) {
+    if (!is_stopword(w)) filtered.emplace_back(w);
+  }
+  if (filtered.empty()) return;
+
+  ::std::vector<::std::uint64_t> hashes(filtered.size(), 0);
+  ::pluss::coden::native::cpu::hash_bytes_fnv1a_batch(
+      ::std::span<const ::std::string_view>(filtered.data(), filtered.size()),
+      ::std::span<::std::uint64_t>(hashes.data(), hashes.size()));
+
+  ::std::unordered_map<::std::uint64_t, ::std::vector<::std::uint32_t>> buckets;
+  buckets.reserve(filtered.size() * 2);
+  ::std::vector<::std::string_view> dict;
+  dict.reserve(filtered.size());
+  ::std::vector<::std::int64_t> counts;
+  counts.reserve(filtered.size());
+
+  for (::std::size_t i = 0; i < filtered.size(); ++i) {
+    const auto h = hashes[i];
+    const auto tok = filtered[i];
+    auto& bucket = buckets[h];
+
+    ::std::uint32_t code = ::std::numeric_limits<::std::uint32_t>::max();
+    for (const auto idx : bucket) {
+      if (dict[static_cast<::std::size_t>(idx)] == tok) {
+        code = idx;
+        break;
+      }
+    }
+    if (code == ::std::numeric_limits<::std::uint32_t>::max()) {
+      code = static_cast<::std::uint32_t>(dict.size());
+      dict.push_back(tok);
+      counts.push_back(1);
+      bucket.push_back(code);
+    } else {
+      ++counts[static_cast<::std::size_t>(code)];
+    }
+  }
+
+  ::std::vector<::std::uint32_t> order(dict.size());
+  ::std::iota(order.begin(), order.end(), 0u);
+  ::std::stable_sort(order.begin(), order.end(), [&](::std::uint32_t a, ::std::uint32_t b) {
+    const auto ca = counts[static_cast<::std::size_t>(a)];
+    const auto cb = counts[static_cast<::std::size_t>(b)];
+    if (ca != cb) return ca > cb;
+    return ::pluss::coden::native::cpu::compare_lex_bytes(
+        dict[static_cast<::std::size_t>(a)],
+        dict[static_cast<::std::size_t>(b)],
+        ::pluss::coden::native::cpu::LexCompareOp::Lt);
   });
-  const ::std::size_t take = ::std::min<::std::size_t>(static_cast<::std::size_t>(k), items.size());
-  for (::std::size_t i = 0; i < take; ++i) out.push_back(items[i].first);
+
+  const ::std::size_t take = ::std::min<::std::size_t>(static_cast<::std::size_t>(k), order.size());
+  out.reserve(out.size() + take);
+  for (::std::size_t i = 0; i < take; ++i) {
+    out.emplace_back(dict[static_cast<::std::size_t>(order[i])]);
+  }
 }
 
 static void extract_tex_environment_blocks_to(::std::string_view s,
@@ -1407,6 +1505,21 @@ static void diff_or_align_to(::std::string_view a_text,
   emit_alignment_or_diff(a, b, include_equal, out);
 }
 
+static bool coden_parallel_enabled() {
+  if (coden_reference_mode_enabled()) return false;
+  return env_bool_flag("PLUSS_CODEN_PARALLEL", true);
+}
+
+static ::std::int64_t coden_parallel_workers(::std::int64_t tasks, ::std::int64_t min_tasks_per_worker) {
+  if (!coden_parallel_enabled()) return 1;
+  if (tasks <= 0 || min_tasks_per_worker <= 0) return 1;
+  const auto hw_u = ::std::thread::hardware_concurrency();
+  if (hw_u < 2u) return 1;
+  const auto hw = static_cast<::std::int64_t>(hw_u);
+  if (tasks < min_tasks_per_worker * 2) return 1;
+  return ::std::max<::std::int64_t>(1, ::std::min<::std::int64_t>(hw, tasks));
+}
+
 template <class TokenizeFn>
 static TokenBatch tokenbatch_from_chord(const Chord& x, TokenizeFn&& fn) {
   if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0,0});
@@ -1428,10 +1541,51 @@ static TokenBatch tokenbatch_from_note(const Note& x, const char* op, TokenizeFn
   const ::std::int64_t n = impl->numel();
   ::std::vector<::std::int64_t> offsets(static_cast<::std::size_t>(n) + 1, 0);
   ::std::vector<::std::string> flat_tokens;
-  for (::std::int64_t i = 0; i < n; ++i) {
-    fn(impl->bytes_at(i), flat_tokens);
-    offsets[static_cast<::std::size_t>(i) + 1] = static_cast<::std::int64_t>(flat_tokens.size());
+
+  const auto workers = coden_parallel_workers(n, /*min_tasks_per_worker=*/256);
+  if (workers <= 1) {
+    for (::std::int64_t i = 0; i < n; ++i) {
+      fn(impl->bytes_at(i), flat_tokens);
+      offsets[static_cast<::std::size_t>(i) + 1] = static_cast<::std::int64_t>(flat_tokens.size());
+    }
+  } else {
+    ::std::vector<::std::vector<::std::string>> per_row(static_cast<::std::size_t>(n));
+    const ::std::int64_t chunk = (n + workers - 1) / workers;
+    ::std::vector<::std::thread> pool;
+    pool.reserve(static_cast<::std::size_t>(workers - 1));
+
+    for (::std::int64_t w = 1; w < workers; ++w) {
+      const ::std::int64_t b = w * chunk;
+      const ::std::int64_t e = ::std::min<::std::int64_t>(n, b + chunk);
+      if (b >= e) break;
+      pool.emplace_back([&, b, e]() {
+        for (::std::int64_t i = b; i < e; ++i) {
+          fn(impl->bytes_at(i), per_row[static_cast<::std::size_t>(i)]);
+        }
+      });
+    }
+
+    const ::std::int64_t b0 = 0;
+    const ::std::int64_t e0 = ::std::min<::std::int64_t>(n, chunk);
+    for (::std::int64_t i = b0; i < e0; ++i) {
+      fn(impl->bytes_at(i), per_row[static_cast<::std::size_t>(i)]);
+    }
+    for (auto& t : pool) t.join();
+
+    ::std::int64_t total = 0;
+    for (::std::int64_t i = 0; i < n; ++i) {
+      total += static_cast<::std::int64_t>(per_row[static_cast<::std::size_t>(i)].size());
+      offsets[static_cast<::std::size_t>(i) + 1] = total;
+    }
+    flat_tokens.reserve(static_cast<::std::size_t>(total));
+    for (::std::int64_t i = 0; i < n; ++i) {
+      auto& row = per_row[static_cast<::std::size_t>(i)];
+      flat_tokens.insert(flat_tokens.end(),
+                         ::std::make_move_iterator(row.begin()),
+                         ::std::make_move_iterator(row.end()));
+    }
   }
+
   ::std::vector<::std::string_view> views;
   views.reserve(flat_tokens.size());
   for (const auto& tok : flat_tokens) views.push_back(tok);
@@ -1460,11 +1614,55 @@ static TokenBatch tokenbatch_from_note_pair(const Note& x,
 
   ::std::vector<::std::int64_t> offsets(static_cast<::std::size_t>(n) + 1, 0);
   ::std::vector<::std::string> flat_tokens;
-  for (::std::int64_t i = 0; i < n; ++i) {
-    const ::std::string_view sx = x_impl->bytes_at(bx ? 0 : i);
-    const ::std::string_view sy = y_impl->bytes_at(by ? 0 : i);
-    fn(sx, sy, flat_tokens);
-    offsets[static_cast<::std::size_t>(i) + 1] = static_cast<::std::int64_t>(flat_tokens.size());
+
+  const auto workers = coden_parallel_workers(n, /*min_tasks_per_worker=*/256);
+  if (workers <= 1) {
+    for (::std::int64_t i = 0; i < n; ++i) {
+      const ::std::string_view sx = x_impl->bytes_at(bx ? 0 : i);
+      const ::std::string_view sy = y_impl->bytes_at(by ? 0 : i);
+      fn(sx, sy, flat_tokens);
+      offsets[static_cast<::std::size_t>(i) + 1] = static_cast<::std::int64_t>(flat_tokens.size());
+    }
+  } else {
+    ::std::vector<::std::vector<::std::string>> per_row(static_cast<::std::size_t>(n));
+    const ::std::int64_t chunk = (n + workers - 1) / workers;
+    ::std::vector<::std::thread> pool;
+    pool.reserve(static_cast<::std::size_t>(workers - 1));
+
+    for (::std::int64_t w = 1; w < workers; ++w) {
+      const ::std::int64_t b = w * chunk;
+      const ::std::int64_t e = ::std::min<::std::int64_t>(n, b + chunk);
+      if (b >= e) break;
+      pool.emplace_back([&, b, e]() {
+        for (::std::int64_t i = b; i < e; ++i) {
+          const ::std::string_view sx = x_impl->bytes_at(bx ? 0 : i);
+          const ::std::string_view sy = y_impl->bytes_at(by ? 0 : i);
+          fn(sx, sy, per_row[static_cast<::std::size_t>(i)]);
+        }
+      });
+    }
+
+    const ::std::int64_t b0 = 0;
+    const ::std::int64_t e0 = ::std::min<::std::int64_t>(n, chunk);
+    for (::std::int64_t i = b0; i < e0; ++i) {
+      const ::std::string_view sx = x_impl->bytes_at(bx ? 0 : i);
+      const ::std::string_view sy = y_impl->bytes_at(by ? 0 : i);
+      fn(sx, sy, per_row[static_cast<::std::size_t>(i)]);
+    }
+    for (auto& t : pool) t.join();
+
+    ::std::int64_t total = 0;
+    for (::std::int64_t i = 0; i < n; ++i) {
+      total += static_cast<::std::int64_t>(per_row[static_cast<::std::size_t>(i)].size());
+      offsets[static_cast<::std::size_t>(i) + 1] = total;
+    }
+    flat_tokens.reserve(static_cast<::std::size_t>(total));
+    for (::std::int64_t i = 0; i < n; ++i) {
+      auto& row = per_row[static_cast<::std::size_t>(i)];
+      flat_tokens.insert(flat_tokens.end(),
+                         ::std::make_move_iterator(row.begin()),
+                         ::std::make_move_iterator(row.end()));
+    }
   }
 
   ::std::vector<::std::string_view> views;
@@ -2183,6 +2381,9 @@ static ::std::string tex_to_text_text(::std::string_view s, ::std::int64_t mode)
   ::std::string out = tex_strip_comments_text(s);
   out = tex_strip_preamble_text(out);
   out = ::pluss::coden::native::cpu::nlp_remove_math_fast(out);
+  static const ::std::regex kTextCmd(
+      R"(\\(?:text|textbf|textit|emph|underline|texttt|mathrm|mathbf|mathit|mathsf|operatorname)\s*\{([^{}]*)\})");
+  out = ::std::regex_replace(out, kTextCmd, "$1");
   out = tex_remove_commands_text(out);
   out = ::pluss::coden::native::cpu::replace_bytes(out, "{", " ");
   out = ::pluss::coden::native::cpu::replace_bytes(out, "}", " ");
@@ -4740,6 +4941,222 @@ Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
+namespace {
+
+enum class EncodedFastPathMode : ::std::uint8_t {
+  Off = 0,
+  Auto = 1,
+  Force = 2,
+};
+
+struct EncodedSpanLane {
+  bool enabled = false;
+  ::std::vector<NoteImpl::OffLen> dict_spans; // first-seen dictionary entries
+  ::std::vector<::std::uint32_t> codes;       // per-element dictionary code
+};
+
+static EncodedFastPathMode encoded_fastpath_mode() {
+  if (coden_reference_mode_enabled()) return EncodedFastPathMode::Off;
+  const char* raw = ::std::getenv("PLUSS_CODEN_ENCODE_FASTPATH");
+  if (raw == nullptr || *raw == '\0') return EncodedFastPathMode::Auto;
+  ::std::string_view v(raw);
+  ::std::string lower;
+  lower.reserve(v.size());
+  for (char c : v) lower.push_back(static_cast<char>(::std::tolower(static_cast<unsigned char>(c))));
+  if (lower == "0" || lower == "off" || lower == "false" || lower == "no") return EncodedFastPathMode::Off;
+  if (lower == "1" || lower == "on" || lower == "true" || lower == "yes" || lower == "force") {
+    return EncodedFastPathMode::Force;
+  }
+  return EncodedFastPathMode::Auto;
+}
+
+static bool should_try_encoded_auto(
+    const ::std::vector<NoteImpl::OffLen>& src,
+    const ::pluss::flame::intrusive_ptr<TextArena>& arena) {
+  const auto n = src.size();
+  if (n < 256) return false;
+  const auto sample_n = ::std::min<::std::size_t>(n, 1024);
+  ::std::unordered_set<::std::string_view> sample;
+  sample.reserve(sample_n * 2);
+  for (::std::size_t i = 0; i < sample_n; ++i) {
+    const auto& s = src[i];
+    sample.insert(arena->view(s.first, s.second));
+  }
+  const double distinct_ratio = static_cast<double>(sample.size()) / static_cast<double>(sample_n);
+  return distinct_ratio <= 0.85;
+}
+
+static EncodedSpanLane build_encoded_lane(
+    const ::std::vector<NoteImpl::OffLen>& src,
+    const ::pluss::flame::intrusive_ptr<TextArena>& arena,
+    bool force_enable) {
+  EncodedSpanLane out;
+  if (src.empty()) {
+    out.enabled = true;
+    return out;
+  }
+
+  out.codes.resize(src.size());
+  out.dict_spans.reserve(src.size());
+  ::std::unordered_map<::std::uint64_t, ::std::vector<::std::uint32_t>> buckets;
+  buckets.reserve(src.size() * 2);
+
+  ::std::vector<::std::string_view> views(src.size());
+  for (::std::size_t i = 0; i < src.size(); ++i) {
+    const auto& s = src[i];
+    views[i] = arena->view(s.first, s.second);
+  }
+  ::std::vector<::std::uint64_t> hashes(src.size(), 0);
+  native::cpu::hash_bytes_fnv1a_batch(
+      ::std::span<const ::std::string_view>(views.data(), views.size()),
+      ::std::span<::std::uint64_t>(hashes.data(), hashes.size()));
+
+  for (::std::size_t i = 0; i < src.size(); ++i) {
+    const auto h = hashes[i];
+    const auto sv = views[i];
+    auto& bucket = buckets[h];
+    ::std::uint32_t code = ::std::numeric_limits<::std::uint32_t>::max();
+    for (const auto cand : bucket) {
+      const auto& d = out.dict_spans[static_cast<::std::size_t>(cand)];
+      if (arena->view(d.first, d.second) == sv) {
+        code = cand;
+        break;
+      }
+    }
+    if (code == ::std::numeric_limits<::std::uint32_t>::max()) {
+      code = static_cast<::std::uint32_t>(out.dict_spans.size());
+      out.dict_spans.push_back(src[i]);
+      bucket.push_back(code);
+    }
+    out.codes[i] = code;
+  }
+
+  if (force_enable) {
+    out.enabled = true;
+    return out;
+  }
+  const double distinct_ratio =
+      static_cast<double>(out.dict_spans.size()) / static_cast<double>(src.size());
+  const double avg_reuse =
+      static_cast<double>(src.size()) / static_cast<double>(::std::max<::std::size_t>(1, out.dict_spans.size()));
+  out.enabled = (distinct_ratio <= 0.75 && avg_reuse >= 1.25);
+  if (!out.enabled) {
+    out.dict_spans.clear();
+    out.codes.clear();
+  }
+  return out;
+}
+
+static EncodedSpanLane maybe_build_encoded_lane(
+    const ::std::vector<NoteImpl::OffLen>& src,
+    const ::pluss::flame::intrusive_ptr<TextArena>& arena) {
+  const auto mode = encoded_fastpath_mode();
+  if (mode == EncodedFastPathMode::Off) return {};
+  if (mode == EncodedFastPathMode::Auto && !should_try_encoded_auto(src, arena)) return {};
+  return build_encoded_lane(src, arena, mode == EncodedFastPathMode::Force);
+}
+
+static Note make_note_from_spans_1d(
+    const ::pluss::flame::intrusive_ptr<TextArena>& arena,
+    ::std::vector<NoteImpl::OffLen> spans,
+    NoteImpl::Encoding enc) {
+  const ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(spans.size()), 1, 1};
+  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      arena, ::std::move(spans), sizes, /*dim=*/1, enc);
+  return NoteFactoryAccess::wrap(::std::move(out_impl));
+}
+
+static ::std::vector<NoteImpl::OffLen> distinct_first_seen_spans_hashed(
+    const ::std::vector<NoteImpl::OffLen>& src,
+    const ::pluss::flame::intrusive_ptr<TextArena>& arena) {
+  ::std::vector<NoteImpl::OffLen> out;
+  out.reserve(src.size());
+  if (src.empty()) return out;
+
+  // Collision-safe hash buckets: hash narrows candidates, lexical equality confirms exact match.
+  ::std::unordered_map<::std::uint64_t, ::std::vector<NoteImpl::OffLen>> seen;
+  seen.reserve(src.size() * 2);
+
+  ::std::vector<::std::string_view> views(src.size());
+  for (::std::size_t i = 0; i < src.size(); ++i) {
+    const auto& s = src[i];
+    views[i] = arena->view(s.first, s.second);
+  }
+  ::std::vector<::std::uint64_t> hashes(src.size(), 0);
+  native::cpu::hash_bytes_fnv1a_batch(
+      ::std::span<const ::std::string_view>(views.data(), views.size()),
+      ::std::span<::std::uint64_t>(hashes.data(), hashes.size()));
+
+  for (::std::size_t i = 0; i < src.size(); ++i) {
+    const auto h = hashes[i];
+    const auto sv = views[i];
+    auto& bucket = seen[h];
+    bool exists = false;
+    for (const auto& cand : bucket) {
+      if (arena->view(cand.first, cand.second) == sv) {
+        exists = true;
+        break;
+      }
+    }
+    if (!exists) {
+      bucket.push_back(src[i]);
+      out.push_back(src[i]);
+    }
+  }
+
+  return out;
+}
+
+} // namespace
+
+::std::vector<::std::int64_t> note_argsort_indices_1d(
+    const Note& x,
+    bool descending,
+    bool stable) {
+  PLUSS_CHECK(x.defined(), "note_argsort_indices_1d: Note must be defined");
+  const auto& impl = NoteAccess::impl(x);
+  PLUSS_CHECK(impl, "note_argsort_indices_1d: Note impl must be defined");
+  PLUSS_CHECK(impl->dim() <= 1, "note_argsort_indices_1d currently supports 1D/scalar Notes only");
+
+  const auto n = impl->numel();
+  ::std::vector<::std::int64_t> order(static_cast<::std::size_t>(n));
+  ::std::iota(order.begin(), order.end(), 0);
+
+  const auto& spans = impl->spans();
+  const auto arena = impl->arena();
+  auto cmp_asc = [&](::std::int64_t i, ::std::int64_t j) {
+    const auto& a = spans[static_cast<::std::size_t>(i)];
+    const auto& b = spans[static_cast<::std::size_t>(j)];
+    return native::cpu::compare_lex_bytes(
+        arena->view(a.first, a.second),
+        arena->view(b.first, b.second),
+        native::cpu::LexCompareOp::Lt);
+  };
+  auto cmp_desc = [&](::std::int64_t i, ::std::int64_t j) {
+    const auto& a = spans[static_cast<::std::size_t>(i)];
+    const auto& b = spans[static_cast<::std::size_t>(j)];
+    return native::cpu::compare_lex_bytes(
+        arena->view(b.first, b.second),
+        arena->view(a.first, a.second),
+        native::cpu::LexCompareOp::Lt);
+  };
+
+  if (descending) {
+    if (stable) {
+      ::std::stable_sort(order.begin(), order.end(), cmp_desc);
+    } else {
+      ::std::sort(order.begin(), order.end(), cmp_desc);
+    }
+  } else {
+    if (stable) {
+      ::std::stable_sort(order.begin(), order.end(), cmp_asc);
+    } else {
+      ::std::sort(order.begin(), order.end(), cmp_asc);
+    }
+  }
+  return order;
+}
+
 Note sort(const Note& x, ::std::int64_t dim) {
   if (!x.defined()) return Note::undefined();
   const auto& impl = NoteAccess::impl(x);
@@ -4762,20 +5179,59 @@ Note sort(const Note& x, ::std::int64_t dim) {
     outer *= sizes[static_cast<::std::size_t>(d)];
   }
 
-  ::std::vector<NoteImpl::OffLen> lane(static_cast<::std::size_t>(size_d));
-  for (::std::int64_t o = 0; o < outer; ++o) {
-    for (::std::int64_t i = 0; i < stride; ++i) {
-      const ::std::int64_t base = o * size_d * stride + i;
-      for (::std::int64_t k = 0; k < size_d; ++k) {
-        lane[static_cast<::std::size_t>(k)] = spans[static_cast<::std::size_t>(base + k * stride)];
-      }
-      ::std::stable_sort(lane.begin(), lane.end(), [arena](const NoteImpl::OffLen& a, const NoteImpl::OffLen& b) {
-        return arena->view(a.first, a.second) < arena->view(b.first, b.second);
-      });
-      for (::std::int64_t k = 0; k < size_d; ++k) {
-        spans[static_cast<::std::size_t>(base + k * stride)] = lane[static_cast<::std::size_t>(k)];
-      }
+  const ::std::int64_t lanes = outer * stride;
+  auto sort_lane = [&](::std::int64_t lane_id, ::std::vector<NoteImpl::OffLen>& lane) {
+    const ::std::int64_t o = lane_id / stride;
+    const ::std::int64_t i = lane_id % stride;
+    const ::std::int64_t base = o * size_d * stride + i;
+    for (::std::int64_t k = 0; k < size_d; ++k) {
+      lane[static_cast<::std::size_t>(k)] = spans[static_cast<::std::size_t>(base + k * stride)];
     }
+    ::std::stable_sort(lane.begin(), lane.end(), [arena](const NoteImpl::OffLen& a, const NoteImpl::OffLen& b) {
+      return arena->view(a.first, a.second) < arena->view(b.first, b.second);
+    });
+    for (::std::int64_t k = 0; k < size_d; ++k) {
+      spans[static_cast<::std::size_t>(base + k * stride)] = lane[static_cast<::std::size_t>(k)];
+    }
+  };
+
+  const ::std::int64_t lane_work = lanes * size_d;
+  const bool sort_parallel_eligible =
+      (size_d >= 32) && (lane_work >= 32768) &&
+      (coden_parallel_workers(lanes, /*min_tasks_per_worker=*/256) > 1);
+  const auto workers =
+      sort_parallel_eligible
+          ? coden_parallel_workers(lanes, /*min_tasks_per_worker=*/256)
+          : 1;
+
+  if (workers <= 1) {
+    ::std::vector<NoteImpl::OffLen> lane(static_cast<::std::size_t>(size_d));
+    for (::std::int64_t lane_id = 0; lane_id < lanes; ++lane_id) {
+      sort_lane(lane_id, lane);
+    }
+  } else {
+    const ::std::int64_t chunk = (lanes + workers - 1) / workers;
+    ::std::vector<::std::thread> pool;
+    pool.reserve(static_cast<::std::size_t>(workers - 1));
+
+    for (::std::int64_t w = 1; w < workers; ++w) {
+      const ::std::int64_t b = w * chunk;
+      const ::std::int64_t e = ::std::min<::std::int64_t>(lanes, b + chunk);
+      if (b >= e) break;
+      pool.emplace_back([&, b, e]() {
+        ::std::vector<NoteImpl::OffLen> lane(static_cast<::std::size_t>(size_d));
+        for (::std::int64_t lane_id = b; lane_id < e; ++lane_id) {
+          sort_lane(lane_id, lane);
+        }
+      });
+    }
+
+    ::std::vector<NoteImpl::OffLen> lane(static_cast<::std::size_t>(size_d));
+    const ::std::int64_t e0 = ::std::min<::std::int64_t>(lanes, chunk);
+    for (::std::int64_t lane_id = 0; lane_id < e0; ++lane_id) {
+      sort_lane(lane_id, lane);
+    }
+    for (auto& t : pool) t.join();
   }
 
   auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
@@ -4789,24 +5245,53 @@ Note unique(const Note& x, ::std::int64_t dim) {
     (void)wrap_dim(dim, x.dim(), false);
   }
   const auto& impl = NoteAccess::impl(x);
-  ::std::vector<::std::string> elems;
-  elems.reserve(static_cast<::std::size_t>(impl->numel()));
-  for (::std::int64_t i = 0; i < impl->numel(); ++i) elems.emplace_back(impl->bytes_at(i));
-  ::std::sort(elems.begin(), elems.end());
-  elems.erase(::std::unique(elems.begin(), elems.end()), elems.end());
 
-  ::std::vector<::std::string_view> views;
-  views.reserve(elems.size());
-  for (const auto& e : elems) views.push_back(e);
-  const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(views.size())};
-  if (impl->is_bytes()) {
-    return note_from_bytes(
+  if (coden_reference_mode_enabled()) {
+    ::std::vector<::std::string> elems;
+    elems.reserve(static_cast<::std::size_t>(impl->numel()));
+    for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+      elems.emplace_back(impl->bytes_at(i));
+    }
+    ::std::sort(elems.begin(), elems.end());
+    elems.erase(::std::unique(elems.begin(), elems.end()), elems.end());
+
+    ::std::vector<::std::string_view> views;
+    views.reserve(elems.size());
+    for (const auto& e : elems) views.emplace_back(e);
+    const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(views.size())};
+    if (impl->is_bytes()) {
+      return note_from_bytes(
+          ::std::span<const ::std::string_view>(views.data(), views.size()),
+          ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
+    }
+    return note_from_utf8(
         ::std::span<const ::std::string_view>(views.data(), views.size()),
         ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
   }
-  return note_from_utf8(
-      ::std::span<const ::std::string_view>(views.data(), views.size()),
-      ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
+
+  const auto& src = impl->spans();
+  const auto arena = impl->arena();
+
+  auto encoded = maybe_build_encoded_lane(src, arena);
+  if (encoded.enabled) {
+    auto dict = ::std::move(encoded.dict_spans);
+    ::std::stable_sort(dict.begin(), dict.end(), [arena](const NoteImpl::OffLen& a, const NoteImpl::OffLen& b) {
+      return native::cpu::compare_lex_bytes(
+          arena->view(a.first, a.second),
+          arena->view(b.first, b.second),
+          native::cpu::LexCompareOp::Lt);
+    });
+    return make_note_from_spans_1d(arena, ::std::move(dict), impl->encoding());
+  }
+
+  auto distinct = distinct_first_seen_spans_hashed(src, arena);
+  ::std::stable_sort(distinct.begin(), distinct.end(), [arena](const NoteImpl::OffLen& a, const NoteImpl::OffLen& b) {
+    return native::cpu::compare_lex_bytes(
+        arena->view(a.first, a.second),
+        arena->view(b.first, b.second),
+        native::cpu::LexCompareOp::Lt);
+  });
+  return make_note_from_spans_1d(arena, ::std::move(distinct), impl->encoding());
 }
 
 Note deduplicate(const Note& x, ::std::int64_t dim) {
@@ -4815,26 +5300,44 @@ Note deduplicate(const Note& x, ::std::int64_t dim) {
     (void)wrap_dim(dim, x.dim(), false);
   }
   const auto& impl = NoteAccess::impl(x);
-  ::std::vector<::std::string> elems;
-  elems.reserve(static_cast<::std::size_t>(impl->numel()));
-  ::std::unordered_set<::std::string> seen;
-  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
-    ::std::string v(impl->bytes_at(i));
-    if (seen.insert(v).second) elems.push_back(::std::move(v));
-  }
 
-  ::std::vector<::std::string_view> views;
-  views.reserve(elems.size());
-  for (const auto& e : elems) views.push_back(e);
-  const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(views.size())};
-  if (impl->is_bytes()) {
-    return note_from_bytes(
+  if (coden_reference_mode_enabled()) {
+    ::std::vector<::std::string> elems;
+    elems.reserve(static_cast<::std::size_t>(impl->numel()));
+    ::std::unordered_set<::std::string> seen;
+    for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+      ::std::string v(impl->bytes_at(i));
+      if (seen.insert(v).second) elems.push_back(::std::move(v));
+    }
+
+    ::std::vector<::std::string_view> views;
+    views.reserve(elems.size());
+    for (const auto& e : elems) views.emplace_back(e);
+    const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(views.size())};
+    if (impl->is_bytes()) {
+      return note_from_bytes(
+          ::std::span<const ::std::string_view>(views.data(), views.size()),
+          ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
+    }
+    return note_from_utf8(
         ::std::span<const ::std::string_view>(views.data(), views.size()),
         ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
   }
-  return note_from_utf8(
-      ::std::span<const ::std::string_view>(views.data(), views.size()),
-      ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
+
+  const auto& src = impl->spans();
+  const auto arena = impl->arena();
+
+  auto encoded = maybe_build_encoded_lane(src, arena);
+  if (encoded.enabled) {
+    return make_note_from_spans_1d(arena, ::std::move(encoded.dict_spans), impl->encoding());
+  }
+
+  auto out = distinct_first_seen_spans_hashed(src, arena);
+
+  const ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(out.size()), 1, 1};
+  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      arena, ::std::move(out), sizes, /*dim=*/1, impl->encoding());
+  return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
 TokenBatch split_whitespace(const Note& x) {

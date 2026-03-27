@@ -1,6 +1,6 @@
 #include "mads_blackbox_minimizers.h"
 
-#include "aux/UseAux.h"
+#include "pluss/tils/aux/UseAux.h"
 
 #include <algorithm>
 #include <cmath>

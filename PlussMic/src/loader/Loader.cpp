@@ -23,6 +23,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
+#include "loader/SourceResolver.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
@@ -2224,9 +2225,12 @@ CsvRawBatch read_csv_raw_batch(std::string_view filepath,
 }
 
 CsvRawBatch read_txt_raw_batch(std::string_view filepath, const Config& config) {
+  auto source = detail::resolve_local_or_http_source(filepath, "loader::read_txt_raw_batch");
+  const std::string_view local_filepath(source.local_path());
+
   const auto mode = txt_parse_mode_from_config(config);
   auto csv_options = csv_read_options_from_config(config);
-  csv_options.filepath = std::string(filepath);
+  csv_options.filepath = source.local_path();
 
   if (mode == TxtParseMode::Delimited) {
     return ::pluss::loader::read_csv_raw_batch(csv_options);
@@ -2234,7 +2238,7 @@ CsvRawBatch read_txt_raw_batch(std::string_view filepath, const Config& config) 
 
   const auto widths = parse_widths_config(config);
   const auto min_gap = mode == TxtParseMode::Whitespace ? std::size_t{1} : std::size_t{2};
-  const auto records = read_text_records_with_mode(filepath, min_gap, widths, csv_options.skip_blank_lines);
+  const auto records = read_text_records_with_mode(local_filepath, min_gap, widths, csv_options.skip_blank_lines);
   if (mode == TxtParseMode::Whitespace || mode == TxtParseMode::FixedWidth) {
     return parse_txt_records_as_raw_batch(records, csv_options);
   }
@@ -2245,8 +2249,8 @@ CsvRawBatch read_txt_raw_batch(std::string_view filepath, const Config& config) 
     return csv_raw;
   }
 
-  auto whitespace_records = read_text_records_with_mode(filepath, 1, {}, csv_options.skip_blank_lines);
-  auto fixed_gap_records = read_text_records_with_mode(filepath, 2, widths, csv_options.skip_blank_lines);
+  auto whitespace_records = read_text_records_with_mode(local_filepath, 1, {}, csv_options.skip_blank_lines);
+  auto fixed_gap_records = read_text_records_with_mode(local_filepath, 2, widths, csv_options.skip_blank_lines);
   const auto whitespace_score = score_record_grid(whitespace_records);
   const auto fixed_score = score_record_grid(fixed_gap_records);
 

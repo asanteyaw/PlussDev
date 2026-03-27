@@ -158,3 +158,5 @@ Bring CodeN (`Note`) CPU performance closer to CodeM (`Series`) for high-impact 
 ## Execution Tracker
 - Detailed execution checklist:
   - `docs/CODEN_CPU_PERFORMANCE_EXECUTION_TRACKER.md`
+- Runtime controls and usage guide:
+  - `docs/CODEN_CPU_RUNTIME_POLICY.md`

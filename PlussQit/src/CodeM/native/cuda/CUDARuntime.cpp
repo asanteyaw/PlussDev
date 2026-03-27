@@ -128,23 +128,60 @@ ProviderContext probe_provider_(
   }
 
 #if PLUSSQIT_HAS_DLOPEN
-  for (const char* lib : libs) {
-    if (lib == nullptr || *lib == '\0') {
-      continue;
-    }
-    void* handle = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
+  auto try_candidate = [&](const char* candidate, std::string* why) -> bool {
+    if (candidate == nullptr || *candidate == '\0') return false;
+    dlerror(); // clear
+    void* handle = dlopen(candidate, RTLD_LAZY | RTLD_LOCAL);
     if (handle == nullptr) {
-      continue;
+      if (why != nullptr) {
+        const char* dlerr = dlerror();
+        *why = std::string(provider_name) + " unavailable: failed to open " + candidate +
+            (dlerr != nullptr ? std::string(" (") + dlerr + ")" : std::string{});
+      }
+      return false;
     }
     void* create_fn = dlsym(handle, create_sym);
     void* destroy_fn = dlsym(handle, destroy_sym);
     if (create_fn != nullptr && destroy_fn != nullptr) {
       out.available = true;
       dlclose(handle);
+      return true;
+    }
+    if (why != nullptr) {
+      *why = std::string(provider_name) + " unavailable: missing required symbols in " + candidate;
+    }
+    dlclose(handle);
+    return false;
+  };
+
+  if (std::string(provider_name) == "cuDNN") {
+    const char* explicit_lib = std::getenv("PLUSS_CUDNN_LIBRARY");
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = std::getenv("CUDNN_LIBRARY");
+    }
+#if defined(PLUSS_CUDNN_LIBRARY_DEFAULT)
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = PLUSS_CUDNN_LIBRARY_DEFAULT;
+    }
+#endif
+    if (explicit_lib != nullptr && *explicit_lib != '\0') {
+      std::string why{};
+      if (try_candidate(explicit_lib, &why)) {
+        return out;
+      }
+      out.error = std::move(why);
+    }
+  }
+
+  for (const char* lib : libs) {
+    if (lib == nullptr || *lib == '\0') {
+      continue;
+    }
+    std::string why{};
+    if (try_candidate(lib, &why)) {
       return out;
     }
-    out.error = std::string(provider_name) + " unavailable: missing required symbols in " + lib;
-    dlclose(handle);
+    out.error = std::move(why);
   }
   if (out.error.empty()) {
     out.error = std::string(provider_name) + " unavailable: provider library not found on loader path";

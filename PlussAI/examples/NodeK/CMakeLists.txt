@@ -135,3 +135,9 @@ add_executable(plussai_adagrad_oop_demo
 )
 target_link_libraries(plussai_adagrad_oop_demo PRIVATE pluss)
 target_compile_features(plussai_adagrad_oop_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_outlier_holdout_parity_probe
+  outlier_holdout_parity_probe.cpp
+)
+target_link_libraries(plussai_outlier_holdout_parity_probe PRIVATE pluss PlussMic)
+target_compile_features(plussai_outlier_holdout_parity_probe PRIVATE cxx_std_20)

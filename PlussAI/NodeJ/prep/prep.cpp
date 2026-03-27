@@ -1,4 +1,5 @@
 #include "pluss/ai/nodej/prep.h"
+#include "pluss/table/table.h"
 
 #include <algorithm>
 #include <bit>
@@ -6,9 +7,12 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <memory>
 #include <numeric>
+#include <random>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -185,6 +189,162 @@ struct DenseMatrix {
   return Status::success();
 }
 
+[[nodiscard]] Config index_config_on(::pluss::Platform platform) {
+  return Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+}
+
+[[nodiscard]] Series make_index_series(std::vector<std::int64_t> ids, ::pluss::Platform platform) {
+  return pluss::make_series(std::move(ids), {static_cast<std::int64_t>(ids.size())}, index_config_on(platform));
+}
+
+[[nodiscard]] StatusOr<std::vector<std::int64_t>> normalized_feature_route(const std::vector<std::int64_t>& route,
+                                                                           std::int64_t feature_count,
+                                                                           std::int64_t stage_index,
+                                                                           const char* where) {
+  if (route.empty()) {
+    return StatusOr<std::vector<std::int64_t>>(
+        Status::invalid_argument(std::string(where) + " stage " + std::to_string(stage_index)
+                                 + " requires a non-empty feature route."));
+  }
+  std::vector<std::int64_t> sorted = route;
+  std::sort(sorted.begin(), sorted.end());
+  if (std::adjacent_find(sorted.begin(), sorted.end()) != sorted.end()) {
+    return StatusOr<std::vector<std::int64_t>>(
+        Status::invalid_argument(std::string(where) + " stage " + std::to_string(stage_index)
+                                 + " route contains duplicate feature indices."));
+  }
+  for (std::int64_t idx : sorted) {
+    if (idx < 0 || idx >= feature_count) {
+      return StatusOr<std::vector<std::int64_t>>(
+          Status::shape_mismatch(std::string(where) + " stage " + std::to_string(stage_index)
+                                 + " route index out of range for current feature count."));
+    }
+  }
+  return StatusOr<std::vector<std::int64_t>>(std::move(sorted));
+}
+
+[[nodiscard]] StatusOr<FeatureBatch> select_routed_features(const FeatureBatch& batch,
+                                                            const std::vector<std::int64_t>& route,
+                                                            std::int64_t stage_index,
+                                                            const char* where) {
+  Status check = validate_features(batch);
+  if (!check.ok()) return StatusOr<FeatureBatch>(std::move(check));
+  if (route.empty()) {
+    return StatusOr<FeatureBatch>(
+        Status::invalid_argument(std::string(where) + " stage " + std::to_string(stage_index) + " has an empty route."));
+  }
+
+  FeatureBatch out = batch;
+  const Series idx = make_index_series(route, batch.x.platform());
+  if (batch.layout == ObservationLayout::Rows) {
+    out.x = batch.x.index_select(1, idx);
+  } else {
+    out.x = batch.x.index_select(0, idx);
+  }
+  check = validate_features(out);
+  if (!check.ok()) {
+    return StatusOr<FeatureBatch>(
+        Status::shape_mismatch(std::string(where) + " stage " + std::to_string(stage_index)
+                               + " could not select routed feature subset."));
+  }
+  return StatusOr<FeatureBatch>(std::move(out));
+}
+
+[[nodiscard]] StatusOr<FeatureBatch> mapped_batch_checked(const Series& mapped,
+                                                          ObservationLayout layout,
+                                                          std::int64_t expected_samples,
+                                                          std::int64_t stage_index,
+                                                          const char* where) {
+  FeatureBatch out{
+      .x = mapped,
+      .layout = layout,
+  };
+  Status check = validate_features(out);
+  if (!check.ok()) {
+    return StatusOr<FeatureBatch>(Status::shape_mismatch(
+        std::string(where) + " stage " + std::to_string(stage_index) + " emitted invalid feature shape."));
+  }
+  if (out.sample_count() != expected_samples) {
+    return StatusOr<FeatureBatch>(Status::shape_mismatch(
+        std::string(where) + " stage " + std::to_string(stage_index) + " changed sample count."));
+  }
+  return StatusOr<FeatureBatch>(std::move(out));
+}
+
+[[nodiscard]] StatusOr<FeatureBatch> single_feature_batch_from_thread(const pluss::table::Thread& thread,
+                                                                       const char* where) {
+  if (!thread.defined()) {
+    return StatusOr<FeatureBatch>(Status::invalid_argument(std::string(where) + " requires a defined Thread."));
+  }
+  const std::int64_t rows = thread.size();
+  if (rows <= 0) {
+    return StatusOr<FeatureBatch>(Status::shape_mismatch(std::string(where) + " requires at least one row."));
+  }
+
+  Series feature = Series::undefined();
+  switch (thread.kind()) {
+    case pluss::table::ThreadKind::Series: {
+      feature = thread.as_series().to(ScalarType::Float64);
+      break;
+    }
+    case pluss::table::ThreadKind::Note: {
+      constexpr std::uint64_t fnv_offset = 1469598103934665603ULL;
+      constexpr std::uint64_t fnv_prime = 1099511628211ULL;
+      std::vector<double> hashed(static_cast<std::size_t>(rows), std::numeric_limits<double>::quiet_NaN());
+      for (std::int64_t i = 0; i < rows; ++i) {
+        if (!thread.is_valid(i)) continue;
+        std::uint64_t h = fnv_offset;
+        const std::string_view token = thread.as_note().at(i);
+        for (unsigned char ch : token) {
+          h ^= static_cast<std::uint64_t>(ch);
+          h *= fnv_prime;
+        }
+        const std::uint32_t lane = static_cast<std::uint32_t>((h ^ (h >> 32)) & 0x7FFFFFFFULL);
+        hashed[static_cast<std::size_t>(i)] = static_cast<double>(lane);
+      }
+      feature = pluss::make_series(std::move(hashed), {rows}, prep_work_config());
+      break;
+    }
+    case pluss::table::ThreadKind::Timeline:
+    case pluss::table::ThreadKind::TimeIndex: {
+      const pluss::table::Thread casted = thread.cast(pluss::table::ThreadCastTarget::Series);
+      feature = casted.as_series().to(ScalarType::Float64);
+      break;
+    }
+    default: {
+      return StatusOr<FeatureBatch>(
+          Status::invalid_argument(std::string(where) + " supports only Series/Note/Timeline/TimeIndex Thread kinds."));
+    }
+  }
+
+  if (!feature.defined() || feature.numel() != rows) {
+    return StatusOr<FeatureBatch>(
+        Status::shape_mismatch(std::string(where) + " expected a 1D-compatible Thread column."));
+  }
+  feature = feature.reshape({rows});
+
+  if (thread.has_validity_mask()) {
+    auto host = feature.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    bool touched = false;
+    for (std::int64_t i = 0; i < rows; ++i) {
+      if (!thread.is_valid(i)) {
+        host[static_cast<std::size_t>(i)] = std::numeric_limits<double>::quiet_NaN();
+        touched = true;
+      }
+    }
+    if (touched) {
+      const Series fixed = pluss::make_series(std::move(host), {rows}, prep_work_config());
+      feature = fixed.to(feature.platform(), ScalarType::Float64);
+    }
+  }
+
+  FeatureBatch batch{
+      .x = feature.reshape({rows, 1}),
+      .layout = ObservationLayout::Rows,
+  };
+  return StatusOr<FeatureBatch>(std::move(batch));
+}
+
 [[nodiscard]] Status validate_neighbors(std::int64_t value, const char* where) {
   if (value <= 0) {
     return Status::invalid_argument(std::string(where) + " requires neighbors > 0.");
@@ -204,6 +364,197 @@ struct DenseMatrix {
     return Status::invalid_argument(std::string(where) + " requires lambda_grid >= 2.");
   }
   return Status::success();
+}
+
+[[nodiscard]] Status validate_estimators(std::int64_t value, const char* where) {
+  if (value <= 0) {
+    return Status::invalid_argument(std::string(where) + " requires estimators > 0.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] Status validate_max_samples(std::int64_t value, const char* where) {
+  if (value <= 0) {
+    return Status::invalid_argument(std::string(where) + " requires max_samples > 0.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] Status validate_max_features_ratio(double value, const char* where) {
+  if (!std::isfinite(value) || !(value > 0.0 && value <= 1.0)) {
+    return Status::invalid_argument(std::string(where) + " requires max_features_ratio in (0, 1].");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] Status validate_contamination(double value, const char* where) {
+  if (!std::isfinite(value) || !(value > 0.0 && value <= 0.5)) {
+    return Status::invalid_argument(std::string(where) + " requires contamination in (0, 0.5].");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] std::uint64_t splitmix64(std::uint64_t x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+[[nodiscard]] std::uint64_t compose_seed(const RandomState& random) {
+  if (random.deterministic) return random.seed;
+  std::random_device rd;
+  const std::uint64_t rd_seed = (static_cast<std::uint64_t>(rd()) << 32) ^ static_cast<std::uint64_t>(rd());
+  return splitmix64(rd_seed ^ random.seed);
+}
+
+template <class URBG>
+void shuffle_indices(std::vector<std::int64_t>& indices, URBG& rng) {
+  if (indices.size() < 2) return;
+  for (std::size_t i = indices.size(); i > 1; --i) {
+    std::uniform_int_distribution<std::size_t> dist(0, i - 1);
+    const std::size_t j = dist(rng);
+    std::swap(indices[i - 1], indices[j]);
+  }
+}
+
+class NumpyRandomState final {
+ public:
+  explicit NumpyRandomState(std::uint32_t seed) : mt_(seed) {}
+
+  [[nodiscard]] std::uint32_t rand_u32() { return mt_(); }
+
+  [[nodiscard]] double rand_double01() {
+    // Match NumPy RandomState.random_sample implementation (randomkit rk_double).
+    // Consumes two uint32 draws to produce one uniform [0,1) double.
+    const std::uint64_t a = static_cast<std::uint64_t>(rand_u32() >> 5);
+    const std::uint64_t b = static_cast<std::uint64_t>(rand_u32() >> 6);
+    return (static_cast<double>(a) * 67108864.0 + static_cast<double>(b)) * (1.0 / 9007199254740992.0);
+  }
+
+  [[nodiscard]] std::int64_t randint_exclusive(std::int64_t high_exclusive) {
+    if (high_exclusive <= 0) return 0;
+    return static_cast<std::int64_t>(rk_interval_(static_cast<std::uint32_t>(high_exclusive - 1)));
+  }
+
+  [[nodiscard]] std::int64_t randint_range(std::int64_t low, std::int64_t high_exclusive) {
+    return low + randint_exclusive(high_exclusive - low);
+  }
+
+ private:
+  [[nodiscard]] std::uint32_t rk_interval_(std::uint32_t max_inclusive) {
+    // Match NumPy RandomState randint path (randomkit rk_interval).
+    std::uint32_t mask = max_inclusive;
+    mask |= mask >> 1;
+    mask |= mask >> 2;
+    mask |= mask >> 4;
+    mask |= mask >> 8;
+    mask |= mask >> 16;
+    for (;;) {
+      const std::uint32_t value = rand_u32() & mask;
+      if (value <= max_inclusive) return value;
+    }
+  }
+
+  std::mt19937 mt_;
+};
+
+[[nodiscard]] std::uint32_t sklearn_rand_r(std::uint32_t& seed) {
+  // Match sklearn.utils._random.our_rand_r
+  constexpr std::uint32_t kDefaultSeed = 1u;
+  constexpr std::uint32_t kRandRMax = 2147483647u;
+  if (seed == 0u) seed = kDefaultSeed;
+  seed ^= static_cast<std::uint32_t>(seed << 13);
+  seed ^= static_cast<std::uint32_t>(seed >> 17);
+  seed ^= static_cast<std::uint32_t>(seed << 5);
+  return seed % (static_cast<std::uint64_t>(kRandRMax) + 1u);
+}
+
+[[nodiscard]] std::int64_t sklearn_rand_int(std::int64_t low,
+                                            std::int64_t high_exclusive,
+                                            std::uint32_t& seed) {
+  if (high_exclusive <= low) return low;
+  const auto span = static_cast<std::uint64_t>(high_exclusive - low);
+  return low + static_cast<std::int64_t>(sklearn_rand_r(seed) % span);
+}
+
+[[nodiscard]] double sklearn_rand_uniform(double low, double high, std::uint32_t& seed) {
+  constexpr double kRandRMax = 2147483647.0;
+  return ((high - low) * static_cast<double>(sklearn_rand_r(seed)) / kRandRMax) + low;
+}
+
+[[nodiscard]] std::vector<std::int64_t> random_permutation_prefix(std::int64_t n_population,
+                                                                  std::int64_t n_samples,
+                                                                  NumpyRandomState& rng) {
+  std::vector<std::int64_t> out(static_cast<std::size_t>(n_population));
+  std::iota(out.begin(), out.end(), std::int64_t{0});
+  for (std::int64_t i = n_population - 1; i > 0; --i) {
+    const std::int64_t j = rng.randint_exclusive(i + 1);
+    std::swap(out[static_cast<std::size_t>(i)], out[static_cast<std::size_t>(j)]);
+  }
+  out.resize(static_cast<std::size_t>(n_samples));
+  return out;
+}
+
+[[nodiscard]] std::vector<std::int64_t> sample_without_replacement(std::int64_t n_population,
+                                                                   std::int64_t n_samples,
+                                                                   NumpyRandomState& rng) {
+  n_samples = std::clamp<std::int64_t>(n_samples, 0, n_population);
+  if (n_samples <= 0) return {};
+  if (n_samples >= n_population) {
+    std::vector<std::int64_t> all(static_cast<std::size_t>(n_population));
+    std::iota(all.begin(), all.end(), std::int64_t{0});
+    return all;
+  }
+
+  // Match sklearn.utils.random.sample_without_replacement(..., method="auto")
+  const double ratio = n_population == 0 ? 1.0 : (static_cast<double>(n_samples) / static_cast<double>(n_population));
+  if (ratio > 0.01 && ratio < 0.99) {
+    return random_permutation_prefix(n_population, n_samples, rng);
+  }
+
+  if (ratio < 0.2) {
+    std::unordered_set<std::int64_t> selected{};
+    selected.reserve(static_cast<std::size_t>(n_samples * 2));
+    std::vector<std::int64_t> out{};
+    out.reserve(static_cast<std::size_t>(n_samples));
+    for (std::int64_t i = 0; i < n_samples; ++i) {
+      std::int64_t j = rng.randint_exclusive(n_population);
+      while (selected.find(j) != selected.end()) {
+        j = rng.randint_exclusive(n_population);
+      }
+      selected.insert(j);
+      out.push_back(j);
+    }
+    return out;
+  }
+
+  // Reservoir sampling branch.
+  std::vector<std::int64_t> out(static_cast<std::size_t>(n_samples));
+  for (std::int64_t i = 0; i < n_samples; ++i) {
+    out[static_cast<std::size_t>(i)] = i;
+  }
+  for (std::int64_t i = n_samples; i < n_population; ++i) {
+    const std::int64_t j = rng.randint_exclusive(i + 1);
+    if (j < n_samples) {
+      out[static_cast<std::size_t>(j)] = i;
+    }
+  }
+  return out;
+}
+
+[[nodiscard]] std::int64_t randint_max_int(NumpyRandomState& rng) {
+  // sklearn BaseBagging uses MAX_INT = np.iinfo(np.int32).max as exclusive upper bound.
+  constexpr std::int64_t kMaxIntExclusive = 2147483647LL;
+  return rng.randint_exclusive(kMaxIntExclusive);
+}
+
+[[nodiscard]] double average_isolation_path_length(std::int64_t n) {
+  if (n <= 1) return 0.0;
+  if (n == 2) return 1.0;
+  constexpr double gamma = 0.5772156649015328606; // Euler-Mascheroni
+  const double nd = static_cast<double>(n);
+  return 2.0 * (std::log(nd - 1.0) + gamma) - (2.0 * (nd - 1.0) / nd);
 }
 
 [[nodiscard]] double normal_quantile(double p) {
@@ -481,6 +832,441 @@ void collect_combinations_no_repetition(std::int64_t start,
 
 } // namespace
 
+FunctionTransformer::FunctionTransformer(SeriesMapFn map_fn, FunctionTransformerOptions options)
+    : options_(options), map_fn_(std::move(map_fn)), learned_(map_fn_ != nullptr) {}
+
+bool FunctionTransformer::trained() const noexcept { return map_fn_ != nullptr; }
+
+Status FunctionTransformer::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  if (!map_fn_) {
+    return Status::invalid_argument("FunctionTransformer::learn requires a valid callable.");
+  }
+  if (options_.validate_input) {
+    Status check = validate_features(batch);
+    if (!check.ok()) return check;
+  }
+  layout_ = batch.layout;
+  feature_count_ = batch.feature_count();
+  learned_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> FunctionTransformer::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  if (!map_fn_) {
+    return StatusOr<Series>(Status::invalid_argument("FunctionTransformer::map requires a valid callable."));
+  }
+  if (options_.validate_input) {
+    Status check = validate_features(batch);
+    if (!check.ok()) return StatusOr<Series>(std::move(check));
+  }
+
+  StatusOr<Series> mapped_or = map_fn_(batch.x);
+  if (!mapped_or.ok()) return StatusOr<Series>(mapped_or.status());
+
+  FeatureBatch mapped{
+      .x = mapped_or.move_value(),
+      .layout = batch.layout,
+  };
+  Status check = validate_features(mapped);
+  if (!check.ok()) {
+    return StatusOr<Series>(Status::shape_mismatch("FunctionTransformer::map callable emitted invalid feature shape."));
+  }
+  if (options_.preserve_sample_count && mapped.sample_count() != batch.sample_count()) {
+    return StatusOr<Series>(Status::shape_mismatch("FunctionTransformer::map callable changed sample count."));
+  }
+  return StatusOr<Series>(std::move(mapped.x));
+}
+
+StatusOr<Series> FunctionTransformer::learn_map(const FeatureBatch& batch,
+                                                const TrainOptions& learn_options,
+                                                const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+StatusOr<std::vector<Series>> FunctionTransformer::dump_state() const {
+  return StatusOr<std::vector<Series>>(
+      Status::not_implemented("FunctionTransformer::dump_state is unavailable for callable-based stages."));
+}
+
+Status FunctionTransformer::load_state(const std::vector<Series>& state) {
+  (void)state;
+  return Status::not_implemented("FunctionTransformer::load_state is unavailable for callable-based stages.");
+}
+
+FeatureTransformer::FeatureTransformer(FeatureRemainderPolicy remainder) : remainder_(remainder) {}
+
+bool FeatureTransformer::trained() const noexcept { return trained_; }
+
+Status FeatureTransformer::add_stage(std::unique_ptr<TransformerBase> transformer, std::vector<std::int64_t> feature_route) {
+  std::vector<std::unique_ptr<TransformerBase>> pipeline{};
+  pipeline.push_back(std::move(transformer));
+  return add_pipeline(std::move(pipeline), std::move(feature_route));
+}
+
+Status FeatureTransformer::add_pipeline(std::vector<std::unique_ptr<TransformerBase>> transformers,
+                                        std::vector<std::int64_t> feature_route) {
+  if (transformers.empty()) {
+    return Status::invalid_argument("FeatureTransformer::add_pipeline requires at least one transformer.");
+  }
+  for (std::size_t i = 0; i < transformers.size(); ++i) {
+    if (!transformers[i]) {
+      return Status::invalid_argument("FeatureTransformer::add_pipeline contains a null transformer.");
+    }
+  }
+  if (feature_route.empty()) {
+    return Status::invalid_argument("FeatureTransformer::add_pipeline requires a non-empty feature_route.");
+  }
+  stages_.push_back(Stage{
+      .transformers = std::move(transformers),
+      .feature_route = std::move(feature_route),
+  });
+  trained_ = false;
+  return Status::success();
+}
+
+void FeatureTransformer::clear_stages() noexcept {
+  stages_.clear();
+  trained_ = false;
+  feature_count_ = 0;
+  output_feature_count_ = 0;
+}
+
+std::int64_t FeatureTransformer::stage_count() const noexcept { return static_cast<std::int64_t>(stages_.size()); }
+
+FeatureRemainderPolicy FeatureTransformer::remainder_policy() const noexcept { return remainder_; }
+
+void FeatureTransformer::set_remainder_policy(FeatureRemainderPolicy policy) noexcept {
+  remainder_ = policy;
+  trained_ = false;
+}
+
+Status FeatureTransformer::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  const InferOptions infer_options{
+      .layout = batch.layout,
+      .missing = options.missing,
+      .unknown_categorical = options.unknown_categorical,
+  };
+  StatusOr<Series> mapped_or = learn_map(batch, options, infer_options);
+  if (!mapped_or.ok()) return mapped_or.status();
+  return Status::success();
+}
+
+StatusOr<Series> FeatureTransformer::map(const FeatureBatch& batch, const InferOptions& options) const {
+  if (!trained_) {
+    return StatusOr<Series>(Status::precondition("FeatureTransformer::map requires learn() before map()."));
+  }
+  Status check = validate_features(batch);
+  if (!check.ok()) return StatusOr<Series>(std::move(check));
+  if (batch.layout != layout_) {
+    return StatusOr<Series>(Status::shape_mismatch("FeatureTransformer::map layout mismatch with fitted transformer."));
+  }
+  if (batch.feature_count() != feature_count_) {
+    return StatusOr<Series>(Status::shape_mismatch("FeatureTransformer::map feature count mismatch with fitted transformer."));
+  }
+
+  if (stages_.empty()) {
+    if (remainder_ == FeatureRemainderPolicy::PassThrough) return StatusOr<Series>(batch.x);
+    return StatusOr<Series>(
+        Status::invalid_argument("FeatureTransformer::map has no stages and remainder policy is Drop."));
+  }
+
+  const std::int64_t expected_samples = batch.sample_count();
+  std::vector<Series> outputs{};
+  outputs.reserve(stages_.size() + 1);
+  std::vector<bool> selected(static_cast<std::size_t>(feature_count_), false);
+
+  for (std::size_t i = 0; i < stages_.size(); ++i) {
+    const Stage& stage = stages_[i];
+    if (stage.transformers.empty()) {
+      return StatusOr<Series>(Status::internal("FeatureTransformer contains an empty stage pipeline."));
+    }
+    for (std::size_t j = 0; j < stage.transformers.size(); ++j) {
+      if (!stage.transformers[j]) {
+        return StatusOr<Series>(Status::internal("FeatureTransformer contains a null transformer in stage pipeline."));
+      }
+    }
+    StatusOr<std::vector<std::int64_t>> route_or = normalized_feature_route(
+        stage.feature_route, feature_count_, static_cast<std::int64_t>(i), "FeatureTransformer::map");
+    if (!route_or.ok()) return StatusOr<Series>(route_or.status());
+    const std::vector<std::int64_t> route = route_or.move_value();
+    for (std::int64_t idx : route) selected[static_cast<std::size_t>(idx)] = true;
+
+    StatusOr<FeatureBatch> routed_or = select_routed_features(batch, route, static_cast<std::int64_t>(i), "FeatureTransformer::map");
+    if (!routed_or.ok()) return StatusOr<Series>(routed_or.status());
+
+    FeatureBatch branch = routed_or.move_value();
+    for (std::size_t j = 0; j < stage.transformers.size(); ++j) {
+      StatusOr<Series> mapped_or = stage.transformers[j]->map(branch, options);
+      if (!mapped_or.ok()) return StatusOr<Series>(mapped_or.status());
+      StatusOr<FeatureBatch> mapped_batch_or = mapped_batch_checked(
+          mapped_or.move_value(), batch.layout, expected_samples, static_cast<std::int64_t>(i), "FeatureTransformer::map");
+      if (!mapped_batch_or.ok()) return StatusOr<Series>(mapped_batch_or.status());
+      branch = mapped_batch_or.move_value();
+    }
+    outputs.push_back(branch.x);
+  }
+
+  if (remainder_ == FeatureRemainderPolicy::PassThrough) {
+    std::vector<std::int64_t> remainder{};
+    remainder.reserve(static_cast<std::size_t>(feature_count_));
+    for (std::int64_t f = 0; f < feature_count_; ++f) {
+      if (!selected[static_cast<std::size_t>(f)]) remainder.push_back(f);
+    }
+    if (!remainder.empty()) {
+      StatusOr<FeatureBatch> routed_or =
+          select_routed_features(batch, remainder, static_cast<std::int64_t>(stages_.size()), "FeatureTransformer::map");
+      if (!routed_or.ok()) return StatusOr<Series>(routed_or.status());
+      outputs.push_back(routed_or.move_value().x);
+    }
+  }
+
+  if (outputs.empty()) {
+    return StatusOr<Series>(
+        Status::invalid_argument("FeatureTransformer::map produced no output features."));
+  }
+  Series merged = outputs.front();
+  const std::int64_t axis = batch.layout == ObservationLayout::Rows ? 1 : 0;
+  for (std::size_t i = 1; i < outputs.size(); ++i) {
+    merged = merged.unite({outputs[i]}, axis);
+  }
+
+  FeatureBatch merged_batch{
+      .x = merged,
+      .layout = batch.layout,
+  };
+  check = validate_features(merged_batch);
+  if (!check.ok()) {
+    return StatusOr<Series>(Status::shape_mismatch("FeatureTransformer::map produced invalid feature shape."));
+  }
+  if (merged_batch.sample_count() != expected_samples) {
+    return StatusOr<Series>(Status::shape_mismatch("FeatureTransformer::map changed sample count."));
+  }
+  if (output_feature_count_ > 0 && merged_batch.feature_count() != output_feature_count_) {
+    return StatusOr<Series>(
+        Status::shape_mismatch("FeatureTransformer::map output feature count mismatch with fitted transformer."));
+  }
+  return StatusOr<Series>(std::move(merged_batch.x));
+}
+
+StatusOr<Series> FeatureTransformer::learn_map(const FeatureBatch& batch,
+                                              const TrainOptions& learn_options,
+                                              const InferOptions& infer_options) {
+  Status check = validate_features(batch);
+  if (!check.ok()) return StatusOr<Series>(std::move(check));
+
+  if (stages_.empty()) {
+    if (remainder_ == FeatureRemainderPolicy::PassThrough) {
+      trained_ = true;
+      layout_ = batch.layout;
+      feature_count_ = batch.feature_count();
+      output_feature_count_ = feature_count_;
+      return StatusOr<Series>(batch.x);
+    }
+    return StatusOr<Series>(
+        Status::invalid_argument("FeatureTransformer::learn_map requires at least one stage when remainder policy is Drop."));
+  }
+
+  const std::int64_t expected_samples = batch.sample_count();
+  std::vector<Series> outputs{};
+  outputs.reserve(stages_.size() + 1);
+  std::vector<bool> selected(static_cast<std::size_t>(batch.feature_count()), false);
+
+  for (std::size_t i = 0; i < stages_.size(); ++i) {
+    Stage& stage = stages_[i];
+    if (stage.transformers.empty()) {
+      return StatusOr<Series>(Status::internal("FeatureTransformer contains an empty stage pipeline."));
+    }
+    for (std::size_t j = 0; j < stage.transformers.size(); ++j) {
+      if (!stage.transformers[j]) {
+        return StatusOr<Series>(Status::internal("FeatureTransformer contains a null transformer in stage pipeline."));
+      }
+    }
+    StatusOr<std::vector<std::int64_t>> route_or = normalized_feature_route(
+        stage.feature_route, batch.feature_count(), static_cast<std::int64_t>(i), "FeatureTransformer::learn_map");
+    if (!route_or.ok()) return StatusOr<Series>(route_or.status());
+    const std::vector<std::int64_t> route = route_or.move_value();
+    stage.feature_route = route;
+    for (std::int64_t idx : route) selected[static_cast<std::size_t>(idx)] = true;
+
+    StatusOr<FeatureBatch> routed_or =
+        select_routed_features(batch, route, static_cast<std::int64_t>(i), "FeatureTransformer::learn_map");
+    if (!routed_or.ok()) return StatusOr<Series>(routed_or.status());
+
+    FeatureBatch branch = routed_or.move_value();
+    for (std::size_t j = 0; j < stage.transformers.size(); ++j) {
+      StatusOr<Series> mapped_or = stage.transformers[j]->learn_map(branch, learn_options, infer_options);
+      if (!mapped_or.ok()) return StatusOr<Series>(mapped_or.status());
+      StatusOr<FeatureBatch> mapped_batch_or = mapped_batch_checked(
+          mapped_or.move_value(), batch.layout, expected_samples, static_cast<std::int64_t>(i), "FeatureTransformer::learn_map");
+      if (!mapped_batch_or.ok()) return StatusOr<Series>(mapped_batch_or.status());
+      branch = mapped_batch_or.move_value();
+    }
+    outputs.push_back(branch.x);
+  }
+
+  if (remainder_ == FeatureRemainderPolicy::PassThrough) {
+    std::vector<std::int64_t> remainder{};
+    remainder.reserve(static_cast<std::size_t>(batch.feature_count()));
+    for (std::int64_t f = 0; f < batch.feature_count(); ++f) {
+      if (!selected[static_cast<std::size_t>(f)]) remainder.push_back(f);
+    }
+    if (!remainder.empty()) {
+      StatusOr<FeatureBatch> routed_or = select_routed_features(
+          batch, remainder, static_cast<std::int64_t>(stages_.size()), "FeatureTransformer::learn_map");
+      if (!routed_or.ok()) return StatusOr<Series>(routed_or.status());
+      outputs.push_back(routed_or.move_value().x);
+    }
+  }
+
+  if (outputs.empty()) {
+    return StatusOr<Series>(
+        Status::invalid_argument("FeatureTransformer::learn_map produced no output features."));
+  }
+  Series merged = outputs.front();
+  const std::int64_t axis = batch.layout == ObservationLayout::Rows ? 1 : 0;
+  for (std::size_t i = 1; i < outputs.size(); ++i) {
+    merged = merged.unite({outputs[i]}, axis);
+  }
+
+  FeatureBatch merged_batch{
+      .x = merged,
+      .layout = batch.layout,
+  };
+  check = validate_features(merged_batch);
+  if (!check.ok()) {
+    return StatusOr<Series>(Status::shape_mismatch("FeatureTransformer::learn_map produced invalid feature shape."));
+  }
+  if (merged_batch.sample_count() != expected_samples) {
+    return StatusOr<Series>(Status::shape_mismatch("FeatureTransformer::learn_map changed sample count."));
+  }
+
+  trained_ = true;
+  layout_ = batch.layout;
+  feature_count_ = batch.feature_count();
+  output_feature_count_ = merged_batch.feature_count();
+  return StatusOr<Series>(std::move(merged_batch.x));
+}
+
+StatusOr<std::vector<Series>> FeatureTransformer::dump_state() const {
+  std::vector<Series> state{};
+  state.reserve(1 + stages_.size() * 3);
+  state.push_back(state_f64({
+      trained_ ? 1.0 : 0.0,
+      static_cast<double>(static_cast<std::int64_t>(layout_)),
+      static_cast<double>(feature_count_),
+      static_cast<double>(output_feature_count_),
+      static_cast<double>(static_cast<std::int64_t>(remainder_)),
+      static_cast<double>(stage_count()),
+  }));
+
+  for (std::size_t i = 0; i < stages_.size(); ++i) {
+    const Stage& stage = stages_[i];
+    if (stage.transformers.empty()) {
+      return StatusOr<std::vector<Series>>(Status::internal("FeatureTransformer contains an empty stage pipeline."));
+    }
+    state.push_back(state_i64(stage.feature_route));
+    state.push_back(state_i64({static_cast<std::int64_t>(stage.transformers.size())}));
+    for (std::size_t j = 0; j < stage.transformers.size(); ++j) {
+      if (!stage.transformers[j]) {
+        return StatusOr<std::vector<Series>>(Status::internal("FeatureTransformer contains a null transformer in stage pipeline."));
+      }
+      StatusOr<std::vector<Series>> stage_state_or = stage.transformers[j]->dump_state();
+      if (!stage_state_or.ok()) {
+        return StatusOr<std::vector<Series>>(
+            Status::invalid_argument("FeatureTransformer::dump_state failed at stage "
+                                     + std::to_string(i) + " pipeline index " + std::to_string(j)
+                                     + ": " + stage_state_or.status().message));
+      }
+      const std::vector<Series> stage_state = stage_state_or.move_value();
+      state.push_back(state_i64({static_cast<std::int64_t>(stage_state.size())}));
+      state.insert(state.end(), stage_state.begin(), stage_state.end());
+    }
+  }
+  return StatusOr<std::vector<Series>>(std::move(state));
+}
+
+Status FeatureTransformer::load_state(const std::vector<Series>& state) {
+  if (state.empty()) {
+    return Status::invalid_argument("FeatureTransformer::load_state expects at least metadata tensor.");
+  }
+  const std::vector<double> meta = vec_f64(state.front());
+  if (meta.size() < 6) {
+    return Status::invalid_argument("FeatureTransformer::load_state invalid metadata.");
+  }
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  output_feature_count_ = static_cast<std::int64_t>(meta[3]);
+  remainder_ = static_cast<FeatureRemainderPolicy>(static_cast<std::int64_t>(meta[4]));
+  const std::int64_t expected_stages = static_cast<std::int64_t>(meta[5]);
+  if (expected_stages != static_cast<std::int64_t>(stages_.size())) {
+    return Status::invalid_argument(
+        "FeatureTransformer::load_state stage count mismatch. Ensure the same stage graph is constructed before load_state().");
+  }
+
+  std::size_t cursor = 1;
+  for (std::size_t i = 0; i < stages_.size(); ++i) {
+    Stage& stage = stages_[i];
+    if (stage.transformers.empty()) {
+      return Status::internal("FeatureTransformer contains an empty stage pipeline.");
+    }
+    if (cursor >= state.size()) {
+      return Status::invalid_argument("FeatureTransformer::load_state truncated while reading stage route.");
+    }
+    stage.feature_route = vec_i64(state[cursor++]);
+    if (cursor >= state.size()) {
+      return Status::invalid_argument("FeatureTransformer::load_state truncated while reading stage pipeline size.");
+    }
+    const std::vector<std::int64_t> pipeline_meta = vec_i64(state[cursor++]);
+    if (pipeline_meta.empty() || pipeline_meta.front() < 0) {
+      return Status::invalid_argument("FeatureTransformer::load_state encountered invalid stage pipeline size.");
+    }
+    const std::size_t pipeline_count = static_cast<std::size_t>(pipeline_meta.front());
+    if (pipeline_count != stage.transformers.size()) {
+      return Status::invalid_argument("FeatureTransformer::load_state stage pipeline size mismatch.");
+    }
+    for (std::size_t j = 0; j < pipeline_count; ++j) {
+      if (!stage.transformers[j]) {
+        return Status::internal("FeatureTransformer contains a null transformer in stage pipeline.");
+      }
+      if (cursor >= state.size()) {
+        return Status::invalid_argument("FeatureTransformer::load_state truncated while reading transformer state size.");
+      }
+      const std::vector<std::int64_t> count_meta = vec_i64(state[cursor++]);
+      if (count_meta.empty() || count_meta.front() < 0) {
+        return Status::invalid_argument("FeatureTransformer::load_state encountered invalid transformer state size.");
+      }
+      const std::size_t state_count = static_cast<std::size_t>(count_meta.front());
+      if (cursor + state_count > state.size()) {
+        return Status::invalid_argument("FeatureTransformer::load_state truncated while reading transformer state payload.");
+      }
+      std::vector<Series> payload{};
+      payload.reserve(state_count);
+      for (std::size_t k = 0; k < state_count; ++k) {
+        payload.push_back(state[cursor++]);
+      }
+      Status s = stage.transformers[j]->load_state(payload);
+      if (!s.ok()) {
+        return Status::invalid_argument("FeatureTransformer::load_state failed at stage "
+                                        + std::to_string(i) + " pipeline index " + std::to_string(j)
+                                        + ": " + s.message);
+      }
+    }
+  }
+  if (cursor != state.size()) {
+    return Status::invalid_argument("FeatureTransformer::load_state contains trailing state tensors.");
+  }
+  if (!trained_) {
+    feature_count_ = 0;
+    output_feature_count_ = 0;
+  }
+  return Status::success();
+}
+
 StandardScaler::StandardScaler(StandardScalerOptions options) : options_(options) {}
 
 bool StandardScaler::trained() const noexcept { return trained_; }
@@ -522,7 +1308,7 @@ Status StandardScaler::learn(const FeatureBatch& batch, const TrainOptions& opti
       }
       var /= static_cast<double>(count);
       stddev = std::sqrt(var);
-      if (!(stddev >= options_.variance_floor)) stddev = 1.0;
+      if (!std::isfinite(stddev) || !(stddev > options_.variance_floor)) stddev = 1.0;
     }
 
     center_[static_cast<std::size_t>(f)] = options_.with_centering ? mean : 0.0;
@@ -548,7 +1334,10 @@ StatusOr<Series> StandardScaler::map(const FeatureBatch& batch, const InferOptio
       const std::size_t idx = offset(matrix, i, f);
       const double v = out[idx];
       if (std::isnan(v)) continue;
-      out[idx] = (v - center_[static_cast<std::size_t>(f)]) / scale_[static_cast<std::size_t>(f)];
+      const double center = center_[static_cast<std::size_t>(f)];
+      double denom = scale_[static_cast<std::size_t>(f)];
+      if (!std::isfinite(denom) || !(std::abs(denom) > options_.variance_floor)) denom = 1.0;
+      out[idx] = (v - center) / denom;
     }
   }
   return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
@@ -1556,6 +2345,12 @@ Status OneHotEncoder::learn(const FeatureBatch& batch, const TrainOptions& optio
   return Status::success();
 }
 
+Status OneHotEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OneHotEncoder::learn(Thread)");
+  if (!batch_or.ok()) return batch_or.status();
+  return learn(batch_or.value(), options);
+}
+
 StatusOr<Series> OneHotEncoder::map(const FeatureBatch& batch, const InferOptions& options) const {
   Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "OneHotEncoder::map");
   if (!ready.ok()) return StatusOr<Series>(std::move(ready));
@@ -1612,12 +2407,26 @@ StatusOr<Series> OneHotEncoder::map(const FeatureBatch& batch, const InferOption
   return StatusOr<Series>(from_dense(matrix, std::move(out), encoded_feature_count_));
 }
 
+StatusOr<Series> OneHotEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OneHotEncoder::map(Thread)");
+  if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
+  return map(batch_or.value(), options);
+}
+
 StatusOr<Series> OneHotEncoder::learn_map(const FeatureBatch& batch,
                                           const TrainOptions& learn_options,
                                           const InferOptions& infer_options) {
   Status s = learn(batch, learn_options);
   if (!s.ok()) return StatusOr<Series>(std::move(s));
   return map(batch, infer_options);
+}
+
+StatusOr<Series> OneHotEncoder::learn_map(const pluss::table::Thread& feature,
+                                          const TrainOptions& learn_options,
+                                          const InferOptions& infer_options) {
+  Status s = learn(feature, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(feature, infer_options);
 }
 
 FrequencyEncoder::FrequencyEncoder(FrequencyEncoderOptions options) : options_(options) {}
@@ -1698,6 +2507,12 @@ Status FrequencyEncoder::learn(const FeatureBatch& batch, const TrainOptions& op
   return Status::success();
 }
 
+Status FrequencyEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "FrequencyEncoder::learn(Thread)");
+  if (!batch_or.ok()) return batch_or.status();
+  return learn(batch_or.value(), options);
+}
+
 StatusOr<Series> FrequencyEncoder::map(const FeatureBatch& batch, const InferOptions& options) const {
   Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "FrequencyEncoder::map");
   if (!ready.ok()) return StatusOr<Series>(std::move(ready));
@@ -1748,12 +2563,701 @@ StatusOr<Series> FrequencyEncoder::map(const FeatureBatch& batch, const InferOpt
   return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
 }
 
+StatusOr<Series> FrequencyEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "FrequencyEncoder::map(Thread)");
+  if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
+  return map(batch_or.value(), options);
+}
+
 StatusOr<Series> FrequencyEncoder::learn_map(const FeatureBatch& batch,
                                              const TrainOptions& learn_options,
                                              const InferOptions& infer_options) {
   Status s = learn(batch, learn_options);
   if (!s.ok()) return StatusOr<Series>(std::move(s));
   return map(batch, infer_options);
+}
+
+StatusOr<Series> FrequencyEncoder::learn_map(const pluss::table::Thread& feature,
+                                             const TrainOptions& learn_options,
+                                             const InferOptions& infer_options) {
+  Status s = learn(feature, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(feature, infer_options);
+}
+
+namespace {
+
+template <class EncoderOptions>
+[[nodiscard]] std::vector<std::uint64_t> fit_category_keys_for_feature(const DenseMatrix& matrix,
+                                                                        std::int64_t feature_idx,
+                                                                        const EncoderOptions& options,
+                                                                        bool* active_out,
+                                                                        Status* status_out,
+                                                                        const char* where) {
+  if (active_out) *active_out = true;
+  if (status_out) *status_out = Status::success();
+
+  std::unordered_map<std::uint64_t, std::int64_t> counts{};
+  counts.reserve(static_cast<std::size_t>(matrix.sample_count));
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    const double v = matrix.values[offset(matrix, i, feature_idx)];
+    if (std::isnan(v)) continue;
+    ++counts[key_for_value(v)];
+  }
+
+  std::vector<std::pair<std::uint64_t, std::int64_t>> ranked(counts.begin(), counts.end());
+  const std::size_t cap = options.max_categories > 0 ? static_cast<std::size_t>(options.max_categories) : ranked.size();
+  if (ranked.size() > cap) {
+    switch (options.overflow) {
+      case CategoryOverflowPolicy::Error: {
+        if (status_out) {
+          *status_out = Status::invalid_argument(std::string(where) + " observed feature cardinality above max_categories.");
+        }
+        return {};
+      }
+      case CategoryOverflowPolicy::SkipFeature: {
+        if (active_out) *active_out = false;
+        ranked.clear();
+        break;
+      }
+      case CategoryOverflowPolicy::KeepMostFrequent: {
+        std::stable_sort(ranked.begin(),
+                         ranked.end(),
+                         [](const auto& lhs, const auto& rhs) {
+                           if (lhs.second != rhs.second) return lhs.second > rhs.second;
+                           return std::bit_cast<double>(lhs.first) < std::bit_cast<double>(rhs.first);
+                         });
+        ranked.resize(cap);
+        break;
+      }
+    }
+  }
+
+  std::vector<std::uint64_t> keys{};
+  keys.reserve(ranked.size());
+  for (const auto& [key, _count] : ranked) keys.push_back(key);
+  std::sort(keys.begin(), keys.end(), [](std::uint64_t a, std::uint64_t b) {
+    return std::bit_cast<double>(a) < std::bit_cast<double>(b);
+  });
+  return keys;
+}
+
+template <class EncoderOptions>
+[[nodiscard]] StatusOr<std::vector<std::vector<std::uint64_t>>> fit_category_keys(const DenseMatrix& matrix,
+                                                                                   const EncoderOptions& options,
+                                                                                   const char* where) {
+  std::vector<std::vector<std::uint64_t>> keys(static_cast<std::size_t>(matrix.feature_count));
+  for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+    bool active = true;
+    Status status = Status::success();
+    auto fitted = fit_category_keys_for_feature(matrix, f, options, &active, &status, where);
+    if (!status.ok()) return StatusOr<std::vector<std::vector<std::uint64_t>>>(std::move(status));
+    if (!active) fitted.clear();
+    keys[static_cast<std::size_t>(f)] = std::move(fitted);
+  }
+  return StatusOr<std::vector<std::vector<std::uint64_t>>>(std::move(keys));
+}
+
+template <class EncoderOptions>
+[[nodiscard]] StatusOr<Series> map_index_like(const DenseMatrix& matrix,
+                                              const std::vector<std::vector<std::uint64_t>>& category_keys,
+                                              const EncoderOptions& options,
+                                              const InferOptions& infer_options,
+                                              const char* where) {
+  std::vector<double> out(static_cast<std::size_t>(matrix.sample_count * matrix.feature_count),
+                          std::numeric_limits<double>::quiet_NaN());
+  const double base = options.one_based ? 1.0 : 0.0;
+
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+      const auto& keys = category_keys[static_cast<std::size_t>(f)];
+      const double v = matrix.values[offset(matrix, i, f)];
+      bool unknown = std::isnan(v);
+      std::int64_t index = -1;
+
+      if (!unknown) {
+        const std::uint64_t key = key_for_value(v);
+        auto it = std::find(keys.begin(), keys.end(), key);
+        if (it == keys.end()) {
+          unknown = true;
+        } else {
+          index = static_cast<std::int64_t>(std::distance(keys.begin(), it));
+        }
+      }
+
+      double mapped = std::numeric_limits<double>::quiet_NaN();
+      if (!unknown) {
+        mapped = base + static_cast<double>(index);
+      } else {
+        switch (infer_options.unknown_categorical) {
+          case UnknownCategoryPolicy::Error:
+            return StatusOr<Series>(Status::invalid_argument(std::string(where) + " saw unknown category during map()."));
+          case UnknownCategoryPolicy::MissingBucket:
+            if (options.include_unknown_bucket) {
+              mapped = base + static_cast<double>(keys.size());
+            }
+            break;
+          case UnknownCategoryPolicy::Ignore:
+            break;
+        }
+      }
+      out[offset(matrix, i, f)] = mapped;
+    }
+  }
+  return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
+}
+
+} // namespace
+
+OrdinalEncoder::OrdinalEncoder(OrdinalEncoderOptions options) : options_(options) {}
+
+bool OrdinalEncoder::trained() const noexcept { return trained_; }
+
+Status OrdinalEncoder::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status max_cat_status = validate_max_categories(options_.max_categories, "OrdinalEncoder");
+  if (!max_cat_status.ok()) return max_cat_status;
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "OrdinalEncoder::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+
+  auto keys_or = fit_category_keys(matrix, options_, "OrdinalEncoder::learn");
+  if (!keys_or.ok()) return keys_or.status();
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  category_keys_ = keys_or.move_value();
+  trained_ = true;
+  return Status::success();
+}
+
+Status OrdinalEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OrdinalEncoder::learn(Thread)");
+  if (!batch_or.ok()) return batch_or.status();
+  return learn(batch_or.value(), options);
+}
+
+StatusOr<Series> OrdinalEncoder::map(const FeatureBatch& batch, const InferOptions& options) const {
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "OrdinalEncoder::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "OrdinalEncoder::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  return map_index_like(matrix_or.value(), category_keys_, options_, options, "OrdinalEncoder::map");
+}
+
+StatusOr<Series> OrdinalEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OrdinalEncoder::map(Thread)");
+  if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
+  return map(batch_or.value(), options);
+}
+
+StatusOr<Series> OrdinalEncoder::learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options,
+                                           const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+StatusOr<Series> OrdinalEncoder::learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options,
+                                           const InferOptions& infer_options) {
+  Status s = learn(feature, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(feature, infer_options);
+}
+
+StatusOr<std::vector<Series>> OrdinalEncoder::dump_state() const {
+  std::vector<std::int64_t> sizes{};
+  sizes.reserve(category_keys_.size());
+  std::vector<double> flat_values{};
+  for (const auto& keys : category_keys_) {
+    sizes.push_back(static_cast<std::int64_t>(keys.size()));
+    for (std::uint64_t key : keys) flat_values.push_back(std::bit_cast<double>(key));
+  }
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({
+          trained_ ? 1.0 : 0.0,
+          static_cast<double>(static_cast<std::int64_t>(layout_)),
+          static_cast<double>(feature_count_),
+      }),
+      state_i64(std::move(sizes)),
+      state_f64(std::move(flat_values)),
+  });
+}
+
+Status OrdinalEncoder::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("OrdinalEncoder::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("OrdinalEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  const auto nested = unflatten_nested(vec_f64(state[2]), vec_i64(state[1]));
+  category_keys_.clear();
+  category_keys_.reserve(nested.size());
+  for (const auto& row : nested) {
+    std::vector<std::uint64_t> keys{};
+    keys.reserve(row.size());
+    for (double v : row) keys.push_back(key_for_value(v));
+    category_keys_.push_back(std::move(keys));
+  }
+  if (!trained_) category_keys_.clear();
+  return Status::success();
+}
+
+LabelEncoder::LabelEncoder(LabelEncoderOptions options) : options_(options) {}
+
+bool LabelEncoder::trained() const noexcept { return trained_; }
+
+Status LabelEncoder::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status max_cat_status = validate_max_categories(options_.max_categories, "LabelEncoder");
+  if (!max_cat_status.ok()) return max_cat_status;
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "LabelEncoder::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+
+  auto keys_or = fit_category_keys(matrix, options_, "LabelEncoder::learn");
+  if (!keys_or.ok()) return keys_or.status();
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  category_keys_ = keys_or.move_value();
+  trained_ = true;
+  return Status::success();
+}
+
+Status LabelEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "LabelEncoder::learn(Thread)");
+  if (!batch_or.ok()) return batch_or.status();
+  return learn(batch_or.value(), options);
+}
+
+StatusOr<Series> LabelEncoder::map(const FeatureBatch& batch, const InferOptions& options) const {
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "LabelEncoder::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "LabelEncoder::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  return map_index_like(matrix_or.value(), category_keys_, options_, options, "LabelEncoder::map");
+}
+
+StatusOr<Series> LabelEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "LabelEncoder::map(Thread)");
+  if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
+  return map(batch_or.value(), options);
+}
+
+StatusOr<Series> LabelEncoder::learn_map(const FeatureBatch& batch,
+                                         const TrainOptions& learn_options,
+                                         const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+StatusOr<Series> LabelEncoder::learn_map(const pluss::table::Thread& feature,
+                                         const TrainOptions& learn_options,
+                                         const InferOptions& infer_options) {
+  Status s = learn(feature, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(feature, infer_options);
+}
+
+StatusOr<std::vector<Series>> LabelEncoder::dump_state() const {
+  std::vector<std::int64_t> sizes{};
+  sizes.reserve(category_keys_.size());
+  std::vector<double> flat_values{};
+  for (const auto& keys : category_keys_) {
+    sizes.push_back(static_cast<std::int64_t>(keys.size()));
+    for (std::uint64_t key : keys) flat_values.push_back(std::bit_cast<double>(key));
+  }
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({
+          trained_ ? 1.0 : 0.0,
+          static_cast<double>(static_cast<std::int64_t>(layout_)),
+          static_cast<double>(feature_count_),
+      }),
+      state_i64(std::move(sizes)),
+      state_f64(std::move(flat_values)),
+  });
+}
+
+Status LabelEncoder::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("LabelEncoder::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("LabelEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  const auto nested = unflatten_nested(vec_f64(state[2]), vec_i64(state[1]));
+  category_keys_.clear();
+  category_keys_.reserve(nested.size());
+  for (const auto& row : nested) {
+    std::vector<std::uint64_t> keys{};
+    keys.reserve(row.size());
+    for (double v : row) keys.push_back(key_for_value(v));
+    category_keys_.push_back(std::move(keys));
+  }
+  if (!trained_) category_keys_.clear();
+  return Status::success();
+}
+
+OutlierIsolator::OutlierIsolator(OutlierIsolatorOptions options) : options_(options) {}
+
+bool OutlierIsolator::learned() const noexcept { return learned_; }
+
+Status OutlierIsolator::validate_options_() const {
+  Status estimators_status = validate_estimators(options_.estimators, "OutlierIsolator");
+  if (!estimators_status.ok()) return estimators_status;
+
+  if (!options_.max_samples_auto) {
+    Status max_samples_status = validate_max_samples(options_.max_samples, "OutlierIsolator");
+    if (!max_samples_status.ok()) return max_samples_status;
+  }
+
+  Status max_features_status = validate_max_features_ratio(options_.max_features_ratio, "OutlierIsolator");
+  if (!max_features_status.ok()) return max_features_status;
+
+  if (!options_.contamination_auto) {
+    Status contamination_status = validate_contamination(options_.contamination, "OutlierIsolator");
+    if (!contamination_status.ok()) return contamination_status;
+  }
+
+  return Status::success();
+}
+
+Status OutlierIsolator::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status options_status = validate_options_();
+  if (!options_status.ok()) return options_status;
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "OutlierIsolator::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  for (double& v : matrix.values) {
+    if (std::isfinite(v)) v = static_cast<double>(static_cast<float>(v));
+  }
+
+  if (matrix.sample_count < 2) {
+    return Status::invalid_argument("OutlierIsolator::learn requires at least 2 samples.");
+  }
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  max_samples_used_ = options_.max_samples_auto ? std::min<std::int64_t>(256, matrix.sample_count)
+                                                : std::min<std::int64_t>(options_.max_samples, matrix.sample_count);
+  max_samples_used_ = std::max<std::int64_t>(1, max_samples_used_);
+
+  const auto max_features_raw = static_cast<std::int64_t>(
+      std::floor(options_.max_features_ratio * static_cast<double>(feature_count_)));
+  max_features_used_ = std::clamp<std::int64_t>(max_features_raw, 1, feature_count_);
+
+  const std::int64_t depth_base = std::max<std::int64_t>(2, max_samples_used_);
+  max_depth_ = static_cast<std::int64_t>(std::ceil(std::log2(static_cast<double>(depth_base))));
+
+  NumpyRandomState global_rng(static_cast<std::uint32_t>(compose_seed(options_.random)));
+  std::vector<std::int64_t> all_samples(static_cast<std::size_t>(matrix.sample_count));
+  std::iota(all_samples.begin(), all_samples.end(), std::int64_t{0});
+  std::vector<std::int64_t> all_features(static_cast<std::size_t>(feature_count_));
+  std::iota(all_features.begin(), all_features.end(), std::int64_t{0});
+
+  forest_.clear();
+  forest_.reserve(static_cast<std::size_t>(options_.estimators));
+
+  for (std::int64_t tree_idx = 0; tree_idx < options_.estimators; ++tree_idx) {
+    const std::int64_t tree_seed = randint_max_int(global_rng);
+    NumpyRandomState bagging_rng(static_cast<std::uint32_t>(tree_seed));
+    NumpyRandomState estimator_rng(static_cast<std::uint32_t>(tree_seed));
+    std::uint32_t splitter_seed = static_cast<std::uint32_t>(randint_max_int(estimator_rng));
+
+    std::vector<std::int64_t> sampled_rows{};
+    sampled_rows.reserve(static_cast<std::size_t>(max_samples_used_));
+    if (options_.bootstrap) {
+      for (std::int64_t i = 0; i < max_samples_used_; ++i) {
+        sampled_rows.push_back(bagging_rng.randint_exclusive(matrix.sample_count));
+      }
+    } else {
+      sampled_rows = sample_without_replacement(matrix.sample_count, max_samples_used_, bagging_rng);
+      std::sort(sampled_rows.begin(), sampled_rows.end());
+    }
+
+    std::vector<std::int64_t> feature_subset{};
+    if (max_features_used_ >= feature_count_) {
+      feature_subset = all_features;
+    } else {
+      feature_subset = sample_without_replacement(feature_count_, max_features_used_, bagging_rng);
+    }
+
+    IsolationTree tree{};
+    auto add_leaf = [&tree](std::int64_t n_rows) -> std::int32_t {
+      const std::int32_t node = static_cast<std::int32_t>(tree.split_feature.size());
+      tree.split_feature.push_back(-1);
+      tree.split_value.push_back(0.0);
+      tree.left_child.push_back(-1);
+      tree.right_child.push_back(-1);
+      tree.node_size.push_back(static_cast<std::int32_t>(std::max<std::int64_t>(0, n_rows)));
+      tree.missing_go_left.push_back(0);
+      return node;
+    };
+
+    std::vector<std::int64_t> splitter_features = feature_subset;
+    std::vector<std::int64_t> constant_features = feature_subset;
+    constexpr std::size_t kPerNodeMaxFeatures = 1; // ExtraTreeRegressor(max_features=1)
+
+    std::function<std::int32_t(const std::vector<std::int64_t>&, std::int64_t, std::size_t)> build =
+        [&](const std::vector<std::int64_t>& rows,
+            std::int64_t depth,
+            std::size_t n_known_constants_initial) -> std::int32_t {
+      if (rows.empty()) return add_leaf(0);
+      if (depth >= max_depth_ || rows.size() <= 1) {
+        return add_leaf(static_cast<std::int64_t>(rows.size()));
+      }
+
+      std::int64_t split_feature = -1;
+      double split_min = 0.0;
+      double split_max = 0.0;
+      if (splitter_features.empty()) {
+        return add_leaf(static_cast<std::int64_t>(rows.size()));
+      }
+      n_known_constants_initial = std::min<std::size_t>(n_known_constants_initial, splitter_features.size());
+
+      std::size_t f_i = splitter_features.size();
+      std::size_t n_found_constants = 0;
+      std::size_t n_drawn_constants = 0;
+      std::size_t n_known_constants = n_known_constants_initial;
+      std::size_t n_total_constants = n_known_constants;
+      std::size_t n_visited_features = 0;
+
+      auto restore_constant_prefix = [&]() {
+        for (std::size_t i = 0; i < n_known_constants_initial; ++i) {
+          splitter_features[i] = constant_features[i];
+        }
+        for (std::size_t i = 0; i < n_found_constants; ++i) {
+          constant_features[n_known_constants_initial + i] = splitter_features[n_known_constants_initial + i];
+        }
+      };
+
+      while (f_i > n_total_constants &&
+             (n_visited_features < kPerNodeMaxFeatures ||
+              n_visited_features <= n_found_constants + n_drawn_constants)) {
+        ++n_visited_features;
+        std::int64_t f_j_i64 = sklearn_rand_int(
+            static_cast<std::int64_t>(n_drawn_constants),
+            static_cast<std::int64_t>(f_i - n_found_constants),
+            splitter_seed);
+        std::size_t f_j = static_cast<std::size_t>(f_j_i64);
+        if (f_j < n_known_constants) {
+          std::swap(splitter_features[n_drawn_constants], splitter_features[f_j]);
+          ++n_drawn_constants;
+          continue;
+        }
+        f_j += n_found_constants;
+        const std::int64_t f = splitter_features[f_j];
+        double minv = std::numeric_limits<double>::infinity();
+        double maxv = -std::numeric_limits<double>::infinity();
+        std::int64_t non_missing = 0;
+        for (std::int64_t row : rows) {
+          const double v = matrix.values[offset(matrix, row, f)];
+          if (std::isnan(v)) continue;
+          minv = std::min(minv, v);
+          maxv = std::max(maxv, v);
+          ++non_missing;
+        }
+        const std::int64_t missing_count = static_cast<std::int64_t>(rows.size()) - non_missing;
+        constexpr double kFeatureThreshold = 1e-7;
+        const bool all_missing = non_missing == 0;
+        const bool effectively_constant_no_missing = (!all_missing) && (maxv <= minv + kFeatureThreshold) && (missing_count == 0);
+        if (all_missing || effectively_constant_no_missing) {
+          std::swap(splitter_features[f_j], splitter_features[n_total_constants]);
+          ++n_found_constants;
+          ++n_total_constants;
+          continue;
+        }
+        f_i -= 1;
+        std::swap(splitter_features[f_i], splitter_features[f_j]);
+        split_feature = f;
+        split_min = minv;
+        split_max = maxv;
+        break;
+      }
+      if (split_feature < 0) {
+        restore_constant_prefix();
+        return add_leaf(static_cast<std::int64_t>(rows.size()));
+      }
+
+      double split_value = sklearn_rand_uniform(split_min, split_max, splitter_seed);
+      if (split_value == split_max) split_value = split_min;
+      std::vector<std::int64_t> left_rows{};
+      std::vector<std::int64_t> right_rows{};
+      std::vector<std::int64_t> missing_rows{};
+      left_rows.reserve(rows.size());
+      right_rows.reserve(rows.size());
+      missing_rows.reserve(rows.size());
+      for (std::int64_t row : rows) {
+        const double value = matrix.values[offset(matrix, row, split_feature)];
+        if (std::isnan(value)) {
+          missing_rows.push_back(row);
+          continue;
+        }
+        if (value <= split_value) {
+          left_rows.push_back(row);
+        } else {
+          right_rows.push_back(row);
+        }
+      }
+
+      std::uint8_t missing_go_left = 0;
+      if (!missing_rows.empty()) {
+        missing_go_left = static_cast<std::uint8_t>(sklearn_rand_int(0, 2, splitter_seed));
+      }
+      if (missing_go_left) {
+        left_rows.insert(left_rows.end(), missing_rows.begin(), missing_rows.end());
+      } else {
+        right_rows.insert(right_rows.end(), missing_rows.begin(), missing_rows.end());
+      }
+
+      if (left_rows.empty() || right_rows.empty()) {
+        restore_constant_prefix();
+        return add_leaf(static_cast<std::int64_t>(rows.size()));
+      }
+
+      const std::int32_t node = add_leaf(static_cast<std::int64_t>(rows.size()));
+      tree.split_feature[static_cast<std::size_t>(node)] = static_cast<std::int32_t>(split_feature);
+      tree.split_value[static_cast<std::size_t>(node)] = split_value;
+      if (missing_rows.empty()) {
+        tree.missing_go_left[static_cast<std::size_t>(node)] =
+            static_cast<std::uint8_t>(left_rows.size() > right_rows.size());
+      } else {
+        tree.missing_go_left[static_cast<std::size_t>(node)] = missing_go_left;
+      }
+      restore_constant_prefix();
+      tree.left_child[static_cast<std::size_t>(node)] = build(left_rows, depth + 1, n_total_constants);
+      tree.right_child[static_cast<std::size_t>(node)] = build(right_rows, depth + 1, n_total_constants);
+      return node;
+    };
+
+    (void)build(sampled_rows, 0, 0);
+    forest_.push_back(std::move(tree));
+  }
+
+  learned_ = true;
+  offset_ = -0.5; // sklearn contamination='auto'
+  if (!options_.contamination_auto) {
+    StatusOr<std::vector<double>> scores_or = score_dense_(batch.x, batch.layout, "OutlierIsolator::learn");
+    if (!scores_or.ok()) {
+      learned_ = false;
+      forest_.clear();
+      return scores_or.status();
+    }
+    offset_ = quantile(scores_or.move_value(), options_.contamination);
+  }
+
+  return Status::success();
+}
+
+StatusOr<std::vector<double>> OutlierIsolator::score_dense_(const Series& x,
+                                                            ObservationLayout layout,
+                                                            const char* where) const {
+  FeatureBatch batch{};
+  batch.x = x;
+  batch.layout = layout;
+  Status ready = validate_trained_input(learned_, layout_, feature_count_, batch, where);
+  if (!ready.ok()) return StatusOr<std::vector<double>>(std::move(ready));
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, where);
+  if (!matrix_or.ok()) return StatusOr<std::vector<double>>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+  for (double& v : matrix.values) {
+    if (std::isfinite(v)) v = static_cast<double>(static_cast<float>(v));
+  }
+  if (forest_.empty()) {
+    return StatusOr<std::vector<double>>(Status::precondition(std::string(where) + " requires a learned forest."));
+  }
+
+  const double norm = std::max(average_isolation_path_length(max_samples_used_), 1e-12);
+  std::vector<double> scores(static_cast<std::size_t>(matrix.sample_count), 0.0);
+
+  auto path_length = [&](const IsolationTree& tree, std::int64_t row) -> double {
+    if (tree.split_feature.empty()) return 0.0;
+    std::int32_t node = 0;
+    std::int64_t depth = 0;
+    while (node >= 0 && node < static_cast<std::int32_t>(tree.split_feature.size())) {
+      const std::int32_t feat = tree.split_feature[static_cast<std::size_t>(node)];
+      if (feat < 0 || tree.left_child[static_cast<std::size_t>(node)] < 0 || tree.right_child[static_cast<std::size_t>(node)] < 0) {
+        const std::int64_t leaf_size = tree.node_size[static_cast<std::size_t>(node)];
+        return static_cast<double>(depth) + average_isolation_path_length(leaf_size);
+      }
+      const double split = tree.split_value[static_cast<std::size_t>(node)];
+      const double value = matrix.values[offset(matrix, row, static_cast<std::int64_t>(feat))];
+      if (std::isnan(value)) {
+        const bool go_left = tree.missing_go_left[static_cast<std::size_t>(node)] != 0;
+        node = go_left ? tree.left_child[static_cast<std::size_t>(node)]
+                       : tree.right_child[static_cast<std::size_t>(node)];
+      } else {
+        node = value <= split ? tree.left_child[static_cast<std::size_t>(node)]
+                              : tree.right_child[static_cast<std::size_t>(node)];
+      }
+      ++depth;
+    }
+    return static_cast<double>(depth);
+  };
+
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    double total_path = 0.0;
+    for (const auto& tree : forest_) {
+      total_path += path_length(tree, i);
+    }
+    const double avg_path = total_path / static_cast<double>(forest_.size());
+    const double anomaly_score = std::exp2(-avg_path / norm);
+    scores[static_cast<std::size_t>(i)] = -anomaly_score; // sklearn-like score_samples: lower means more anomalous.
+  }
+
+  return StatusOr<std::vector<double>>(std::move(scores));
+}
+
+StatusOr<Series> OutlierIsolator::score_samples(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  StatusOr<std::vector<double>> scores_or = score_dense_(batch.x, batch.layout, "OutlierIsolator::score_samples");
+  if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
+
+  std::vector<double> scores = scores_or.move_value();
+  Series out = pluss::make_series(
+      std::move(scores),
+      {batch.sample_count()},
+      Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+  return StatusOr<Series>(out.to(batch.x.platform(), ScalarType::Float64));
+}
+
+StatusOr<Series> OutlierIsolator::infer(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  StatusOr<std::vector<double>> scores_or = score_dense_(batch.x, batch.layout, "OutlierIsolator::infer");
+  if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
+
+  std::vector<double> scores = scores_or.move_value();
+  std::vector<std::int64_t> labels(scores.size(), 1);
+  for (std::size_t i = 0; i < scores.size(); ++i) {
+    const double decision = scores[i] - offset_;
+    labels[i] = decision < 0.0 ? -1 : 1;
+  }
+
+  Series out = pluss::make_series(
+      std::move(labels),
+      {batch.sample_count()},
+      Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+  return StatusOr<Series>(out.to(batch.x.platform(), ScalarType::Int64));
+}
+
+StatusOr<Series> OutlierIsolator::learn_infer(const FeatureBatch& batch,
+                                              const TrainOptions& learn_options,
+                                              const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return infer(batch, infer_options);
 }
 
 StatusOr<std::vector<Series>> StandardScaler::dump_state() const {

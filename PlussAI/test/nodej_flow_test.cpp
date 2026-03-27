@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -134,13 +135,74 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
 
   {
     Flow flow{};
+    prep::FeatureTransformer column(prep::FeatureRemainderPolicy::PassThrough);
+    if (!column.add_stage(
+             std::make_unique<prep::SimpleImputer>(prep::SimpleImputerOptions{
+                 .strategy = prep::SimpleImputerStrategy::Mean,
+             }),
+             {0})
+             .ok()
+        || !column.add_stage(std::make_unique<prep::OneHotEncoder>(), {1}).ok()) {
+      if (err) *err << "FeatureTransformer stage setup should succeed\n";
+      return false;
+    }
+    if (!flow.add_feature_transformer(std::move(column)).ok()) {
+      if (err) *err << "Flow::add_feature_transformer should succeed\n";
+      return false;
+    }
+    if (!flow.add_function_transformer(prep::FunctionTransformer([](const Series& in) -> StatusOr<Series> {
+           return StatusOr<Series>(in.mul(0.5));
+         }))
+             .ok()) {
+      if (err) *err << "Flow::add_function_transformer should succeed\n";
+      return false;
+    }
+    if (!flow.has_opaque_transforms()) {
+      if (err) *err << "Flow should mark callable/column stages as opaque\n";
+      return false;
+    }
+
+    const FeatureBatch features{
+        .x = pluss::make_series(std::vector<double>{
+                                    1.0, 0.0, 100.0,
+                                    2.0, 1.0, 200.0,
+                                    3.0, 0.0, 300.0,
+                                    4.0, 2.0, 400.0},
+                                {4, 3},
+                                f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    auto out_or = flow.learn_map(features);
+    if (!out_or.ok()) {
+      if (err) *err << "Flow learn_map should succeed with FeatureTransformer + FunctionTransformer\n";
+      return false;
+    }
+    const auto sizes = out_or.value().sizes();
+    if (sizes.size() != 2 || sizes[0] != 4 || sizes[1] <= 3) {
+      if (err) *err << "Flow output should preserve rows and expand routed encoded columns\n";
+      return false;
+    }
+    if (!finite_series(out_or.value())) {
+      if (err) *err << "Flow output from FeatureTransformer + FunctionTransformer should be finite\n";
+      return false;
+    }
+  }
+
+  {
+    Flow flow{};
     if (!flow.add_neighbor_imputer(prep::NeighborImputerOptions{.neighbors = 1}).ok()
         || !flow.add_power_map(prep::PowerMapOptions{.mode = prep::PowerMapMode::YeoJohnson, .standardize = false, .lambda = 1.0}).ok()
         || !flow.add_quantile_map(prep::QuantileMapOptions{.output = prep::QuantileMapOutput::Uniform}).ok()
         || !flow.add_vector_normalizer(prep::VectorNormalizerOptions{.norm = prep::VectorNorm::L2}).ok()
         || !flow.add_polynomial_lift(prep::PolynomialLiftOptions{.degree = 2, .include_bias = false}).ok()
         || !flow.add_maxabs_scaler().ok()
-        || !flow.add_threshold_binarizer(prep::ThresholdBinarizerOptions{.threshold = 0.5, .low_value = 0.0, .high_value = 1.0}).ok()) {
+        || !flow.add_threshold_binarizer(prep::ThresholdBinarizerOptions{.threshold = 0.5, .low_value = 0.0, .high_value = 1.0}).ok()
+        || !flow.add_ordinal_encoder(prep::OrdinalEncoderOptions{.include_unknown_bucket = true, .one_based = true},
+                                     std::vector<std::int64_t>{1})
+                .ok()
+        || !flow.add_label_encoder(prep::LabelEncoderOptions{.include_unknown_bucket = true, .one_based = false},
+                                   std::vector<std::int64_t>{1})
+                .ok()) {
       if (err) *err << "Flow should accept all new prep stage builders\n";
       return false;
     }

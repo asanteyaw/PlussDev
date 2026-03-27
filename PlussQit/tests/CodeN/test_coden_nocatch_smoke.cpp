@@ -1,10 +1,15 @@
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
+#include "CodeN/native/cpu/TextKernels.h"
 
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <span>
 #include <string>
+#include <string_view>
+#include <sstream>
 #include <vector>
 
 namespace {
@@ -29,6 +34,72 @@ double as_score(const pluss::Note& n, std::int64_t i = 0) {
   return std::stod(std::string(n.at(i)));
 }
 
+bool notes_equal_with_diag(const pluss::Note& a, const pluss::Note& b, std::string& diag) {
+  if (a.defined() != b.defined()) {
+    diag = "defined() mismatch";
+    return false;
+  }
+  if (!a.defined()) return true;
+  if (a.dim() != b.dim()) {
+    diag = "dim mismatch";
+    return false;
+  }
+  if (a.sizes() != b.sizes()) {
+    diag = "sizes mismatch";
+    return false;
+  }
+  if (a.numel() != b.numel()) {
+    diag = "numel mismatch";
+    return false;
+  }
+  for (std::int64_t i = 0; i < a.numel(); ++i) {
+    if (a.at(i) != b.at(i)) {
+      std::ostringstream oss;
+      oss << "first mismatch at i=" << i
+          << " lhs=\"" << std::string(a.at(i)) << "\""
+          << " rhs=\"" << std::string(b.at(i)) << "\"";
+      diag = oss.str();
+      return false;
+    }
+  }
+  diag.clear();
+  return true;
+}
+
+bool token_batches_equal_with_diag(const pluss::TokenBatch& a,
+                                   const pluss::TokenBatch& b,
+                                   std::string& diag) {
+  if (a.offsets() != b.offsets()) {
+    diag = "offset mismatch";
+    return false;
+  }
+  return notes_equal_with_diag(a.tokens(), b.tokens(), diag);
+}
+
+void set_coden_encode_fastpath_mode(const char* mode) {
+#if defined(_WIN32)
+  _putenv_s("PLUSS_CODEN_ENCODE_FASTPATH", (mode == nullptr) ? "" : mode);
+#else
+  if (mode == nullptr || mode[0] == '\0') {
+    unsetenv("PLUSS_CODEN_ENCODE_FASTPATH");
+  } else {
+    setenv("PLUSS_CODEN_ENCODE_FASTPATH", mode, 1);
+  }
+#endif
+}
+
+void set_env_mode(const char* key, const char* mode) {
+#if defined(_WIN32)
+  _putenv_s(key, (mode == nullptr) ? "" : mode);
+#else
+  if (mode == nullptr || mode[0] == '\0') {
+    unsetenv(key);
+  } else {
+    setenv(key, mode, 1);
+  }
+#endif
+}
+
 void test_basic_extracts() {
   std::cout << "[RUN] coden:tex_extract\n";
   pluss::Note tex = pluss::make_note(
@@ -40,6 +111,74 @@ void test_basic_extracts() {
 
   auto cmds = tex.tex_commands();
   expect_true(has_token(cmds.tokens(), "\\section"), "tex_commands extracts command tokens");
+}
+
+void test_text_kernels_compare_hash() {
+  std::cout << "[RUN] coden:text_kernels_compare_hash\n";
+  using op = pluss::coden::native::cpu::LexCompareOp;
+  namespace tk = pluss::coden::native::cpu;
+
+  expect_true(tk::compare_lex_bytes("alpha", "alpha", op::Eq), "compare_lex_bytes Eq true");
+  expect_true(!tk::compare_lex_bytes("alpha", "beta", op::Eq), "compare_lex_bytes Eq false");
+  expect_true(tk::compare_lex_bytes("naïve", "東京", op::Lt), "compare_lex_bytes Lt utf8 lexical");
+  expect_true(tk::compare_lex_bytes("ßeta", "ßeta", op::Ge), "compare_lex_bytes Ge equality");
+  expect_true(tk::compare_lex_bytes("東京", "naïve", op::Gt), "compare_lex_bytes Gt utf8 lexical");
+
+  const std::array<std::string_view, 4> lhs{"a", "beta", "東京", "ßeta"};
+  const std::array<std::string_view, 4> rhs{"a", "alpha", "東京", "zeta"};
+  std::array<std::uint8_t, 4> out{};
+  tk::compare_lex_bytes_batch(
+      std::span<const std::string_view>(lhs.data(), lhs.size()),
+      std::span<const std::string_view>(rhs.data(), rhs.size()),
+      op::Gt,
+      std::span<std::uint8_t>(out.data(), out.size()));
+  expect_true(out[0] == 0 && out[1] == 1 && out[2] == 0 && out[3] == 1,
+              "compare_lex_bytes_batch applies lexical op element-wise");
+
+  const auto h0 = tk::hash_bytes_fnv1a("alpha");
+  const auto h1 = tk::hash_bytes_fnv1a("alpha");
+  const auto h2 = tk::hash_bytes_fnv1a("beta");
+  expect_true(h0 == h1, "hash_bytes_fnv1a deterministic for equal inputs");
+  expect_true(h0 != h2, "hash_bytes_fnv1a differentiates common unequal inputs");
+
+  std::array<std::uint64_t, 4> hb{};
+  tk::hash_bytes_fnv1a_batch(
+      std::span<const std::string_view>(lhs.data(), lhs.size()),
+      std::span<std::uint64_t>(hb.data(), hb.size()));
+  expect_true(hb[0] == tk::hash_bytes_fnv1a(lhs[0]) &&
+                  hb[1] == tk::hash_bytes_fnv1a(lhs[1]) &&
+                  hb[2] == tk::hash_bytes_fnv1a(lhs[2]) &&
+                  hb[3] == tk::hash_bytes_fnv1a(lhs[3]),
+              "hash_bytes_fnv1a_batch matches scalar hash kernel");
+}
+
+void test_encoded_fastpath_parity() {
+  std::cout << "[RUN] coden:encoded_fastpath_parity\n";
+  const std::array<std::int64_t, 1> shape{12};
+  const std::vector<std::string> values{
+      "alpha", "beta",  "alpha", "東京", "beta", "東京",
+      "naïve", "alpha", "ßeta",  "beta", "ßeta", "alpha"};
+  const auto note = pluss::make_note(values, std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  set_coden_encode_fastpath_mode("0");
+  const auto uniq_off = note.unique();
+  const auto dedup_off = note.deduplicate();
+
+  set_coden_encode_fastpath_mode("1");
+  const auto uniq_on = note.unique();
+  const auto dedup_on = note.deduplicate();
+
+  set_coden_encode_fastpath_mode(nullptr);
+
+  expect_true(uniq_off.numel() == uniq_on.numel(), "encoded parity: unique numel match");
+  for (std::int64_t i = 0; i < uniq_off.numel(); ++i) {
+    expect_true(uniq_off.at(i) == uniq_on.at(i), "encoded parity: unique values match");
+  }
+
+  expect_true(dedup_off.numel() == dedup_on.numel(), "encoded parity: deduplicate numel match");
+  for (std::int64_t i = 0; i < dedup_off.numel(); ++i) {
+    expect_true(dedup_off.at(i) == dedup_on.at(i), "encoded parity: deduplicate values match");
+  }
 }
 
 void test_nlp_extracts_and_filters() {
@@ -55,6 +194,113 @@ void test_nlp_extracts_and_filters() {
 
   auto filtered = n.nlp_filter_tokens_len_ge(4);
   expect_true(filtered.tokens().numel() > 0, "nlp_filter_tokens_len_ge returns tokens");
+}
+
+void test_nlp_keyword_frequency_order() {
+  std::cout << "[RUN] coden:nlp_keyword_frequency\n";
+  const std::array<std::int64_t, 1> shape{2};
+  const auto note = pluss::make_note(
+      std::vector<std::string>{
+          "beta alpha beta gamma alpha alpha the and beta",
+          "omega omega zeta zeta and the"},
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  const auto kw = note.nlp_keywords(3);
+  expect_true(kw.offsets().size() == 3, "nlp_keywords returns row offsets");
+  expect_true(kw.offsets()[0] == 0 && kw.offsets()[1] == 3 && kw.offsets()[2] == 5,
+              "nlp_keywords offsets match per-row top-k lengths");
+
+  expect_true(kw.tokens().at(0) == "alpha" && kw.tokens().at(1) == "beta" && kw.tokens().at(2) == "gamma",
+              "nlp_keywords row0 ranks by frequency then lexical tie-break");
+  expect_true(kw.tokens().at(3) == "omega" && kw.tokens().at(4) == "zeta",
+              "nlp_keywords row1 removes stopwords and ranks ties lexically");
+
+  const auto stop_only = pluss::make_note("the and in to with");
+  const auto kw_stop_only = stop_only.nlp_keywords(5);
+  expect_true(kw_stop_only.offsets().size() == 2 && kw_stop_only.offsets()[0] == 0 && kw_stop_only.offsets()[1] == 0,
+              "nlp_keywords stopword-only row produces empty token range");
+  expect_true(kw_stop_only.tokens().numel() == 0, "nlp_keywords stopword-only row returns no keywords");
+}
+
+void test_parallel_lane_parity() {
+  std::cout << "[RUN] coden:parallel_lane_parity\n";
+
+  std::vector<std::string> rows;
+  rows.reserve(32768);
+  for (int i = 0; i < 32768; ++i) {
+    rows.push_back((i % 2 == 0) ? "beta alpha beta gamma alpha alpha the and beta"
+                                : "omega omega zeta zeta and the");
+  }
+  const std::array<std::int64_t, 2> shape{512, 64};
+  const auto note2d = pluss::make_note(rows, std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  set_env_mode("PLUSS_CODEN_PARALLEL", "off");
+  const auto sorted_off = note2d.sort();
+  const auto kw_off = note2d.nlp_keywords(3);
+
+  set_env_mode("PLUSS_CODEN_PARALLEL", "on");
+  const auto sorted_on = note2d.sort();
+  const auto kw_on = note2d.nlp_keywords(3);
+
+  set_env_mode("PLUSS_CODEN_PARALLEL", nullptr);
+
+  bool same_sort = (sorted_off.numel() == sorted_on.numel());
+  for (std::int64_t i = 0; same_sort && i < sorted_off.numel(); ++i) {
+    if (sorted_off.at(i) != sorted_on.at(i)) same_sort = false;
+  }
+  expect_true(same_sort, "parallel on/off sort parity is exact");
+
+  bool same_kw = (kw_off.offsets() == kw_on.offsets()) &&
+                 (kw_off.tokens().numel() == kw_on.tokens().numel());
+  for (std::int64_t i = 0; same_kw && i < kw_off.tokens().numel(); ++i) {
+    if (kw_off.tokens().at(i) != kw_on.tokens().at(i)) same_kw = false;
+  }
+  expect_true(same_kw, "parallel on/off tokenbatch parity is exact");
+}
+
+void test_reference_mode_parity() {
+  std::cout << "[RUN] coden:reference_mode_parity\n";
+
+  std::vector<std::string> rows;
+  rows.reserve(32768);
+  for (int i = 0; i < 32768; ++i) {
+    rows.push_back((i % 2 == 0) ? "beta alpha beta gamma alpha alpha the and beta"
+                                : "omega omega zeta zeta and the");
+  }
+  const std::array<std::int64_t, 2> shape2d{512, 64};
+  const auto note2d = pluss::make_note(rows, std::span<const std::int64_t>(shape2d.data(), shape2d.size()));
+  const std::array<std::int64_t, 1> shape1d{32768};
+  const auto note1d = pluss::make_note(rows, std::span<const std::int64_t>(shape1d.data(), shape1d.size()));
+  const auto scalar = pluss::make_note("alpha omega");
+
+  set_env_mode("PLUSS_CODEN_EXECUTION_MODE", "reference");
+  set_env_mode("PLUSS_CODEN_PARALLEL", "on");
+  set_env_mode("PLUSS_CODEN_ENCODE_FASTPATH", "force");
+  set_env_mode("PLUSS_CODEN_COUNT_FASTPATH", "on");
+  const auto sort_ref = note2d.sort();
+  const auto unique_ref = note1d.unique();
+  const auto dedup_ref = note1d.deduplicate();
+  const auto kw_ref = note2d.nlp_keywords(3);
+  const auto inter_ref = note2d.intersect_tokens(scalar);
+
+  set_env_mode("PLUSS_CODEN_EXECUTION_MODE", "optimized");
+  const auto sort_opt = note2d.sort();
+  const auto unique_opt = note1d.unique();
+  const auto dedup_opt = note1d.deduplicate();
+  const auto kw_opt = note2d.nlp_keywords(3);
+  const auto inter_opt = note2d.intersect_tokens(scalar);
+
+  set_env_mode("PLUSS_CODEN_EXECUTION_MODE", nullptr);
+  set_env_mode("PLUSS_CODEN_PARALLEL", nullptr);
+  set_env_mode("PLUSS_CODEN_ENCODE_FASTPATH", nullptr);
+  set_env_mode("PLUSS_CODEN_COUNT_FASTPATH", nullptr);
+
+  std::string diag;
+  expect_true(notes_equal_with_diag(sort_ref, sort_opt, diag), "reference parity sort: " + diag);
+  expect_true(notes_equal_with_diag(unique_ref, unique_opt, diag), "reference parity unique: " + diag);
+  expect_true(notes_equal_with_diag(dedup_ref, dedup_opt, diag), "reference parity deduplicate: " + diag);
+  expect_true(token_batches_equal_with_diag(kw_ref, kw_opt, diag), "reference parity nlp_keywords: " + diag);
+  expect_true(token_batches_equal_with_diag(inter_ref, inter_opt, diag), "reference parity intersect_tokens: " + diag);
 }
 
 void test_diff_align_family() {
@@ -203,7 +449,133 @@ void test_encoding_and_shape_ops() {
   expect_true(ri.size(0) == 6 && ri.at(0) == "b" && ri.at(1) == "b" && ri.at(2) == "a", "repeat_interleave duplicates along dim");
   auto til = v.tile(std::span<const std::int64_t>(reps2.data(), reps2.size()));
   expect_true(til.size(0) == 6 && til.at(4) == "a", "tile aliases repeat semantics");
+
+  const std::vector<std::int64_t> take_idx{2, 1, -1, 0};
+  auto taken = v.take(std::span<const std::int64_t>(take_idx.data(), take_idx.size()));
+  expect_true(taken.dim() == 1 && taken.size(0) == 4, "take emits 1D gathered Note");
+  expect_true(taken.at(0) == "b" && taken.at(1) == "a" && taken.at(2) == "b" && taken.at(3) == "b",
+              "take gathers with negative index support");
+
+  bool threw_hi = false;
+  try {
+    const std::vector<std::int64_t> bad_idx{3};
+    (void)v.take(std::span<const std::int64_t>(bad_idx.data(), bad_idx.size()));
+  } catch (const std::exception&) {
+    threw_hi = true;
+  }
+  expect_true(threw_hi, "take throws on out-of-range positive index");
+
+  bool threw_lo = false;
+  try {
+    const std::vector<std::int64_t> bad_idx{-4};
+    (void)v.take(std::span<const std::int64_t>(bad_idx.data(), bad_idx.size()));
+  } catch (const std::exception&) {
+    threw_lo = true;
+  }
+  expect_true(threw_lo, "take throws on out-of-range negative index");
 }
+
+void test_perf_regression_corpus_ops() {
+  std::cout << "[RUN] coden:perf_regression_corpus\n";
+  const std::array<std::int64_t, 1> shape{10};
+  const std::vector<std::string> values{
+      "",
+      "beta",
+      "東京",
+      "beta",
+      "naïve",
+      "",
+      "ßeta",
+      "alpha",
+      "東京",
+      "alpha"};
+  const auto note = pluss::make_note(values, std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  const auto sorted = note.sort();
+  expect_true(sorted.numel() == note.numel(), "sort keeps same numel on regression corpus");
+  for (std::int64_t i = 1; i < sorted.numel(); ++i) {
+    expect_true(std::string(sorted.at(i - 1)) <= std::string(sorted.at(i)),
+                "sort keeps non-decreasing lexical order on mixed UTF-8 corpus");
+  }
+
+  const auto uniq = note.unique();
+  expect_true(uniq.numel() == 6, "unique returns 6 distinct values on regression corpus");
+  for (std::int64_t i = 1; i < uniq.numel(); ++i) {
+    expect_true(std::string(uniq.at(i - 1)) < std::string(uniq.at(i)),
+                "unique returns strictly increasing sorted distinct values");
+  }
+
+  const auto dedup = note.deduplicate();
+  expect_true(dedup.numel() == 6, "deduplicate keeps first-seen distinct values");
+  expect_true(dedup.at(0) == "", "deduplicate first token");
+  expect_true(dedup.at(1) == "beta", "deduplicate second token");
+  expect_true(dedup.at(2) == "東京", "deduplicate third token");
+  expect_true(dedup.at(3) == "naïve", "deduplicate fourth token");
+  expect_true(dedup.at(4) == "ßeta", "deduplicate fifth token");
+  expect_true(dedup.at(5) == "alpha", "deduplicate sixth token");
+
+  const auto sorted_once = note.sort();
+  const auto sorted_twice = note.sort();
+  expect_true(sorted_once.numel() == sorted_twice.numel(), "sort deterministic numel on repeated run");
+  bool same = true;
+  for (std::int64_t i = 0; i < sorted_once.numel(); ++i) {
+    if (sorted_once.at(i) != sorted_twice.at(i)) {
+      same = false;
+      break;
+    }
+  }
+  expect_true(same, "sort deterministic ordering across repeated runs");
+
+  const std::array<std::int64_t, 1> shape2{5};
+  const std::vector<std::string> repeated_empty{"", "", "", "alpha", "alpha"};
+  const auto t = pluss::make_note(repeated_empty, std::span<const std::int64_t>(shape2.data(), shape2.size()));
+  const auto uniq2 = t.unique();
+  expect_true(uniq2.numel() == 2, "unique retains empty token once on repeated-empty corpus");
+  bool uniq2_has_empty = false;
+  bool uniq2_has_alpha = false;
+  for (std::int64_t i = 0; i < uniq2.numel(); ++i) {
+    if (uniq2.at(i) == "") uniq2_has_empty = true;
+    if (uniq2.at(i) == "alpha") uniq2_has_alpha = true;
+  }
+  expect_true(uniq2_has_empty && uniq2_has_alpha, "unique keeps both empty and alpha in repeated-empty corpus");
+
+  const auto dedup2 = t.deduplicate();
+  expect_true(dedup2.numel() == 2, "deduplicate retains two first-seen distinct values on repeated-empty corpus");
+  expect_true(dedup2.at(0) == "" && dedup2.at(1) == "alpha", "deduplicate keeps first-seen order on repeated-empty corpus");
+
+  const auto undef = pluss::Note::undefined();
+  expect_true(!undef.unique().defined(), "unique(undefined) remains undefined");
+  expect_true(!undef.deduplicate().defined(), "deduplicate(undefined) remains undefined");
+}
+
+#ifdef CODEN_ENABLE_SERIES_INTEROP
+void test_argsort_interop_ops() {
+  std::cout << "[RUN] coden:argsort_interop\n";
+  const std::array<std::int64_t, 1> shape{7};
+  const std::vector<std::string> values{"b", "a", "b", "z", "", "b", "a"};
+  const auto note = pluss::make_note(values, std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  auto order_series = note.argsort(/*descending=*/false, /*stable=*/true)
+                          .to(pluss::pCPU, pluss::ScalarType::Int64);
+  auto order = order_series.to_vec<std::int64_t>();
+  expect_true(order.size() == values.size(), "argsort size matches input size");
+  expect_true(order[0] == 4 && order[1] == 1 && order[2] == 6 && order[3] == 0 && order[4] == 2 && order[5] == 5 &&
+                  order[6] == 3,
+              "argsort ascending stable ordering matches expected permutation");
+
+  auto sorted = note.take(std::span<const std::int64_t>(order.data(), order.size()));
+  expect_true(sorted.at(0) == "" && sorted.at(1) == "a" && sorted.at(2) == "a" && sorted.at(3) == "b" &&
+                  sorted.at(4) == "b" && sorted.at(5) == "b" && sorted.at(6) == "z",
+              "take(argsort()) reproduces lexicographically sorted Note");
+
+  auto desc_series = note.argsort(/*descending=*/true, /*stable=*/true)
+                         .to(pluss::pCPU, pluss::ScalarType::Int64);
+  auto desc = desc_series.to_vec<std::int64_t>();
+  expect_true(desc[0] == 3 && desc[1] == 0 && desc[2] == 2 && desc[3] == 5 && desc[4] == 1 && desc[5] == 6 &&
+                  desc[6] == 4,
+              "argsort descending stable ordering matches expected permutation");
+}
+#endif
 
 void test_high_yield_nlp_and_printing() {
   std::cout << "[RUN] coden:high_yield_nlp_print\n";
@@ -475,9 +847,9 @@ void test_aux_transmit_translate_and_queue_basics() {
   expect_true(sum_vals.size() == 3 && sum_vals[0] == 0.0 && sum_vals[1] == 3.0 && sum_vals[2] == -2.0,
               "Queue binary + delegates to Series");
 
-  pluss::Queue qcmp = qn == pluss::Queue(pluss::make_note({"aa", "zz"}));
+  pluss::Queue qcmp = qn == pluss::Queue(pluss::make_note({{"aa", "zzz"}, {"c", "DDDD"}}));
   auto cmp_vals = qcmp.as<pluss::Series>().to_vec<bool>();
-  expect_true(cmp_vals.size() == 2 && cmp_vals[0] && !cmp_vals[1],
+  expect_true(cmp_vals.size() == 4 && cmp_vals[0] && !cmp_vals[1] && cmp_vals[2] && !cmp_vals[3],
               "Queue Note comparison delegates safely");
 
   pluss::Queue qwhere = pluss::Queue::where(
@@ -493,10 +865,19 @@ void test_aux_transmit_translate_and_queue_basics() {
 
 int main() {
   test_basic_extracts();
+  test_text_kernels_compare_hash();
+  test_encoded_fastpath_parity();
   test_nlp_extracts_and_filters();
+  test_nlp_keyword_frequency_order();
+  test_parallel_lane_parity();
+  test_reference_mode_parity();
   test_diff_align_family();
   test_pairwise_set_ops_and_fast_paths();
   test_encoding_and_shape_ops();
+  test_perf_regression_corpus_ops();
+#ifdef CODEN_ENABLE_SERIES_INTEROP
+  test_argsort_interop_ops();
+#endif
   test_high_yield_nlp_and_printing();
   test_tex_canonicalize_and_macros();
   test_note_factory_paths();

@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "CodeN/core/OpsInternal.h"
+#include "CodeN/native/cpu/TextKernels.h"
 
 namespace pluss::coden {
 
@@ -132,22 +133,26 @@ Note note_repeat_scalar(const Note& n, ::std::int64_t times) {
 }
 
 bool note_compare_strings(::std::string_view lhs, ::std::string_view rhs, NoteCmpOp op) {
-  switch (op) {
-    case NoteCmpOp::Eq:
-      return lhs == rhs;
-    case NoteCmpOp::Ne:
-      return lhs != rhs;
-    case NoteCmpOp::Lt:
-      return lhs < rhs;
-    case NoteCmpOp::Le:
-      return lhs <= rhs;
-    case NoteCmpOp::Gt:
-      return lhs > rhs;
-    case NoteCmpOp::Ge:
-      return lhs >= rhs;
-    default:
-      return false;
-  }
+  using native_op = ::pluss::coden::native::cpu::LexCompareOp;
+  const auto map_op = [&]() -> native_op {
+    switch (op) {
+      case NoteCmpOp::Eq:
+        return native_op::Eq;
+      case NoteCmpOp::Ne:
+        return native_op::Ne;
+      case NoteCmpOp::Lt:
+        return native_op::Lt;
+      case NoteCmpOp::Le:
+        return native_op::Le;
+      case NoteCmpOp::Gt:
+        return native_op::Gt;
+      case NoteCmpOp::Ge:
+        return native_op::Ge;
+      default:
+        return native_op::Eq;
+    }
+  }();
+  return ::pluss::coden::native::cpu::compare_lex_bytes(lhs, rhs, map_op);
 }
 
 ::std::vector<::std::uint8_t> note_compare_pair(const Note& lhs, const Note& rhs, NoteCmpOp op) {
@@ -158,6 +163,41 @@ bool note_compare_strings(::std::string_view lhs, ::std::string_view rhs, NoteCm
   const bool by = (ny == 1);
   const auto n = (nx == ny) ? nx : (bx ? ny : nx);
   ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(n), 0);
+
+  if (!bx && !by) {
+    ::std::vector<::std::string_view> lhs_flat(static_cast<::std::size_t>(n));
+    ::std::vector<::std::string_view> rhs_flat(static_cast<::std::size_t>(n));
+    for (::std::int64_t i = 0; i < n; ++i) {
+      lhs_flat[static_cast<::std::size_t>(i)] = lhs.at(i);
+      rhs_flat[static_cast<::std::size_t>(i)] = rhs.at(i);
+    }
+    using native_op = ::pluss::coden::native::cpu::LexCompareOp;
+    const auto map_op = [&]() -> native_op {
+      switch (op) {
+        case NoteCmpOp::Eq:
+          return native_op::Eq;
+        case NoteCmpOp::Ne:
+          return native_op::Ne;
+        case NoteCmpOp::Lt:
+          return native_op::Lt;
+        case NoteCmpOp::Le:
+          return native_op::Le;
+        case NoteCmpOp::Gt:
+          return native_op::Gt;
+        case NoteCmpOp::Ge:
+          return native_op::Ge;
+        default:
+          return native_op::Eq;
+      }
+    }();
+    ::pluss::coden::native::cpu::compare_lex_bytes_batch(
+        ::std::span<const ::std::string_view>(lhs_flat.data(), lhs_flat.size()),
+        ::std::span<const ::std::string_view>(rhs_flat.data(), rhs_flat.size()),
+        map_op,
+        ::std::span<::std::uint8_t>(out.data(), out.size()));
+    return out;
+  }
+
   for (::std::int64_t i = 0; i < n; ++i) {
     out[static_cast<::std::size_t>(i)] =
         static_cast<::std::uint8_t>(note_compare_strings(lhs.at(bx ? 0 : i), rhs.at(by ? 0 : i), op));
@@ -346,6 +386,31 @@ Note Note::render_latex(::std::int64_t mode) const {
   return ops_internal::tex_render(*this, mode);
 }
 
+Note Note::take(::std::span<const ::std::int64_t> indices) const {
+  if (!defined()) return Note::undefined();
+  const auto& p = impl();
+  PLUSS_CHECK(p, "Note::take on undefined Note");
+  PLUSS_CHECK(p->dim() <= 1, "Note::take currently supports 1D/scalar Notes only");
+
+  const auto n = p->numel();
+  const auto& src = p->spans();
+  ::std::vector<NoteImpl::OffLen> out;
+  out.reserve(indices.size());
+
+  for (const auto idx_raw : indices) {
+    ::std::int64_t idx = idx_raw;
+    if (idx < 0) idx += n;
+    PLUSS_CHECK(idx >= 0 && idx < n, "Note::take index out of range");
+    out.push_back(src[static_cast<::std::size_t>(idx)]);
+  }
+
+  ::std::array<::std::int64_t, 3> shape{0, 1, 1};
+  shape[0] = static_cast<::std::int64_t>(out.size());
+  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      p->arena(), ::std::move(out), shape, /*dim=*/1, p->encoding());
+  return Note(::std::move(out_impl));
+}
+
 Note Note::operator+(const Note& other) const { return note_concat_pair(*this, other); }
 Note Note::operator+(::std::string_view suffix) const {
   const ::std::array<::std::string_view, 1> flat{suffix};
@@ -461,9 +526,21 @@ Note operator*(::std::int64_t times, const Note& rhs) { return rhs * times; }
 } // namespace pluss::coden
 
 #ifdef CODEN_ENABLE_SERIES_INTEROP
+#include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::coden {
+
+pluss::codem::Series Note::argsort(bool descending, bool stable) const {
+  PLUSS_CHECK(defined(), "Note::argsort on undefined Note");
+  const auto n = numel();
+  auto order = ops_internal::note_argsort_indices_1d(*this, descending, stable);
+
+  ::std::vector<double> out(order.size());
+  for (::std::size_t i = 0; i < order.size(); ++i) out[i] = static_cast<double>(order[i]);
+  const ::std::vector<::std::int64_t> shape{n};
+  return pluss::codem::Series::make_from_doubles(out, shape, pluss::codem::ScalarType::Int64);
+}
 
 pluss::codem::Series Note::contains_series(::std::string_view needle) const {
   return ops_internal::note_contains_series(*this, needle);

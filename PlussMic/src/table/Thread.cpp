@@ -8,9 +8,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

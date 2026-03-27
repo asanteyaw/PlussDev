@@ -26,18 +26,7 @@
 // - pluss::dispense<R>(obj, "method", args...) typed dynamic dispatch
 // - pluss::dispense_any(obj, "method", args...) runtime variant dispatch
 //
-// Aux algorithm utilities:
-// - pluss::transmit(...) for elementwise map/zip transforms over values/ranges
-// - pluss::transform_axis(...) for NumPy-style apply_along_axis slice transforms
-// - pluss::DataLoader convenience alias (single root-level export)
-// - pluss::loader::DataLoader for Series-native mini-batch iteration (shuffle/drop_last)
-// - pluss::loader::Dataset / pluss::loader::SeriesDataset map-style dataset surfaces
-// - pluss::loader::split_fields(...) / pluss::loader::split_loaders(...) for train/val/test partitioning
-// - pluss::loader::time_series_split_indices/fields/loaders(...) for sklearn-like TimeSeriesSplit workflows
-// - pluss::to_scalar<T>(series), pluss::as_f64/as_f32/as_i64/... scalar extract helpers
-// - pluss::loader::set_path_root(...), pluss::loader::path_root(...), pluss::loader::path_file(...), plus data/output/model helpers
-//
-// Core pluss surface (Series/Note/Timeline/TimeIndex + Queue/Dispense/Aux) lives in PlussQit.
+// Core pluss surface (Series/Note/Timeline/TimeIndex + Queue/Dispense) lives in PlussQit.
 #include "pluss/core.h"
 
 // PlussAI is intentionally opt-in:
@@ -47,6 +36,13 @@
 //
 // PlussMa is intentionally opt-in:
 // - include <pluss/ma.h> for PlussMa math/stat/time-series utilities
+//
+// PlussTils is intentionally opt-in:
+// - include <pluss/tils.h> for utility helpers (aux + view utilities), including:
+//   - pluss::transmit(...), pluss::transform_axis(...)
+//   - pluss::DataLoader + pluss::loader::* helpers
+//   - pluss::to_scalar<T>(series) + pluss::as_f64/as_f32/as_i64/... helpers
+//   - pluss::view::* utilities
 
 #if __has_include("pluss/mic.h")
 #include "pluss/mic.h"

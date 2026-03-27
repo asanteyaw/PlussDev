@@ -341,6 +341,36 @@ Status Flow::add_polynomial_lift(prep::PolynomialLiftOptions options, std::vecto
   return Status::success();
 }
 
+Status Flow::add_ordinal_encoder(prep::OrdinalEncoderOptions options, std::vector<std::int64_t> feature_route) {
+  transforms_.push_back(std::make_unique<prep::OrdinalEncoder>(options));
+  transform_specs_.push_back(TransformSpec{
+      .kind = TransformKind::OrdinalEncoder,
+      .options = options,
+      .feature_route = std::move(feature_route),
+  });
+  trained_ = false;
+  return Status::success();
+}
+
+Status Flow::add_label_encoder(prep::LabelEncoderOptions options, std::vector<std::int64_t> feature_route) {
+  transforms_.push_back(std::make_unique<prep::LabelEncoder>(options));
+  transform_specs_.push_back(TransformSpec{
+      .kind = TransformKind::LabelEncoder,
+      .options = options,
+      .feature_route = std::move(feature_route),
+  });
+  trained_ = false;
+  return Status::success();
+}
+
+Status Flow::add_function_transformer(prep::FunctionTransformer transformer) {
+  return append_transform(std::make_unique<prep::FunctionTransformer>(std::move(transformer)));
+}
+
+Status Flow::add_feature_transformer(prep::FeatureTransformer transformer) {
+  return append_transform(std::make_unique<prep::FeatureTransformer>(std::move(transformer)));
+}
+
 Status Flow::set_model(const ModelSpec& spec) {
   clear_model();
   if (spec.task == TaskKind::Classification) {

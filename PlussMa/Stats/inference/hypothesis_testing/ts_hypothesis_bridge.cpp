@@ -20,4 +20,11 @@ KpssResult kpss_test(const pluss::codem::Series& y,
   return ::pluss::subsp::stats::ts::kpss_test(y, options, cfg);
 }
 
+DmResult dm_test(const pluss::codem::Series& err_a,
+                 const pluss::codem::Series& err_b,
+                 const DmOptions& options,
+                 pluss::codem::Config cfg) {
+  return ::pluss::subsp::stats::ts::dm_test(err_a, err_b, options, cfg);
+}
+
 } // namespace pluss::subsp::stats::inference::hypothesis

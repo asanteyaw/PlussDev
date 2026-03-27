@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <filesystem>
 #include <initializer_list>
 #include <iosfwd>
 #include <optional>
@@ -183,6 +184,7 @@ void save_json(const pluss::table::DataFrame& frame,
 void save_json(const pluss::table::DataFrame& frame,
                std::string_view filepath,
                std::initializer_list<ConfigEntry> config_entries);
+
 void save_parquet(const pluss::table::DataFrame& frame,
                   std::string_view filepath,
                   const Config& config = {});

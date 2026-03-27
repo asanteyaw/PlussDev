@@ -151,7 +151,8 @@ inline std::tuple<Series, Series> rnn(const Series& input,
     state = detail::zeros_state_({cfg.num_layers * dirs, batch, hidden_size}, x0);
   }
 
-  const bool require_backward = x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params);
+  const bool require_backward =
+      cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_rnn(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
@@ -204,7 +205,8 @@ inline std::tuple<Series, Series> gru(const Series& input,
     state = detail::zeros_state_({cfg.num_layers * dirs, batch, hidden_size}, x0);
   }
 
-  const bool require_backward = x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params);
+  const bool require_backward =
+      cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
@@ -264,7 +266,8 @@ inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
   }
 
   const bool require_backward =
-      x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() || detail::any_weight_tracks_slope_(params);
+      cfg.training &&
+      (x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_lstm(x0, hidden, cell, params, cfg, require_backward);
         routed.has_value()) {

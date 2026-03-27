@@ -33,7 +33,7 @@ CI also runs this validation on push/PR.
 
 ## Scope
 
-This policy applies codebase-wide (`PlussPl`, `PlussMic`, `PlussMa`, `PlussQit`, `PlussView`).
+This policy applies codebase-wide (`PlussPl`, `PlussMic`, `PlussMa`, `PlussQit`, `PlussTilsView`).
 
 ## Hard Rules
 

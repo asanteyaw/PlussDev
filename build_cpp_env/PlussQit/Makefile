@@ -515,6 +515,20 @@ plussqit_coden_note_base_methods_demo/fast:
 .PHONY : plussqit_coden_note_base_methods_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/rule
+
+# Convenience name for target.
+plussqit_coden_cpu_perf_bench: PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/rule
+.PHONY : plussqit_coden_cpu_perf_bench
+
+# fast build rule for target.
+plussqit_coden_cpu_perf_bench/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build.make PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build
+.PHONY : plussqit_coden_cpu_perf_bench/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codeh.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codeh.dir/rule
@@ -1175,6 +1189,30 @@ examples/CodeM/transmit_demo.s: examples/CodeM/transmit_demo.cpp.s
 examples/CodeM/transmit_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/examples/CodeM/transmit_demo.cpp.s
 .PHONY : examples/CodeM/transmit_demo.cpp.s
+
+examples/CodeN/coden_cpu_perf_bench.o: examples/CodeN/coden_cpu_perf_bench.cpp.o
+.PHONY : examples/CodeN/coden_cpu_perf_bench.o
+
+# target to build an object file
+examples/CodeN/coden_cpu_perf_bench.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build.make PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/examples/CodeN/coden_cpu_perf_bench.cpp.o
+.PHONY : examples/CodeN/coden_cpu_perf_bench.cpp.o
+
+examples/CodeN/coden_cpu_perf_bench.i: examples/CodeN/coden_cpu_perf_bench.cpp.i
+.PHONY : examples/CodeN/coden_cpu_perf_bench.i
+
+# target to preprocess a source file
+examples/CodeN/coden_cpu_perf_bench.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build.make PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/examples/CodeN/coden_cpu_perf_bench.cpp.i
+.PHONY : examples/CodeN/coden_cpu_perf_bench.cpp.i
+
+examples/CodeN/coden_cpu_perf_bench.s: examples/CodeN/coden_cpu_perf_bench.cpp.s
+.PHONY : examples/CodeN/coden_cpu_perf_bench.s
+
+# target to generate assembly for a file
+examples/CodeN/coden_cpu_perf_bench.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build.make PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/examples/CodeN/coden_cpu_perf_bench.cpp.s
+.PHONY : examples/CodeN/coden_cpu_perf_bench.cpp.s
 
 examples/CodeN/note_base_methods_demo.o: examples/CodeN/note_base_methods_demo.cpp.o
 .PHONY : examples/CodeN/note_base_methods_demo.o
@@ -5069,6 +5107,33 @@ tests/CodeM/test_patch165_cuda_stochastic_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch165_cuda_stochastic_contract.cpp.s
 .PHONY : tests/CodeM/test_patch165_cuda_stochastic_contract.cpp.s
 
+tests/CodeM/test_patch166_cuda_cublas_strict_route.o: tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.o
+.PHONY : tests/CodeM/test_patch166_cuda_cublas_strict_route.o
+
+# target to build an object file
+tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.o
+.PHONY : tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.o
+
+tests/CodeM/test_patch166_cuda_cublas_strict_route.i: tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.i
+.PHONY : tests/CodeM/test_patch166_cuda_cublas_strict_route.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.i
+.PHONY : tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.i
+
+tests/CodeM/test_patch166_cuda_cublas_strict_route.s: tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.s
+.PHONY : tests/CodeM/test_patch166_cuda_cublas_strict_route.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.s
+.PHONY : tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp.s
+
 tests/CodeM/test_patch166_parallel_iterator_indexing_regression.o: tests/CodeM/test_patch166_parallel_iterator_indexing_regression.cpp.o
 .PHONY : tests/CodeM/test_patch166_parallel_iterator_indexing_regression.o
 
@@ -7619,6 +7684,30 @@ tests/CodeN/test_coden_patch21_note_latex_render.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch21_note_latex_render.cpp.s
 .PHONY : tests/CodeN/test_coden_patch21_note_latex_render.cpp.s
 
+tests/CodeN/test_coden_patch22_perf_regression_corpus.o: tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.o
+.PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.o
+
+# target to build an object file
+tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.o
+.PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.o
+
+tests/CodeN/test_coden_patch22_perf_regression_corpus.i: tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.i
+.PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.i
+.PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.i
+
+tests/CodeN/test_coden_patch22_perf_regression_corpus.s: tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s
+.PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s
+.PHONY : tests/CodeN/test_coden_patch22_perf_regression_corpus.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -7660,6 +7749,7 @@ help:
 	@echo "... plussqit_codem_suppose_demo"
 	@echo "... plussqit_codem_transmit_demo"
 	@echo "... plussqit_coden"
+	@echo "... plussqit_coden_cpu_perf_bench"
 	@echo "... plussqit_coden_note_base_methods_demo"
 	@echo "... plussqit_coden_note_cleanup_demo"
 	@echo "... plussqit_coden_note_factory_demo"
@@ -7730,6 +7820,9 @@ help:
 	@echo "... examples/CodeM/transmit_demo.o"
 	@echo "... examples/CodeM/transmit_demo.i"
 	@echo "... examples/CodeM/transmit_demo.s"
+	@echo "... examples/CodeN/coden_cpu_perf_bench.o"
+	@echo "... examples/CodeN/coden_cpu_perf_bench.i"
+	@echo "... examples/CodeN/coden_cpu_perf_bench.s"
 	@echo "... examples/CodeN/note_base_methods_demo.o"
 	@echo "... examples/CodeN/note_base_methods_demo.i"
 	@echo "... examples/CodeN/note_base_methods_demo.s"
@@ -8199,6 +8292,9 @@ help:
 	@echo "... tests/CodeM/test_patch165_cuda_stochastic_contract.o"
 	@echo "... tests/CodeM/test_patch165_cuda_stochastic_contract.i"
 	@echo "... tests/CodeM/test_patch165_cuda_stochastic_contract.s"
+	@echo "... tests/CodeM/test_patch166_cuda_cublas_strict_route.o"
+	@echo "... tests/CodeM/test_patch166_cuda_cublas_strict_route.i"
+	@echo "... tests/CodeM/test_patch166_cuda_cublas_strict_route.s"
 	@echo "... tests/CodeM/test_patch166_parallel_iterator_indexing_regression.o"
 	@echo "... tests/CodeM/test_patch166_parallel_iterator_indexing_regression.i"
 	@echo "... tests/CodeM/test_patch166_parallel_iterator_indexing_regression.s"
@@ -8505,6 +8601,9 @@ help:
 	@echo "... tests/CodeN/test_coden_patch21_note_latex_render.o"
 	@echo "... tests/CodeN/test_coden_patch21_note_latex_render.i"
 	@echo "... tests/CodeN/test_coden_patch21_note_latex_render.s"
+	@echo "... tests/CodeN/test_coden_patch22_perf_regression_corpus.o"
+	@echo "... tests/CodeN/test_coden_patch22_perf_regression_corpus.i"
+	@echo "... tests/CodeN/test_coden_patch22_perf_regression_corpus.s"
 .PHONY : help
 
 

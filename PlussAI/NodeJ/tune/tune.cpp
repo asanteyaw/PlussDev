@@ -4,9 +4,11 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <future>
 #include <limits>
 #include <random>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -85,6 +87,25 @@ namespace {
   return candidate < incumbent;
 }
 
+[[nodiscard]] std::int64_t resolved_search_parallelism(std::size_t count, std::int64_t max_parallel) {
+  if (count <= 1) return 1;
+  if (max_parallel > 0) {
+    return std::max<std::int64_t>(
+        1,
+        std::min<std::int64_t>(static_cast<std::int64_t>(count), max_parallel));
+  }
+  const std::uint32_t hw = std::thread::hardware_concurrency();
+  const std::int64_t cap = hw == 0 ? 1 : static_cast<std::int64_t>(hw);
+  return std::max<std::int64_t>(1, std::min<std::int64_t>(static_cast<std::int64_t>(count), cap));
+}
+
+[[nodiscard]] std::int64_t resolved_nested_fold_parallelism(std::int64_t candidate_workers) {
+  if (candidate_workers <= 1) return 0;
+  const std::uint32_t hw = std::thread::hardware_concurrency();
+  const std::int64_t cap = hw == 0 ? candidate_workers : static_cast<std::int64_t>(hw);
+  return std::max<std::int64_t>(1, cap / std::max<std::int64_t>(1, candidate_workers));
+}
+
 [[nodiscard]] TuneTrialResult make_failed_trial(const ModelSpec& spec, const Status& status) {
   TuneTrialResult out{};
   out.spec = spec;
@@ -115,7 +136,8 @@ StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates,
                            const TrainOptions& train_options,
                            const AssessOptions& assess_options,
                            MetricKind objective_metric,
-                           TuneObjectivePolicy objective_policy) {
+                           TuneObjectivePolicy objective_policy,
+                           std::int64_t max_parallel) {
   if (candidates.empty()) {
     return StatusOr<TuneReport>(Status::invalid_argument("sweep requires at least one candidate ModelSpec."));
   }
@@ -131,17 +153,22 @@ StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates,
   bool have_best = false;
   double best_objective = maximize ? -std::numeric_limits<double>::infinity()
                                    : std::numeric_limits<double>::infinity();
+  const std::int64_t workers = resolved_search_parallelism(candidates.size(), max_parallel);
+  const std::int64_t fold_parallel_budget = resolved_nested_fold_parallelism(workers);
 
-  for (std::size_t i = 0; i < candidates.size(); ++i) {
+  auto eval_trial = [&](std::size_t i) -> TuneTrialResult {
     TuneTrialResult trial{};
     trial.spec = candidates[i];
 
+    SplitOptions trial_split = split;
+    if (workers > 1 && trial_split.max_parallel <= 0) {
+      // Use bounded nested fold parallelism when evaluating many candidates concurrently.
+      trial_split.max_parallel = fold_parallel_budget;
+    }
     StatusOr<CrossAssessReport> assess_or =
-        cross_assess(candidates[i], batch, split, train_options, assess_options);
+        cross_assess(candidates[i], batch, trial_split, train_options, assess_options);
     if (!assess_or.ok()) {
-      trial = make_failed_trial(candidates[i], assess_or.status());
-      report.trials.push_back(std::move(trial));
-      continue;
+      return make_failed_trial(candidates[i], assess_or.status());
     }
 
     trial.assess = assess_or.move_value();
@@ -149,14 +176,42 @@ StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates,
     if (!objective_or.ok()) {
       trial.status = objective_or.status();
       trial.objective = std::numeric_limits<double>::quiet_NaN();
-      report.trials.push_back(std::move(trial));
-      continue;
+      return trial;
     }
 
     trial.status = Status::success();
     trial.objective = objective_or.value();
-    report.trials.push_back(std::move(trial));
-    maybe_update_best(report.trials.back(), maximize, static_cast<std::int64_t>(i), have_best, best_objective, report.best_index);
+    return trial;
+  };
+
+  if (workers <= 1) {
+    for (std::size_t i = 0; i < candidates.size(); ++i) {
+      report.trials.push_back(eval_trial(i));
+      maybe_update_best(report.trials.back(),
+                        maximize,
+                        static_cast<std::int64_t>(i),
+                        have_best,
+                        best_objective,
+                        report.best_index);
+    }
+  } else {
+    for (std::size_t start = 0; start < candidates.size(); start += static_cast<std::size_t>(workers)) {
+      const std::size_t end = std::min(candidates.size(), start + static_cast<std::size_t>(workers));
+      std::vector<std::future<TuneTrialResult>> futures{};
+      futures.reserve(end - start);
+      for (std::size_t i = start; i < end; ++i) {
+        futures.emplace_back(std::async(std::launch::async, [&, i]() { return eval_trial(i); }));
+      }
+      for (std::size_t i = start; i < end; ++i) {
+        report.trials.push_back(futures[i - start].get());
+        maybe_update_best(report.trials.back(),
+                          maximize,
+                          static_cast<std::int64_t>(i),
+                          have_best,
+                          best_objective,
+                          report.best_index);
+      }
+    }
   }
 
   return StatusOr<TuneReport>(std::move(report));
@@ -170,7 +225,8 @@ StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
                            const AssessOptions& assess_options,
                            MetricKind objective_metric,
                            TuneObjectivePolicy objective_policy,
-                           RandomState random) {
+                           RandomState random,
+                           std::int64_t max_parallel) {
   if (!sampler) {
     return StatusOr<TuneReport>(Status::invalid_argument("probe requires a valid sampler callback."));
   }
@@ -189,29 +245,33 @@ StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
   bool have_best = false;
   double best_objective = maximize ? -std::numeric_limits<double>::infinity()
                                    : std::numeric_limits<double>::infinity();
+  const std::int64_t workers = resolved_search_parallelism(static_cast<std::size_t>(trials), max_parallel);
+  const std::int64_t fold_parallel_budget = resolved_nested_fold_parallelism(workers);
 
   const std::uint64_t base_seed = compose_seed(random);
-  for (std::int64_t trial_index = 0; trial_index < trials; ++trial_index) {
+  auto eval_trial = [&](std::int64_t trial_index) -> TuneTrialResult {
     const std::uint64_t trial_seed = splitmix64(base_seed + static_cast<std::uint64_t>(trial_index));
     StatusOr<ModelSpec> spec_or = sampler(trial_index, trial_seed);
     if (!spec_or.ok()) {
       TuneTrialResult failed{};
       failed.status = spec_or.status();
       failed.objective = std::numeric_limits<double>::quiet_NaN();
-      report.trials.push_back(std::move(failed));
-      continue;
+      return failed;
     }
 
     TuneTrialResult trial{};
     trial.spec = spec_or.move_value();
-
+    SplitOptions trial_split = split;
+    if (workers > 1 && trial_split.max_parallel <= 0) {
+      // Use bounded nested fold parallelism when evaluating many probe trials concurrently.
+      trial_split.max_parallel = fold_parallel_budget;
+    }
     StatusOr<CrossAssessReport> assess_or =
-        cross_assess(trial.spec, batch, split, train_options, assess_options);
+        cross_assess(trial.spec, batch, trial_split, train_options, assess_options);
     if (!assess_or.ok()) {
       trial.status = assess_or.status();
       trial.objective = std::numeric_limits<double>::quiet_NaN();
-      report.trials.push_back(std::move(trial));
-      continue;
+      return trial;
     }
 
     trial.assess = assess_or.move_value();
@@ -219,19 +279,42 @@ StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
     if (!objective_or.ok()) {
       trial.status = objective_or.status();
       trial.objective = std::numeric_limits<double>::quiet_NaN();
-      report.trials.push_back(std::move(trial));
-      continue;
+      return trial;
     }
 
     trial.status = Status::success();
     trial.objective = objective_or.value();
-    report.trials.push_back(std::move(trial));
-    maybe_update_best(report.trials.back(),
-                      maximize,
-                      static_cast<std::int64_t>(report.trials.size() - 1),
-                      have_best,
-                      best_objective,
-                      report.best_index);
+    return trial;
+  };
+
+  if (workers <= 1) {
+    for (std::int64_t trial_index = 0; trial_index < trials; ++trial_index) {
+      report.trials.push_back(eval_trial(trial_index));
+      maybe_update_best(report.trials.back(),
+                        maximize,
+                        static_cast<std::int64_t>(report.trials.size() - 1),
+                        have_best,
+                        best_objective,
+                        report.best_index);
+    }
+  } else {
+    for (std::int64_t start = 0; start < trials; start += workers) {
+      const std::int64_t end = std::min(trials, start + workers);
+      std::vector<std::future<TuneTrialResult>> futures{};
+      futures.reserve(static_cast<std::size_t>(end - start));
+      for (std::int64_t i = start; i < end; ++i) {
+        futures.emplace_back(std::async(std::launch::async, [&, i]() { return eval_trial(i); }));
+      }
+      for (std::int64_t i = start; i < end; ++i) {
+        report.trials.push_back(futures[static_cast<std::size_t>(i - start)].get());
+        maybe_update_best(report.trials.back(),
+                          maximize,
+                          static_cast<std::int64_t>(report.trials.size() - 1),
+                          have_best,
+                          best_objective,
+                          report.best_index);
+      }
+    }
   }
 
   return StatusOr<TuneReport>(std::move(report));

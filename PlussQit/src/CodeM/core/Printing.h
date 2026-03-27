@@ -87,7 +87,7 @@ struct PrintOptions {
   PrintBracketStyle pretty_bracket_style = PrintBracketStyle::Unicode;
   bool pretty_values_with_commas = false;
   bool pretty_show_slice_indices = true;
-  std::string pretty_slice_label_prefix = "values";
+  std::string pretty_slice_label_prefix = "data";
   std::string pretty_slice_label_suffix = " =";
   PrintSliceSampling pretty_slice_sampling = PrintSliceSampling::HeadTail;
   std::int64_t pretty_matrix_max_rows = 7; // if rows > this: show head/tail rows with ellipsis

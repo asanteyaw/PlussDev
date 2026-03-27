@@ -10,7 +10,7 @@ TEST_CASE("Bytes-mode Note basic behavior", "[coden][patch10]") {
 
   REQUIRE(b.defined());
   REQUIRE(b.dim() == 0);
-  REQUIRE(b.is_bytes());
+  REQUIRE(static_cast<const pluss::coden::NoteBase&>(b).is_bytes());
 
   auto v = b.at(0);
   REQUIRE(v.size() == 3);

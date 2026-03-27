@@ -56,7 +56,7 @@
 #include "CodeM/native/mps/Scatter.h"
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
-#include "aux/rng_seed.h"
+#include "pluss/tils/aux/rng_seed.h"
 
 #ifdef PLUSS_ENABLE_TORCH
 #include "pluss/codem/torch_interop.h"
@@ -3981,8 +3981,8 @@ Series bincount(const Series& a, std::int64_t minlength) {
     auto xf = x.to(ScalarType::Float32);
     auto min_s = amin(xf);
     auto max_s = amax(xf);
-    const auto min_h = min_s.to_host<float>();
-    const auto max_h = max_s.to_host<float>();
+    const auto min_h = min_s.host<float>().array();
+    const auto max_h = max_s.host<float>().array();
     PLUSS_CHECK(!min_h.data.empty() && !max_h.data.empty(), "bincount: internal scalar extraction failure");
     PLUSS_CHECK(min_h.data[0] >= 0.0f, "bincount: input must be non-negative");
     const auto maxv = static_cast<std::int64_t>(std::llround(static_cast<double>(max_h.data[0])));
@@ -4039,8 +4039,8 @@ Series histc(const Series& a, std::int64_t bins, double min, double max) {
     if (min == 0.0 && max == 0.0) {
       auto mn_s = amin(x);
       auto mx_s = amax(x);
-      const auto mn_h = mn_s.to_host<float>();
-      const auto mx_h = mx_s.to_host<float>();
+      const auto mn_h = mn_s.host<float>().array();
+      const auto mx_h = mx_s.host<float>().array();
       PLUSS_CHECK(!mn_h.data.empty() && !mx_h.data.empty(), "histc: internal scalar extraction failure");
       min = static_cast<double>(mn_h.data[0]);
       max = static_cast<double>(mx_h.data[0]);
@@ -4271,11 +4271,6 @@ Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st, Platfor
       throw_error(
           std::string("Series::empty(..., CUDA): CUDA runtime unavailable: ") +
           native::cuda::runtime_error_cstr());
-    }
-    if (!native::cuda::cpu_bridge_enabled()) {
-      throw_error(
-          "Series::empty(..., CUDA): CUDA storage path is unavailable in strict mode; "
-          "set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 for bridge-backed staging storage");
     }
   }
   if (platform == Platform::MPS) {
@@ -4827,11 +4822,6 @@ Series Series::platform(Platform target) const {
         throw_error(
             std::string("Series::platform(CUDA): CUDA runtime unavailable: ") +
             native::cuda::runtime_error_cstr());
-      }
-      if (!native::cuda::cpu_bridge_enabled()) {
-        throw_error(
-            "Series::platform(CUDA): CUDA transfer path unavailable in strict mode; "
-            "set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 for bridge-backed staging transfers");
       }
       break;
     case Platform::MPS:

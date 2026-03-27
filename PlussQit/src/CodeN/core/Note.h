@@ -12,6 +12,10 @@
 #include "CodeN/core/Errors.h"
 #include "CodeN/core/NoteBase.h"
 
+namespace pluss::codem {
+class Series;
+}
+
 namespace pluss::coden {
 
 class Note;
@@ -43,6 +47,7 @@ public:
   Note latex_to_text(::std::int64_t mode = 0) const;
   Note text_to_latex(::std::int64_t mode = 0) const;
   Note render_latex(::std::int64_t mode = 0) const;
+  Note take(::std::span<const ::std::int64_t> indices) const;
 
   // Full surface (hundreds of methods + factories)
   #include "CodeN/generated/NoteMethodDeclsGen.h"
@@ -77,6 +82,7 @@ public:
   // Interop helpers returning CodeM Series.
   pluss::codem::Series contains_series(::std::string_view needle) const;
   pluss::codem::Series lengths_bytes_series() const;
+  pluss::codem::Series argsort(bool descending = false, bool stable = true) const;
 #endif
 
 private:

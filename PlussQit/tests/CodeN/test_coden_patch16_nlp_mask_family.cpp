@@ -15,7 +15,7 @@ TEST_CASE("CodeN NLP mask family is concrete", "[coden][patch16]") {
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
   auto out = n.nlp_mask_pii();
-  const std::string s0 = out.at(0);
+  const std::string s0 = std::string(out.at(0));
   REQUIRE(s0.find("[EMAIL]") != std::string::npos);
   REQUIRE(s0.find("[URL]") != std::string::npos);
   REQUIRE(s0.find("[MENTION]") != std::string::npos);
@@ -25,7 +25,7 @@ TEST_CASE("CodeN NLP mask family is concrete", "[coden][patch16]") {
   REQUIRE(s0.find("[CUR]") != std::string::npos);
   REQUIRE(s0.find("[NUM]") != std::string::npos);
 
-  const std::string s1 = out.at(1);
+  const std::string s1 = std::string(out.at(1));
   REQUIRE(s1.find("[EMAIL]") != std::string::npos);
   REQUIRE(s1.find("[TIME]") != std::string::npos);
   REQUIRE(s1.find("[DATE]") != std::string::npos);
@@ -35,7 +35,7 @@ TEST_CASE("CodeN NLP mask family is concrete", "[coden][patch16]") {
 TEST_CASE("CodeN nlp_mask_pii flags select subsets", "[coden][patch16]") {
   pluss::Note n = pluss::make_note("contact bob@example.com and use code 42");
   auto numbers_only = n.nlp_mask_pii(1);
-  const std::string s = numbers_only.at(0);
+  const std::string s = std::string(numbers_only.at(0));
   REQUIRE(s.find("bob@example.com") != std::string::npos);
   REQUIRE(s.find("[NUM]") != std::string::npos);
   REQUIRE(s.find("[EMAIL]") == std::string::npos);

@@ -11,7 +11,7 @@ TEST_CASE("CodeN TeX delimiter/spacing cleanup family is concrete", "[coden][pat
   auto out = tex.tex_remove_left_right()
                  .tex_remove_big_delims()
                  .tex_remove_spacing_cmds();
-  const std::string s = out.at(0);
+  const std::string s = std::string(out.at(0));
   REQUIRE(s.find("\\left") == std::string::npos);
   REQUIRE(s.find("\\right") == std::string::npos);
   REQUIRE(s.find("\\Bigl") == std::string::npos);

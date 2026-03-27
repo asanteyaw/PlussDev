@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -79,6 +80,29 @@ namespace pluss::coden::native::cpu {
 
 // Byte substring contains.
 bool contains_bytes(::std::string_view hay, ::std::string_view needle);
+
+enum class LexCompareOp : ::std::uint8_t {
+  Eq = 0,
+  Ne = 1,
+  Lt = 2,
+  Le = 3,
+  Gt = 4,
+  Ge = 5,
+};
+
+// Lexical byte compare on UTF-8/bytes payloads (byte-order semantics).
+bool compare_lex_bytes(::std::string_view lhs, ::std::string_view rhs, LexCompareOp op) noexcept;
+
+// FNV-1a 64-bit hash for byte payloads.
+::std::uint64_t hash_bytes_fnv1a(::std::string_view s) noexcept;
+
+// Batch kernels (input and output spans must have matching size).
+void compare_lex_bytes_batch(::std::span<const ::std::string_view> lhs,
+                             ::std::span<const ::std::string_view> rhs,
+                             LexCompareOp op,
+                             ::std::span<::std::uint8_t> out);
+void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
+                            ::std::span<::std::uint64_t> out);
 
 // Byte replace (non-overlapping, left-to-right).
 ::std::string replace_bytes(::std::string_view s, ::std::string_view from, ::std::string_view to);

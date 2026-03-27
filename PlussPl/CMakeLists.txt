@@ -22,7 +22,7 @@ target_include_directories(PlussPl PUBLIC
 )
 
 target_link_libraries(PlussPl PUBLIC
-    PlussView
+    PlussTils
     PlussQit
     plussqit_codem
 )

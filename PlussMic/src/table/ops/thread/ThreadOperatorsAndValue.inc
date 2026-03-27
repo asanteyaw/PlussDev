@@ -360,6 +360,20 @@ ThreadValue::ThreadValue(Thread thread) : thread_(std::move(thread)) {}
 bool ThreadValue::defined() const noexcept { return thread_.defined(); }
 ThreadKind ThreadValue::kind() const { return thread_.kind(); }
 const Thread& ThreadValue::thread() const noexcept { return thread_; }
+ThreadValue::Payload ThreadValue::payload() const {
+  switch (kind()) {
+    case ThreadKind::Series:
+      return as_series();
+    case ThreadKind::Note:
+      return as_note();
+    case ThreadKind::Timeline:
+      return as_timeline();
+    case ThreadKind::TimeIndex:
+      return as_timeindex();
+    default:
+      PLUSS_FAIL("ThreadValue::payload: unsupported ThreadKind");
+  }
+}
 
 pluss::Series ThreadValue::as_series() const { return thread_.as_series(); }
 pluss::Note ThreadValue::as_note() const { return thread_.as_note(); }
@@ -370,3 +384,12 @@ ThreadValue::operator pluss::Series() const { return as_series(); }
 ThreadValue::operator pluss::Note() const { return as_note(); }
 ThreadValue::operator pluss::Timeline() const { return as_timeline(); }
 ThreadValue::operator pluss::TimeIndex() const { return as_timeindex(); }
+
+std::ostream& operator<<(std::ostream& os, const ThreadValue& value) {
+  output_render(os, value);
+  return os;
+}
+
+void output_render(std::ostream& os, const ThreadValue& value) {
+  std::visit([&](const auto& v) { os << v; }, value.payload());
+}

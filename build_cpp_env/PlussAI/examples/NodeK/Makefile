@@ -486,6 +486,20 @@ plussai_adagrad_oop_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_adagrad_oop_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_adagrad_oop_demo.dir/build
 .PHONY : plussai_adagrad_oop_demo/fast
 
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/rule
+
+# Convenience name for target.
+plussai_outlier_holdout_parity_probe: PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/rule
+.PHONY : plussai_outlier_holdout_parity_probe
+
+# fast build rule for target.
+plussai_outlier_holdout_parity_probe/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build
+.PHONY : plussai_outlier_holdout_parity_probe/fast
+
 adagrad_oop_demo.o: adagrad_oop_demo.cpp.o
 .PHONY : adagrad_oop_demo.o
 
@@ -966,6 +980,30 @@ nn_transformer_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/nn_transformer_demo.cpp.s
 .PHONY : nn_transformer_demo.cpp.s
 
+outlier_holdout_parity_probe.o: outlier_holdout_parity_probe.cpp.o
+.PHONY : outlier_holdout_parity_probe.o
+
+# target to build an object file
+outlier_holdout_parity_probe.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/outlier_holdout_parity_probe.cpp.o
+.PHONY : outlier_holdout_parity_probe.cpp.o
+
+outlier_holdout_parity_probe.i: outlier_holdout_parity_probe.cpp.i
+.PHONY : outlier_holdout_parity_probe.i
+
+# target to preprocess a source file
+outlier_holdout_parity_probe.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/outlier_holdout_parity_probe.cpp.i
+.PHONY : outlier_holdout_parity_probe.cpp.i
+
+outlier_holdout_parity_probe.s: outlier_holdout_parity_probe.cpp.s
+.PHONY : outlier_holdout_parity_probe.s
+
+# target to generate assembly for a file
+outlier_holdout_parity_probe.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/outlier_holdout_parity_probe.cpp.s
+.PHONY : outlier_holdout_parity_probe.cpp.s
+
 tcn_demo.o: tcn_demo.cpp.o
 .PHONY : tcn_demo.o
 
@@ -1025,6 +1063,7 @@ help:
 	@echo "... plussai_nn_schedule_demo"
 	@echo "... plussai_nn_sp500_lstm_end_to_end_minimal_demo"
 	@echo "... plussai_nn_transformer_demo"
+	@echo "... plussai_outlier_holdout_parity_probe"
 	@echo "... plussai_tcn_demo"
 	@echo "... adagrad_oop_demo.o"
 	@echo "... adagrad_oop_demo.i"
@@ -1086,6 +1125,9 @@ help:
 	@echo "... nn_transformer_demo.o"
 	@echo "... nn_transformer_demo.i"
 	@echo "... nn_transformer_demo.s"
+	@echo "... outlier_holdout_parity_probe.o"
+	@echo "... outlier_holdout_parity_probe.i"
+	@echo "... outlier_holdout_parity_probe.s"
 	@echo "... tcn_demo.o"
 	@echo "... tcn_demo.i"
 	@echo "... tcn_demo.s"

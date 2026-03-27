@@ -15,6 +15,9 @@ using pluss::Series;
 using pluss::subsp::stats::ts::AdfModel;
 using pluss::subsp::stats::ts::AdfOptions;
 using pluss::subsp::stats::ts::ArchLmOptions;
+using pluss::subsp::stats::ts::DmLoss;
+using pluss::subsp::stats::ts::DmOptions;
+using pluss::subsp::stats::ts::DmTail;
 using pluss::subsp::stats::ts::KpssOptions;
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
@@ -101,6 +104,30 @@ TEST_CASE("ts hypothesis: KPSS separates stationary and unit-root paths", "[ts][
   REQUIRE(kpss_rw.reject);
 }
 
+TEST_CASE("ts hypothesis: DM test detects forecast loss difference", "[ts][hypothesis][dm]") {
+  const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Series base = pluss::randn({4000}, cfg, 20260406ULL);
+  const Series err_b = base;
+  const Series err_a = base.add(1.0);
+
+  DmOptions opt;
+  opt.loss = DmLoss::Squared;
+  opt.horizon = 1;
+  opt.tail = DmTail::Right;
+  opt.alpha = 0.01;
+
+  const auto right = pluss::subsp::stats::ts::dm_test(err_a, err_b, opt, cfg);
+  REQUIRE(right.reject);
+  REQUIRE(right.pvalue < 1e-8);
+  REQUIRE(right.stat > 0.0);
+
+  opt.tail = DmTail::Left;
+  const auto left = pluss::subsp::stats::ts::dm_test(err_b, err_a, opt, cfg);
+  REQUIRE(left.reject);
+  REQUIRE(left.pvalue < 1e-8);
+  REQUIRE(left.stat < 0.0);
+}
+
 TEST_CASE("ts hypothesis: parameter validation", "[ts][hypothesis][errors]") {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series y = pluss::randn({64}, cfg, 20260421ULL);
@@ -116,4 +143,8 @@ TEST_CASE("ts hypothesis: parameter validation", "[ts][hypothesis][errors]") {
   KpssOptions bad_kpss;
   bad_kpss.lags = -1;
   REQUIRE_THROWS(pluss::subsp::stats::ts::kpss_test(y, bad_kpss, cfg));
+
+  DmOptions bad_dm;
+  bad_dm.horizon = 0;
+  REQUIRE_THROWS(pluss::subsp::stats::ts::dm_test(y, y, bad_dm, cfg));
 }

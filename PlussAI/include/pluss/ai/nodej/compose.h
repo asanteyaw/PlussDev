@@ -27,6 +27,8 @@ enum class TransformKind : std::uint8_t {
   PowerMap = 11,
   ThresholdBinarizer = 12,
   PolynomialLift = 13,
+  OrdinalEncoder = 14,
+  LabelEncoder = 15,
 };
 
 using TransformOptions = std::variant<prep::StandardScalerOptions,
@@ -42,7 +44,9 @@ using TransformOptions = std::variant<prep::StandardScalerOptions,
                                       prep::QuantileMapOptions,
                                       prep::PowerMapOptions,
                                       prep::ThresholdBinarizerOptions,
-                                      prep::PolynomialLiftOptions>;
+                                      prep::PolynomialLiftOptions,
+                                      prep::OrdinalEncoderOptions,
+                                      prep::LabelEncoderOptions>;
 
 struct TransformSpec {
   TransformKind kind = TransformKind::StandardScaler;
@@ -84,6 +88,10 @@ public:
   Status add_power_map(prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {});
   Status add_threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
   Status add_polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {});
+  Status add_ordinal_encoder(prep::OrdinalEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
+  Status add_label_encoder(prep::LabelEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
+  Status add_function_transformer(prep::FunctionTransformer transformer);
+  Status add_feature_transformer(prep::FeatureTransformer transformer);
 
   Status set_model(const ModelSpec& spec);
   Status set_classifier(std::unique_ptr<ClassifierBase> model);

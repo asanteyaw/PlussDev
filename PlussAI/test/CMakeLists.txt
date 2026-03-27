@@ -26,6 +26,14 @@ foreach(test_src ${AI_TEST_SOURCES})
     )
 
     add_test(NAME ${test_name} COMMAND ${test_name})
+    if(DEFINED PLUSS_CUDNN_LIBRARY_DIR AND PLUSS_CUDNN_LIBRARY_DIR)
+        set_property(TARGET ${test_name} APPEND PROPERTY BUILD_RPATH "${PLUSS_CUDNN_LIBRARY_DIR}")
+    endif()
+    if(DEFINED PLUSS_CUDNN_LIBRARY AND PLUSS_CUDNN_LIBRARY)
+        set_tests_properties(${test_name} PROPERTIES
+            ENVIRONMENT "PLUSS_CUDNN_LIBRARY=${PLUSS_CUDNN_LIBRARY}"
+        )
+    endif()
 
     message(STATUS "Added AI test: ${test_name}")
 endforeach()

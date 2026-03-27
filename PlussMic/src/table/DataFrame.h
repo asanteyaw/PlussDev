@@ -7,9 +7,11 @@
 #include <iosfwd>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -22,6 +24,7 @@
 #include "loader/ExcelLoader.h"
 #include "table/Thread.h"
 #include "table/display/Display.h"
+#include "pluss/codem/stack_array.h"
 #include "pluss/codem/codem.h"
 
 namespace pluss::loader {
@@ -39,6 +42,15 @@ struct TabelizePolicy;
 namespace pluss::table {
 
 namespace detail {
+template <class T>
+struct IsInitializerList : std::false_type {};
+template <class T>
+struct IsInitializerList<std::initializer_list<T>> : std::true_type {};
+template <class T>
+inline constexpr bool IsInitializerListV = IsInitializerList<std::remove_cvref_t<T>>::value;
+}
+
+namespace detail {
 class DataFrameImpl;
 }
 class DataFrame;
@@ -49,6 +61,7 @@ class AtlasPlotAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
 class DataFrameSqlPrepared;
+class DataFrameTsAccessor;
 class Atlas;
 
 class ColumnRef {
@@ -70,11 +83,33 @@ private:
 
 class DataFrame {
 public:
-  using MatrixValues = std::tuple<
+  struct MatrixValues : std::tuple<
       std::vector<pluss::Series>,
       std::vector<pluss::Note>,
       std::vector<pluss::Timeline>,
-      std::vector<pluss::TimeIndex>>;
+      std::vector<pluss::TimeIndex>> {
+    using Base = std::tuple<
+        std::vector<pluss::Series>,
+        std::vector<pluss::Note>,
+        std::vector<pluss::Timeline>,
+        std::vector<pluss::TimeIndex>>;
+    using Base::Base;
+
+    std::span<const pluss::Series> series_span() const noexcept { return std::get<0>(*this); }
+    std::span<const pluss::Note> note_span() const noexcept { return std::get<1>(*this); }
+    std::span<const pluss::Timeline> timeline_span() const noexcept { return std::get<2>(*this); }
+    std::span<const pluss::TimeIndex> timeindex_span() const noexcept { return std::get<3>(*this); }
+
+    std::size_t size() const noexcept {
+      return std::get<0>(*this).size() + std::get<1>(*this).size()
+             + std::get<2>(*this).size() + std::get<3>(*this).size();
+    }
+
+    pluss::Series as_series() const;
+    pluss::Note as_note() const;
+    pluss::Timeline as_timeline() const;
+    pluss::TimeIndex as_timeindex() const;
+  };
 
   class LetSlot {
   public:
@@ -364,7 +399,6 @@ public:
   std::int64_t ncases() const;
   std::int64_t nfeats() const;
   std::int64_t nfeatures() const;
-  std::vector<Thread> values() const;
   MatrixValues matrix() const;
   const std::vector<std::string>& feature_names() const;
   std::vector<Thread> features() const;
@@ -389,8 +423,31 @@ public:
   bool has_feature(std::string_view name) const;
   Thread features(std::string_view name);
   Thread features(std::string_view name) const;
+  DataFrame features(std::span<const std::string_view> names);
+  DataFrame features(std::span<const std::string_view> names) const;
+  DataFrame features(StackArray<std::string_view> names);
+  DataFrame features(StackArray<std::string_view> names) const;
+  template <class NameRange>
+    requires(std::ranges::input_range<NameRange> &&
+             !std::is_convertible_v<NameRange, std::string_view> &&
+             !detail::IsInitializerListV<NameRange> &&
+             !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> &&
+             std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>)
+  DataFrame features(const NameRange& names) {
+    return features(StackArray<std::string_view>(names));
+  }
+  template <class NameRange>
+    requires(std::ranges::input_range<NameRange> &&
+             !std::is_convertible_v<NameRange, std::string_view> &&
+             !detail::IsInitializerListV<NameRange> &&
+             !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> &&
+             std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>)
+  DataFrame features(const NameRange& names) const {
+    return features(StackArray<std::string_view>(names));
+  }
   ColumnRef feature_ref(std::string_view name) const;
   DataFrame select(std::initializer_list<std::string_view> names) const;
+  DataFrame select(std::span<const std::string_view> names) const;
   DataFrame select_like(std::string_view needle, bool case_sensitive = true) const;
   DataFrame select_regex(std::string_view pattern) const;
   DataFrame features(std::initializer_list<std::string_view> names);
@@ -433,6 +490,8 @@ public:
   DataFrameSqlAccessor sql() const;
   DataFrameSqlPrepared prepare_sql(std::string_view statement) const;
   DataFrameSqlPrepared prepare_sql(std::string_view statement, SqlOptions options) const;
+  DataFrameTsAccessor ts(std::string_view feature) const;
+  DataFrameTsAccessor ts(std::initializer_list<std::string_view> features) const;
   LetSlot set(std::string_view name);
   LetSlots set(std::initializer_list<std::string_view> names);
   DataFrame set_features(std::string_view name, const Thread& value) const;
@@ -769,6 +828,87 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
 void output_render(std::ostream& os, const DataFrameView& frame);
+
+enum class TsAlignMode : std::uint8_t {
+  Exact = 0,
+  Backward = 1,
+  Forward = 2,
+  Nearest = 3,
+};
+
+enum class TsReindexFill : std::uint8_t {
+  None = 0,
+  Forward = 1,
+  Backward = 2,
+  Zero = 3,
+  Constant = 4,
+};
+
+struct TsRollingBlockOptions {
+  bool include_mean{true};
+  bool include_std{true};
+  bool include_min{false};
+  bool include_max{false};
+  bool include_sum{false};
+  bool include_var{false};
+  std::int64_t min_periods{1};
+};
+
+class DataFrameTsAccessor {
+ public:
+  DataFrameTsAccessor(DataFrame frame, std::vector<std::string> features);
+
+  DataFrame returns(std::int64_t periods = 1) const;
+  DataFrame log_returns(std::int64_t periods = 1) const;
+  DataFrame diff(std::int64_t periods = 1) const;
+  DataFrame lag(std::int64_t periods = 1) const;
+  DataFrame lead(std::int64_t periods = 1) const;
+  DataFrame rolling_mean(std::int64_t window, std::int64_t min_periods = 1) const;
+  DataFrame rolling_std(std::int64_t window, std::int64_t min_periods = 1) const;
+  DataFrame rolling_sum(std::int64_t window, std::int64_t min_periods = 1) const;
+  DataFrame rolling_var(std::int64_t window, std::int64_t min_periods = 1) const;
+  DataFrame rolling_min(std::int64_t window, std::int64_t min_periods = 1) const;
+  DataFrame rolling_max(std::int64_t window, std::int64_t min_periods = 1) const;
+  DataFrame ema(double alpha) const;
+  DataFrame ewm_mean(double alpha) const;
+  DataFrame ewm_std(double alpha, double epsilon = 1e-12) const;
+  DataFrame expanding_mean(std::int64_t min_periods = 1) const;
+  DataFrame expanding_std(std::int64_t min_periods = 1, double epsilon = 1e-12) const;
+  DataFrame zscore_rolling(std::int64_t window, std::int64_t min_periods = 1, double epsilon = 1e-12) const;
+  DataFrame fill_gaps(pluss::subsp::stats::ts::GapFillMode mode = pluss::subsp::stats::ts::GapFillMode::Forward,
+                      std::optional<double> constant = std::nullopt) const;
+
+  DataFrame resample(std::string_view time_feature,
+                     std::string_view freq,
+                     pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Mean,
+                     std::int64_t step = 1) const;
+  DataFrame asfreq(std::string_view time_feature,
+                   std::string_view freq,
+                   std::int64_t step = 1,
+                   pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward,
+                   std::optional<double> constant = std::nullopt,
+                   pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
+  DataFrame insert_gaps(std::string_view time_feature,
+                        std::string_view freq,
+                        std::int64_t step = 1) const;
+  DataFrame align_to(std::string_view time_feature,
+                     const Thread& target_axis,
+                     TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame reindex_time(std::string_view time_feature,
+                         const Thread& target_axis,
+                         TsAlignMode mode = TsAlignMode::Exact,
+                         TsReindexFill fill = TsReindexFill::None,
+                         std::optional<double> constant = std::nullopt) const;
+
+  DataFrame calendar(std::string_view time_feature) const;
+  DataFrame lag_block(std::initializer_list<std::int64_t> lags) const;
+  DataFrame rolling_block(std::initializer_list<std::int64_t> windows,
+                          const TsRollingBlockOptions& options = {}) const;
+
+ private:
+  DataFrame frame_{};
+  std::vector<std::string> features_{};
+};
 
 } // namespace pluss::table
 

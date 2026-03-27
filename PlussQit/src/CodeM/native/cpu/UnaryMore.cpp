@@ -38,11 +38,6 @@ DISPATCH_FLOAT_ONLY(atan, std::atan(x), std::atan(x))
 DISPATCH_FLOAT_ONLY(sinh, std::sinh(x), std::sinh(x))
 DISPATCH_FLOAT_ONLY(cosh, std::cosh(x), std::cosh(x))
 
-DISPATCH_FLOAT_ONLY(floor, std::floor(x), std::floor(x))
-DISPATCH_FLOAT_ONLY(ceil, std::ceil(x), std::ceil(x))
-DISPATCH_FLOAT_ONLY(round, std::round(x), std::round(x))
-DISPATCH_FLOAT_ONLY(trunc, std::trunc(x), std::trunc(x))
-
 DISPATCH_FLOAT_ONLY(reciprocal, (1.0 / x), (1.0f / x))
 
 DISPATCH_FLOAT_ONLY(log1p, std::log1p(x), std::log1p(x))
@@ -98,12 +93,8 @@ static void unary_is_predicate_(const Series& a, Series& out, bool(*pred)(double
   throw_error("predicate unary: dtype not implemented");
 }
 
-static bool pred_isnan(double x) { return std::isnan(x); }
-static bool pred_isinf(double x) { return std::isinf(x); }
 static bool pred_isfinite(double x) { return std::isfinite(x); }
 
-void isnan(const Series& a, Series& out) { unary_is_predicate_(a, out, &pred_isnan); }
-void isinf(const Series& a, Series& out) { unary_is_predicate_(a, out, &pred_isinf); }
 void isfinite(const Series& a, Series& out) { unary_is_predicate_(a, out, &pred_isfinite); }
 
 void logical_not(const Series& a, Series& out) {

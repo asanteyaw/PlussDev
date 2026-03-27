@@ -386,7 +386,8 @@ bool run_nodej_rigorous_checks(std::ostream* err = nullptr) {
       if (err) *err << "rigorous: StandardScaler should preserve NaN mask locations\n";
       return false;
     }
-    if (!scaled.isnan().logical_not().where(scaled, pluss::zeros_like(scaled, ScalarType::Float64)).isfinite().all().item<bool>()) {
+    const Series non_nan_scaled = scaled.masked_select(scaled.isnan().logical_not());
+    if (non_nan_scaled.numel() > 0 && !non_nan_scaled.isfinite().all().item<bool>()) {
       if (err) *err << "rigorous: StandardScaler non-NaN outputs should be finite\n";
       return false;
     }

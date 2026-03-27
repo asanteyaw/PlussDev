@@ -1,5 +1,8 @@
 #include "pluss/ai/nodej/metrics.h"
 
+#include <algorithm>
+#include <future>
+#include <thread>
 #include <memory>
 #include <string>
 #include <utility>
@@ -92,6 +95,18 @@ template <class ModelT>
   return StatusOr<FoldAssessResult>(std::move(fold));
 }
 
+[[nodiscard]] std::int64_t resolved_cv_parallelism(std::size_t fold_count, const SplitOptions& split) {
+  if (fold_count <= 1) return 1;
+  if (split.max_parallel > 0) {
+    return std::max<std::int64_t>(
+        1,
+        std::min<std::int64_t>(static_cast<std::int64_t>(fold_count), split.max_parallel));
+  }
+  const std::uint32_t hw = std::thread::hardware_concurrency();
+  const std::int64_t cap = hw == 0 ? 1 : static_cast<std::int64_t>(hw);
+  return std::max<std::int64_t>(1, std::min<std::int64_t>(static_cast<std::int64_t>(fold_count), cap));
+}
+
 } // namespace
 
 StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec,
@@ -124,6 +139,14 @@ StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec,
   fold_assess_options.metrics = report.metrics;
   report.folds.reserve(plan.folds.size());
 
+  struct PreparedFold {
+    IndexSplit split{};
+    LabeledBatch train{};
+    LabeledBatch test{};
+  };
+  std::vector<PreparedFold> prepared{};
+  prepared.reserve(plan.folds.size());
+
   for (std::size_t fi = 0; fi < plan.folds.size(); ++fi) {
     const auto& fold = plan.folds[fi];
     StatusOr<LabeledBatch> train_or = slice_labeled_batch(batch, fold.train_indices);
@@ -142,48 +165,58 @@ StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec,
                                                            fold.train_indices.numel(),
                                                            fold.test_indices.numel()));
     }
+    prepared.push_back(PreparedFold{
+        .split = fold,
+        .train = train_or.move_value(),
+        .test = test_or.move_value(),
+    });
+  }
 
+  std::vector<StatusOr<FoldAssessResult>> fold_results{};
+  fold_results.reserve(prepared.size());
+  auto eval_fold = [&](std::size_t fi) -> StatusOr<FoldAssessResult> {
+    const PreparedFold& pf = prepared[fi];
     if (spec.task == TaskKind::Classification) {
       StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_classifier(spec);
-      if (!model_or.ok()) {
-        return StatusOr<CrossAssessReport>(with_fold_context(model_or.status(),
-                                                             static_cast<std::int64_t>(fi),
-                                                             static_cast<std::int64_t>(plan.folds.size()),
-                                                             fold.train_indices.numel(),
-                                                             fold.test_indices.numel()));
-      }
+      if (!model_or.ok()) return StatusOr<FoldAssessResult>(model_or.status());
       std::unique_ptr<ClassifierBase> model = model_or.move_value();
-      StatusOr<FoldAssessResult> fold_or =
-          learn_and_assess_fold(*model, train_or.value(), test_or.value(), train_options, fold_assess_options, fold);
-      if (!fold_or.ok()) {
-        return StatusOr<CrossAssessReport>(with_fold_context(fold_or.status(),
-                                                             static_cast<std::int64_t>(fi),
-                                                             static_cast<std::int64_t>(plan.folds.size()),
-                                                             fold.train_indices.numel(),
-                                                             fold.test_indices.numel()));
-      }
-      report.folds.push_back(fold_or.move_value());
-    } else {
-      StatusOr<std::unique_ptr<RegressorBase>> model_or = make_regressor(spec);
-      if (!model_or.ok()) {
-        return StatusOr<CrossAssessReport>(with_fold_context(model_or.status(),
-                                                             static_cast<std::int64_t>(fi),
-                                                             static_cast<std::int64_t>(plan.folds.size()),
-                                                             fold.train_indices.numel(),
-                                                             fold.test_indices.numel()));
-      }
-      std::unique_ptr<RegressorBase> model = model_or.move_value();
-      StatusOr<FoldAssessResult> fold_or =
-          learn_and_assess_fold(*model, train_or.value(), test_or.value(), train_options, fold_assess_options, fold);
-      if (!fold_or.ok()) {
-        return StatusOr<CrossAssessReport>(with_fold_context(fold_or.status(),
-                                                             static_cast<std::int64_t>(fi),
-                                                             static_cast<std::int64_t>(plan.folds.size()),
-                                                             fold.train_indices.numel(),
-                                                             fold.test_indices.numel()));
-      }
-      report.folds.push_back(fold_or.move_value());
+      return learn_and_assess_fold(*model, pf.train, pf.test, train_options, fold_assess_options, pf.split);
     }
+    StatusOr<std::unique_ptr<RegressorBase>> model_or = make_regressor(spec);
+    if (!model_or.ok()) return StatusOr<FoldAssessResult>(model_or.status());
+    std::unique_ptr<RegressorBase> model = model_or.move_value();
+    return learn_and_assess_fold(*model, pf.train, pf.test, train_options, fold_assess_options, pf.split);
+  };
+
+  const std::int64_t workers = resolved_cv_parallelism(prepared.size(), effective_split);
+  if (workers <= 1) {
+    for (std::size_t fi = 0; fi < prepared.size(); ++fi) {
+      fold_results.push_back(eval_fold(fi));
+    }
+  } else {
+    for (std::size_t start = 0; start < prepared.size(); start += static_cast<std::size_t>(workers)) {
+      const std::size_t end = std::min(prepared.size(), start + static_cast<std::size_t>(workers));
+      std::vector<std::future<StatusOr<FoldAssessResult>>> futures{};
+      futures.reserve(end - start);
+      for (std::size_t fi = start; fi < end; ++fi) {
+        futures.emplace_back(std::async(std::launch::async, [&, fi]() { return eval_fold(fi); }));
+      }
+      for (auto& future : futures) {
+        fold_results.push_back(future.get());
+      }
+    }
+  }
+
+  for (std::size_t fi = 0; fi < fold_results.size(); ++fi) {
+    const PreparedFold& pf = prepared[fi];
+    if (!fold_results[fi].ok()) {
+      return StatusOr<CrossAssessReport>(with_fold_context(fold_results[fi].status(),
+                                                           static_cast<std::int64_t>(fi),
+                                                           static_cast<std::int64_t>(prepared.size()),
+                                                           pf.split.train_indices.numel(),
+                                                           pf.split.test_indices.numel()));
+    }
+    report.folds.push_back(fold_results[fi].move_value());
   }
 
   const std::int64_t fold_count = static_cast<std::int64_t>(report.folds.size());

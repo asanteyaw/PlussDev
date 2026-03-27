@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include <iosfwd>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -13,6 +14,7 @@
 #include "pluss/codem/codem.h"
 #include "pluss/coden/coden.h"
 #include "pluss/codeh/codeh.h"
+#include "pluss/subsp/stats/ts.h"
 
 namespace pluss::table {
 
@@ -21,6 +23,8 @@ class ThreadImpl;
 }
 class ThreadValue;
 class DataFrameView;
+class ThreadView;
+class TimeSeriesAccessor;
 
 enum class ThreadKind : std::uint8_t {
   Series = 0,
@@ -88,7 +92,6 @@ public:
   ThreadKind kind() const;
   std::string dtype_name() const;
   ThreadValue value() const;
-  const Thread& values() const noexcept;
   bool is_valid(std::int64_t row) const;
 
   bool has_validity_mask() const;
@@ -126,8 +129,9 @@ public:
   Thread& fillna_(const pluss::TimeIndex& value);
 
   // 1D row-space transforms.
-  Thread head(std::int64_t n) const;
-  Thread tail(std::int64_t n) const;
+  ThreadView head(std::int64_t n = 5, bool render = true) const;
+  ThreadView tail(std::int64_t n = 5, bool render = true) const;
+  ThreadView view(std::int64_t start, std::int64_t stop, bool render = true) const;
   Thread shift(std::int64_t periods = 1) const;
   Thread slice(std::int64_t start, std::int64_t stop) const;
   Thread take(std::span<const std::int64_t> indices) const;
@@ -138,6 +142,7 @@ public:
   Thread bfill() const;
   Thread distinct(bool dropna = true) const;
   DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
+  ThreadView describe(bool render = true) const;
   Thread bucketize(std::initializer_list<double> bins,
                    std::initializer_list<std::int64_t> labels = {},
                    bool right = true,
@@ -180,17 +185,26 @@ public:
   Thread astype(pluss::codem::ScalarType dtype) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
+  std::string info_string() const;
   void show(const display::DisplayOptions& options = {}) const;
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
+  void info() const;
+  void info(std::ostream& os) const;
   bool has_display_labels() const;
   Thread display_labels() const;
   Thread with_display_labels(const Thread& labels) const;
   Thread clear_display_labels() const;
+  bool has_display_name() const;
+  std::string display_name() const;
+  Thread with_display_name(std::string name) const;
+  Thread clear_display_name() const;
 
   const pluss::Series& as_series() const;
   const pluss::Note& as_note() const;
   const pluss::Timeline& as_timeline() const;
   const pluss::TimeIndex& as_timeindex() const;
+
+  TimeSeriesAccessor ts() const;
 
 private:
   explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
@@ -199,6 +213,75 @@ private:
   const detail::ThreadImpl& impl_ref_() const;
 
   pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl_{nullptr};
+};
+
+struct TimeSeriesResample {
+  Thread labels{};
+  Thread values{};
+};
+
+class TimeSeriesAccessor {
+ public:
+  explicit TimeSeriesAccessor(Thread base);
+
+  Thread returns(std::int64_t periods = 1) const;
+  Thread log_returns(std::int64_t periods = 1) const;
+  Thread diff(std::int64_t periods = 1) const;
+  Thread lag(std::int64_t periods = 1) const;
+  Thread lead(std::int64_t periods = 1) const;
+  Thread rolling_mean(std::int64_t window, std::int64_t min_periods = 1) const;
+  Thread rolling_std(std::int64_t window, std::int64_t min_periods = 1) const;
+  Thread rolling_sum(std::int64_t window, std::int64_t min_periods = 1) const;
+  Thread rolling_var(std::int64_t window, std::int64_t min_periods = 1) const;
+  Thread rolling_min(std::int64_t window, std::int64_t min_periods = 1) const;
+  Thread rolling_max(std::int64_t window, std::int64_t min_periods = 1) const;
+  Thread ema(double alpha) const;
+  Thread ewm_mean(double alpha) const;
+  Thread ewm_std(double alpha, double epsilon = 1e-12) const;
+  Thread expanding_mean(std::int64_t min_periods = 1) const;
+  Thread expanding_std(std::int64_t min_periods = 1, double epsilon = 1e-12) const;
+  Thread zscore_rolling(std::int64_t window,
+                        std::int64_t min_periods = 1,
+                        double epsilon = 1e-12) const;
+  Thread fill_gaps(pluss::subsp::stats::ts::GapFillMode mode =
+                       pluss::subsp::stats::ts::GapFillMode::Forward,
+                   std::optional<double> constant = std::nullopt) const;
+  TimeSeriesResample resample(const Thread& axis,
+                              std::string_view freq,
+                              pluss::subsp::stats::ts::ResampleOp op =
+                                  pluss::subsp::stats::ts::ResampleOp::Mean,
+                              std::int64_t step = 1) const;
+
+ private:
+  const pluss::Series& series_payload_(const char* op) const;
+  Thread base_{};
+};
+
+class ThreadView final : public Thread {
+ public:
+  ThreadView();
+  explicit ThreadView(Thread thread,
+                      bool auto_render_terminal = false,
+                      std::string operation = {});
+  ThreadView(const ThreadView& other);
+  ThreadView(ThreadView&& other) noexcept;
+  ThreadView& operator=(const ThreadView& other);
+  ThreadView& operator=(ThreadView&& other) noexcept;
+  ~ThreadView();
+
+  void show(const display::DisplayOptions& options = {}) const;
+  void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
+
+ private:
+  struct State;
+  std::shared_ptr<State> state_{};
+
+  void consume_pending_display_() const;
+  void maybe_autorender_() const;
+  std::string resolved_window_title_() const;
+
+  friend void output_render(std::ostream& os, const ThreadView& thread);
+  friend std::ostream& operator<<(std::ostream& os, const ThreadView& thread);
 };
 
 Thread operator+(const Thread& lhs, double rhs);
@@ -239,12 +322,15 @@ Thread operator>=(const Thread& lhs, const Thread& rhs);
 
 class ThreadValue {
 public:
+  using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
+
   ThreadValue() = default;
   explicit ThreadValue(Thread thread);
 
   bool defined() const noexcept;
   ThreadKind kind() const;
   const Thread& thread() const noexcept;
+  Payload payload() const;
 
   pluss::Series as_series() const;
   pluss::Note as_note() const;
@@ -262,5 +348,9 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Thread& thread);
 void output_render(std::ostream& os, const Thread& thread);
+std::ostream& operator<<(std::ostream& os, const ThreadView& thread);
+void output_render(std::ostream& os, const ThreadView& thread);
+std::ostream& operator<<(std::ostream& os, const ThreadValue& value);
+void output_render(std::ostream& os, const ThreadValue& value);
 
 } // namespace pluss::table

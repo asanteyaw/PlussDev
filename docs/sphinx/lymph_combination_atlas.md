@@ -145,6 +145,8 @@ for (auto layout : {pluss::ai::nodej::ObservationLayout::Rows,
 - `prep::MaxAbsScaler(options: MaxAbsScalerOptions = {})`
 - `prep::OneHotEncoder(options: OneHotEncoderOptions = {})`
 - `prep::FrequencyEncoder(options: FrequencyEncoderOptions = {})`
+- `prep::OrdinalEncoder(options: OrdinalEncoderOptions = {})`
+- `prep::LabelEncoder(options: LabelEncoderOptions = {})`
 - `prep::VectorNormalizer(options: VectorNormalizerOptions = {})`
 - `prep::QuantileMap(options: QuantileMapOptions = {})`
 - `prep::PowerMap(options: PowerMapOptions = {})`
@@ -176,6 +178,8 @@ Discrete exhaustive counts:
 - `MaxAbsScalerOptions`: no enum/bool => **1**
 - `OneHotEncoderOptions`: `overflow(3) * include_unknown_bucket(2)` => **6**
 - `FrequencyEncoderOptions`: `overflow(3)` => **3**
+- `OrdinalEncoderOptions`: `overflow(3) * include_unknown_bucket(2) * one_based(2)` => **12**
+- `LabelEncoderOptions`: `overflow(3) * include_unknown_bucket(2) * one_based(2)` => **12**
 - `VectorNormalizerOptions`: `norm(3)` => **3**
 - `QuantileMapOptions`: `output(2)` => **2**
 - `PowerMapOptions`: `mode(2) * standardize(2) * lambda_mode(2)` => **8**
@@ -185,7 +189,7 @@ Discrete exhaustive counts:
 
 Total discrete preprocessor combinations across all wrappers:
 
-- **45** (excluding numeric sweep axes)
+- **69** (excluding numeric sweep axes)
 
 ### Examples
 
@@ -200,6 +204,7 @@ for (auto overflow : {lym::prep::CategoryOverflowPolicy::Error,
         .overflow = overflow,
         .include_unknown_bucket = unk,
     });
+    enc.features({"ocean_proximity"});
     auto x_train_e = enc.learn_map(x_train);
     auto x_test_e = enc.map(x_test);
   }

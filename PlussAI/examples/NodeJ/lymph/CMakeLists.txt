@@ -8,6 +8,8 @@ set(NODEJ_LYMPH_DEMOS
   lymph_online_demo
   lymph_unsupervised_demo
   lymph_end_to_end_hour_workflow_showcase
+  lymph_feature_transformer_workflow_demo
+  lymph_housing_ch2_end_to_end_notebook
 )
 
 foreach(demo ${NODEJ_LYMPH_DEMOS})

@@ -12,7 +12,7 @@
 #include <string_view>
 
 #include "CodeM/core/Errors.h"
-#include "pluss/view/html_window.h"
+#include "pluss/tils/view/html_window.h"
 
 namespace pluss::pl {
 
@@ -196,7 +196,7 @@ std::string native_window_title_(std::string_view fallback) {
 }
 
 pluss::view::BackendPreference plot_backend_preference_() {
-  const char* raw = std::getenv("PLUSSVIEW_PLOT_BACKEND");
+  const char* raw = std::getenv("PLUSSTILS_VIEW_PLOT_BACKEND");
   if (raw == nullptr) {
     return pluss::view::BackendPreference::NativeWebView;
   }

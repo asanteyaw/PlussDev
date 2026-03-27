@@ -154,7 +154,7 @@ def _validate_alias_block(file_text: str, file_rel: str, entry: dict, errors: li
 def _scan_unregistered_aliases(registered: dict, errors: list[str]) -> None:
   include_roots = [
       ROOT / module / "include"
-      for module in ("PlussAI", "PlussMa", "PlussMic", "PlussPl", "PlussQit", "PlussView")
+      for module in ("PlussAI", "PlussMa", "PlussMic", "PlussPl", "PlussQit", "PlussTils")
       if (ROOT / module / "include").exists()
   ]
   candidate_files = [

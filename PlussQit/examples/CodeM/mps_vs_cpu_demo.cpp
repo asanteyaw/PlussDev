@@ -231,8 +231,8 @@ void print_round_profile_(const char* label, const std::vector<double>& round_ms
 }
 
 ErrorStats compare_stats(const pluss::Series& cpu_last, const pluss::Series& mps_last) {
-  const auto c = cpu_last.to_host<float>();
-  const auto g = mps_last.to_host<float>();
+  const auto c = cpu_last.host<float>().array();
+  const auto g = mps_last.host<float>().array();
   if (c.data.size() != g.data.size()) {
     throw std::runtime_error("compare_stats: shape mismatch");
   }

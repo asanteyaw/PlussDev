@@ -10,6 +10,8 @@
 
 namespace pluss::codem {
 
+class Series;
+
 // Handle type (Torch-like TensorBase): cheap copy, shared underlying impl.
 class CODEM_API SeriesBase {
 public:
@@ -44,6 +46,9 @@ public:
   bool is_gpu() const noexcept { return !is_cpu(); }
   bool is_cuda() const noexcept { return platform() == Platform::CUDA; }
   bool is_mps() const noexcept { return platform() == Platform::MPS; }
+  // Vector-style bounds-checked scalar selection for 1-D Series.
+  // Returns a rank-0 Series view of the selected element.
+  Series pos(std::int64_t index) const;
 
   // Raw storage access (byte-addressable).
   std::byte* raw_data();

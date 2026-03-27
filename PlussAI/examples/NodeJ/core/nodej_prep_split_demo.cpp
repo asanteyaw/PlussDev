@@ -24,6 +24,8 @@ using pluss::ai::nodej::prep::NeighborImputer;
 using pluss::ai::nodej::prep::NeighborImputerOptions;
 using pluss::ai::nodej::prep::OneHotEncoder;
 using pluss::ai::nodej::prep::OneHotEncoderOptions;
+using pluss::ai::nodej::prep::OrdinalEncoder;
+using pluss::ai::nodej::prep::OrdinalEncoderOptions;
 using pluss::ai::nodej::prep::PolynomialLift;
 using pluss::ai::nodej::prep::PolynomialLiftOptions;
 using pluss::ai::nodej::prep::PowerMap;
@@ -37,6 +39,8 @@ using pluss::ai::nodej::prep::SimpleImputer;
 using pluss::ai::nodej::prep::SimpleImputerOptions;
 using pluss::ai::nodej::prep::SimpleImputerStrategy;
 using pluss::ai::nodej::prep::StandardScaler;
+using pluss::ai::nodej::prep::LabelEncoder;
+using pluss::ai::nodej::prep::LabelEncoderOptions;
 using pluss::ai::nodej::prep::ThresholdBinarizer;
 using pluss::ai::nodej::prep::ThresholdBinarizerOptions;
 using pluss::ai::nodej::prep::VectorNorm;
@@ -221,6 +225,26 @@ int main() {
   auto freq_or = freq.learn_map(cat_batch);
   if (!require_ok(freq_or, "FrequencyEncoder.learn_map")) return 1;
   print_shape("frequency-encoded", freq_or.value());
+
+  OrdinalEncoder ordinal(OrdinalEncoderOptions{
+      .max_categories = 8,
+      .overflow = CategoryOverflowPolicy::KeepMostFrequent,
+      .include_unknown_bucket = true,
+      .one_based = true,
+  });
+  auto ordinal_or = ordinal.learn_map(cat_batch);
+  if (!require_ok(ordinal_or, "OrdinalEncoder.learn_map")) return 1;
+  print_shape("ordinal-encoded", ordinal_or.value());
+
+  LabelEncoder label(LabelEncoderOptions{
+      .max_categories = 8,
+      .overflow = CategoryOverflowPolicy::KeepMostFrequent,
+      .include_unknown_bucket = true,
+      .one_based = false,
+  });
+  auto label_or = label.learn_map(cat_batch);
+  if (!require_ok(label_or, "LabelEncoder.learn_map")) return 1;
+  print_shape("label-encoded", label_or.value());
 
   std::cout << "NodeJ split + prep demo completed.\n";
   return 0;

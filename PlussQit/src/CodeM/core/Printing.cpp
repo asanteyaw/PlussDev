@@ -806,7 +806,7 @@ static void format_pretty_values_(std::ostringstream& oss,
                                   const PrintOptions& opt) {
   const std::size_t rank = sizes.size();
   if (rank == 2) {
-    oss << "values=\n";
+    oss << "data=\n";
     format_matrix_with_wrap_(oss, s, 0, sizes[0], sizes[1], strides[0], strides[1], opt);
     return;
   }
@@ -956,7 +956,7 @@ static std::string render_series_string_(const Series& s,
   if (use_pretty_values && sizes.size() >= 2) {
     format_pretty_values_(oss, c, sizes, strides, opt);
   } else {
-    oss << "values=";
+    oss << "data=";
     format_recursive_(oss, c, sizes, strides, 0, 0, opt);
   }
   return oss.str();

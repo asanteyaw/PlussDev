@@ -381,6 +381,10 @@ Note squeeze(const Note& x, ::std::int64_t dim);
 Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats);
 Note tile(const Note& x, ::std::span<const ::std::int64_t> reps);
 Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim);
+::std::vector<::std::int64_t> note_argsort_indices_1d(
+    const Note& x,
+    bool descending = false,
+    bool stable = true);
 Note sort(const Note& x, ::std::int64_t dim = -1);
 Note unique(const Note& x, ::std::int64_t dim = -1);
 Note deduplicate(const Note& x, ::std::int64_t dim = -1);
@@ -505,5 +509,10 @@ Note tex_to_html(const Note& x, ::std::int64_t mode = 0);
 
 // Join flattened tokens into a scalar (0D) Note.
 Note join(const Note& x, ::std::string_view sep = {});
+
+#ifdef CODEN_ENABLE_SERIES_INTEROP
+pluss::codem::Series note_contains_series(const Note& a, ::std::string_view needle);
+pluss::codem::Series note_lengths_bytes_series(const Note& a);
+#endif
 
 } // namespace pluss::coden::ops_internal

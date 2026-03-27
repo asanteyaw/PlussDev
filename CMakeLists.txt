@@ -9,10 +9,58 @@ find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
     pkg_check_modules(LIBZIP QUIET libzip)
 endif()
+
+# On macOS, prefer the cpp_env LLVM toolchain for C/C++ compilation when the
+# user has not explicitly pinned compilers. This keeps modern C++20 support
+# while still allowing explicit override via -DCMAKE_{C,CXX}_COMPILER.
+if(APPLE
+   AND NOT DEFINED CMAKE_C_COMPILER
+   AND NOT DEFINED CMAKE_CXX_COMPILER)
+    set(_pluss_cpp_env "$ENV{CONDA_PREFIX}")
+    if(NOT _pluss_cpp_env)
+        set(_pluss_cpp_env "/Users/yawasante/software/miniconda3/envs/cpp_env")
+    endif()
+    if(EXISTS "${_pluss_cpp_env}/bin/clang" AND EXISTS "${_pluss_cpp_env}/bin/clang++")
+        set(CMAKE_C_COMPILER "${_pluss_cpp_env}/bin/clang" CACHE FILEPATH "C compiler" FORCE)
+        set(CMAKE_CXX_COMPILER "${_pluss_cpp_env}/bin/clang++" CACHE FILEPATH "CXX compiler" FORCE)
+        message(STATUS "Auto-selected cpp_env clang toolchain: ${_pluss_cpp_env}/bin/clang++")
+    endif()
+endif()
+
 project(plussma VERSION 0.1.0 LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)
+
+# Conda clang toolchains can fail to link Objective-C/Apple frameworks
+# (Foundation/Cocoa/Metal/Accelerate) even when compile succeeds. Keep
+# compilation toolchain unchanged, but force Apple clang as the link driver.
+set(_pluss_is_conda_clang FALSE)
+if(APPLE)
+    if(CMAKE_CXX_COMPILER MATCHES ".*/envs/cpp_env/bin/clang\\+\\+$"
+       OR CMAKE_CXX_COMPILER MATCHES ".*/envs/cpp_env/bin/arm64-apple-darwin[0-9.]+-clang\\+\\+$")
+        set(_pluss_is_conda_clang TRUE)
+    endif()
+    if(DEFINED ENV{CONDA_PREFIX} AND NOT "$ENV{CONDA_PREFIX}" STREQUAL "")
+        if(CMAKE_CXX_COMPILER MATCHES "^$ENV{CONDA_PREFIX}/bin/clang\\+\\+$"
+           OR CMAKE_CXX_COMPILER MATCHES "^$ENV{CONDA_PREFIX}/bin/arm64-apple-darwin[0-9.]+-clang\\+\\+$")
+            set(_pluss_is_conda_clang TRUE)
+        endif()
+    endif()
+endif()
+
+if(APPLE
+   AND _pluss_is_conda_clang
+   AND EXISTS "/usr/bin/clang++")
+    message(STATUS "Using /usr/bin/clang++ as link driver for macOS framework parity with Conda clang compile toolchain.")
+    set(CMAKE_CXX_LINK_EXECUTABLE
+        "/usr/bin/clang++ <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    if(CMAKE_OBJCXX_COMPILER)
+        set(CMAKE_OBJCXX_LINK_EXECUTABLE
+            "/usr/bin/clang++ <FLAGS> <CMAKE_OBJCXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    endif()
+endif()
+unset(_pluss_is_conda_clang)
 
 # PlussQit core numeric/time primitives are foundational for all higher layers
 # (including PlussMic). Keep them always enabled at the top-level.
@@ -70,7 +118,79 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
 
-add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+option(
+    PLUSS_FORCE_GLIBCXX_ABI0
+    "Force legacy libstdc++ ABI (_GLIBCXX_USE_CXX11_ABI=0) for old prebuilt binary compatibility"
+    OFF
+)
+if(PLUSS_FORCE_GLIBCXX_ABI0)
+    add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+    message(STATUS "PLUSS forcing legacy libstdc++ ABI (_GLIBCXX_USE_CXX11_ABI=0)")
+endif()
+
+# Optional cuDNN wiring for CUDA hosts (cluster-friendly defaults, fully overrideable).
+set(PLUSS_CUDNN_ROOT "" CACHE PATH "Root directory for cuDNN (contains include/ and lib or lib64)")
+set(PLUSS_CUDNN_LIBRARY "" CACHE FILEPATH "Absolute path to libcudnn shared library")
+
+if(NOT PLUSS_CUDNN_ROOT)
+    foreach(_pluss_cudnn_candidate
+            "$ENV{PLUSS_CUDNN_ROOT}"
+            "$ENV{CUDNN_ROOT}"
+            "$ENV{CUDNN_PATH}"
+            "/global/software/cudnn/9.7.1-cuda12")
+        if(_pluss_cudnn_candidate AND EXISTS "${_pluss_cudnn_candidate}/include")
+            set(PLUSS_CUDNN_ROOT "${_pluss_cudnn_candidate}" CACHE PATH "Root directory for cuDNN (contains include/ and lib or lib64)" FORCE)
+            break()
+        endif()
+    endforeach()
+endif()
+
+set(PLUSS_CUDNN_INCLUDE_DIR "")
+set(PLUSS_CUDNN_LIBRARY_DIR "")
+if(PLUSS_CUDNN_ROOT)
+    if(EXISTS "${PLUSS_CUDNN_ROOT}/include")
+        set(PLUSS_CUDNN_INCLUDE_DIR "${PLUSS_CUDNN_ROOT}/include")
+    endif()
+    if(EXISTS "${PLUSS_CUDNN_ROOT}/lib64")
+        set(PLUSS_CUDNN_LIBRARY_DIR "${PLUSS_CUDNN_ROOT}/lib64")
+    elseif(EXISTS "${PLUSS_CUDNN_ROOT}/lib")
+        set(PLUSS_CUDNN_LIBRARY_DIR "${PLUSS_CUDNN_ROOT}/lib")
+    endif()
+endif()
+
+if(NOT PLUSS_CUDNN_LIBRARY)
+    set(_pluss_cudnn_hint_paths "")
+    if(PLUSS_CUDNN_LIBRARY_DIR)
+        list(APPEND _pluss_cudnn_hint_paths "${PLUSS_CUDNN_LIBRARY_DIR}")
+    endif()
+    find_library(_pluss_cudnn_library
+        NAMES cudnn libcudnn.so.9 libcudnn.so.8
+        HINTS ${_pluss_cudnn_hint_paths}
+    )
+    if(_pluss_cudnn_library)
+        set(PLUSS_CUDNN_LIBRARY "${_pluss_cudnn_library}" CACHE FILEPATH "Absolute path to libcudnn shared library" FORCE)
+    endif()
+endif()
+unset(_pluss_cudnn_library CACHE)
+
+if(PLUSS_CUDNN_LIBRARY AND NOT PLUSS_CUDNN_LIBRARY_DIR)
+    get_filename_component(PLUSS_CUDNN_LIBRARY_DIR "${PLUSS_CUDNN_LIBRARY}" DIRECTORY)
+endif()
+
+if(PLUSS_CUDNN_LIBRARY_DIR)
+    list(APPEND CMAKE_BUILD_RPATH "${PLUSS_CUDNN_LIBRARY_DIR}")
+    list(REMOVE_DUPLICATES CMAKE_BUILD_RPATH)
+endif()
+
+if(PLUSS_CUDNN_ROOT)
+    message(STATUS "PLUSS cuDNN root: ${PLUSS_CUDNN_ROOT}")
+endif()
+if(PLUSS_CUDNN_INCLUDE_DIR)
+    message(STATUS "PLUSS cuDNN include: ${PLUSS_CUDNN_INCLUDE_DIR}")
+endif()
+if(PLUSS_CUDNN_LIBRARY)
+    message(STATUS "PLUSS cuDNN library: ${PLUSS_CUDNN_LIBRARY}")
+endif()
 
 # ==============================
 # Create libraries
@@ -78,7 +198,7 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
 add_subdirectory(PlussAI)
 add_subdirectory(PlussQit)
-add_subdirectory(PlussView)
+add_subdirectory(PlussTils)
 if(NOT TARGET plussqit_coden)
     message(FATAL_ERROR "plussqit_coden (CodeN) must be built for PlussMa.")
 endif()
@@ -96,6 +216,16 @@ target_link_libraries(pluss PUBLIC
 add_subdirectory(PlussPl)
 add_subdirectory(PlussMa)
 add_subdirectory(PlussMic)
+
+if(TARGET pluss AND PLUSS_CUDNN_INCLUDE_DIR)
+    target_include_directories(pluss PRIVATE "${PLUSS_CUDNN_INCLUDE_DIR}")
+endif()
+if(TARGET pluss AND PLUSS_CUDNN_LIBRARY)
+    target_compile_definitions(pluss PRIVATE PLUSS_CUDNN_LIBRARY_DEFAULT="${PLUSS_CUDNN_LIBRARY}")
+endif()
+if(TARGET plussqit_codem AND PLUSS_CUDNN_LIBRARY)
+    target_compile_definitions(plussqit_codem PRIVATE PLUSS_CUDNN_LIBRARY_DEFAULT="${PLUSS_CUDNN_LIBRARY}")
+endif()
 
 if(TARGET pluss AND TARGET PlussMic AND TARGET plussqit_codem)
     add_executable(plussma_math_finance_calibrate_heston_demo
@@ -123,9 +253,9 @@ if(TARGET pluss AND TARGET PlussMic AND TARGET plussqit_codem)
     )
 endif()
 
-if(TARGET plussview_window_registry_demo AND TARGET PlussMic)
-    target_link_libraries(plussview_window_registry_demo PRIVATE PlussMic)
-    target_compile_definitions(plussview_window_registry_demo PRIVATE
+if(TARGET plusstils_view_window_registry_demo AND TARGET PlussMic)
+    target_link_libraries(plusstils_view_window_registry_demo PRIVATE PlussMic)
+    target_compile_definitions(plusstils_view_window_registry_demo PRIVATE
         PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
     )
 endif()
@@ -144,8 +274,8 @@ endif()
 if(TARGET PlussMic)
     target_link_libraries(pluss_sdk INTERFACE PlussMic)
 endif()
-if(TARGET PlussView)
-    target_link_libraries(pluss_sdk INTERFACE PlussView)
+if(TARGET PlussTils)
+    target_link_libraries(pluss_sdk INTERFACE PlussTils)
 endif()
 if(TARGET PlussTiq)
     target_link_libraries(pluss_sdk INTERFACE PlussTiq)
@@ -300,6 +430,7 @@ add_custom_target(pluss_sdk_stage
         pluss
         PlussPl
         PlussMic
+        PlussTils
     USES_TERMINAL
     COMMENT "Staging pluss SDK at ${PLUSS_SDK_STAGING_DIR}"
 )

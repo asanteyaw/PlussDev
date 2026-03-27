@@ -62,6 +62,12 @@ OUTSOURCED_LINALG_METHOD_NAMES = {
     "triangular_solve",
 }
 
+# Methods intentionally excluded from the public Series method surface.
+EXCLUDED_METHOD_NAMES = {
+    "values",
+    "_values",
+}
+
 
 def extract_method_names(yaml_text: str) -> list[str]:
     funcs = re.findall(r"^\s*-\s*func:\s*([^\n#]+)$", yaml_text, flags=re.MULTILINE)
@@ -158,6 +164,7 @@ def main() -> int:
         if seed_path.exists():
             names.update(extract_seed_list(seed_path))
     names.difference_update(OUTSOURCED_LINALG_METHOD_NAMES)
+    names.difference_update(EXCLUDED_METHOD_NAMES)
     names = sorted(names)
     rendered = render_header(names, yaml_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)

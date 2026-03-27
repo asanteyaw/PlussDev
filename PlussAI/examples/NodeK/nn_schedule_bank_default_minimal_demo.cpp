@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
 #include <pluss/nn.h>
 
 #include <cstdint>
@@ -10,7 +11,7 @@ using pluss::ScalarType;
 using pluss::Series;
 
 int main() {
-  const auto csv_path = pluss::loader::data_file("bank-full.csv");
+  const auto csv_path = pluss::loader::file_path("data/bank-full.csv");
   if (!std::filesystem::exists(csv_path)) {
     std::cerr << "could not find bank-full.csv\n";
     return 1;
@@ -118,7 +119,7 @@ int main() {
   const Series test_acc = test_pred.eq(y_test).to(dtype).mean();
 
   std::cout << "nn_schedule_bank_default_minimal_demo\n";
-  std::cout << "source=" << csv_path << "\n";
+  std::cout << "source=" << csv_path.string() << "\n";
   std::cout << "rows=" << df.ncases()
             << " train=" << x_train.sizes()[0]
             << " val=" << x_val.sizes()[0]

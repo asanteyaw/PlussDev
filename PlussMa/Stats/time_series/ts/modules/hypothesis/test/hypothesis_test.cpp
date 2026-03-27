@@ -14,6 +14,9 @@ using pluss::Series;
 using pluss::subsp::stats::ts::AdfModel;
 using pluss::subsp::stats::ts::AdfOptions;
 using pluss::subsp::stats::ts::ArchLmOptions;
+using pluss::subsp::stats::ts::DmLoss;
+using pluss::subsp::stats::ts::DmOptions;
+using pluss::subsp::stats::ts::DmTail;
 using pluss::subsp::stats::ts::KpssOptions;
 
 void expect(bool condition, const std::string& message) {
@@ -104,6 +107,30 @@ void test_kpss_stationary_vs_unit_root() {
   expect(kpss_rw.reject, "kpss_test should reject stationarity for random walk");
 }
 
+void test_dm_forecast_loss_difference() {
+  const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Series base = pluss::randn({4000}, cfg, 20260406ULL);
+  const Series err_b = base;
+  const Series err_a = base.add(1.0);
+
+  DmOptions opt;
+  opt.loss = DmLoss::Squared;
+  opt.horizon = 1;
+  opt.tail = DmTail::Right;
+  opt.alpha = 0.01;
+
+  const auto right = pluss::subsp::stats::ts::dm_test(err_a, err_b, opt, cfg);
+  expect(right.reject, "dm_test should reject when model A has larger squared-error loss");
+  expect(right.pvalue < 1e-8, "dm_test right-tail p-value should be tiny");
+  expect(right.stat > 0.0, "dm_test statistic should be positive for larger model A loss");
+
+  opt.tail = DmTail::Left;
+  const auto left = pluss::subsp::stats::ts::dm_test(err_b, err_a, opt, cfg);
+  expect(left.reject, "dm_test left-tail should reject in swapped ordering");
+  expect(left.pvalue < 1e-8, "dm_test left-tail p-value should be tiny");
+  expect(left.stat < 0.0, "dm_test swapped statistic should be negative");
+}
+
 void test_error_paths() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series y = pluss::randn({64}, cfg, 20260420ULL);
@@ -137,6 +164,16 @@ void test_error_paths() {
     threw = true;
   }
   expect(threw, "kpss_test should throw when lags < 0");
+
+  threw = false;
+  try {
+    DmOptions bad;
+    bad.horizon = 0;
+    (void)pluss::subsp::stats::ts::dm_test(y, y, bad, cfg);
+  } catch (...) {
+    threw = true;
+  }
+  expect(threw, "dm_test should throw when horizon < 1");
 }
 
 } // namespace
@@ -146,6 +183,7 @@ int main() {
     test_arch_lm_detects_arch_effects();
     test_adf_stationary_vs_unit_root();
     test_kpss_stationary_vs_unit_root();
+    test_dm_forecast_loss_difference();
     test_error_paths();
     std::cout << "hypothesis_test passed\n";
     return 0;

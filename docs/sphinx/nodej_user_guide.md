@@ -278,6 +278,8 @@ if (!metric_or.ok()) throw std::runtime_error(metric_or.status().message);
 - `Flow::add_iterative_imputer(options: prep::IterativeImputerOptions = {}, feature_route: vector<int64> = {}) -> Status`
 - `Flow::add_one_hot_encoder(options: prep::OneHotEncoderOptions = {}, feature_route: vector<int64> = {}) -> Status`
 - `Flow::add_frequency_encoder(options: prep::FrequencyEncoderOptions = {}, feature_route: vector<int64> = {}) -> Status`
+- `Flow::add_ordinal_encoder(options: prep::OrdinalEncoderOptions = {}, feature_route: vector<int64> = {}) -> Status`
+- `Flow::add_label_encoder(options: prep::LabelEncoderOptions = {}, feature_route: vector<int64> = {}) -> Status`
 - `Flow::add_vector_normalizer(options: prep::VectorNormalizerOptions = {}, feature_route: vector<int64> = {}) -> Status`
 - `Flow::add_maxabs_scaler(options: prep::MaxAbsScalerOptions = {}, feature_route: vector<int64> = {}) -> Status`
 - `Flow::add_quantile_map(options: prep::QuantileMapOptions = {}, feature_route: vector<int64> = {}) -> Status`
@@ -329,15 +331,36 @@ if (!flow.add_standard_scaler().ok()) throw std::runtime_error("scaler add faile
 - `prep::SimpleImputer::learn(batch: FeatureBatch, options: TrainOptions = {}) -> Status`
 - `prep::SimpleImputer::map(batch: FeatureBatch, options: InferOptions = {}) -> StatusOr<Series>`
 - `prep::SimpleImputer::learn_map(batch: FeatureBatch, learn_options: TrainOptions = {}, infer_options: InferOptions = {}) -> StatusOr<Series>`
-- same contract for all NodeJ preprocessors (`StandardScaler`, `MinMaxScaler`, `RobustScaler`, `NeighborImputer`, `IterativeImputer`, `OneHotEncoder`, `FrequencyEncoder`, `VectorNormalizer`, `MaxAbsScaler`, `QuantileMap`, `PowerMap`, `ThresholdBinarizer`, `PolynomialLift`)
+- same contract for all NodeJ preprocessors (`StandardScaler`, `MinMaxScaler`, `RobustScaler`, `NeighborImputer`, `IterativeImputer`, `OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`, `VectorNormalizer`, `MaxAbsScaler`, `QuantileMap`, `PowerMap`, `ThresholdBinarizer`, `PolynomialLift`)
+- single-feature categorical convenience:
+  - `prep::OneHotEncoder::learn(feature: pluss::table::Thread, ...)`
+  - `prep::OneHotEncoder::map(feature: pluss::table::Thread, ...)`
+  - `prep::OneHotEncoder::learn_map(feature: pluss::table::Thread, ...)`
+  - same Thread overloads for `prep::FrequencyEncoder`, `prep::OrdinalEncoder`, and `prep::LabelEncoder`
 
 ### Notes
 
 Use standalone preprocessors when you want explicit transform state management outside `Flow`.
 
+Categorical tools have distinct intent:
+
+- `prep::CategoryIndexer`: stable category->index mapping utility
+- `prep::OrdinalEncoder`: ordered integer encoding
+- `prep::LabelEncoder`: compact integer labels
+- `prep::OneHotEncoder`: nominal category expansion
+- `prep::FrequencyEncoder`: prevalence-based compact encoding
+
+Practical guidance:
+
+- use `CategoryIndexer` when you need deterministic IDs/contracts
+- for nominal model features, prefer `OneHotEncoder` or `FrequencyEncoder`
+- for ordered categorical features, use `OrdinalEncoder`
+- for categorical label-side mapping, use `LabelEncoder`
+
 ### Inputs
 
 - `FeatureBatch`
+- `pluss::table::Thread` for single-feature categorical encoding (`OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`) across Series/Note/Timeline/TimeIndex
 
 ### Output
 

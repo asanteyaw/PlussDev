@@ -286,14 +286,21 @@
   function buildSectionSidebar() {
     const documentRoot = document.querySelector("div.document");
     const bodywrapper = document.querySelector(".bodywrapper");
-    const pageRoot = document.querySelector("div.body > section");
-    if (!documentRoot || !bodywrapper || !pageRoot) {
+    if (!documentRoot || !bodywrapper) {
       return null;
     }
 
-    const sections = Array.from(pageRoot.children).filter((node) => {
-      return node.tagName === "SECTION" && node.querySelector(":scope > h2");
+    const pageRoots = Array.from(document.querySelectorAll("div.body > section"));
+    const pageRoot = pageRoots.find((root) => {
+      return Array.from(root.children).some((node) => {
+        return node.tagName === "SECTION" && node.querySelector(":scope > h2");
+      });
     });
+    if (!pageRoot) {
+      return null;
+    }
+
+    const sections = Array.from(pageRoot.children).filter((node) => node.tagName === "SECTION" && node.querySelector(":scope > h2"));
     if (!sections.length) {
       return null;
     }
@@ -512,6 +519,19 @@
     buildTopbar();
     const methodNav = buildMethodSidebar();
     const sectionNav = methodNav ? null : buildSectionSidebar();
+
+    // Safety fallback: never leave the left rail empty.
+    if (document.body.classList.contains("has-method-sidebar")) {
+      const navCount = document.querySelectorAll("#pluss-method-sidebar .method-nav a").length;
+      if (navCount === 0) {
+        const sidebar = document.getElementById("pluss-method-sidebar");
+        if (sidebar) {
+          sidebar.remove();
+        }
+        document.body.classList.remove("has-method-sidebar");
+      }
+    }
+
     buildPrevNext(methodNav || sectionNav);
   });
 })();

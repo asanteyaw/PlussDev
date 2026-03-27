@@ -3,6 +3,9 @@
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesSlim.h"
 
+#include <optional>
+#include <string>
+
 namespace pluss::codem::native::cuda {
 
 bool native_linalg_enabled() noexcept;
@@ -37,5 +40,9 @@ bool supports_qr(const Series& a, bool reduced) noexcept;
 bool supports_svd(const Series& a, bool full_matrices) noexcept;
 bool supports_matrix_power(const Series& a) noexcept;
 bool supports_matrix_exp(const Series& a) noexcept;
+
+bool cusolver_linalg_ready() noexcept;
+std::optional<Series> try_det(const Series& a, std::string* reason = nullptr);
+std::optional<Series> try_inverse(const Series& a, std::string* reason = nullptr);
 
 } // namespace pluss::codem::native::cuda

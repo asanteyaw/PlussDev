@@ -124,13 +124,27 @@ pluss::Series bool_series_from_thread_mask_(
 
 DataFrameView DataFrame::head(std::int64_t n, bool render) const {
   const auto clipped = std::clamp<std::int64_t>(n, 0, ncases());
-  auto out = slice(0, clipped);
+  const auto& src = impl_ref_();
+  std::vector<std::pair<std::string, Thread>> cols;
+  cols.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    cols.emplace_back(src.names_[i], src.columns_[i].head(clipped, /*render=*/false));
+  }
+  auto out = DataFrame(std::move(cols), src.cases_.head(clipped, /*render=*/false).clear_display_labels())
+                 .title(title());
   return DataFrameView(std::move(out), render, "head", title());
 }
 
 DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
   const auto clipped = std::clamp<std::int64_t>(n, 0, ncases());
-  auto out = slice(ncases() - clipped, ncases());
+  const auto& src = impl_ref_();
+  std::vector<std::pair<std::string, Thread>> cols;
+  cols.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    cols.emplace_back(src.names_[i], src.columns_[i].tail(clipped, /*render=*/false));
+  }
+  auto out = DataFrame(std::move(cols), src.cases_.tail(clipped, /*render=*/false).clear_display_labels())
+                 .title(title());
   return DataFrameView(std::move(out), render, "tail", title());
 }
 

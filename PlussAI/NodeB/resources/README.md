@@ -1,0 +1,3 @@
+# resources
+
+Scaffolded module directory for NodeB.

@@ -116,10 +116,46 @@ CudnnContext& cudnn_ctx_() {
       return;
     }
 
+    const char* explicit_lib = std::getenv("PLUSS_CUDNN_LIBRARY");
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = std::getenv("CUDNN_LIBRARY");
+    }
+#if defined(PLUSS_CUDNN_LIBRARY_DEFAULT)
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = PLUSS_CUDNN_LIBRARY_DEFAULT;
+    }
+#endif
+    if (explicit_lib != nullptr && *explicit_lib != '\0') {
+      dlerror(); // clear
+      void* handle = dlopen(explicit_lib, RTLD_LAZY | RTLD_LOCAL);
+      if (handle != nullptr) {
+        std::string why{};
+        if (ctx.api.load(handle, &why)) {
+          ctx.handle = handle;
+          ctx.ready = true;
+          ctx.error.clear();
+          return;
+        }
+        ctx.error = why;
+        dlclose(handle);
+      } else {
+        const char* dlerr = dlerror();
+        ctx.error = std::string("failed to open explicit cuDNN library '") + explicit_lib + "'" +
+            (dlerr != nullptr ? std::string(" (") + dlerr + ")" : std::string{});
+      }
+    }
+
     for (const char* lib : libs) {
       if (lib == nullptr || *lib == '\0') continue;
+      dlerror(); // clear
       void* handle = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
-      if (handle == nullptr) continue;
+      if (handle == nullptr) {
+        const char* dlerr = dlerror();
+        if (dlerr != nullptr) {
+          ctx.error = std::string("failed to open cuDNN library '") + lib + "' (" + dlerr + ")";
+        }
+        continue;
+      }
       std::string why{};
       if (!ctx.api.load(handle, &why)) {
         ctx.error = why;
@@ -171,6 +207,55 @@ struct TensorDescGuard {
     }
   }
 };
+
+struct DeviceBuffer {
+  void* ptr{nullptr};
+  std::size_t bytes{0};
+  ~DeviceBuffer() {
+    if (ptr != nullptr) {
+      (void)cudaFree(ptr);
+    }
+  }
+};
+
+std::size_t bytes_of_(const Series& s) noexcept {
+  return static_cast<std::size_t>(s.numel()) * static_cast<std::size_t>(s.itemsize());
+}
+
+bool alloc_device_buffer_(DeviceBuffer* buf, std::size_t bytes, std::string* reason) {
+  if (buf == nullptr) {
+    if (reason != nullptr) *reason = "internal: null device buffer";
+    return false;
+  }
+  buf->bytes = bytes;
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMalloc(&buf->ptr, bytes);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMalloc failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
+bool copy_h2d_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMemcpy(dst, src, bytes, cudaMemcpyHostToDevice);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMemcpy(H2D) failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
+bool copy_d2h_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToHost);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMemcpy(D2H) failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
 
 bool set_softmax_desc_(
     const CudnnApi& api,
@@ -235,6 +320,12 @@ bool cudnn_softmax_forward_(
   Series out_series = pluss::empty(
       in.sizes(),
       Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCUDA));
+  DeviceBuffer d_in{};
+  DeviceBuffer d_out{};
+  if (!alloc_device_buffer_(&d_in, bytes_of_(in), reason)) return false;
+  if (!alloc_device_buffer_(&d_out, bytes_of_(out_series), reason)) return false;
+  if (!copy_h2d_(d_in.ptr, in.raw_data(), d_in.bytes, reason)) return false;
+
   const float alpha = 1.0f;
   const float beta = 0.0f;
   if (!check_status_(
@@ -245,14 +336,15 @@ bool cudnn_softmax_forward_(
               CUDNN_SOFTMAX_MODE_CHANNEL,
               &alpha,
               desc.value,
-              in.data_ptr(),
+              d_in.ptr,
               &beta,
               desc.value,
-              out_series.data_ptr()),
+              d_out.ptr),
           "cudnnSoftmaxForward",
           reason)) {
     return false;
   }
+  if (!copy_d2h_(out_series.raw_mutable_data(), d_out.ptr, d_out.bytes, reason)) return false;
 
   *out = std::move(out_series);
   return true;

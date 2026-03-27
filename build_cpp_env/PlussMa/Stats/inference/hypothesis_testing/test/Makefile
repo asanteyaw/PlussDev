@@ -193,6 +193,48 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/rule
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/rule
+
+# Convenience name for target.
+gof_hypothesis_test: PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/rule
+.PHONY : gof_hypothesis_test
+
+# fast build rule for target.
+gof_hypothesis_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build
+.PHONY : gof_hypothesis_test/fast
+
+# Convenience name for target.
+PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule
+
+# Convenience name for target.
+nonparametric_hypothesis_test: PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule
+.PHONY : nonparametric_hypothesis_test
+
+# fast build rule for target.
+nonparametric_hypothesis_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build
+.PHONY : nonparametric_hypothesis_test/fast
+
+# Convenience name for target.
+PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/rule
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/rule
+
+# Convenience name for target.
+parametric_hypothesis_test: PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/rule
+.PHONY : parametric_hypothesis_test
+
+# fast build rule for target.
+parametric_hypothesis_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build
+.PHONY : parametric_hypothesis_test/fast
+
+# Convenience name for target.
 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/ts_hypothesis_bridge_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/ts_hypothesis_bridge_test.dir/rule
 .PHONY : PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/ts_hypothesis_bridge_test.dir/rule
@@ -205,6 +247,78 @@ ts_hypothesis_bridge_test: PlussMa/Stats/inference/hypothesis_testing/test/CMake
 ts_hypothesis_bridge_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/ts_hypothesis_bridge_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/ts_hypothesis_bridge_test.dir/build
 .PHONY : ts_hypothesis_bridge_test/fast
+
+gof/gof_hypothesis_test.o: gof/gof_hypothesis_test.cpp.o
+.PHONY : gof/gof_hypothesis_test.o
+
+# target to build an object file
+gof/gof_hypothesis_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/gof/gof_hypothesis_test.cpp.o
+.PHONY : gof/gof_hypothesis_test.cpp.o
+
+gof/gof_hypothesis_test.i: gof/gof_hypothesis_test.cpp.i
+.PHONY : gof/gof_hypothesis_test.i
+
+# target to preprocess a source file
+gof/gof_hypothesis_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/gof/gof_hypothesis_test.cpp.i
+.PHONY : gof/gof_hypothesis_test.cpp.i
+
+gof/gof_hypothesis_test.s: gof/gof_hypothesis_test.cpp.s
+.PHONY : gof/gof_hypothesis_test.s
+
+# target to generate assembly for a file
+gof/gof_hypothesis_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/gof/gof_hypothesis_test.cpp.s
+.PHONY : gof/gof_hypothesis_test.cpp.s
+
+nonparametric/nonparametric_hypothesis_test.o: nonparametric/nonparametric_hypothesis_test.cpp.o
+.PHONY : nonparametric/nonparametric_hypothesis_test.o
+
+# target to build an object file
+nonparametric/nonparametric_hypothesis_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/nonparametric/nonparametric_hypothesis_test.cpp.o
+.PHONY : nonparametric/nonparametric_hypothesis_test.cpp.o
+
+nonparametric/nonparametric_hypothesis_test.i: nonparametric/nonparametric_hypothesis_test.cpp.i
+.PHONY : nonparametric/nonparametric_hypothesis_test.i
+
+# target to preprocess a source file
+nonparametric/nonparametric_hypothesis_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/nonparametric/nonparametric_hypothesis_test.cpp.i
+.PHONY : nonparametric/nonparametric_hypothesis_test.cpp.i
+
+nonparametric/nonparametric_hypothesis_test.s: nonparametric/nonparametric_hypothesis_test.cpp.s
+.PHONY : nonparametric/nonparametric_hypothesis_test.s
+
+# target to generate assembly for a file
+nonparametric/nonparametric_hypothesis_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/nonparametric/nonparametric_hypothesis_test.cpp.s
+.PHONY : nonparametric/nonparametric_hypothesis_test.cpp.s
+
+parametric/parametric_hypothesis_test.o: parametric/parametric_hypothesis_test.cpp.o
+.PHONY : parametric/parametric_hypothesis_test.o
+
+# target to build an object file
+parametric/parametric_hypothesis_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/parametric/parametric_hypothesis_test.cpp.o
+.PHONY : parametric/parametric_hypothesis_test.cpp.o
+
+parametric/parametric_hypothesis_test.i: parametric/parametric_hypothesis_test.cpp.i
+.PHONY : parametric/parametric_hypothesis_test.i
+
+# target to preprocess a source file
+parametric/parametric_hypothesis_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/parametric/parametric_hypothesis_test.cpp.i
+.PHONY : parametric/parametric_hypothesis_test.cpp.i
+
+parametric/parametric_hypothesis_test.s: parametric/parametric_hypothesis_test.cpp.s
+.PHONY : parametric/parametric_hypothesis_test.s
+
+# target to generate assembly for a file
+parametric/parametric_hypothesis_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/parametric/parametric_hypothesis_test.cpp.s
+.PHONY : parametric/parametric_hypothesis_test.cpp.s
 
 ts_hypothesis_bridge_test.o: ts_hypothesis_bridge_test.cpp.o
 .PHONY : ts_hypothesis_bridge_test.o
@@ -245,7 +359,19 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... gof_hypothesis_test"
+	@echo "... nonparametric_hypothesis_test"
+	@echo "... parametric_hypothesis_test"
 	@echo "... ts_hypothesis_bridge_test"
+	@echo "... gof/gof_hypothesis_test.o"
+	@echo "... gof/gof_hypothesis_test.i"
+	@echo "... gof/gof_hypothesis_test.s"
+	@echo "... nonparametric/nonparametric_hypothesis_test.o"
+	@echo "... nonparametric/nonparametric_hypothesis_test.i"
+	@echo "... nonparametric/nonparametric_hypothesis_test.s"
+	@echo "... parametric/parametric_hypothesis_test.o"
+	@echo "... parametric/parametric_hypothesis_test.i"
+	@echo "... parametric/parametric_hypothesis_test.s"
 	@echo "... ts_hypothesis_bridge_test.o"
 	@echo "... ts_hypothesis_bridge_test.i"
 	@echo "... ts_hypothesis_bridge_test.s"

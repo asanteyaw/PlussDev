@@ -150,7 +150,9 @@ auto x = pluss::make_series({1.0,2.0,3.0});
 std::cout << x.dtype() << " " << x.sizes() << "\n";
 
 auto cpu_f32 = x.to(pluss::Platform::CPU, pluss::ScalarType::Float32);
-auto host = cpu_f32.to_host<float>();
+auto host = cpu_f32.host<float>().array();
+auto meta = cpu_f32.attr();
+std::cout << meta << "\n";
 \end{lstlisting}
 
 \subsubsection{Math and reductions}

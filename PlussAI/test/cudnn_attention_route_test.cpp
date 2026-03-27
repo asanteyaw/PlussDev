@@ -33,13 +33,15 @@ bool run_cudnn_attention_route_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  if (pluss::cuda::is_ready()) {
+  if (pluss::cuda::is_ready() && pluss::cuda::cpu_bridge_enabled()) {
     const pluss::Series x_cuda = x.to(pluss::pCUDA);
     const auto [out_cuda, w_cuda] = pluss::scaled_attention(x_cuda, x_cuda, x_cuda);
     if (!same_shape(out_cuda, {2, 5, 8}) || !same_shape(w_cuda, {2, 5, 5})) {
       if (err) *err << "scaled_attention CUDA route shape mismatch\n";
       return false;
     }
+  } else if (pluss::cuda::is_ready() && err != nullptr) {
+    *err << "skipping CUDA attention route shape check: cuda::cpu_bridge_enabled() is false\n";
   }
   return true;
 }

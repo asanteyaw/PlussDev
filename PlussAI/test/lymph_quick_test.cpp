@@ -17,10 +17,12 @@ using pluss::Series;
 using pluss::table::DataFrame;
 using pluss::table::Thread;
 using pluss::ai::nodej::FeatureBatch;
+using pluss::ai::nodej::InferOptions;
 using pluss::ai::nodej::LabeledBatch;
 using pluss::ai::nodej::LinearFamilyOptions;
 using pluss::ai::nodej::ObservationLayout;
 using pluss::ai::nodej::TrainOptions;
+using pluss::ai::nodej::UnknownCategoryPolicy;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -118,6 +120,395 @@ bool run_lymph_quick_checks(std::ostream* err = nullptr) {
     auto pred_or = restored_or.value().infer(frame, data_options);
     if (!pred_or.ok() || pred_or.value().numel() != 6) {
       if (err) *err << "restored DataFrame flow should infer\n";
+      return false;
+    }
+  }
+
+  {
+    const Thread category = Thread(pluss::make_note({"red", "blue", "red", "green"})).with_display_name("ocean_proximity");
+    auto one_hot = pluss::ai::lymph::prep::OneHotEncoder({
+        .max_categories = 32,
+        .overflow = pluss::ai::nodej::prep::CategoryOverflowPolicy::KeepMostFrequent,
+        .include_unknown_bucket = true,
+    });
+    const Series mapped = one_hot.learn_map(category);
+    const auto sizes = mapped.sizes();
+    if (sizes.size() != 2 || sizes[0] != 4 || sizes[1] != 4) {
+      if (err) *err << "lymph OneHotEncoder Thread learn_map should return [n, encoded_features]\n";
+      return false;
+    }
+    if (one_hot.categories_.size() != 1 || one_hot.categories_[0].size() != 3) {
+      if (err) *err << "lymph OneHotEncoder should expose learned categories_\n";
+      return false;
+    }
+    bool seen_red = false;
+    bool seen_blue = false;
+    bool seen_green = false;
+    for (const auto& label : one_hot.categories_[0]) {
+      seen_red = seen_red || (label == "red");
+      seen_blue = seen_blue || (label == "blue");
+      seen_green = seen_green || (label == "green");
+    }
+    if (!(seen_red && seen_blue && seen_green)) {
+      if (err) *err << "lymph OneHotEncoder categories_ should preserve Note labels\n";
+      return false;
+    }
+    if (one_hot.category_keys_.size() != 1 || one_hot.category_keys_[0].size() != 3) {
+      if (err) *err << "lymph OneHotEncoder should expose raw category_keys_\n";
+      return false;
+    }
+    if (one_hot.mapped_names_.size() != 4 || one_hot.mapped_names_[3] != "ocean_proximity_unknown") {
+      if (err) *err << "lymph OneHotEncoder should expose mapped_names_\n";
+      return false;
+    }
+
+    auto unknown_or_error = false;
+    try {
+      (void)one_hot.map(Thread(pluss::make_note({"yellow"})));
+    } catch (...) {
+      unknown_or_error = true;
+    }
+    if (!unknown_or_error) {
+      if (err) *err << "lymph OneHotEncoder Thread map should error on unknown category by default\n";
+      return false;
+    }
+
+    InferOptions infer{};
+    infer.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
+    const Series mapped_unknown = one_hot.map(Thread(pluss::make_note({"yellow"})), infer);
+    const auto unknown_vec = mapped_unknown.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (unknown_vec.size() != 4 || !approx(unknown_vec[3], 1.0)) {
+      if (err) *err << "lymph OneHotEncoder Thread should activate unknown bucket\n";
+      return false;
+    }
+  }
+
+  {
+    const DataFrame cat_df({
+        {"feat1", Thread(pluss::make_note({"red", "blue", "green", "red"})).with_display_name("feat1")},
+        {"feat2", Thread(pluss::make_note({"low", "high", "low", "high"})).with_display_name("feat2")},
+    });
+    {
+      auto one_hot_no_features = pluss::ai::lymph::prep::OneHotEncoder({});
+      bool threw = false;
+      try {
+        (void)one_hot_no_features.learn_map(cat_df);
+      } catch (...) {
+        threw = true;
+      }
+      if (!threw) {
+        if (err) *err << "lymph OneHotEncoder DataFrame path should require explicit .features({...})\n";
+        return false;
+      }
+    }
+    auto one_hot = pluss::ai::lymph::prep::OneHotEncoder({
+        .max_categories = 32,
+        .overflow = pluss::ai::nodej::prep::CategoryOverflowPolicy::KeepMostFrequent,
+        .include_unknown_bucket = true,
+    });
+    one_hot.features({"feat1", "feat2"});
+    const DataFrame mapped = one_hot.learn_map(cat_df);
+    if (mapped.ncases() != cat_df.ncases() || mapped.nfeats() < cat_df.nfeats()) {
+      if (err) *err << "lymph OneHotEncoder DataFrame learn_map should support Note-backed DataFrame inputs\n";
+      return false;
+    }
+    if (one_hot.categories_.size() != 2 || one_hot.mapped_names_.size() < 5) {
+      if (err) *err << "lymph OneHotEncoder DataFrame path should expose categories_ and mapped_names_\n";
+      return false;
+    }
+
+    const DataFrame cat_unknown({
+        {"feat1", Thread(pluss::make_note({"yellow", "blue", "green", "red"})).with_display_name("feat1")},
+        {"feat2", Thread(pluss::make_note({"low", "high", "low", "high"})).with_display_name("feat2")},
+    });
+    InferOptions infer{};
+    infer.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
+    const DataFrame mapped_unknown = one_hot.map(cat_unknown, infer);
+    if (mapped_unknown.ncases() != cat_unknown.ncases() || mapped_unknown.nfeats() != mapped.nfeats()) {
+      if (err) *err << "lymph OneHotEncoder DataFrame map should handle unknown categories via MissingBucket\n";
+      return false;
+    }
+  }
+
+  {
+    const Thread category = Thread(pluss::make_note({"red", "blue", "red", "green"})).with_display_name("ocean_proximity");
+    auto freq = pluss::ai::lymph::prep::FrequencyEncoder({
+        .max_categories = 32,
+        .overflow = pluss::ai::nodej::prep::CategoryOverflowPolicy::KeepMostFrequent,
+        .unknown_frequency = 0.125,
+    });
+    const Series mapped = freq.learn_map(category);
+    const auto mapped_vec = mapped.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (mapped_vec.size() != 4 || !approx(mapped_vec[0], 0.5) || !approx(mapped_vec[1], 0.25) || !approx(mapped_vec[3], 0.25)) {
+      if (err) *err << "lymph FrequencyEncoder Thread learn_map should encode learned frequencies\n";
+      return false;
+    }
+    if (freq.categories_.size() != 1 || freq.categories_[0].size() != 3) {
+      if (err) *err << "lymph FrequencyEncoder should expose learned categories_\n";
+      return false;
+    }
+    bool seen_red = false;
+    bool seen_blue = false;
+    bool seen_green = false;
+    for (const auto& label : freq.categories_[0]) {
+      seen_red = seen_red || (label == "red");
+      seen_blue = seen_blue || (label == "blue");
+      seen_green = seen_green || (label == "green");
+    }
+    if (!(seen_red && seen_blue && seen_green)) {
+      if (err) *err << "lymph FrequencyEncoder categories_ should preserve Note labels\n";
+      return false;
+    }
+    if (freq.category_keys_.size() != 1 || freq.category_keys_[0].size() != 3) {
+      if (err) *err << "lymph FrequencyEncoder should expose raw category_keys_\n";
+      return false;
+    }
+    if (freq.frequencies_.size() != 1 || freq.frequencies_[0].size() != 3) {
+      if (err) *err << "lymph FrequencyEncoder should expose learned frequencies_\n";
+      return false;
+    }
+    if (freq.mapped_names_.size() != 1 || freq.mapped_names_[0] != "ocean_proximity") {
+      if (err) *err << "lymph FrequencyEncoder should expose mapped_names_\n";
+      return false;
+    }
+
+    auto unknown_or_error = false;
+    try {
+      (void)freq.map(Thread(pluss::make_note({"yellow"})));
+    } catch (...) {
+      unknown_or_error = true;
+    }
+    if (!unknown_or_error) {
+      if (err) *err << "lymph FrequencyEncoder Thread map should error on unknown category by default\n";
+      return false;
+    }
+
+    InferOptions infer{};
+    infer.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
+    const Series mapped_unknown = freq.map(Thread(pluss::make_note({"yellow"})), infer);
+    const auto unknown_vec = mapped_unknown.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (unknown_vec.size() != 1 || !approx(unknown_vec[0], 0.125)) {
+      if (err) *err << "lymph FrequencyEncoder Thread should use unknown_frequency for unknown category\n";
+      return false;
+    }
+  }
+
+  {
+    const DataFrame cat_df({
+        {"feat1", Thread(pluss::make_note({"red", "blue", "green", "red"})).with_display_name("feat1")},
+        {"feat2", Thread(pluss::make_note({"low", "high", "low", "high"})).with_display_name("feat2")},
+    });
+    {
+      auto freq_no_features = pluss::ai::lymph::prep::FrequencyEncoder({});
+      bool threw = false;
+      try {
+        (void)freq_no_features.learn_map(cat_df);
+      } catch (...) {
+        threw = true;
+      }
+      if (!threw) {
+        if (err) *err << "lymph FrequencyEncoder DataFrame path should require explicit .features({...})\n";
+        return false;
+      }
+    }
+    auto freq = pluss::ai::lymph::prep::FrequencyEncoder({
+        .max_categories = 32,
+        .overflow = pluss::ai::nodej::prep::CategoryOverflowPolicy::KeepMostFrequent,
+        .unknown_frequency = 0.125,
+    });
+    freq.features({"feat1", "feat2"});
+    const DataFrame mapped = freq.learn_map(cat_df);
+    if (mapped.ncases() != cat_df.ncases() || mapped.nfeats() != cat_df.nfeats()) {
+      if (err) *err << "lymph FrequencyEncoder DataFrame learn_map should support Note-backed DataFrame inputs\n";
+      return false;
+    }
+    if (freq.categories_.size() != 2 || freq.frequencies_.size() != 2) {
+      if (err) *err << "lymph FrequencyEncoder DataFrame path should expose categories_ and frequencies_\n";
+      return false;
+    }
+  }
+
+  {
+    const Thread category = Thread(pluss::make_note({"red", "blue", "red", "green"})).with_display_name("segment");
+    auto ord = pluss::ai::lymph::prep::OrdinalEncoder({
+        .max_categories = 32,
+        .overflow = pluss::ai::nodej::prep::CategoryOverflowPolicy::KeepMostFrequent,
+        .include_unknown_bucket = true,
+        .one_based = true,
+    });
+    const Series mapped = ord.learn_map(category);
+    const auto mapped_vec = mapped.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (mapped_vec.size() != 4 || !approx(mapped_vec[0], mapped_vec[2])) {
+      if (err) *err << "lymph OrdinalEncoder Thread should assign stable ordinal indices\n";
+      return false;
+    }
+    if (ord.categories_.size() != 1 || ord.categories_[0].size() != 3) {
+      if (err) *err << "lymph OrdinalEncoder should expose categories_\n";
+      return false;
+    }
+    if (ord.mapped_names_.size() != 1 || ord.mapped_names_[0] != "segment_ordinal") {
+      if (err) *err << "lymph OrdinalEncoder should expose mapped_names_\n";
+      return false;
+    }
+
+    InferOptions infer{};
+    infer.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
+    const Series unknown = ord.map(Thread(pluss::make_note({"yellow"})), infer);
+    const auto unknown_vec = unknown.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (unknown_vec.size() != 1 || !approx(unknown_vec[0], 4.0)) {
+      if (err) *err << "lymph OrdinalEncoder unknown category should map to unknown bucket index\n";
+      return false;
+    }
+  }
+
+  {
+    const DataFrame cat_df({
+        {"feat1", Thread(pluss::make_note({"red", "blue", "green", "red"})).with_display_name("feat1")},
+        {"feat2", Thread(pluss::make_note({"low", "high", "low", "high"})).with_display_name("feat2")},
+    });
+    auto lbl = pluss::ai::lymph::prep::LabelEncoder({
+        .max_categories = 32,
+        .overflow = pluss::ai::nodej::prep::CategoryOverflowPolicy::KeepMostFrequent,
+        .include_unknown_bucket = true,
+        .one_based = false,
+    });
+    lbl.features({"feat1", "feat2"});
+    const DataFrame mapped = lbl.learn_map(cat_df);
+    if (mapped.ncases() != cat_df.ncases() || mapped.nfeats() != 2) {
+      if (err) *err << "lymph LabelEncoder DataFrame learn_map should return one encoded column per selected feature\n";
+      return false;
+    }
+    if (lbl.categories_.size() != 2 || lbl.mapped_names_.size() != 2) {
+      if (err) *err << "lymph LabelEncoder DataFrame should expose categories_ and mapped_names_\n";
+      return false;
+    }
+    if (lbl.mapped_names_[0] != "feat1_label" || lbl.mapped_names_[1] != "feat2_label") {
+      if (err) *err << "lymph LabelEncoder DataFrame should emit *_label mapped names\n";
+      return false;
+    }
+  }
+
+  {
+    const Thread category = Thread(pluss::make_note({"red", "blue", "red", "green"})).with_display_name("segment");
+    auto indexer = pluss::ai::lymph::prep::CategoryIndexer({});
+    const Series code = indexer.learn_map(category);
+    const auto code_vec = code.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (code_vec.size() != 4 || !approx(code_vec[0], code_vec[2])) {
+      if (err) *err << "CategoryIndexer Thread path should assign consistent indices per repeated category\n";
+      return false;
+    }
+    if (indexer.categories_.size() != 1 || indexer.categories_[0].size() != 3) {
+      if (err) *err << "CategoryIndexer should expose learned category labels\n";
+      return false;
+    }
+
+    InferOptions infer{};
+    infer.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
+    const Series unknown = indexer.map(Thread(pluss::make_note({"yellow"})), infer);
+    const auto unknown_vec = unknown.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const double expected_unknown = static_cast<double>(indexer.categories_[0].size() + 1);
+    if (unknown_vec.size() != 1 || !approx(unknown_vec[0], expected_unknown)) {
+      if (err) *err << "CategoryIndexer unknown category should map to unknown bucket index with MissingBucket policy\n";
+      return false;
+    }
+  }
+
+  {
+    const DataFrame cat_df({
+        {"feat1", Thread(pluss::make_note({"red", "blue", "green", "red"})).with_display_name("feat1")},
+        {"feat2", Thread(pluss::make_note({"low", "high", "low", "high"})).with_display_name("feat2")},
+    });
+    auto indexer = pluss::ai::lymph::prep::CategoryIndexer({});
+    bool threw_without_features = false;
+    try {
+      (void)indexer.learn_map(cat_df);
+    } catch (...) {
+      threw_without_features = true;
+    }
+    if (!threw_without_features) {
+      if (err) *err << "CategoryIndexer DataFrame path should require explicit .features({...})\n";
+      return false;
+    }
+
+    indexer.features({"feat1", "feat2"});
+    const DataFrame mapped = indexer.learn_map(cat_df);
+    if (mapped.ncases() != cat_df.ncases() || mapped.nfeats() != 2) {
+      if (err) *err << "CategoryIndexer DataFrame path should return one indexed column per selected feature\n";
+      return false;
+    }
+    const auto mapped_names = mapped.feature_names();
+    if (mapped_names.size() != 2 || mapped_names[0] != "feat1_index" || mapped_names[1] != "feat2_index") {
+      if (err) *err << "CategoryIndexer DataFrame path should emit *_index output names\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}, f64());
+    const Thread cat = Thread(pluss::make_note({"red", "blue", "red", "blue", "red", "blue"}));
+    const Series y = x.mul(2.0).add(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0, 0.0, 1.0}, {6}, f64()));
+    const DataFrame frame({
+        {"x", Thread(x)},
+        {"cat", cat},
+        {"target", Thread(y)},
+    });
+
+    const auto num_cols = frame.series_features().feature_names();
+    const auto cat_cols = frame.note_features().feature_names();
+    if (num_cols.size() < 2 || cat_cols.size() != 1 || cat_cols.front() != "cat") {
+      if (err) *err << "lymph feature selectors should detect numeric and categorical features\n";
+      return false;
+    }
+    const std::vector<std::string> model_numeric_features{"x"};
+
+    pluss::ai::nodej::DataFrameBatchOptions data_options{};
+    data_options.feature_names = {"x", "cat", "target"};
+    data_options.label_feature = "target";
+    data_options.layout = ObservationLayout::Rows;
+    data_options.note_policy = pluss::ai::nodej::DataNotePolicy::Hash;
+    data_options.thread_policy = pluss::ai::nodej::DataThreadPolicy::CastTemporalToSeries;
+
+    auto feature_transformer = pluss::ai::lymph::make_feature_transformer(
+        frame,
+        data_options,
+        std::vector<pluss::ai::lymph::workflow::feature::Branch>{
+            pluss::ai::lymph::workflow::feature::compose(
+                {
+                    pluss::ai::lymph::workflow::stage::simple_imputer(
+                        pluss::ai::lymph::prep::SimpleImputerOptions{
+                            .strategy = pluss::ai::lymph::prep::SimpleImputerStrategy::Mean,
+                        }),
+                    pluss::ai::lymph::workflow::stage::standard_scaler(),
+                },
+                model_numeric_features),
+            pluss::ai::lymph::workflow::feature::one_hot_encoder(
+                pluss::ai::lymph::prep::OneHotEncoderOptions{.include_unknown_bucket = true},
+                cat_cols),
+        },
+        pluss::ai::lymph::prep::FeatureRemainderPolicy::PassThrough);
+
+    auto model = pluss::ai::lymph::linear_factory::linear_regression(LinearFamilyOptions{
+        .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
+        .regularization = pluss::ai::nodej::RegularizationKind::None,
+        .regularization_strength = 0.0,
+        .fit_intercept = true,
+    });
+    model.feature_transformer(std::move(feature_transformer));
+
+    TrainOptions train_options{};
+    train_options.max_iterations = 4000;
+    train_options.tolerance = 1e-8;
+    model.learn_(frame, data_options, train_options);
+
+    auto metrics = model.assess(frame, data_options, pluss::ai::nodej::AssessOptions{
+                                                        .metrics = {pluss::ai::nodej::MetricKind::Mse, pluss::ai::nodej::MetricKind::R2},
+                                                    });
+    if (!metrics.mse.defined() || !metrics.r2.defined()) {
+      if (err) *err << "lymph feature-transformer workflow assess should expose mse/r2\n";
+      return false;
+    }
+    if (metrics.r2.item<double>() < 0.95) {
+      if (err) *err << "lymph feature-transformer workflow should fit simple mixed-schema regression\n";
       return false;
     }
   }

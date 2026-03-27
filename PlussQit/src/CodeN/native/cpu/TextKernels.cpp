@@ -1257,6 +1257,55 @@ bool contains_bytes(::std::string_view hay, ::std::string_view needle) {
   return hay.find(needle) != ::std::string_view::npos;
 }
 
+bool compare_lex_bytes(::std::string_view lhs, ::std::string_view rhs, LexCompareOp op) noexcept {
+  switch (op) {
+    case LexCompareOp::Eq:
+      return lhs == rhs;
+    case LexCompareOp::Ne:
+      return lhs != rhs;
+    case LexCompareOp::Lt:
+      return lhs < rhs;
+    case LexCompareOp::Le:
+      return lhs <= rhs;
+    case LexCompareOp::Gt:
+      return lhs > rhs;
+    case LexCompareOp::Ge:
+      return lhs >= rhs;
+    default:
+      return false;
+  }
+}
+
+::std::uint64_t hash_bytes_fnv1a(::std::string_view s) noexcept {
+  constexpr ::std::uint64_t kOffset = 14695981039346656037ull;
+  constexpr ::std::uint64_t kPrime = 1099511628211ull;
+  ::std::uint64_t h = kOffset;
+  for (unsigned char c : s) {
+    h ^= static_cast<::std::uint64_t>(c);
+    h *= kPrime;
+  }
+  return h;
+}
+
+void compare_lex_bytes_batch(::std::span<const ::std::string_view> lhs,
+                             ::std::span<const ::std::string_view> rhs,
+                             LexCompareOp op,
+                             ::std::span<::std::uint8_t> out) {
+  PLUSS_CHECK(lhs.size() == rhs.size(), "compare_lex_bytes_batch: lhs/rhs size mismatch");
+  PLUSS_CHECK(lhs.size() == out.size(), "compare_lex_bytes_batch: out size mismatch");
+  for (::std::size_t i = 0; i < lhs.size(); ++i) {
+    out[i] = static_cast<::std::uint8_t>(compare_lex_bytes(lhs[i], rhs[i], op));
+  }
+}
+
+void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
+                            ::std::span<::std::uint64_t> out) {
+  PLUSS_CHECK(in.size() == out.size(), "hash_bytes_fnv1a_batch: input/output size mismatch");
+  for (::std::size_t i = 0; i < in.size(); ++i) {
+    out[i] = hash_bytes_fnv1a(in[i]);
+  }
+}
+
 ::std::string replace_bytes(::std::string_view s, ::std::string_view from, ::std::string_view to) {
   if (from.empty()) return ::std::string(s);
   ::std::string out;

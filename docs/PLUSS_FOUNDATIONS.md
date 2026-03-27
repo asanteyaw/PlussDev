@@ -42,7 +42,7 @@ Conceptual mapping of Plusses spaces:
 - The `PlussPl` space: Immersive plotting engine for visual workflows and pictorial representations of data.
 - The `PlussMa` space: High performance scientific computing spanning across different scientific and engineering domains, with numerical methods and optimization engines
 - The `PlussAI` space: Artificial intelligence with machine learning, deep learning, robotics and other AI functionalities
-- The `PlussView` space: Graphical user interface for outputting results and visualizing workflows in real time.
+- The `PlussTilsView` space: Graphical user interface for outputting results and visualizing workflows in real time.
 
 This mapping is directional and maturity-dependent, with growing implementations and incoporation. More spaces may be added with time.
 
@@ -86,7 +86,7 @@ Current stack structure by space:
 - `PlussPl` space: Responsible for all plotting utilities and functionalities. Offers the platform for `Flash`, a higher level engine built on top of `PlussPl` functionalities to provide a convenient way of plotting, with complex plots made easier.
 - `PlussMa` space: Provides several subspaces for a wide range of scientific computing tasks, quantiative modelling and numerical optimization work. The `Math` subspace provides libraries for tasks in linear algebra, optimization, finance, etc. The `Stats` subspace provides various libraries for statistical tasks like hypothesis testing, time series and inference. `NatSci` and `Eng` subspaces provide the platform natural sciences and engineering work.
 - `PlussAI` space: Provides Machine and Deep learning surfaces (functional and module-style APIs), robotics and other artificial intelligence tools for AI work. 
-- `PlussView` space: Responsible for rendering/window/session infrastructure
+- `PlussTilsView` space: Responsible for rendering/window/session infrastructure
 
 ## Product Goals
 

@@ -32,6 +32,7 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
 #include "CodeM/core/ScalarType.h"
+#include "loader/SourceResolver.h"
 #include "table/DataFrame.h"
 #include "table/Thread.h"
 #include "loader/parallel_csv_reader.h"
@@ -1337,7 +1338,8 @@ CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string
 
 CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
   ReadCsvOptions resolved = options;
-  PLUSS_CHECK(!resolved.filepath.empty(), "load_csv: filepath is empty");
+  auto source = detail::resolve_local_or_http_source(resolved.filepath, "load_csv");
+  resolved.filepath = source.local_path();
 
   const auto t_total_start = std::chrono::steady_clock::now();
   CsvLoadProfile profile_stats;
@@ -1440,7 +1442,8 @@ CsvBatch read_csv_records_batch(const std::vector<std::vector<std::string>>& rec
 
 CsvBatch read_csv_batch(const ReadCsvOptions& options) {
   ReadCsvOptions resolved = options;
-  PLUSS_CHECK(!resolved.filepath.empty(), "load_csv: filepath is empty");
+  auto source = detail::resolve_local_or_http_source(resolved.filepath, "load_csv");
+  resolved.filepath = source.local_path();
 
   const auto t_total_start = std::chrono::steady_clock::now();
   CsvLoadProfile profile_stats;

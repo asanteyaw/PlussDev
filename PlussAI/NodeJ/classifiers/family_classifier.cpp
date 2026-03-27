@@ -7,12 +7,14 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <future>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -70,6 +72,20 @@ bool is_phase0_family(ModelFamily family) {
 
 [[nodiscard]] Config f64_on(Platform platform) {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(platform);
+}
+
+[[nodiscard]] std::uint64_t splitmix64(std::uint64_t x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+[[nodiscard]] std::int64_t resolved_parallel_workers(std::int64_t tasks) {
+  if (tasks <= 1) return 1;
+  const std::uint32_t hw = std::thread::hardware_concurrency();
+  const std::int64_t cap = hw == 0 ? 1 : static_cast<std::int64_t>(hw);
+  return std::max<std::int64_t>(1, std::min<std::int64_t>(tasks, cap));
 }
 
 [[nodiscard]] Series state_f64(std::vector<double> values) {
@@ -237,6 +253,79 @@ struct DenseFeatureMatrix {
   const Series q_norm = query_rows.square().sum(1, true);
   const Series t_norm = train_rows.square().sum(1, true).transpose(0, 1);
   return q_norm.add(t_norm).sub(dot.mul(2.0)).relu();
+}
+
+[[nodiscard]] Series knn_probability_cpu(const Series& query_rows,
+                                         const Series& train_rows,
+                                         const Series& y_train,
+                                         std::int64_t k,
+                                         bool distance_weighted) {
+  const std::int64_t nq = query_rows.sizes()[0];
+  const std::int64_t nt = train_rows.sizes()[0];
+  const std::int64_t d = train_rows.sizes()[1];
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(k, nt));
+  std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
+  constexpr double eps = 1e-12;
+
+  for (std::int64_t qi = 0; qi < nq; ++qi) {
+    std::vector<std::pair<double, std::int64_t>> best{};
+    best.reserve(static_cast<std::size_t>(kk));
+    const std::size_t qbase = static_cast<std::size_t>(qi * d);
+    for (std::int64_t ti = 0; ti < nt; ++ti) {
+      const std::size_t tbase = static_cast<std::size_t>(ti * d);
+      double d2 = 0.0;
+      for (std::int64_t f = 0; f < d; ++f) {
+        const double dv = qv[qbase + static_cast<std::size_t>(f)] - tv[tbase + static_cast<std::size_t>(f)];
+        d2 += dv * dv;
+      }
+      if (static_cast<std::int64_t>(best.size()) < kk) {
+        best.emplace_back(d2, ti);
+        if (static_cast<std::int64_t>(best.size()) == kk) {
+          std::make_heap(best.begin(), best.end());
+        }
+      } else if (d2 < best.front().first) {
+        std::pop_heap(best.begin(), best.end());
+        best.back() = std::pair<double, std::int64_t>{d2, ti};
+        std::push_heap(best.begin(), best.end());
+      }
+    }
+    std::sort_heap(best.begin(), best.end());
+
+    if (distance_weighted) {
+      double zero_sum = 0.0;
+      double zero_count = 0.0;
+      for (const auto& [d2, ti] : best) {
+        if (d2 <= eps) {
+          zero_sum += yv[static_cast<std::size_t>(ti)];
+          zero_count += 1.0;
+        }
+      }
+      if (zero_count > 0.0) {
+        out[static_cast<std::size_t>(qi)] = std::clamp(zero_sum / zero_count, 0.0, 1.0);
+        continue;
+      }
+
+      double wsum = 0.0;
+      double ysum = 0.0;
+      for (const auto& [d2, ti] : best) {
+        const double w = 1.0 / std::sqrt(d2 + eps);
+        wsum += w;
+        ysum += w * yv[static_cast<std::size_t>(ti)];
+      }
+      out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? std::clamp(ysum / wsum, 0.0, 1.0) : 0.0;
+    } else {
+      double sum = 0.0;
+      for (const auto& [_, ti] : best) {
+        sum += yv[static_cast<std::size_t>(ti)];
+      }
+      out[static_cast<std::size_t>(qi)] = std::clamp(sum / static_cast<double>(kk), 0.0, 1.0);
+    }
+  }
+
+  return pluss::make_series(out, {nq}, f64_cpu());
 }
 
 struct BinaryLabelEncoding {
@@ -575,27 +664,32 @@ public:
     }
 
     const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
-    const Series dist2 = pairwise_distance2(x_query, x_train_);
-    const Series sort_idx = dist2.argsort(1, false, true);
-    const Series k_cols = pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
-    const Series knn_idx = sort_idx.index_select(1, k_cols);
-    const Series y_train_2d =
-        y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
-    const Series y_knn = y_train_2d.gather(1, knn_idx);
-
     Series probs = Series::undefined();
-    if (options_.distance_weighted) {
-      constexpr double eps = 1e-12;
-      const Series d2_knn = dist2.gather(1, knn_idx);
-      const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
-      const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
-      const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
-      const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
-      const Series wsum = weights.sum(1, false);
-      const Series ysum = weights.mul(y_knn).sum(1, false);
-      probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+    if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
+      probs = knn_probability_cpu(x_query, x_train_, y_train_, neighbor_count, options_.distance_weighted);
     } else {
-      probs = y_knn.mean(1, false).clamp(0.0, 1.0);
+      const Series dist2 = pairwise_distance2(x_query, x_train_);
+      const Series sort_idx = dist2.argsort(1, false, true);
+      const Series k_cols =
+          pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
+      const Series knn_idx = sort_idx.index_select(1, k_cols);
+      const Series y_train_2d =
+          y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
+      const Series y_knn = y_train_2d.gather(1, knn_idx);
+
+      if (options_.distance_weighted) {
+        constexpr double eps = 1e-12;
+        const Series d2_knn = dist2.gather(1, knn_idx);
+        const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
+        const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
+        const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
+        const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
+        const Series wsum = weights.sum(1, false);
+        const Series ysum = weights.mul(y_knn).sum(1, false);
+        probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+      } else {
+        probs = y_knn.mean(1, false).clamp(0.0, 1.0);
+      }
     }
 
     return StatusOr<Series>(probs.to(matrix.original_platform, ScalarType::Float64));
@@ -756,6 +850,10 @@ public:
       return Status::invalid_argument(
           "TreeClassifier::learn does not support NaN features; apply a nodej::prep imputer before learn().");
     }
+    if (matrix.x_rows.platform() != pluss::pCPU) {
+      return Status::not_implemented(
+          "TreeClassifier::learn currently has a CPU-only implementation. Provide CPU features for tree learn().");
+    }
 
     StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "TreeClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
@@ -763,8 +861,8 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
-    x_train_ = matrix.x_rows;
-    y_train_ = labels.y01.reshape({sample_count_});
+    x_train_host_ = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+    y_train_host_ = labels.y01.to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
 
     nodes_.clear();
     nodes_.reserve(static_cast<std::size_t>(2 * sample_count_ + 1));
@@ -776,8 +874,8 @@ public:
       return Status::internal("TreeClassifier::learn failed to build any tree nodes.");
     }
 
-    x_train_ = Series::undefined();
-    y_train_ = Series::undefined();
+    x_train_host_.clear();
+    y_train_host_.clear();
 
     negative_label_ = labels.negative;
     positive_label_ = labels.positive;
@@ -799,22 +897,45 @@ public:
       return StatusOr<Series>(Status::invalid_argument(
           "TreeClassifier::infer_scores does not support NaN features; apply the fitted imputer used for learn()."));
     }
+    if (matrix.x_rows.platform() != pluss::pCPU) {
+      return StatusOr<Series>(Status::not_implemented(
+          "TreeClassifier::infer_scores currently has a CPU-only implementation. Provide CPU features for tree inference."));
+    }
 
     std::vector<double> probs{};
-    probs.reserve(static_cast<std::size_t>(matrix.sample_count));
-
-    for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
-      std::int64_t node_idx = 0;
-      while (!nodes_[static_cast<std::size_t>(node_idx)].is_leaf) {
-        const TreeNode& node = nodes_[static_cast<std::size_t>(node_idx)];
-        const double xv = x_at(matrix.x_rows, i, node.feature);
-        node_idx = xv < node.threshold ? node.left : node.right;
-      }
-      probs.push_back(std::clamp(nodes_[static_cast<std::size_t>(node_idx)].leaf_positive_probability, 0.0, 1.0));
-    }
+    Status pred_status = predict_prob_host_rows(
+        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>(),
+        matrix.sample_count,
+        matrix.feature_count,
+        probs);
+    if (!pred_status.ok()) return StatusOr<Series>(std::move(pred_status));
 
     Series out = pluss::make_series(probs, {static_cast<std::int64_t>(probs.size())}, f64_cpu());
     return StatusOr<Series>(out.to(matrix.original_platform, ScalarType::Float64));
+  }
+
+  Status predict_prob_host_rows(const std::vector<double>& x_rows,
+                                std::int64_t sample_count,
+                                std::int64_t feature_count,
+                                std::vector<double>& out) const {
+    if (!trained_) return Status::precondition("TreeClassifier must be learned before host prediction.");
+    if (feature_count != feature_count_) return Status::shape_mismatch("TreeClassifier host prediction feature mismatch.");
+    const std::size_t expected = static_cast<std::size_t>(sample_count * feature_count);
+    if (x_rows.size() != expected) {
+      return Status::shape_mismatch("TreeClassifier host prediction row-major size mismatch.");
+    }
+    out.assign(static_cast<std::size_t>(sample_count), 0.0);
+    for (std::int64_t i = 0; i < sample_count; ++i) {
+      std::int64_t node_idx = 0;
+      while (!nodes_[static_cast<std::size_t>(node_idx)].is_leaf) {
+        const TreeNode& node = nodes_[static_cast<std::size_t>(node_idx)];
+        const double xv = x_rows[static_cast<std::size_t>(i * feature_count + node.feature)];
+        node_idx = xv < node.threshold ? node.left : node.right;
+      }
+      out[static_cast<std::size_t>(i)] =
+          std::clamp(nodes_[static_cast<std::size_t>(node_idx)].leaf_positive_probability, 0.0, 1.0);
+    }
+    return Status::success();
   }
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
@@ -921,8 +1042,8 @@ public:
       node.leaf_positive_probability = flat[base + 5];
       nodes_[i] = node;
     }
-    x_train_ = Series::undefined();
-    y_train_ = Series::undefined();
+    x_train_host_.clear();
+    y_train_host_.clear();
     return Status::success();
   }
 
@@ -953,21 +1074,18 @@ private:
     return Status::success();
   }
 
-  [[nodiscard]] double x_at(const Series& x_rows, std::int64_t row, std::int64_t feature) const {
-    const Series row_idx = make_index_series(std::vector<std::int64_t>{row}, x_rows.platform());
-    const Series col_idx = make_index_series(std::vector<std::int64_t>{feature}, x_rows.platform());
-    return x_rows.index_select(0, row_idx).index_select(1, col_idx).reshape({1}).item<double>();
+  [[nodiscard]] double x_train_at(std::int64_t row, std::int64_t feature) const {
+    return x_train_host_[static_cast<std::size_t>(row * feature_count_ + feature)];
   }
 
-  [[nodiscard]] double y_at(std::int64_t row) const {
-    const Series row_idx = make_index_series(std::vector<std::int64_t>{row}, y_train_.platform());
-    return y_train_.index_select(0, row_idx).reshape({1}).item<double>();
+  [[nodiscard]] double y_train_at(std::int64_t row) const {
+    return y_train_host_[static_cast<std::size_t>(row)];
   }
 
   std::int64_t build_node(const std::vector<std::int64_t>& indices, std::int64_t depth) {
     const std::int64_t n = static_cast<std::int64_t>(indices.size());
     double positive_count = 0.0;
-    for (std::int64_t idx : indices) positive_count += y_at(idx);
+    for (std::int64_t idx : indices) positive_count += y_train_at(idx);
 
     const double parent_impurity = binary_class_impurity(positive_count, static_cast<double>(n), options_.criterion);
     TreeNode node{};
@@ -993,7 +1111,7 @@ private:
     left.reserve(indices.size());
     right.reserve(indices.size());
     for (std::int64_t idx : indices) {
-      if (x_at(x_train_, idx, best.feature) < best.threshold) {
+      if (x_train_at(idx, best.feature) < best.threshold) {
         left.push_back(idx);
       } else {
         right.push_back(idx);
@@ -1012,55 +1130,106 @@ private:
     return node_index;
   }
 
+  [[nodiscard]] bool split_better(const SplitCandidate& candidate, const SplitCandidate& incumbent) const {
+    if (!candidate.valid) return false;
+    if (!incumbent.valid) return true;
+    const bool better_gain = candidate.gain > incumbent.gain + 1e-15;
+    const bool tie_break = std::abs(candidate.gain - incumbent.gain) <= 1e-15
+                           && (candidate.feature < incumbent.feature
+                               || (candidate.feature == incumbent.feature && candidate.threshold < incumbent.threshold));
+    return better_gain || tie_break;
+  }
+
+  [[nodiscard]] SplitCandidate find_best_split_for_feature(const std::vector<std::int64_t>& indices,
+                                                           double parent_impurity,
+                                                           std::int64_t feature) const {
+    const std::int64_t n = static_cast<std::int64_t>(indices.size());
+    SplitCandidate best{};
+    best.feature = feature;
+
+    std::vector<std::pair<double, double>> values{};
+    values.reserve(static_cast<std::size_t>(n));
+    double total_positive = 0.0;
+    for (std::int64_t idx : indices) {
+      const double yi = y_train_at(idx);
+      total_positive += yi;
+      values.emplace_back(x_train_at(idx, feature), yi);
+    }
+    std::sort(values.begin(), values.end(),
+              [](const auto& a, const auto& b) {
+                if (a.first != b.first) return a.first < b.first;
+                return a.second < b.second;
+              });
+    if (values.front().first == values.back().first) return best;
+
+    double left_positive = 0.0;
+    for (std::int64_t i = 0; i < n - 1; ++i) {
+      left_positive += values[static_cast<std::size_t>(i)].second;
+      const std::int64_t left_n = i + 1;
+      const std::int64_t right_n = n - left_n;
+      if (left_n < options_.min_samples_leaf || right_n < options_.min_samples_leaf) continue;
+      const double xi = values[static_cast<std::size_t>(i)].first;
+      const double xj = values[static_cast<std::size_t>(i + 1)].first;
+      if (xi == xj) continue;
+
+      const double right_positive = total_positive - left_positive;
+      const double left_impurity = binary_class_impurity(left_positive, static_cast<double>(left_n), options_.criterion);
+      const double right_impurity =
+          binary_class_impurity(right_positive, static_cast<double>(right_n), options_.criterion);
+      const double weighted_impurity =
+          (static_cast<double>(left_n) * left_impurity + static_cast<double>(right_n) * right_impurity)
+          / static_cast<double>(n);
+      const double gain = parent_impurity - weighted_impurity;
+      const double threshold = xi + (xj - xi) * 0.5;
+
+      const SplitCandidate candidate{
+          .valid = true,
+          .feature = feature,
+          .threshold = threshold,
+          .gain = gain,
+      };
+      if (split_better(candidate, best)) {
+        best = candidate;
+      }
+    }
+
+    return best;
+  }
+
   [[nodiscard]] SplitCandidate find_best_split(const std::vector<std::int64_t>& indices, double parent_impurity) const {
     const std::int64_t n = static_cast<std::int64_t>(indices.size());
     SplitCandidate best{};
-
-    for (std::int64_t f = 0; f < feature_count_; ++f) {
-      std::vector<std::pair<double, double>> values{};
-      values.reserve(static_cast<std::size_t>(n));
-      double total_positive = 0.0;
-      for (std::int64_t idx : indices) {
-        const double yi = y_at(idx);
-        total_positive += yi;
-        values.emplace_back(x_at(x_train_, idx, f), yi);
-      }
-      std::sort(values.begin(), values.end(),
-                [](const auto& a, const auto& b) {
-                  if (a.first != b.first) return a.first < b.first;
-                  return a.second < b.second;
-                });
-      if (values.front().first == values.back().first) continue;
-
-      double left_positive = 0.0;
-      for (std::int64_t i = 0; i < n - 1; ++i) {
-        left_positive += values[static_cast<std::size_t>(i)].second;
-        const std::int64_t left_n = i + 1;
-        const std::int64_t right_n = n - left_n;
-        if (left_n < options_.min_samples_leaf || right_n < options_.min_samples_leaf) continue;
-        const double xi = values[static_cast<std::size_t>(i)].first;
-        const double xj = values[static_cast<std::size_t>(i + 1)].first;
-        if (xi == xj) continue;
-
-        const double right_positive = total_positive - left_positive;
-        const double left_impurity = binary_class_impurity(left_positive, static_cast<double>(left_n), options_.criterion);
-        const double right_impurity =
-            binary_class_impurity(right_positive, static_cast<double>(right_n), options_.criterion);
-        const double weighted_impurity =
-            (static_cast<double>(left_n) * left_impurity + static_cast<double>(right_n) * right_impurity)
-            / static_cast<double>(n);
-        const double gain = parent_impurity - weighted_impurity;
-        const double threshold = xi + (xj - xi) * 0.5;
-
-        const bool better_gain = gain > best.gain + 1e-15;
-        const bool tie_break = std::abs(gain - best.gain) <= 1e-15
-                               && (f < best.feature || (f == best.feature && threshold < best.threshold));
-        if (!best.valid || better_gain || tie_break) {
-          best.valid = true;
-          best.feature = f;
-          best.threshold = threshold;
-          best.gain = gain;
+    const bool parallel_feature_scan = feature_count_ >= 8 && n >= 1024;
+    const std::int64_t workers = parallel_feature_scan ? resolved_parallel_workers(feature_count_) : 1;
+    if (workers <= 1) {
+      for (std::int64_t f = 0; f < feature_count_; ++f) {
+        const SplitCandidate candidate = find_best_split_for_feature(indices, parent_impurity, f);
+        if (split_better(candidate, best)) {
+          best = candidate;
         }
+      }
+      return best;
+    }
+
+    const std::int64_t chunk = std::max<std::int64_t>(1, (feature_count_ + workers - 1) / workers);
+    std::vector<std::future<SplitCandidate>> futures{};
+    for (std::int64_t start = 0; start < feature_count_; start += chunk) {
+      const std::int64_t end = std::min(feature_count_, start + chunk);
+      futures.emplace_back(std::async(std::launch::async, [this, &indices, parent_impurity, start, end]() {
+        SplitCandidate local{};
+        for (std::int64_t f = start; f < end; ++f) {
+          const SplitCandidate candidate = find_best_split_for_feature(indices, parent_impurity, f);
+          if (split_better(candidate, local)) {
+            local = candidate;
+          }
+        }
+        return local;
+      }));
+    }
+    for (auto& future : futures) {
+      const SplitCandidate candidate = future.get();
+      if (split_better(candidate, best)) {
+        best = candidate;
       }
     }
     return best;
@@ -1070,8 +1239,8 @@ private:
   bool trained_{false};
   std::int64_t sample_count_{0};
   std::int64_t feature_count_{0};
-  Series x_train_ = Series::undefined();
-  Series y_train_ = Series::undefined();
+  std::vector<double> x_train_host_{};
+  std::vector<double> y_train_host_{};
   std::vector<TreeNode> nodes_{};
   double negative_label_{0.0};
   double positive_label_{1.0};
@@ -1100,6 +1269,10 @@ public:
       return Status::invalid_argument(
           "EnsembleClassifier::learn does not support NaN features; apply a nodej::prep imputer before learn().");
     }
+    if (matrix.x_rows.platform() != pluss::pCPU) {
+      return Status::not_implemented(
+          "EnsembleClassifier::learn currently has a CPU-only implementation. Provide CPU features for ensemble learn().");
+    }
 
     StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "EnsembleClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
@@ -1107,8 +1280,10 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
-    const Series x_train = matrix.x_rows;
-    const Series y_train = labels.y01.reshape({sample_count_});
+    const std::vector<double> x_train_host =
+        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+    const std::vector<double> y_train_host =
+        labels.y01.reshape({sample_count_}).to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
 
     const std::int64_t learner_count = options_.learners;
     const std::int64_t subsample_count =
@@ -1117,19 +1292,18 @@ public:
                                   ? std::max<std::int64_t>(1, static_cast<std::int64_t>(std::sqrt(static_cast<double>(feature_count_))))
                                   : feature_count_;
 
-    std::mt19937_64 rng{};
-    if (options.random.deterministic) {
-      rng.seed(options.random.seed);
-    } else {
-      std::random_device rd;
-      rng.seed((static_cast<std::uint64_t>(rd()) << 32U) ^ static_cast<std::uint64_t>(rd()));
-    }
-
     learners_.clear();
     learners_.reserve(static_cast<std::size_t>(learner_count));
-    std::uniform_int_distribution<std::int64_t> row_dist(0, sample_count_ - 1);
+    std::uint64_t base_seed = options.random.seed;
+    if (!options.random.deterministic) {
+      std::random_device rd;
+      base_seed = (static_cast<std::uint64_t>(rd()) << 32U) ^ static_cast<std::uint64_t>(rd());
+    }
 
-    for (std::int64_t l = 0; l < learner_count; ++l) {
+    auto train_member = [&](std::int64_t learner_index) -> StatusOr<EnsembleMember> {
+      std::mt19937_64 rng(splitmix64(base_seed + static_cast<std::uint64_t>(learner_index)));
+      std::uniform_int_distribution<std::int64_t> row_dist(0, sample_count_ - 1);
+
       std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
       std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
       if (mtry < feature_count_) {
@@ -1139,47 +1313,74 @@ public:
       }
 
       const std::int64_t learner_features = static_cast<std::int64_t>(feature_ids.size());
-      const Series feature_index = make_index_series(feature_ids, x_train.platform());
-      const Series x_feature_view = x_train.index_select(1, feature_index);
-      bool trained_tree = false;
       constexpr std::int64_t max_attempts = 16;
-
-      for (std::int64_t attempt = 0; attempt < max_attempts && !trained_tree; ++attempt) {
+      for (std::int64_t attempt = 0; attempt < max_attempts; ++attempt) {
         std::vector<std::int64_t> row_ids(static_cast<std::size_t>(subsample_count), 0);
-
+        std::vector<double> y_sub_host(static_cast<std::size_t>(subsample_count), 0.0);
+        double positive_count = 0.0;
         for (std::int64_t i = 0; i < subsample_count; ++i) {
-          row_ids[static_cast<std::size_t>(i)] = row_dist(rng);
+          const std::int64_t row = row_dist(rng);
+          row_ids[static_cast<std::size_t>(i)] = row;
+          const double yv = y_train_host[static_cast<std::size_t>(row)];
+          y_sub_host[static_cast<std::size_t>(i)] = yv;
+          positive_count += yv;
         }
-
-        const Series row_index = make_index_series(row_ids, x_train.platform());
-        const Series x_sub = x_feature_view.index_select(0, row_index);
-        const Series y_sub = y_train.index_select(0, row_index);
-        const double positive_count = y_sub.sum().item<double>();
         if (positive_count <= 0.0 || positive_count >= static_cast<double>(subsample_count)) {
           continue;
         }
 
+        std::vector<double> x_sub_host(static_cast<std::size_t>(subsample_count * learner_features), 0.0);
+        for (std::int64_t i = 0; i < subsample_count; ++i) {
+          const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
+          const std::size_t in_base = static_cast<std::size_t>(row * feature_count_);
+          const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
+          for (std::int64_t j = 0; j < learner_features; ++j) {
+            const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
+            x_sub_host[out_base + static_cast<std::size_t>(j)] = x_train_host[in_base + static_cast<std::size_t>(f)];
+          }
+        }
+
+        const Series x_sub = pluss::make_series(std::move(x_sub_host), {subsample_count, learner_features}, f64_cpu());
+        const Series y_sub = pluss::make_series(std::move(y_sub_host), {subsample_count}, f64_cpu());
         const LabeledBatch sub_batch{
-            .features = FeatureBatch{.x = x_sub.reshape({subsample_count, learner_features}), .layout = ObservationLayout::Rows},
-            .y = y_sub.reshape({subsample_count}),
+            .features = FeatureBatch{.x = x_sub, .layout = ObservationLayout::Rows},
+            .y = y_sub,
         };
 
         auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{});
         Status tree_status = tree->learn(sub_batch, options);
-        if (!tree_status.ok()) {
-          continue;
-        }
-
-        learners_.push_back(EnsembleMember{
-            .tree = std::move(tree),
-            .feature_ids = feature_ids,
-        });
-        trained_tree = true;
+        if (!tree_status.ok()) continue;
+        EnsembleMember member{};
+        member.tree = std::move(tree);
+        member.feature_ids = std::move(feature_ids);
+        return StatusOr<EnsembleMember>(std::move(member));
       }
 
-      if (!trained_tree) {
-        return Status::internal(
-            "EnsembleClassifier::learn could not draw a class-diverse bootstrap sample for a base learner.");
+      return StatusOr<EnsembleMember>(Status::internal(
+          "EnsembleClassifier::learn could not draw a class-diverse bootstrap sample for learner "
+          + std::to_string(learner_index) + "."));
+    };
+
+    const std::int64_t workers = resolved_parallel_workers(learner_count);
+    if (workers <= 1) {
+      for (std::int64_t l = 0; l < learner_count; ++l) {
+        StatusOr<EnsembleMember> member_or = train_member(l);
+        if (!member_or.ok()) return member_or.status();
+        learners_.push_back(member_or.move_value());
+      }
+    } else {
+      for (std::int64_t start = 0; start < learner_count; start += workers) {
+        const std::int64_t end = std::min(learner_count, start + workers);
+        std::vector<std::future<StatusOr<EnsembleMember>>> futures{};
+        futures.reserve(static_cast<std::size_t>(end - start));
+        for (std::int64_t l = start; l < end; ++l) {
+          futures.emplace_back(std::async(std::launch::async, [&, l]() { return train_member(l); }));
+        }
+        for (std::int64_t l = start; l < end; ++l) {
+          StatusOr<EnsembleMember> member_or = futures[static_cast<std::size_t>(l - start)].get();
+          if (!member_or.ok()) return member_or.status();
+          learners_.push_back(member_or.move_value());
+        }
       }
     }
 
@@ -1207,26 +1408,68 @@ public:
       return StatusOr<Series>(Status::invalid_argument(
           "EnsembleClassifier::infer_scores does not support NaN features; apply the fitted imputer used for learn()."));
     }
+    if (matrix.x_rows.platform() != pluss::pCPU) {
+      return StatusOr<Series>(Status::not_implemented(
+          "EnsembleClassifier::infer_scores currently has a CPU-only implementation. Provide CPU features for ensemble inference."));
+    }
 
-    Series probs_sum = pluss::zeros({matrix.sample_count}, f64_cpu()).to(matrix.x_rows.platform());
+    const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+    std::vector<double> probs_sum(static_cast<std::size_t>(matrix.sample_count), 0.0);
 
-    for (const EnsembleMember& member : learners_) {
+    auto infer_member = [&](std::size_t member_index) -> StatusOr<std::vector<double>> {
+      const EnsembleMember& member = learners_[member_index];
       const std::int64_t learner_features = static_cast<std::int64_t>(member.feature_ids.size());
-      const Series feature_index = make_index_series(member.feature_ids, matrix.x_rows.platform());
-      const Series x_sub = matrix.x_rows.index_select(1, feature_index);
+      std::vector<double> x_sub_host(static_cast<std::size_t>(matrix.sample_count * learner_features), 0.0);
+      for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+        const std::size_t x_row_base = static_cast<std::size_t>(i * matrix.feature_count);
+        const std::size_t out_row_base = static_cast<std::size_t>(i * learner_features);
+        for (std::int64_t j = 0; j < learner_features; ++j) {
+          const std::int64_t f = member.feature_ids[static_cast<std::size_t>(j)];
+          x_sub_host[out_row_base + static_cast<std::size_t>(j)] = x_host[x_row_base + static_cast<std::size_t>(f)];
+        }
+      }
+      std::vector<double> member_probs{};
+      Status member_status = member.tree->predict_prob_host_rows(x_sub_host, matrix.sample_count, learner_features, member_probs);
+      if (!member_status.ok()) return StatusOr<std::vector<double>>(member_status);
+      return StatusOr<std::vector<double>>(std::move(member_probs));
+    };
 
-      const FeatureBatch sub_batch{
-          .x = x_sub.reshape({matrix.sample_count, learner_features}),
-          .layout = ObservationLayout::Rows,
-      };
-      StatusOr<Series> member_probs_or = member.tree->infer_scores(sub_batch);
-      if (!member_probs_or.ok()) return StatusOr<Series>(member_probs_or.status());
-      probs_sum = probs_sum.add(member_probs_or.value().to(matrix.x_rows.platform(), ScalarType::Float64));
+    const std::int64_t workers = resolved_parallel_workers(static_cast<std::int64_t>(learners_.size()));
+    if (workers <= 1) {
+      for (std::size_t mi = 0; mi < learners_.size(); ++mi) {
+        StatusOr<std::vector<double>> member_probs_or = infer_member(mi);
+        if (!member_probs_or.ok()) return StatusOr<Series>(member_probs_or.status());
+        const auto& member_probs = member_probs_or.value();
+        for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+          probs_sum[static_cast<std::size_t>(i)] += member_probs[static_cast<std::size_t>(i)];
+        }
+      }
+    } else {
+      for (std::size_t start = 0; start < learners_.size(); start += static_cast<std::size_t>(workers)) {
+        const std::size_t end = std::min(learners_.size(), start + static_cast<std::size_t>(workers));
+        std::vector<std::future<StatusOr<std::vector<double>>>> futures{};
+        futures.reserve(end - start);
+        for (std::size_t mi = start; mi < end; ++mi) {
+          futures.emplace_back(std::async(std::launch::async, [&, mi]() { return infer_member(mi); }));
+        }
+        for (std::size_t mi = start; mi < end; ++mi) {
+          StatusOr<std::vector<double>> member_probs_or = futures[mi - start].get();
+          if (!member_probs_or.ok()) return StatusOr<Series>(member_probs_or.status());
+          const auto& member_probs = member_probs_or.value();
+          for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+            probs_sum[static_cast<std::size_t>(i)] += member_probs[static_cast<std::size_t>(i)];
+          }
+        }
+      }
     }
 
     const double denom = static_cast<double>(learners_.size());
     constexpr double eps = 1e-12;
-    const Series probs = probs_sum.div(denom).clamp(eps, 1.0 - eps);
+    for (double& v : probs_sum) {
+      v /= denom;
+      v = std::clamp(v, eps, 1.0 - eps);
+    }
+    const Series probs = pluss::make_series(probs_sum, {matrix.sample_count}, f64_cpu());
     const Series scores = probs.log().sub(probs.mul(-1.0).add(1.0).log());
     return StatusOr<Series>(scores.to(matrix.original_platform, ScalarType::Float64));
   }
@@ -1455,6 +1698,81 @@ private:
       return dot.mul(gamma).tanh();
   }
   return dot;
+}
+
+[[nodiscard]] StatusOr<Series> solve_kernel_dual_cg(const Series& kernel,
+                                                    const Series& rhs,
+                                                    double lambda,
+                                                    std::int64_t max_iterations,
+                                                    double tolerance,
+                                                    const char* where) {
+  const std::int64_t n = kernel.sizes()[0];
+  const Platform platform = kernel.platform();
+  const Series eye = pluss::eye(n, n, f64_on(platform));
+  const Series a = kernel.add(eye.mul(lambda));
+  Series x = pluss::zeros({n}, f64_on(platform));
+  Series b = rhs.to(platform, ScalarType::Float64).reshape({n});
+  Series r = b;
+  Series p = r;
+  double rs = r.square().sum().reshape({1}).item<double>();
+  if (!std::isfinite(rs)) {
+    return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite residual norm."));
+  }
+  if (rs <= std::max(1e-24, tolerance * tolerance)) {
+    return StatusOr<Series>(x);
+  }
+
+  const double rs0 = rs;
+  const std::int64_t iters = std::max<std::int64_t>(4, max_iterations);
+  constexpr double eps = 1e-18;
+  for (std::int64_t iter = 0; iter < iters; ++iter) {
+    const Series ap = a.matmul(p.reshape({n, 1})).reshape({n});
+    const double denom = p.mul(ap).sum().reshape({1}).item<double>();
+    if (!std::isfinite(denom) || std::abs(denom) <= eps) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered unstable CG denominator."));
+    }
+    const double alpha = rs / denom;
+    x = x.add(p.mul(alpha));
+    r = r.sub(ap.mul(alpha));
+    const double rs_new = r.square().sum().reshape({1}).item<double>();
+    if (!std::isfinite(rs_new)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite CG residual norm."));
+    }
+    if (std::sqrt(rs_new) <= std::max(tolerance * std::sqrt(std::max(rs0, eps)), 1e-12)) {
+      break;
+    }
+    const double beta = rs_new / std::max(rs, eps);
+    p = r.add(p.mul(beta));
+    rs = rs_new;
+  }
+  if (!all_finite(x)) {
+    return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite dual coefficients."));
+  }
+  return StatusOr<Series>(x);
+}
+
+[[nodiscard]] Series kernel_scores_cpu(const Series& query_rows,
+                                       const Series& train_rows,
+                                       const Series& alpha,
+                                       KernelKind kind,
+                                       double gamma) {
+  const std::int64_t nq = query_rows.sizes()[0];
+  const std::int64_t nt = train_rows.sizes()[0];
+  const std::int64_t d = train_rows.sizes()[1];
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto av = alpha.to(pluss::pCPU, ScalarType::Float64).reshape({alpha.numel()}).contiguous().to_vec<double>();
+  std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
+  for (std::int64_t qi = 0; qi < nq; ++qi) {
+    const double* qptr = qv.data() + static_cast<std::size_t>(qi * d);
+    double s = 0.0;
+    for (std::int64_t ti = 0; ti < nt; ++ti) {
+      const double* tptr = tv.data() + static_cast<std::size_t>(ti * d);
+      s += kernel_eval(kind, gamma, qptr, tptr, d) * av[static_cast<std::size_t>(ti)];
+    }
+    out[static_cast<std::size_t>(qi)] = s;
+  }
+  return pluss::make_series(out, {nq}, f64_cpu());
 }
 
 class BayesClassifier final : public ClassifierBase {
@@ -1708,10 +2026,22 @@ public:
     gamma_ = resolved_gamma(options_.gamma, feature_count_);
     lambda_ = 1.0 / options_.c;
     x_train_ = matrix.x_rows;
-    Series k_series = kernel_matrix(x_train_, x_train_, options_.kernel, gamma_);
-    k_series = k_series.add(pluss::eye(sample_count_, sample_count_, f64_cpu()).to(x_train_.platform()).mul(lambda_));
     const Series y_pm1 = labels.y01.mul(2.0).sub(1.0).reshape({sample_count_, 1});
-    const Series alpha = pluss::subsp::math::linalg::pinverse(k_series, 1e-12).matmul(y_pm1).reshape({sample_count_});
+    const Series k_series = kernel_matrix(x_train_, x_train_, options_.kernel, gamma_);
+    StatusOr<Series> alpha_or = solve_kernel_dual_cg(k_series,
+                                                     y_pm1.reshape({sample_count_}),
+                                                     lambda_,
+                                                     options.max_iterations,
+                                                     options.tolerance,
+                                                     "KernelClassifier::learn");
+    Series alpha = Series::undefined();
+    if (alpha_or.ok()) {
+      alpha = alpha_or.move_value();
+    } else {
+      // Fallback for indefinite kernels (for example sigmoid/polynomial edge cases).
+      Series shifted = k_series.add(pluss::eye(sample_count_, sample_count_, f64_cpu()).to(x_train_.platform()).mul(lambda_));
+      alpha = pluss::subsp::math::linalg::pinverse(shifted, 1e-12).matmul(y_pm1).reshape({sample_count_});
+    }
     if (!all_finite(alpha)) {
       return Status::numerical_failure("KernelClassifier::learn produced non-finite dual coefficients.");
     }
@@ -1738,8 +2068,13 @@ public:
           "KernelClassifier::infer_scores does not support NaN features; apply the fitted imputer used for learn()."));
     }
 
-    const Series k_query = kernel_matrix(matrix.x_rows, x_train_, options_.kernel, gamma_);
-    const Series scores = k_query.matmul(alpha_.reshape({sample_count_, 1})).reshape({matrix.sample_count});
+    Series scores = Series::undefined();
+    if (matrix.x_rows.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
+      scores = kernel_scores_cpu(matrix.x_rows, x_train_, alpha_, options_.kernel, gamma_);
+    } else {
+      const Series k_query = kernel_matrix(matrix.x_rows, x_train_, options_.kernel, gamma_);
+      scores = k_query.matmul(alpha_.reshape({sample_count_, 1})).reshape({matrix.sample_count});
+    }
     return StatusOr<Series>(scores.to(matrix.original_platform, ScalarType::Float64));
   }
 
@@ -1905,6 +2240,104 @@ private:
   return loss;
 }
 
+[[nodiscard]] StatusOr<Series> solve_spd_system_with_jitter(const Series& hessian,
+                                                            const Series& rhs,
+                                                            const char* where) {
+  const std::int64_t p = hessian.sizes()[0];
+  const Platform platform = hessian.platform();
+  const Series eye = pluss::eye(p, p, f64_on(platform));
+  const std::array<double, 7> jitters{0.0, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2};
+  for (double jitter : jitters) {
+    try {
+      Series h = hessian;
+      if (jitter > 0.0) h = h.add(eye.mul(jitter));
+      const Series chol = pluss::subsp::math::linalg::cholesky(h, false).to(platform, ScalarType::Float64);
+      const Series delta =
+          pluss::subsp::math::linalg::cholesky_solve(rhs.reshape({p, 1}), chol, false).reshape({p}).to(platform, ScalarType::Float64);
+      if (all_finite(delta)) return StatusOr<Series>(delta);
+    } catch (const std::exception&) {
+    }
+  }
+  return StatusOr<Series>(Status::numerical_failure(std::string(where) + " failed to solve SPD system."));
+}
+
+[[nodiscard]] StatusOr<Series> solve_logistic_newton(const Series& design,
+                                                     const Series& y01,
+                                                     const Series& sample_weight,
+                                                     bool fit_intercept,
+                                                     double lambda,
+                                                     std::int64_t max_iterations,
+                                                     double tolerance,
+                                                     const char* where) {
+  const std::int64_t n = design.sizes()[0];
+  const std::int64_t p = design.sizes()[1];
+  const Platform platform = design.platform();
+  const double denom = sample_weight.sum().item<double>();
+  if (!(denom > 0.0) || !std::isfinite(denom)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires strictly positive sample weight sum."));
+  }
+
+  Series weights = pluss::zeros({p}, f64_on(platform));
+  Series ridge_diag = pluss::zeros({p}, f64_on(platform));
+  if (lambda > 0.0) {
+    ridge_diag = pluss::ones({p}, f64_on(platform)).mul(lambda);
+    if (fit_intercept) {
+      const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, platform);
+      ridge_diag = pluss::index_put(ridge_diag,
+                                    std::vector<Series>{idx0},
+                                    pluss::zeros({1}, f64_on(platform)),
+                                    false);
+    }
+  }
+  const Series eye = pluss::eye(p, p, f64_on(platform));
+  double prev_loss = std::numeric_limits<double>::infinity();
+
+  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
+    const Series logits = design.matmul(weights.reshape({p, 1})).reshape({n});
+    const Series probs = logits.sigmoid();
+    const Series err = probs.sub(y01).mul(sample_weight);
+    Series grad = design.transpose(0, 1).matmul(err.reshape({n, 1})).div(denom).reshape({p});
+    if (lambda > 0.0) {
+      grad = grad.add(weights.mul(ridge_diag));
+    }
+    if (!all_finite(grad)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite gradient."));
+    }
+
+    const Series r = probs.mul(probs.mul(-1.0).add(1.0)).mul(sample_weight).clamp_min(1e-12);
+    Series hessian = design
+                         .transpose(0, 1)
+                         .matmul(design.mul(r.reshape({n, 1})))
+                         .div(denom);
+    if (lambda > 0.0) {
+      hessian = hessian.add(eye.mul(ridge_diag.reshape({1, p})));
+    }
+    if (!all_finite(hessian)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite Hessian."));
+    }
+
+    StatusOr<Series> delta_or = solve_spd_system_with_jitter(hessian, grad, where);
+    if (!delta_or.ok()) return StatusOr<Series>(delta_or.status());
+    const Series delta = delta_or.move_value();
+    weights = weights.sub(delta);
+    if (!all_finite(weights)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite coefficients."));
+    }
+
+    const double loss = logistic_objective(design, y01, sample_weight, weights, fit_intercept, lambda);
+    if (!std::isfinite(loss)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
+    }
+    const double step_inf = delta.abs().max().reshape({1}).item<double>();
+    if (step_inf <= tolerance || std::abs(prev_loss - loss) <= tolerance) {
+      break;
+    }
+    prev_loss = loss;
+  }
+
+  return StatusOr<Series>(weights);
+}
+
 [[nodiscard]] Series hinge_gradient(const Series& design,
                                     const Series& y01,
                                     const Series& sample_weight,
@@ -1971,6 +2404,8 @@ private:
   const Series yb = y.ge(0.5).to(ScalarType::Float64);
   const Series yhb = yh.ge(0.5).to(ScalarType::Float64);
   const Series clipped = p.clamp(eps, 1.0 - eps);
+  const Series one = pluss::ones({1}, f64_on(y.platform()));
+  const Series zero = pluss::zeros({1}, f64_on(y.platform()));
 
   const Series tp = yb.mul(yhb).sum();
   const Series tn = yb.mul(-1.0).add(1.0).mul(yhb.mul(-1.0).add(1.0)).sum();
@@ -1979,15 +2414,18 @@ private:
   const Series accuracy = yb.eq(yhb).to(ScalarType::Float64).mean();
   const Series tpr_den = tp.add(fn);
   const Series tnr_den = tn.add(fp);
-  const Series zero = pluss::zeros_like(tpr_den, ScalarType::Float64);
-  const Series tpr = tpr_den.gt(0.0).where(tp.div(tpr_den), zero);
-  const Series tnr = tnr_den.gt(0.0).where(tn.div(tnr_den), zero);
+  const Series tpr_mask = tpr_den.gt(0.0).to(ScalarType::Float64);
+  const Series tnr_mask = tnr_den.gt(0.0).to(ScalarType::Float64);
+  const Series tpr = tp.div(tpr_den.clamp_min(1.0)).mul(tpr_mask);
+  const Series tnr = tn.div(tnr_den.clamp_min(1.0)).mul(tnr_mask);
   const Series bal_accuracy = tpr.add(tnr).mul(0.5);
   const Series precision_den = tp.add(fp);
-  const Series precision = precision_den.gt(0.0).where(tp.div(precision_den), zero);
+  const Series precision_mask = precision_den.gt(0.0).to(ScalarType::Float64);
+  const Series precision = tp.div(precision_den.clamp_min(1.0)).mul(precision_mask);
   const Series recall = tpr;
   const Series f1_den = precision.add(recall);
-  const Series f1 = f1_den.gt(0.0).where(precision.mul(recall).mul(2.0).div(f1_den), zero);
+  const Series f1_mask = f1_den.gt(0.0).to(ScalarType::Float64);
+  const Series f1 = precision.mul(recall).mul(2.0).div(f1_den.clamp_min(1.0)).mul(f1_mask);
   const Series logloss = yb.mul(clipped.log()).add(yb.mul(-1.0).add(1.0).mul(clipped.mul(-1.0).add(1.0).log())).mul(-1.0).mean();
 
   const Series pos_count = yb.sum();
@@ -2032,7 +2470,7 @@ private:
                                     0)
                               : pluss::zeros({1}, f64_on(platform));
   const Series roc_auc_raw = fpr_u.sub(fpr_prev).mul(tpr_u.add(tpr_prev)).mul(0.5).sum().clamp(0.0, 1.0).reshape({1});
-  const Series roc_auc = has_both.gt(0.5).where(roc_auc_raw, pluss::ones({1}, f64_on(platform)).mul(0.5));
+  const Series roc_auc = roc_auc_raw.mul(has_both).add(one.mul(0.5).mul(one.sub(has_both)));
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -2107,13 +2545,15 @@ private:
     const Series tp = y_c.mul(yh_c).sum();
     const Series fp = y_c.mul(-1.0).add(1.0).mul(yh_c).sum();
     const Series fn = y_c.mul(yh_c.mul(-1.0).add(1.0)).sum();
-    const Series zero = pluss::zeros_like(tp, ScalarType::Float64);
     const Series precision_den = tp.add(fp);
     const Series recall_den = tp.add(fn);
-    const Series precision = precision_den.gt(0.0).where(tp.div(precision_den), zero);
-    const Series recall = recall_den.gt(0.0).where(tp.div(recall_den), zero);
+    const Series precision_mask = precision_den.gt(0.0).to(ScalarType::Float64);
+    const Series recall_mask = recall_den.gt(0.0).to(ScalarType::Float64);
+    const Series precision = tp.div(precision_den.clamp_min(1.0)).mul(precision_mask);
+    const Series recall = tp.div(recall_den.clamp_min(1.0)).mul(recall_mask);
     const Series f1_den = precision.add(recall);
-    const Series f1 = f1_den.gt(0.0).where(precision.mul(recall).mul(2.0).div(f1_den), zero);
+    const Series f1_mask = f1_den.gt(0.0).to(ScalarType::Float64);
+    const Series f1 = precision.mul(recall).mul(2.0).div(f1_den.clamp_min(1.0)).mul(f1_mask);
     precision_sum = precision_sum.add(precision.reshape({1}));
     recall_sum = recall_sum.add(recall.reshape({1}));
     f1_sum = f1_sum.add(f1.reshape({1}));
@@ -2254,40 +2694,54 @@ public:
       minimax_state = optim::minimax_state_like(std::vector<Series>{weights}, minimax_constraints);
     }
 
-    double prev_loss = std::numeric_limits<double>::infinity();
-    for (std::int64_t iter = 0; iter < options.max_iterations; ++iter) {
-      Series grad = Series::undefined();
-      if (options_.objective == LinearObjective::Logistic) {
-        grad = logistic_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
-      } else {
-        grad = hinge_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
-      }
-      if (!all_finite(grad)) {
-        return Status::numerical_failure("LinearClassifier::learn encountered non-finite gradient.");
-      }
-
-      std::vector<Series> params{weights};
-      try {
-        if (use_parameter_bounds) {
-          optim::minimax_step_inplace(params, std::vector<Series>{grad}, minimax_state, minimax_options, minimax_constraints);
+    if (options_.objective == LinearObjective::Logistic && !use_parameter_bounds) {
+      StatusOr<Series> fast_weights_or =
+          solve_logistic_newton(design,
+                                labels.y01,
+                                sample_weight,
+                                options_.fit_intercept,
+                                lambda,
+                                options.max_iterations,
+                                options.tolerance,
+                                "LinearClassifier::learn");
+      if (!fast_weights_or.ok()) return fast_weights_or.status();
+      weights = fast_weights_or.move_value();
+    } else {
+      double prev_loss = std::numeric_limits<double>::infinity();
+      for (std::int64_t iter = 0; iter < options.max_iterations; ++iter) {
+        Series grad = Series::undefined();
+        if (options_.objective == LinearObjective::Logistic) {
+          grad = logistic_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
         } else {
-          optim::adam_step_inplace(params, std::vector<Series>{grad}, adam, adam_opt);
+          grad = hinge_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
         }
-      } catch (const std::exception& ex) {
-        return Status::numerical_failure(std::string("LinearClassifier::learn optimizer failure: ") + ex.what());
-      }
-      weights = params[0];
+        if (!all_finite(grad)) {
+          return Status::numerical_failure("LinearClassifier::learn encountered non-finite gradient.");
+        }
 
-      const double loss = options_.objective == LinearObjective::Logistic
-                              ? logistic_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda)
-                              : hinge_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
-      if (!std::isfinite(loss)) {
-        return Status::numerical_failure("LinearClassifier::learn encountered non-finite objective.");
+        std::vector<Series> params{weights};
+        try {
+          if (use_parameter_bounds) {
+            optim::minimax_step_inplace(params, std::vector<Series>{grad}, minimax_state, minimax_options, minimax_constraints);
+          } else {
+            optim::adam_step_inplace(params, std::vector<Series>{grad}, adam, adam_opt);
+          }
+        } catch (const std::exception& ex) {
+          return Status::numerical_failure(std::string("LinearClassifier::learn optimizer failure: ") + ex.what());
+        }
+        weights = params[0];
+
+        const double loss = options_.objective == LinearObjective::Logistic
+                                ? logistic_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda)
+                                : hinge_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
+        if (!std::isfinite(loss)) {
+          return Status::numerical_failure("LinearClassifier::learn encountered non-finite objective.");
+        }
+        if (std::abs(prev_loss - loss) <= options.tolerance) {
+          break;
+        }
+        prev_loss = loss;
       }
-      if (std::abs(prev_loss - loss) <= options.tolerance) {
-        break;
-      }
-      prev_loss = loss;
     }
 
     if (!all_finite(weights)) {

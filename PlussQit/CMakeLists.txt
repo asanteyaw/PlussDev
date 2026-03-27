@@ -8,8 +8,65 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(PlussQit LANGUAGES CXX)
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 option(PLUSS_ENABLE_TORCH "Enable LibTorch interop" OFF)
 if(PLUSS_ENABLE_TORCH)
+  if(NOT Torch_DIR)
+    set(_pluss_torch_candidates "")
+
+    if(DEFINED ENV{TORCH_SITE} AND NOT "$ENV{TORCH_SITE}" STREQUAL "")
+      list(APPEND _pluss_torch_candidates "$ENV{TORCH_SITE}/share/cmake/Torch")
+    endif()
+    if(DEFINED ENV{TORCH_DIR} AND NOT "$ENV{TORCH_DIR}" STREQUAL "")
+      list(APPEND _pluss_torch_candidates "$ENV{TORCH_DIR}")
+    endif()
+
+    if(DEFINED ENV{CONDA_PREFIX} AND NOT "$ENV{CONDA_PREFIX}" STREQUAL "")
+      file(GLOB _pluss_torch_from_conda "$ENV{CONDA_PREFIX}/lib/python*/site-packages/torch/share/cmake/Torch")
+      list(FILTER _pluss_torch_from_conda INCLUDE REGEX ".*/python[0-9]+\\.[0-9]+/site-packages/torch/share/cmake/Torch$")
+      list(APPEND _pluss_torch_candidates ${_pluss_torch_from_conda})
+    endif()
+
+    if(Python3_EXECUTABLE)
+      get_filename_component(_pluss_py_bin "${Python3_EXECUTABLE}" DIRECTORY)
+      get_filename_component(_pluss_py_prefix "${_pluss_py_bin}" DIRECTORY)
+      execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+        RESULT_VARIABLE _pluss_py_ver_rc
+        OUTPUT_VARIABLE _pluss_py_ver
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+      )
+      if(_pluss_py_ver_rc EQUAL 0 AND _pluss_py_ver)
+        list(APPEND _pluss_torch_candidates
+          "${_pluss_py_prefix}/lib/python${_pluss_py_ver}/site-packages/torch/share/cmake/Torch")
+      endif()
+
+      file(GLOB _pluss_torch_from_py_prefix "${_pluss_py_prefix}/lib/python*/site-packages/torch/share/cmake/Torch")
+      list(FILTER _pluss_torch_from_py_prefix INCLUDE REGEX ".*/python[0-9]+\\.[0-9]+/site-packages/torch/share/cmake/Torch$")
+      list(APPEND _pluss_torch_candidates ${_pluss_torch_from_py_prefix})
+    endif()
+
+    list(REMOVE_DUPLICATES _pluss_torch_candidates)
+    foreach(_pluss_torch_cand IN LISTS _pluss_torch_candidates)
+      if(EXISTS "${_pluss_torch_cand}/TorchConfig.cmake")
+        set(Torch_DIR "${_pluss_torch_cand}" CACHE PATH "Path to Torch CMake package" FORCE)
+        message(STATUS "Auto-detected Torch_DIR: ${Torch_DIR}")
+        break()
+      endif()
+    endforeach()
+
+    unset(_pluss_torch_candidates)
+    unset(_pluss_torch_from_conda)
+    unset(_pluss_torch_from_py_prefix)
+    unset(_pluss_torch_cand)
+    unset(_pluss_py_bin)
+    unset(_pluss_py_prefix)
+    unset(_pluss_py_ver)
+    unset(_pluss_py_ver_rc)
+  endif()
+
   find_package(Torch REQUIRED)
   add_compile_definitions(PLUSS_ENABLE_TORCH)
 endif()
@@ -44,8 +101,14 @@ elseif (EXISTS "${CMAKE_SOURCE_DIR}/../PlussMa/include")
   set(PLUSSMA_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../PlussMa/include")
 endif()
 
+set(PLUSSTILS_INCLUDE_DIR "")
+if (EXISTS "${CMAKE_SOURCE_DIR}/PlussTils/include")
+  set(PLUSSTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/PlussTils/include")
+elseif (EXISTS "${CMAKE_SOURCE_DIR}/../PlussTils/include")
+  set(PLUSSTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../PlussTils/include")
+endif()
+
 include(FetchContent)
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 if (PLUSSQIT_USE_FMT)
   find_package(fmt QUIET)
@@ -251,11 +314,19 @@ target_include_directories(plussqit_codem
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+if(PLUSSTILS_INCLUDE_DIR)
+  target_include_directories(plussqit_codem PUBLIC
+    $<BUILD_INTERFACE:${PLUSSTILS_INCLUDE_DIR}>
+  )
+endif()
 
 if(PLUSS_ENABLE_TORCH)
   if(TORCH_INCLUDE_DIRS)
     target_include_directories(plussqit_codem PUBLIC ${TORCH_INCLUDE_DIRS})
   endif()
+  # Export Torch interop gate to downstream consumers so <pluss/codem/codem.h>
+  # exposes from_torch/to_torch when they link PlussQit::CodeM / Pluss::SDK.
+  target_compile_definitions(plussqit_codem PUBLIC PLUSS_ENABLE_TORCH=1)
   if(TORCH_CXX_FLAGS)
     separate_arguments(_PLUSS_TORCH_CXX_FLAGS NATIVE_COMMAND "${TORCH_CXX_FLAGS}")
     target_compile_options(plussqit_codem PUBLIC ${_PLUSS_TORCH_CXX_FLAGS})
@@ -448,6 +519,12 @@ if (PLUSSQIT_BUILD_EXAMPLES)
   target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeN)
   if (TARGET plussqit_codem)
     target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_cpu_perf_bench examples/CodeN/coden_cpu_perf_bench.cpp)
+  target_link_libraries(plussqit_coden_cpu_perf_bench PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_cpu_perf_bench PRIVATE PlussQit::CodeM)
   endif()
 endif()
 
@@ -684,6 +761,7 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch163_cuda_selection_route_contract.cpp
       tests/CodeM/test_patch164_cuda_factory_contract.cpp
       tests/CodeM/test_patch165_cuda_stochastic_contract.cpp
+      tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp
     )
 
     add_executable(plussqit_codem_mps_selection_tests
@@ -735,6 +813,9 @@ if (PLUSSQIT_BUILD_TESTS)
     # CodeN-only tests (kept separate so CodeN can evolve even when CodeM is mid-refactor).
     add_executable(plussqit_coden_tests ${CODEN_TEST_SOURCES})
     target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeN Catch2::Catch2WithMain)
+    if (TARGET plussqit_codem)
+      target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeM)
+    endif()
     target_compile_features(plussqit_coden_tests PRIVATE cxx_std_20)
 
     if (PLUSSQIT_BUILD_CODEH AND CODEH_TEST_SOURCES)
@@ -788,10 +869,6 @@ endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  PATTERN ".DS_Store" EXCLUDE
-)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/aux/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/aux
   PATTERN ".DS_Store" EXCLUDE
 )
 
@@ -927,19 +1004,20 @@ if(PLUSSQIT_BUILD_CODEM)
     find_library(PLUSS_MPS_GRAPH_FRAMEWORK MetalPerformanceShadersGraph)
     find_library(PLUSS_FOUNDATION_FRAMEWORK Foundation)
     if(PLUSS_ACCELERATE_FRAMEWORK)
-      # Export portable framework linkage instead of SDK-versioned absolute paths.
-      target_link_options(plussqit_codem PUBLIC "SHELL:-framework Accelerate")
+      # Link frameworks as proper libraries so static-lib consumers resolve symbols
+      # in the final link pass (instead of relying on early link options ordering).
+      target_link_libraries(plussqit_codem PUBLIC "-framework Accelerate")
       set(_pluss_has_accelerate 1)
       set(_pluss_has_accelerate_new_lapack 1)
     endif()
     if(PLUSS_METAL_FRAMEWORK AND PLUSS_MPS_FRAMEWORK AND PLUSS_FOUNDATION_FRAMEWORK)
-      target_link_options(plussqit_codem PUBLIC
-        "SHELL:-framework Metal"
-        "SHELL:-framework MetalPerformanceShaders"
-        "SHELL:-framework Foundation"
+      target_link_libraries(plussqit_codem PUBLIC
+        "-framework Metal"
+        "-framework MetalPerformanceShaders"
+        "-framework Foundation"
       )
       if(PLUSS_MPS_GRAPH_FRAMEWORK)
-        target_link_options(plussqit_codem PUBLIC "SHELL:-framework MetalPerformanceShadersGraph")
+        target_link_libraries(plussqit_codem PUBLIC "-framework MetalPerformanceShadersGraph")
       endif()
       set(_pluss_has_mps 1)
     endif()

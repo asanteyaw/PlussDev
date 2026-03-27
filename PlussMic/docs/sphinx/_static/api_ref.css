@@ -106,11 +106,20 @@ div.sphinxsidebar h4 {
 }
 
 body.has-method-sidebar div.sphinxsidebar {
-  display: block;
+  display: none;
 }
 
 body.has-method-sidebar #pluss-method-sidebar {
-  display: none;
+  background: var(--pluss-panel);
+  border-right: 1px solid var(--pluss-border);
+  bottom: 0;
+  display: block;
+  left: 0;
+  overflow-y: auto;
+  padding: 0.85rem 0.5rem;
+  position: absolute;
+  top: 0;
+  width: var(--pluss-method-sidebar-width);
 }
 
 #pluss-method-sidebar .sidebar-title {
@@ -162,8 +171,8 @@ div.documentwrapper {
 }
 
 body.has-method-sidebar div.documentwrapper {
-  margin-left: var(--pluss-sidebar-width);
-  width: calc(100% - var(--pluss-sidebar-width));
+  margin-left: var(--pluss-method-sidebar-width);
+  width: calc(100% - var(--pluss-method-sidebar-width));
 }
 
 div.bodywrapper {

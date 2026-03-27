@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
 #include <pluss/nn.h>
 #include <pluss/mic.h>
 #include <fmt/format.h>

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "pluss/pluss.h"
+#include "pluss/tils.h"
 
 namespace {
 

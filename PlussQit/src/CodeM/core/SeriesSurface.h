@@ -49,6 +49,7 @@ Series cdf(const char*) const = delete;
 // Matching lhs scalar overloads are provided as free functions in codem.h.
 
 // Out-of-place arithmetic
+Series operator-() const { return neg(); }
 Series operator+(const Series& other) const { return add(other); }
 Series operator-(const Series& other) const { return sub(other); }
 Series operator*(const Series& other) const { return mul(other); }

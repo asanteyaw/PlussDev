@@ -1,6 +1,6 @@
 # Aux User Guide
 
-This guide covers the user-facing utilities in `PlussQit/src/aux`:
+This guide covers the user-facing utilities in `PlussTils` (notably `pluss/tils/aux.h`):
 
 - functional mini-pipeline helpers (`suppose`, `let_as`)
 - mapping and axis transforms (`transmit`, `transform_axis`)
@@ -14,8 +14,10 @@ For full onboarding with end-to-end workflows and extended examples, read [Aux T
 ## Include
 
 ```cpp
-#include <pluss/pluss.h>
+#include <pluss/tils.h>
 ```
+
+Environment-variable helpers are documented in [PlussTils Env Guide](tils_env.md).
 
 ## 1. Output Engine
 

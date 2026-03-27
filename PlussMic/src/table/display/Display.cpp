@@ -27,7 +27,7 @@
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
 #include "CodeM/core/ScalarType.h"
-#include "pluss/view/html_window.h"
+#include "pluss/tils/view/html_window.h"
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
 #include "table/Thread.h"
@@ -703,6 +703,63 @@ std::string logical_dtype_name(const Thread& t) {
     default:
       return "Unknown";
   }
+}
+
+std::string render_thread_series_like_(const Thread& thread,
+                                       const EffectiveDisplayOptions& options,
+                                       std::int64_t terminal_width) {
+  const auto dtype_footer = logical_dtype_name(thread);
+
+  const auto values = display_thread(thread);
+  std::optional<Thread> labels = std::nullopt;
+  if (thread.has_display_labels()) {
+    labels = display_thread(thread.display_labels());
+  }
+
+  const auto row_plan = build_row_plan(values.size(), options);
+  std::vector<std::pair<std::string, std::string>> rows;
+  rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
+
+  auto push_row = [&](std::int64_t ridx) {
+    const auto idx = labels.has_value() ? thread_value_at(*labels, ridx) : fmt::format("{}", ridx);
+    const auto val = thread_value_at(values, ridx);
+    rows.emplace_back(clip_cell(idx, options.max_cell_width), clip_cell(val, options.max_cell_width));
+  };
+
+  for (const auto ridx : row_plan.head) {
+    push_row(ridx);
+  }
+  if (row_plan.ellipsis) {
+    rows.emplace_back("...", "...");
+  }
+  for (const auto ridx : row_plan.tail) {
+    push_row(ridx);
+  }
+
+  std::int64_t idx_width = 1;
+  for (const auto& row : rows) {
+    idx_width = std::max<std::int64_t>(idx_width, static_cast<std::int64_t>(row.first.size()));
+  }
+
+  std::string out;
+  for (std::size_t i = 0; i < rows.size(); ++i) {
+    const auto line = fmt::format("{}  {}",
+                                  left_pad(rows[i].first, idx_width),
+                                  rows[i].second);
+    out += fit_line(line, terminal_width);
+    if (i + 1 < rows.size()) {
+      out.push_back('\n');
+    }
+  }
+  if (!out.empty()) {
+    out.push_back('\n');
+  }
+  if (thread.has_display_name()) {
+    out += fmt::format("Name: {}, dtype: {}", thread.display_name(), dtype_footer);
+  } else {
+    out += fmt::format("dtype: {}", dtype_footer);
+  }
+  return out;
 }
 
 bool native_webview_backend_available_() {
@@ -1532,12 +1589,10 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 std::string render(const Thread& thread, const DisplayOptions& options) {
-  std::optional<Thread> cases = std::nullopt;
-  if (thread.has_display_labels()) {
-    cases = thread.display_labels();
-  }
-  DataFrame tmp({{"value", thread}}, std::move(cases));
-  return render(tmp, options);
+  const auto term = detect_terminal();
+  const auto effective = resolve_effective_options(options, term, false);
+  const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
+  return render_thread_series_like_(thread, effective, terminal_width);
 }
 
 std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
@@ -1549,12 +1604,9 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 std::string render_html(const Thread& thread, const DisplayOptions& options) {
-  std::optional<Thread> cases = std::nullopt;
-  if (thread.has_display_labels()) {
-    cases = thread.display_labels();
-  }
-  DataFrame tmp({{"value", thread}}, std::move(cases));
-  return render_html(tmp, options);
+  const auto title = document_title_(thread.has_display_name() ? thread.display_name() : "Thread", options);
+  const auto subtitle = fmt::format("{} cases, dtype {}", thread.size(), thread.dtype_name());
+  return render_html_pre_(title, subtitle, render(thread, options), options);
 }
 
 std::string render_html(const Atlas& atlas, const DisplayOptions& options) {

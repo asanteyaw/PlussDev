@@ -402,6 +402,20 @@ plussmic_atlas_plot_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_atlas_plot_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_atlas_plot_demo.dir/build
 .PHONY : plussmic_atlas_plot_demo/fast
 
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/rule
+
+# Convenience name for target.
+plussmic_time_series_accessor_demo: PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/rule
+.PHONY : plussmic_time_series_accessor_demo
+
+# fast build rule for target.
+plussmic_time_series_accessor_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build
+.PHONY : plussmic_time_series_accessor_demo/fast
+
 atlas_plot_demo.o: atlas_plot_demo.cpp.o
 .PHONY : atlas_plot_demo.o
 
@@ -738,6 +752,30 @@ sp500_eda_ml_prep_notebook_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_sp500_eda_ml_prep_notebook_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_sp500_eda_ml_prep_notebook_demo.dir/sp500_eda_ml_prep_notebook_demo.cpp.s
 .PHONY : sp500_eda_ml_prep_notebook_demo.cpp.s
 
+time_series_accessor_demo.o: time_series_accessor_demo.cpp.o
+.PHONY : time_series_accessor_demo.o
+
+# target to build an object file
+time_series_accessor_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/time_series_accessor_demo.cpp.o
+.PHONY : time_series_accessor_demo.cpp.o
+
+time_series_accessor_demo.i: time_series_accessor_demo.cpp.i
+.PHONY : time_series_accessor_demo.i
+
+# target to preprocess a source file
+time_series_accessor_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/time_series_accessor_demo.cpp.i
+.PHONY : time_series_accessor_demo.cpp.i
+
+time_series_accessor_demo.s: time_series_accessor_demo.cpp.s
+.PHONY : time_series_accessor_demo.s
+
+# target to generate assembly for a file
+time_series_accessor_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/time_series_accessor_demo.cpp.s
+.PHONY : time_series_accessor_demo.cpp.s
+
 us_accidents_eda_verbs_demo.o: us_accidents_eda_verbs_demo.cpp.o
 .PHONY : us_accidents_eda_verbs_demo.o
 
@@ -791,6 +829,7 @@ help:
 	@echo "... plussmic_loader_saver_parity_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
+	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"
 	@echo "... atlas_plot_demo.o"
 	@echo "... atlas_plot_demo.i"
@@ -834,6 +873,9 @@ help:
 	@echo "... sp500_eda_ml_prep_notebook_demo.o"
 	@echo "... sp500_eda_ml_prep_notebook_demo.i"
 	@echo "... sp500_eda_ml_prep_notebook_demo.s"
+	@echo "... time_series_accessor_demo.o"
+	@echo "... time_series_accessor_demo.i"
+	@echo "... time_series_accessor_demo.s"
 	@echo "... us_accidents_eda_verbs_demo.o"
 	@echo "... us_accidents_eda_verbs_demo.i"
 	@echo "... us_accidents_eda_verbs_demo.s"

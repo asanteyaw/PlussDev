@@ -191,6 +191,81 @@ double kpss_pvalue_approx_(double stat, const std::array<double, 4>& criticals) 
   return sig[3];
 }
 
+double normal_cdf_(double z, Config cfg) {
+  const Series q = pluss::make_series(std::vector<double>{z}, {1}, f64_cfg_(cfg));
+  return clamp01_(pluss::subsp::stats::distr::Normal{}.cdf(q).item<double>());
+}
+
+double normal_quantile_(double p, Config cfg) {
+  if (p <= 0.0) {
+    return -std::numeric_limits<double>::infinity();
+  }
+  if (p >= 1.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  double lo = -12.0;
+  double hi = 12.0;
+  for (std::int64_t i = 0; i < 120; ++i) {
+    const double mid = 0.5 * (lo + hi);
+    if (normal_cdf_(mid, cfg) < p) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return 0.5 * (lo + hi);
+}
+
+double t_cdf_(double x, double dof, Config cfg) {
+  const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
+  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).item<double>());
+}
+
+double t_quantile_(double p, double dof, Config cfg) {
+  if (p <= 0.0) {
+    return -std::numeric_limits<double>::infinity();
+  }
+  if (p >= 1.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  double lo = -128.0;
+  double hi = 128.0;
+  for (std::int64_t i = 0; i < 140; ++i) {
+    const double mid = 0.5 * (lo + hi);
+    if (t_cdf_(mid, dof, cfg) < p) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return 0.5 * (lo + hi);
+}
+
+double p_from_cdf_(double cdf, DmTail tail) {
+  const double c = clamp01_(cdf);
+  switch (tail) {
+    case DmTail::Both:
+      return clamp01_(2.0 * std::min(c, 1.0 - c));
+    case DmTail::Left:
+      return c;
+    case DmTail::Right:
+      return 1.0 - c;
+  }
+  return 1.0;
+}
+
+Series dm_loss_diff_(const Series& err_a, const Series& err_b, const DmOptions& options) {
+  switch (options.loss) {
+    case DmLoss::Squared:
+      return err_a.square().sub(err_b.square());
+    case DmLoss::Absolute:
+      return err_a.abs().sub(err_b.abs());
+    case DmLoss::Power:
+      return err_a.abs().pow(options.loss_power).sub(err_b.abs().pow(options.loss_power));
+  }
+  return err_a.square().sub(err_b.square());
+}
+
 } // namespace
 
 ArchLmResult arch_lm(const Series& x, const ArchLmOptions& options, Config cfg) {
@@ -369,6 +444,87 @@ KpssResult kpss_test(const Series& y, const KpssOptions& options, Config cfg) {
       .long_run_var = long_run_var,
       .lags = lags,
       .effective_n = n,
+  };
+}
+
+DmResult dm_test(const Series& err_a, const Series& err_b, const DmOptions& options, Config cfg) {
+  PLUSS_CHECK(options.horizon >= 1, "subsp::stats::ts::dm_test: horizon must be >= 1");
+  PLUSS_CHECK(std::isfinite(options.alpha) && options.alpha > 0.0 && options.alpha < 1.0,
+              "subsp::stats::ts::dm_test: alpha must be in (0,1)");
+  if (options.loss == DmLoss::Power) {
+    PLUSS_CHECK(std::isfinite(options.loss_power) && options.loss_power > 0.0,
+                "subsp::stats::ts::dm_test: loss_power must be > 0 for DmLoss::Power");
+  }
+
+  const auto out_cfg = f64_cfg_(cfg);
+  const Series a_raw = as_vector_(err_a, "dm_test").to(out_cfg.platform, out_cfg.dtype).reshape({err_a.numel()});
+  const Series b_raw = as_vector_(err_b, "dm_test").to(out_cfg.platform, out_cfg.dtype).reshape({err_b.numel()});
+  PLUSS_CHECK(a_raw.numel() == b_raw.numel(), "subsp::stats::ts::dm_test: inputs must have the same length");
+
+  const Series finite = a_raw.isfinite().logical_and(b_raw.isfinite());
+  const Series a = a_raw.masked_select(finite);
+  const Series b = b_raw.masked_select(finite);
+  const std::int64_t n = a.numel();
+  PLUSS_CHECK(n >= 3, "subsp::stats::ts::dm_test: need at least 3 finite paired observations");
+  PLUSS_CHECK(options.horizon <= n, "subsp::stats::ts::dm_test: horizon cannot exceed effective sample size");
+
+  const std::int64_t requested_lags = (options.max_lag >= 0) ? options.max_lag : (options.horizon - 1);
+  PLUSS_CHECK(requested_lags >= 0, "subsp::stats::ts::dm_test: max_lag must be >= -1");
+  const std::int64_t lags = std::min<std::int64_t>(requested_lags, n - 1);
+
+  const Series d = dm_loss_diff_(a, b, options);
+  const double mean_diff = scalar_(d.mean());
+  const Series centered = d.sub(mean_diff);
+
+  const double gamma0 = scalar_(centered.mul(centered).sum()) / static_cast<double>(n);
+  double acov_sum = 0.0;
+  for (std::int64_t lag = 1; lag <= lags; ++lag) {
+    const Series left = centered.take(Series::arange(lag, n, 1, ScalarType::Int64));
+    const Series right = centered.take(Series::arange(0, n - lag, 1, ScalarType::Int64));
+    const double gamma = scalar_(left.mul(right).sum()) / static_cast<double>(n);
+    acov_sum += gamma;
+  }
+
+  const double lrv = gamma0 + 2.0 * acov_sum;
+  PLUSS_CHECK(std::isfinite(lrv) && lrv > kEps,
+              "subsp::stats::ts::dm_test: long-run variance is not positive; test is undefined");
+
+  double stat = mean_diff / std::sqrt(lrv / static_cast<double>(n));
+  if (options.hln_adjust) {
+    const double h = static_cast<double>(options.horizon);
+    const double nd = static_cast<double>(n);
+    const double ratio = (nd + 1.0 - 2.0 * h + h * (h - 1.0) / nd) / nd;
+    PLUSS_CHECK(ratio > 0.0,
+                "subsp::stats::ts::dm_test: HLN adjustment undefined for current horizon and sample size");
+    stat *= std::sqrt(ratio);
+  }
+
+  const double dof = static_cast<double>(n - 1);
+  const double cdf = options.hln_adjust ? t_cdf_(stat, dof, out_cfg) : normal_cdf_(stat, out_cfg);
+  const double pvalue = p_from_cdf_(cdf, options.tail);
+
+  double critical = 0.0;
+  if (options.tail == DmTail::Both) {
+    critical = options.hln_adjust ? t_quantile_(1.0 - options.alpha * 0.5, dof, out_cfg)
+                                  : normal_quantile_(1.0 - options.alpha * 0.5, out_cfg);
+  } else if (options.tail == DmTail::Right) {
+    critical = options.hln_adjust ? t_quantile_(1.0 - options.alpha, dof, out_cfg)
+                                  : normal_quantile_(1.0 - options.alpha, out_cfg);
+  } else {
+    critical = options.hln_adjust ? t_quantile_(options.alpha, dof, out_cfg)
+                                  : normal_quantile_(options.alpha, out_cfg);
+  }
+
+  return DmResult{
+      .stat = stat,
+      .pvalue = pvalue,
+      .critical = critical,
+      .reject = (pvalue < options.alpha),
+      .horizon = options.horizon,
+      .lags = lags,
+      .effective_n = n,
+      .mean_diff = mean_diff,
+      .lrv = lrv,
   };
 }
 

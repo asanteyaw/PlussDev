@@ -207,6 +207,20 @@ lag_features_test/fast:
 .PHONY : lag_features_test/fast
 
 # Convenience name for target.
+PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/rule
+.PHONY : PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/rule
+
+# Convenience name for target.
+series_ts_transforms_test: PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/rule
+.PHONY : series_ts_transforms_test
+
+# fast build rule for target.
+series_ts_transforms_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build
+.PHONY : series_ts_transforms_test/fast
+
+# Convenience name for target.
 PlussMa/Stats/time_series/ts/core/test/CMakeFiles/ts_core_catch2.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/ts/core/test/CMakeFiles/ts_core_catch2.dir/rule
 .PHONY : PlussMa/Stats/time_series/ts/core/test/CMakeFiles/ts_core_catch2.dir/rule
@@ -243,6 +257,30 @@ lag_features_test.s: lag_features_test.cpp.s
 lag_features_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/lag_features_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/lag_features_test.dir/lag_features_test.cpp.s
 .PHONY : lag_features_test.cpp.s
+
+series_ts_transforms_test.o: series_ts_transforms_test.cpp.o
+.PHONY : series_ts_transforms_test.o
+
+# target to build an object file
+series_ts_transforms_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/series_ts_transforms_test.cpp.o
+.PHONY : series_ts_transforms_test.cpp.o
+
+series_ts_transforms_test.i: series_ts_transforms_test.cpp.i
+.PHONY : series_ts_transforms_test.i
+
+# target to preprocess a source file
+series_ts_transforms_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/series_ts_transforms_test.cpp.i
+.PHONY : series_ts_transforms_test.cpp.i
+
+series_ts_transforms_test.s: series_ts_transforms_test.cpp.s
+.PHONY : series_ts_transforms_test.s
+
+# target to generate assembly for a file
+series_ts_transforms_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/series_ts_transforms_test.cpp.s
+.PHONY : series_ts_transforms_test.cpp.s
 
 ts_core_catch2.o: ts_core_catch2.cpp.o
 .PHONY : ts_core_catch2.o
@@ -284,10 +322,14 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... lag_features_test"
+	@echo "... series_ts_transforms_test"
 	@echo "... ts_core_catch2"
 	@echo "... lag_features_test.o"
 	@echo "... lag_features_test.i"
 	@echo "... lag_features_test.s"
+	@echo "... series_ts_transforms_test.o"
+	@echo "... series_ts_transforms_test.i"
+	@echo "... series_ts_transforms_test.s"
 	@echo "... ts_core_catch2.o"
 	@echo "... ts_core_catch2.i"
 	@echo "... ts_core_catch2.s"

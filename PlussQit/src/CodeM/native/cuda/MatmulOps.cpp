@@ -18,6 +18,9 @@
 
 #if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && __has_include(<cublas_v2.h>)
 #include <cublas_v2.h>
+#if __has_include(<cuda_runtime_api.h>)
+#include <cuda_runtime_api.h>
+#endif
 #define PLUSS_CODEM_HAS_CUBLAS_MATMUL 1
 #else
 #define PLUSS_CODEM_HAS_CUBLAS_MATMUL 0
@@ -179,6 +182,56 @@ std::string cublas_status_string_(const CublasApi& api, cublasStatus_t st) {
   return std::string("status=") + std::to_string(static_cast<int>(st));
 }
 
+std::size_t bytes_of_(const Series& s) noexcept {
+  return static_cast<std::size_t>(s.numel()) * static_cast<std::size_t>(s.itemsize());
+}
+
+struct DeviceBuffer {
+  void* ptr{nullptr};
+  std::size_t bytes{0};
+
+  ~DeviceBuffer() {
+    if (ptr != nullptr) {
+      (void)cudaFree(ptr);
+    }
+  }
+};
+
+bool alloc_device_buffer_(DeviceBuffer* buf, std::size_t bytes, std::string* reason) {
+  if (buf == nullptr) {
+    if (reason != nullptr) *reason = "internal: null device buffer";
+    return false;
+  }
+  buf->bytes = bytes;
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMalloc(&buf->ptr, bytes);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMalloc failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
+bool copy_h2d_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMemcpy(dst, src, bytes, cudaMemcpyHostToDevice);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMemcpy(H2D) failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
+bool copy_d2h_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToHost);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMemcpy(D2H) failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
 bool run_cublas_2d_gemm_(
     const Series& a,
     const Series& b,
@@ -205,7 +258,16 @@ bool run_cublas_2d_gemm_(
   const int m = static_cast<int>(m64);
   const int n = static_cast<int>(n64);
   const int k = static_cast<int>(k64);
-  Series y = Series::empty({m64, n64}, a.scalar_type()).to(Platform::CUDA);
+  Series y = Series::empty({m64, n64}, a.scalar_type(), Platform::CUDA);
+
+  DeviceBuffer d_a{};
+  DeviceBuffer d_b{};
+  DeviceBuffer d_c{};
+  if (!alloc_device_buffer_(&d_a, bytes_of_(a), reason)) return false;
+  if (!alloc_device_buffer_(&d_b, bytes_of_(b), reason)) return false;
+  if (!alloc_device_buffer_(&d_c, bytes_of_(y), reason)) return false;
+  if (!copy_h2d_(d_a.ptr, a.raw_data(), d_a.bytes, reason)) return false;
+  if (!copy_h2d_(d_b.ptr, b.raw_data(), d_b.bytes, reason)) return false;
 
   cublasHandle_t handle = nullptr;
   cublasStatus_t st = ctx.api.create(&handle);
@@ -235,12 +297,12 @@ bool run_cublas_2d_gemm_(
         m,
         k,
         &alpha,
-        static_cast<const float*>(b.data_ptr()),
+        reinterpret_cast<const float*>(d_b.ptr),
         n,
-        static_cast<const float*>(a.data_ptr()),
+        reinterpret_cast<const float*>(d_a.ptr),
         k,
         &beta,
-        static_cast<float*>(y.data_ptr()),
+        reinterpret_cast<float*>(d_c.ptr),
         n);
   } else {
     const double alpha = 1.0;
@@ -253,12 +315,12 @@ bool run_cublas_2d_gemm_(
         m,
         k,
         &alpha,
-        static_cast<const double*>(b.data_ptr()),
+        reinterpret_cast<const double*>(d_b.ptr),
         n,
-        static_cast<const double*>(a.data_ptr()),
+        reinterpret_cast<const double*>(d_a.ptr),
         k,
         &beta,
-        static_cast<double*>(y.data_ptr()),
+        reinterpret_cast<double*>(d_c.ptr),
         n);
   }
 
@@ -267,6 +329,7 @@ bool run_cublas_2d_gemm_(
     if (reason != nullptr) *reason = std::string("cublasGemm failed: ") + cublas_status_string_(ctx.api, st);
     return false;
   }
+  if (!copy_d2h_(y.raw_mutable_data(), d_c.ptr, d_c.bytes, reason)) return false;
 
   *out = std::move(y);
   return true;

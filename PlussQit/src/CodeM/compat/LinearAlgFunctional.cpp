@@ -1448,6 +1448,16 @@ Series det(const Series& a) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
     const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
     const bool route_supported = pluss::codem::native::cuda::supports_det(a);
+    if (native_enabled && route_supported) {
+      std::string why{};
+      if (auto out = pluss::codem::native::cuda::try_det(a, &why); out.has_value()) {
+        return std::move(*out);
+      }
+      if (native_strict) {
+        pluss::codem::throw_error(
+            std::string("subsp::linearalg::det: strict native CUDA route failed: ") + why);
+      }
+    }
     return cuda_linalg_route_or_bridge_(
         "det",
         native_enabled,
@@ -1495,6 +1505,16 @@ Series inverse(const Series& a) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
     const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
     const bool route_supported = pluss::codem::native::cuda::supports_inverse(a);
+    if (native_enabled && route_supported) {
+      std::string why{};
+      if (auto out = pluss::codem::native::cuda::try_inverse(a, &why); out.has_value()) {
+        return std::move(*out);
+      }
+      if (native_strict) {
+        pluss::codem::throw_error(
+            std::string("subsp::linearalg::inverse: strict native CUDA route failed: ") + why);
+      }
+    }
     return cuda_linalg_route_or_bridge_(
         "inverse",
         native_enabled,

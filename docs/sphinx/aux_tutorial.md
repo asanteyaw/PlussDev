@@ -525,7 +525,7 @@ auto n = pluss::make_note({"ab", "c", "def", "gh"}, {2,2});
 auto lengths = pluss::transform_axis(
   [](const pluss::Note& slice) {
     int total = 0;
-    for (const auto& s : slice.to_vec<std::string>()) total += static_cast<int>(s.size());
+    for (const auto& s : slice.host<std::string>().vector()) total += static_cast<int>(s.size());
     return total;
   },
   n,
@@ -551,7 +551,7 @@ auto t = pluss::make_timeline({
 
 auto first_hours = pluss::transform_axis(
   [](const pluss::Timeline& slice) {
-    return slice.hour().to_vec<std::int32_t>()[0];
+    return slice.hour().host<std::int32_t>().vector().front();
   },
   t,
   1
@@ -678,86 +678,280 @@ v2 = 42.25
 
 ## 7) Pathing Utilities (`pluss::loader` namespace)
 
-Pathing utilities are implemented in aux and re-exported in `pluss::loader`.
+Pathing is centered on a simple single-root API (`file_path(...)`) with two add-ons:
+- explicit absolute paths via `absolute_path(...)`
+- multi-root contexts via `PathContext`
 
 ### 7.1 API Signatures (Public)
 
-`pluss::loader::project_root() -> path`  
-`pluss::loader::set_project_root(root) -> void`  
-`pluss::loader::reset_project_root() -> void`
+`pluss::loader::root_path() -> path`  
+`pluss::loader::set_root_path(root, resolve_mode = RootResolve::WorkingDirectory) -> void`  
+`pluss::loader::reset_root_path() -> void`
 
-`pluss::loader::set_path_root(key, root) -> void`  
-`pluss::loader::path_root(key, create_dirs = false) -> path`  
-`pluss::loader::has_path_root(key) -> bool`  
-`pluss::loader::clear_path_root(key) -> void`
+`pluss::loader::path_policy() -> PathPolicy`  
+`pluss::loader::set_path_policy(policy) -> void`
 
-`pluss::loader::path_join(base, parts...) -> path`  
-`pluss::loader::path_file(key, name, ensure_parent = false) -> path`  
-`pluss::loader::ensure_dir(path) -> path`
+`pluss::loader::file_path(subpath, options = {}) -> PathRef`  
+`pluss::loader::file_dir(subpath, options = {}) -> DirRef`  
+`pluss::loader::absolute_path(path, options = {}) -> PathRef`  
+`pluss::loader::join_path(base, parts...) -> path`
 
-`pluss::loader::data_file(name) -> path`  
-`pluss::loader::output_dir(name = "") -> path`  
-`pluss::loader::model_dir(name = "") -> path`
+`PathRef::string() -> std::string`  
+`DirRef::string() -> std::string`  
+`DirRef::file(subpath, options = {}) -> PathRef`
 
-Inputs:
-- `key`: logical root key (for example `data`, `output`, `model`).
-- `root/base/path/name/parts`: filesystem path components.
-- `create_dirs/ensure_parent`: directory creation behavior.
-Output:
-- resolved filesystem path (or `void` for mutators).
+`pluss::loader::PathContext` (add-on):
+- `PathContext::from_root(root, resolve_mode = RootResolve::WorkingDirectory) -> PathContext`
+- `ctx.set_root_path(...)`, `ctx.root_path()`, `ctx.reset_root_path()`
+- `ctx.set_path_policy(...)`, `ctx.path_policy()`
+- `ctx.file_path(subpath, options = {}) -> PathRef`
+- `ctx.file_dir(subpath, options = {}) -> DirRef`
+- `ctx.absolute_path(path, options = {}) -> PathRef`
 
-### 7.2 Default keys and behavior
+`pluss::loader::UrlContext` (internet-root add-on):
+- `UrlContext::from_root("https://...") -> UrlContext`
+- `u.file_path(subpath) -> UrlRef`
+- `u.file_paths({...}) -> std::vector<UrlRef>`
+- `u.file_path_map({...}) -> std::unordered_map<std::string, UrlRef>`
+- `UrlRef::string() -> std::string`
 
-Known keys include:
+### 7.2 Knobs and policies
 
-- `qit`, `mic`, `ma`, `ai`
-- `data`, `output`, `model`, `cache`, `temp`
+`RootResolve`:
+- `WorkingDirectory`: relative roots resolve from current process working directory.
+- `CallerFile`: relative roots resolve from the file location where `set_root_path` is called.
 
-Environment overrides are supported via patterns like:
+`PathPolicy` (global):
+- `canonicalize_root` (default `true`): normalize/absolute/canonicalize root.
+- `auto_create_dirs` (default `false`): enable implicit directory creation for `file_dir(...)` and parent-directory creation for file targets.
+- `force_replace_dirs` (default `false`): if a directory creation target exists, remove and recreate.
+- `strip_leading_separators` (default `true`): legacy compatibility knob; rooted inputs are always treated as root-relative/parent-relative subpaths.
 
-- `PLUSS_PATH_<KEY>`
-- plus aliases such as `PLUSS_PROJECT_ROOT`, `PLUSS_DATA_DIR`, `PLUSS_OUTPUT_DIR`, `PLUSS_MODEL_DIR`, `PLUSS_CACHE_DIR`
+`PathOptions` (per call):
+- `create_dirs`: optional override for creation behavior.
+- `force_replace_dirs`: optional override for replacement behavior.
 
-### 7.3 Example A: stable output path
+### 7.3 Resolution rules (exact behavior)
+
+1. Default root resolution:
+- `PLUSS_ROOT_PATH` env var if set.
+- else `PLUSS_PROJECT_ROOT` env var if set.
+- else nearest parent containing `.git`, `CMakeLists.txt`, or `PlussQit` (up to 12 levels).
+- else current working directory.
+
+2. `set_root_path(...)` accepts absolute or relative root:
+- absolute stays absolute.
+- relative resolves per `RootResolve`.
+
+3. `file_path(subpath)` always appends to root:
+- `"/all_data/train.csv"` and `"all_data/train.csv"` both resolve to `"<root>/all_data/train.csv"`.
+
+4. Directory creation:
+- global via `PathPolicy::auto_create_dirs`.
+- per call via `PathOptions::create_dirs`.
+
+5. `absolute_path(path)` is explicit opt-in:
+- input must be rooted/absolute.
+- resolved value is returned directly (it does not prepend configured root).
+
+### 7.4 Example A: basic root + file lookup
 
 ```cpp
 using namespace pluss::loader;
 
-set_path_root("output", "./outputs");
-set_auto_create_path_dirs(true);
-
-auto run_dir = output_dir("nodej_cv");
-auto pred_csv = path_file("output", "nodej_cv/preds.csv", true);
-
-std::cout << run_dir << "\n";
-std::cout << pred_csv << "\n";
+set_root_path("/abs/path/to/proj1");
+auto train_csv = file_path("all_data/train.csv");
+std::cout << root_path() << "\n";
+std::cout << train_csv.string() << "\n";
 ```
 
 Expected output:
 
 ```text
-./outputs/nodej_cv
-./outputs/nodej_cv/preds.csv
+/abs/path/to/proj1
+/abs/path/to/proj1/all_data/train.csv
 ```
 
-### 7.4 Example B: data and model folders
+### 7.5 Example B: relative root from current working directory
 
 ```cpp
-auto train_csv = pluss::loader::data_file("train.csv");
-auto model_ckpt = pluss::loader::model_dir("nodej_v1") / "checkpoint.bin";
+using namespace pluss::loader;
+
+set_root_path("../../proj1", RootResolve::WorkingDirectory);
+auto p = file_path("trained_models/model.bin");
+std::cout << root_path() << "\n";
+std::cout << p.string() << "\n";
 ```
 
 Expected output behavior:
 
 ```text
-train_csv resolves under configured/default data root
-model_ckpt resolves under configured/default model root
+root_path() prints an absolute normalized path
+p prints <absolute_root>/trained_models/model.bin
 ```
 
-### 7.5 Notes
+### 7.6 Example C: relative root from caller file location
 
-- Call `set_project_root` early when running from non-standard working directories.
-- For team reproducibility, keep key roots explicit in app bootstrap code.
+```cpp
+using namespace pluss::loader;
+
+set_root_path("../proj1", RootResolve::CallerFile);
+auto p = file_path("main_outputs/run_01/metrics.txt");
+```
+
+Expected output behavior:
+
+```text
+root is anchored to the source file location that called set_root_path
+```
+
+### 7.7 Example D: leading slash input still binds to root
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj1");
+auto p = file_path("/all_data/housing.csv");
+std::cout << p.string() << "\n";
+```
+
+Expected output:
+
+```text
+/abs/path/to/proj1/all_data/housing.csv
+```
+
+### 7.8 Example E: directory paths and trailing slash output
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj1");
+auto model_dir = file_dir("trained_models");
+std::cout << model_dir.string() << "\n";
+```
+
+Expected output:
+
+```text
+/abs/path/to/proj1/trained_models/
+```
+
+### 7.9 Example F: attach a file target from directory ref
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj1");
+auto model_dir = file_dir("trained_models");
+auto model_file = model_dir.file("model.bin");
+std::cout << model_file.string() << "\n";
+```
+
+Expected output:
+
+```text
+/abs/path/to/proj1/trained_models/model.bin
+```
+
+### 7.10 Example G: global creation policy (set once)
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj1");
+set_path_policy(PathPolicy{
+  .canonicalize_root = true,
+  .auto_create_dirs = true,
+  .force_replace_dirs = false
+});
+
+auto run_dir = file_dir("main_outputs/ngarch_run_01");
+auto metrics = run_dir.file("metrics.txt");
+```
+
+Expected output behavior:
+
+```text
+main_outputs/ngarch_run_01 is created if missing
+metrics parent folder exists when writing metrics.txt
+```
+
+### 7.11 Example H: per-call override for creation and replacement
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj1");
+auto out = file_dir("saved_images/plots", PathOptions{
+  .create_dirs = true,
+  .force_replace_dirs = false
+});
+```
+
+Expected output behavior:
+
+```text
+saved_images/plots is created for this call even if global auto_create_dirs=false
+```
+
+### 7.12 Example I: explicit one-off absolute path
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj1");
+auto tool = absolute_path("/usr/local/bin/tool.exe");
+std::cout << tool.string() << "\n";
+```
+
+Expected output:
+
+```text
+/usr/local/bin/tool.exe
+```
+
+### 7.13 Example J: multiple roots with `PathContext`
+
+```cpp
+using namespace pluss::loader;
+
+auto proj = PathContext::from_root("/abs/path/to/proj1");
+auto ext  = PathContext::from_root("/mnt/shared_data");
+
+auto train_csv = proj.file_path("/all_data/train.csv");
+auto vendor    = ext.file_dir("vendor").file("source2.csv");
+auto cache     = ext.absolute_path("/tmp/cache/index.bin");
+```
+
+Expected output behavior:
+
+```text
+proj and ext resolve independently using their own root/policy state
+```
+
+### 7.14 Notes
+
+- Keep one `set_root_path(...)` near app startup.
+- Use `file_dir(...)` when you intend a folder target.
+- Use `.file("file.ext")` on `DirRef` to finalize file targets from folders.
+- For reproducible CI runs, set `PLUSS_ROOT_PATH` before launching binaries.
+- `absolute_path(...)` is explicit and does not affect root-relative behavior.
+- `PathContext` lets you keep multiple roots without replacing global root state.
+
+### 7.15 Diagnostics (`PLUSS_CHECK` / `PLUSS_WARN`)
+
+Pathing now emits stronger diagnostics:
+
+- `PLUSS_CHECK` hard-fails when:
+  - `set_root_path(...)` resolves to empty.
+  - `file_path(...)` attempts to escape configured root.
+  - `absolute_path(...)` receives non-rooted input.
+  - `DirRef::file(...)` receives an empty path.
+  - `DirRef::file(...)` attempts to escape parent root.
+- `PLUSS_WARN` warns (stderr) when:
+  - rooted path input is supplied to `file_path(...)`, `file_dir(...)`, or `DirRef::file(...)` (input is rewritten as subpath under root/parent).
+  - `absolute_path(...)` cannot be normalized with `std::filesystem::absolute` and falls back to lexical normalization.
 
 ---
 
@@ -1015,8 +1209,12 @@ This section ties multiple aux components together the way real applications do.
 int main() {
   pluss::rng_seed(20260319);
 
-  pluss::loader::set_path_root("output", "./outputs");
-  pluss::loader::set_auto_create_path_dirs(true);
+  pluss::loader::set_root_path("./", pluss::loader::RootResolve::WorkingDirectory);
+  pluss::loader::set_path_policy(pluss::loader::PathPolicy{
+    .canonicalize_root = true,
+    .auto_create_dirs = true,
+    .force_replace_dirs = false
+  });
 
   pluss::OutputOptions o;
   o.level_prefixes = {"[T]", "[D]", "[I]", "[W]", "[E]"};
@@ -1024,8 +1222,8 @@ int main() {
 
   out.info("seed", pluss::rng_seed());
 
-  auto run_dir = pluss::loader::output_dir("aux_tutorial_run");
-  auto log_path = pluss::loader::path_file("output", "aux_tutorial_run/metrics.txt", true);
+  auto run_dir = pluss::loader::file_dir("outputs/aux_tutorial_run");
+  auto log_path = run_dir.file("metrics.txt", {.create_dirs = true});
   out.info("run_dir", run_dir.string());
   out.info("log_path", log_path.string());
 
@@ -1161,6 +1359,11 @@ Typical pattern:
 3. Convert needed fields to tensor structures for modeling.
 4. Use aux DataLoader split helpers for training loops.
 
+Pathing interop note:
+- `load_csv` / `load_txt` take string paths, so pass `file_path(...).string()` (and similarly from `file_paths` / `file_path_map`).
+- `load_csv` / `load_txt` / `load_excel` also accept `http(s)` URLs directly.
+- for reusable internet roots, use `UrlContext::from_root("https://...")` then `u.file_path("file.csv").string()`.
+
 Example inspection stage:
 
 ```cpp
@@ -1220,9 +1423,9 @@ Actions:
 
 ### 11.4 Path resolution confusion
 
-- print `project_root()` and `path_root("data")` at startup.
-- explicitly set roots in app bootstrap.
-- verify env overrides (`PLUSS_PATH_*`, `PLUSS_*_DIR`).
+- print `root_path()` at startup.
+- print representative resolved targets such as `file_path("all_data/train.csv").string()`.
+- verify env overrides (`PLUSS_ROOT_PATH`, `PLUSS_PROJECT_ROOT`).
 
 ### 11.5 DataLoader shape mismatch
 
@@ -1263,7 +1466,10 @@ Actions:
 
 ### Pathing
 
-- `project_root`, `path_root`, `path_file`, `data_file`, `output_dir`, `model_dir`
+- `set_root_path`, `root_path`, `reset_root_path`
+- `set_path_policy`, `path_policy`
+- `file_path`, `file_dir`, `absolute_path`
+- `PathRef::string`, `DirRef::string`, `DirRef::file`
 
 ### Tensor data loading
 

@@ -23,6 +23,7 @@
 
 #include "CodeM/core/ScalarType.h"
 #include "pluss/pluss.h"
+#include "pluss/tils.h"
 
 namespace {
 
@@ -764,8 +765,9 @@ void test_feature_value_cases_values_and_save_defaults() {
   expect(age_series.scalar_type() == pluss::codem::ScalarType::Int64, "features(\"age\").value() should preserve Series dtype");
   expect(age_series.numel() == df.ncases(), "features(\"age\").value() length mismatch");
 
-  const auto all_values = df.values();
-  expect(static_cast<std::int64_t>(all_values.size()) == df.nfeats(), "df.values() should return one Thread per feature");
+  const auto all_features = df.features();
+  expect(static_cast<std::int64_t>(all_features.size()) == df.nfeats(),
+         "df.features() should return one Thread per feature");
 
   const auto row3 = df.cases(3);
   expect(row3.ncases() == 1, "df.cases(3) should return single-case frame");
@@ -1341,6 +1343,14 @@ void test_versatile_dataframe_families() {
   const auto selected_vec = df.features({"age", "job"});
   expect(selected_vec.nfeats() == 2 && selected_vec.has_feature("age") && selected_vec.has_feature("job"),
          "features({...}) should project requested features");
+  const std::vector<std::string> selected_names = {"age", "job"};
+  const auto selected_lvalue = df.features(selected_names);
+  expect(selected_lvalue.nfeats() == 2 && selected_lvalue.has_feature("age") && selected_lvalue.has_feature("job"),
+         "features(vector<string>) should project requested features");
+  const std::vector<std::string> selected_one_name = {"age"};
+  const auto selected_one_lvalue = df.features(selected_one_name);
+  expect(selected_one_lvalue.nfeats() == 1 && selected_one_lvalue.has_feature("age"),
+         "features(single-item vector<string>) should return one-column DataFrame");
   const auto selected_public = df.select({"age", "job"});
   expect(selected_public.nfeats() == 2 && selected_public.has_feature("age") && selected_public.has_feature("job"),
          "select({...}) should project requested features");

@@ -42,15 +42,6 @@ private:
   std::optional<std::string> old_;
 };
 
-bool contains_any_(const std::string& haystack, const std::vector<std::string>& needles) {
-  for (const auto& needle : needles) {
-    if (haystack.find(needle) != std::string::npos) {
-      return true;
-    }
-  }
-  return false;
-}
-
 } // namespace
 
 TEST_CASE("CUDA bootstrap backend info is coherent", "[cuda][bootstrap][backend]") {
@@ -93,37 +84,23 @@ TEST_CASE("CUDA is_ready and is_usable stay coherent", "[cuda][bootstrap][runtim
   REQUIRE(pluss::platform_available(pluss::codem::Platform::CUDA) == ready);
 }
 
-TEST_CASE("CUDA Series::empty fails loudly until backend is built", "[cuda][bootstrap][policy]") {
+TEST_CASE("CUDA Series::empty is runtime-gated only", "[cuda][bootstrap][policy]") {
   const std::vector<std::int64_t> shape{2, 2};
-  try {
-    (void)pluss::Series::empty(shape, pluss::ScalarType::Float32, pluss::codem::Platform::CUDA);
-    FAIL("Series::empty(..., CUDA) must fail loudly before CUDA storage is implemented");
-  } catch (const std::exception& e) {
-    const std::string msg = e.what();
-    REQUIRE(contains_any_(
-        msg,
-        {
-            "CUDA runtime unavailable",
-            "CUDA storage path not implemented yet",
-            "CUDA storage path is unavailable in strict mode"}));
+  if (!pluss::cuda::is_ready()) {
+    REQUIRE_THROWS((void)pluss::Series::empty(shape, pluss::ScalarType::Float32, pluss::codem::Platform::CUDA));
+    return;
   }
+  REQUIRE_NOTHROW((void)pluss::Series::empty(shape, pluss::ScalarType::Float32, pluss::codem::Platform::CUDA));
 }
 
-TEST_CASE("CUDA Series::platform fails loudly until backend is built", "[cuda][bootstrap][policy]") {
+TEST_CASE("CUDA Series::platform transfer is runtime-gated only", "[cuda][bootstrap][policy]") {
   const auto cpu = pluss::Series::ones({2, 2}, pluss::ScalarType::Float32);
   REQUIRE(cpu.platform() == pluss::codem::Platform::CPU);
-  try {
-    (void)cpu.platform(pluss::codem::Platform::CUDA);
-    FAIL("Series::platform(CUDA) must fail loudly before CUDA transfer path is implemented");
-  } catch (const std::exception& e) {
-    const std::string msg = e.what();
-    REQUIRE(contains_any_(
-        msg,
-        {
-            "CUDA runtime unavailable",
-            "CUDA transfer path not implemented yet",
-            "CUDA transfer path unavailable in strict mode"}));
+  if (!pluss::cuda::is_ready()) {
+    REQUIRE_THROWS((void)cpu.platform(pluss::codem::Platform::CUDA));
+    return;
   }
+  REQUIRE_NOTHROW((void)cpu.platform(pluss::codem::Platform::CUDA));
 }
 
 TEST_CASE("CUDA transfer policy is runtime-dynamic", "[cuda][bootstrap][policy][runtime]") {

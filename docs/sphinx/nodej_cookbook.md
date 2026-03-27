@@ -174,6 +174,8 @@ const auto batch = batch_or.value();
 - `Flow::add_simple_imputer(...) -> Status`
 - `Flow::add_standard_scaler(...) -> Status`
 - `Flow::add_one_hot_encoder(...) -> Status`
+- `Flow::add_ordinal_encoder(...) -> Status`
+- `Flow::add_label_encoder(...) -> Status`
 
 ### Notes
 

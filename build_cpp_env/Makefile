@@ -947,6 +947,32 @@ plussai_lymph_end_to_end_hour_workflow_showcase/fast:
 .PHONY : plussai_lymph_end_to_end_hour_workflow_showcase/fast
 
 #=============================================================================
+# Target rules for targets named plussai_lymph_feature_transformer_workflow_demo
+
+# Build rule for target.
+plussai_lymph_feature_transformer_workflow_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_feature_transformer_workflow_demo
+.PHONY : plussai_lymph_feature_transformer_workflow_demo
+
+# fast build rule for target.
+plussai_lymph_feature_transformer_workflow_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build
+.PHONY : plussai_lymph_feature_transformer_workflow_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_housing_ch2_end_to_end_notebook
+
+# Build rule for target.
+plussai_lymph_housing_ch2_end_to_end_notebook: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_housing_ch2_end_to_end_notebook
+.PHONY : plussai_lymph_housing_ch2_end_to_end_notebook
+
+# fast build rule for target.
+plussai_lymph_housing_ch2_end_to_end_notebook/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build
+.PHONY : plussai_lymph_housing_ch2_end_to_end_notebook/fast
+
+#=============================================================================
 # Target rules for targets named plussai_nn_rnn_demo
 
 # Build rule for target.
@@ -1220,6 +1246,19 @@ plussai_adagrad_oop_demo/fast:
 .PHONY : plussai_adagrad_oop_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_outlier_holdout_parity_probe
+
+# Build rule for target.
+plussai_outlier_holdout_parity_probe: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_outlier_holdout_parity_probe
+.PHONY : plussai_outlier_holdout_parity_probe
+
+# fast build rule for target.
+plussai_outlier_holdout_parity_probe/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_outlier_holdout_parity_probe.dir/build
+.PHONY : plussai_outlier_holdout_parity_probe/fast
+
+#=============================================================================
 # Target rules for targets named attention_transformer_test
 
 # Build rule for target.
@@ -1309,6 +1348,32 @@ cudnn_rnn_route_test: cmake_check_build_system
 cudnn_rnn_route_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build
 .PHONY : cudnn_rnn_route_test/fast
+
+#=============================================================================
+# Target rules for targets named cudnn_rnn_strict_route_test
+
+# Build rule for target.
+cudnn_rnn_strict_route_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cudnn_rnn_strict_route_test
+.PHONY : cudnn_rnn_strict_route_test
+
+# fast build rule for target.
+cudnn_rnn_strict_route_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build
+.PHONY : cudnn_rnn_strict_route_test/fast
+
+#=============================================================================
+# Target rules for targets named cudnn_strict_route_test
+
+# Build rule for target.
+cudnn_strict_route_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cudnn_strict_route_test
+.PHONY : cudnn_strict_route_test
+
+# fast build rule for target.
+cudnn_strict_route_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build
+.PHONY : cudnn_strict_route_test/fast
 
 #=============================================================================
 # Target rules for targets named cudnn_transformer_rigorous_test
@@ -1933,6 +1998,19 @@ plussqit_coden_note_base_methods_demo: cmake_check_build_system
 plussqit_coden_note_base_methods_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_base_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_base_methods_demo.dir/build
 .PHONY : plussqit_coden_note_base_methods_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_cpu_perf_bench
+
+# Build rule for target.
+plussqit_coden_cpu_perf_bench: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_cpu_perf_bench
+.PHONY : plussqit_coden_cpu_perf_bench
+
+# fast build rule for target.
+plussqit_coden_cpu_perf_bench/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build.make PlussQit/CMakeFiles/plussqit_coden_cpu_perf_bench.dir/build
+.PHONY : plussqit_coden_cpu_perf_bench/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codeh
@@ -3716,6 +3794,45 @@ distr_objects_catch2/fast:
 .PHONY : distr_objects_catch2/fast
 
 #=============================================================================
+# Target rules for targets named gof_hypothesis_test
+
+# Build rule for target.
+gof_hypothesis_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gof_hypothesis_test
+.PHONY : gof_hypothesis_test
+
+# fast build rule for target.
+gof_hypothesis_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build
+.PHONY : gof_hypothesis_test/fast
+
+#=============================================================================
+# Target rules for targets named nonparametric_hypothesis_test
+
+# Build rule for target.
+nonparametric_hypothesis_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nonparametric_hypothesis_test
+.PHONY : nonparametric_hypothesis_test
+
+# fast build rule for target.
+nonparametric_hypothesis_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/build
+.PHONY : nonparametric_hypothesis_test/fast
+
+#=============================================================================
+# Target rules for targets named parametric_hypothesis_test
+
+# Build rule for target.
+parametric_hypothesis_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 parametric_hypothesis_test
+.PHONY : parametric_hypothesis_test
+
+# fast build rule for target.
+parametric_hypothesis_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/parametric_hypothesis_test.dir/build
+.PHONY : parametric_hypothesis_test/fast
+
+#=============================================================================
 # Target rules for targets named ts_hypothesis_bridge_test
 
 # Build rule for target.
@@ -3729,6 +3846,58 @@ ts_hypothesis_bridge_test/fast:
 .PHONY : ts_hypothesis_bridge_test/fast
 
 #=============================================================================
+# Target rules for targets named glm_regression_test
+
+# Build rule for target.
+glm_regression_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 glm_regression_test
+.PHONY : glm_regression_test
+
+# fast build rule for target.
+glm_regression_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/regression/glm/test/CMakeFiles/glm_regression_test.dir/build.make PlussMa/Stats/regression/glm/test/CMakeFiles/glm_regression_test.dir/build
+.PHONY : glm_regression_test/fast
+
+#=============================================================================
+# Target rules for targets named ols_regression_test
+
+# Build rule for target.
+ols_regression_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ols_regression_test
+.PHONY : ols_regression_test
+
+# fast build rule for target.
+ols_regression_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/regression/linear/test/CMakeFiles/ols_regression_test.dir/build.make PlussMa/Stats/regression/linear/test/CMakeFiles/ols_regression_test.dir/build
+.PHONY : ols_regression_test/fast
+
+#=============================================================================
+# Target rules for targets named poly_regression_test
+
+# Build rule for target.
+poly_regression_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 poly_regression_test
+.PHONY : poly_regression_test
+
+# fast build rule for target.
+poly_regression_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/regression/poly/test/CMakeFiles/poly_regression_test.dir/build.make PlussMa/Stats/regression/poly/test/CMakeFiles/poly_regression_test.dir/build
+.PHONY : poly_regression_test/fast
+
+#=============================================================================
+# Target rules for targets named quantile_regression_test
+
+# Build rule for target.
+quantile_regression_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 quantile_regression_test
+.PHONY : quantile_regression_test
+
+# fast build rule for target.
+quantile_regression_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/regression/quantile/test/CMakeFiles/quantile_regression_test.dir/build.make PlussMa/Stats/regression/quantile/test/CMakeFiles/quantile_regression_test.dir/build
+.PHONY : quantile_regression_test/fast
+
+#=============================================================================
 # Target rules for targets named lag_features_test
 
 # Build rule for target.
@@ -3740,6 +3909,19 @@ lag_features_test: cmake_check_build_system
 lag_features_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/lag_features_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/lag_features_test.dir/build
 .PHONY : lag_features_test/fast
+
+#=============================================================================
+# Target rules for targets named series_ts_transforms_test
+
+# Build rule for target.
+series_ts_transforms_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 series_ts_transforms_test
+.PHONY : series_ts_transforms_test
+
+# fast build rule for target.
+series_ts_transforms_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build.make PlussMa/Stats/time_series/ts/core/test/CMakeFiles/series_ts_transforms_test.dir/build
+.PHONY : series_ts_transforms_test/fast
 
 #=============================================================================
 # Target rules for targets named ts_core_catch2
@@ -4262,6 +4444,97 @@ plussma_distributions_quasirandom_demo/fast:
 .PHONY : plussma_distributions_quasirandom_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussma_hypothesis_tests_demo
+
+# Build rule for target.
+plussma_hypothesis_tests_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_hypothesis_tests_demo
+.PHONY : plussma_hypothesis_tests_demo
+
+# fast build rule for target.
+plussma_hypothesis_tests_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/inference/CMakeFiles/plussma_hypothesis_tests_demo.dir/build.make PlussMa/Stats/examples/inference/CMakeFiles/plussma_hypothesis_tests_demo.dir/build
+.PHONY : plussma_hypothesis_tests_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_matlab_parity_probe
+
+# Build rule for target.
+plussma_matlab_parity_probe: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_matlab_parity_probe
+.PHONY : plussma_matlab_parity_probe
+
+# fast build rule for target.
+plussma_matlab_parity_probe/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/inference/CMakeFiles/plussma_matlab_parity_probe.dir/build.make PlussMa/Stats/examples/inference/CMakeFiles/plussma_matlab_parity_probe.dir/build
+.PHONY : plussma_matlab_parity_probe/fast
+
+#=============================================================================
+# Target rules for targets named plussma_ols_summary_demo
+
+# Build rule for target.
+plussma_ols_summary_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_ols_summary_demo
+.PHONY : plussma_ols_summary_demo
+
+# fast build rule for target.
+plussma_ols_summary_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/regression/CMakeFiles/plussma_ols_summary_demo.dir/build.make PlussMa/Stats/examples/regression/CMakeFiles/plussma_ols_summary_demo.dir/build
+.PHONY : plussma_ols_summary_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_glm_summary_demo
+
+# Build rule for target.
+plussma_glm_summary_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_glm_summary_demo
+.PHONY : plussma_glm_summary_demo
+
+# fast build rule for target.
+plussma_glm_summary_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/regression/CMakeFiles/plussma_glm_summary_demo.dir/build.make PlussMa/Stats/examples/regression/CMakeFiles/plussma_glm_summary_demo.dir/build
+.PHONY : plussma_glm_summary_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_quantile_summary_demo
+
+# Build rule for target.
+plussma_quantile_summary_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_quantile_summary_demo
+.PHONY : plussma_quantile_summary_demo
+
+# fast build rule for target.
+plussma_quantile_summary_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/regression/CMakeFiles/plussma_quantile_summary_demo.dir/build.make PlussMa/Stats/examples/regression/CMakeFiles/plussma_quantile_summary_demo.dir/build
+.PHONY : plussma_quantile_summary_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_poly_summary_demo
+
+# Build rule for target.
+plussma_poly_summary_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_poly_summary_demo
+.PHONY : plussma_poly_summary_demo
+
+# fast build rule for target.
+plussma_poly_summary_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/regression/CMakeFiles/plussma_poly_summary_demo.dir/build.make PlussMa/Stats/examples/regression/CMakeFiles/plussma_poly_summary_demo.dir/build
+.PHONY : plussma_poly_summary_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_bike_sharing_regression_notebook_demo
+
+# Build rule for target.
+plussma_bike_sharing_regression_notebook_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_bike_sharing_regression_notebook_demo
+.PHONY : plussma_bike_sharing_regression_notebook_demo
+
+# fast build rule for target.
+plussma_bike_sharing_regression_notebook_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/examples/regression/CMakeFiles/plussma_bike_sharing_regression_notebook_demo.dir/build.make PlussMa/Stats/examples/regression/CMakeFiles/plussma_bike_sharing_regression_notebook_demo.dir/build
+.PHONY : plussma_bike_sharing_regression_notebook_demo/fast
+
+#=============================================================================
 # Target rules for targets named PlussMic
 
 # Build rule for target.
@@ -4470,6 +4743,19 @@ plussmic_atlas_plot_demo/fast:
 .PHONY : plussmic_atlas_plot_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_time_series_accessor_demo
+
+# Build rule for target.
+plussmic_time_series_accessor_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_time_series_accessor_demo
+.PHONY : plussmic_time_series_accessor_demo
+
+# fast build rule for target.
+plussmic_time_series_accessor_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build
+.PHONY : plussmic_time_series_accessor_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_kindle_model_demo
 
 # Build rule for target.
@@ -4546,6 +4832,19 @@ plussmic_table_dataframe_plot_api_tests: cmake_check_build_system
 plussmic_table_dataframe_plot_api_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/build
 .PHONY : plussmic_table_dataframe_plot_api_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_table_ts_accessor_tests
+
+# Build rule for target.
+plussmic_table_ts_accessor_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_table_ts_accessor_tests
+.PHONY : plussmic_table_ts_accessor_tests
+
+# fast build rule for target.
+plussmic_table_ts_accessor_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build
+.PHONY : plussmic_table_ts_accessor_tests/fast
 
 PlussAI/Lymph/quick.o: PlussAI/Lymph/quick.cpp.o
 .PHONY : PlussAI/Lymph/quick.o
@@ -6299,6 +6598,78 @@ PlussMa/Stats/distributions/distr_objects_special.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/distributions/distr_objects_special.cpp.s
 .PHONY : PlussMa/Stats/distributions/distr_objects_special.cpp.s
 
+PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.o: PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.o
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.o
+
+# target to build an object file
+PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.o
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.o
+
+PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.i: PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.i
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.i
+
+# target to preprocess a source file
+PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.i
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.i
+
+PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.s: PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.s
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.s
+
+# target to generate assembly for a file
+PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.s
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.cpp.s
+
+PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.o: PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.o
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.o
+
+# target to build an object file
+PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.o
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.o
+
+PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.i: PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.i
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.i
+
+# target to preprocess a source file
+PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.i
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.i
+
+PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.s: PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.s
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.s
+
+# target to generate assembly for a file
+PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.s
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.cpp.s
+
+PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.o: PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.o
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.o
+
+# target to build an object file
+PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.o
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.o
+
+PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.i: PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.i
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.i
+
+# target to preprocess a source file
+PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.i
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.i
+
+PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.s: PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.s
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.s
+
+# target to generate assembly for a file
+PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.s
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.cpp.s
+
 PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.o: PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.cpp.o
 .PHONY : PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.o
 
@@ -6322,6 +6693,102 @@ PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.s: PlussMa/Stats
 PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.cpp.s
 .PHONY : PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.cpp.s
+
+PlussMa/Stats/regression/glm/glm_regression.o: PlussMa/Stats/regression/glm/glm_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/glm/glm_regression.o
+
+# target to build an object file
+PlussMa/Stats/regression/glm/glm_regression.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/glm/glm_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/glm/glm_regression.cpp.o
+
+PlussMa/Stats/regression/glm/glm_regression.i: PlussMa/Stats/regression/glm/glm_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/glm/glm_regression.i
+
+# target to preprocess a source file
+PlussMa/Stats/regression/glm/glm_regression.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/glm/glm_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/glm/glm_regression.cpp.i
+
+PlussMa/Stats/regression/glm/glm_regression.s: PlussMa/Stats/regression/glm/glm_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/glm/glm_regression.s
+
+# target to generate assembly for a file
+PlussMa/Stats/regression/glm/glm_regression.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/glm/glm_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/glm/glm_regression.cpp.s
+
+PlussMa/Stats/regression/linear/ols_regression.o: PlussMa/Stats/regression/linear/ols_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/linear/ols_regression.o
+
+# target to build an object file
+PlussMa/Stats/regression/linear/ols_regression.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/linear/ols_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/linear/ols_regression.cpp.o
+
+PlussMa/Stats/regression/linear/ols_regression.i: PlussMa/Stats/regression/linear/ols_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/linear/ols_regression.i
+
+# target to preprocess a source file
+PlussMa/Stats/regression/linear/ols_regression.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/linear/ols_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/linear/ols_regression.cpp.i
+
+PlussMa/Stats/regression/linear/ols_regression.s: PlussMa/Stats/regression/linear/ols_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/linear/ols_regression.s
+
+# target to generate assembly for a file
+PlussMa/Stats/regression/linear/ols_regression.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/linear/ols_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/linear/ols_regression.cpp.s
+
+PlussMa/Stats/regression/poly/poly_regression.o: PlussMa/Stats/regression/poly/poly_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/poly/poly_regression.o
+
+# target to build an object file
+PlussMa/Stats/regression/poly/poly_regression.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/poly/poly_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/poly/poly_regression.cpp.o
+
+PlussMa/Stats/regression/poly/poly_regression.i: PlussMa/Stats/regression/poly/poly_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/poly/poly_regression.i
+
+# target to preprocess a source file
+PlussMa/Stats/regression/poly/poly_regression.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/poly/poly_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/poly/poly_regression.cpp.i
+
+PlussMa/Stats/regression/poly/poly_regression.s: PlussMa/Stats/regression/poly/poly_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/poly/poly_regression.s
+
+# target to generate assembly for a file
+PlussMa/Stats/regression/poly/poly_regression.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/poly/poly_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/poly/poly_regression.cpp.s
+
+PlussMa/Stats/regression/quantile/quantile_regression.o: PlussMa/Stats/regression/quantile/quantile_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/quantile/quantile_regression.o
+
+# target to build an object file
+PlussMa/Stats/regression/quantile/quantile_regression.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/quantile/quantile_regression.cpp.o
+.PHONY : PlussMa/Stats/regression/quantile/quantile_regression.cpp.o
+
+PlussMa/Stats/regression/quantile/quantile_regression.i: PlussMa/Stats/regression/quantile/quantile_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/quantile/quantile_regression.i
+
+# target to preprocess a source file
+PlussMa/Stats/regression/quantile/quantile_regression.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/quantile/quantile_regression.cpp.i
+.PHONY : PlussMa/Stats/regression/quantile/quantile_regression.cpp.i
+
+PlussMa/Stats/regression/quantile/quantile_regression.s: PlussMa/Stats/regression/quantile/quantile_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/quantile/quantile_regression.s
+
+# target to generate assembly for a file
+PlussMa/Stats/regression/quantile/quantile_regression.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/regression/quantile/quantile_regression.cpp.s
+.PHONY : PlussMa/Stats/regression/quantile/quantile_regression.cpp.s
 
 PlussMa/Stats/time_series/specialized/vol_models/egarch.o: PlussMa/Stats/time_series/specialized/vol_models/egarch.cpp.o
 .PHONY : PlussMa/Stats/time_series/specialized/vol_models/egarch.o
@@ -6466,6 +6933,30 @@ PlussMa/Stats/time_series/ts/core/partition.s: PlussMa/Stats/time_series/ts/core
 PlussMa/Stats/time_series/ts/core/partition.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/core/partition.cpp.s
 .PHONY : PlussMa/Stats/time_series/ts/core/partition.cpp.s
+
+PlussMa/Stats/time_series/ts/core/series_ts_transforms.o: PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.o
+.PHONY : PlussMa/Stats/time_series/ts/core/series_ts_transforms.o
+
+# target to build an object file
+PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.o
+.PHONY : PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.o
+
+PlussMa/Stats/time_series/ts/core/series_ts_transforms.i: PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.i
+.PHONY : PlussMa/Stats/time_series/ts/core/series_ts_transforms.i
+
+# target to preprocess a source file
+PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.i
+.PHONY : PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.i
+
+PlussMa/Stats/time_series/ts/core/series_ts_transforms.s: PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.s
+.PHONY : PlussMa/Stats/time_series/ts/core/series_ts_transforms.s
+
+# target to generate assembly for a file
+PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.s
+.PHONY : PlussMa/Stats/time_series/ts/core/series_ts_transforms.cpp.s
 
 PlussMa/Stats/time_series/ts/forecasting/direct/direct_cv_forecaster.o: PlussMa/Stats/time_series/ts/forecasting/direct/direct_cv_forecaster.cpp.o
 .PHONY : PlussMa/Stats/time_series/ts/forecasting/direct/direct_cv_forecaster.o
@@ -6779,6 +7270,8 @@ help:
 	@echo "... cudnn_conv_route_test"
 	@echo "... cudnn_rnn_rigorous_test"
 	@echo "... cudnn_rnn_route_test"
+	@echo "... cudnn_rnn_strict_route_test"
+	@echo "... cudnn_strict_route_test"
 	@echo "... cudnn_transformer_rigorous_test"
 	@echo "... delta_hedge_test"
 	@echo "... dfo_minimizers_test"
@@ -6793,6 +7286,8 @@ help:
 	@echo "... filtering_test"
 	@echo "... fusion_route_test"
 	@echo "... garch11_test"
+	@echo "... glm_regression_test"
+	@echo "... gof_hypothesis_test"
 	@echo "... heston_nandi_calibration_catch2"
 	@echo "... heston_nandi_calibration_test"
 	@echo "... heston_sv_calibration_test"
@@ -6826,8 +7321,11 @@ help:
 	@echo "... nodej_rigorous_suite_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
+	@echo "... nonparametric_hypothesis_test"
 	@echo "... object_pricing_test"
+	@echo "... ols_regression_test"
 	@echo "... optima_robustness_catch2"
+	@echo "... parametric_hypothesis_test"
 	@echo "... pattern_search_closure_catch2"
 	@echo "... pattern_search_minimizer_test"
 	@echo "... phys_quantum_quantum_test"
@@ -6841,7 +7339,9 @@ help:
 	@echo "... plussai_func_rnn_demo"
 	@echo "... plussai_lymph_cv_tune_demo"
 	@echo "... plussai_lymph_end_to_end_hour_workflow_showcase"
+	@echo "... plussai_lymph_feature_transformer_workflow_demo"
 	@echo "... plussai_lymph_flow_demo"
+	@echo "... plussai_lymph_housing_ch2_end_to_end_notebook"
 	@echo "... plussai_lymph_multiclass_demo"
 	@echo "... plussai_lymph_online_demo"
 	@echo "... plussai_lymph_presets_demo"
@@ -6876,8 +7376,10 @@ help:
 	@echo "... plussai_nodej_prep_split_demo"
 	@echo "... plussai_nodej_unsupervised_demo"
 	@echo "... plussai_nodej_workflow_tuning_demo"
+	@echo "... plussai_outlier_holdout_parity_probe"
 	@echo "... plussai_tcn_demo"
 	@echo "... plussma_adam_functional_demo"
+	@echo "... plussma_bike_sharing_regression_notebook_demo"
 	@echo "... plussma_dfo_suite_demo"
 	@echo "... plussma_dfo_unified_demo"
 	@echo "... plussma_distributions_catalog_demo"
@@ -6888,6 +7390,8 @@ help:
 	@echo "... plussma_garch11_internal_protocol_demo"
 	@echo "... plussma_garch11_nelder_mead_demo"
 	@echo "... plussma_garch11_optima_demo"
+	@echo "... plussma_glm_summary_demo"
+	@echo "... plussma_hypothesis_tests_demo"
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
 	@echo "... plussma_math_finance_calibrate_bates_demo"
@@ -6909,8 +7413,10 @@ help:
 	@echo "... plussma_math_finance_finance_stochvol_schemes_demo"
 	@echo "... plussma_math_finance_pricing_models_demo"
 	@echo "... plussma_math_finance_roughvol_fft_demo"
+	@echo "... plussma_matlab_parity_probe"
 	@echo "... plussma_minimax_functional_demo"
 	@echo "... plussma_minimax_functional_multiblock_demo"
+	@echo "... plussma_ols_summary_demo"
 	@echo "... plussma_optima_clone_parity_bench"
 	@echo "... plussma_optima_clone_parity_scorecard"
 	@echo "... plussma_optima_demo"
@@ -6922,6 +7428,8 @@ help:
 	@echo "... plussma_optima_working_set_bench"
 	@echo "... plussma_optima_working_set_demo"
 	@echo "... plussma_pattern_search_demo"
+	@echo "... plussma_poly_summary_demo"
+	@echo "... plussma_quantile_summary_demo"
 	@echo "... plussma_series_objective_analytic_grad_demo"
 	@echo "... plussma_simple_garch11_objective_first_demo"
 	@echo "... plussma_simple_garch11_optim_demo"
@@ -6963,6 +7471,8 @@ help:
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
 	@echo "... plussmic_table_csv_tests"
 	@echo "... plussmic_table_dataframe_plot_api_tests"
+	@echo "... plussmic_table_ts_accessor_tests"
+	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"
 	@echo "... plusspl_2d_all_families_demo"
 	@echo "... plusspl_2d_discrete_demo"
@@ -7013,6 +7523,7 @@ help:
 	@echo "... plussqit_codem_suppose_demo"
 	@echo "... plussqit_codem_transmit_demo"
 	@echo "... plussqit_coden"
+	@echo "... plussqit_coden_cpu_perf_bench"
 	@echo "... plussqit_coden_note_base_methods_demo"
 	@echo "... plussqit_coden_note_cleanup_demo"
 	@echo "... plussqit_coden_note_factory_demo"
@@ -7032,12 +7543,15 @@ help:
 	@echo "... plussview_window_session_demo"
 	@echo "... plussview_window_shell_backend_demo"
 	@echo "... plussview_window_table_demo"
+	@echo "... poly_regression_test"
 	@echo "... population_test"
+	@echo "... quantile_regression_test"
 	@echo "... rate_models_test"
 	@echo "... rates_paths_test"
 	@echo "... rnn_fusion_test"
 	@echo "... sabr_slv_pricing_test"
 	@echo "... schedule_test"
+	@echo "... series_ts_transforms_test"
 	@echo "... simulator_matlab_parity_test"
 	@echo "... ssm_test"
 	@echo "... stochastic_vol_paths_test"
@@ -7276,9 +7790,30 @@ help:
 	@echo "... PlussMa/Stats/distributions/distr_objects_special.o"
 	@echo "... PlussMa/Stats/distributions/distr_objects_special.i"
 	@echo "... PlussMa/Stats/distributions/distr_objects_special.s"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.o"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.i"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/gof/gof_tests.s"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.o"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.i"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/nonparametric/nonparametric_tests.s"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.o"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.i"
+	@echo "... PlussMa/Stats/inference/hypothesis_testing/parametric/parametric_tests.s"
 	@echo "... PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.o"
 	@echo "... PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.i"
 	@echo "... PlussMa/Stats/inference/hypothesis_testing/ts_hypothesis_bridge.s"
+	@echo "... PlussMa/Stats/regression/glm/glm_regression.o"
+	@echo "... PlussMa/Stats/regression/glm/glm_regression.i"
+	@echo "... PlussMa/Stats/regression/glm/glm_regression.s"
+	@echo "... PlussMa/Stats/regression/linear/ols_regression.o"
+	@echo "... PlussMa/Stats/regression/linear/ols_regression.i"
+	@echo "... PlussMa/Stats/regression/linear/ols_regression.s"
+	@echo "... PlussMa/Stats/regression/poly/poly_regression.o"
+	@echo "... PlussMa/Stats/regression/poly/poly_regression.i"
+	@echo "... PlussMa/Stats/regression/poly/poly_regression.s"
+	@echo "... PlussMa/Stats/regression/quantile/quantile_regression.o"
+	@echo "... PlussMa/Stats/regression/quantile/quantile_regression.i"
+	@echo "... PlussMa/Stats/regression/quantile/quantile_regression.s"
 	@echo "... PlussMa/Stats/time_series/specialized/vol_models/egarch.o"
 	@echo "... PlussMa/Stats/time_series/specialized/vol_models/egarch.i"
 	@echo "... PlussMa/Stats/time_series/specialized/vol_models/egarch.s"
@@ -7297,6 +7832,9 @@ help:
 	@echo "... PlussMa/Stats/time_series/ts/core/partition.o"
 	@echo "... PlussMa/Stats/time_series/ts/core/partition.i"
 	@echo "... PlussMa/Stats/time_series/ts/core/partition.s"
+	@echo "... PlussMa/Stats/time_series/ts/core/series_ts_transforms.o"
+	@echo "... PlussMa/Stats/time_series/ts/core/series_ts_transforms.i"
+	@echo "... PlussMa/Stats/time_series/ts/core/series_ts_transforms.s"
 	@echo "... PlussMa/Stats/time_series/ts/forecasting/direct/direct_cv_forecaster.o"
 	@echo "... PlussMa/Stats/time_series/ts/forecasting/direct/direct_cv_forecaster.i"
 	@echo "... PlussMa/Stats/time_series/ts/forecasting/direct/direct_cv_forecaster.s"

@@ -291,6 +291,34 @@ cudnn_rnn_route_test/fast:
 .PHONY : cudnn_rnn_route_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/rule
+
+# Convenience name for target.
+cudnn_rnn_strict_route_test: PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/rule
+.PHONY : cudnn_rnn_strict_route_test
+
+# fast build rule for target.
+cudnn_rnn_strict_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build
+.PHONY : cudnn_rnn_strict_route_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/rule
+
+# Convenience name for target.
+cudnn_strict_route_test: PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/rule
+.PHONY : cudnn_strict_route_test
+
+# fast build rule for target.
+cudnn_strict_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build
+.PHONY : cudnn_strict_route_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule
@@ -807,6 +835,54 @@ cudnn_rnn_route_test.s: cudnn_rnn_route_test.cpp.s
 cudnn_rnn_route_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/cudnn_rnn_route_test.cpp.s
 .PHONY : cudnn_rnn_route_test.cpp.s
+
+cudnn_rnn_strict_route_test.o: cudnn_rnn_strict_route_test.cpp.o
+.PHONY : cudnn_rnn_strict_route_test.o
+
+# target to build an object file
+cudnn_rnn_strict_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/cudnn_rnn_strict_route_test.cpp.o
+.PHONY : cudnn_rnn_strict_route_test.cpp.o
+
+cudnn_rnn_strict_route_test.i: cudnn_rnn_strict_route_test.cpp.i
+.PHONY : cudnn_rnn_strict_route_test.i
+
+# target to preprocess a source file
+cudnn_rnn_strict_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/cudnn_rnn_strict_route_test.cpp.i
+.PHONY : cudnn_rnn_strict_route_test.cpp.i
+
+cudnn_rnn_strict_route_test.s: cudnn_rnn_strict_route_test.cpp.s
+.PHONY : cudnn_rnn_strict_route_test.s
+
+# target to generate assembly for a file
+cudnn_rnn_strict_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_strict_route_test.dir/cudnn_rnn_strict_route_test.cpp.s
+.PHONY : cudnn_rnn_strict_route_test.cpp.s
+
+cudnn_strict_route_test.o: cudnn_strict_route_test.cpp.o
+.PHONY : cudnn_strict_route_test.o
+
+# target to build an object file
+cudnn_strict_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/cudnn_strict_route_test.cpp.o
+.PHONY : cudnn_strict_route_test.cpp.o
+
+cudnn_strict_route_test.i: cudnn_strict_route_test.cpp.i
+.PHONY : cudnn_strict_route_test.i
+
+# target to preprocess a source file
+cudnn_strict_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/cudnn_strict_route_test.cpp.i
+.PHONY : cudnn_strict_route_test.cpp.i
+
+cudnn_strict_route_test.s: cudnn_strict_route_test.cpp.s
+.PHONY : cudnn_strict_route_test.s
+
+# target to generate assembly for a file
+cudnn_strict_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_strict_route_test.dir/cudnn_strict_route_test.cpp.s
+.PHONY : cudnn_strict_route_test.cpp.s
 
 cudnn_transformer_rigorous_test.o: cudnn_transformer_rigorous_test.cpp.o
 .PHONY : cudnn_transformer_rigorous_test.o
@@ -1430,6 +1506,8 @@ help:
 	@echo "... cudnn_conv_route_test"
 	@echo "... cudnn_rnn_rigorous_test"
 	@echo "... cudnn_rnn_route_test"
+	@echo "... cudnn_rnn_strict_route_test"
+	@echo "... cudnn_strict_route_test"
 	@echo "... cudnn_transformer_rigorous_test"
 	@echo "... fusion_route_test"
 	@echo "... lymph_quick_test"
@@ -1476,6 +1554,12 @@ help:
 	@echo "... cudnn_rnn_route_test.o"
 	@echo "... cudnn_rnn_route_test.i"
 	@echo "... cudnn_rnn_route_test.s"
+	@echo "... cudnn_rnn_strict_route_test.o"
+	@echo "... cudnn_rnn_strict_route_test.i"
+	@echo "... cudnn_rnn_strict_route_test.s"
+	@echo "... cudnn_strict_route_test.o"
+	@echo "... cudnn_strict_route_test.i"
+	@echo "... cudnn_strict_route_test.s"
 	@echo "... cudnn_transformer_rigorous_test.o"
 	@echo "... cudnn_transformer_rigorous_test.i"
 	@echo "... cudnn_transformer_rigorous_test.s"

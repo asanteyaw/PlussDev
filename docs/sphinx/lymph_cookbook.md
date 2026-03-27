@@ -234,6 +234,147 @@ const DataFrame x_test_i = it_imp.map(x_test);
 
 - progressively stabilized imputations after configured rounds.
 
+### Outlier Isolator Recipes
+
+#### API Signature
+
+- `prep::OutlierIsolator(options: OutlierIsolatorOptions = {}) -> OutlierIsolator`
+- `prep::outlier_isolator(options: OutlierIsolatorOptions = {}) -> OutlierIsolator`
+
+#### Notes
+
+Isolation Forest-style anomaly detection wrapper on DataFrame series features.
+
+#### Inputs
+
+- DataFrame with numeric Series features
+
+#### Output
+
+- labels (`+1` inlier, `-1` outlier), anomaly scores, filtered DataFrame
+
+#### Examples
+
+Minimal (defaults):
+
+```cpp
+lym::prep::OutlierIsolator iso;   // default options
+iso.learn(housing_df);            // train
+
+auto labels = iso.infer(housing_df);         // Thread<int64>, +1 (inlier), -1 (outlier)
+auto scores = iso.score_samples(housing_df); // Thread<float64>, lower => more anomalous
+```
+
+Configure options (seed, contamination, forest size):
+
+```cpp
+lym::prep::OutlierIsolatorOptions opts;
+opts.estimators = 300;
+opts.max_samples_auto = true;     // sklearn-style auto
+opts.max_features_ratio = 0.8;
+opts.bootstrap = false;
+opts.contamination_auto = false;  // use explicit contamination
+opts.contamination = 0.02;        // 2% outliers
+opts.random.seed = 42;
+opts.random.deterministic = true;
+
+lym::prep::OutlierIsolator iso(opts);
+iso.learn(housing_df);
+auto labels = iso.infer(housing_df);
+```
+
+Use only selected features:
+
+```cpp
+lym::prep::OutlierIsolator iso;
+iso.features({"median_income", "total_rooms", "population"})
+   .learn(housing_df);
+
+auto labels = iso.infer(housing_df);
+```
+
+One-shot train + infer:
+
+```cpp
+auto labels = lym::prep::outlier_isolator(
+    lym::prep::OutlierIsolatorOptions{.estimators = 200, .max_features_ratio = 0.75}
+).features({"median_income", "total_rooms"})
+ .learn_infer(housing_df);
+```
+
+Train once, infer on new data:
+
+```cpp
+auto [train_df, test_df] = lym::hold_out_split(
+    housing_df,
+    lym::HoldoutSplitOptions{
+        .test_size = 0.2,
+        .random_state = 42
+    });
+
+lym::prep::OutlierIsolator iso(
+    lym::prep::OutlierIsolatorOptions{.random = {.seed = 42, .deterministic = true}});
+iso.learn(train_df);
+
+auto test_scores = iso.score_samples(test_df);
+auto test_labels = iso.infer(test_df);
+```
+
+Keep only inliers (or only outliers):
+
+```cpp
+lym::prep::OutlierIsolator iso;
+iso.learn(housing_df);
+
+auto clean_df = iso.filter_inliers(housing_df);                   // convenience helper
+auto outlier_df = housing_df.filter(iso.infer(housing_df) == -1.0); // explicit
+```
+
+Custom threshold from raw scores:
+
+```cpp
+lym::prep::OutlierIsolator iso;
+iso.learn(housing_df);
+
+auto scores = iso.score_samples(housing_df);
+// stricter than default decision boundary:
+auto very_anomalous_df = housing_df.filter(scores < -0.62);
+```
+
+Inspect fitted model summary:
+
+```cpp
+auto iso = lym::prep::outlier_isolator(lym::prep::OutlierIsolatorOptions{.estimators = 256});
+iso.features({"median_income", "total_rooms"}).learn(housing_df);
+
+auto s = iso.summary();   // learned, feature_count, estimators, max_samples, max_features, contamination, offset, names
+out.writeln(s);           // works with OutputEngine
+```
+
+Low-level NodeJ (without Lymph wrapper):
+
+```cpp
+#include "pluss/ai/nodej/nodej.h"
+
+namespace nodej = pluss::ai::nodej;
+
+// X must be a 2D numeric Series: [n_samples, n_features]
+nodej::FeatureBatch batch{
+    .x = X,
+    .layout = nodej::ObservationLayout::Rows
+};
+
+nodej::prep::OutlierIsolator core(nodej::prep::OutlierIsolatorOptions{
+    .random = {.seed = 42, .deterministic = true}
+});
+auto st = core.learn(batch);
+if (!st.ok()) throw std::runtime_error(st.message);
+
+auto labels_or = core.infer(batch);
+if (!labels_or.ok()) throw std::runtime_error(labels_or.status().message);
+auto labels = labels_or.move_value(); // Series (+1 / -1)
+```
+
 ### Scaling Recipes
 
 #### API Signature
@@ -300,6 +441,9 @@ const DataFrame x_test_s = scaler.map(x_test);
 
 - `prep::OneHotEncoder(options: OneHotEncoderOptions = {}) -> OneHotEncoder`
 - `prep::FrequencyEncoder(options: FrequencyEncoderOptions = {}) -> FrequencyEncoder`
+- `prep::OrdinalEncoder(options: OrdinalEncoderOptions = {}) -> OrdinalEncoder`
+- `prep::LabelEncoder(options: LabelEncoderOptions = {}) -> LabelEncoder`
+- `prep::CategoryIndexer(options: CategoryIndexerOptions = {}) -> CategoryIndexer`
 - `prep::QuantileMap(options: QuantileMapOptions = {}) -> QuantileMap`
 - `prep::PowerMap(options: PowerMapOptions = {}) -> PowerMap`
 - `prep::ThresholdBinarizer(options: ThresholdBinarizerOptions = {}) -> ThresholdBinarizer`
@@ -309,14 +453,49 @@ const DataFrame x_test_s = scaler.map(x_test);
 #### Notes
 
 Use these to normalize non-Gaussian features, expand basis features, and encode categories.
+For a single categorical column without a DataFrame wrapper, `lymph::prep::OneHotEncoder`
+`lymph::prep::FrequencyEncoder`, `lymph::prep::OrdinalEncoder`, and
+`lymph::prep::LabelEncoder` also support direct `pluss::table::Thread`
+overloads (`learn/map/learn_map`).
+After fitting, encoder wrappers expose fitted attrs directly:
+
+- `feature_names_`: selected input feature names (DataFrame path)
+- `categories_`: learned category labels per feature (string labels when available)
+- `category_keys_`: raw numeric category keys used internally by core encoder
+- `mapped_names_`: output column names in transform order
+- `frequencies_`: learned category frequencies per feature (FrequencyEncoder)
+- `state_`: raw serialized state tensors (advanced/debug)
+
+For `Thread` input, if `Thread::display_name()` is set, Lymph uses it as the
+base for `mapped_names_`; otherwise it falls back to `feature_0`, `feature_1`, etc.
+
+`CategoryIndexer` specific role:
+
+- purpose: learn/apply a stable categorical index map
+- output form: integer-coded category IDs
+- best for: lookup/index consistency, diagnostics, export, controlled category contracts
+- not ideal alone for many linear models on nominal categories; prefer `OneHotEncoder` or `FrequencyEncoder` for model features
+
+Encoder choice quick guide:
+
+- nominal, low/moderate cardinality: `OneHotEncoder`
+- nominal, high cardinality: `FrequencyEncoder` (or later target/WOE style encoders where appropriate)
+- ordered categories: `OrdinalEncoder`
+- categorical labels/targets or compact IDs: `LabelEncoder`
+- need explicit stable IDs before downstream handling: `CategoryIndexer`
 
 #### Inputs
 
-- DataFrame with selected feature subset
+- `OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`:
+  - `DataFrame` (`learn/map/learn_map`)
+  - `Thread` (`learn/map/learn_map`)
+- other mappers in this section:
+  - `DataFrame`
 
 #### Output
 
-- mapped DataFrame
+- DataFrame path: mapped `DataFrame`
+- Thread path (one-hot/frequency): mapped `Series`
 
 #### Options
 
@@ -331,6 +510,20 @@ Use these to normalize non-Gaussian features, expand basis features, and encode 
 - `max_categories`
 - `overflow`
 - `unknown_frequency`
+
+`OrdinalEncoderOptions`:
+
+- `max_categories`
+- `overflow`
+- `include_unknown_bucket`
+- `one_based`
+
+`LabelEncoderOptions`:
+
+- `max_categories`
+- `overflow`
+- `include_unknown_bucket`
+- `one_based`
 
 `QuantileMapOptions`:
 
@@ -367,18 +560,127 @@ Use these to normalize non-Gaussian features, expand basis features, and encode 
 #### Examples
 
 ```cpp
+// One-hot on a DataFrame subset; output is DataFrame with mapped columns.
 auto cat = lym::prep::OneHotEncoder({.max_categories = 32});
-auto freq = lym::prep::FrequencyEncoder({.max_categories = 64});
-auto poly = lym::prep::PolynomialLift({.degree = 3, .include_bias = false});
+cat.features({"ocean_proximity"});
+DataFrame x_cat_train = cat.learn_map(train_df);
+DataFrame x_cat_test = cat.map(test_df);
 
-DataFrame x1 = cat.learn_map(x_train);
-DataFrame x2 = freq.learn_map(x1);
-DataFrame x3 = poly.learn_map(x2);
+// Fitted attrs
+const auto cat_names = cat.mapped_names_;
+const auto cat_labels = cat.categories_;    // per-feature category labels
+const auto cat_keys = cat.category_keys_;   // per-feature numeric keys
+
+// Frequency encoding on DataFrame.
+auto freq = lym::prep::FrequencyEncoder({
+    .max_categories = 64,
+    .unknown_frequency = 0.0,
+});
+freq.features({"ocean_proximity"});
+DataFrame x_freq_train = freq.learn_map(train_df);
+DataFrame x_freq_test = freq.map(test_df);
+
+// Fitted attrs
+const auto freq_names = freq.mapped_names_;
+const auto freq_labels = freq.categories_;
+const auto freq_keys = freq.category_keys_;
+const auto freq_vals = freq.frequencies_;
+
+// Ordinal encoding (order-preserving index map by sorted category keys).
+auto ord = lym::prep::OrdinalEncoder({
+    .max_categories = 64,
+    .include_unknown_bucket = true,
+    .one_based = true,
+});
+ord.features({"ocean_proximity"});
+DataFrame x_ord_train = ord.learn_map(train_df);
+DataFrame x_ord_test = ord.map(test_df);
+const auto ord_names = ord.mapped_names_;
+const auto ord_labels = ord.categories_;
+
+// Label encoding (integer labels, default zero-based).
+auto lbl = lym::prep::LabelEncoder({
+    .max_categories = 64,
+    .include_unknown_bucket = true,
+    .one_based = false,
+});
+lbl.features({"ocean_proximity"});
+DataFrame x_lbl_train = lbl.learn_map(train_df);
+DataFrame x_lbl_test = lbl.map(test_df);
+const auto lbl_names = lbl.mapped_names_;
+const auto lbl_labels = lbl.categories_;
+
+// Category indexing (grp2idx-style behavior) with explicit feature list.
+auto indexer = lym::prep::CategoryIndexer({
+    .max_categories = 64,
+    .include_unknown_bucket = true,
+    .one_based = true,
+});
+indexer.features({"ocean_proximity"});
+DataFrame x_cat_idx_train = indexer.learn_map(train_df);
+DataFrame x_cat_idx_test = indexer.map(test_df);
+
+// Compose indexing with one-hot if you need strict ID contract + expansion.
+auto idx_then_oh = lym::prep::OneHotEncoder({
+    .max_categories = 64,
+    .include_unknown_bucket = true,
+});
+idx_then_oh.features({"ocean_proximity"});
+DataFrame x_cat_idx_oh_train = idx_then_oh.learn_map(x_cat_idx_train);
+DataFrame x_cat_idx_oh_test = idx_then_oh.map(x_cat_idx_test);
+
+// Single categorical Thread -> index Series
+pluss::table::Thread cat_label = train_df.features("ocean_proximity");
+Series y_cat_idx = indexer.learn_map(cat_label);
+
+// Thread path for a single categorical feature.
+pluss::table::Thread cat_thread = train_df.features("ocean_proximity");
+auto cat_thread_enc = lym::prep::OneHotEncoder({
+    .max_categories = 32,
+    .overflow = lym::prep::CategoryOverflowPolicy::KeepMostFrequent,
+    .include_unknown_bucket = true,
+});
+Series x_cat_series = cat_thread_enc.learn_map(cat_thread);
+
+// Build named output columns from mapped_names_ if you need a new DataFrame.
+std::vector<std::pair<std::string, pluss::table::Thread>> cols{};
+const auto out_names = cat_thread_enc.mapped_names_;
+for (std::int64_t j = 0; j < static_cast<std::int64_t>(out_names.size()); ++j) {
+  Series idx = pluss::make_series(
+      std::vector<std::int64_t>{j},
+      {1},
+      pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(x_cat_series.platform()));
+  Series col = x_cat_series.index_select(1, idx).reshape({x_cat_series.sizes()[0]});
+  cols.emplace_back(out_names[static_cast<std::size_t>(j)], pluss::table::Thread(col));
+}
+DataFrame x_cat_named(std::move(cols), train_df.cases());
+
+// Inspect learned metadata to understand encoder mapping.
+// categories_: human-readable category labels when available.
+// category_keys_: numeric keys used internally by the core encoder.
+// mapped_names_: transformed output feature names in emitted order.
+const auto cats = cat.categories_;
+const auto keys = cat.category_keys_;
+const auto out_cols = cat.mapped_names_;
+
+// Unknown-category handling at inference.
+pluss::ai::nodej::InferOptions infer_opts{};
+infer_opts.unknown_categorical = pluss::ai::nodej::UnknownCategoryPolicy::MissingBucket;
+Series x_cat_unknown_safe = cat_thread_enc.map(test_df.features("ocean_proximity"), infer_opts);
+Series x_ord_unknown_safe = ord.map(test_df.features("ocean_proximity"), infer_opts);
+Series x_lbl_unknown_safe = lbl.map(test_df.features("ocean_proximity"), infer_opts);
+
+// Continue with non-categorical feature mapping.
+auto poly = lym::prep::PolynomialLift({.degree = 3, .include_bias = false});
+DataFrame x3 = poly.learn_map(x_freq_train);
 ```
 
 #### Expected output
 
-- encoded and expanded feature matrix ready for model fitting.
+- one-hot/frequency/ordinal/label categorical mappings with stable fitted metadata
+- explicit unknown-category behavior via `InferOptions::unknown_categorical`
+- named mapped outputs accessible from `mapped_names_` for downstream DataFrame assembly
+- encoded and expanded feature matrix ready for model fitting
 
 ## Model Family Recipes
 
@@ -483,7 +785,7 @@ auto krr = lym::kernel_factory::rbf_kernel_regressor({
 
 ## Workflow Recipes
 
-### Recipe: sklearn-style pipeline order
+### Recipe: Workflow stage order
 
 #### API Signature
 
@@ -499,7 +801,7 @@ Stages execute in sequence; model consumes transformed output.
 
 #### Output
 
-- deterministic preprocessing + model fit path
+- deterministic preprocessing + model fit path through one workflow
 
 #### Options
 
@@ -531,6 +833,34 @@ auto metrics = wf.assess(x_test, y_test, pluss::ai::nodej::AssessOptions{
 #### Expected output
 
 - train and inference use the exact same learned preprocessing state.
+
+### Recipe: Feature-branch composition (numeric + categorical)
+
+#### API Signature
+
+- `workflow::feature::compose(transforms: list<TransformSpec>, feature_names: list<string>) -> Branch`
+- `make_feature_transformer(feature_order: list<string>, branches: list<Branch>, remainder: FeatureRemainderPolicy = PassThrough) -> prep::FeatureTransformer`
+
+#### Notes
+
+Use this when different feature subsets need different transform chains.
+
+#### Examples
+
+```cpp
+const std::vector<std::string> feature_order = x_train.feature_names();
+const auto ft = lym::make_feature_transformer(
+    feature_order,
+    {
+      lym::workflow::feature::compose(
+          {lym::workflow::stage::simple_imputer({.strategy = lym::prep::SimpleImputerStrategy::Median}),
+           lym::workflow::stage::standard_scaler()},
+          {"median_income", "total_rooms", "population"}),
+      lym::workflow::feature::compose(
+          {lym::workflow::stage::one_hot_encoder({.include_unknown_bucket = true})},
+          {"ocean_proximity"}),
+    });
+```
 
 ## Model Selection Recipes
 

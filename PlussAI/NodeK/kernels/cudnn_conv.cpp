@@ -155,12 +155,46 @@ CudnnContext& cudnn_ctx_() {
       return;
     }
 
+    const char* explicit_lib = std::getenv("PLUSS_CUDNN_LIBRARY");
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = std::getenv("CUDNN_LIBRARY");
+    }
+#if defined(PLUSS_CUDNN_LIBRARY_DEFAULT)
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = PLUSS_CUDNN_LIBRARY_DEFAULT;
+    }
+#endif
+    if (explicit_lib != nullptr && *explicit_lib != '\0') {
+      dlerror(); // clear
+      void* handle = dlopen(explicit_lib, RTLD_LAZY | RTLD_LOCAL);
+      if (handle != nullptr) {
+        std::string why{};
+        if (ctx.api.load(handle, &why)) {
+          ctx.handle = handle;
+          ctx.ready = true;
+          ctx.error.clear();
+          return;
+        }
+        ctx.error = why;
+        dlclose(handle);
+      } else {
+        const char* dlerr = dlerror();
+        ctx.error = std::string("failed to open explicit cuDNN library '") + explicit_lib + "'" +
+            (dlerr != nullptr ? std::string(" (") + dlerr + ")" : std::string{});
+      }
+    }
+
     for (const char* lib : libs) {
       if (lib == nullptr || *lib == '\0') {
         continue;
       }
+      dlerror(); // clear
       void* handle = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
       if (handle == nullptr) {
+        const char* dlerr = dlerror();
+        if (dlerr != nullptr) {
+          ctx.error = std::string("failed to open cuDNN library '") + lib + "' (" + dlerr + ")";
+        }
         continue;
       }
       std::string why{};
@@ -248,6 +282,55 @@ struct WorkspaceGuard {
     }
   }
 };
+
+struct DeviceBuffer {
+  void* ptr{nullptr};
+  std::size_t bytes{0};
+  ~DeviceBuffer() {
+    if (ptr != nullptr) {
+      (void)cudaFree(ptr);
+    }
+  }
+};
+
+std::size_t bytes_of_(const Series& s) noexcept {
+  return static_cast<std::size_t>(s.numel()) * static_cast<std::size_t>(s.itemsize());
+}
+
+bool alloc_device_buffer_(DeviceBuffer* buf, std::size_t bytes, std::string* reason) {
+  if (buf == nullptr) {
+    if (reason != nullptr) *reason = "internal: null device buffer";
+    return false;
+  }
+  buf->bytes = bytes;
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMalloc(&buf->ptr, bytes);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMalloc failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
+bool copy_h2d_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMemcpy(dst, src, bytes, cudaMemcpyHostToDevice);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMemcpy(H2D) failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
+
+bool copy_d2h_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
+  if (bytes == 0) return true;
+  const cudaError_t st = cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToHost);
+  if (st == cudaSuccess) return true;
+  if (reason != nullptr) {
+    *reason = std::string("cudaMemcpy(D2H) failed: ") + cudaGetErrorString(st);
+  }
+  return false;
+}
 
 bool map_dtype_(
     ScalarType st,
@@ -500,6 +583,15 @@ bool try_forward_algo_(
     Series* output,
     cudnnConvolutionFwdAlgo_t algo,
     std::string* reason) {
+  DeviceBuffer d_input{};
+  DeviceBuffer d_weight{};
+  DeviceBuffer d_output{};
+  if (!alloc_device_buffer_(&d_input, bytes_of_(input), reason)) return false;
+  if (!alloc_device_buffer_(&d_weight, bytes_of_(weight), reason)) return false;
+  if (!alloc_device_buffer_(&d_output, bytes_of_(*output), reason)) return false;
+  if (!copy_h2d_(d_input.ptr, input.raw_data(), d_input.bytes, reason)) return false;
+  if (!copy_h2d_(d_weight.ptr, weight.raw_data(), d_weight.bytes, reason)) return false;
+
   size_t workspace_bytes = 0;
   if (api.get_fwd_workspace(handle, x_desc, w_desc, conv_desc, y_desc, algo, &workspace_bytes) != CUDNN_STATUS_SUCCESS) {
     return false;
@@ -518,20 +610,21 @@ bool try_forward_algo_(
               handle,
               &alpha,
               x_desc,
-              input.raw_data(),
+              d_input.ptr,
               w_desc,
-              weight.raw_data(),
+              d_weight.ptr,
               conv_desc,
               algo,
               workspace.ptr,
               workspace_bytes,
               &beta,
               y_desc,
-              output->raw_data()),
+              d_output.ptr),
           "cudnnConvolutionForward",
           reason)) {
     return false;
   }
+  if (!copy_d2h_(output->raw_mutable_data(), d_output.ptr, d_output.bytes, reason)) return false;
   return true;
 }
 
@@ -547,6 +640,15 @@ bool try_backward_data_algo_(
     Series* grad_input,
     cudnnConvolutionBwdDataAlgo_t algo,
     std::string* reason) {
+  DeviceBuffer d_weight{};
+  DeviceBuffer d_grad_out{};
+  DeviceBuffer d_grad_input{};
+  if (!alloc_device_buffer_(&d_weight, bytes_of_(weight), reason)) return false;
+  if (!alloc_device_buffer_(&d_grad_out, bytes_of_(grad_out), reason)) return false;
+  if (!alloc_device_buffer_(&d_grad_input, bytes_of_(*grad_input), reason)) return false;
+  if (!copy_h2d_(d_weight.ptr, weight.raw_data(), d_weight.bytes, reason)) return false;
+  if (!copy_h2d_(d_grad_out.ptr, grad_out.raw_data(), d_grad_out.bytes, reason)) return false;
+
   size_t workspace_bytes = 0;
   if (api.get_bwd_data_workspace(handle, w_desc, go_desc, conv_desc, dx_desc, algo, &workspace_bytes) != CUDNN_STATUS_SUCCESS) {
     return false;
@@ -565,20 +667,21 @@ bool try_backward_data_algo_(
               handle,
               &alpha,
               w_desc,
-              weight.raw_data(),
+              d_weight.ptr,
               go_desc,
-              grad_out.raw_data(),
+              d_grad_out.ptr,
               conv_desc,
               algo,
               workspace.ptr,
               workspace_bytes,
               &beta,
               dx_desc,
-              grad_input->raw_data()),
+              d_grad_input.ptr),
           "cudnnConvolutionBackwardData",
           reason)) {
     return false;
   }
+  if (!copy_d2h_(grad_input->raw_mutable_data(), d_grad_input.ptr, d_grad_input.bytes, reason)) return false;
   return true;
 }
 
@@ -594,6 +697,15 @@ bool try_backward_filter_algo_(
     Series* grad_weight,
     cudnnConvolutionBwdFilterAlgo_t algo,
     std::string* reason) {
+  DeviceBuffer d_input{};
+  DeviceBuffer d_grad_out{};
+  DeviceBuffer d_grad_weight{};
+  if (!alloc_device_buffer_(&d_input, bytes_of_(input), reason)) return false;
+  if (!alloc_device_buffer_(&d_grad_out, bytes_of_(grad_out), reason)) return false;
+  if (!alloc_device_buffer_(&d_grad_weight, bytes_of_(*grad_weight), reason)) return false;
+  if (!copy_h2d_(d_input.ptr, input.raw_data(), d_input.bytes, reason)) return false;
+  if (!copy_h2d_(d_grad_out.ptr, grad_out.raw_data(), d_grad_out.bytes, reason)) return false;
+
   size_t workspace_bytes = 0;
   if (api.get_bwd_filter_workspace(handle, x_desc, go_desc, conv_desc, dw_desc, algo, &workspace_bytes) != CUDNN_STATUS_SUCCESS) {
     return false;
@@ -612,20 +724,21 @@ bool try_backward_filter_algo_(
               handle,
               &alpha,
               x_desc,
-              input.raw_data(),
+              d_input.ptr,
               go_desc,
-              grad_out.raw_data(),
+              d_grad_out.ptr,
               conv_desc,
               algo,
               workspace.ptr,
               workspace_bytes,
               &beta,
               dw_desc,
-              grad_weight->raw_data()),
+              d_grad_weight.ptr),
           "cudnnConvolutionBackwardFilter",
           reason)) {
     return false;
   }
+  if (!copy_d2h_(grad_weight->raw_mutable_data(), d_grad_weight.ptr, d_grad_weight.bytes, reason)) return false;
   return true;
 }
 
@@ -709,7 +822,7 @@ bool cudnn_forward_(
               algo,
               reason)) {
         std::lock_guard<std::mutex> lock(algo_cache_mutex_());
-        fwd_algo_cache_[key] = algo;
+        fwd_algo_cache_()[key] = algo;
         executed = true;
         break;
       }
@@ -840,7 +953,7 @@ bool cudnn_backward_input_(
               algo,
               reason)) {
         std::lock_guard<std::mutex> lock(algo_cache_mutex_());
-        bwd_data_algo_cache_[key] = algo;
+        bwd_data_algo_cache_()[key] = algo;
         executed = true;
         break;
       }
@@ -967,7 +1080,7 @@ bool cudnn_backward_weight_(
               algo,
               reason)) {
         std::lock_guard<std::mutex> lock(algo_cache_mutex_());
-        bwd_filter_algo_cache_[key] = algo;
+        bwd_filter_algo_cache_()[key] = algo;
         executed = true;
         break;
       }

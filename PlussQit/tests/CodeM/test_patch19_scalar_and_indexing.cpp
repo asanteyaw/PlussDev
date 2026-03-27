@@ -43,3 +43,23 @@ TEST_CASE("nonzero/take/put", "[index]") {
   REQUIRE(outp[1] == 1);
   REQUIRE(outp[3] == 1);
 }
+
+TEST_CASE("Series::pos bounds-checked scalar selection", "[index][pos]") {
+  Series s = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::codem::SeriesBase& b = s;
+
+  Series picked = s.pos(1);
+  REQUIRE(picked.dim() == 0);
+  REQUIRE(picked.numel() == 1);
+  REQUIRE(picked.item<double>() == 2.0);
+
+  Series picked_from_base = b.pos(2);
+  REQUIRE(picked_from_base.dim() == 0);
+  REQUIRE(picked_from_base.item<double>() == 3.0);
+
+  REQUIRE_THROWS(s.pos(-1));
+  REQUIRE_THROWS(s.pos(3));
+
+  Series m = pluss::ones({2, 2}, ScalarType::Float64);
+  REQUIRE_THROWS(m.pos(0));
+}

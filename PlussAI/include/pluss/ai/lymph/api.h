@@ -5,12 +5,17 @@
 #include "table/DataFrame.h"
 
 #include <algorithm>
+#include <bit>
 #include <cstdint>
 #include <limits>
+#include <memory>
+#include <numeric>
 #include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -39,6 +44,11 @@ class WorkflowModel;
 
 namespace prep {
 
+class OneHotEncoder;
+class FrequencyEncoder;
+class OrdinalEncoder;
+class LabelEncoder;
+
 using StandardScalerOptions = ::pluss::ai::nodej::prep::StandardScalerOptions;
 using MinMaxScalerOptions = ::pluss::ai::nodej::prep::MinMaxScalerOptions;
 using RobustScalerOptions = ::pluss::ai::nodej::prep::RobustScalerOptions;
@@ -47,6 +57,8 @@ using SimpleImputerOptions = ::pluss::ai::nodej::prep::SimpleImputerOptions;
 using CategoryOverflowPolicy = ::pluss::ai::nodej::prep::CategoryOverflowPolicy;
 using OneHotEncoderOptions = ::pluss::ai::nodej::prep::OneHotEncoderOptions;
 using FrequencyEncoderOptions = ::pluss::ai::nodej::prep::FrequencyEncoderOptions;
+using OrdinalEncoderOptions = ::pluss::ai::nodej::prep::OrdinalEncoderOptions;
+using LabelEncoderOptions = ::pluss::ai::nodej::prep::LabelEncoderOptions;
 using NeighborImputerWeighting = ::pluss::ai::nodej::prep::NeighborImputerWeighting;
 using NeighborImputerOptions = ::pluss::ai::nodej::prep::NeighborImputerOptions;
 using IterativeImputerOptions = ::pluss::ai::nodej::prep::IterativeImputerOptions;
@@ -59,6 +71,41 @@ using PowerMapMode = ::pluss::ai::nodej::prep::PowerMapMode;
 using PowerMapOptions = ::pluss::ai::nodej::prep::PowerMapOptions;
 using ThresholdBinarizerOptions = ::pluss::ai::nodej::prep::ThresholdBinarizerOptions;
 using PolynomialLiftOptions = ::pluss::ai::nodej::prep::PolynomialLiftOptions;
+using OutlierIsolatorOptions = ::pluss::ai::nodej::prep::OutlierIsolatorOptions;
+using FunctionTransformerOptions = ::pluss::ai::nodej::prep::FunctionTransformerOptions;
+using FeatureRemainderPolicy = ::pluss::ai::nodej::prep::FeatureRemainderPolicy;
+using FunctionTransformer = ::pluss::ai::nodej::prep::FunctionTransformer;
+using FeatureTransformer = ::pluss::ai::nodej::prep::FeatureTransformer;
+
+template <class WrapperT>
+inline void prep_refresh_encoder_attrs_(WrapperT&) {}
+
+template <class WrapperT>
+inline void prep_before_thread_fit_(WrapperT&, const pluss::table::Thread&) {}
+
+[[nodiscard]] inline std::uint64_t prep_key_for_value_(double value) {
+  if (value == 0.0) value = 0.0;
+  return std::bit_cast<std::uint64_t>(value);
+}
+
+[[nodiscard]] inline double prep_note_hash_value_(std::string_view token) {
+  constexpr std::uint64_t fnv_offset = 1469598103934665603ULL;
+  constexpr std::uint64_t fnv_prime = 1099511628211ULL;
+  std::uint64_t h = fnv_offset;
+  for (unsigned char ch : token) {
+    h ^= static_cast<std::uint64_t>(ch);
+    h *= fnv_prime;
+  }
+  const std::uint32_t lane = static_cast<std::uint32_t>((h ^ (h >> 32)) & 0x7FFFFFFFULL);
+  return static_cast<double>(lane);
+}
+
+[[nodiscard]] inline std::string prep_scalar_to_string_(double value) {
+  std::ostringstream oss;
+  oss.precision(15);
+  oss << value;
+  return oss.str();
+}
 
 struct SimpleImputerSummary {
   SimpleImputerStrategy strategy = SimpleImputerStrategy::Mean;
@@ -79,6 +126,36 @@ struct StandardScalerSummary {
 struct TransformerSummary {
   std::vector<std::string> feature_names{};
   std::vector<Series> state{};
+};
+
+struct OutlierIsolatorSummary {
+  bool learned = false;
+  std::int64_t feature_count = 0;
+  std::int64_t estimators = 0;
+  std::int64_t max_samples = 0;
+  std::int64_t max_features = 0;
+  bool bootstrap = false;
+  bool contamination_auto = true;
+  double contamination = 0.1;
+  double offset = -0.5;
+  std::vector<std::string> feature_names{};
+};
+
+struct CategoryIndexerOptions {
+  std::int64_t max_categories = 256;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+  bool include_unknown_bucket = true;
+  bool one_based = true;
+};
+
+struct CategoryIndexerSummary {
+  bool learned = false;
+  std::int64_t feature_count = 0;
+  bool include_unknown_bucket = true;
+  bool one_based = true;
+  std::vector<std::string> feature_names{};
+  std::vector<std::string> mapped_names{};
+  std::vector<std::vector<std::string>> categories{};
 };
 
 inline const char* simple_imputer_strategy_name(SimpleImputerStrategy strategy) {
@@ -133,6 +210,52 @@ inline void output_render(std::ostream& os, const TransformerSummary& summary) {
   os << "]}";
 }
 
+inline void output_render(std::ostream& os, const OutlierIsolatorSummary& summary) {
+  os << "OutlierIsolatorSummary{learned=" << (summary.learned ? "true" : "false")
+     << ", feature_count=" << summary.feature_count
+     << ", estimators=" << summary.estimators
+     << ", max_samples=" << summary.max_samples
+     << ", max_features=" << summary.max_features
+     << ", bootstrap=" << (summary.bootstrap ? "true" : "false")
+     << ", contamination_auto=" << (summary.contamination_auto ? "true" : "false")
+     << ", contamination=" << summary.contamination
+     << ", offset=" << summary.offset
+     << ", feature_names=[";
+  for (std::size_t i = 0; i < summary.feature_names.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.feature_names[i];
+  }
+  os << "]}";
+}
+
+inline void output_render(std::ostream& os, const CategoryIndexerSummary& summary) {
+  os << "CategoryIndexerSummary{learned=" << (summary.learned ? "true" : "false")
+     << ", feature_count=" << summary.feature_count
+     << ", include_unknown_bucket=" << (summary.include_unknown_bucket ? "true" : "false")
+     << ", one_based=" << (summary.one_based ? "true" : "false")
+     << ", feature_names=[";
+  for (std::size_t i = 0; i < summary.feature_names.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.feature_names[i];
+  }
+  os << "], mapped_names=[";
+  for (std::size_t i = 0; i < summary.mapped_names.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.mapped_names[i];
+  }
+  os << "], categories=[";
+  for (std::size_t i = 0; i < summary.categories.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << "[";
+    for (std::size_t j = 0; j < summary.categories[i].size(); ++j) {
+      if (j != 0) os << ", ";
+      os << summary.categories[i][j];
+    }
+    os << "]";
+  }
+  os << "]}";
+}
+
 inline std::ostream& operator<<(std::ostream& os, const SimpleImputerSummary& summary) {
   output_render(os, summary);
   return os;
@@ -144,6 +267,16 @@ inline std::ostream& operator<<(std::ostream& os, const StandardScalerSummary& s
 }
 
 inline std::ostream& operator<<(std::ostream& os, const TransformerSummary& summary) {
+  output_render(os, summary);
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const OutlierIsolatorSummary& summary) {
+  output_render(os, summary);
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const CategoryIndexerSummary& summary) {
   output_render(os, summary);
   return os;
 }
@@ -249,6 +382,59 @@ private:
   bool learned_{false};
 };
 
+class OutlierIsolator final {
+public:
+  explicit OutlierIsolator(OutlierIsolatorOptions options = {})
+      : options_(options), core_(options) {}
+
+  OutlierIsolator& features(std::initializer_list<std::string_view> names) {
+    feature_names_.clear();
+    feature_names_.reserve(names.size());
+    for (auto name : names) {
+      const std::string owned(name);
+      if (!owned.empty()) feature_names_.push_back(owned);
+    }
+    feature_names_pinned_ = !feature_names_.empty();
+    return *this;
+  }
+
+  OutlierIsolator& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
+  [[nodiscard]] pluss::table::Thread infer(const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;
+  [[nodiscard]] pluss::table::Thread score_samples(const pluss::table::DataFrame& frame,
+                                                   const InferOptions& options = {}) const;
+  [[nodiscard]] pluss::table::Thread learn_infer(const pluss::table::DataFrame& frame,
+                                                 const TrainOptions& learn_options = {},
+                                                 const InferOptions& infer_options = {});
+  [[nodiscard]] pluss::table::DataFrame filter_inliers(const pluss::table::DataFrame& frame,
+                                                       const InferOptions& options = {}) const;
+
+  [[nodiscard]] OutlierIsolatorSummary summary() const {
+    return OutlierIsolatorSummary{
+        .learned = learned_,
+        .feature_count = static_cast<std::int64_t>(feature_names_.size()),
+        .estimators = options_.estimators,
+        .max_samples = core_.max_samples_used(),
+        .max_features = core_.max_features_used(),
+        .bootstrap = options_.bootstrap,
+        .contamination_auto = options_.contamination_auto,
+        .contamination = options_.contamination,
+        .offset = core_.decision_offset(),
+        .feature_names = feature_names_,
+    };
+  }
+
+  [[nodiscard]] bool learned() const noexcept { return learned_; }
+  OutlierIsolatorOptions options_{};
+  std::vector<std::string> feature_names_{};
+
+private:
+  [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  ::pluss::ai::nodej::prep::OutlierIsolator core_{};
+  bool feature_names_pinned_{false};
+  bool learned_{false};
+};
+
 #define PLUSS_NODEJ_DECLARE_PREP_WRAPPER(WrapperName, OptionsType)                              \
   class WrapperName final {                                                                      \
   public:                                                                                        \
@@ -301,12 +487,80 @@ private:
     bool learned_{false};                                                                        \
   };
 
+#define PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(WrapperName, OptionsType)                  \
+  class WrapperName final {                                                                      \
+  public:                                                                                        \
+    explicit WrapperName(OptionsType options = {})                                               \
+        : options_(options), core_(options) {}                                                   \
+                                                                                                 \
+    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+      feature_names_.clear();                                                                    \
+      feature_names_.reserve(names.size());                                                      \
+      for (auto name : names) {                                                                  \
+        const std::string owned(name);                                                           \
+        if (!owned.empty()) feature_names_.push_back(owned);                                     \
+      }                                                                                          \
+      feature_names_pinned_ = !feature_names_.empty();                                           \
+      return *this;                                                                              \
+    }                                                                                            \
+                                                                                                 \
+    WrapperName& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {}); \
+    [[nodiscard]] pluss::table::DataFrame map(const pluss::table::DataFrame& frame,             \
+                                              const InferOptions& options = {}) const;           \
+    [[nodiscard]] pluss::table::DataFrame learn_map(const pluss::table::DataFrame& frame,       \
+                                                    const TrainOptions& learn_options = {},      \
+                                                    const InferOptions& infer_options = {});     \
+                                                                                                 \
+    WrapperName& learn(const pluss::table::Thread& feature, const TrainOptions& options = {});  \
+    [[nodiscard]] Series map(const pluss::table::Thread& feature,                                \
+                             const InferOptions& options = {}) const;                            \
+    [[nodiscard]] Series learn_map(const pluss::table::Thread& feature,                          \
+                                   const TrainOptions& learn_options = {},                       \
+                                   const InferOptions& infer_options = {});                      \
+                                                                                                 \
+    [[nodiscard]] TransformerSummary summary() const {                                            \
+      return TransformerSummary{                                                                  \
+          .feature_names = feature_names_,                                                       \
+          .state = state_,                                                                       \
+      };                                                                                         \
+    }                                                                                            \
+                                                                                                 \
+    [[nodiscard]] bool learned() const noexcept { return learned_; }                             \
+    OptionsType options_{};                                                                      \
+    std::vector<std::string> feature_names_{};                                                   \
+    std::vector<Series> state_{};                                                                \
+    std::vector<std::vector<std::string>> categories_{};                                         \
+    std::vector<std::vector<double>> category_keys_{};                                           \
+    std::vector<std::vector<double>> frequencies_{};                                             \
+    std::vector<std::string> mapped_names_{};                                                    \
+                                                                                                 \
+  private:                                                                                       \
+    [[nodiscard]] std::vector<std::string> resolved_feature_names_(                              \
+        const pluss::table::DataFrame& frame,                                                    \
+        const char* where) const;                                                                \
+    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names); \
+    [[nodiscard]] static pluss::table::DataFrame merge_mapped_(                                  \
+        const pluss::table::DataFrame& frame,                                                    \
+        const std::vector<std::string>& names,                                                   \
+        const Series& mapped,                                                                    \
+        const char* where);                                                                      \
+    void refresh_state_();                                                                       \
+    friend void prep_refresh_encoder_attrs_(WrapperName& wrapper);                               \
+    friend void prep_before_thread_fit_(WrapperName& wrapper, const pluss::table::Thread& feature); \
+    ::pluss::ai::nodej::prep::WrapperName core_{};                                               \
+    std::unordered_map<std::uint64_t, std::string> category_labels_by_key_{};                   \
+    bool feature_names_pinned_{false};                                                           \
+    bool learned_{false};                                                                        \
+  };
+
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(MinMaxScaler, MinMaxScalerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(RobustScaler, RobustScalerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(NeighborImputer, NeighborImputerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(IterativeImputer, IterativeImputerOptions)
-PLUSS_NODEJ_DECLARE_PREP_WRAPPER(OneHotEncoder, OneHotEncoderOptions)
-PLUSS_NODEJ_DECLARE_PREP_WRAPPER(FrequencyEncoder, FrequencyEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(OneHotEncoder, OneHotEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(FrequencyEncoder, FrequencyEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(OrdinalEncoder, OrdinalEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(LabelEncoder, LabelEncoderOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(VectorNormalizer, VectorNormalizerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(MaxAbsScaler, MaxAbsScalerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(QuantileMap, QuantileMapOptions)
@@ -314,7 +568,78 @@ PLUSS_NODEJ_DECLARE_PREP_WRAPPER(PowerMap, PowerMapOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(ThresholdBinarizer, ThresholdBinarizerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(PolynomialLift, PolynomialLiftOptions)
 
+inline void prep_refresh_encoder_attrs_(OneHotEncoder& wrapper);
+inline void prep_refresh_encoder_attrs_(FrequencyEncoder& wrapper);
+inline void prep_refresh_encoder_attrs_(OrdinalEncoder& wrapper);
+inline void prep_refresh_encoder_attrs_(LabelEncoder& wrapper);
+inline void prep_before_thread_fit_(OneHotEncoder& wrapper, const pluss::table::Thread& feature);
+inline void prep_before_thread_fit_(FrequencyEncoder& wrapper, const pluss::table::Thread& feature);
+inline void prep_before_thread_fit_(OrdinalEncoder& wrapper, const pluss::table::Thread& feature);
+inline void prep_before_thread_fit_(LabelEncoder& wrapper, const pluss::table::Thread& feature);
+
 #undef PLUSS_NODEJ_DECLARE_PREP_WRAPPER
+#undef PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD
+
+class CategoryIndexer final {
+public:
+  explicit CategoryIndexer(CategoryIndexerOptions options = {})
+      : options_(options) {}
+
+  CategoryIndexer& features(std::initializer_list<std::string_view> names) {
+    feature_names_.clear();
+    feature_names_.reserve(names.size());
+    for (auto name : names) {
+      const std::string owned(name);
+      if (!owned.empty()) feature_names_.push_back(owned);
+    }
+    feature_names_pinned_ = !feature_names_.empty();
+    return *this;
+  }
+
+  CategoryIndexer& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
+  CategoryIndexer& learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+
+  [[nodiscard]] pluss::table::DataFrame map(const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;
+  [[nodiscard]] Series map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+
+  [[nodiscard]] pluss::table::DataFrame learn_map(const pluss::table::DataFrame& frame,
+                                                  const TrainOptions& learn_options = {},
+                                                  const InferOptions& infer_options = {});
+  [[nodiscard]] Series learn_map(const pluss::table::Thread& feature,
+                                 const TrainOptions& learn_options = {},
+                                 const InferOptions& infer_options = {});
+
+  [[nodiscard]] CategoryIndexerSummary summary() const {
+    return CategoryIndexerSummary{
+        .learned = learned_,
+        .feature_count = static_cast<std::int64_t>(feature_names_.size()),
+        .include_unknown_bucket = options_.include_unknown_bucket,
+        .one_based = options_.one_based,
+        .feature_names = feature_names_,
+        .mapped_names = mapped_names_,
+        .categories = categories_,
+    };
+  }
+
+  [[nodiscard]] bool learned() const noexcept { return learned_; }
+  CategoryIndexerOptions options_{};
+  std::vector<std::string> feature_names_{};
+  std::vector<std::string> mapped_names_{};
+  std::vector<std::vector<std::string>> categories_{};
+
+private:
+  [[nodiscard]] static OneHotEncoderOptions to_one_hot_options_(const CategoryIndexerOptions& options);
+  [[nodiscard]] static Series encode_feature_(const OneHotEncoder& encoder,
+                                              const pluss::table::Thread& feature,
+                                              bool one_based,
+                                              const InferOptions& options,
+                                              const char* where);
+  void refresh_from_encoders_();
+
+  std::vector<OneHotEncoder> encoders_{};
+  bool feature_names_pinned_{false};
+  bool learned_{false};
+};
 
 [[nodiscard]] inline SimpleImputer simple_imputer(SimpleImputerOptions options = {}) { return SimpleImputer(options); }
 [[nodiscard]] inline StandardScaler standard_scaler(StandardScalerOptions options = {}) { return StandardScaler(options); }
@@ -324,6 +649,8 @@ PLUSS_NODEJ_DECLARE_PREP_WRAPPER(PolynomialLift, PolynomialLiftOptions)
 [[nodiscard]] inline IterativeImputer iterative_imputer(IterativeImputerOptions options = {}) { return IterativeImputer(options); }
 [[nodiscard]] inline OneHotEncoder one_hot_encoder(OneHotEncoderOptions options = {}) { return OneHotEncoder(options); }
 [[nodiscard]] inline FrequencyEncoder frequency_encoder(FrequencyEncoderOptions options = {}) { return FrequencyEncoder(options); }
+[[nodiscard]] inline OrdinalEncoder ordinal_encoder(OrdinalEncoderOptions options = {}) { return OrdinalEncoder(options); }
+[[nodiscard]] inline LabelEncoder label_encoder(LabelEncoderOptions options = {}) { return LabelEncoder(options); }
 [[nodiscard]] inline VectorNormalizer vector_normalizer(VectorNormalizerOptions options = {}) { return VectorNormalizer(options); }
 [[nodiscard]] inline MaxAbsScaler maxabs_scaler(MaxAbsScalerOptions options = {}) { return MaxAbsScaler(options); }
 [[nodiscard]] inline QuantileMap quantile_map(QuantileMapOptions options = {}) { return QuantileMap(options); }
@@ -332,6 +659,10 @@ PLUSS_NODEJ_DECLARE_PREP_WRAPPER(PolynomialLift, PolynomialLiftOptions)
   return ThresholdBinarizer(options);
 }
 [[nodiscard]] inline PolynomialLift polynomial_lift(PolynomialLiftOptions options = {}) { return PolynomialLift(options); }
+[[nodiscard]] inline CategoryIndexer category_indexer(CategoryIndexerOptions options = {}) { return CategoryIndexer(options); }
+[[nodiscard]] inline OutlierIsolator outlier_isolator(OutlierIsolatorOptions options = {}) {
+  return OutlierIsolator(options);
+}
 
 } // namespace prep
 
@@ -682,6 +1013,16 @@ public:
     return *this;
   }
 
+  WorkflowModel& ordinal_encoder(prep::OrdinalEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
+    resolve(workflow_.add_ordinal_encoder(options, std::move(feature_route)), "ordinal_encoder");
+    return *this;
+  }
+
+  WorkflowModel& label_encoder(prep::LabelEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
+    resolve(workflow_.add_label_encoder(options, std::move(feature_route)), "label_encoder");
+    return *this;
+  }
+
   WorkflowModel& vector_normalizer(prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
     resolve(workflow_.add_vector_normalizer(options, std::move(feature_route)), "vector_normalizer");
     return *this;
@@ -709,6 +1050,16 @@ public:
 
   WorkflowModel& polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
     resolve(workflow_.add_polynomial_lift(options, std::move(feature_route)), "polynomial_lift");
+    return *this;
+  }
+
+  WorkflowModel& function_transformer(prep::FunctionTransformer transformer) {
+    resolve(workflow_.add_function_transformer(std::move(transformer)), "function_transformer");
+    return *this;
+  }
+
+  WorkflowModel& feature_transformer(prep::FeatureTransformer transformer) {
+    resolve(workflow_.add_feature_transformer(std::move(transformer)), "feature_transformer");
     return *this;
   }
 
@@ -1077,6 +1428,10 @@ private:
         return flow.add_one_hot_encoder(std::get<prep::OneHotEncoderOptions>(spec.options), spec.feature_route);
       case TransformKind::FrequencyEncoder:
         return flow.add_frequency_encoder(std::get<prep::FrequencyEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::OrdinalEncoder:
+        return flow.add_ordinal_encoder(std::get<prep::OrdinalEncoderOptions>(spec.options), spec.feature_route);
+      case TransformKind::LabelEncoder:
+        return flow.add_label_encoder(std::get<prep::LabelEncoderOptions>(spec.options), spec.feature_route);
       case TransformKind::VectorNormalizer:
         return flow.add_vector_normalizer(std::get<prep::VectorNormalizerOptions>(spec.options), spec.feature_route);
       case TransformKind::MaxAbsScaler:
@@ -1302,7 +1657,92 @@ private:
   return cross_validate(model, x, as_stratify_series(y), cv, train_options, assess_options);
 }
 
+struct FeatureSelectorOptions {
+  std::vector<pluss::table::ThreadKind> include{};
+  std::vector<pluss::table::ThreadKind> exclude{};
+};
+
+[[nodiscard]] inline std::vector<std::string> make_feature_selector(const pluss::table::DataFrame& frame,
+                                                                   FeatureSelectorOptions options = {}) {
+  const auto names = frame.feature_names();
+  std::vector<std::string> selected{};
+  selected.reserve(names.size());
+
+  const auto has_kind = [](const std::vector<pluss::table::ThreadKind>& kinds, pluss::table::ThreadKind kind) {
+    return std::find(kinds.begin(), kinds.end(), kind) != kinds.end();
+  };
+
+  for (const auto& name : names) {
+    const auto kind = frame.features(name).kind();
+    const bool include_match = options.include.empty() || has_kind(options.include, kind);
+    const bool exclude_match = has_kind(options.exclude, kind);
+    if (include_match && !exclude_match) selected.push_back(name);
+  }
+  return selected;
+}
+
+[[nodiscard]] inline std::vector<std::string> temporal_features(const pluss::table::DataFrame& frame) {
+  return make_feature_selector(frame, FeatureSelectorOptions{
+                                         .include = {pluss::table::ThreadKind::Timeline, pluss::table::ThreadKind::TimeIndex},
+                                         .exclude = {},
+                                     });
+}
+
 namespace workflow {
+namespace feature {
+
+struct Branch {
+  std::vector<TransformSpec> transforms{};
+  std::vector<std::string> feature_names{};
+  std::vector<std::int64_t> feature_route{};
+};
+
+[[nodiscard]] inline Branch compose(std::vector<TransformSpec> transforms,
+                                    std::vector<std::string> feature_names = {},
+                                    std::vector<std::int64_t> feature_route = {}) {
+  return Branch{
+      .transforms = std::move(transforms),
+      .feature_names = std::move(feature_names),
+      .feature_route = std::move(feature_route),
+  };
+}
+
+#define PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(FuncName, KindName, OptionsType)                                 \
+  [[nodiscard]] inline Branch FuncName(OptionsType options = {},                                             \
+                                       std::vector<std::string> feature_names = {},                          \
+                                       std::vector<std::int64_t> feature_route = {}) {                       \
+    return Branch{                                                                                            \
+        .transforms = {TransformSpec{                                                                         \
+            .kind = TransformKind::KindName,                                                                  \
+            .options = options,                                                                               \
+            .feature_route = {},                                                                              \
+        }},                                                                                                   \
+        .feature_names = std::move(feature_names),                                                            \
+        .feature_route = std::move(feature_route),                                                            \
+    };                                                                                                        \
+  }
+
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(standard_scaler, StandardScaler, prep::StandardScalerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(minmax_scaler, MinMaxScaler, prep::MinMaxScalerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(robust_scaler, RobustScaler, prep::RobustScalerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(simple_imputer, SimpleImputer, prep::SimpleImputerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(neighbor_imputer, NeighborImputer, prep::NeighborImputerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(iterative_imputer, IterativeImputer, prep::IterativeImputerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(one_hot_encoder, OneHotEncoder, prep::OneHotEncoderOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(frequency_encoder, FrequencyEncoder, prep::FrequencyEncoderOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(ordinal_encoder, OrdinalEncoder, prep::OrdinalEncoderOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(label_encoder, LabelEncoder, prep::LabelEncoderOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(vector_normalizer, VectorNormalizer, prep::VectorNormalizerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(maxabs_scaler, MaxAbsScaler, prep::MaxAbsScalerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(quantile_map, QuantileMap, prep::QuantileMapOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(power_map, PowerMap, prep::PowerMapOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(threshold_binarizer, ThresholdBinarizer, prep::ThresholdBinarizerOptions)
+PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftOptions)
+
+#undef PLUSS_LYMPH_FEATURE_BRANCH_BUILDER
+
+} // namespace feature
+
 namespace stage {
 
 #define PLUSS_LYMPH_STAGE_BUILDER(FuncName, KindName, OptionsType)                                 \
@@ -1324,6 +1764,8 @@ PLUSS_LYMPH_STAGE_BUILDER(neighbor_imputer, NeighborImputer, prep::NeighborImput
 PLUSS_LYMPH_STAGE_BUILDER(iterative_imputer, IterativeImputer, prep::IterativeImputerOptions)
 PLUSS_LYMPH_STAGE_BUILDER(one_hot_encoder, OneHotEncoder, prep::OneHotEncoderOptions)
 PLUSS_LYMPH_STAGE_BUILDER(frequency_encoder, FrequencyEncoder, prep::FrequencyEncoderOptions)
+PLUSS_LYMPH_STAGE_BUILDER(ordinal_encoder, OrdinalEncoder, prep::OrdinalEncoderOptions)
+PLUSS_LYMPH_STAGE_BUILDER(label_encoder, LabelEncoder, prep::LabelEncoderOptions)
 PLUSS_LYMPH_STAGE_BUILDER(vector_normalizer, VectorNormalizer, prep::VectorNormalizerOptions)
 PLUSS_LYMPH_STAGE_BUILDER(maxabs_scaler, MaxAbsScaler, prep::MaxAbsScalerOptions)
 PLUSS_LYMPH_STAGE_BUILDER(quantile_map, QuantileMap, prep::QuantileMapOptions)
@@ -1335,6 +1777,176 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
 
 } // namespace stage
 } // namespace workflow
+
+[[nodiscard]] inline std::vector<std::string> resolved_feature_order_for_features_(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options) {
+  std::vector<std::string> names = data_options.feature_names.empty() ? frame.feature_names() : data_options.feature_names;
+  if (data_options.label_feature.has_value()) {
+    names.erase(std::remove(names.begin(), names.end(), *data_options.label_feature), names.end());
+  }
+  if (data_options.sample_weight_feature.has_value()) {
+    names.erase(std::remove(names.begin(), names.end(), *data_options.sample_weight_feature), names.end());
+  }
+  if (names.empty()) {
+    throw std::runtime_error("make_feature_transformer: resolved zero feature names.");
+  }
+  return names;
+}
+
+[[nodiscard]] inline std::unique_ptr<TransformerBase> make_core_transformer_from_spec_(const TransformSpec& spec) {
+  switch (spec.kind) {
+    case TransformKind::StandardScaler:
+      return std::make_unique<::pluss::ai::nodej::prep::StandardScaler>(
+          std::get<prep::StandardScalerOptions>(spec.options));
+    case TransformKind::MinMaxScaler:
+      return std::make_unique<::pluss::ai::nodej::prep::MinMaxScaler>(
+          std::get<prep::MinMaxScalerOptions>(spec.options));
+    case TransformKind::RobustScaler:
+      return std::make_unique<::pluss::ai::nodej::prep::RobustScaler>(
+          std::get<prep::RobustScalerOptions>(spec.options));
+    case TransformKind::SimpleImputer:
+      return std::make_unique<::pluss::ai::nodej::prep::SimpleImputer>(
+          std::get<prep::SimpleImputerOptions>(spec.options));
+    case TransformKind::NeighborImputer:
+      return std::make_unique<::pluss::ai::nodej::prep::NeighborImputer>(
+          std::get<prep::NeighborImputerOptions>(spec.options));
+    case TransformKind::IterativeImputer:
+      return std::make_unique<::pluss::ai::nodej::prep::IterativeImputer>(
+          std::get<prep::IterativeImputerOptions>(spec.options));
+    case TransformKind::OneHotEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::OneHotEncoder>(
+          std::get<prep::OneHotEncoderOptions>(spec.options));
+    case TransformKind::FrequencyEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::FrequencyEncoder>(
+          std::get<prep::FrequencyEncoderOptions>(spec.options));
+    case TransformKind::OrdinalEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::OrdinalEncoder>(
+          std::get<prep::OrdinalEncoderOptions>(spec.options));
+    case TransformKind::LabelEncoder:
+      return std::make_unique<::pluss::ai::nodej::prep::LabelEncoder>(
+          std::get<prep::LabelEncoderOptions>(spec.options));
+    case TransformKind::VectorNormalizer:
+      return std::make_unique<::pluss::ai::nodej::prep::VectorNormalizer>(
+          std::get<prep::VectorNormalizerOptions>(spec.options));
+    case TransformKind::MaxAbsScaler:
+      return std::make_unique<::pluss::ai::nodej::prep::MaxAbsScaler>(
+          std::get<prep::MaxAbsScalerOptions>(spec.options));
+    case TransformKind::QuantileMap:
+      return std::make_unique<::pluss::ai::nodej::prep::QuantileMap>(
+          std::get<prep::QuantileMapOptions>(spec.options));
+    case TransformKind::PowerMap:
+      return std::make_unique<::pluss::ai::nodej::prep::PowerMap>(
+          std::get<prep::PowerMapOptions>(spec.options));
+    case TransformKind::ThresholdBinarizer:
+      return std::make_unique<::pluss::ai::nodej::prep::ThresholdBinarizer>(
+          std::get<prep::ThresholdBinarizerOptions>(spec.options));
+    case TransformKind::PolynomialLift:
+      return std::make_unique<::pluss::ai::nodej::prep::PolynomialLift>(
+          std::get<prep::PolynomialLiftOptions>(spec.options));
+  }
+  throw std::runtime_error("make_feature_transformer: unsupported transform kind.");
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const std::vector<std::string>& feature_order,
+    const std::vector<workflow::feature::Branch>& branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  if (feature_order.empty()) {
+    throw std::runtime_error("make_feature_transformer: feature_order cannot be empty.");
+  }
+  if (branches.empty()) {
+    throw std::runtime_error("make_feature_transformer: requires at least one branch.");
+  }
+
+  std::unordered_map<std::string, std::int64_t> index_by_name{};
+  index_by_name.reserve(feature_order.size());
+  for (std::size_t i = 0; i < feature_order.size(); ++i) {
+    index_by_name.emplace(feature_order[i], static_cast<std::int64_t>(i));
+  }
+
+  ::pluss::ai::nodej::prep::FeatureTransformer feature_transformer(remainder);
+  for (std::size_t i = 0; i < branches.size(); ++i) {
+    const auto& branch = branches[i];
+    if (branch.transforms.empty()) {
+      throw std::runtime_error("make_feature_transformer: branch requires at least one transform stage.");
+    }
+    std::vector<std::int64_t> route{};
+    if (!branch.feature_names.empty() || !branch.feature_route.empty()) {
+      if (!branch.feature_names.empty() && !branch.feature_route.empty()) {
+        throw std::runtime_error(
+            "make_feature_transformer: branch cannot specify both feature_names and feature_route.");
+      }
+      if (!branch.feature_names.empty()) {
+        route.reserve(branch.feature_names.size());
+        for (const auto& name : branch.feature_names) {
+          auto it = index_by_name.find(name);
+          if (it == index_by_name.end()) {
+            throw std::runtime_error(
+                "make_feature_transformer: feature '" + name + "' was not found in feature_order.");
+          }
+          route.push_back(it->second);
+        }
+      } else {
+        route = branch.feature_route;
+      }
+      for (const auto& stage : branch.transforms) {
+        if (!stage.feature_route.empty()) {
+          throw std::runtime_error(
+              "make_feature_transformer: when branch-level routing is set, per-stage feature_route must be empty.");
+        }
+      }
+    } else {
+      std::optional<std::vector<std::int64_t>> inferred_route{};
+      for (const auto& stage : branch.transforms) {
+        if (stage.feature_route.empty()) continue;
+        if (!inferred_route.has_value()) {
+          inferred_route = stage.feature_route;
+          continue;
+        }
+        if (*inferred_route != stage.feature_route) {
+          throw std::runtime_error(
+              "make_feature_transformer: all per-stage feature_route values in a branch must match.");
+        }
+      }
+      if (inferred_route.has_value()) {
+        route = std::move(*inferred_route);
+      }
+    }
+    if (route.empty()) {
+      throw std::runtime_error("make_feature_transformer: each branch must select at least one feature.");
+    }
+
+    std::vector<std::unique_ptr<TransformerBase>> branch_chain{};
+    branch_chain.reserve(branch.transforms.size());
+    for (const auto& stage : branch.transforms) {
+      branch_chain.push_back(make_core_transformer_from_spec_(stage));
+    }
+    resolve(feature_transformer.add_pipeline(std::move(branch_chain), std::move(route)),
+            "make_feature_transformer.add_branch");
+  }
+  return feature_transformer;
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    const std::vector<workflow::feature::Branch>& branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      resolved_feature_order_for_features_(frame, data_options),
+      branches,
+      remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    const std::vector<workflow::feature::Branch>& branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  DataFrameBatchOptions options{};
+  options.feature_names = frame.feature_names();
+  return make_feature_transformer(frame, options, branches, remainder);
+}
 
 class Workflow final {
 public:
@@ -1430,6 +2042,18 @@ public:
                               const TrainOptions& options = {}) const {
     ensure_model_("learn");
     return from_model_(model->learn(x, y, options));
+  }
+
+  Workflow& function_transformer(prep::FunctionTransformer transformer) {
+    ensure_model_("function_transformer");
+    model->function_transformer(std::move(transformer));
+    return *this;
+  }
+
+  Workflow& feature_transformer(prep::FeatureTransformer transformer) {
+    ensure_model_("feature_transformer");
+    model->feature_transformer(std::move(transformer));
+    return *this;
   }
 
   [[nodiscard]] Series infer(const FeatureBatch& batch, const InferOptions& options = {}) const {
@@ -1674,6 +2298,12 @@ private:
       case TransformKind::FrequencyEncoder:
         model.frequency_encoder(std::get<prep::FrequencyEncoderOptions>(spec.options), spec.feature_route);
         return;
+      case TransformKind::OrdinalEncoder:
+        model.ordinal_encoder(std::get<prep::OrdinalEncoderOptions>(spec.options), spec.feature_route);
+        return;
+      case TransformKind::LabelEncoder:
+        model.label_encoder(std::get<prep::LabelEncoderOptions>(spec.options), spec.feature_route);
+        return;
       case TransformKind::VectorNormalizer:
         model.vector_normalizer(std::get<prep::VectorNormalizerOptions>(spec.options), spec.feature_route);
         return;
@@ -1697,30 +2327,30 @@ private:
 
 };
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& pipeline,
+[[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& workflow,
                                                           const LabeledBatch& batch,
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  return cross_validate(pipeline.workflow_model(), batch, cv, train_options, assess_options);
+  return cross_validate(workflow.workflow_model(), batch, cv, train_options, assess_options);
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& pipeline,
+[[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& workflow,
                                                           const pluss::table::DataFrame& x,
                                                           const Series& y,
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  return cross_validate(pipeline.workflow_model(), x, y, cv, train_options, assess_options);
+  return cross_validate(workflow.workflow_model(), x, y, cv, train_options, assess_options);
 }
 
-[[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& pipeline,
+[[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& workflow,
                                                           const pluss::table::DataFrame& x,
                                                           const pluss::table::Thread& y,
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  return cross_validate(pipeline.workflow_model(), x, y, cv, train_options, assess_options);
+  return cross_validate(workflow.workflow_model(), x, y, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline std::vector<std::string> prep_resolve_series_feature_names_(
@@ -1749,6 +2379,112 @@ private:
   options.layout = ObservationLayout::Rows;
   options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
+  return options;
+}
+
+template <class WrapperT>
+[[nodiscard]] inline std::vector<std::string> prep_resolve_feature_names_for_(
+    const pluss::table::DataFrame& frame,
+    const std::vector<std::string>& pinned_feature_names,
+    bool feature_names_pinned,
+    const char* where) {
+  return prep_resolve_series_feature_names_(frame, pinned_feature_names, feature_names_pinned, where);
+}
+
+template <>
+[[nodiscard]] inline std::vector<std::string> prep_resolve_feature_names_for_<prep::OneHotEncoder>(
+    const pluss::table::DataFrame& frame,
+    const std::vector<std::string>& pinned_feature_names,
+    bool feature_names_pinned,
+    const char* where) {
+  (void)frame;
+  if (!feature_names_pinned || pinned_feature_names.empty()) {
+    throw std::runtime_error(std::string(where) +
+                             ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
+                             "before learn()/map()/learn_map() on DataFrame.");
+  }
+  return pinned_feature_names;
+}
+
+template <>
+[[nodiscard]] inline std::vector<std::string> prep_resolve_feature_names_for_<prep::FrequencyEncoder>(
+    const pluss::table::DataFrame& frame,
+    const std::vector<std::string>& pinned_feature_names,
+    bool feature_names_pinned,
+    const char* where) {
+  (void)frame;
+  if (!feature_names_pinned || pinned_feature_names.empty()) {
+    throw std::runtime_error(std::string(where) +
+                             ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
+                             "before learn()/map()/learn_map() on DataFrame.");
+  }
+  return pinned_feature_names;
+}
+
+template <>
+[[nodiscard]] inline std::vector<std::string> prep_resolve_feature_names_for_<prep::OrdinalEncoder>(
+    const pluss::table::DataFrame& frame,
+    const std::vector<std::string>& pinned_feature_names,
+    bool feature_names_pinned,
+    const char* where) {
+  (void)frame;
+  if (!feature_names_pinned || pinned_feature_names.empty()) {
+    throw std::runtime_error(std::string(where) +
+                             ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
+                             "before learn()/map()/learn_map() on DataFrame.");
+  }
+  return pinned_feature_names;
+}
+
+template <>
+[[nodiscard]] inline std::vector<std::string> prep_resolve_feature_names_for_<prep::LabelEncoder>(
+    const pluss::table::DataFrame& frame,
+    const std::vector<std::string>& pinned_feature_names,
+    bool feature_names_pinned,
+    const char* where) {
+  (void)frame;
+  if (!feature_names_pinned || pinned_feature_names.empty()) {
+    throw std::runtime_error(std::string(where) +
+                             ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
+                             "before learn()/map()/learn_map() on DataFrame.");
+  }
+  return pinned_feature_names;
+}
+
+template <class WrapperT>
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_(const std::vector<std::string>& names) {
+  return prep_batch_options_for_(names);
+}
+
+template <>
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::OneHotEncoder>(
+    const std::vector<std::string>& names) {
+  auto options = prep_batch_options_for_(names);
+  options.note_policy = DataNotePolicy::Hash;
+  return options;
+}
+
+template <>
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::FrequencyEncoder>(
+    const std::vector<std::string>& names) {
+  auto options = prep_batch_options_for_(names);
+  options.note_policy = DataNotePolicy::Hash;
+  return options;
+}
+
+template <>
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::OrdinalEncoder>(
+    const std::vector<std::string>& names) {
+  auto options = prep_batch_options_for_(names);
+  options.note_policy = DataNotePolicy::Hash;
+  return options;
+}
+
+template <>
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::LabelEncoder>(
+    const std::vector<std::string>& names) {
+  auto options = prep_batch_options_for_(names);
+  options.note_policy = DataNotePolicy::Hash;
   return options;
 }
 
@@ -1927,15 +2663,80 @@ inline pluss::table::DataFrame prep::StandardScaler::learn_map(const pluss::tabl
   return merge_mapped_(frame, names, mapped, "prep::StandardScaler.learn_map");
 }
 
+inline std::vector<std::string> prep::OutlierIsolator::resolved_feature_names_(const pluss::table::DataFrame& frame,
+                                                                                 const char* where) const {
+  return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
+}
+
+inline DataFrameBatchOptions prep::OutlierIsolator::batch_options_for_(const std::vector<std::string>& names) {
+  return prep_batch_options_for_(names);
+}
+
+inline prep::OutlierIsolator& prep::OutlierIsolator::learn(const pluss::table::DataFrame& frame,
+                                                            const TrainOptions& options) {
+  const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.learn");
+  const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
+                             "prep::OutlierIsolator.learn.feature_batch_from_dataframe");
+  resolve(core_.learn(batch, options), "prep::OutlierIsolator.learn");
+  feature_names_ = names;
+  feature_names_pinned_ = true;
+  learned_ = true;
+  return *this;
+}
+
+inline pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::DataFrame& frame,
+                                                         const InferOptions& options) const {
+  if (!learned_) {
+    throw std::runtime_error("prep::OutlierIsolator.infer: call learn() or learn_infer() first.");
+  }
+  const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.infer");
+  const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
+                             "prep::OutlierIsolator.infer.feature_batch_from_dataframe");
+  return pluss::table::Thread(resolve(core_.infer(batch, options), "prep::OutlierIsolator.infer"));
+}
+
+inline pluss::table::Thread prep::OutlierIsolator::score_samples(const pluss::table::DataFrame& frame,
+                                                                 const InferOptions& options) const {
+  if (!learned_) {
+    throw std::runtime_error("prep::OutlierIsolator.score_samples: call learn() or learn_infer() first.");
+  }
+  const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.score_samples");
+  const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
+                             "prep::OutlierIsolator.score_samples.feature_batch_from_dataframe");
+  return pluss::table::Thread(resolve(core_.score_samples(batch, options), "prep::OutlierIsolator.score_samples"));
+}
+
+inline pluss::table::Thread prep::OutlierIsolator::learn_infer(const pluss::table::DataFrame& frame,
+                                                               const TrainOptions& learn_options,
+                                                               const InferOptions& infer_options) {
+  const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.learn_infer");
+  const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
+                             "prep::OutlierIsolator.learn_infer.feature_batch_from_dataframe");
+  const auto labels = resolve(core_.learn_infer(batch, learn_options, infer_options), "prep::OutlierIsolator.learn_infer");
+  feature_names_ = names;
+  feature_names_pinned_ = true;
+  learned_ = true;
+  return pluss::table::Thread(labels);
+}
+
+inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss::table::DataFrame& frame,
+                                                                      const InferOptions& options) const {
+  return frame.filter((infer(frame, options) == 1.0));
+}
+
 #define PLUSS_NODEJ_DEFINE_PREP_WRAPPER(WrapperName, Label)                                      \
   inline std::vector<std::string> prep::WrapperName::resolved_feature_names_(                    \
       const pluss::table::DataFrame& frame,                                                       \
       const char* where) const {                                                                  \
-    return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where); \
+    return prep_resolve_feature_names_for_<prep::WrapperName>(                                    \
+        frame,                                                                                    \
+        feature_names_,                                                                           \
+        feature_names_pinned_,                                                                    \
+        where);                                                                                   \
   }                                                                                               \
                                                                                                   \
   inline DataFrameBatchOptions prep::WrapperName::batch_options_for_(const std::vector<std::string>& names) { \
-    return prep_batch_options_for_(names);                                                        \
+    return prep_batch_options_for_wrapper_<prep::WrapperName>(names);                             \
   }                                                                                               \
                                                                                                   \
   inline pluss::table::DataFrame prep::WrapperName::merge_mapped_(                                \
@@ -1954,6 +2755,7 @@ inline pluss::table::DataFrame prep::StandardScaler::learn_map(const pluss::tabl
     } catch (...) {                                                                               \
       state_.clear();                                                                             \
     }                                                                                             \
+    prep_refresh_encoder_attrs_(*this);                                                           \
   }                                                                                               \
                                                                                                   \
   inline prep::WrapperName& prep::WrapperName::learn(const pluss::table::DataFrame& frame,       \
@@ -1995,12 +2797,53 @@ inline pluss::table::DataFrame prep::StandardScaler::learn_map(const pluss::tabl
     return merge_mapped_(frame, names, mapped, Label ".learn_map");                              \
   }
 
+#define PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(WrapperName, Label)                          \
+  PLUSS_NODEJ_DEFINE_PREP_WRAPPER(WrapperName, Label)                                             \
+                                                                                                  \
+  inline prep::WrapperName& prep::WrapperName::learn(const pluss::table::Thread& feature,        \
+                                                      const TrainOptions& options) {              \
+    prep_before_thread_fit_(*this, feature);                                                     \
+    resolve(core_.learn(feature, options), Label ".learn(Thread)");                              \
+    if (feature_names_.empty() && feature.has_display_name()) {                                   \
+      feature_names_ = {feature.display_name()};                                                  \
+      feature_names_pinned_ = true;                                                               \
+    }                                                                                             \
+    learned_ = true;                                                                              \
+    refresh_state_();                                                                             \
+    return *this;                                                                                 \
+  }                                                                                               \
+                                                                                                  \
+  inline Series prep::WrapperName::map(const pluss::table::Thread& feature,                      \
+                                        const InferOptions& options) const {                      \
+    if (!learned_) {                                                                              \
+      throw std::runtime_error(std::string(Label) + ".map(Thread): call learn() or learn_map() first."); \
+    }                                                                                             \
+    return resolve(core_.map(feature, options), Label ".map(Thread)");                           \
+  }                                                                                               \
+                                                                                                  \
+  inline Series prep::WrapperName::learn_map(const pluss::table::Thread& feature,                \
+                                              const TrainOptions& learn_options,                  \
+                                              const InferOptions& infer_options) {                \
+    prep_before_thread_fit_(*this, feature);                                                     \
+    const auto mapped = resolve(core_.learn_map(feature, learn_options, infer_options),          \
+                                Label ".learn_map(Thread)");                                      \
+    if (feature_names_.empty() && feature.has_display_name()) {                                   \
+      feature_names_ = {feature.display_name()};                                                  \
+      feature_names_pinned_ = true;                                                               \
+    }                                                                                             \
+    learned_ = true;                                                                              \
+    refresh_state_();                                                                             \
+    return mapped;                                                                                \
+  }
+
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(MinMaxScaler, "prep::MinMaxScaler")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(RobustScaler, "prep::RobustScaler")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(NeighborImputer, "prep::NeighborImputer")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(IterativeImputer, "prep::IterativeImputer")
-PLUSS_NODEJ_DEFINE_PREP_WRAPPER(OneHotEncoder, "prep::OneHotEncoder")
-PLUSS_NODEJ_DEFINE_PREP_WRAPPER(FrequencyEncoder, "prep::FrequencyEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(OneHotEncoder, "prep::OneHotEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(FrequencyEncoder, "prep::FrequencyEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(OrdinalEncoder, "prep::OrdinalEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(LabelEncoder, "prep::LabelEncoder")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(VectorNormalizer, "prep::VectorNormalizer")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(MaxAbsScaler, "prep::MaxAbsScaler")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(QuantileMap, "prep::QuantileMap")
@@ -2009,6 +2852,440 @@ PLUSS_NODEJ_DEFINE_PREP_WRAPPER(ThresholdBinarizer, "prep::ThresholdBinarizer")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(PolynomialLift, "prep::PolynomialLift")
 
 #undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER
+#undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD
+
+inline void prep::prep_before_thread_fit_(OneHotEncoder& wrapper, const pluss::table::Thread& feature) {
+  wrapper.category_labels_by_key_.clear();
+  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  for (std::int64_t i = 0; i < feature.size(); ++i) {
+    if (!feature.is_valid(i)) continue;
+    const auto token = std::string(feature.as_note().at(i));
+    const auto key = prep_key_for_value_(prep_note_hash_value_(token));
+    if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
+      wrapper.category_labels_by_key_.emplace(key, token);
+    }
+  }
+}
+
+inline void prep::prep_before_thread_fit_(FrequencyEncoder& wrapper, const pluss::table::Thread& feature) {
+  wrapper.category_labels_by_key_.clear();
+  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  for (std::int64_t i = 0; i < feature.size(); ++i) {
+    if (!feature.is_valid(i)) continue;
+    const auto token = std::string(feature.as_note().at(i));
+    const auto key = prep_key_for_value_(prep_note_hash_value_(token));
+    if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
+      wrapper.category_labels_by_key_.emplace(key, token);
+    }
+  }
+}
+
+inline void prep::prep_before_thread_fit_(OrdinalEncoder& wrapper, const pluss::table::Thread& feature) {
+  wrapper.category_labels_by_key_.clear();
+  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  for (std::int64_t i = 0; i < feature.size(); ++i) {
+    if (!feature.is_valid(i)) continue;
+    const auto token = std::string(feature.as_note().at(i));
+    const auto key = prep_key_for_value_(prep_note_hash_value_(token));
+    if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
+      wrapper.category_labels_by_key_.emplace(key, token);
+    }
+  }
+}
+
+inline void prep::prep_before_thread_fit_(LabelEncoder& wrapper, const pluss::table::Thread& feature) {
+  wrapper.category_labels_by_key_.clear();
+  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  for (std::int64_t i = 0; i < feature.size(); ++i) {
+    if (!feature.is_valid(i)) continue;
+    const auto token = std::string(feature.as_note().at(i));
+    const auto key = prep_key_for_value_(prep_note_hash_value_(token));
+    if (wrapper.category_labels_by_key_.find(key) == wrapper.category_labels_by_key_.end()) {
+      wrapper.category_labels_by_key_.emplace(key, token);
+    }
+  }
+}
+
+inline void prep::prep_refresh_encoder_attrs_(OneHotEncoder& wrapper) {
+  wrapper.categories_.clear();
+  wrapper.category_keys_.clear();
+  wrapper.frequencies_.clear();
+  wrapper.mapped_names_.clear();
+  if (!wrapper.learned() || wrapper.state_.size() < 5) return;
+
+  const auto key_sizes =
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+  const auto widths =
+      wrapper.state_[4].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[4].numel()}).to_vec<std::int64_t>();
+  const auto flat_keys =
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+
+  const std::size_t n_features = std::min(key_sizes.size(), widths.size());
+  wrapper.categories_.reserve(n_features);
+  wrapper.category_keys_.reserve(n_features);
+
+  std::size_t cursor = 0;
+  for (std::size_t i = 0; i < n_features; ++i) {
+    const std::int64_t key_count = std::max<std::int64_t>(0, key_sizes[i]);
+    std::vector<double> key_vals{};
+    key_vals.reserve(static_cast<std::size_t>(key_count));
+    std::vector<double> cats{};
+    cats.reserve(static_cast<std::size_t>(key_count));
+    for (std::int64_t j = 0; j < key_count && cursor < flat_keys.size(); ++j, ++cursor) {
+      key_vals.push_back(flat_keys[cursor]);
+      cats.push_back(flat_keys[cursor]);
+    }
+    std::vector<std::string> labels{};
+    labels.reserve(cats.size());
+    for (double cat_key_value : cats) {
+      const auto key = prep_key_for_value_(cat_key_value);
+      auto it = wrapper.category_labels_by_key_.find(key);
+      if (it != wrapper.category_labels_by_key_.end()) {
+        labels.push_back(it->second);
+      } else {
+        labels.push_back(prep_scalar_to_string_(cat_key_value));
+      }
+    }
+    wrapper.category_keys_.push_back(std::move(key_vals));
+    wrapper.categories_.push_back(std::move(labels));
+  }
+
+  for (std::size_t i = 0; i < n_features; ++i) {
+    const std::string base = i < wrapper.feature_names_.size()
+                                 ? wrapper.feature_names_[i]
+                                 : ("feature_" + std::to_string(i));
+    const std::int64_t key_count = std::max<std::int64_t>(0, key_sizes[i]);
+    const std::int64_t width = std::max<std::int64_t>(0, widths[i]);
+    for (std::int64_t j = 0; j < std::min<std::int64_t>(key_count, width); ++j) {
+      const std::string suffix =
+          (i < wrapper.categories_.size() && j < static_cast<std::int64_t>(wrapper.categories_[i].size()))
+              ? wrapper.categories_[i][static_cast<std::size_t>(j)]
+              : std::to_string(j);
+      wrapper.mapped_names_.push_back(base + "_" + suffix);
+    }
+    if (width > key_count) {
+      wrapper.mapped_names_.push_back(base + "_unknown");
+      for (std::int64_t j = key_count + 1; j < width; ++j) {
+        wrapper.mapped_names_.push_back(base + "_" + std::to_string(j));
+      }
+    }
+  }
+}
+
+inline void prep::prep_refresh_encoder_attrs_(FrequencyEncoder& wrapper) {
+  wrapper.categories_.clear();
+  wrapper.category_keys_.clear();
+  wrapper.frequencies_.clear();
+  wrapper.mapped_names_.clear();
+  if (!wrapper.learned() || wrapper.state_.size() < 5) return;
+
+  const auto key_sizes =
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+  const auto freq_sizes =
+      wrapper.state_[3].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[3].numel()}).to_vec<std::int64_t>();
+  const auto flat_keys =
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+  const auto flat_freqs =
+      wrapper.state_[4].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[4].numel()}).to_vec<double>();
+
+  const std::size_t n_features = std::min(key_sizes.size(), freq_sizes.size());
+  wrapper.categories_.reserve(n_features);
+  wrapper.category_keys_.reserve(n_features);
+  wrapper.frequencies_.reserve(n_features);
+
+  std::size_t key_cursor = 0;
+  std::size_t freq_cursor = 0;
+  for (std::size_t i = 0; i < n_features; ++i) {
+    const std::int64_t key_count = std::max<std::int64_t>(0, key_sizes[i]);
+    const std::int64_t freq_count = std::max<std::int64_t>(0, freq_sizes[i]);
+
+    std::vector<double> key_vals{};
+    key_vals.reserve(static_cast<std::size_t>(key_count));
+    for (std::int64_t j = 0; j < key_count && key_cursor < flat_keys.size(); ++j, ++key_cursor) {
+      key_vals.push_back(flat_keys[key_cursor]);
+    }
+
+    std::vector<double> freqs{};
+    freqs.reserve(static_cast<std::size_t>(freq_count));
+    for (std::int64_t j = 0; j < freq_count && freq_cursor < flat_freqs.size(); ++j, ++freq_cursor) {
+      freqs.push_back(flat_freqs[freq_cursor]);
+    }
+
+    std::vector<std::string> labels{};
+    labels.reserve(key_vals.size());
+    for (double cat_key_value : key_vals) {
+      const auto key = prep_key_for_value_(cat_key_value);
+      auto it = wrapper.category_labels_by_key_.find(key);
+      if (it != wrapper.category_labels_by_key_.end()) {
+        labels.push_back(it->second);
+      } else {
+        labels.push_back(prep_scalar_to_string_(cat_key_value));
+      }
+    }
+
+    wrapper.category_keys_.push_back(std::move(key_vals));
+    wrapper.categories_.push_back(std::move(labels));
+    wrapper.frequencies_.push_back(std::move(freqs));
+  }
+
+  for (std::size_t i = 0; i < n_features; ++i) {
+    if (i < wrapper.feature_names_.size()) {
+      wrapper.mapped_names_.push_back(wrapper.feature_names_[i]);
+    } else {
+      wrapper.mapped_names_.push_back("feature_" + std::to_string(i));
+    }
+  }
+}
+
+inline void prep::prep_refresh_encoder_attrs_(OrdinalEncoder& wrapper) {
+  wrapper.categories_.clear();
+  wrapper.category_keys_.clear();
+  wrapper.frequencies_.clear();
+  wrapper.mapped_names_.clear();
+  if (!wrapper.learned() || wrapper.state_.size() < 3) return;
+
+  const auto key_sizes =
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+  const auto flat_keys =
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+
+  const std::size_t n_features = key_sizes.size();
+  wrapper.categories_.reserve(n_features);
+  wrapper.category_keys_.reserve(n_features);
+
+  std::size_t key_cursor = 0;
+  for (std::size_t i = 0; i < n_features; ++i) {
+    const std::int64_t key_count = std::max<std::int64_t>(0, key_sizes[i]);
+    std::vector<double> key_vals{};
+    key_vals.reserve(static_cast<std::size_t>(key_count));
+    for (std::int64_t j = 0; j < key_count && key_cursor < flat_keys.size(); ++j, ++key_cursor) {
+      key_vals.push_back(flat_keys[key_cursor]);
+    }
+
+    std::vector<std::string> labels{};
+    labels.reserve(key_vals.size());
+    for (double cat_key_value : key_vals) {
+      const auto key = prep_key_for_value_(cat_key_value);
+      auto it = wrapper.category_labels_by_key_.find(key);
+      if (it != wrapper.category_labels_by_key_.end()) {
+        labels.push_back(it->second);
+      } else {
+        labels.push_back(prep_scalar_to_string_(cat_key_value));
+      }
+    }
+
+    wrapper.category_keys_.push_back(std::move(key_vals));
+    wrapper.categories_.push_back(std::move(labels));
+    if (i < wrapper.feature_names_.size()) {
+      wrapper.mapped_names_.push_back(wrapper.feature_names_[i] + "_ordinal");
+    } else {
+      wrapper.mapped_names_.push_back("feature_" + std::to_string(i) + "_ordinal");
+    }
+  }
+}
+
+inline void prep::prep_refresh_encoder_attrs_(LabelEncoder& wrapper) {
+  wrapper.categories_.clear();
+  wrapper.category_keys_.clear();
+  wrapper.frequencies_.clear();
+  wrapper.mapped_names_.clear();
+  if (!wrapper.learned() || wrapper.state_.size() < 3) return;
+
+  const auto key_sizes =
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+  const auto flat_keys =
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+
+  const std::size_t n_features = key_sizes.size();
+  wrapper.categories_.reserve(n_features);
+  wrapper.category_keys_.reserve(n_features);
+
+  std::size_t key_cursor = 0;
+  for (std::size_t i = 0; i < n_features; ++i) {
+    const std::int64_t key_count = std::max<std::int64_t>(0, key_sizes[i]);
+    std::vector<double> key_vals{};
+    key_vals.reserve(static_cast<std::size_t>(key_count));
+    for (std::int64_t j = 0; j < key_count && key_cursor < flat_keys.size(); ++j, ++key_cursor) {
+      key_vals.push_back(flat_keys[key_cursor]);
+    }
+
+    std::vector<std::string> labels{};
+    labels.reserve(key_vals.size());
+    for (double cat_key_value : key_vals) {
+      const auto key = prep_key_for_value_(cat_key_value);
+      auto it = wrapper.category_labels_by_key_.find(key);
+      if (it != wrapper.category_labels_by_key_.end()) {
+        labels.push_back(it->second);
+      } else {
+        labels.push_back(prep_scalar_to_string_(cat_key_value));
+      }
+    }
+
+    wrapper.category_keys_.push_back(std::move(key_vals));
+    wrapper.categories_.push_back(std::move(labels));
+    if (i < wrapper.feature_names_.size()) {
+      wrapper.mapped_names_.push_back(wrapper.feature_names_[i] + "_label");
+    } else {
+      wrapper.mapped_names_.push_back("feature_" + std::to_string(i) + "_label");
+    }
+  }
+}
+
+inline prep::OneHotEncoderOptions prep::CategoryIndexer::to_one_hot_options_(const CategoryIndexerOptions& options) {
+  prep::OneHotEncoderOptions out{};
+  out.max_categories = options.max_categories;
+  out.overflow = options.overflow;
+  out.include_unknown_bucket = options.include_unknown_bucket;
+  return out;
+}
+
+inline Series prep::CategoryIndexer::encode_feature_(const OneHotEncoder& encoder,
+                                                     const pluss::table::Thread& feature,
+                                                     bool one_based,
+                                                     const InferOptions& options,
+                                                     const char* where) {
+  (void)where;
+  const Series hot = encoder.map(feature, options);
+  if (!hot.defined() || hot.dim() != 2) {
+    throw std::runtime_error(std::string(where) + ": encoded feature matrix must be rank-2.");
+  }
+  const auto sizes = hot.sizes();
+  if (sizes.size() != 2 || sizes[1] <= 0) {
+    throw std::runtime_error(std::string(where) + ": encoded feature matrix must have nonzero width.");
+  }
+  const std::int64_t rows = sizes[0];
+  const std::int64_t width = sizes[1];
+
+  std::vector<double> weights_host(static_cast<std::size_t>(width), 0.0);
+  const double base = one_based ? 1.0 : 0.0;
+  for (std::int64_t j = 0; j < width; ++j) {
+    weights_host[static_cast<std::size_t>(j)] = base + static_cast<double>(j);
+  }
+  const Series weights = pluss::make_series(
+      std::move(weights_host),
+      {width, 1},
+      Config{}.with_dtype(ScalarType::Float64).with_platform(hot.platform()));
+  return hot.matmul(weights).reshape({rows});
+}
+
+inline void prep::CategoryIndexer::refresh_from_encoders_() {
+  categories_.clear();
+  mapped_names_.clear();
+  if (!learned_) return;
+
+  categories_.reserve(encoders_.size());
+  mapped_names_.reserve(encoders_.size());
+  for (std::size_t i = 0; i < encoders_.size(); ++i) {
+    if (!encoders_[i].categories_.empty()) {
+      categories_.push_back(encoders_[i].categories_.front());
+    } else {
+      categories_.emplace_back();
+    }
+    const std::string base = i < feature_names_.size()
+                                 ? feature_names_[i]
+                                 : ("feature_" + std::to_string(i));
+    mapped_names_.push_back(base + "_index");
+  }
+}
+
+inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::Thread& feature,
+                                                           const TrainOptions& options) {
+  if (!feature.defined()) {
+    throw std::runtime_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
+  }
+  if (feature.has_display_name()) {
+    feature_names_ = {feature.display_name()};
+    feature_names_pinned_ = true;
+  } else if (feature_names_.empty()) {
+    feature_names_ = {"feature_0"};
+    feature_names_pinned_ = true;
+  }
+
+  OneHotEncoder encoder(to_one_hot_options_(options_));
+  encoder.learn(feature, options);
+  encoders_.clear();
+  encoders_.push_back(std::move(encoder));
+  learned_ = true;
+  refresh_from_encoders_();
+  return *this;
+}
+
+inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::DataFrame& frame,
+                                                           const TrainOptions& options) {
+  if (!feature_names_pinned_ || feature_names_.empty()) {
+    throw std::runtime_error(
+        "prep::CategoryIndexer.learn(DataFrame): explicit feature selection is required; call .features({...}).");
+  }
+  encoders_.clear();
+  encoders_.reserve(feature_names_.size());
+  for (const auto& name : feature_names_) {
+    if (!frame.has_feature(name)) {
+      throw std::runtime_error("prep::CategoryIndexer.learn(DataFrame): missing feature '" + name + "'.");
+    }
+    OneHotEncoder encoder(to_one_hot_options_(options_));
+    encoder.learn(frame.features(name), options);
+    encoders_.push_back(std::move(encoder));
+  }
+  learned_ = true;
+  refresh_from_encoders_();
+  return *this;
+}
+
+inline Series prep::CategoryIndexer::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+  if (!learned_ || encoders_.empty()) {
+    throw std::runtime_error("prep::CategoryIndexer.map(Thread): call learn() or learn_map() first.");
+  }
+  if (encoders_.size() != 1) {
+    throw std::runtime_error(
+        "prep::CategoryIndexer.map(Thread): encoder was trained for multiple features; map(DataFrame) is required.");
+  }
+  return encode_feature_(encoders_.front(), feature, options_.one_based, options, "prep::CategoryIndexer.map(Thread)");
+}
+
+inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame& frame,
+                                                          const InferOptions& options) const {
+  if (!learned_ || encoders_.empty()) {
+    throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): call learn() or learn_map() first.");
+  }
+  if (encoders_.size() != feature_names_.size()) {
+    throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): internal encoder state is inconsistent.");
+  }
+
+  std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
+  columns.reserve(feature_names_.size());
+  for (std::size_t i = 0; i < feature_names_.size(); ++i) {
+    const auto& name = feature_names_[i];
+    if (!frame.has_feature(name)) {
+      throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): missing feature '" + name + "'.");
+    }
+    const auto& encoder = encoders_[i];
+    const Series idx = encode_feature_(
+        encoder,
+        frame.features(name),
+        options_.one_based,
+        options,
+        "prep::CategoryIndexer.map(DataFrame)");
+    const std::string out_name = i < mapped_names_.size()
+                                     ? mapped_names_[i]
+                                     : (name + "_index");
+    columns.emplace_back(out_name, pluss::table::Thread(idx.reshape({frame.ncases()})));
+  }
+  return pluss::table::DataFrame(std::move(columns), frame.cases());
+}
+
+inline Series prep::CategoryIndexer::learn_map(const pluss::table::Thread& feature,
+                                               const TrainOptions& learn_options,
+                                               const InferOptions& infer_options) {
+  learn(feature, learn_options);
+  return map(feature, infer_options);
+}
+
+inline pluss::table::DataFrame prep::CategoryIndexer::learn_map(const pluss::table::DataFrame& frame,
+                                                                const TrainOptions& learn_options,
+                                                                const InferOptions& infer_options) {
+  learn(frame, learn_options);
+  return map(frame, infer_options);
+}
 
 struct linear_factory {
   [[nodiscard]] static WorkflowModel linear_regression(LinearFamilyOptions options = {}) {

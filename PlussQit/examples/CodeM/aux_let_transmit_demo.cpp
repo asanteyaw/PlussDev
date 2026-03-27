@@ -1,6 +1,7 @@
 // If you ever want to disable let macro behavior in a TU, define PLUSS_DISABLE_LET_AUTO before including pluss.h>
 // #define PLUSS_DISABLE_LET_AUTO
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
 
 #include <iostream>
 #include <vector>

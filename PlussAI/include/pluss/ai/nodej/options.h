@@ -134,6 +134,9 @@ struct SplitOptions {
   bool stratified = false;
   bool reliability_defaults = true;
   bool shuffle = true;
+  // Parallel workers for fold evaluation in cross_assess.
+  // <= 0 uses hardware-concurrency auto sizing.
+  std::int64_t max_parallel = 0;
   RandomState random{};
 };
 

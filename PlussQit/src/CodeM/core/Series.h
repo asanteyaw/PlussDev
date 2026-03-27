@@ -4,9 +4,13 @@
 #include <cstring>
 #include <initializer_list>
 #include <span>
+#include <sstream>
+#include <string>
+#include <variant>
 #include <vector>
 #include <type_traits>
 #include <iosfwd>
+#include <utility>
 
 #include "CodeM/core/Errors.h"
 
@@ -61,6 +65,438 @@ public:
     std::span<const std::int64_t> stride_view() const noexcept { return strides; }
     std::int64_t dim() const noexcept { return static_cast<std::int64_t>(sizes.size()); }
     std::int64_t numel() const noexcept { return static_cast<std::int64_t>(data.size()); }
+  };
+
+  using HostScalarAny = std::variant<
+      bool,
+      std::uint8_t,
+      std::uint16_t,
+      std::uint32_t,
+      std::uint64_t,
+      std::int8_t,
+      std::int16_t,
+      std::int32_t,
+      std::int64_t,
+      Float16,
+      BFloat16,
+      float,
+      double,
+      Complex64,
+      Complex128>;
+
+  using HostVectorAny = std::variant<
+      std::vector<bool>,
+      std::vector<std::uint8_t>,
+      std::vector<std::uint16_t>,
+      std::vector<std::uint32_t>,
+      std::vector<std::uint64_t>,
+      std::vector<std::int8_t>,
+      std::vector<std::int16_t>,
+      std::vector<std::int32_t>,
+      std::vector<std::int64_t>,
+      std::vector<Float16>,
+      std::vector<BFloat16>,
+      std::vector<float>,
+      std::vector<double>,
+      std::vector<Complex64>,
+      std::vector<Complex128>>;
+
+  struct HostArrayAny final {
+    HostVectorAny data;
+    std::vector<std::int64_t> sizes;
+    std::vector<std::int64_t> strides;
+    bool contiguous{false};
+
+    std::span<const std::int64_t> shape() const noexcept { return sizes; }
+    std::span<const std::int64_t> stride_view() const noexcept { return strides; }
+    std::int64_t dim() const noexcept { return static_cast<std::int64_t>(sizes.size()); }
+    std::int64_t numel() const noexcept {
+      return std::visit(
+          [](const auto& v) -> std::int64_t {
+            return static_cast<std::int64_t>(v.size());
+          },
+          data);
+    }
+
+    template <class T>
+    std::span<const T> flat_span_as() const {
+      const auto& v = std::get<std::vector<T>>(data);
+      if constexpr (std::is_same_v<T, bool>) {
+        PLUSS_FAIL("Series::host(): bool payload does not expose span view; use vector_as<bool>()");
+      } else {
+        return std::span<const T>(v.data(), v.size());
+      }
+    }
+  };
+
+  class HostAny final {
+  public:
+    enum class Kind : std::uint8_t { Scalar = 0, Vector = 1, Array = 2 };
+
+    HostAny() = default;
+
+    static HostAny from_scalar(HostScalarAny scalar, ScalarType dtype) {
+      HostAny out;
+      out.kind_ = Kind::Scalar;
+      out.dtype_ = dtype;
+      out.payload_ = std::move(scalar);
+      return out;
+    }
+
+    static HostAny from_vector(HostVectorAny vec, ScalarType dtype) {
+      HostAny out;
+      out.kind_ = Kind::Vector;
+      out.dtype_ = dtype;
+      out.payload_ = std::move(vec);
+      return out;
+    }
+
+    static HostAny from_array(HostArrayAny arr, ScalarType dtype) {
+      HostAny out;
+      out.kind_ = Kind::Array;
+      out.dtype_ = dtype;
+      out.payload_ = std::move(arr);
+      return out;
+    }
+
+    Kind kind() const noexcept { return kind_; }
+    ScalarType dtype() const noexcept { return dtype_; }
+    bool is_scalar() const noexcept { return kind_ == Kind::Scalar; }
+    bool is_vector() const noexcept { return kind_ == Kind::Vector; }
+    bool is_array() const noexcept { return kind_ == Kind::Array; }
+
+    const HostScalarAny& scalar() const {
+      PLUSS_CHECK(is_scalar(), "Series::host(): value is not scalar");
+      return std::get<HostScalarAny>(payload_);
+    }
+
+    const HostVectorAny& vector() const {
+      PLUSS_CHECK(is_vector(), "Series::host(): value is not a 1-D vector");
+      return std::get<HostVectorAny>(payload_);
+    }
+
+    const HostArrayAny& array() const {
+      PLUSS_CHECK(is_array(), "Series::host(): value is not N-D array");
+      return std::get<HostArrayAny>(payload_);
+    }
+
+    template <class T>
+    const T& scalar_as() const {
+      return std::get<T>(scalar());
+    }
+
+    template <class T>
+    const std::vector<T>& vector_as() const {
+      return std::get<std::vector<T>>(vector());
+    }
+
+    template <class T>
+    std::span<const T> vector_span_as() const {
+      const auto& v = vector_as<T>();
+      if constexpr (std::is_same_v<T, bool>) {
+        PLUSS_FAIL("Series::host(): bool payload does not expose span view; use vector_as<bool>()");
+      } else {
+        return std::span<const T>(v.data(), v.size());
+      }
+    }
+
+    template <class T>
+    std::span<const T> array_flat_span_as() const {
+      return array().template flat_span_as<T>();
+    }
+
+    template <class T>
+    T to_scalar() const {
+      PLUSS_CHECK(is_scalar(), "Series::host(): scalar conversion requested on non-scalar");
+      return std::visit(
+          [](const auto& v) -> T {
+            using U = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
+            if constexpr (std::is_same_v<U, Float16>) {
+              return static_cast<T>(float16_to_float(v));
+            } else if constexpr (std::is_same_v<U, BFloat16>) {
+              return static_cast<T>(bfloat16_to_float(v));
+            } else {
+              return static_cast<T>(v);
+            }
+          },
+          scalar());
+    }
+
+    double to_double() const {
+      PLUSS_CHECK(is_scalar(), "Series::host(): scalar numeric conversion requested on non-scalar");
+      return std::visit(
+          [](const auto& v) -> double {
+            using U = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
+            if constexpr (std::is_same_v<U, bool>) {
+              return v ? 1.0 : 0.0;
+            } else if constexpr (std::is_same_v<U, Float16>) {
+              return static_cast<double>(float16_to_float(v));
+            } else if constexpr (std::is_same_v<U, BFloat16>) {
+              return static_cast<double>(bfloat16_to_float(v));
+            } else if constexpr (std::is_same_v<U, Complex64> || std::is_same_v<U, Complex128>) {
+              PLUSS_CHECK(std::abs(v.imag()) == 0.0, "Series::host(): cannot cast complex scalar with non-zero imaginary part to double");
+              return static_cast<double>(v.real());
+            } else {
+              return static_cast<double>(v);
+            }
+          },
+          scalar());
+    }
+
+    operator double() const { return to_double(); }
+
+    friend std::ostream& operator<<(std::ostream& os, Kind k) {
+      switch (k) {
+        case Kind::Scalar: os << "Scalar"; break;
+        case Kind::Vector: os << "Vector"; break;
+        case Kind::Array: os << "Array"; break;
+      }
+      return os;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const HostAny& v) {
+      auto append_scalar = [&](const auto& x) {
+        using U = std::remove_cv_t<std::remove_reference_t<decltype(x)>>;
+        if constexpr (std::is_same_v<U, bool>) {
+          os << (x ? "true" : "false");
+        } else if constexpr (std::is_same_v<U, Float16>) {
+          os << float16_to_float(x);
+        } else if constexpr (std::is_same_v<U, BFloat16>) {
+          os << bfloat16_to_float(x);
+        } else {
+          os << x;
+        }
+      };
+
+      auto append_vector = [&](const auto& vec) {
+        os << "[";
+        for (std::size_t i = 0; i < vec.size(); ++i) {
+          if (i) os << ", ";
+          append_scalar(vec[i]);
+        }
+        os << "]";
+      };
+
+      if (v.is_scalar()) {
+        std::visit([&](const auto& x) { append_scalar(x); }, v.scalar());
+        return os;
+      }
+      if (v.is_vector()) {
+        std::visit([&](const auto& vec) { append_vector(vec); }, v.vector());
+        return os;
+      }
+      const auto& arr = v.array();
+      os << "{shape=[";
+      for (std::size_t i = 0; i < arr.sizes.size(); ++i) {
+        if (i) os << ",";
+        os << arr.sizes[i];
+      }
+      os << "], flat=";
+      std::visit([&](const auto& vec) { append_vector(vec); }, arr.data);
+      os << "}";
+      return os;
+    }
+
+  private:
+    Kind kind_{Kind::Scalar};
+    ScalarType dtype_{ScalarType::Float64};
+    std::variant<HostScalarAny, HostVectorAny, HostArrayAny> payload_{HostScalarAny{0.0}};
+  };
+
+  // Dynamic host export wrapper:
+  // - scalar Series -> scalar T
+  // - 1-D Series    -> std::vector<T>
+  // - N-D Series    -> HostArray<T>
+  // `array()` always preserves exact shape/stride/contiguous metadata from
+  // the source Series (including scalar/1-D cases).
+  template <class T>
+  class HostValue {
+  public:
+    enum class Kind : std::uint8_t { Scalar = 0, Vector = 1, Array = 2 };
+
+    HostValue() = default;
+    explicit HostValue(HostArray<T> arr, Kind kind = Kind::Array)
+        : arr_(std::move(arr)), kind_(kind) {}
+
+    static HostValue from_scalar(HostArray<T> arr) { return HostValue(std::move(arr), Kind::Scalar); }
+    static HostValue from_vector(HostArray<T> arr) { return HostValue(std::move(arr), Kind::Vector); }
+    static HostValue from_array(HostArray<T> arr) { return HostValue(std::move(arr), Kind::Array); }
+
+    Kind kind() const noexcept { return kind_; }
+    bool is_scalar() const noexcept { return kind_ == Kind::Scalar; }
+    bool is_vector() const noexcept { return kind_ == Kind::Vector; }
+    bool is_array() const noexcept { return kind_ == Kind::Array; }
+
+    const T& scalar() const {
+      PLUSS_CHECK(is_scalar(), "Series::HostValue: not scalar");
+      PLUSS_CHECK(arr_.data.size() == 1, "Series::HostValue: scalar payload must contain exactly one element");
+      return arr_.data.front();
+    }
+
+    std::vector<T> vector() const {
+      if (is_scalar()) return std::vector<T>{scalar()};
+      return arr_.data;
+    }
+
+    const HostArray<T>& array() const { return arr_; }
+
+    operator T() const { return scalar(); }
+    operator std::vector<T>() const { return vector(); }
+    operator HostArray<T>() const { return arr_; }
+
+    friend std::ostream& operator<<(std::ostream& os, const HostValue& v) {
+      auto append_scalar = [&](const auto& x) {
+        using U = std::remove_cv_t<std::remove_reference_t<decltype(x)>>;
+        if constexpr (std::is_same_v<U, bool>) {
+          os << (x ? "true" : "false");
+        } else if constexpr (std::is_same_v<U, Float16>) {
+          os << float16_to_float(x);
+        } else if constexpr (std::is_same_v<U, BFloat16>) {
+          os << bfloat16_to_float(x);
+        } else {
+          os << x;
+        }
+      };
+
+      auto append_vector = [&](const std::vector<T>& vec) {
+        os << "[";
+        for (std::size_t i = 0; i < vec.size(); ++i) {
+          if (i) os << ", ";
+          append_scalar(vec[i]);
+        }
+        os << "]";
+      };
+
+      if (v.is_scalar()) {
+        append_scalar(v.scalar());
+        return os;
+      }
+      if (v.is_vector()) {
+        append_vector(v.vector());
+        return os;
+      }
+      const auto& arr = v.array();
+      os << "{shape=[";
+      for (std::size_t i = 0; i < arr.sizes.size(); ++i) {
+        if (i) os << ",";
+        os << arr.sizes[i];
+      }
+      os << "], flat=";
+      append_vector(arr.data);
+      os << "}";
+      return os;
+    }
+
+  private:
+    HostArray<T> arr_{};
+    Kind kind_{Kind::Array};
+  };
+
+  struct Attr final {
+    std::vector<std::int64_t> shape;
+    std::vector<std::int64_t> strides;
+    ScalarType dtype{ScalarType::Float64};
+    Platform platform{Platform::CPU};
+    std::int64_t numel{0};
+    bool contiguous{false};
+    HostAny values{};
+
+    [[nodiscard]] std::span<const std::int64_t> shape_view() const noexcept { return shape; }
+    [[nodiscard]] std::span<const std::int64_t> stride_view() const noexcept { return strides; }
+    [[nodiscard]] std::int64_t rank() const noexcept { return static_cast<std::int64_t>(shape.size()); }
+    [[nodiscard]] ScalarType scalar_type() const noexcept { return dtype; }
+    [[nodiscard]] Platform device() const noexcept { return platform; }
+    [[nodiscard]] bool is_contiguous() const noexcept { return contiguous; }
+    [[nodiscard]] bool is_scalar() const noexcept { return numel == 1; }
+    [[nodiscard]] bool is_vector() const noexcept { return rank() <= 1 && numel > 1; }
+    [[nodiscard]] bool is_array() const noexcept { return rank() > 1; }
+    [[nodiscard]] HostAny::Kind value_kind() const noexcept { return values.kind(); }
+
+    [[nodiscard]] std::string to_string(std::int64_t edge_items = 3) const {
+      std::ostringstream oss;
+      oss << "SeriesAttr(";
+      oss << "shape=" << dims_to_string_(shape);
+      oss << ", strides=" << dims_to_string_(strides);
+      oss << ", dtype=" << dtype;
+      oss << ", platform=" << platform;
+      oss << ", numel=" << numel;
+      oss << ", contiguous=" << (contiguous ? "true" : "false");
+      oss << ", values=" << host_any_to_string_(values, edge_items);
+      oss << ")";
+      return oss.str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Attr& a) {
+      os << a.to_string();
+      return os;
+    }
+
+  private:
+    static std::string dims_to_string_(const std::vector<std::int64_t>& xs) {
+      std::ostringstream oss;
+      oss << "[";
+      for (std::size_t i = 0; i < xs.size(); ++i) {
+        if (i) oss << ",";
+        oss << xs[i];
+      }
+      oss << "]";
+      return oss.str();
+    }
+
+    template <class U>
+    static void append_scalar_(std::ostringstream& oss, const U& v) {
+      using V = std::remove_cv_t<std::remove_reference_t<U>>;
+      if constexpr (std::is_same_v<V, bool>) {
+        oss << (v ? "true" : "false");
+      } else if constexpr (std::is_same_v<V, Float16>) {
+        oss << float16_to_float(v);
+      } else if constexpr (std::is_same_v<V, BFloat16>) {
+        oss << bfloat16_to_float(v);
+      } else {
+        oss << v;
+      }
+    }
+
+    template <class VecT>
+    static void append_vector_preview_(std::ostringstream& oss, const VecT& v, std::int64_t edge_items) {
+      const std::size_t n = v.size();
+      const std::size_t k = static_cast<std::size_t>(std::max<std::int64_t>(1, edge_items));
+      oss << "[";
+      if (n <= 2 * k) {
+        for (std::size_t i = 0; i < n; ++i) {
+          if (i) oss << ", ";
+          append_scalar_(oss, v[i]);
+        }
+      } else {
+        for (std::size_t i = 0; i < k; ++i) {
+          if (i) oss << ", ";
+          append_scalar_(oss, v[i]);
+        }
+        oss << ", ..., ";
+        for (std::size_t i = n - k; i < n; ++i) {
+          if (i > n - k) oss << ", ";
+          append_scalar_(oss, v[i]);
+        }
+      }
+      oss << "]";
+    }
+
+    static std::string host_any_to_string_(const HostAny& any, std::int64_t edge_items) {
+      std::ostringstream oss;
+      if (any.is_scalar()) {
+        std::visit([&](const auto& x) { append_scalar_(oss, x); }, any.scalar());
+        return oss.str();
+      }
+      if (any.is_vector()) {
+        std::visit([&](const auto& v) { append_vector_preview_(oss, v, edge_items); }, any.vector());
+        return oss.str();
+      }
+      const auto& arr = any.array();
+      oss << "{shape=" << dims_to_string_(arr.sizes) << ", flat=";
+      std::visit([&](const auto& v) { append_vector_preview_(oss, v, edge_items); }, arr.data);
+      oss << "}";
+      return oss.str();
+    }
   };
 
   // Statistical namespace-like proxy.
@@ -400,7 +836,9 @@ public:
   void* raw_mutable_data() noexcept { return reinterpret_cast<void*>(raw_data()); }
 
   // Materialize host data to a contiguous vector in row-major logical order.
-  // For N-D shape-aware export, use to_host<T>().
+  // For N-D shape-aware export, use host<T>().array().
+  // Legacy user-facing API: prefer host<T>() / item<T>().
+  // Retained during staged internal migration.
   template <class T>
   std::vector<T> to_vec() const {
     return detail_materialize_vec_<T>();
@@ -467,14 +905,58 @@ public:
     }
   }
 
-  // Materialize host data with full N-D metadata.
+  // Host-export convenience entrypoint.
+  // Typed variant:
+  // - Scalar series materializes as scalar T
+  // - 1-D series materializes as std::vector<T>
+  // - N-D series materializes as HostArray<T> (data + sizes/strides)
   template <class T>
-  HostArray<T> to_host() const {
-    HostArray<T> out;
-    out.sizes.assign(sizes().begin(), sizes().end());
+  HostValue<T> host() const {
+    auto arr = detail_host_array_impl_<T>();
+    if (numel() == 1) return HostValue<T>::from_scalar(std::move(arr));
+    if (dim() <= 1) return HostValue<T>::from_vector(std::move(arr));
+    return HostValue<T>::from_array(std::move(arr));
+  }
+
+  // Untyped variant:
+  // - scalar -> HostScalarAny
+  // - 1-D    -> HostVectorAny
+  // - N-D    -> HostArrayAny
+  // This does not require the caller to pass T.
+  HostAny host() const {
+    const auto st = scalar_type();
+    switch (st) {
+      case ScalarType::Bool: return detail_host_any_impl_<bool>(st);
+      case ScalarType::UInt8: return detail_host_any_impl_<std::uint8_t>(st);
+      case ScalarType::UInt16: return detail_host_any_impl_<std::uint16_t>(st);
+      case ScalarType::UInt32: return detail_host_any_impl_<std::uint32_t>(st);
+      case ScalarType::UInt64: return detail_host_any_impl_<std::uint64_t>(st);
+      case ScalarType::Int8: return detail_host_any_impl_<std::int8_t>(st);
+      case ScalarType::Int16: return detail_host_any_impl_<std::int16_t>(st);
+      case ScalarType::Int32: return detail_host_any_impl_<std::int32_t>(st);
+      case ScalarType::Int64: return detail_host_any_impl_<std::int64_t>(st);
+      case ScalarType::Float16: return detail_host_any_impl_<Float16>(st);
+      case ScalarType::BFloat16: return detail_host_any_impl_<BFloat16>(st);
+      case ScalarType::Float32: return detail_host_any_impl_<float>(st);
+      case ScalarType::Float64: return detail_host_any_impl_<double>(st);
+      case ScalarType::Float8E4M3FN: return detail_host_any_float32_bridge_(st);
+      case ScalarType::Float8E5M2: return detail_host_any_float32_bridge_(st);
+      case ScalarType::Complex64: return detail_host_any_impl_<Complex64>(st);
+      case ScalarType::Complex128: return detail_host_any_impl_<Complex128>(st);
+      default:
+        PLUSS_FAIL("Series::host(): unsupported dtype");
+    }
+  }
+
+  [[nodiscard]] Attr attr() const {
+    Attr out;
+    out.shape.assign(sizes().begin(), sizes().end());
     out.strides.assign(strides().begin(), strides().end());
+    out.dtype = scalar_type();
+    out.platform = platform();
+    out.numel = numel();
     out.contiguous = is_contiguous();
-    out.data = detail_materialize_vec_<T>();
+    out.values = host();
     return out;
   }
 
@@ -617,6 +1099,54 @@ public:
 private:
   template <class>
   struct detail_false_ : std::false_type {};
+
+  template <class T>
+  HostArray<T> detail_host_array_impl_() const {
+    HostArray<T> out;
+    out.sizes.assign(sizes().begin(), sizes().end());
+    out.strides.assign(strides().begin(), strides().end());
+    out.contiguous = is_contiguous();
+    out.data = detail_materialize_vec_<T>();
+    return out;
+  }
+
+  template <class T>
+  HostAny detail_host_any_impl_(ScalarType st) const {
+    auto arr = detail_host_array_impl_<T>();
+    if (numel() == 1) {
+      PLUSS_CHECK(!arr.data.empty(), "Series::host(): scalar payload is empty");
+      return HostAny::from_scalar(HostScalarAny{arr.data.front()}, st);
+    }
+    if (dim() <= 1) {
+      return HostAny::from_vector(HostVectorAny{arr.data}, st);
+    }
+    HostArrayAny any_arr{
+        .data = HostVectorAny{std::move(arr.data)},
+        .sizes = std::move(arr.sizes),
+        .strides = std::move(arr.strides),
+        .contiguous = arr.contiguous,
+    };
+    return HostAny::from_array(std::move(any_arr), st);
+  }
+
+  HostAny detail_host_any_float32_bridge_(ScalarType original_dtype) const {
+    const Series cpu_f32 = to(Platform::CPU, ScalarType::Float32);
+    auto arr = cpu_f32.detail_host_array_impl_<float>();
+    if (cpu_f32.numel() == 1) {
+      PLUSS_CHECK(!arr.data.empty(), "Series::host(): scalar payload is empty");
+      return HostAny::from_scalar(HostScalarAny{arr.data.front()}, original_dtype);
+    }
+    if (cpu_f32.dim() <= 1) {
+      return HostAny::from_vector(HostVectorAny{arr.data}, original_dtype);
+    }
+    HostArrayAny any_arr{
+        .data = HostVectorAny{std::move(arr.data)},
+        .sizes = std::move(arr.sizes),
+        .strides = std::move(arr.strides),
+        .contiguous = arr.contiguous,
+    };
+    return HostAny::from_array(std::move(any_arr), original_dtype);
+  }
 
   template <class T>
   std::vector<T> detail_materialize_vec_() const {

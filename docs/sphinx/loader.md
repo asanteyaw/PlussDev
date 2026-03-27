@@ -18,7 +18,7 @@ For table/DataFrame I/O:
 For aux-backed loader/path/data-loader utilities:
 
 ```cpp
-#include <pluss/pluss.h>
+#include <pluss/tils.h>
 ```
 
 ## 1. Config-Driven Loader Surface
@@ -69,7 +69,7 @@ cfg contains 4 keys with typed values
 `pluss::loader::load_csv_records(records, options = {}) -> DataFrame`
 
 Inputs:
-- `filepath`: source CSV/TXT path.
+- `filepath`: source CSV/TXT path or `http(s)` URL.
 - `options`: typed CSV options (`sep`, header, selected features, row bounds, NA behavior, bad-line policy, engine).
 - `records`: in-memory table rows.
 Output:
@@ -82,6 +82,8 @@ Output:
 - `usefeats`: select a subset of feature names.
 - `case_col`: choose a feature to become the case/index column.
 - `on_bad_lines`: strict fail, warn, or skip malformed rows.
+- `filepath` URL mode:
+  - `load_csv` and `load_txt` accept `http://...` and `https://...` and download to a temporary local file before parsing.
 
 ### Example A: deterministic in-memory records
 
@@ -108,7 +110,18 @@ nfeatures 3
 feature_names [id, name, score]
 ```
 
-### Example B: space-separated file
+### Example B: load CSV from URL
+
+```cpp
+auto df = pluss::loader::load_csv(
+  "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/example5.csv"
+);
+```
+
+Expected output behavior:
+- remote CSV is downloaded and parsed as a regular DataFrame.
+
+### Example B.1: space-separated file
 
 ```cpp
 pluss::loader::ReadCsvOptions opts;
@@ -156,7 +169,7 @@ Case/index derived from "age"
 `pluss::loader::load_excel(filepath, sheet_index, header = true) -> DataFrame`
 
 Inputs:
-- `filepath`: Excel file path.
+- `filepath`: Excel file path or `http(s)` URL.
 - `options`: sheet selection, header policy, row/column window.
 - `sheet_name` / `sheet_index`: convenience single-sheet selectors.
 Output:
@@ -168,6 +181,8 @@ Output:
 - `sheet_names` / `sheet_indices` / `all_sheets`: multi-sheet selection.
 - `header_rows + header_joiner`: flatten multi-row headers.
 - `start_*` / `end_*`: bounded region read.
+- `filepath` URL mode:
+  - `load_excel` and `load_excel_workbook` accept `http://...` and `https://...` and download to a temporary local file before parsing.
 
 ### Example
 
@@ -275,52 +290,257 @@ Row/feature shape preserved across save/load round-trips
 
 ## 6. Path Utilities in `pluss::loader`
 
-These come from aux pathing and are useful for stable, environment-aware path resolution.
+These APIs provide a consistent pathing system for both local files and internet-hosted datasets.
 
-### API Signature
+### 6.1 Mental model
 
-`pluss::loader::project_root() -> path`  
-`pluss::loader::set_project_root(root) -> void`  
-`pluss::loader::reset_project_root() -> void`  
-`pluss::loader::set_path_root(key, root) -> void`  
-`pluss::loader::path_root(key, create_dirs = false) -> path`  
-`pluss::loader::has_path_root(key) -> bool`  
-`pluss::loader::clear_path_root(key) -> void`  
-`pluss::loader::path_join(base, parts...) -> path`  
-`pluss::loader::path_file(key, name, ensure_parent = false) -> path`  
-`pluss::loader::data_file(name) -> path`  
-`pluss::loader::output_dir(name = "") -> path`  
-`pluss::loader::model_dir(name = "") -> path`
+Use one of three root styles depending on workflow:
 
-Inputs:
-- logical `key` + path components.
-Output:
-- resolved path or mutating side effect.
+- Global local root (`set_root_path(...)`): simplest for single-project scripts/notebooks.
+- Scoped local roots (`PathContext::from_root(...)`): best for multi-root programs.
+- Scoped internet roots (`UrlContext::from_root("https://...")`): best for repeatable remote dataset layouts.
 
-### Arguments
+### 6.2 API surface
 
-- keys such as `"data"`, `"output"`, `"model"`, `"qit"`, `"mic"`, `"ma"`, `"ai"` resolve to library-aware defaults.
-- env overrides are supported (for example `PLUSS_PATH_DATA`, `PLUSS_OUTPUT_DIR`).
+Global local root:
 
-### Example
+`set_root_path(root, resolve_mode = RootResolve::WorkingDirectory) -> void`  
+`root_path() -> path`  
+`reset_root_path() -> void`  
+`set_path_policy(policy) -> void`  
+`path_policy() -> PathPolicy`  
+`file_path(subpath, options = {}) -> PathRef`  
+`file_paths({...}, options = {}) -> std::vector<PathRef>`  
+`file_path_map({{"name","subpath"}, ...}, options = {}) -> std::unordered_map<std::string, PathRef>`  
+`file_dir(subpath, options = {}) -> DirRef`  
+`absolute_path(path, options = {}) -> PathRef`
+
+Scoped local root:
+
+`PathContext::from_root(root, resolve_mode = RootResolve::WorkingDirectory) -> PathContext`  
+`ctx.file_path(...)`, `ctx.file_paths(...)`, `ctx.file_path_map(...)`, `ctx.file_dir(...)`, `ctx.absolute_path(...)`
+
+Scoped internet root:
+
+`UrlContext::from_root("https://...") -> UrlContext`  
+`u.root() -> std::string`  
+`u.file_path(subpath) -> UrlRef`  
+`u.file_paths({...}) -> std::vector<UrlRef>`  
+`u.file_path_map({...}) -> std::unordered_map<std::string, UrlRef>`
+
+String accessors:
+
+`PathRef::string() -> std::string`  
+`DirRef::string() -> std::string`  
+`DirRef::file(subpath, options = {}) -> PathRef`  
+`UrlRef::string() -> std::string`
+
+### 6.3 Global root workflows (`set_root_path`)
 
 ```cpp
 using namespace pluss::loader;
 
-set_path_root("output", "./outputs");
-auto run_dir = output_dir("nodej_cv");
-auto pred_file = path_file("output", "nodej_cv/preds.csv", true);
+set_root_path("../"); // project root relative to current working directory
 
-std::cout << run_dir << "\n";
-std::cout << pred_file << "\n";
+auto raw_csv  = file_path("all_data/housing.csv");
+auto out_dir  = file_dir("main_outputs/exp01", {.create_dirs = true});
+auto pred_csv = out_dir.file("predictions.csv");
+
+auto df = load_csv(raw_csv.string());
+save_csv(df, pred_csv.string());
 ```
 
-Expected output:
+Expected behavior:
 
 ```text
-./outputs/nodej_cv
-./outputs/nodej_cv/preds.csv
+all paths are anchored under the configured project root
+output directory is created automatically for this call
 ```
+
+### 6.4 Batch path helpers (many files)
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj");
+
+auto files = file_paths({
+  "all_data/housing.csv",
+  "all_data/prices.csv",
+  "all_data/fossils.xlsx"
+});
+
+auto named = file_path_map({
+  {"housing", "all_data/housing.csv"},
+  {"prices",  "all_data/prices.csv"},
+  {"fossils", "all_data/fossils.xlsx"}
+});
+
+auto housing = load_csv(named.at("housing").string());
+auto prices  = load_csv(named.at("prices").string());
+auto fossil  = load_excel(named.at("fossils").string());
+```
+
+Expected behavior:
+
+```text
+ordered access for file_paths
+name-addressable access for file_path_map
+duplicate keys throw
+```
+
+### 6.5 Directory-first workflows (`file_dir`)
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj");
+
+auto model_dir = file_dir("trained_models/ngarch", {.create_dirs = true});
+auto model_bin = model_dir.file("model.bin");
+auto metrics   = model_dir.file("metrics.json");
+```
+
+Expected behavior:
+
+```text
+model_dir resolves as a directory target under root
+model_bin/metrics are guaranteed to stay inside model_dir
+```
+
+### 6.6 Path policies and call overrides
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj");
+set_path_policy({
+  .canonicalize_root = true,
+  .auto_create_dirs = true,
+  .force_replace_dirs = false
+});
+
+auto logs = file_dir("logs"); // inherits global auto_create_dirs=true
+auto one_off = file_dir("scratch", {.create_dirs = false}); // explicit per-call override
+```
+
+Expected behavior:
+
+```text
+global policy sets defaults
+PathOptions can override defaults for a single call
+```
+
+### 6.7 Absolute escape hatch (`absolute_path`)
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj");
+auto tool = absolute_path("/usr/local/bin/tool.exe");
+```
+
+Expected behavior:
+
+```text
+absolute_path does not prepend root
+it is explicit opt-in and requires rooted input
+```
+
+### 6.8 Multi-root local workflows (`PathContext`)
+
+```cpp
+using namespace pluss::loader;
+
+auto proj = PathContext::from_root("/abs/path/to/project_a");
+auto ext  = PathContext::from_root("/mnt/shared_data");
+
+auto train_csv = proj.file_path("all_data/train.csv");
+auto vendor    = ext.file_path("vendor/source2.csv");
+auto report    = proj.file_dir("reports", {.create_dirs = true}).file("summary.txt");
+```
+
+Expected behavior:
+
+```text
+each context has independent root and policy state
+no mutation of global set_root_path state
+```
+
+### 6.9 Internet-root workflows (`UrlContext`)
+
+`UrlContext` is the remote equivalent of `PathContext`, but for HTTP/HTTPS roots.
+
+```cpp
+using namespace pluss::loader;
+
+auto remote = UrlContext::from_root(
+  "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main/"
+);
+
+auto csv_url = remote.file_path("example5.csv");
+auto xls_url = remote.file_path("unit1/example.xlsx");
+
+auto df1 = load_csv(csv_url.string());
+auto df2 = load_excel(xls_url.string());
+```
+
+Expected behavior:
+
+```text
+root trailing slash is normalized
+subpaths are joined safely under the URL root
+loaders receive plain string URLs
+```
+
+Batch URL addressing:
+
+```cpp
+auto urls = remote.file_paths({
+  "example5.csv",
+  "unit1/example6.csv"
+});
+
+auto named_urls = remote.file_path_map({
+  {"housing", "example5.csv"},
+  {"other", "unit1/example6.csv"}
+});
+```
+
+### 6.10 Hybrid local + remote recipe
+
+```cpp
+using namespace pluss::loader;
+
+set_root_path("/abs/path/to/proj");
+auto out_dir = file_dir("outputs/session_01", {.create_dirs = true});
+
+auto gh = UrlContext::from_root(
+  "https://raw.githubusercontent.com/DanikaLipman/Stat217/refs/heads/main"
+);
+auto remote_csv = gh.file_path("example5.csv");
+
+auto df = load_csv(remote_csv.string());
+save_csv(df, out_dir.file("example5_copy.csv").string());
+```
+
+Expected behavior:
+
+```text
+remote read via UrlContext
+local write via file_dir/file_path
+single coherent pathing style across both sources
+```
+
+### 6.11 Safety and diagnostics
+
+- Root escape prevention:
+  - local helpers reject paths that attempt traversal outside root.
+  - `UrlContext` rejects `..` and full URL subpath injection.
+- Rooted subpath behavior:
+  - local `file_path("/x.csv")` is rewritten as root-relative (`<root>/x.csv`) with warning.
+- String handoff:
+  - loaders accept string paths/URLs, so pass `.string()` from `PathRef`/`UrlRef`.
 
 ## 7. Tensor DataLoader APIs under `pluss::loader`
 

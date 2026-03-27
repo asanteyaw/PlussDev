@@ -21,6 +21,7 @@
 #include "CodeM/core/Half.h"
 #include "CodeM/core/ScalarType.h"
 #include "loader/CsvLoader.h"
+#include "loader/SourceResolver.h"
 #include "table/DataFrame.h"
 #include "table/Thread.h"
 
@@ -768,14 +769,15 @@ std::vector<std::vector<std::string>> parse_sheet_table(zip_t* archive,
 
 CsvRawBatch read_excel_raw_batch(std::string_view filepath, const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
-  PLUSS_CHECK(!filepath.empty(), "read_excel_raw_batch: filepath is empty");
+  auto source = detail::resolve_local_or_http_source(filepath, "read_excel_raw_batch");
+  const std::string_view local_filepath(source.local_path());
   PLUSS_CHECK(!options.all_sheets, "read_excel_raw_batch: all_sheets=true requires read_excel_workbook_raw_batch");
   PLUSS_CHECK(options.sheet_names.empty(), "read_excel_raw_batch: sheet_names requires read_excel_workbook_raw_batch");
   PLUSS_CHECK(options.sheet_indices.empty(), "read_excel_raw_batch: sheet_indices requires read_excel_workbook_raw_batch");
   PLUSS_CHECK(!options.n_sheets.has_value(), "read_excel_raw_batch: n_sheets requires read_excel_workbook_raw_batch");
 
   int err = 0;
-  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
+  zip_t* archive = zip_open(std::string(local_filepath).c_str(), ZIP_RDONLY, &err);
   PLUSS_CHECK(archive != nullptr, "read_excel_raw_batch: failed to open workbook");
 
   auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
@@ -816,10 +818,11 @@ CsvRawBatch read_excel_raw_batch(std::string_view filepath, const ReadExcelOptio
 ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
                                                     const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
-  PLUSS_CHECK(!filepath.empty(), "read_excel_workbook_raw_batch: filepath is empty");
+  auto source = detail::resolve_local_or_http_source(filepath, "read_excel_workbook_raw_batch");
+  const std::string_view local_filepath(source.local_path());
 
   int err = 0;
-  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
+  zip_t* archive = zip_open(std::string(local_filepath).c_str(), ZIP_RDONLY, &err);
   PLUSS_CHECK(archive != nullptr, "read_excel_workbook_raw_batch: failed to open workbook");
 
   auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
@@ -881,14 +884,15 @@ ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
 
 CsvBatch read_excel_batch(std::string_view filepath, const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
-  PLUSS_CHECK(!filepath.empty(), "load_excel: filepath is empty");
+  auto source = detail::resolve_local_or_http_source(filepath, "load_excel");
+  const std::string_view local_filepath(source.local_path());
   PLUSS_CHECK(!options.all_sheets, "load_excel: all_sheets=true requires load_excel_workbook");
   PLUSS_CHECK(options.sheet_names.empty(), "load_excel: sheet_names requires load_excel_workbook");
   PLUSS_CHECK(options.sheet_indices.empty(), "load_excel: sheet_indices requires load_excel_workbook");
   PLUSS_CHECK(!options.n_sheets.has_value(), "load_excel: n_sheets requires load_excel_workbook");
 
   int err = 0;
-  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
+  zip_t* archive = zip_open(std::string(local_filepath).c_str(), ZIP_RDONLY, &err);
   PLUSS_CHECK(archive != nullptr, "load_excel: failed to open workbook");
 
   auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
@@ -929,10 +933,11 @@ ExcelBatchWorkbook read_excel_workbook_batch(
     std::string_view filepath,
     const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
-  PLUSS_CHECK(!filepath.empty(), "read_excel_workbook_batch: filepath is empty");
+  auto source = detail::resolve_local_or_http_source(filepath, "read_excel_workbook_batch");
+  const std::string_view local_filepath(source.local_path());
 
   int err = 0;
-  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
+  zip_t* archive = zip_open(std::string(local_filepath).c_str(), ZIP_RDONLY, &err);
   PLUSS_CHECK(archive != nullptr, "read_excel_workbook_batch: failed to open workbook");
 
   auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);

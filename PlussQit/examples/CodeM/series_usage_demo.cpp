@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
 
 #include <complex>
 #include <cstdint>
@@ -88,10 +89,10 @@ int main() {
   }
   std::cout << "]\n";
   std::cout << "first via to_vec(index)=" << rand_vals.to_vec<double>(0) << "\n";
-  auto h = rand_vals.to_host<double>();
+  auto h = rand_vals.host<double>().array();
   std::cout << "host shape=(" << h.shape()[0] << "," << h.shape()[1] << ") numel=" << h.numel() << "\n";
   std::cout << "first=" << h.data.at(0) << "\n";
-  auto hb = rand_vals.to_host<bool>();
+  auto hb = rand_vals.host<bool>().array();
   std::size_t true_count = 0;
   for (bool v : hb.data) {
     if (v) ++true_count;

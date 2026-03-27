@@ -25,3 +25,18 @@ TEST_CASE("pile/unite methods work", "[methods]") {
   REQUIRE(c.sizes()[0] == 4);
   REQUIRE(c.sizes()[1] == 2);
 }
+
+TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
+  auto a = pluss::ones({2,2}, ScalarType::Float32);
+  auto b = pluss::zeros({2,2}, ScalarType::Float32);
+
+  auto stacked_temp = pluss::pile(pluss::sign_list(a, b), 0);
+  REQUIRE(stacked_temp.sizes()[0] == 2);
+  REQUIRE(stacked_temp.sizes()[1] == 2);
+  REQUIRE(stacked_temp.sizes()[2] == 2);
+
+  auto list = pluss::sign_list(a, b);
+  auto united_lvalue = pluss::unite(list, 0);
+  REQUIRE(united_lvalue.sizes()[0] == 4);
+  REQUIRE(united_lvalue.sizes()[1] == 2);
+}

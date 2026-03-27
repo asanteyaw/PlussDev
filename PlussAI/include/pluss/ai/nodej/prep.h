@@ -3,8 +3,14 @@
 #include "pluss/ai/nodej/interfaces.h"
 
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <vector>
+
+namespace pluss::table {
+class Thread;
+}
 
 namespace pluss::ai::nodej::prep {
 
@@ -58,6 +64,20 @@ struct FrequencyEncoderOptions {
   std::int64_t max_categories = 50;
   CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
   double unknown_frequency = 0.0;
+};
+
+struct OrdinalEncoderOptions {
+  std::int64_t max_categories = 256;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+  bool include_unknown_bucket = true;
+  bool one_based = true;
+};
+
+struct LabelEncoderOptions {
+  std::int64_t max_categories = 256;
+  CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent;
+  bool include_unknown_bucket = true;
+  bool one_based = false;
 };
 
 enum class NeighborImputerWeighting : std::uint8_t {
@@ -128,6 +148,131 @@ struct PolynomialLiftOptions {
   std::int64_t degree = 2;
   bool interactions_only = false;
   bool include_bias = false;
+};
+
+struct OutlierIsolatorOptions {
+  std::int64_t estimators = 100;
+  std::int64_t max_samples = 256;
+  bool max_samples_auto = true;
+  double max_features_ratio = 1.0;
+  bool bootstrap = false;
+  bool contamination_auto = true;
+  double contamination = 0.1;
+  RandomState random{};
+};
+
+class OutlierIsolator final {
+public:
+  explicit OutlierIsolator(OutlierIsolatorOptions options = {});
+
+  [[nodiscard]] bool learned() const noexcept;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {});
+  [[nodiscard]] StatusOr<Series> score_samples(const FeatureBatch& batch, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> learn_infer(const FeatureBatch& batch,
+                                             const TrainOptions& learn_options = {},
+                                             const InferOptions& infer_options = {});
+
+  [[nodiscard]] double decision_offset() const noexcept { return offset_; }
+  [[nodiscard]] std::int64_t max_samples_used() const noexcept { return max_samples_used_; }
+  [[nodiscard]] std::int64_t max_features_used() const noexcept { return max_features_used_; }
+
+private:
+  struct IsolationTree {
+    std::vector<std::int32_t> split_feature{};
+    std::vector<double> split_value{};
+    std::vector<std::int32_t> left_child{};
+    std::vector<std::int32_t> right_child{};
+    std::vector<std::int32_t> node_size{};
+    std::vector<std::uint8_t> missing_go_left{};
+  };
+
+  [[nodiscard]] Status validate_options_() const;
+  [[nodiscard]] StatusOr<std::vector<double>> score_dense_(const Series& x, ObservationLayout layout, const char* where) const;
+
+  OutlierIsolatorOptions options_{};
+  bool learned_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  std::int64_t max_samples_used_{0};
+  std::int64_t max_features_used_{0};
+  std::int64_t max_depth_{0};
+  double offset_{-0.5};
+  std::vector<IsolationTree> forest_{};
+};
+
+struct FunctionTransformerOptions {
+  bool validate_input = true;
+  bool preserve_sample_count = true;
+};
+
+class FunctionTransformer final : public TransformerBase {
+public:
+  using SeriesMapFn = std::function<StatusOr<Series>(const Series&)>;
+
+  explicit FunctionTransformer(SeriesMapFn map_fn = {}, FunctionTransformerOptions options = {});
+
+  [[nodiscard]] bool trained() const noexcept override;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
+  Status load_state(const std::vector<Series>& state) override;
+
+private:
+  FunctionTransformerOptions options_{};
+  SeriesMapFn map_fn_{};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  bool learned_{false};
+};
+
+enum class FeatureRemainderPolicy : std::uint8_t {
+  Drop = 0,
+  PassThrough = 1,
+};
+
+class FeatureTransformer final : public TransformerBase {
+public:
+  explicit FeatureTransformer(FeatureRemainderPolicy remainder = FeatureRemainderPolicy::Drop);
+
+  FeatureTransformer(FeatureTransformer&&) noexcept = default;
+  FeatureTransformer& operator=(FeatureTransformer&&) noexcept = default;
+  FeatureTransformer(const FeatureTransformer&) = delete;
+  FeatureTransformer& operator=(const FeatureTransformer&) = delete;
+
+  [[nodiscard]] bool trained() const noexcept override;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
+  Status load_state(const std::vector<Series>& state) override;
+
+  Status add_stage(std::unique_ptr<TransformerBase> transformer, std::vector<std::int64_t> feature_route);
+  Status add_pipeline(std::vector<std::unique_ptr<TransformerBase>> transformers,
+                      std::vector<std::int64_t> feature_route);
+  void clear_stages() noexcept;
+  [[nodiscard]] std::int64_t stage_count() const noexcept;
+
+  [[nodiscard]] FeatureRemainderPolicy remainder_policy() const noexcept;
+  void set_remainder_policy(FeatureRemainderPolicy policy) noexcept;
+
+private:
+  struct Stage {
+    std::vector<std::unique_ptr<TransformerBase>> transformers{};
+    std::vector<std::int64_t> feature_route{};
+  };
+
+  FeatureRemainderPolicy remainder_{FeatureRemainderPolicy::Drop};
+  std::vector<Stage> stages_{};
+  bool trained_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  std::int64_t output_feature_count_{0};
 };
 
 class StandardScaler final : public TransformerBase {
@@ -396,10 +541,15 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
   Status load_state(const std::vector<Series>& state) override;
 
@@ -420,10 +570,15 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
   Status load_state(const std::vector<Series>& state) override;
 
@@ -434,6 +589,58 @@ private:
   std::int64_t feature_count_{0};
   std::vector<std::vector<std::uint64_t>> category_keys_{};
   std::vector<std::vector<double>> category_freqs_{};
+};
+
+class OrdinalEncoder final : public TransformerBase {
+public:
+  explicit OrdinalEncoder(OrdinalEncoderOptions options = {});
+
+  [[nodiscard]] bool trained() const noexcept override;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {});
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
+  Status load_state(const std::vector<Series>& state) override;
+
+private:
+  OrdinalEncoderOptions options_{};
+  bool trained_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  std::vector<std::vector<std::uint64_t>> category_keys_{};
+};
+
+class LabelEncoder final : public TransformerBase {
+public:
+  explicit LabelEncoder(LabelEncoderOptions options = {});
+
+  [[nodiscard]] bool trained() const noexcept override;
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
+  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override;
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {});
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
+  Status load_state(const std::vector<Series>& state) override;
+
+private:
+  LabelEncoderOptions options_{};
+  bool trained_{false};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  std::int64_t feature_count_{0};
+  std::vector<std::vector<std::uint64_t>> category_keys_{};
 };
 
 } // namespace pluss::ai::nodej::prep

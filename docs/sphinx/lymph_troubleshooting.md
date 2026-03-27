@@ -19,7 +19,7 @@ A `Workflow` must have `.model` set before `learn_`, `infer`, `assess`, or `save
 
 ### Output
 
-- valid executable pipeline
+- valid executable workflow
 
 ### Options
 
@@ -277,6 +277,9 @@ const Series p2 = wf.infer(x_test_b);
 - `TrainOptions.unknown_categorical`
 - `InferOptions.unknown_categorical`
 - `prep::OneHotEncoder(options: OneHotEncoderOptions = {})`
+- `prep::FrequencyEncoder(options: FrequencyEncoderOptions = {})`
+- `prep::OrdinalEncoder(options: OrdinalEncoderOptions = {})`
+- `prep::LabelEncoder(options: LabelEncoderOptions = {})`
 
 ### Notes
 
@@ -294,6 +297,8 @@ Unknown category behavior is configurable both at preprocessing and model infer/
 
 - `UnknownCategoryPolicy::Error | MissingBucket | Ignore`
 - `OneHotEncoderOptions.include_unknown_bucket`
+- `OrdinalEncoderOptions.include_unknown_bucket`
+- `LabelEncoderOptions.include_unknown_bucket`
 
 ### Examples
 
@@ -301,6 +306,7 @@ Unknown category behavior is configurable both at preprocessing and model infer/
 auto enc = lym::prep::OneHotEncoder({
     .include_unknown_bucket = true,
 });
+enc.features({"ocean_proximity"});
 
 const DataFrame x_train_e = enc.learn_map(x_train);
 const DataFrame x_test_e = enc.map(x_test);

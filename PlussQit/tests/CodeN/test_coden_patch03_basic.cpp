@@ -12,7 +12,7 @@ TEST_CASE("Scalar Note basic ops (ASCII)", "[coden][patch03]") {
   REQUIRE(a.lower().at(0) == "  hello  ");
   REQUIRE(a.strip().lower().at(0) == "hello");
   REQUIRE(a.contains("LL").at(0) == 1);
-  REQUIRE(a.replace("HeL", "Ye").strip().at(0) == "Yeo");
+  REQUIRE(a.replace("HeL", "Ye").strip().at(0) == "YeLo");
 }
 
 TEST_CASE("Note split_whitespace TokenBatch offsets", "[coden][patch03]") {

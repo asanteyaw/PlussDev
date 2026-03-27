@@ -29,7 +29,7 @@ add_subdirectory(src/table)
 
 target_link_libraries(PlussMic PUBLIC
     PlussPl
-    PlussView
+    PlussTils
     PlussQit
     plussqit_codeh
     plussqit_codem

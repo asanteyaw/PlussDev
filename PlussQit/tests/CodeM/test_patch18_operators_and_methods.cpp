@@ -15,6 +15,14 @@ TEST_CASE("operators", "[ops]") {
   auto* cp = reinterpret_cast<const float*>(c.raw_data());
   REQUIRE(cp[0] == 5.0f);
 
+  Series n0 = -a;
+  auto* n0p = reinterpret_cast<const float*>(n0.raw_data());
+  REQUIRE(n0p[0] == -2.0f);
+
+  Series n1 = -(a + 4.0);
+  auto* n1p = reinterpret_cast<const float*>(n1.raw_data());
+  REQUIRE(n1p[0] == -6.0f);
+
   a += b;
   auto* ap = reinterpret_cast<const float*>(a.raw_data());
   REQUIRE(ap[0] == 5.0f);

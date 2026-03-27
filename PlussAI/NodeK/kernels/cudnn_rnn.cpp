@@ -76,6 +76,16 @@ int gate_count_(RnnKind kind) noexcept {
 
 #if PLUSS_AI_HAS_CUDNN_RNN_KERNELS && PLUSS_AI_HAS_DLOPEN
 
+using cudnn_set_rnn_desc_v6_fn = cudnnStatus_t (*)(...);
+using cudnn_set_rnn_projection_layers_fn = cudnnStatus_t (*)(...);
+using cudnn_get_rnn_workspace_size_fn = cudnnStatus_t (*)(...);
+using cudnn_get_rnn_training_reserve_size_fn = cudnnStatus_t (*)(...);
+using cudnn_get_rnn_params_size_fn = cudnnStatus_t (*)(...);
+using cudnn_get_rnn_lin_layer_matrix_fn = cudnnStatus_t (*)(...);
+using cudnn_get_rnn_lin_layer_bias_fn = cudnnStatus_t (*)(...);
+using cudnn_rnn_forward_inference_fn = cudnnStatus_t (*)(...);
+using cudnn_rnn_forward_training_fn = cudnnStatus_t (*)(...);
+
 struct CudnnApi {
   decltype(&cudnnCreate) create_handle{nullptr};
   decltype(&cudnnDestroy) destroy_handle{nullptr};
@@ -95,21 +105,27 @@ struct CudnnApi {
   decltype(&cudnnDestroyDropoutDescriptor) destroy_dropout_desc{nullptr};
 
   decltype(&cudnnCreateRNNDescriptor) create_rnn_desc{nullptr};
-  decltype(&cudnnSetRNNDescriptor_v6) set_rnn_desc_v6{nullptr};
-  decltype(&cudnnSetRNNProjectionLayers) set_rnn_projection_layers{nullptr};
+  cudnn_set_rnn_desc_v6_fn set_rnn_desc_v6{nullptr};
+  cudnn_set_rnn_projection_layers_fn set_rnn_projection_layers{nullptr};
   decltype(&cudnnDestroyRNNDescriptor) destroy_rnn_desc{nullptr};
 
-  decltype(&cudnnGetRNNWorkspaceSize) get_rnn_workspace_size{nullptr};
-  decltype(&cudnnGetRNNTrainingReserveSize) get_rnn_training_reserve_size{nullptr};
-  decltype(&cudnnGetRNNParamsSize) get_rnn_params_size{nullptr};
-  decltype(&cudnnGetRNNLinLayerMatrixParams) get_rnn_lin_layer_matrix{nullptr};
-  decltype(&cudnnGetRNNLinLayerBiasParams) get_rnn_lin_layer_bias{nullptr};
-  decltype(&cudnnRNNForwardInference) rnn_forward_inference{nullptr};
-  decltype(&cudnnRNNForwardTraining) rnn_forward_training{nullptr};
+  cudnn_get_rnn_workspace_size_fn get_rnn_workspace_size{nullptr};
+  cudnn_get_rnn_training_reserve_size_fn get_rnn_training_reserve_size{nullptr};
+  cudnn_get_rnn_params_size_fn get_rnn_params_size{nullptr};
+  cudnn_get_rnn_lin_layer_matrix_fn get_rnn_lin_layer_matrix{nullptr};
+  cudnn_get_rnn_lin_layer_bias_fn get_rnn_lin_layer_bias{nullptr};
+  cudnn_rnn_forward_inference_fn rnn_forward_inference{nullptr};
+  cudnn_rnn_forward_training_fn rnn_forward_training{nullptr};
 
   bool load(void* handle, std::string* why) {
+    auto resolve_sym = [&](const char* name) -> void* {
+      void* sym = nullptr;
+      if (handle != nullptr) sym = dlsym(handle, name);
+      if (sym == nullptr) sym = dlsym(RTLD_DEFAULT, name);
+      return sym;
+    };
     auto load_sym = [&](auto& fn, const char* name) -> bool {
-      fn = reinterpret_cast<std::remove_reference_t<decltype(fn)>>(dlsym(handle, name));
+      fn = reinterpret_cast<std::remove_reference_t<decltype(fn)>>(resolve_sym(name));
       if (fn == nullptr) {
         if (why != nullptr) *why = std::string("cuDNN symbol missing: ") + name;
         return false;
@@ -117,7 +133,7 @@ struct CudnnApi {
       return true;
     };
     auto load_sym_opt = [&](auto& fn, const char* name) {
-      fn = reinterpret_cast<std::remove_reference_t<decltype(fn)>>(dlsym(handle, name));
+      fn = reinterpret_cast<std::remove_reference_t<decltype(fn)>>(resolve_sym(name));
       (void)name;
     };
 
@@ -161,17 +177,23 @@ CudnnContext& cudnn_ctx_() {
   static CudnnContext ctx;
   static std::once_flag once;
   std::call_once(once, [&]() {
-    constexpr std::array<const char*, 5> libs{
+    constexpr auto libs = std::to_array<const char*>({
 #if defined(__APPLE__)
         "libcudnn.dylib",
 #else
         "libcudnn.so.9",
+        "libcudnn_ops.so.9",
+        "libcudnn_cnn.so.9",
+        "libcudnn_adv.so.9",
+        "libcudnn_graph.so.9",
         "libcudnn.so.8",
+        "libcudnn_ops.so.8",
+        "libcudnn_cnn.so.8",
+        "libcudnn_adv.so.8",
+        "libcudnn_graph.so.8",
         "libcudnn.so",
 #endif
-        nullptr,
-        nullptr,
-    };
+    });
 
     if (!pluss::cuda::is_ready()) {
       ctx.error = "CUDA runtime unavailable";
@@ -182,20 +204,61 @@ CudnnContext& cudnn_ctx_() {
       return;
     }
 
+    const char* explicit_lib = std::getenv("PLUSS_CUDNN_LIBRARY");
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = std::getenv("CUDNN_LIBRARY");
+    }
+#if defined(PLUSS_CUDNN_LIBRARY_DEFAULT)
+    if (explicit_lib == nullptr || *explicit_lib == '\0') {
+      explicit_lib = PLUSS_CUDNN_LIBRARY_DEFAULT;
+    }
+#endif
+    if (explicit_lib != nullptr && *explicit_lib != '\0') {
+      dlerror(); // clear
+      void* handle = dlopen(explicit_lib, RTLD_NOW | RTLD_GLOBAL);
+      if (handle != nullptr) {
+        std::string why{};
+        if (ctx.api.load(handle, &why)) {
+          ctx.handle = handle;
+          ctx.ready = true;
+          ctx.error.clear();
+          return;
+        }
+        ctx.error = why;
+        dlclose(handle);
+      } else {
+        const char* dlerr = dlerror();
+        ctx.error = std::string("failed to open explicit cuDNN library '") + explicit_lib + "'" +
+            (dlerr != nullptr ? std::string(" (") + dlerr + ")" : std::string{});
+      }
+    }
+
+    std::vector<void*> opened_handles{};
+    opened_handles.reserve(libs.size());
     for (const char* lib : libs) {
       if (lib == nullptr || *lib == '\0') continue;
-      void* handle = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
-      if (handle == nullptr) continue;
+      dlerror(); // clear
+      void* handle = dlopen(lib, RTLD_NOW | RTLD_GLOBAL);
+      if (handle == nullptr) {
+        const char* dlerr = dlerror();
+        if (dlerr != nullptr) {
+          ctx.error = std::string("failed to open cuDNN library '") + lib + "' (" + dlerr + ")";
+        }
+        continue;
+      }
+      opened_handles.push_back(handle);
       std::string why{};
       if (!ctx.api.load(handle, &why)) {
         ctx.error = why;
-        dlclose(handle);
         continue;
       }
       ctx.handle = handle;
       ctx.ready = true;
       ctx.error.clear();
       return;
+    }
+    for (void* h : opened_handles) {
+      if (h != nullptr) dlclose(h);
     }
     if (ctx.error.empty()) {
       ctx.error = "cuDNN library not found on loader path";

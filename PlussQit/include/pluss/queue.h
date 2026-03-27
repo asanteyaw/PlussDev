@@ -298,7 +298,8 @@ public:
     try {
       switch (x.kind()) {
         case Kind::Series:
-          return x.invoke("where", {condition.as_series(), y.as_series()});
+          // Force torch-style semantics: where(mask, x, y) => mask ? x : y.
+          return Queue(condition.as_series().where(x.as_series(), y.as_series()));
         case Kind::Timeline:
           return x.invoke("where", {condition.as_series(), y.as_timeline()});
         case Kind::Note:

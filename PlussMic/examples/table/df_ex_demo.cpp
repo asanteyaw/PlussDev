@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/tils.h>
 
 #include <filesystem>
 #include <iostream>
@@ -29,8 +30,8 @@ int main() {
    std::cout << "Agency Code feature numel: " << code.numel() << "\n";
    pluss::Timeline updated_date = df.features("Updated Date").value();
    std::cout << "Updated Date feature numel: " << updated_date.numel() << "\n";
-   auto all_feat_values = df.values();
-   std::cout << "values() returns " << all_feat_values.size() << " feature threads\n";
+   auto all_features = df.features();
+   std::cout << "features() returns " << all_features.size() << " Thread payloads\n";
    std::cout << "cell[0, Agency Code]: " << df.cases(0, "Agency Code") << "\n";
    df.cases(0).head();
    df.cases({1, 5}).head();

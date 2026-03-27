@@ -319,10 +319,67 @@ auto stats = imputer.summary();
 - `prep::VectorNormalizer`
 - `prep::OneHotEncoder`
 - `prep::FrequencyEncoder`
+- `prep::OrdinalEncoder`
+- `prep::LabelEncoder`
+- `prep::CategoryIndexer`
 - `prep::QuantileMap`
 - `prep::PowerMap`
 - `prep::ThresholdBinarizer`
 - `prep::PolynomialLift`
+
+### CategoryIndexer And Encoders: Correct Roles
+
+`CategoryIndexer` is an indexing utility for categorical values. It learns a stable
+category-to-index map and applies it consistently. It is not a replacement for all
+encoders.
+
+Use this mental model:
+
+- `CategoryIndexer`: canonical integer IDs for categories (mapping utility)
+- `OrdinalEncoder`: ordered integer encoding for model input
+- `LabelEncoder`: integer label encoding surface for categorical targets/labels or compact feature IDs
+- `OneHotEncoder`: sparse/binary indicator expansion for nominal categories
+- `FrequencyEncoder`: category -> frequency/statistical prevalence encoding
+
+When to use each:
+
+- use `CategoryIndexer` when you need a stable lookup/index map, joins, diagnostics, or pre-indexing
+- use `OneHotEncoder` for nominal categories where linear distance between IDs is meaningless
+- use `OrdinalEncoder` only when order is meaningful or tree models can tolerate integer bins
+- use `LabelEncoder` for compact integer labels (often target-side, sometimes feature-side)
+- use `FrequencyEncoder` when dimensionality pressure makes one-hot too wide
+
+Typical combinations:
+
+- `CategoryIndexer` -> `OneHotEncoder`: only if your source is already pre-indexed and you want explicit index control
+- raw categorical -> `OneHotEncoder`: most common nominal feature pipeline
+- raw categorical -> `OrdinalEncoder`: when ordered categories are intended
+- raw categorical -> `FrequencyEncoder`: compact alternative to one-hot
+
+Minimal examples:
+
+```cpp
+// 1) Stable indexing utility
+auto idx = lym::prep::CategoryIndexer({
+    .max_categories = 64,
+    .include_unknown_bucket = true,
+});
+idx.features({"ocean_proximity"});
+DataFrame x_idx_train = idx.learn_map(train_df);
+DataFrame x_idx_test = idx.map(test_df);
+
+// 2) Model-ready nominal encoding
+auto onehot = lym::prep::OneHotEncoder({.max_categories = 64});
+onehot.features({"ocean_proximity"});
+DataFrame x_oh_train = onehot.learn_map(train_df);
+DataFrame x_oh_test = onehot.map(test_df);
+
+// 3) Compact frequency encoding
+auto freq = lym::prep::FrequencyEncoder({.max_categories = 64});
+freq.features({"ocean_proximity"});
+DataFrame x_fr_train = freq.learn_map(train_df);
+DataFrame x_fr_test = freq.map(test_df);
+```
 
 ## Model Factories
 
@@ -371,7 +428,7 @@ auto tree = lym::tree_factory::decision_tree_regressor(
 
 - `lin` and `tree` can immediately `learn_`, `infer`, and `assess`.
 
-## Workflow And Pipeline Patterns
+## Workflow Patterns
 
 ### API Signature
 
@@ -381,7 +438,7 @@ auto tree = lym::tree_factory::decision_tree_regressor(
 
 ### Notes
 
-`Workflow` executes stage list in order, then model learn/infer/assess. This is the pipeline abstraction.
+`Workflow` executes stage list in order, then model learn/infer/assess.
 
 ### Inputs
 
@@ -390,11 +447,14 @@ auto tree = lym::tree_factory::decision_tree_regressor(
 
 ### Output
 
-- reusable pipeline object
+- reusable workflow object
 
 ### Options
 
 - `feature_route` lets a stage target specific feature positions.
+
+For feature-branch composition (numeric branch + categorical branch), use
+`workflow::feature::compose(...)` with `make_feature_transformer(...)`.
 
 ### Examples
 
@@ -633,7 +693,7 @@ Expected output behavior:
 - `predict` -> `infer`
 - `predict_proba`/`decision_function` -> `infer_scores`
 - `score` -> `assess`
-- `Pipeline([...])` -> `Workflow{ .model, .stages = {...} }`
+- sklearn `Pipeline([...])` concept -> `Workflow{ .model, .stages = {...} }`
 - `train_test_split` -> `hold_out_split`
 - `GridSearchCV` workflow selection -> `selection::tune` / `selection::tune_specs`
 

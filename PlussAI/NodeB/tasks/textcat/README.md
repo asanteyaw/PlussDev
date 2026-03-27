@@ -1,0 +1,3 @@
+# textcat
+
+Scaffolded module directory for NodeB.
