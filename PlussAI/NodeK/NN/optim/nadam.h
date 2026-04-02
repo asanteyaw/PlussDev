@@ -68,7 +68,7 @@ public:
 
   void set_group_options(std::size_t group_index, const NAdamOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -115,7 +115,7 @@ public:
         state.mu_product_scalar.size() != groups_.size() ||
         state.beta2_power.size() != groups_.size() ||
         state.decay_power.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam::restore_state: group count mismatch");
     }
     validate_state_vector_(state.exp_avg, "pluss::ai::nn::optim::NAdam::restore_state[exp_avg]");
     validate_state_vector_(state.exp_avg_sq, "pluss::ai::nn::optim::NAdam::restore_state[exp_avg_sq]");
@@ -525,38 +525,38 @@ private:
 
   static void validate_options_(const NAdamOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: learning_rate must be positive and finite");
     }
     if (!(options.beta1 >= 0.0 && options.beta1 < 1.0) || !std::isfinite(options.beta1)) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: beta1 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: beta1 must be in [0, 1)");
     }
     if (!(options.beta2 >= 0.0 && options.beta2 < 1.0) || !std::isfinite(options.beta2)) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: beta2 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: beta2 must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: epsilon must be positive and finite");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: weight_decay must be finite and non-negative");
     }
     if (options.momentum_decay < 0.0 || !std::isfinite(options.momentum_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: momentum_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: momentum_decay must be finite and non-negative");
     }
   }
 
   static std::vector<Series*> flatten_groups_(const std::vector<NAdamGroup>& groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::NAdam: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::NAdam: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::NAdam: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::NAdam: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::NAdam: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::NAdam: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -594,17 +594,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::NAdam: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::NAdam: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::NAdam: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::NAdam: capturable mode requires same dtype across each group");
         }
       }

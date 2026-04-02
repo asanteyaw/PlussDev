@@ -15,6 +15,7 @@
 #include "CodeH/core/Errors.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codeh {
 
@@ -34,7 +35,7 @@ public:
   ~TimelineBase() = default;
 
   bool defined() const noexcept { return ticks_.defined(); }
-  std::span<const std::int64_t> sizes() const { return ticks_.sizes(); }
+  pluss::msharp::RangeView::Int sizes() const { return ticks_.sizes(); }
   std::int64_t dim() const { return ticks_.dim(); }
   std::int64_t numel() const { return ticks_.numel(); }
   bool is_scalar() const { return dim() == 0; }

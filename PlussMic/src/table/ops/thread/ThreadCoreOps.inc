@@ -1252,6 +1252,64 @@ Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
   PLUSS_FAIL("Thread::compare: unsupported payload combination");
 }
 
+Thread Thread::btw(double a, double b, bool inclusive) const {
+  return btw(a, b, inclusive, inclusive);
+}
+
+Thread Thread::btw(double a, double b, bool include_left, bool include_right) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series,
+              "Thread::btw(double,double,...): requires Series payload; use temporal overloads for date/time threads");
+  PLUSS_CHECK(is_numeric_series_type(as_series()),
+              "Thread::btw(double,double,...): Series payload must be numeric");
+
+  auto lower = a;
+  auto upper = b;
+  if (lower > upper) {
+    std::swap(lower, upper);
+    std::swap(include_left, include_right);
+  }
+
+  const auto left = include_left ? compare(lower, ThreadBinaryCompareOp::Ge)
+                                 : compare(lower, ThreadBinaryCompareOp::Gt);
+  const auto right = include_right ? compare(upper, ThreadBinaryCompareOp::Le)
+                                   : compare(upper, ThreadBinaryCompareOp::Lt);
+  return (left & right);
+}
+
+Thread Thread::btw(std::string_view lo, std::string_view hi, bool inclusive) const {
+  return btw(lo, hi, inclusive, inclusive);
+}
+
+Thread Thread::btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const {
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::btw(string,string,...): requires Timeline/TimeIndex payload");
+
+  auto lower = pluss::make_timeline(lo);
+  auto upper = pluss::make_timeline(hi);
+  if (lower > upper) {
+    std::swap(lower, upper);
+    std::swap(include_left, include_right);
+  }
+
+  const auto& axis = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
+  const auto left = include_left ? axis.ge(lower) : axis.gt(lower);
+  const auto right = include_right ? axis.le(upper) : axis.lt(upper);
+  return Thread(left.logical_and(right), validity_mask());
+}
+
+Thread Thread::btw(const Thread& lo, const Thread& hi, bool inclusive) const {
+  return btw(lo, hi, inclusive, inclusive);
+}
+
+Thread Thread::btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
+  PLUSS_CHECK(lo.defined() && hi.defined(), "Thread::btw(Thread,Thread,...): lower/upper bounds must be defined");
+  PLUSS_CHECK(size() == lo.size() && size() == hi.size(),
+              "Thread::btw(Thread,Thread,...): lower/upper bounds must match thread size");
+  const auto left = include_left ? (*this >= lo) : (*this > lo);
+  const auto right = include_right ? (*this <= hi) : (*this < hi);
+  return (left & right);
+}
+
 int Thread::compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last) const {
   const auto l = normalize_index(lhs_row, size());
   const auto r = normalize_index(rhs_row, size());

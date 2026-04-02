@@ -383,7 +383,7 @@ StatusOr<SplitPlan> time_series_fold_plan(std::int64_t sample_count, const Split
   pluss::loader::TimeSeriesIndexSplit plan_indices{};
   try {
     plan_indices = pluss::loader::time_series_split_indices(sample_count, ts_opts);
-  } catch (const pluss::codem::Error& e) {
+  } catch (const pluss::Error& e) {
     return StatusOr<SplitPlan>(Status::invalid_argument(e.what()));
   } catch (const std::exception& e) {
     return StatusOr<SplitPlan>(Status::invalid_argument(e.what()));

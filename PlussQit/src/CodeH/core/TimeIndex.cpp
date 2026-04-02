@@ -11,11 +11,11 @@ pluss::codem::Series TimeIndex::join_asof(const TimeIndex& right,
                                           bool allow_exact_matches) const {
   if (tolerance) {
     return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
-        "join_asof", *this, right, direction, *tolerance, allow_exact_matches);
+        "join_asof", *this, {right, direction, *tolerance, allow_exact_matches});
   }
   return ::pluss::codeh::_compat::invoke<pluss::codem::Series>(
-      "join_asof", *this, right, direction, ::pluss::codeh::_compat::Arg{},
-      allow_exact_matches);
+      "join_asof", *this,
+      {right, direction, ::pluss::codeh::_compat::Arg{}, allow_exact_matches});
 }
 
 } // namespace pluss::codeh

@@ -15,7 +15,7 @@ RET_MAP = {
 ARG_MAP = {
   'string': '::std::string_view',
   'int64': '::std::int64_t',
-  'intlist': '::std::span<const ::std::int64_t>',
+  'intlist': '::pluss::msharp::RangeView::Int',
 }
 
 GROUP_TO_SELF = {
@@ -42,10 +42,11 @@ def gen_for(target: str, ops: list[dict]) -> str:
   out.append('#pragma once')
   out.append('')
   out.append('#include <cstdint>')
-  out.append('#include <span>')
   out.append('#include <string_view>')
   out.append('#include <vector>')
   out.append('#include <variant>')
+  out.append('')
+  out.append('#include "MSharp/RangeView.h"')
   out.append('')
   out.append('#include "CodeN/compat/Invoke.h"')
   out.append('')
@@ -73,7 +74,7 @@ def gen_for(target: str, ops: list[dict]) -> str:
     params_s = ', '.join(params)
     call_s = ', '.join(call_args)
     if call_s:
-      call_s = ', ' + call_s
+      call_s = ', {' + call_s + '}'
 
     out.append(f'inline {ret} {target}::{name}({params_s}) const {{')
     out.append(f'  return ::pluss::coden::_compat::invoke<{ret}>("{name}", *this{call_s});')

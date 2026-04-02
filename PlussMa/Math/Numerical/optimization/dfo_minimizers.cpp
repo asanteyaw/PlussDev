@@ -55,20 +55,20 @@ struct HostBoundsPack {
 
 double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error(std::string(op) + ": expected scalar Series");
+    ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
   return x.to(ScalarType::Float64).item<double>();
 }
 
 void require_valid_initial(const Series& initial, const char* op) {
   if (!initial.defined()) {
-    throw std::runtime_error(std::string(op) + ": initial point is undefined");
+    ::pluss::throw_error(std::string(op) + ": initial point is undefined");
   }
   if (initial.numel() < 1) {
-    throw std::runtime_error(std::string(op) + ": initial point must be non-empty");
+    ::pluss::throw_error(std::string(op) + ": initial point must be non-empty");
   }
   if (!initial.dtype().is_floating() || initial.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": initial point must be real floating-point");
+    ::pluss::throw_error(std::string(op) + ": initial point must be real floating-point");
   }
 }
 
@@ -133,19 +133,19 @@ BoundsPack prepare_bounds(
     return bounds;
   }
   if (!lower_defined || !upper_defined) {
-    throw std::runtime_error(std::string(op) + ": both lower_bounds and upper_bounds must be defined");
+    ::pluss::throw_error(std::string(op) + ": both lower_bounds and upper_bounds must be defined");
   }
 
   const Series flat_lower = lower.reshape({setup.dimension}).to(setup.work_cfg.platform, setup.work_cfg.dtype).contiguous();
   const Series flat_upper = upper.reshape({setup.dimension}).to(setup.work_cfg.platform, setup.work_cfg.dtype).contiguous();
 
   if (flat_lower.numel() != setup.dimension || flat_upper.numel() != setup.dimension) {
-    throw std::runtime_error(std::string(op) + ": bounds must have same number of elements as initial point");
+    ::pluss::throw_error(std::string(op) + ": bounds must have same number of elements as initial point");
   }
 
   const Series ok = flat_lower.le(flat_upper).all();
   if (!ok.item<bool>()) {
-    throw std::runtime_error(std::string(op) + ": expected lower_bounds <= upper_bounds elementwise");
+    ::pluss::throw_error(std::string(op) + ": expected lower_bounds <= upper_bounds elementwise");
   }
 
   bounds.enabled = true;
@@ -190,7 +190,7 @@ HostBoundsPack to_host_bounds(
   out.upper = bounds.upper.to(ScalarType::Float64).to_vec<double>();
   if (static_cast<std::int64_t>(out.lower.size()) != n_dim ||
       static_cast<std::int64_t>(out.upper.size()) != n_dim) {
-    throw std::runtime_error("dfo_minimizers: invalid bounds host conversion");
+    ::pluss::throw_error("dfo_minimizers: invalid bounds host conversion");
   }
   return out;
 }
@@ -251,7 +251,7 @@ double eval_host_candidate(
       std::span<const std::int64_t>(setup.original_shape.data(), setup.original_shape.size()));
   const Series out = objective(shaped);
   if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": objective must return real scalar Series");
+    ::pluss::throw_error(std::string(op) + ": objective must return real scalar Series");
   }
   const double val = scalar_as_f64(out, op);
   return std::isfinite(val) ? val : std::numeric_limits<double>::infinity();
@@ -284,7 +284,7 @@ std::vector<std::vector<double>> sample_population_host(
   std::vector<double> center =
       setup.flat_initial.to(ScalarType::Float64).to_vec<double>();
   if (static_cast<std::int64_t>(center.size()) != n_dim) {
-    throw std::runtime_error("dfo_minimizers: invalid host initial conversion");
+    ::pluss::throw_error("dfo_minimizers: invalid host initial conversion");
   }
 
   std::vector<double> lb(n_dim), ub(n_dim);
@@ -335,10 +335,10 @@ Series eval_candidate(
   const Series out = objective(x);
 
   if (!out.defined() || out.numel() != 1) {
-    throw std::runtime_error(std::string(op) + ": objective must return scalar Series");
+    ::pluss::throw_error(std::string(op) + ": objective must return scalar Series");
   }
   if (out.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": objective must return real scalar Series");
+    ::pluss::throw_error(std::string(op) + ": objective must return real scalar Series");
   }
 
   const double v = scalar_as_f64(out, op);
@@ -533,7 +533,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
   constexpr const char* op = "differential_evolution_minimizer";
   require_valid_initial(initial, op);
   if (config.population_size < 5) {
-    throw std::runtime_error(std::string(op) + ": population_size must be >= 5");
+    ::pluss::throw_error(std::string(op) + ": population_size must be >= 5");
   }
 
   const CommonSetup setup = make_common_setup(initial, config.promote_cpu_to_float64);
@@ -755,7 +755,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
   constexpr const char* op = "differential_evolution_prmm_minimizer";
   require_valid_initial(initial, op);
   if (config.population_size < 10) {
-    throw std::runtime_error(std::string(op) + ": population_size must be >= 10");
+    ::pluss::throw_error(std::string(op) + ": population_size must be >= 10");
   }
 
   const CommonSetup setup = make_common_setup(initial, config.promote_cpu_to_float64);
@@ -1276,7 +1276,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
   constexpr const char* op = "particle_swarm_minimizer";
   require_valid_initial(initial, op);
   if (config.population_size < 4) {
-    throw std::runtime_error(std::string(op) + ": population_size must be >= 4");
+    ::pluss::throw_error(std::string(op) + ": population_size must be >= 4");
   }
 
   const CommonSetup setup = make_common_setup(initial, config.promote_cpu_to_float64);
@@ -1606,7 +1606,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
   constexpr const char* op = "particle_swarm_dv_minimizer";
   require_valid_initial(initial, op);
   if (config.population_size < 4) {
-    throw std::runtime_error(std::string(op) + ": population_size must be >= 4");
+    ::pluss::throw_error(std::string(op) + ": population_size must be >= 4");
   }
 
   const CommonSetup setup = make_common_setup(initial, config.promote_cpu_to_float64);

@@ -1,0 +1,2772 @@
+methods:
+  - name: expand
+    signature: "Series expand(pluss::msharp::RangeView::Int target_sizes, bool implicit=false) const"
+    forward: "target_sizes, implicit"
+
+  - name: add
+    signature: "Series add(const Series& rhs) const"
+    forward: "rhs, 1.0"
+
+  - name: add
+    signature: "Series add(const Series& rhs, double alpha) const"
+    forward: "rhs, alpha"
+
+  - name: add
+    signature: "Series add(double rhs, double alpha) const"
+    forward: "rhs, alpha"
+
+  - name: sub
+    signature: "Series sub(const Series& rhs) const"
+    forward: "rhs, 1.0"
+
+  - name: sub
+    signature: "Series sub(const Series& rhs, double alpha) const"
+    forward: "rhs, alpha"
+
+  - name: sub
+    signature: "Series sub(double rhs, double alpha) const"
+    forward: "rhs, alpha"
+
+  - name: mul
+    signature: "Series mul(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: div
+    signature: "Series div(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: pow
+    signature: "Series pow(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: minimum
+    signature: "Series minimum(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: maximum
+    signature: "Series maximum(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: eq
+    signature: "Series eq(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ne
+    signature: "Series ne(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: lt
+    signature: "Series lt(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: le
+    signature: "Series le(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: gt
+    signature: "Series gt(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ge
+    signature: "Series ge(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: add_
+    signature: "Series& add_(const Series& rhs) const"
+    forward: "rhs, 1.0"
+
+  - name: sub_
+    signature: "Series& sub_(const Series& rhs) const"
+    forward: "rhs, 1.0"
+
+  - name: sum
+    signature: "Series sum() const"
+    forward: ""
+
+  - name: sum
+    signature: "Series sum(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: mean
+    signature: "Series mean(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: amax
+    signature: "Series amax() const"
+    forward: ""
+
+  - name: amax
+    signature: "Series amax(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: amin
+    signature: "Series amin() const"
+    forward: ""
+
+  - name: amin
+    signature: "Series amin(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: all
+    signature: "Series all() const"
+    forward: ""
+
+  - name: all
+    signature: "Series all(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: any
+    signature: "Series any() const"
+    forward: ""
+
+  - name: any
+    signature: "Series any(std::int64_t dim) const"
+    forward: "dim, false"
+
+  # Ordered/statistical reduction family (large tranche, concrete signatures).
+  - name: argmax
+    signature: "Series argmax() const"
+    forward: ""
+
+  - name: argmax
+    signature: "Series argmax(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: argmax
+    signature: "Series argmax(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: argmin
+    signature: "Series argmin() const"
+    forward: ""
+
+  - name: argmin
+    signature: "Series argmin(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: argmin
+    signature: "Series argmin(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: argsort
+    signature: "Series argsort() const"
+    forward: ""
+
+  - name: argsort
+    signature: "Series argsort(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: argsort
+    signature: "Series argsort(std::int64_t dim, bool descending) const"
+    forward: "dim, descending"
+
+  - name: argsort
+    signature: "Series argsort(std::int64_t dim, bool descending, bool stable) const"
+    forward: "dim, descending, stable"
+
+  - name: sort
+    signature: "Series sort() const"
+    forward: ""
+
+  - name: sort
+    signature: "Series sort(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: sort
+    signature: "Series sort(std::int64_t dim, bool descending) const"
+    forward: "dim, descending"
+
+  - name: sort
+    signature: "Series sort(std::int64_t dim, bool descending, bool stable) const"
+    forward: "dim, descending, stable"
+
+  - name: topk
+    signature: "Series topk(std::int64_t k) const"
+    forward: "k, -1, true, true"
+
+  - name: topk
+    signature: "Series topk(std::int64_t k, std::int64_t dim) const"
+    forward: "k, dim, true, true"
+
+  - name: topk
+    signature: "Series topk(std::int64_t k, std::int64_t dim, bool largest) const"
+    forward: "k, dim, largest, true"
+
+  - name: topk
+    signature: "Series topk(std::int64_t k, std::int64_t dim, bool largest, bool sorted) const"
+    forward: "k, dim, largest, sorted"
+
+  - name: kthvalue
+    signature: "Series kthvalue(std::int64_t k) const"
+    forward: "k, -1, false"
+
+  - name: kthvalue
+    signature: "Series kthvalue(std::int64_t k, std::int64_t dim) const"
+    forward: "k, dim, false"
+
+  - name: kthvalue
+    signature: "Series kthvalue(std::int64_t k, std::int64_t dim, bool keepdim) const"
+    forward: "k, dim, keepdim"
+
+  - name: median
+    signature: "Series median() const"
+    forward: ""
+
+  - name: median
+    signature: "Series median(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: nanmedian
+    signature: "Series nanmedian() const"
+    forward: ""
+
+  - name: nanmedian
+    signature: "Series nanmedian(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: mode
+    signature: "Series mode() const"
+    forward: ""
+
+  - name: mode
+    signature: "Series mode(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: quantile
+    signature: "Series quantile() const"
+    forward: ""
+
+  - name: quantile
+    signature: "Series quantile(double q) const"
+    forward: "q"
+
+  - name: nanquantile
+    signature: "Series nanquantile() const"
+    forward: ""
+
+  - name: nanquantile
+    signature: "Series nanquantile(double q) const"
+    forward: "q"
+
+  - name: logsumexp
+    signature: "Series logsumexp() const"
+    forward: ""
+
+  - name: logsumexp
+    signature: "Series logsumexp(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: logsumexp
+    signature: "Series logsumexp(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: logcumsumexp
+    signature: "Series logcumsumexp() const"
+    forward: ""
+
+  - name: logcumsumexp
+    signature: "Series logcumsumexp(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: cummax
+    signature: "Series cummax() const"
+    forward: ""
+
+  - name: cummax
+    signature: "Series cummax(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: cummin
+    signature: "Series cummin() const"
+    forward: ""
+
+  - name: cummin
+    signature: "Series cummin(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: msort
+    signature: "Series msort() const"
+    forward: ""
+
+  - name: tril
+    signature: "Series tril() const"
+    forward: "0"
+
+  - name: tril
+    signature: "Series tril(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: triu
+    signature: "Series triu() const"
+    forward: "0"
+
+  - name: triu
+    signature: "Series triu(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: trace
+    signature: "Series trace() const"
+    forward: ""
+
+  - name: diag
+    signature: "Series diag() const"
+    forward: ""
+
+  - name: diag
+    signature: "Series diag(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: diagonal
+    signature: "Series diagonal() const"
+    forward: ""
+
+  - name: diagonal
+    signature: "Series diagonal(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: diagonal
+    signature: "Series diagonal(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const"
+    forward: "diagonal, dim1, dim2"
+
+  - name: diagflat
+    signature: "Series diagflat() const"
+    forward: ""
+
+  - name: diagflat
+    signature: "Series diagflat(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: diag_embed
+    signature: "Series diag_embed() const"
+    forward: ""
+
+  - name: diag_embed
+    signature: "Series diag_embed(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: flipud
+    signature: "Series flipud() const"
+    forward: ""
+
+  - name: fliplr
+    signature: "Series fliplr() const"
+    forward: ""
+
+  # Spectral / moving-stat / distribution scalar families (large tranche, concrete signatures).
+  - name: dct
+    signature: "Series dct() const"
+    forward: ""
+
+  - name: dct
+    signature: "Series dct(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: idct
+    signature: "Series idct() const"
+    forward: ""
+
+  - name: idct
+    signature: "Series idct(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: dst
+    signature: "Series dst() const"
+    forward: ""
+
+  - name: dst
+    signature: "Series dst(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: idst
+    signature: "Series idst() const"
+    forward: ""
+
+  - name: idst
+    signature: "Series idst(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: hilbert
+    signature: "Series hilbert() const"
+    forward: ""
+
+  - name: hilbert
+    signature: "Series hilbert(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: cumsum
+    signature: "Series cumsum(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: cumsum_
+    signature: "Series& cumsum_(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: cumprod
+    signature: "Series cumprod(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: cumprod_
+    signature: "Series& cumprod_(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: flatten
+    signature: "Series flatten() const"
+    forward: "0, -1"
+
+  - name: flatten
+    signature: "Series flatten(std::int64_t start_dim) const"
+    forward: "start_dim, -1"
+
+  - name: norm
+    signature: "Series norm() const"
+    forward: "2.0"
+
+  - name: norm
+    signature: "Series norm(std::int64_t dim, bool keepdim=false) const"
+    forward: "2.0, dim, keepdim"
+
+  - name: unique
+    signature: "Series unique() const"
+    forward: "true"
+
+  - name: bincount
+    signature: "Series bincount() const"
+    forward: "0"
+
+  - name: histc
+    signature: "Series histc() const"
+    forward: "100, 0.0, 0.0"
+
+  - name: histc
+    signature: "Series histc(std::int64_t bins) const"
+    forward: "bins, 0.0, 0.0"
+
+  - name: repeat
+    signature: "Series repeat(pluss::msharp::RangeView::Int repeats) const"
+    forward: "repeats"
+
+  - name: tile
+    signature: "Series tile(pluss::msharp::RangeView::Int dims) const"
+    forward: "dims"
+
+  - name: sum_to_size
+    signature: "Series sum_to_size(pluss::msharp::RangeView::Int size) const"
+    forward: "size"
+
+  - name: broadcast_to
+    signature: "Series broadcast_to(pluss::msharp::RangeView::Int size) const"
+    forward: "size"
+
+  # Tranche 1/12: unary/view/introspection no-arg concretes (large tranche).
+  - name: abs
+    signature: "Series abs() const"
+    forward: ""
+
+  - name: abs2
+    signature: "Series abs2() const"
+    forward: ""
+
+  - name: abs_
+    signature: "Series& abs_() const"
+    forward: ""
+
+  - name: absolute
+    signature: "Series absolute() const"
+    forward: ""
+
+  - name: absolute_
+    signature: "Series& absolute_() const"
+    forward: ""
+
+  - name: adjoint
+    signature: "Series adjoint() const"
+    forward: ""
+
+  - name: airy
+    signature: "Series airy() const"
+    forward: ""
+
+  - name: alias
+    signature: "Series alias() const"
+    forward: ""
+
+  - name: angle
+    signature: "Series angle() const"
+    forward: ""
+
+  - name: argwhere
+    signature: "Series argwhere() const"
+    forward: ""
+
+  - name: cbrt
+    signature: "Series cbrt() const"
+    forward: ""
+
+  - name: chalf
+    signature: "Series chalf() const"
+    forward: ""
+
+  - name: coalesce
+    signature: "Series coalesce() const"
+    forward: ""
+
+  - name: conj
+    signature: "Series conj() const"
+    forward: ""
+
+  - name: conj_physical
+    signature: "Series conj_physical() const"
+    forward: ""
+
+  - name: conj_physical_
+    signature: "Series& conj_physical_() const"
+    forward: ""
+
+  - name: data
+    signature: "Series data() const"
+    forward: ""
+
+  - name: dequantize
+    signature: "Series dequantize() const"
+    forward: ""
+
+  - name: detach
+    signature: "Series detach() const"
+    forward: ""
+
+  - name: detach_
+    signature: "Series& detach_() const"
+    forward: ""
+
+  - name: factorial
+    signature: "Series factorial() const"
+    forward: ""
+
+  - name: fftshift
+    signature: "Series fftshift() const"
+    forward: ""
+
+  - name: imag
+    signature: "Series imag() const"
+    forward: ""
+
+  - name: is_coalesced
+    signature: "Series is_coalesced() const"
+    forward: ""
+
+  - name: is_nonzero
+    signature: "Series is_nonzero() const"
+    forward: ""
+
+  - name: matrix_exp
+    signature: "Series matrix_exp() const"
+    forward: ""
+
+  - name: nan_to_num
+    signature: "Series nan_to_num() const"
+    forward: ""
+
+  - name: positive
+    signature: "Series positive() const"
+    forward: ""
+
+  - name: positive_
+    signature: "Series& positive_() const"
+    forward: ""
+
+  - name: real
+    signature: "Series real() const"
+    forward: ""
+
+  - name: resolve_conj
+    signature: "Series resolve_conj() const"
+    forward: ""
+
+  - name: resolve_neg
+    signature: "Series resolve_neg() const"
+    forward: ""
+
+  - name: signbit
+    signature: "Series signbit() const"
+    forward: ""
+
+  - name: signbit_
+    signature: "Series& signbit_() const"
+    forward: ""
+
+  - name: values_copy
+    signature: "Series values_copy() const"
+    forward: ""
+
+  - name: values_view
+    signature: "Series values_view() const"
+    forward: ""
+
+  - name: zero_
+    signature: "Series& zero_() const"
+    forward: ""
+
+  # Tranche 2/12: binary pair/scalar-adjacent concretes (large tranche).
+  - name: arctan2
+    signature: "Series arctan2(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: arctan2_
+    signature: "Series& arctan2_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: atan2
+    signature: "Series atan2(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: atan2_
+    signature: "Series& atan2_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_left_shift
+    signature: "Series bitwise_left_shift(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_left_shift_
+    signature: "Series& bitwise_left_shift_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_right_shift
+    signature: "Series bitwise_right_shift(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_right_shift_
+    signature: "Series& bitwise_right_shift_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: copysign
+    signature: "Series copysign(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: copysign_
+    signature: "Series& copysign_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: divide
+    signature: "Series divide(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: divide_
+    signature: "Series& divide_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: float_power
+    signature: "Series float_power(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: float_power_
+    signature: "Series& float_power_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: fmod
+    signature: "Series fmod(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: fmod_
+    signature: "Series& fmod_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: gcd
+    signature: "Series gcd(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: gcd_
+    signature: "Series& gcd_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: lcm
+    signature: "Series lcm(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: lcm_
+    signature: "Series& lcm_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: nextafter
+    signature: "Series nextafter(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: nextafter_
+    signature: "Series& nextafter_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: hypot
+    signature: "Series hypot(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: hypot_
+    signature: "Series& hypot_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ldexp
+    signature: "Series ldexp(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ldexp_
+    signature: "Series& ldexp_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: greater
+    signature: "Series greater(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: greater_
+    signature: "Series& greater_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: greater_equal
+    signature: "Series greater_equal(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: greater_equal_
+    signature: "Series& greater_equal_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: less
+    signature: "Series less(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: less_
+    signature: "Series& less_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: less_equal
+    signature: "Series less_equal(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: less_equal_
+    signature: "Series& less_equal_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: logical_and_
+    signature: "Series& logical_and_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: logical_or_
+    signature: "Series& logical_or_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: logical_xor_
+    signature: "Series& logical_xor_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: eq_
+    signature: "Series& eq_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ge_
+    signature: "Series& ge_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: gt_
+    signature: "Series& gt_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: le_
+    signature: "Series& le_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: lt_
+    signature: "Series& lt_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: ne_
+    signature: "Series& ne_(const Series& rhs) const"
+    forward: "rhs"
+
+  # Tranche 3/12: binary matrix/math family (large tranche, concrete signatures).
+  - name: addbmm
+    signature: "Series addbmm(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const"
+    forward: "batch1, batch2, beta, alpha"
+
+  - name: addbmm_
+    signature: "Series& addbmm_(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const"
+    forward: "batch1, batch2, beta, alpha"
+
+  - name: addcdiv
+    signature: "Series addcdiv(const Series& tensor1, const Series& tensor2, double value=1.0) const"
+    forward: "tensor1, tensor2, value"
+
+  - name: addcdiv_
+    signature: "Series& addcdiv_(const Series& tensor1, const Series& tensor2, double value=1.0) const"
+    forward: "tensor1, tensor2, value"
+
+  - name: addcmul
+    signature: "Series addcmul(const Series& tensor1, const Series& tensor2, double value=1.0) const"
+    forward: "tensor1, tensor2, value"
+
+  - name: addcmul_
+    signature: "Series& addcmul_(const Series& tensor1, const Series& tensor2, double value=1.0) const"
+    forward: "tensor1, tensor2, value"
+
+  - name: addmm
+    signature: "Series addmm(const Series& mat1, const Series& mat2, double beta=1.0, double alpha=1.0) const"
+    forward: "mat1, mat2, beta, alpha"
+
+  - name: addmm_
+    signature: "Series& addmm_(const Series& mat1, const Series& mat2, double beta=1.0, double alpha=1.0) const"
+    forward: "mat1, mat2, beta, alpha"
+
+  - name: addmv
+    signature: "Series addmv(const Series& mat, const Series& vec, double beta=1.0, double alpha=1.0) const"
+    forward: "mat, vec, beta, alpha"
+
+  - name: addmv_
+    signature: "Series& addmv_(const Series& mat, const Series& vec, double beta=1.0, double alpha=1.0) const"
+    forward: "mat, vec, beta, alpha"
+
+  - name: addr
+    signature: "Series addr(const Series& vec1, const Series& vec2, double beta=1.0, double alpha=1.0) const"
+    forward: "vec1, vec2, beta, alpha"
+
+  - name: addr_
+    signature: "Series& addr_(const Series& vec1, const Series& vec2, double beta=1.0, double alpha=1.0) const"
+    forward: "vec1, vec2, beta, alpha"
+
+  - name: baddbmm
+    signature: "Series baddbmm(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const"
+    forward: "batch1, batch2, beta, alpha"
+
+  - name: baddbmm_
+    signature: "Series& baddbmm_(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const"
+    forward: "batch1, batch2, beta, alpha"
+
+  - name: bmm
+    signature: "Series bmm(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: cross
+    signature: "Series cross(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: cross
+    signature: "Series cross(const Series& rhs, std::int64_t dim) const"
+    forward: "rhs, dim"
+
+  - name: dist
+    signature: "Series dist(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: expand_as
+    signature: "Series expand_as(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: fmax
+    signature: "Series fmax(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: fmin
+    signature: "Series fmin(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: floor_divide
+    signature: "Series floor_divide(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: floor_divide
+    signature: "Series floor_divide(double rhs) const"
+    forward: "rhs"
+
+  - name: floor_divide_
+    signature: "Series& floor_divide_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: floor_divide_
+    signature: "Series& floor_divide_(double rhs) const"
+    forward: "rhs"
+
+  - name: ger
+    signature: "Series ger(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: inner
+    signature: "Series inner(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: is_same_size
+    signature: "Series is_same_size(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: kron
+    signature: "Series kron(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: multiply
+    signature: "Series multiply(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: multiply
+    signature: "Series multiply(double rhs) const"
+    forward: "rhs"
+
+  - name: multiply_
+    signature: "Series& multiply_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: multiply_
+    signature: "Series& multiply_(double rhs) const"
+    forward: "rhs"
+
+  - name: remainder
+    signature: "Series remainder(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: remainder
+    signature: "Series remainder(double rhs) const"
+    forward: "rhs"
+
+  - name: remainder_
+    signature: "Series& remainder_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: remainder_
+    signature: "Series& remainder_(double rhs) const"
+    forward: "rhs"
+
+  - name: xlogy
+    signature: "Series xlogy(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: xlogy
+    signature: "Series xlogy(double rhs) const"
+    forward: "rhs"
+
+  - name: xlogy_
+    signature: "Series& xlogy_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: xlogy_
+    signature: "Series& xlogy_(double rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_and_
+    signature: "Series& bitwise_and_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_or_
+    signature: "Series& bitwise_or_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: bitwise_xor_
+    signature: "Series& bitwise_xor_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: equal
+    signature: "Series equal(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: is_set_to
+    signature: "Series is_set_to() const"
+    forward: ""
+
+  - name: isclose
+    signature: "Series isclose(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: isclose
+    signature: "Series isclose(const Series& rhs, double rtol, double atol) const"
+    forward: "rhs, rtol, atol"
+
+  - name: isclose
+    signature: "Series isclose(const Series& rhs, double rtol, double atol, bool equal_nan) const"
+    forward: "rhs, rtol, atol, equal_nan"
+
+  - name: allclose
+    signature: "Series allclose(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: allclose
+    signature: "Series allclose(const Series& rhs, double rtol, double atol) const"
+    forward: "rhs, rtol, atol"
+
+  - name: allclose
+    signature: "Series allclose(const Series& rhs, double rtol, double atol, bool equal_nan) const"
+    forward: "rhs, rtol, atol, equal_nan"
+
+  # Tranche 4/12: metadata/introspection/quantization no-arg family (large tranche).
+  - name: _conj
+    signature: "Series _conj() const"
+    forward: ""
+
+  - name: _conj_physical
+    signature: "Series _conj_physical() const"
+    forward: ""
+
+  - name: _is_all_true
+    signature: "Series _is_all_true() const"
+    forward: ""
+
+  - name: _is_any_true
+    signature: "Series _is_any_true() const"
+    forward: ""
+
+  - name: _is_zerotensor
+    signature: "Series _is_zerotensor() const"
+    forward: ""
+
+  - name: _nnz
+    signature: "Series _nnz() const"
+    forward: ""
+
+  - name: _version
+    signature: "Series _version() const"
+    forward: ""
+
+  - name: ccol_indices
+    signature: "Series ccol_indices() const"
+    forward: ""
+
+  - name: col_indices
+    signature: "Series col_indices() const"
+    forward: ""
+
+  - name: count_nonzero
+    signature: "Series count_nonzero() const"
+    forward: ""
+
+  - name: crow_indices
+    signature: "Series crow_indices() const"
+    forward: ""
+
+  - name: dense_dim
+    signature: "Series dense_dim() const"
+    forward: ""
+
+  - name: indices
+    signature: "Series indices() const"
+    forward: ""
+
+  - name: int_repr
+    signature: "Series int_repr() const"
+    forward: ""
+
+  - name: is_complex
+    signature: "Series is_complex() const"
+    forward: ""
+
+  - name: is_conj
+    signature: "Series is_conj() const"
+    forward: ""
+
+  - name: is_distributed
+    signature: "Series is_distributed() const"
+    forward: ""
+
+  - name: is_floating_point
+    signature: "Series is_floating_point() const"
+    forward: ""
+
+  - name: is_inference
+    signature: "Series is_inference() const"
+    forward: ""
+
+  - name: is_leaf
+    signature: "Series is_leaf() const"
+    forward: ""
+
+  - name: is_neg
+    signature: "Series is_neg() const"
+    forward: ""
+
+  - name: is_pinned
+    signature: "Series is_pinned() const"
+    forward: ""
+
+  - name: is_signed
+    signature: "Series is_signed() const"
+    forward: ""
+
+  - name: isneginf
+    signature: "Series isneginf() const"
+    forward: ""
+
+  - name: isposinf
+    signature: "Series isposinf() const"
+    forward: ""
+
+  - name: isreal
+    signature: "Series isreal() const"
+    forward: ""
+
+  - name: mH
+    signature: "Series mH() const"
+    forward: ""
+
+  - name: mT
+    signature: "Series mT() const"
+    forward: ""
+
+  - name: matrix_H
+    signature: "Series matrix_H() const"
+    forward: ""
+
+  - name: nonzero_numpy
+    signature: "Series nonzero_numpy() const"
+    forward: ""
+
+  - name: nonzero_static
+    signature: "Series nonzero_static() const"
+    forward: ""
+
+  - name: normc
+    signature: "Series normc() const"
+    forward: ""
+
+  - name: normr
+    signature: "Series normr() const"
+    forward: ""
+
+  - name: numpy_T
+    signature: "Series numpy_T() const"
+    forward: ""
+
+  - name: output_nr
+    signature: "Series output_nr() const"
+    forward: ""
+
+  - name: pin_memory
+    signature: "Series pin_memory() const"
+    forward: ""
+
+  - name: q_per_channel_axis
+    signature: "Series q_per_channel_axis() const"
+    forward: ""
+
+  - name: q_per_channel_scales
+    signature: "Series q_per_channel_scales() const"
+    forward: ""
+
+  - name: q_per_channel_zero_points
+    signature: "Series q_per_channel_zero_points() const"
+    forward: ""
+
+  - name: q_scale
+    signature: "Series q_scale() const"
+    forward: ""
+
+  - name: q_zero_point
+    signature: "Series q_zero_point() const"
+    forward: ""
+
+  - name: qscheme
+    signature: "Series qscheme() const"
+    forward: ""
+
+  - name: ravel
+    signature: "Series ravel() const"
+    forward: ""
+
+  - name: retains_grad
+    signature: "Series retains_grad() const"
+    forward: ""
+
+  - name: row_indices
+    signature: "Series row_indices() const"
+    forward: ""
+
+  - name: sparse_dim
+    signature: "Series sparse_dim() const"
+    forward: ""
+
+  - name: t
+    signature: "Series t() const"
+    forward: ""
+
+  - name: t_
+    signature: "Series& t_() const"
+    forward: ""
+
+  # Tranche 5/12: sparse/conversion + metadata no-arg family (large tranche).
+  - name: _dimI
+    signature: "Series _dimI() const"
+    forward: ""
+
+  - name: _dimV
+    signature: "Series _dimV() const"
+    forward: ""
+
+  - name: _indices
+    signature: "Series _indices() const"
+    forward: ""
+
+  - name: _lazy_clone
+    signature: "Series _lazy_clone() const"
+    forward: ""
+
+  - name: _neg_view
+    signature: "Series _neg_view() const"
+    forward: ""
+
+  - name: _nested_tensor_size
+    signature: "Series _nested_tensor_size() const"
+    forward: ""
+
+  - name: _nested_tensor_storage_offsets
+    signature: "Series _nested_tensor_storage_offsets() const"
+    forward: ""
+
+  - name: _nested_tensor_strides
+    signature: "Series _nested_tensor_strides() const"
+    forward: ""
+
+  - name: _sparse_mask_projection
+    signature: "Series _sparse_mask_projection() const"
+    forward: ""
+
+  - name: _to_dense
+    signature: "Series _to_dense() const"
+    forward: ""
+
+  - name: _to_sparse
+    signature: "Series _to_sparse() const"
+    forward: ""
+
+  - name: _to_sparse_bsc
+    signature: "Series _to_sparse_bsc() const"
+    forward: ""
+
+  - name: _to_sparse_bsr
+    signature: "Series _to_sparse_bsr() const"
+    forward: ""
+
+  - name: _to_sparse_csc
+    signature: "Series _to_sparse_csc() const"
+    forward: ""
+
+  - name: _to_sparse_csr
+    signature: "Series _to_sparse_csr() const"
+    forward: ""
+
+  - name: bitwise_not_
+    signature: "Series& bitwise_not_() const"
+    forward: ""
+
+  - name: cplxpair
+    signature: "Series cplxpair() const"
+    forward: ""
+
+  - name: ediff1d
+    signature: "Series ediff1d() const"
+    forward: ""
+
+  - name: frexp
+    signature: "Series frexp() const"
+    forward: ""
+
+  - name: size
+    signature: "Series size() const"
+    forward: ""
+
+  - name: sparse_resize_and_clear_
+    signature: "Series& sparse_resize_and_clear_() const"
+    forward: ""
+
+  - name: sspaddmm
+    signature: "Series sspaddmm() const"
+    forward: ""
+
+  - name: stride
+    signature: "Series stride() const"
+    forward: ""
+
+  - name: to_dense
+    signature: "Series to_dense() const"
+    forward: ""
+
+  - name: to_mkldnn
+    signature: "Series to_mkldnn() const"
+    forward: ""
+
+  - name: to_padded_tensor
+    signature: "Series to_padded_tensor() const"
+    forward: ""
+
+  - name: to_sparse
+    signature: "Series to_sparse() const"
+    forward: ""
+
+  - name: to_sparse_bsc
+    signature: "Series to_sparse_bsc() const"
+    forward: ""
+
+  - name: to_sparse_bsr
+    signature: "Series to_sparse_bsr() const"
+    forward: ""
+
+  - name: to_sparse_csc
+    signature: "Series to_sparse_csc() const"
+    forward: ""
+
+  - name: to_sparse_csr
+    signature: "Series to_sparse_csr() const"
+    forward: ""
+
+  # Tranche 6/12: arithmetic alias + shape/selection concrete wrappers (large tranche).
+  - name: subtract
+    signature: "Series subtract(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: subtract
+    signature: "Series subtract(const Series& rhs, double alpha) const"
+    forward: "rhs, alpha"
+
+  - name: subtract
+    signature: "Series subtract(double rhs, double alpha=1.0) const"
+    forward: "rhs, alpha"
+
+  - name: subtract_
+    signature: "Series& subtract_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: subtract_
+    signature: "Series& subtract_(const Series& rhs, double alpha) const"
+    forward: "rhs, alpha"
+
+  - name: subtract_
+    signature: "Series& subtract_(double rhs) const"
+    forward: "rhs"
+
+  - name: true_divide
+    signature: "Series true_divide(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: true_divide
+    signature: "Series true_divide(double rhs) const"
+    forward: "rhs"
+
+  - name: true_divide_
+    signature: "Series& true_divide_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: true_divide_
+    signature: "Series& true_divide_(double rhs) const"
+    forward: "rhs"
+
+  - name: not_equal
+    signature: "Series not_equal(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: not_equal
+    signature: "Series not_equal(double rhs) const"
+    forward: "rhs"
+
+  - name: not_equal_
+    signature: "Series& not_equal_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: not_equal_
+    signature: "Series& not_equal_(double rhs) const"
+    forward: "rhs"
+
+  - name: clamp
+    signature: "Series clamp(double min_v, double max_v) const"
+    forward: "min_v, max_v"
+
+  - name: clamp_
+    signature: "Series& clamp_(double min_v, double max_v) const"
+    forward: "min_v, max_v"
+
+  - name: index_select
+    signature: "Series index_select(std::int64_t dim, const Series& index) const"
+    forward: "dim, index"
+
+  - name: matmul
+    signature: "Series matmul(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: mm
+    signature: "Series mm(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: mv
+    signature: "Series mv(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: dot
+    signature: "Series dot(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: outer
+    signature: "Series outer(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: reshape_as
+    signature: "Series reshape_as(const Series& other) const"
+    forward: "other"
+
+  - name: view_as
+    signature: "Series view_as(const Series& other) const"
+    forward: "other"
+
+  - name: type_as
+    signature: "Series type_as(const Series& other) const"
+    forward: "other"
+
+  - name: align_as
+    signature: "Series align_as(const Series& other) const"
+    forward: "other"
+
+  - name: moveaxis
+    signature: "Series moveaxis(std::int64_t src, std::int64_t dst) const"
+    forward: "src, dst"
+
+  - name: movedim
+    signature: "Series movedim(std::int64_t src, std::int64_t dst) const"
+    forward: "src, dst"
+
+  - name: swapaxes
+    signature: "Series swapaxes(std::int64_t dim0, std::int64_t dim1) const"
+    forward: "dim0, dim1"
+
+  - name: swapdims
+    signature: "Series swapdims(std::int64_t dim0, std::int64_t dim1) const"
+    forward: "dim0, dim1"
+
+  - name: swapaxes_
+    signature: "Series& swapaxes_(std::int64_t dim0, std::int64_t dim1) const"
+    forward: "dim0, dim1"
+
+  - name: swapdims_
+    signature: "Series& swapdims_(std::int64_t dim0, std::int64_t dim1) const"
+    forward: "dim0, dim1"
+
+  - name: transpose_
+    signature: "Series& transpose_(std::int64_t dim0, std::int64_t dim1) const"
+    forward: "dim0, dim1"
+
+  - name: squeeze_
+    signature: "Series& squeeze_() const"
+    forward: ""
+
+  - name: squeeze_
+    signature: "Series& squeeze_(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: unsqueeze_
+    signature: "Series& unsqueeze_(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: tril_
+    signature: "Series& tril_() const"
+    forward: ""
+
+  - name: tril_
+    signature: "Series& tril_(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  - name: triu_
+    signature: "Series& triu_() const"
+    forward: ""
+
+  - name: triu_
+    signature: "Series& triu_(std::int64_t diagonal) const"
+    forward: "diagonal"
+
+  # Tranche 6/12 extension: RangeView::Int list/shape signatures.
+  - name: align_to
+    signature: "Series align_to(pluss::msharp::RangeView::Int dims) const"
+    forward: "dims"
+
+  - name: as_strided
+    signature: "Series as_strided(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides) const"
+    forward: "sizes, strides"
+
+  - name: as_strided
+    signature: "Series as_strided(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides, std::int64_t storage_offset) const"
+    forward: "sizes, strides, storage_offset"
+
+  - name: as_strided_
+    signature: "Series& as_strided_(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  - name: as_strided_
+    signature: "Series& as_strided_(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides) const"
+    forward: "sizes, strides"
+
+  - name: as_strided_
+    signature: "Series& as_strided_(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides, std::int64_t storage_offset) const"
+    forward: "sizes, strides, storage_offset"
+
+  - name: as_strided_scatter
+    signature: "Series as_strided_scatter(const Series& src, pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides) const"
+    forward: "src, sizes, strides"
+
+  - name: as_strided_scatter
+    signature: "Series as_strided_scatter(const Series& src, pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides, std::int64_t storage_offset) const"
+    forward: "src, sizes, strides, storage_offset"
+
+  - name: split
+    signature: "Series split(std::int64_t split_size, std::int64_t dim=0) const"
+    forward: "split_size, dim"
+
+  - name: split
+    signature: "Series split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
+    forward: "split_sizes, dim"
+
+  - name: unsafe_split
+    signature: "Series unsafe_split(std::int64_t split_size, std::int64_t dim=0) const"
+    forward: "split_size, dim"
+
+  - name: unsafe_split
+    signature: "Series unsafe_split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
+    forward: "split_sizes, dim"
+
+  - name: split_with_sizes
+    signature: "Series split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
+    forward: "split_sizes, dim"
+
+  - name: unsafe_split_with_sizes
+    signature: "Series unsafe_split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const"
+    forward: "split_sizes, dim"
+
+  - name: tensor_split
+    signature: "Series tensor_split(std::int64_t sections, std::int64_t dim=0) const"
+    forward: "sections, dim"
+
+  - name: tensor_split
+    signature: "Series tensor_split(pluss::msharp::RangeView::Int indices_or_sections, std::int64_t dim=0) const"
+    forward: "indices_or_sections, dim"
+
+  - name: flip
+    signature: "Series flip(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: flip
+    signature: "Series flip(pluss::msharp::RangeView::Int dims) const"
+    forward: "dims"
+
+  - name: roll
+    signature: "Series roll(std::int64_t shift) const"
+    forward: "shift"
+
+  - name: roll
+    signature: "Series roll(std::int64_t shift, std::int64_t dim) const"
+    forward: "shift, dim"
+
+  - name: roll
+    signature: "Series roll(pluss::msharp::RangeView::Int shifts) const"
+    forward: "shifts"
+
+  - name: roll
+    signature: "Series roll(pluss::msharp::RangeView::Int shifts, std::int64_t dim) const"
+    forward: "shifts, dim"
+
+  - name: roll
+    signature: "Series roll(pluss::msharp::RangeView::Int shifts, pluss::msharp::RangeView::Int dims) const"
+    forward: "shifts, dims"
+
+  - name: unflatten
+    signature: "Series unflatten(std::int64_t dim, pluss::msharp::RangeView::Int sizes) const"
+    forward: "dim, sizes"
+
+  - name: new_empty
+    signature: "Series new_empty(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  - name: new_empty_strided
+    signature: "Series new_empty_strided(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  - name: new_empty_strided
+    signature: "Series new_empty_strided(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides) const"
+    forward: "sizes, strides"
+
+  - name: new_zeros
+    signature: "Series new_zeros(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  - name: new_ones
+    signature: "Series new_ones(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  - name: new_full
+    signature: "Series new_full(pluss::msharp::RangeView::Int sizes, double fill_value) const"
+    forward: "sizes, fill_value"
+
+  - name: resize_
+    signature: "Series& resize_(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  # Tranche 7/12: broad concrete wrappers batch (~50 methods).
+  - name: _addmm_activation
+    signature: "Series _addmm_activation() const"
+    forward: ""
+
+  - name: _autocast_to_full_precision
+    signature: "Series _autocast_to_full_precision() const"
+    forward: ""
+
+  - name: _autocast_to_reduced_precision
+    signature: "Series _autocast_to_reduced_precision() const"
+    forward: ""
+
+  - name: _fw_primal
+    signature: "Series _fw_primal() const"
+    forward: ""
+
+  - name: aminmax
+    signature: "Series aminmax() const"
+    forward: ""
+
+  - name: corrcoef
+    signature: "Series corrcoef() const"
+    forward: ""
+
+  - name: cov
+    signature: "Series cov() const"
+    forward: ""
+
+  - name: gelu_
+    signature: "Series& gelu_() const"
+    forward: ""
+
+  - name: istft
+    signature: "Series istft() const"
+    forward: ""
+
+  - name: record_stream
+    signature: "Series record_stream() const"
+    forward: ""
+
+  - name: refine_names
+    signature: "Series refine_names() const"
+    forward: ""
+
+  - name: rename
+    signature: "Series rename() const"
+    forward: ""
+
+  - name: stft
+    signature: "Series stft() const"
+    forward: ""
+
+  - name: _reshape_alias
+    signature: "Series _reshape_alias(pluss::msharp::RangeView::Int sizes) const"
+    forward: "sizes"
+
+  - name: _reshape_alias
+    signature: "Series _reshape_alias(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides) const"
+    forward: "sizes, strides"
+
+  - name: _reshape_alias
+    signature: "Series _reshape_alias(pluss::msharp::RangeView::Int sizes, pluss::msharp::RangeView::Int strides, std::int64_t storage_offset) const"
+    forward: "sizes, strides, storage_offset"
+
+  - name: bernoulli
+    signature: "Series bernoulli() const"
+    forward: ""
+
+  - name: bernoulli
+    signature: "Series bernoulli(double p) const"
+    forward: "p"
+
+  - name: bernoulli_
+    signature: "Series& bernoulli_() const"
+    forward: ""
+
+  - name: bernoulli_
+    signature: "Series& bernoulli_(double p) const"
+    forward: "p"
+
+  - name: besseli
+    signature: "Series besseli() const"
+    forward: ""
+
+  - name: besseli
+    signature: "Series besseli(double order) const"
+    forward: "order"
+
+  - name: besselj
+    signature: "Series besselj() const"
+    forward: ""
+
+  - name: besselj
+    signature: "Series besselj(double order) const"
+    forward: "order"
+
+  - name: besselk
+    signature: "Series besselk() const"
+    forward: ""
+
+  - name: besselk
+    signature: "Series besselk(double order) const"
+    forward: "order"
+
+  - name: bessely
+    signature: "Series bessely() const"
+    forward: ""
+
+  - name: bessely
+    signature: "Series bessely(double order) const"
+    forward: "order"
+
+  - name: log_softmax
+    signature: "Series log_softmax(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: histogram
+    signature: "Series histogram() const"
+    forward: ""
+
+  - name: histogram
+    signature: "Series histogram(std::int64_t bins) const"
+    forward: "bins"
+
+  - name: histcounts
+    signature: "Series histcounts() const"
+    forward: ""
+
+  - name: histcounts
+    signature: "Series histcounts(std::int64_t bins) const"
+    forward: "bins"
+
+  - name: histcounts
+    signature: "Series histcounts(std::int64_t bins, double min_v, double max_v) const"
+    forward: "bins, min_v, max_v"
+
+  - name: ifftshift
+    signature: "Series ifftshift() const"
+    forward: ""
+
+  - name: ifftshift
+    signature: "Series ifftshift(pluss::msharp::RangeView::Int dims) const"
+    forward: "dims"
+
+  - name: ifftshift
+    signature: "Series ifftshift(pluss::msharp::RangeView::Int dims, std::int64_t dim) const"
+    forward: "dims, dim"
+
+  - name: softplus
+    signature: "Series softplus() const"
+    forward: ""
+
+  - name: softplus
+    signature: "Series softplus(double beta, double threshold) const"
+    forward: "beta, threshold"
+
+  - name: softplus_
+    signature: "Series& softplus_() const"
+    forward: ""
+
+  - name: softplus_
+    signature: "Series& softplus_(double beta, double threshold) const"
+    forward: "beta, threshold"
+
+  - name: unwrap
+    signature: "Series unwrap() const"
+    forward: ""
+
+  - name: unwrap
+    signature: "Series unwrap(double discont) const"
+    forward: "discont"
+
+  - name: unwrap
+    signature: "Series unwrap(double discont, std::int64_t dim) const"
+    forward: "discont, dim"
+
+  - name: mvlgamma
+    signature: "Series mvlgamma() const"
+    forward: ""
+
+  - name: mvlgamma
+    signature: "Series mvlgamma(std::int64_t p) const"
+    forward: "p"
+
+  - name: mvlgamma_
+    signature: "Series& mvlgamma_(std::int64_t p) const"
+    forward: "p"
+
+  - name: polygamma
+    signature: "Series polygamma() const"
+    forward: ""
+
+  - name: polygamma
+    signature: "Series polygamma(std::int64_t n) const"
+    forward: "n"
+
+  - name: polygamma_
+    signature: "Series& polygamma_(std::int64_t n) const"
+    forward: "n"
+
+  # Tranche 8/12: coherence pass + broad stats/index concrete wrappers.
+
+  - name: cdist
+    signature: "Series cdist(const Series& other) const"
+    forward: "other"
+
+  - name: cdist
+    signature: "Series cdist(const Series& other, double p) const"
+    forward: "other, p"
+
+  - name: pdist2
+    signature: "Series pdist2(const Series& other) const"
+    forward: "other"
+
+  - name: pdist2
+    signature: "Series pdist2(const Series& other, double p) const"
+    forward: "other, p"
+
+  - name: center
+    signature: "Series center() const"
+    forward: ""
+
+  - name: center
+    signature: "Series center(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: standardize
+    signature: "Series standardize() const"
+    forward: ""
+
+  - name: standardize
+    signature: "Series standardize(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: nanstd
+    signature: "Series nanstd() const"
+    forward: ""
+
+  - name: nanstd
+    signature: "Series nanstd(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: nanstd
+    signature: "Series nanstd(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: nanvar
+    signature: "Series nanvar() const"
+    forward: ""
+
+  - name: nanvar
+    signature: "Series nanvar(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: nanvar
+    signature: "Series nanvar(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: nanmean
+    signature: "Series nanmean() const"
+    forward: ""
+
+  - name: nanmean
+    signature: "Series nanmean(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: nanmean
+    signature: "Series nanmean(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: nansum
+    signature: "Series nansum() const"
+    forward: ""
+
+  - name: nansum
+    signature: "Series nansum(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: nansum
+    signature: "Series nansum(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: prod
+    signature: "Series prod() const"
+    forward: ""
+
+  - name: prod
+    signature: "Series prod(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: prod
+    signature: "Series prod(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: beta
+    signature: "Series beta(double rhs) const"
+    forward: "rhs"
+
+  - name: betaln
+    signature: "Series betaln(double rhs) const"
+    forward: "rhs"
+
+  - name: zeta
+    signature: "Series zeta(double rhs) const"
+    forward: "rhs"
+
+  - name: vdot
+    signature: "Series vdot(const Series& other) const"
+    forward: "other"
+
+  - name: vsplit
+    signature: "Series vsplit(std::int64_t sections) const"
+    forward: "sections"
+
+  - name: chunk
+    signature: "Series chunk(std::int64_t chunks, std::int64_t dim=0) const"
+    forward: "chunks, dim"
+
+  - name: unsafe_chunk
+    signature: "Series unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const"
+    forward: "chunks, dim"
+
+  - name: dsplit
+    signature: "Series dsplit(std::int64_t sections) const"
+    forward: "sections"
+
+  - name: dsplit
+    signature: "Series dsplit(pluss::msharp::RangeView::Int boundaries) const"
+    forward: "boundaries"
+
+  - name: hsplit
+    signature: "Series hsplit(std::int64_t sections) const"
+    forward: "sections"
+
+  - name: hsplit
+    signature: "Series hsplit(pluss::msharp::RangeView::Int boundaries) const"
+    forward: "boundaries"
+
+  - name: repeat_interleave
+    signature: "Series repeat_interleave(std::int64_t repeats) const"
+    forward: "repeats"
+
+  - name: repeat_interleave
+    signature: "Series repeat_interleave(std::int64_t repeats, std::int64_t dim) const"
+    forward: "repeats, dim"
+
+  - name: unfold
+    signature: "Series unfold(std::int64_t dim, std::int64_t size, std::int64_t step) const"
+    forward: "dim, size, step"
+
+  - name: take_along_dim
+    signature: "Series take_along_dim(const Series& index) const"
+    forward: "index"
+
+  - name: take_along_dim
+    signature: "Series take_along_dim(const Series& index, std::int64_t dim) const"
+    forward: "index, dim"
+
+  - name: put
+    signature: "Series put(const Series& index, const Series& src, bool accumulate=false) const"
+    forward: "index, src, accumulate"
+
+  - name: put_
+    signature: "Series& put_(const Series& index, const Series& source, bool accumulate=false) const"
+    forward: "index, source, accumulate"
+
+  - name: narrow_copy
+    signature: "Series narrow_copy(std::int64_t dim, std::int64_t start, std::int64_t length) const"
+    forward: "dim, start, length"
+
+  - name: slice_inverse
+    signature: "Series slice_inverse(std::int64_t dim, std::int64_t start, std::int64_t length) const"
+    forward: "dim, start, length"
+
+  - name: softmax
+    signature: "Series softmax(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: rot90
+    signature: "Series rot90() const"
+    forward: ""
+
+  - name: rot90
+    signature: "Series rot90(std::int64_t k) const"
+    forward: "k"
+
+  - name: rot90
+    signature: "Series rot90(std::int64_t k, std::int64_t dim1, std::int64_t dim2) const"
+    forward: "k, dim1, dim2"
+
+  # Tranche 9/12: remaining variadics sweep (broad concrete signatures).
+  - name: cauchy_
+    signature: "Series& cauchy_() const"
+    forward: ""
+
+  - name: cauchy_
+    signature: "Series& cauchy_(double median) const"
+    forward: "median"
+
+  - name: cauchy_
+    signature: "Series& cauchy_(double median, double sigma) const"
+    forward: "median, sigma"
+
+  - name: copy_
+    signature: "Series& copy_(const Series& src) const"
+    forward: "src"
+
+  - name: copy_
+    signature: "Series& copy_(const Series& src, bool non_blocking) const"
+    forward: "src, non_blocking"
+
+  - name: diagonal_scatter
+    signature: "Series diagonal_scatter(const Series& src) const"
+    forward: "src"
+
+  - name: diagonal_scatter
+    signature: "Series diagonal_scatter(const Series& src, std::int64_t diagonal) const"
+    forward: "src, diagonal"
+
+  - name: diff
+    signature: "Series diff(std::int64_t n) const"
+    forward: "n"
+
+  - name: diff
+    signature: "Series diff(std::int64_t n, std::int64_t dim) const"
+    forward: "n, dim"
+
+  - name: div_
+    signature: "Series& div_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: div_
+    signature: "Series& div_(double rhs) const"
+    forward: "rhs"
+
+  - name: exponential_
+    signature: "Series& exponential_() const"
+    forward: ""
+
+  - name: exponential_
+    signature: "Series& exponential_(double lambda) const"
+    forward: "lambda"
+
+  - name: fill_
+    signature: "Series& fill_(double value) const"
+    forward: "value"
+
+  - name: fill_diagonal_
+    signature: "Series& fill_diagonal_(double value) const"
+    forward: "value"
+
+  - name: fill_diagonal_
+    signature: "Series& fill_diagonal_(double value, bool wrap) const"
+    forward: "value, wrap"
+
+  - name: gelu
+    signature: "Series gelu() const"
+    forward: ""
+
+  - name: gelu
+    signature: "Series gelu(bool approximate) const"
+    forward: "approximate"
+
+  - name: geometric_
+    signature: "Series& geometric_() const"
+    forward: ""
+
+  - name: geometric_
+    signature: "Series& geometric_(double p) const"
+    forward: "p"
+
+  - name: hardshrink
+    signature: "Series hardshrink() const"
+    forward: ""
+
+  - name: hardshrink
+    signature: "Series hardshrink(double lambd) const"
+    forward: "lambd"
+
+  - name: hardshrink_backward
+    signature: "Series hardshrink_backward(const Series& grad_output, double lambd) const"
+    forward: "grad_output, lambd"
+
+  - name: heaviside
+    signature: "Series heaviside(const Series& values) const"
+    forward: "values"
+
+  - name: heaviside
+    signature: "Series heaviside(double value) const"
+    forward: "value"
+
+  - name: heaviside_
+    signature: "Series& heaviside_(const Series& values) const"
+    forward: "values"
+
+  - name: heaviside_
+    signature: "Series& heaviside_(double value) const"
+    forward: "value"
+
+  - name: igamma
+    signature: "Series igamma(const Series& other) const"
+    forward: "other"
+
+  - name: igamma
+    signature: "Series igamma(double other) const"
+    forward: "other"
+
+  - name: igamma_
+    signature: "Series& igamma_(const Series& other) const"
+    forward: "other"
+
+  - name: igamma_
+    signature: "Series& igamma_(double other) const"
+    forward: "other"
+
+  - name: igammac
+    signature: "Series igammac(const Series& other) const"
+    forward: "other"
+
+  - name: igammac
+    signature: "Series igammac(double other) const"
+    forward: "other"
+
+  - name: igammac_
+    signature: "Series& igammac_(const Series& other) const"
+    forward: "other"
+
+  - name: igammac_
+    signature: "Series& igammac_(double other) const"
+    forward: "other"
+
+  - name: index_add
+    signature: "Series index_add(std::int64_t dim, const Series& index, const Series& source) const"
+    forward: "dim, index, source"
+
+  - name: index_add
+    signature: "Series index_add(std::int64_t dim, const Series& index, const Series& source, double alpha) const"
+    forward: "dim, index, source, alpha"
+
+  - name: index_add_
+    signature: "Series& index_add_(std::int64_t dim, const Series& index, const Series& source) const"
+    forward: "dim, index, source"
+
+  - name: index_add_
+    signature: "Series& index_add_(std::int64_t dim, const Series& index, const Series& source, double alpha) const"
+    forward: "dim, index, source, alpha"
+
+  - name: index_copy
+    signature: "Series index_copy(std::int64_t dim, const Series& index, const Series& source) const"
+    forward: "dim, index, source"
+
+  - name: index_copy_
+    signature: "Series& index_copy_(std::int64_t dim, const Series& index, const Series& source) const"
+    forward: "dim, index, source"
+
+  - name: index_fill
+    signature: "Series index_fill(std::int64_t dim, const Series& index, double value) const"
+    forward: "dim, index, value"
+
+  - name: index_fill_
+    signature: "Series& index_fill_(std::int64_t dim, const Series& index, double value) const"
+    forward: "dim, index, value"
+
+  - name: index_reduce
+    signature: "Series index_reduce(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce) const"
+    forward: "dim, index, source, reduce"
+
+  - name: index_reduce
+    signature: "Series index_reduce(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce, bool include_self) const"
+    forward: "dim, index, source, reduce, include_self"
+
+  - name: index_reduce_
+    signature: "Series& index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce) const"
+    forward: "dim, index, source, reduce"
+
+  - name: index_reduce_
+    signature: "Series& index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce, bool include_self) const"
+    forward: "dim, index, source, reduce, include_self"
+
+  - name: leaky_relu
+    signature: "Series leaky_relu(double negative_slope) const"
+    forward: "negative_slope"
+
+  - name: leaky_relu_
+    signature: "Series& leaky_relu_(double negative_slope) const"
+    forward: "negative_slope"
+
+  - name: lerp
+    signature: "Series lerp(double end, double weight) const"
+    forward: "end, weight"
+
+  - name: lerp
+    signature: "Series lerp(const Series& end, double weight) const"
+    forward: "end, weight"
+
+  - name: lerp
+    signature: "Series lerp(const Series& end, const Series& weight) const"
+    forward: "end, weight"
+
+  - name: lerp_
+    signature: "Series& lerp_(const Series& end, double weight) const"
+    forward: "end, weight"
+
+  - name: lerp_
+    signature: "Series& lerp_(const Series& end, const Series& weight) const"
+    forward: "end, weight"
+
+  - name: log_normal_
+    signature: "Series& log_normal_() const"
+    forward: ""
+
+  - name: log_normal_
+    signature: "Series& log_normal_(double mean) const"
+    forward: "mean"
+
+  - name: log_normal_
+    signature: "Series& log_normal_(double mean, double stddev) const"
+    forward: "mean, stddev"
+
+  - name: logaddexp
+    signature: "Series logaddexp(const Series& other) const"
+    forward: "other"
+
+  - name: logaddexp
+    signature: "Series logaddexp(double other) const"
+    forward: "other"
+
+  - name: logaddexp2
+    signature: "Series logaddexp2(const Series& other) const"
+    forward: "other"
+
+  - name: logaddexp2
+    signature: "Series logaddexp2(double other) const"
+    forward: "other"
+
+  - name: logit
+    signature: "Series logit(double eps) const"
+    forward: "eps"
+
+  - name: logit_
+    signature: "Series& logit_(double eps) const"
+    forward: "eps"
+
+  - name: masked_fill
+    signature: "Series masked_fill(const Series& mask, double value) const"
+    forward: "mask, value"
+
+  - name: masked_fill
+    signature: "Series masked_fill(const Series& mask, const Series& value) const"
+    forward: "mask, value"
+
+  - name: masked_fill_
+    signature: "Series& masked_fill_(const Series& mask, double value) const"
+    forward: "mask, value"
+
+  - name: masked_fill_
+    signature: "Series& masked_fill_(const Series& mask, const Series& value) const"
+    forward: "mask, value"
+
+  - name: max
+    signature: "Series max() const"
+    forward: ""
+
+  - name: max
+    signature: "Series max(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: max
+    signature: "Series max(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: max
+    signature: "Series max(const Series& other) const"
+    forward: "other"
+
+  - name: min
+    signature: "Series min() const"
+    forward: ""
+
+  - name: min
+    signature: "Series min(std::int64_t dim) const"
+    forward: "dim, false"
+
+  - name: min
+    signature: "Series min(std::int64_t dim, bool keepdim) const"
+    forward: "dim, keepdim"
+
+  - name: min
+    signature: "Series min(const Series& other) const"
+    forward: "other"
+
+  - name: mul_
+    signature: "Series& mul_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: mul_
+    signature: "Series& mul_(double rhs) const"
+    forward: "rhs"
+
+  - name: multinomial
+    signature: "Series multinomial() const"
+    forward: ""
+
+  - name: multinomial
+    signature: "Series multinomial(std::int64_t num_samples) const"
+    forward: "num_samples"
+
+  - name: multinomial
+    signature: "Series multinomial(std::int64_t num_samples, bool replacement) const"
+    forward: "num_samples, replacement"
+
+  - name: normal_
+    signature: "Series& normal_() const"
+    forward: ""
+
+  - name: normal_
+    signature: "Series& normal_(double mean) const"
+    forward: "mean"
+
+  - name: normal_
+    signature: "Series& normal_(double mean, double stddev) const"
+    forward: "mean, stddev"
+
+  - name: pow_
+    signature: "Series& pow_(const Series& rhs) const"
+    forward: "rhs"
+
+  - name: pow_
+    signature: "Series& pow_(double rhs) const"
+    forward: "rhs"
+
+  - name: prelu
+    signature: "Series prelu(const Series& weight) const"
+    forward: "weight"
+
+  - name: prelu
+    signature: "Series prelu(double weight) const"
+    forward: "weight"
+
+  - name: random_
+    signature: "Series& random_() const"
+    forward: ""
+
+  - name: random_
+    signature: "Series& random_(double from) const"
+    forward: "from"
+
+  - name: random_
+    signature: "Series& random_(double from, double to) const"
+    forward: "from, to"
+
+  - name: rename_
+    signature: "Series& rename_() const"
+    forward: ""
+
+  - name: renorm
+    signature: "Series renorm(double p) const"
+    forward: "p"
+
+  - name: renorm
+    signature: "Series renorm(double p, std::int64_t dim, double maxnorm) const"
+    forward: "p, dim, maxnorm"
+
+  - name: renorm_
+    signature: "Series& renorm_(double p, std::int64_t dim, double maxnorm) const"
+    forward: "p, dim, maxnorm"
+
+  - name: resize_as_
+    signature: "Series& resize_as_(const Series& other) const"
+    forward: "other"
+
+  - name: resize_as_sparse_
+    signature: "Series& resize_as_sparse_() const"
+    forward: ""
+
+  - name: resize_as_sparse_
+    signature: "Series& resize_as_sparse_(const Series& other) const"
+    forward: "other"
+
+  - name: retain_grad
+    signature: "Series retain_grad() const"
+    forward: ""
+
+  - name: retain_grad
+    signature: "Series retain_grad(bool keep) const"
+    forward: "keep"
+
+  - name: scatter_reduce
+    signature: "Series scatter_reduce(std::int64_t dim, const Series& index, const Series& src, const std::string& reduce) const"
+    forward: "dim, index, src, reduce"
+
+  - name: scatter_reduce
+    signature: "Series scatter_reduce(std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self) const"
+    forward: "dim, index, src, reduce, include_self"
+
+  - name: scatter_reduce
+    signature: "Series scatter_reduce(std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial) const"
+    forward: "dim, index, src, reduce, include_self, has_initial, initial"
+
+  - name: scatter_reduce_
+    signature: "Series& scatter_reduce_(std::int64_t dim, const Series& index, const Series& src, const std::string& reduce) const"
+    forward: "dim, index, src, reduce"
+
+  - name: scatter_reduce_
+    signature: "Series& scatter_reduce_(std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self) const"
+    forward: "dim, index, src, reduce, include_self"
+
+  - name: scatter_reduce_
+    signature: "Series& scatter_reduce_(std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial) const"
+    forward: "dim, index, src, reduce, include_self, has_initial, initial"
+
+  - name: select_scatter
+    signature: "Series select_scatter(const Series& src, std::int64_t dim, std::int64_t index) const"
+    forward: "src, dim, index"
+
+  - name: set_
+    signature: "Series& set_() const"
+    forward: ""
+
+  - name: set_
+    signature: "Series& set_(const Series& other) const"
+    forward: "other"
+
+  - name: set_data
+    signature: "Series set_data(const Series& other) const"
+    forward: "other"
+
+  - name: slice_scatter
+    signature: "Series slice_scatter(const Series& src, std::int64_t dim, std::int64_t start, std::int64_t end) const"
+    forward: "src, dim, start, end"
+
+  - name: slice_scatter
+    signature: "Series slice_scatter(const Series& src, std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step) const"
+    forward: "src, dim, start, end, step"
+
+  - name: smm
+    signature: "Series smm() const"
+    forward: ""
+
+  - name: smm
+    signature: "Series smm(const Series& other) const"
+    forward: "other"
+
+  - name: sparse_mask
+    signature: "Series sparse_mask() const"
+    forward: ""
+
+  - name: sparse_mask
+    signature: "Series sparse_mask(const Series& mask) const"
+    forward: "mask"
+
+  - name: sparse_resize_
+    signature: "Series& sparse_resize_() const"
+    forward: ""
+
+  - name: tracks_slope_
+    signature: "Series& tracks_slope_() const"
+    forward: ""
+
+  - name: tracks_slope_
+    signature: "Series& tracks_slope_(bool enabled) const"
+    forward: "enabled"
+
+  - name: unbind
+    signature: "Series unbind() const"
+    forward: ""
+
+  - name: unbind
+    signature: "Series unbind(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: uniform_
+    signature: "Series& uniform_() const"
+    forward: ""
+
+  - name: uniform_
+    signature: "Series& uniform_(double from, double to) const"
+    forward: "from, to"
+
+  # Unary elementwise family (large tranche, concrete signatures).
+  - name: arccos
+    signature: "Series arccos() const"
+    forward: ""
+  - name: arccos_
+    signature: "Series& arccos_() const"
+    forward: ""
+  - name: arccosh
+    signature: "Series arccosh() const"
+    forward: ""
+  - name: arccosh_
+    signature: "Series& arccosh_() const"
+    forward: ""
+  - name: arcsin
+    signature: "Series arcsin() const"
+    forward: ""
+  - name: arcsin_
+    signature: "Series& arcsin_() const"
+    forward: ""
+  - name: arcsinh
+    signature: "Series arcsinh() const"
+    forward: ""
+  - name: arcsinh_
+    signature: "Series& arcsinh_() const"
+    forward: ""
+  - name: arctan
+    signature: "Series arctan() const"
+    forward: ""
+  - name: arctan_
+    signature: "Series& arctan_() const"
+    forward: ""
+  - name: arctanh
+    signature: "Series arctanh() const"
+    forward: ""
+  - name: arctanh_
+    signature: "Series& arctanh_() const"
+    forward: ""
+  - name: deg2rad
+    signature: "Series deg2rad() const"
+    forward: ""
+  - name: deg2rad_
+    signature: "Series& deg2rad_() const"
+    forward: ""
+  - name: digamma
+    signature: "Series digamma() const"
+    forward: ""
+  - name: digamma_
+    signature: "Series& digamma_() const"
+    forward: ""
+  - name: erfcinv
+    signature: "Series erfcinv() const"
+    forward: ""
+  - name: erfcinv_
+    signature: "Series& erfcinv_() const"
+    forward: ""
+  - name: erfinv
+    signature: "Series erfinv() const"
+    forward: ""
+  - name: erfinv_
+    signature: "Series& erfinv_() const"
+    forward: ""
+  - name: exp2
+    signature: "Series exp2() const"
+    forward: ""
+  - name: exp2_
+    signature: "Series& exp2_() const"
+    forward: ""
+  - name: fix
+    signature: "Series fix() const"
+    forward: ""
+  - name: fix_
+    signature: "Series& fix_() const"
+    forward: ""
+  - name: frac
+    signature: "Series frac() const"
+    forward: ""
+  - name: frac_
+    signature: "Series& frac_() const"
+    forward: ""
+  - name: i0
+    signature: "Series i0() const"
+    forward: ""
+  - name: i0_
+    signature: "Series& i0_() const"
+    forward: ""
+  - name: log10
+    signature: "Series log10() const"
+    forward: ""
+  - name: log10_
+    signature: "Series& log10_() const"
+    forward: ""
+  - name: log2
+    signature: "Series log2() const"
+    forward: ""
+  - name: log2_
+    signature: "Series& log2_() const"
+    forward: ""
+  - name: neg
+    signature: "Series neg() const"
+    forward: ""
+  - name: neg_
+    signature: "Series& neg_() const"
+    forward: ""
+  - name: negative
+    signature: "Series negative() const"
+    forward: ""
+  - name: negative_
+    signature: "Series& negative_() const"
+    forward: ""
+  - name: rad2deg
+    signature: "Series rad2deg() const"
+    forward: ""
+  - name: rad2deg_
+    signature: "Series& rad2deg_() const"
+    forward: ""
+  - name: rsqrt
+    signature: "Series rsqrt() const"
+    forward: ""
+  - name: rsqrt_
+    signature: "Series& rsqrt_() const"
+    forward: ""
+  - name: sgn
+    signature: "Series sgn() const"
+    forward: ""
+  - name: sgn_
+    signature: "Series& sgn_() const"
+    forward: ""
+  - name: sign
+    signature: "Series sign() const"
+    forward: ""
+  - name: sign_
+    signature: "Series& sign_() const"
+    forward: ""
+  - name: silu
+    signature: "Series silu() const"
+    forward: ""
+  - name: silu_
+    signature: "Series& silu_() const"
+    forward: ""
+  - name: sinc
+    signature: "Series sinc() const"
+    forward: ""
+  - name: sinc_
+    signature: "Series& sinc_() const"
+    forward: ""
+  - name: square
+    signature: "Series square() const"
+    forward: ""
+  - name: square_
+    signature: "Series& square_() const"
+    forward: ""
+
+skip_methods:
+  - _backward
+  - _coalesced_
+  - pdf
+  - logpdf
+  - logcdf
+  - cdf
+  - index_put
+  - index_put_
+  - movsum
+  - movmean
+  - movmax
+  - movmin
+  - movstd
+  - movvar
+  - skewness
+  - kurtosis
+  - acos
+  - acos_
+  - acosh
+  - acosh_
+  - asin
+  - asin_
+  - asinh
+  - asinh_
+  - atan
+  - atan_
+  - atanh
+  - atanh_
+  - bitwise_not
+  - ceil
+  - ceil_
+  - cos
+  - cos_
+  - cosh
+  - cosh_
+  - erf
+  - erf_
+  - erfc
+  - erfc_
+  - exp
+  - exp_
+  - expm1
+  - expm1_
+  - floor
+  - floor_
+  - isfinite
+  - isfinite_
+  - isinf
+  - isinf_
+  - isnan
+  - isnan_
+  - lgamma
+  - lgamma_
+  - log
+  - log_
+  - log1p
+  - log1p_
+  - logical_not
+  - logical_not_
+  - reciprocal
+  - reciprocal_
+  - relu
+  - relu_
+  - round
+  - round_
+  - sigmoid
+  - sigmoid_
+  - sin
+  - sin_
+  - sinh
+  - sinh_
+  - sqrt
+  - sqrt_
+  - tan
+  - tan_
+  - tanh
+  - tanh_
+  - view
+  - reshape
+  - permute
+  - transpose
+  - unsqueeze
+  - squeeze
+  - select
+  - gather
+  - scatter
+  - scatter_
+  - scatter_add
+  - scatter_add_
+  - index
+  - take
+  - nonzero
+  - masked_select
+  - masked_scatter
+  - masked_scatter_
+  - trunc
+  - trunc_
+  - flatten
+  - norm
+  - unique
+  - bincount
+  - histc
+  - sum
+  - mean
+  - amax
+  - amin
+  - all
+  - any
+  - cumsum
+  - cumsum_
+  - cumprod
+  - cumprod_
+  - where
+  - where_
+  - clamp_min
+  - clamp_min_
+  - clamp_max
+  - clamp_max_
+  - nan_to_num
+  - nan_to_num_
+  - scatter_reduce_sum
+  - scatter_reduce_amax
+  - scatter_reduce_amin
+  - add
+  - add_
+  - sub
+  - sub_
+  - mul
+  - div
+  - pow
+  - minimum
+  - maximum
+  - eq
+  - ne
+  - lt
+  - le
+  - gt
+  - ge
+  - bitwise_and
+  - bitwise_or
+  - bitwise_xor
+  - item
+  - logical_and
+  - logical_or
+  - logical_xor

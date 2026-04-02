@@ -20,6 +20,13 @@
 // - pluss::make_timeline(...) / make_timeline(...) / from_epoch_nanos(...)
 // - pluss::duration_* helpers / make_timeindex(...)
 //
+// Unified serialization (core types + supported STL containers):
+// - pluss::io::save(...) / pluss::io::load<...>(...)
+// - pluss::save(...) / pluss::load<...>(...) aliases
+//
+// Validation facade (function-style checks):
+// - pluss::validate::check(...) / warn(...) / fail(...) / inspect(...) / check_eq(...)
+//
 // Dynamic union holder:
 // - pluss::Queue (Series/Note/Timeline/TimeIndex)
 // - pluss::Queue::invoke("method", args...) for dynamic method-name dispatch on Queue

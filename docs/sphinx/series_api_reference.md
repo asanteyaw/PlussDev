@@ -8,6 +8,109 @@
 
 This section follows a professional reference layout: signatures, parameters, returns, notes, examples, and overload links.
 
+## Indexing and Slicing Additions
+
+### `pos`
+
+#### Signatures
+
+```cpp
+Series pos(std::int64_t index) const
+Series pos(std::int64_t row, std::int64_t col) const
+Series pos(std::int64_t i, std::int64_t j, std::int64_t k) const
+```
+
+#### Notes
+
+- Bounds-checked scalar selection helpers.
+- `pos(index)` requires rank-1 input.
+- `pos(row, col)` requires rank-2 input.
+- `pos(i, j, k)` requires rank-3 input.
+- Returns a rank-0 scalar `Series`.
+
+#### Example
+
+```cpp
+auto v = pluss::make_series({10.0, 20.0, 30.0});
+auto m = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {2, 2});
+auto t = pluss::make_series({1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0}, {2,2,2});
+
+auto a = v.pos(1);      // 20.0
+auto b = m.pos(1, 0);   // 3.0
+auto c = t.pos(1, 0, 1);// 6.0
+```
+
+### `size` and `sizes`
+
+#### Signatures
+
+```cpp
+std::int64_t size(std::int64_t dim) const
+std::int64_t size(int dim) const
+pluss::msharp::RangeView::Int sizes() const
+```
+
+#### Notes
+
+- `size(dim)` returns a single dimension extent (`int64_t`), matching libtorch-style usage.
+- Negative dims are allowed (for example `size(-1)`).
+- `sizes()` returns a lightweight shape view (`pluss::msharp::RangeView::Int`).
+- Alias: `MSharp::RangeView::Int`.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({1.0,2.0,3.0,4.0,5.0,6.0}, {1,2,3});
+
+std::int64_t d0 = x.size(0);   // 1
+std::int64_t d2 = x.size(-1);  // 3
+auto shape = x.sizes();        // [1,2,3]
+```
+
+### `extract`, `extract_put_`, `extract_put`
+
+#### Signatures
+
+```cpp
+Series extract(pluss::Slicing::Slice d0 = pluss::Slicing::SliceAll(), ... d6) const
+template <class... Specs> Series extract(Specs&&... specs) const
+
+Series& extract_put_(const Series& values, std::span<const Series::ExtractSpec> specs)
+Series& extract_put_(const Series& values, std::initializer_list<Series::ExtractSpec> specs = {})
+
+Series extract_put(const Series& values, std::span<const Series::ExtractSpec> specs) const
+Series extract_put(const Series& values, std::initializer_list<Series::ExtractSpec> specs = {}) const
+```
+
+#### Notes
+
+- Slicing tokens use the concise `pluss::Slicing::*` function style:
+  - `pluss::Slicing::SliceAll()`
+  - `pluss::Slicing::SliceFrom(...)`
+  - `pluss::Slicing::SliceTo(...)`
+  - `pluss::Slicing::SliceRange(...)`
+  - `pluss::Slicing::Ellipsis()`
+  - `pluss::Slicing::NewAxis()`
+- Supports mixed scalar/range specs, ellipsis expansion, new-axis insertion, and bool/int advanced indexing specs.
+- `extract_put_` writes selected elements in place.
+- `extract_put` returns an updated copy (non-mutating).
+
+#### Examples
+
+```cpp
+auto x = pluss::make_series({1.0,2.0,3.0,4.0,5.0,6.0}, {2,3});
+
+// torch-like intent: x.slice(1, 1, x.size(1))
+auto right = x.extract(pluss::Slicing::SliceAll(), {1, x.size(1)});
+
+// ellipsis + scalar index
+auto y = x.extract(pluss::Slicing::Ellipsis(), 1);
+
+// writable extract
+auto w = pluss::zeros({2,3});
+w.extract_put_(pluss::make_series({9.0,8.0}, {2}), {1, {1,3}});
+```
+
 ### `abs2`
 
 #### Signature
@@ -926,7 +1029,7 @@ Computes Gaussian cumulative distribution values for `self` using the provided m
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.cdf();
+auto out = pos.stat.cdf();
 ```
 
 ### `cdf`
@@ -964,7 +1067,7 @@ Computes Gaussian cumulative distribution values for `self` using the provided m
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.cdf(0.0, 1.5);
+auto out = pos.stat.cdf(0.0, 1.5);
 ```
 
 ### `cdf`
@@ -999,7 +1102,7 @@ Computes Gaussian cumulative distribution values for `self` using the provided m
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.cdf(1.5);
+auto out = pos.stat.cdf(1.5);
 ```
 
 ### `cdist`
@@ -2599,7 +2702,7 @@ Applies `kurtosis` computation to `self`. No additional arguments.
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.kurtosis();
+auto out = x.stat.kurtosis();
 ```
 
 ### `le`
@@ -3153,7 +3256,7 @@ Computes moving-window maxima along a dimension (default is last dimension). No 
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movmax();
+auto out = x.stat.movmax();
 ```
 
 ### `movmax`
@@ -3188,7 +3291,7 @@ Computes moving-window maxima along a dimension (default is last dimension). Arg
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movmax(3);
+auto out = x.stat.movmax(3);
 ```
 
 ### `movmax`
@@ -3230,7 +3333,7 @@ auto mm = pluss::make_series({
   {7,8,9}
 });
 
-auto out = mm.movmax(2, 1);
+auto out = mm.stat.movmax(2, 1);
 ```
 
 ### `movmean`
@@ -3264,7 +3367,7 @@ Computes moving-window means along a dimension (default is last dimension). No a
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movmean();
+auto out = x.stat.movmean();
 ```
 
 ### `movmean`
@@ -3299,7 +3402,7 @@ Computes moving-window means along a dimension (default is last dimension). Argu
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movmean(3);
+auto out = x.stat.movmean(3);
 ```
 
 ### `movmean`
@@ -3341,7 +3444,7 @@ auto mm = pluss::make_series({
   {7,8,9}
 });
 
-auto out = mm.movmean(2, 1);
+auto out = mm.stat.movmean(2, 1);
 ```
 
 ### `movmin`
@@ -3375,7 +3478,7 @@ Computes moving-window minima along a dimension (default is last dimension). No 
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movmin();
+auto out = x.stat.movmin();
 ```
 
 ### `movmin`
@@ -3410,7 +3513,7 @@ Computes moving-window minima along a dimension (default is last dimension). Arg
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movmin(3);
+auto out = x.stat.movmin(3);
 ```
 
 ### `movmin`
@@ -3452,7 +3555,7 @@ auto mm = pluss::make_series({
   {7,8,9}
 });
 
-auto out = mm.movmin(2, 1);
+auto out = mm.stat.movmin(2, 1);
 ```
 
 ### `movstd`
@@ -3486,7 +3589,7 @@ Computes moving-window standard deviation along a dimension (default is last dim
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movstd();
+auto out = x.stat.movstd();
 ```
 
 ### `movstd`
@@ -3521,7 +3624,7 @@ Computes moving-window standard deviation along a dimension (default is last dim
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movstd(3);
+auto out = x.stat.movstd(3);
 ```
 
 ### `movstd`
@@ -3563,7 +3666,7 @@ auto mm = pluss::make_series({
   {7,8,9}
 });
 
-auto out = mm.movstd(2, 1);
+auto out = mm.stat.movstd(2, 1);
 ```
 
 ### `movsum`
@@ -3597,7 +3700,7 @@ Computes moving-window sums along a dimension (default is last dimension). No ad
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movsum();
+auto out = x.stat.movsum();
 ```
 
 ### `movsum`
@@ -3632,7 +3735,7 @@ Computes moving-window sums along a dimension (default is last dimension). Argum
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movsum(3);
+auto out = x.stat.movsum(3);
 ```
 
 ### `movsum`
@@ -3674,7 +3777,7 @@ auto mm = pluss::make_series({
   {7,8,9}
 });
 
-auto out = mm.movsum(2, 1);
+auto out = mm.stat.movsum(2, 1);
 ```
 
 ### `movvar`
@@ -3708,7 +3811,7 @@ Computes moving-window variance along a dimension (default is last dimension). N
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movvar();
+auto out = x.stat.movvar();
 ```
 
 ### `movvar`
@@ -3743,7 +3846,7 @@ Computes moving-window variance along a dimension (default is last dimension). A
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.movvar(3);
+auto out = x.stat.movvar(3);
 ```
 
 ### `movvar`
@@ -3785,7 +3888,7 @@ auto mm = pluss::make_series({
   {7,8,9}
 });
 
-auto out = mm.movvar(2, 1);
+auto out = mm.stat.movvar(2, 1);
 ```
 
 ### `mul`
@@ -4136,7 +4239,7 @@ Computes Gaussian probability density values for `self` using the provided mean/
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.pdf();
+auto out = pos.stat.pdf();
 ```
 
 ### `pdf`
@@ -4174,7 +4277,7 @@ Computes Gaussian probability density values for `self` using the provided mean/
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.pdf(0.0, 1.5);
+auto out = pos.stat.pdf(0.0, 1.5);
 ```
 
 ### `pdf`
@@ -4209,7 +4312,7 @@ Computes Gaussian probability density values for `self` using the provided mean/
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.pdf(1.5);
+auto out = pos.stat.pdf(1.5);
 ```
 
 ### `logpdf`
@@ -4243,7 +4346,7 @@ Computes Gaussian log-density values for `self` using the provided mean/stddev p
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.logpdf();
+auto out = pos.stat.logpdf();
 ```
 
 ### `logpdf`
@@ -4281,7 +4384,7 @@ Computes Gaussian log-density values for `self` using the provided mean/stddev p
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.logpdf(0.0, 1.5);
+auto out = pos.stat.logpdf(0.0, 1.5);
 ```
 
 ### `logpdf`
@@ -4316,7 +4419,7 @@ Computes Gaussian log-density values for `self` using the provided mean/stddev p
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.logpdf(1.5);
+auto out = pos.stat.logpdf(1.5);
 ```
 
 ### `logcdf`
@@ -4350,7 +4453,7 @@ Computes Gaussian log-CDF values for `self` using the provided mean/stddev param
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.logcdf();
+auto out = pos.stat.logcdf();
 ```
 
 ### `logcdf`
@@ -4388,7 +4491,7 @@ Computes Gaussian log-CDF values for `self` using the provided mean/stddev param
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.logcdf(0.0, 1.5);
+auto out = pos.stat.logcdf(0.0, 1.5);
 ```
 
 ### `logcdf`
@@ -4423,7 +4526,7 @@ Computes Gaussian log-CDF values for `self` using the provided mean/stddev param
 ```cpp
 auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 
-auto out = pos.logcdf(1.5);
+auto out = pos.stat.logcdf(1.5);
 ```
 
 ### `pdist2`
@@ -5398,7 +5501,7 @@ Applies `skewness` computation to `self`. No additional arguments.
 ```cpp
 auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
 
-auto out = x.skewness();
+auto out = x.stat.skewness();
 ```
 
 ### `sqrt`

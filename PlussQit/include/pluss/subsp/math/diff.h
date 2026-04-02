@@ -33,25 +33,25 @@ inline bool same_shape_(const Series& a, const Series& b) {
 
 inline void require_defined_(const Series& x, const char* op) {
   if (!x.defined()) {
-    throw std::runtime_error(std::string("subsp::math::diff::") + op + ": expected defined Series");
+    ::pluss::throw_error(std::string("subsp::math::diff::") + op + ": expected defined Series");
   }
 }
 
 inline void require_same_platform_(const Series& a, const Series& b, const char* op) {
   if (a.platform() != b.platform()) {
-    throw std::runtime_error(std::string("subsp::math::diff::") + op + ": expected matching platforms");
+    ::pluss::throw_error(std::string("subsp::math::diff::") + op + ": expected matching platforms");
   }
 }
 
 inline void require_same_shape_(const Series& a, const Series& b, const char* op) {
   if (!same_shape_(a, b)) {
-    throw std::runtime_error(std::string("subsp::math::diff::") + op + ": expected matching shapes");
+    ::pluss::throw_error(std::string("subsp::math::diff::") + op + ": expected matching shapes");
   }
 }
 
 inline void require_float_dtype_(const Series& x, const char* op) {
   if (!x.dtype().is_floating() && !x.dtype().is_complex()) {
-    throw std::runtime_error(std::string("subsp::math::diff::") + op +
+    ::pluss::throw_error(std::string("subsp::math::diff::") + op +
                              ": expected floating or complex dtype");
   }
 }
@@ -81,7 +81,7 @@ inline void reverse_with_context_(const Series& output, const char* op) {
   try {
     output.reverse();
   } catch (const std::exception& e) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         std::string("subsp::math::diff::") + op +
         ": reverse failed: " + e.what() +
         " (hint: verify no in-place mutation on traced inputs after graph capture)");
@@ -92,7 +92,7 @@ inline void reverse_with_context_(const Series& output, const Series& sensitivit
   try {
     output.reverse(sensitivity_output);
   } catch (const std::exception& e) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         std::string("subsp::math::diff::") + op +
         ": reverse with seed failed: " + e.what() +
         " (hint: verify seed shape/platform and graph mutation invariants)");
@@ -128,7 +128,7 @@ inline Series stack_cols_(const std::vector<Series>& cols,
 inline double scalar_item_(const Series& x, const char* op) {
   require_defined_(x, op);
   if (x.numel() != 1) {
-    throw std::runtime_error(std::string("subsp::math::diff::") + op + ": expected scalar Series");
+    ::pluss::throw_error(std::string("subsp::math::diff::") + op + ": expected scalar Series");
   }
   return x.item<double>();
 }
@@ -311,7 +311,7 @@ public:
 
   const Series& value() const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::Trace::value: undefined trace");
+      ::pluss::throw_error("subsp::math::diff::Trace::value: undefined trace");
     }
     return *value_;
   }
@@ -323,7 +323,7 @@ public:
 
   Series sensitivity() const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::Trace::sensitivity: undefined trace");
+      ::pluss::throw_error("subsp::math::diff::Trace::sensitivity: undefined trace");
     }
     return value_->sensitivity();
   }
@@ -343,21 +343,21 @@ public:
 
   void reverse() const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::Trace::reverse: undefined trace");
+      ::pluss::throw_error("subsp::math::diff::Trace::reverse: undefined trace");
     }
     detail::reverse_with_context_(*value_, "Trace::reverse");
   }
 
   void reverse(const Series& sensitivity_output) const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::Trace::reverse: undefined trace");
+      ::pluss::throw_error("subsp::math::diff::Trace::reverse: undefined trace");
     }
     detail::reverse_with_context_(*value_, sensitivity_output, "Trace::reverse");
   }
 
   void reverse(const ReversePolicy& policy) const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::Trace::reverse: undefined trace");
+      ::pluss::throw_error("subsp::math::diff::Trace::reverse: undefined trace");
     }
     try {
       value_->reverse(
@@ -365,7 +365,7 @@ public:
           policy.accumulate_sensitivity,
           policy.track_higher_order);
     } catch (const std::exception& e) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           std::string("subsp::math::diff::Trace::reverse") +
           ": reverse failed: " + e.what() +
           " (hint: verify no in-place mutation on traced inputs after graph capture)");
@@ -374,7 +374,7 @@ public:
 
   void reverse(const Series& sensitivity_output, const ReversePolicy& policy) const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::Trace::reverse: undefined trace");
+      ::pluss::throw_error("subsp::math::diff::Trace::reverse: undefined trace");
     }
     try {
       value_->reverse(
@@ -383,7 +383,7 @@ public:
           policy.accumulate_sensitivity,
           policy.track_higher_order);
     } catch (const std::exception& e) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           std::string("subsp::math::diff::Trace::reverse") +
           ": reverse with seed failed: " + e.what() +
           " (hint: verify seed shape/platform and graph mutation invariants)");
@@ -420,13 +420,13 @@ public:
     detail::require_defined_(tangent, "DualTrace");
     detail::require_same_platform_(value, tangent, "DualTrace");
     if (value.scalar_type() != tangent.scalar_type()) {
-      throw std::runtime_error("subsp::math::diff::DualTrace: expected matching dtypes");
+      ::pluss::throw_error("subsp::math::diff::DualTrace: expected matching dtypes");
     }
 
     Series aligned_tangent = tangent;
     if (!detail::same_shape_(value, tangent)) {
       if (value.numel() != tangent.numel()) {
-        throw std::runtime_error("subsp::math::diff::DualTrace: expected matching shapes");
+        ::pluss::throw_error("subsp::math::diff::DualTrace: expected matching shapes");
       }
       aligned_tangent = tangent.reshape(value.sizes());
     }
@@ -437,14 +437,14 @@ public:
 
   const Series& value() const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::DualTrace::value: undefined dual trace");
+      ::pluss::throw_error("subsp::math::diff::DualTrace::value: undefined dual trace");
     }
     return *value_;
   }
 
   const Series& tangent() const {
     if (!defined()) {
-      throw std::runtime_error("subsp::math::diff::DualTrace::tangent: undefined dual trace");
+      ::pluss::throw_error("subsp::math::diff::DualTrace::tangent: undefined dual trace");
     }
     return *tangent_;
   }
@@ -1007,7 +1007,7 @@ inline Trace huber_error_loss(const Trace& prediction,
                               double delta = 1.0,
                               LossReduction reduction = LossReduction::Mean) {
   if (!(delta > 0.0) || !std::isfinite(delta)) {
-    throw std::runtime_error("subsp::math::diff::huber_error_loss: delta must be positive and finite");
+    ::pluss::throw_error("subsp::math::diff::huber_error_loss: delta must be positive and finite");
   }
   const Trace err = sub(prediction, target);
   const Trace a = abs(err);
@@ -1024,7 +1024,7 @@ inline DualTrace huber_error_loss(const DualTrace& prediction,
                                   double delta = 1.0,
                                   LossReduction reduction = LossReduction::Mean) {
   if (!(delta > 0.0) || !std::isfinite(delta)) {
-    throw std::runtime_error("subsp::math::diff::huber_error_loss: delta must be positive and finite");
+    ::pluss::throw_error("subsp::math::diff::huber_error_loss: delta must be positive and finite");
   }
   const DualTrace err = sub(prediction, target);
   const DualTrace a = abs(err);
@@ -1090,14 +1090,14 @@ inline Trace matmul(const Trace& a, const Trace& b) {
   detail::require_defined_(b.value(), "matmul");
   detail::require_same_platform_(a.value(), b.value(), "matmul");
   if (a.value().dim() != 2 || b.value().dim() != 2) {
-    throw std::runtime_error("subsp::math::diff::matmul: expected 2D inputs");
+    ::pluss::throw_error("subsp::math::diff::matmul: expected 2D inputs");
   }
   return Trace(a.value().matmul(b.value()));
 }
 
 inline DualTrace matmul(const DualTrace& a, const DualTrace& b) {
   if (a.value().dim() != 2 || b.value().dim() != 2) {
-    throw std::runtime_error("subsp::math::diff::matmul: expected 2D inputs");
+    ::pluss::throw_error("subsp::math::diff::matmul: expected 2D inputs");
   }
   return DualTrace(
       a.value().matmul(b.value()),
@@ -1235,7 +1235,7 @@ std::pair<Series, std::vector<Series>> value_and_grad(
 
   Trace loss = std::forward<Fn>(fn)(vars);
   if (!loss.defined()) {
-    throw std::runtime_error("subsp::math::diff::value_and_grad: objective returned undefined Trace");
+    ::pluss::throw_error("subsp::math::diff::value_and_grad: objective returned undefined Trace");
   }
 
   if (!policy.accumulate_input_sensitivity) {
@@ -1253,7 +1253,7 @@ std::pair<Series, std::vector<Series>> value_and_grad(
     const auto& v = vars[i];
     if (!v.has_sensitivity()) {
       if (policy.strict_dependency) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "subsp::math::diff::value_and_grad: objective is disconnected from input index " +
             std::to_string(i));
       }
@@ -1329,7 +1329,7 @@ std::pair<Series, Series> jvp(Fn&& fn,
                               const std::vector<Series>& params,
                               const std::vector<Series>& tangents) {
   if (params.size() != tangents.size()) {
-    throw std::runtime_error("subsp::math::diff::jvp: params/tangents size mismatch");
+    ::pluss::throw_error("subsp::math::diff::jvp: params/tangents size mismatch");
   }
 
   std::vector<DualTrace> vars;
@@ -1340,7 +1340,7 @@ std::pair<Series, Series> jvp(Fn&& fn,
 
   DualTrace output = std::forward<Fn>(fn)(vars);
   if (!output.defined()) {
-    throw std::runtime_error("subsp::math::diff::jvp: objective returned undefined DualTrace");
+    ::pluss::throw_error("subsp::math::diff::jvp: objective returned undefined DualTrace");
   }
 
   return {output.value(), output.tangent()};
@@ -1369,7 +1369,7 @@ std::pair<Series, std::vector<Series>> jvp_lanes(
   }
 
   if (!value_set) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::diff::jvp_lanes: expected at least one tangent lane");
   }
   return {value, lanes};
@@ -1389,7 +1389,7 @@ auto linearize(Fn&& fn, const std::vector<Series>& params) {
   FnType fn_copy(std::forward<Fn>(fn));
   DualTrace output = fn_copy(base_vars);
   if (!output.defined()) {
-    throw std::runtime_error("subsp::math::diff::linearize: objective returned undefined DualTrace");
+    ::pluss::throw_error("subsp::math::diff::linearize: objective returned undefined DualTrace");
   }
 
   auto pushforward = [fn = std::move(fn_copy), params](const std::vector<Series>& tangents) -> Series {
@@ -1448,14 +1448,19 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
 
   Trace output = std::forward<Fn>(fn)(vars);
   if (!output.defined()) {
-    throw std::runtime_error("subsp::math::diff::vjp: objective returned undefined Trace");
+    ::pluss::throw_error("subsp::math::diff::vjp: objective returned undefined Trace");
   }
 
-  auto pullback = [vars, output, policy](const Series& cotangent) mutable -> std::vector<Series> {
+  auto pullback = [vars, output, policy, pullback_consumed = false](const Series& cotangent) mutable -> std::vector<Series> {
+    if (!policy.keep_graph && pullback_consumed) {
+      ::pluss::throw_error(
+          "subsp::math::diff::vjp: pullback is one-shot when keep_graph=false; "
+          "set keep_graph=true for reusable pullbacks");
+    }
     detail::require_defined_(cotangent, "vjp");
     detail::require_same_platform_(output.value(), cotangent, "vjp");
     if (!detail::same_shape_(output.value(), cotangent)) {
-      throw std::runtime_error("subsp::math::diff::vjp: cotangent shape must match output shape");
+      ::pluss::throw_error("subsp::math::diff::vjp: cotangent shape must match output shape");
     }
 
     if (!policy.accumulate_input_sensitivity) {
@@ -1466,6 +1471,7 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
     reverse_policy.accumulate_sensitivity = policy.accumulate_input_sensitivity;
     reverse_policy.track_higher_order = policy.track_higher_order;
     output.reverse(cotangent, reverse_policy);
+    pullback_consumed = true;
 
     std::vector<Series> grads;
     grads.reserve(vars.size());
@@ -1473,7 +1479,7 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
       const auto& v = vars[i];
       if (!v.has_sensitivity()) {
         if (policy.strict_dependency) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "subsp::math::diff::vjp: output is disconnected from input index " +
               std::to_string(i));
         }
@@ -1496,7 +1502,13 @@ std::pair<Series, std::vector<std::vector<Series>>> vjp_lanes(
     const std::vector<Series>& params,
     const std::vector<Series>& cotangent_lanes,
     const DerivativePolicy& policy) {
-  auto [value, pullback] = vjp(std::forward<Fn>(fn), params, policy);
+  // Multi-lane pullbacks require repeated reverse passes from one captured graph.
+  // Force retention internally regardless of user one-shot policy.
+  DerivativePolicy lane_policy = policy;
+  if (cotangent_lanes.size() > 1) {
+    lane_policy.keep_graph = true;
+  }
+  auto [value, pullback] = vjp(std::forward<Fn>(fn), params, lane_policy);
   std::vector<std::vector<Series>> lanes;
   lanes.reserve(cotangent_lanes.size());
   for (const auto& lane : cotangent_lanes) {
@@ -1751,10 +1763,10 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
                                            const HvpOptions& opt = {},
                                            const DerivativePolicy& policy = {}) {
   if (params.size() != tangents.size()) {
-    throw std::runtime_error("subsp::math::diff::hvp: params/tangents size mismatch");
+    ::pluss::throw_error("subsp::math::diff::hvp: params/tangents size mismatch");
   }
   if (!(opt.epsilon > 0.0) || !std::isfinite(opt.epsilon)) {
-    throw std::runtime_error("subsp::math::diff::hvp: epsilon must be positive and finite");
+    ::pluss::throw_error("subsp::math::diff::hvp: epsilon must be positive and finite");
   }
 
   for (std::size_t i = 0; i < params.size(); ++i) {
@@ -1767,7 +1779,7 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
   using FnType = std::decay_t<Fn>;
   if constexpr (std::is_invocable_v<FnType&, const std::vector<DualTrace>&>) {
     if (opt.mode == HvpOptions::Mode::FiniteDifferenceOnly) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "subsp::math::diff::hvp: finite-difference-only mode requires a Trace-callable objective");
     }
     std::vector<Series> leaf_params;
@@ -1790,7 +1802,7 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
         tangent_consts);
 
     if (value.numel() != 1 || directional.numel() != 1) {
-      throw std::runtime_error("subsp::math::diff::hvp: objective must be scalar-valued");
+      ::pluss::throw_error("subsp::math::diff::hvp: objective must be scalar-valued");
     }
 
     if (!policy.accumulate_input_sensitivity) {
@@ -1812,7 +1824,7 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
     for (std::size_t i = 0; i < leaf_params.size(); ++i) {
       const auto& leaf = leaf_params[i];
       if (policy.strict_dependency && !leaf.has_sensitivity()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "subsp::math::diff::hvp: objective is disconnected from input index " +
             std::to_string(i));
       }
@@ -1821,12 +1833,12 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
     return {value, hv};
   } else {
     if (opt.mode == HvpOptions::Mode::ExactOnly) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "subsp::math::diff::hvp: exact-only mode requires a DualTrace-callable objective");
     }
     const auto [value, _] = value_and_grad(std::forward<Fn>(fn), params, policy);
     if (value.numel() != 1) {
-      throw std::runtime_error("subsp::math::diff::hvp: objective must be scalar-valued");
+      ::pluss::throw_error("subsp::math::diff::hvp: objective must be scalar-valued");
     }
 
     std::vector<Series> plus;
@@ -1861,7 +1873,7 @@ std::pair<Series, std::vector<Series>> vhp(Fn&& fn,
                                            const HvpOptions& opt,
                                            const DerivativePolicy& policy) {
   if (params.size() != vectors.size()) {
-    throw std::runtime_error("subsp::math::diff::vhp: params/vectors size mismatch");
+    ::pluss::throw_error("subsp::math::diff::vhp: params/vectors size mismatch");
   }
   // For scalar objectives the Hessian is self-adjoint in exact arithmetic,
   // so VHP shares the same implementation surface as HVP.
@@ -1885,7 +1897,7 @@ std::pair<Series, std::vector<std::vector<Series>>> hvp_lanes(
 
   for (const auto& lane : tangent_lanes) {
     if (lane.size() != params.size()) {
-      throw std::runtime_error("subsp::math::diff::hvp_lanes: params/tangents size mismatch");
+      ::pluss::throw_error("subsp::math::diff::hvp_lanes: params/tangents size mismatch");
     }
     const auto [lane_value, lane_hv] = hvp(fn_copy, params, lane, opt, policy);
     if (!value_set) {
@@ -1899,7 +1911,7 @@ std::pair<Series, std::vector<std::vector<Series>>> hvp_lanes(
   }
 
   if (!value_set) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::diff::hvp_lanes: expected at least one tangent lane");
   }
   return {value, lanes};
@@ -1914,7 +1926,7 @@ std::pair<Series, std::vector<std::vector<Series>>> vhp_lanes(
     const DerivativePolicy& policy) {
   for (const auto& lane : vector_lanes) {
     if (lane.size() != params.size()) {
-      throw std::runtime_error("subsp::math::diff::vhp_lanes: params/vectors size mismatch");
+      ::pluss::throw_error("subsp::math::diff::vhp_lanes: params/vectors size mismatch");
     }
   }
   return hvp_lanes(std::forward<Fn>(fn), params, vector_lanes, opt, policy);
@@ -1929,13 +1941,13 @@ DerivativeAuditReport gradient_audit_report(
   report.phase = "gradient";
 
   if (params.empty()) {
-    throw std::runtime_error("subsp::math::diff::gradient_audit_report: expected at least one parameter");
+    ::pluss::throw_error("subsp::math::diff::gradient_audit_report: expected at least one parameter");
   }
   if (!(opt.epsilon > 0.0) || !std::isfinite(opt.epsilon)) {
-    throw std::runtime_error("subsp::math::diff::gradient_audit_report: epsilon must be positive and finite");
+    ::pluss::throw_error("subsp::math::diff::gradient_audit_report: epsilon must be positive and finite");
   }
   if (opt.atol < 0.0 || opt.rtol < 0.0 || !std::isfinite(opt.atol) || !std::isfinite(opt.rtol)) {
-    throw std::runtime_error("subsp::math::diff::gradient_audit_report: atol/rtol must be finite and non-negative");
+    ::pluss::throw_error("subsp::math::diff::gradient_audit_report: atol/rtol must be finite and non-negative");
   }
   for (const auto& p : params) {
     detail::require_defined_(p, "gradient_audit_report");
@@ -1956,10 +1968,10 @@ DerivativeAuditReport gradient_audit_report(
     }
     Trace out = objective(fixed_inputs);
     if (!out.defined()) {
-      throw std::runtime_error("subsp::math::diff::gradient_audit_report: objective returned undefined Trace");
+      ::pluss::throw_error("subsp::math::diff::gradient_audit_report: objective returned undefined Trace");
     }
     if (out.value().numel() != 1) {
-      throw std::runtime_error("subsp::math::diff::gradient_audit_report: objective must be scalar-valued");
+      ::pluss::throw_error("subsp::math::diff::gradient_audit_report: objective must be scalar-valued");
     }
     return out.value();
   };
@@ -2047,13 +2059,13 @@ DerivativeAuditReport curvature_audit_report(
   report.phase = "curvature";
 
   if (params.empty()) {
-    throw std::runtime_error("subsp::math::diff::curvature_audit_report: expected at least one parameter");
+    ::pluss::throw_error("subsp::math::diff::curvature_audit_report: expected at least one parameter");
   }
   if (!(opt.epsilon > 0.0) || !std::isfinite(opt.epsilon)) {
-    throw std::runtime_error("subsp::math::diff::curvature_audit_report: epsilon must be positive and finite");
+    ::pluss::throw_error("subsp::math::diff::curvature_audit_report: epsilon must be positive and finite");
   }
   if (opt.atol < 0.0 || opt.rtol < 0.0 || !std::isfinite(opt.atol) || !std::isfinite(opt.rtol)) {
-    throw std::runtime_error("subsp::math::diff::curvature_audit_report: atol/rtol must be finite and non-negative");
+    ::pluss::throw_error("subsp::math::diff::curvature_audit_report: atol/rtol must be finite and non-negative");
   }
   for (const auto& p : params) {
     detail::require_defined_(p, "curvature_audit_report");
@@ -2074,10 +2086,10 @@ DerivativeAuditReport curvature_audit_report(
     }
     Trace out = objective(fixed_inputs);
     if (!out.defined()) {
-      throw std::runtime_error("subsp::math::diff::curvature_audit_report: objective returned undefined Trace");
+      ::pluss::throw_error("subsp::math::diff::curvature_audit_report: objective returned undefined Trace");
     }
     if (out.value().numel() != 1) {
-      throw std::runtime_error("subsp::math::diff::curvature_audit_report: objective must be scalar-valued");
+      ::pluss::throw_error("subsp::math::diff::curvature_audit_report: objective must be scalar-valued");
     }
     return out.value();
   };
@@ -2216,7 +2228,7 @@ std::pair<Series, std::vector<std::vector<Series>>> hessian(
     const std::vector<Series>& params,
     const HessianOptions& opt = {}) {
   if (params.empty()) {
-    throw std::runtime_error("subsp::math::diff::hessian: expected at least one parameter");
+    ::pluss::throw_error("subsp::math::diff::hessian: expected at least one parameter");
   }
   for (const auto& p : params) {
     detail::require_defined_(p, "hessian");
@@ -2375,10 +2387,10 @@ Series nth_derivative(Fn&& fn,
                       const HvpOptions& opt = {}) {
   detail::require_defined_(param, "nth_derivative");
   if (order < 0) {
-    throw std::runtime_error("subsp::math::diff::nth_derivative: order must be non-negative");
+    ::pluss::throw_error("subsp::math::diff::nth_derivative: order must be non-negative");
   }
   if (param.numel() != 1) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::diff::nth_derivative: currently requires a scalar input Series");
   }
 
@@ -2389,11 +2401,11 @@ Series nth_derivative(Fn&& fn,
     detail::set_tracks_slope_(leaf, true);
     Trace out = fn_copy(Trace(leaf));
     if (!out.defined()) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "subsp::math::diff::nth_derivative: objective returned undefined Trace");
     }
     if (out.value().numel() != 1) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "subsp::math::diff::nth_derivative: objective must return scalar output");
     }
 
@@ -2430,10 +2442,10 @@ Series nth_derivative(Fn&& fn,
       const Series tangent = detail::ones_like_(param);
       return hvp(std::forward<Fn>(fn), param, tangent, opt).second;
     }
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::diff::nth_derivative: order > 2 requires a Trace-callable objective");
   } else {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::diff::nth_derivative: objective must be callable with Trace or DualTrace");
   }
 }

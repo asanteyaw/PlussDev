@@ -15,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+#include "pluss/error.h"
+
 namespace pluss::toolchain {
 
 using Value = std::any;
@@ -86,7 +88,7 @@ inline P any_to(const Value& v) {
   } catch (const std::bad_any_cast&) {
     std::ostringstream oss;
     oss << "bad_any_cast: expected '" << typeid(P).name() << "'";
-    throw std::runtime_error(oss.str());
+    ::pluss::throw_error(oss.str());
   }
 }
 
@@ -99,14 +101,14 @@ inline void validate_kwargs_exact(const MethodSpec& spec, const Kwargs& kwargs) 
     if (!ok) {
       std::ostringstream oss;
       oss << "unexpected kwarg '" << kv.first << "'";
-      throw std::runtime_error(oss.str());
+      ::pluss::throw_error(oss.str());
     }
   }
   for (const auto& pn : spec.param_names) {
     if (kwargs.find(pn) == kwargs.end()) {
       std::ostringstream oss;
       oss << "missing kwarg '" << pn << "'";
-      throw std::runtime_error(oss.str());
+      ::pluss::throw_error(oss.str());
     }
   }
 }
@@ -116,7 +118,7 @@ inline std::array<Value, N> ordered_from_positional(std::span<const Value> args)
   if (args.size() != N) {
     std::ostringstream oss;
     oss << "expected " << N << " positional args, got " << args.size();
-    throw std::runtime_error(oss.str());
+    ::pluss::throw_error(oss.str());
   }
   std::array<Value, N> out{};
   for (std::size_t i = 0; i < N; ++i) out[i] = args[i];
@@ -171,7 +173,7 @@ void register_method(std::string name,
   if (names.size() != arity) {
     std::ostringstream oss;
     oss << "register_method(" << name << "): param_names size " << names.size() << " != arity " << arity;
-    throw std::runtime_error(oss.str());
+    ::pluss::throw_error(oss.str());
   }
   MethodSpec spec{names};
 
@@ -197,7 +199,7 @@ void register_method(std::string name,
   if (names.size() != arity) {
     std::ostringstream oss;
     oss << "register_method(" << name << "): param_names size " << names.size() << " != arity " << arity;
-    throw std::runtime_error(oss.str());
+    ::pluss::throw_error(oss.str());
   }
   MethodSpec spec{names};
 

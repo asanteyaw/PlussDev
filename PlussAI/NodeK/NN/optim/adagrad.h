@@ -65,7 +65,7 @@ public:
 
   void set_group_options(std::size_t group_index, const AdagradOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -95,10 +95,10 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size() || state.group_steps.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad::restore_state: group count mismatch");
     }
     if (state.step < 0) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad::restore_state: step must be non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad::restore_state: step must be non-negative");
     }
     validate_state_vector_(state.sum_square, "pluss::ai::nn::optim::Adagrad::restore_state[sum_square]");
     for (std::size_t i = 0; i < groups_.size(); ++i) {
@@ -348,36 +348,36 @@ private:
 
   static void validate_options_(const AdagradOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: learning_rate must be positive and finite");
     }
     if (options.lr_decay < 0.0 || !std::isfinite(options.lr_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad: lr_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: lr_decay must be finite and non-negative");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: weight_decay must be finite and non-negative");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: epsilon must be positive and finite");
     }
     if (options.initial_accumulator_value < 0.0 || !std::isfinite(options.initial_accumulator_value)) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Adagrad: initial_accumulator_value must be finite and non-negative");
     }
   }
 
   static std::vector<Series*> flatten_groups_(const std::vector<AdagradGroup>& groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adagrad: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Adagrad: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::Adagrad: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -415,17 +415,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Adagrad: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::Adagrad: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::Adagrad: capturable mode requires same dtype across each group");
         }
       }

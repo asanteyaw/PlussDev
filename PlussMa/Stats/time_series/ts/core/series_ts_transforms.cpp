@@ -99,7 +99,7 @@ std::string resample_op_name_(ResampleOp op) {
 }
 
 Series rolling_count_(const Series& x, std::int64_t window) {
-  return pluss::ones({x.numel()}, cfg_like_(x, x.scalar_type())).movsum(window);
+  return pluss::ones({x.numel()}, cfg_like_(x, x.scalar_type())).stat.movsum(window);
 }
 
 Series apply_min_periods_(const Series& stat, const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -162,7 +162,7 @@ Series rolling_mean(const Series& x, std::int64_t window, std::int64_t min_perio
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_mean: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_mean: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_mean");
-  return apply_min_periods_(xr.movmean(window), xr, window, min_periods);
+  return apply_min_periods_(xr.stat.movmean(window), xr, window, min_periods);
 }
 
 Series rolling_std(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -170,7 +170,7 @@ Series rolling_std(const Series& x, std::int64_t window, std::int64_t min_period
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_std: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_std: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_std");
-  return apply_min_periods_(xr.movstd(window), xr, window, min_periods);
+  return apply_min_periods_(xr.stat.movstd(window), xr, window, min_periods);
 }
 
 Series rolling_sum(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -178,7 +178,7 @@ Series rolling_sum(const Series& x, std::int64_t window, std::int64_t min_period
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_sum: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_sum: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_sum");
-  return apply_min_periods_(xr.movsum(window), xr, window, min_periods);
+  return apply_min_periods_(xr.stat.movsum(window), xr, window, min_periods);
 }
 
 Series rolling_var(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -186,7 +186,7 @@ Series rolling_var(const Series& x, std::int64_t window, std::int64_t min_period
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_var: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_var: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_var");
-  return apply_min_periods_(xr.movvar(window), xr, window, min_periods);
+  return apply_min_periods_(xr.stat.movvar(window), xr, window, min_periods);
 }
 
 Series rolling_min(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -194,7 +194,7 @@ Series rolling_min(const Series& x, std::int64_t window, std::int64_t min_period
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_min: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_min: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_min");
-  return apply_min_periods_(xr.movmin(window), xr, window, min_periods);
+  return apply_min_periods_(xr.stat.movmin(window), xr, window, min_periods);
 }
 
 Series rolling_max(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -202,7 +202,7 @@ Series rolling_max(const Series& x, std::int64_t window, std::int64_t min_period
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_max: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_max: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_max");
-  return apply_min_periods_(xr.movmax(window), xr, window, min_periods);
+  return apply_min_periods_(xr.stat.movmax(window), xr, window, min_periods);
 }
 
 Series ema(const Series& x, double alpha) {

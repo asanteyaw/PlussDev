@@ -57,8 +57,12 @@ static void reduce_dim_impl(const Series& a, std::int64_t dim, Series& out, Load
 
 static float load_f16(Float16 x){ return float16_to_float(x); }
 static float load_bf16(BFloat16 x){ return bfloat16_to_float(x); }
+static float load_f8e4m3fn(Float8E4M3FN x){ return float8e4m3fn_to_float(x); }
+static float load_f8e5m2(Float8E5M2 x){ return float8e5m2_to_float(x); }
 static Float16 store_f16(float x){ return float16_from_float(x); }
 static BFloat16 store_bf16(float x){ return bfloat16_from_float(x); }
+static Float8E4M3FN store_f8e4m3fn(float x){ return float8e4m3fn_from_float(x); }
+static Float8E5M2 store_f8e5m2(float x){ return float8e5m2_from_float(x); }
 
 template <class T>
 static double sum_real_fast_(const T* ap, std::int64_t n) {
@@ -274,6 +278,9 @@ default: break;
 void amax_dim(const Series& a, std::int64_t dim, Series& out) {
   PLUSS_CHECK(a.is_contiguous(), "amax_dim: requires contiguous");
   switch (a.scalar_type()) {
+    case ScalarType::Bool:
+      reduce_dim_impl<std::uint8_t,std::uint8_t,std::uint8_t>(a,dim,out,[](std::uint8_t x){return x;},[](std::uint8_t acc, std::int64_t){return acc;},[](){return (std::uint8_t)0;},[](std::uint8_t acc,std::uint8_t x){return (std::uint8_t)std::max(acc,x);});
+      return;
     case ScalarType::Float64:
       reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return -std::numeric_limits<double>::infinity();},[](double acc,double x){return std::max(acc,x);});
       return;
@@ -283,6 +290,9 @@ void amax_dim(const Series& a, std::int64_t dim, Series& out) {
     case ScalarType::Int64:
       reduce_dim_impl<std::int64_t,std::int64_t,std::int64_t>(a,dim,out,[](std::int64_t x){return x;},[](std::int64_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int64_t>::min();},[](std::int64_t acc,std::int64_t x){return std::max(acc,x);});
       return;
+    case ScalarType::UInt64:
+      reduce_dim_impl<std::uint64_t,std::uint64_t,std::uint64_t>(a,dim,out,[](std::uint64_t x){return x;},[](std::uint64_t acc, std::int64_t){return acc;},[](){return (std::uint64_t)0;},[](std::uint64_t acc,std::uint64_t x){return std::max(acc,x);});
+      return;
 
     case ScalarType::Float16:
       reduce_dim_impl<float,Float16,Float16>(a,dim,out,load_f16,[](float acc, std::int64_t){return store_f16(acc);},[](){return -std::numeric_limits<float>::infinity();},[](float acc,float x){return std::max(acc,x);});
@@ -290,8 +300,34 @@ void amax_dim(const Series& a, std::int64_t dim, Series& out) {
     case ScalarType::BFloat16:
       reduce_dim_impl<float,BFloat16,BFloat16>(a,dim,out,load_bf16,[](float acc, std::int64_t){return store_bf16(acc);},[](){return -std::numeric_limits<float>::infinity();},[](float acc,float x){return std::max(acc,x);});
       return;
+    case ScalarType::Float8E4M3FN:
+      reduce_dim_impl<float,Float8E4M3FN,Float8E4M3FN>(
+          a, dim, out, load_f8e4m3fn,
+          [](float acc, std::int64_t){ return store_f8e4m3fn(acc); },
+          [](){ return -std::numeric_limits<float>::infinity(); },
+          [](float acc, float x){ return std::max(acc, x); });
+      return;
+    case ScalarType::Float8E5M2:
+      reduce_dim_impl<float,Float8E5M2,Float8E5M2>(
+          a, dim, out, load_f8e5m2,
+          [](float acc, std::int64_t){ return store_f8e5m2(acc); },
+          [](){ return -std::numeric_limits<float>::infinity(); },
+          [](float acc, float x){ return std::max(acc, x); });
+      return;
     case ScalarType::Int32:
       reduce_dim_impl<std::int32_t,std::int32_t,std::int32_t>(a,dim,out,[](std::int32_t x){return x;},[](std::int32_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int32_t>::min();},[](std::int32_t acc,std::int32_t x){return std::max(acc,x);});
+      return;
+    case ScalarType::Int16:
+      reduce_dim_impl<std::int16_t,std::int16_t,std::int16_t>(a,dim,out,[](std::int16_t x){return x;},[](std::int16_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int16_t>::min();},[](std::int16_t acc,std::int16_t x){return (std::int16_t)std::max(acc,x);});
+      return;
+    case ScalarType::Int8:
+      reduce_dim_impl<std::int8_t,std::int8_t,std::int8_t>(a,dim,out,[](std::int8_t x){return x;},[](std::int8_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int8_t>::min();},[](std::int8_t acc,std::int8_t x){return (std::int8_t)std::max(acc,x);});
+      return;
+    case ScalarType::UInt32:
+      reduce_dim_impl<std::uint32_t,std::uint32_t,std::uint32_t>(a,dim,out,[](std::uint32_t x){return x;},[](std::uint32_t acc, std::int64_t){return acc;},[](){return (std::uint32_t)0;},[](std::uint32_t acc,std::uint32_t x){return (std::uint32_t)std::max(acc,x);});
+      return;
+    case ScalarType::UInt16:
+      reduce_dim_impl<std::uint16_t,std::uint16_t,std::uint16_t>(a,dim,out,[](std::uint16_t x){return x;},[](std::uint16_t acc, std::int64_t){return acc;},[](){return (std::uint16_t)0;},[](std::uint16_t acc,std::uint16_t x){return (std::uint16_t)std::max(acc,x);});
       return;
     case ScalarType::UInt8:
       reduce_dim_impl<std::uint8_t,std::uint8_t,std::uint8_t>(a,dim,out,[](std::uint8_t x){return x;},[](std::uint8_t acc, std::int64_t){return acc;},[](){return (std::uint8_t)0;},[](std::uint8_t acc,std::uint8_t x){return (std::uint8_t)std::max(acc,x);});
@@ -304,6 +340,9 @@ default: break;
 void amin_dim(const Series& a, std::int64_t dim, Series& out) {
   PLUSS_CHECK(a.is_contiguous(), "amin_dim: requires contiguous");
   switch (a.scalar_type()) {
+    case ScalarType::Bool:
+      reduce_dim_impl<std::uint8_t,std::uint8_t,std::uint8_t>(a,dim,out,[](std::uint8_t x){return x;},[](std::uint8_t acc, std::int64_t){return acc;},[](){return (std::uint8_t)1;},[](std::uint8_t acc,std::uint8_t x){return (std::uint8_t)std::min(acc,x);});
+      return;
     case ScalarType::Float64:
       reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return std::numeric_limits<double>::infinity();},[](double acc,double x){return std::min(acc,x);});
       return;
@@ -313,6 +352,9 @@ void amin_dim(const Series& a, std::int64_t dim, Series& out) {
     case ScalarType::Int64:
       reduce_dim_impl<std::int64_t,std::int64_t,std::int64_t>(a,dim,out,[](std::int64_t x){return x;},[](std::int64_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int64_t>::max();},[](std::int64_t acc,std::int64_t x){return std::min(acc,x);});
       return;
+    case ScalarType::UInt64:
+      reduce_dim_impl<std::uint64_t,std::uint64_t,std::uint64_t>(a,dim,out,[](std::uint64_t x){return x;},[](std::uint64_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::uint64_t>::max();},[](std::uint64_t acc,std::uint64_t x){return std::min(acc,x);});
+      return;
 
     case ScalarType::Float16:
       reduce_dim_impl<float,Float16,Float16>(a,dim,out,load_f16,[](float acc, std::int64_t){return store_f16(acc);},[](){return std::numeric_limits<float>::infinity();},[](float acc,float x){return std::min(acc,x);});
@@ -320,8 +362,34 @@ void amin_dim(const Series& a, std::int64_t dim, Series& out) {
     case ScalarType::BFloat16:
       reduce_dim_impl<float,BFloat16,BFloat16>(a,dim,out,load_bf16,[](float acc, std::int64_t){return store_bf16(acc);},[](){return std::numeric_limits<float>::infinity();},[](float acc,float x){return std::min(acc,x);});
       return;
+    case ScalarType::Float8E4M3FN:
+      reduce_dim_impl<float,Float8E4M3FN,Float8E4M3FN>(
+          a, dim, out, load_f8e4m3fn,
+          [](float acc, std::int64_t){ return store_f8e4m3fn(acc); },
+          [](){ return std::numeric_limits<float>::infinity(); },
+          [](float acc, float x){ return std::min(acc, x); });
+      return;
+    case ScalarType::Float8E5M2:
+      reduce_dim_impl<float,Float8E5M2,Float8E5M2>(
+          a, dim, out, load_f8e5m2,
+          [](float acc, std::int64_t){ return store_f8e5m2(acc); },
+          [](){ return std::numeric_limits<float>::infinity(); },
+          [](float acc, float x){ return std::min(acc, x); });
+      return;
     case ScalarType::Int32:
       reduce_dim_impl<std::int32_t,std::int32_t,std::int32_t>(a,dim,out,[](std::int32_t x){return x;},[](std::int32_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int32_t>::max();},[](std::int32_t acc,std::int32_t x){return std::min(acc,x);});
+      return;
+    case ScalarType::Int16:
+      reduce_dim_impl<std::int16_t,std::int16_t,std::int16_t>(a,dim,out,[](std::int16_t x){return x;},[](std::int16_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int16_t>::max();},[](std::int16_t acc,std::int16_t x){return (std::int16_t)std::min(acc,x);});
+      return;
+    case ScalarType::Int8:
+      reduce_dim_impl<std::int8_t,std::int8_t,std::int8_t>(a,dim,out,[](std::int8_t x){return x;},[](std::int8_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::int8_t>::max();},[](std::int8_t acc,std::int8_t x){return (std::int8_t)std::min(acc,x);});
+      return;
+    case ScalarType::UInt32:
+      reduce_dim_impl<std::uint32_t,std::uint32_t,std::uint32_t>(a,dim,out,[](std::uint32_t x){return x;},[](std::uint32_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::uint32_t>::max();},[](std::uint32_t acc,std::uint32_t x){return (std::uint32_t)std::min(acc,x);});
+      return;
+    case ScalarType::UInt16:
+      reduce_dim_impl<std::uint16_t,std::uint16_t,std::uint16_t>(a,dim,out,[](std::uint16_t x){return x;},[](std::uint16_t acc, std::int64_t){return acc;},[](){return std::numeric_limits<std::uint16_t>::max();},[](std::uint16_t acc,std::uint16_t x){return (std::uint16_t)std::min(acc,x);});
       return;
     case ScalarType::UInt8:
       reduce_dim_impl<std::uint8_t,std::uint8_t,std::uint8_t>(a,dim,out,[](std::uint8_t x){return x;},[](std::uint8_t acc, std::int64_t){return acc;},[](){return (std::uint8_t)255;},[](std::uint8_t acc,std::uint8_t x){return (std::uint8_t)std::min(acc,x);});

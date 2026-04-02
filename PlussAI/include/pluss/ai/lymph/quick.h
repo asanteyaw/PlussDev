@@ -27,7 +27,7 @@ T must(StatusOr<T> value_or, const char* where = nullptr) {
     const std::string prefix = (where != nullptr && where[0] != '\0')
                                    ? (std::string(where) + ": ")
                                    : std::string{};
-    throw std::runtime_error(prefix + value_or.status().message);
+    ::pluss::throw_error(prefix + value_or.status().message);
   }
   return value_or.move_value();
 }
@@ -37,7 +37,7 @@ inline void must(nodej::Status status, const char* where = nullptr) {
   const std::string prefix = (where != nullptr && where[0] != '\0')
                                  ? (std::string(where) + ": ")
                                  : std::string{};
-  throw std::runtime_error(prefix + status.message);
+  ::pluss::throw_error(prefix + status.message);
 }
 
 struct FrameFlowArtifact {

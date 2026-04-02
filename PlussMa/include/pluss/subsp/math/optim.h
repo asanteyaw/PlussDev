@@ -38,19 +38,19 @@ inline bool same_shape_(const Series& a, const Series& b) {
 
 inline void require_defined_(const Series& x, const char* op) {
   if (!x.defined()) {
-    throw std::runtime_error(std::string("subsp::math::optim::") + op + ": expected defined Series");
+    ::pluss::throw_error(std::string("subsp::math::optim::") + op + ": expected defined Series");
   }
 }
 
 inline void require_same_platform_(const Series& a, const Series& b, const char* op) {
   if (a.platform() != b.platform()) {
-    throw std::runtime_error(std::string("subsp::math::optim::") + op + ": expected matching platforms");
+    ::pluss::throw_error(std::string("subsp::math::optim::") + op + ": expected matching platforms");
   }
 }
 
 inline void require_float_dtype_(const Series& x, const char* op) {
   if (!x.dtype().is_floating() && !x.dtype().is_complex()) {
-    throw std::runtime_error(std::string("subsp::math::optim::") + op +
+    ::pluss::throw_error(std::string("subsp::math::optim::") + op +
                              ": expected floating or complex dtype");
   }
 }
@@ -135,7 +135,7 @@ public:
     for (const auto& block : blocks_) {
       if (block.name == name) return block;
     }
-    throw std::runtime_error("subsp::math::optim::ParameterLayout::at: unknown parameter block");
+    ::pluss::throw_error("subsp::math::optim::ParameterLayout::at: unknown parameter block");
   }
 
 private:
@@ -182,14 +182,14 @@ public:
     for (const auto& block : blocks_) {
       if (block.name == name) return block.value;
     }
-    throw std::runtime_error("subsp::math::optim::ParameterPack::at: unknown parameter block");
+    ::pluss::throw_error("subsp::math::optim::ParameterPack::at: unknown parameter block");
   }
 
   T& at(std::string_view name) {
     for (auto& block : blocks_) {
       if (block.name == name) return block.value;
     }
-    throw std::runtime_error("subsp::math::optim::ParameterPack::at: unknown parameter block");
+    ::pluss::throw_error("subsp::math::optim::ParameterPack::at: unknown parameter block");
   }
 
   std::vector<T> values() const {
@@ -204,7 +204,7 @@ public:
   template <class U>
   ParameterPack<U> rebind(std::vector<U> values) const {
     if (values.size() != blocks_.size()) {
-      throw std::runtime_error("subsp::math::optim::ParameterPack::rebind: size mismatch");
+      ::pluss::throw_error("subsp::math::optim::ParameterPack::rebind: size mismatch");
     }
 
     std::vector<typename ParameterPack<U>::Block> rebound;
@@ -246,7 +246,7 @@ public:
 
   Series flatten_values() const requires std::is_same_v<T, Series> {
     if (blocks_.empty()) {
-      throw std::runtime_error("subsp::math::optim::ParameterPack::flatten_values: empty pack");
+      ::pluss::throw_error("subsp::math::optim::ParameterPack::flatten_values: empty pack");
     }
 
     std::vector<Series> flat;
@@ -257,7 +257,7 @@ public:
       detail::require_defined_(block.value, "ParameterPack::flatten_values");
       detail::require_same_platform_(blocks_.front().value, block.value, "ParameterPack::flatten_values");
       if (block.value.scalar_type() != scalar_type) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "subsp::math::optim::ParameterPack::flatten_values: expected matching dtypes");
       }
       (void)platform;
@@ -284,10 +284,10 @@ private:
     seen.reserve(blocks_.size());
     for (const auto& block : blocks_) {
       if (block.name.empty()) {
-        throw std::runtime_error("subsp::math::optim::ParameterPack: block names must be non-empty");
+        ::pluss::throw_error("subsp::math::optim::ParameterPack: block names must be non-empty");
       }
       if (!seen.insert(block.name).second) {
-        throw std::runtime_error("subsp::math::optim::ParameterPack: duplicate block name");
+        ::pluss::throw_error("subsp::math::optim::ParameterPack: duplicate block name");
       }
     }
   }
@@ -310,7 +310,7 @@ inline ParameterPack<Series> unflatten_values(const ParameterLayout& layout, con
 
   Series flat = flat_values.reshape({flat_values.numel()});
   if (flat.numel() != layout.total_numel()) {
-    throw std::runtime_error("subsp::math::optim::unflatten_values: flat size mismatch");
+    ::pluss::throw_error("subsp::math::optim::unflatten_values: flat size mismatch");
   }
 
   std::vector<typename ParameterPack<Series>::Block> blocks;
@@ -340,7 +340,7 @@ inline Series flatten_values(const ParameterPack<Series>& params) {
 
 inline Trace flatten_values(const ParameterPack<Trace>& params) {
   if (params.empty()) {
-    throw std::runtime_error("subsp::math::optim::flatten_values<Trace>: empty pack");
+    ::pluss::throw_error("subsp::math::optim::flatten_values<Trace>: empty pack");
   }
   std::vector<Series> flat;
   flat.reserve(params.size());
@@ -353,7 +353,7 @@ inline Trace flatten_values(const ParameterPack<Trace>& params) {
 
 inline DualTrace flatten_values(const ParameterPack<DualTrace>& params) {
   if (params.empty()) {
-    throw std::runtime_error("subsp::math::optim::flatten_values<DualTrace>: empty pack");
+    ::pluss::throw_error("subsp::math::optim::flatten_values<DualTrace>: empty pack");
   }
   std::vector<Series> values;
   std::vector<Series> tangents;
@@ -1420,14 +1420,14 @@ inline Series dense_matvec_(const Series& matrix, const Series& vector) {
   require_defined_(matrix, "dense_matvec");
   require_defined_(vector, "dense_matvec");
   if (matrix.sizes().size() != 2) {
-    throw std::runtime_error("subsp::math::optim::dense_matvec_: expected a rank-2 matrix");
+    ::pluss::throw_error("subsp::math::optim::dense_matvec_: expected a rank-2 matrix");
   }
 
   const std::int64_t rows = matrix.sizes()[0];
   const std::int64_t cols = matrix.sizes()[1];
   const Series flat_vector = vector.reshape({vector.numel()}).to(ScalarType::Float64);
   if (flat_vector.numel() != cols) {
-    throw std::runtime_error("subsp::math::optim::dense_matvec_: matrix/vector shape mismatch");
+    ::pluss::throw_error("subsp::math::optim::dense_matvec_: matrix/vector shape mismatch");
   }
   return matrix.to(ScalarType::Float64)
       .to(vector.platform())
@@ -1440,14 +1440,14 @@ inline Series dense_transpose_matvec_(const Series& matrix, const Series& vector
   require_defined_(matrix, "dense_transpose_matvec");
   require_defined_(vector, "dense_transpose_matvec");
   if (matrix.sizes().size() != 2) {
-    throw std::runtime_error("subsp::math::optim::dense_transpose_matvec_: expected a rank-2 matrix");
+    ::pluss::throw_error("subsp::math::optim::dense_transpose_matvec_: expected a rank-2 matrix");
   }
 
   const std::int64_t rows = matrix.sizes()[0];
   const std::int64_t cols = matrix.sizes()[1];
   const Series flat_vector = vector.reshape({vector.numel()}).to(ScalarType::Float64);
   if (flat_vector.numel() != rows) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optim::dense_transpose_matvec_: matrix/vector shape mismatch");
   }
   return matrix.to(ScalarType::Float64)
@@ -1579,19 +1579,19 @@ inline std::optional<std::string> validate_jacobian_pack_(const ParameterPack<Se
 
 inline void validate_problem_(const ConstrainedProblem& problem, const ParameterPack<Series>& params) {
   if (!problem.objective.defined()) {
-    throw std::runtime_error("subsp::math::optim::evaluate_problem: objective is not defined");
+    ::pluss::throw_error("subsp::math::optim::evaluate_problem: objective is not defined");
   }
   if (problem.bounds.lower.has_value() && !problem.bounds.lower->same_layout(params)) {
-    throw std::runtime_error("subsp::math::optim::evaluate_problem: lower bounds layout mismatch");
+    ::pluss::throw_error("subsp::math::optim::evaluate_problem: lower bounds layout mismatch");
   }
   if (problem.bounds.upper.has_value() && !problem.bounds.upper->same_layout(params)) {
-    throw std::runtime_error("subsp::math::optim::evaluate_problem: upper bounds layout mismatch");
+    ::pluss::throw_error("subsp::math::optim::evaluate_problem: upper bounds layout mismatch");
   }
   if (problem.bounds.lower.has_value() && problem.bounds.upper.has_value()) {
     for (const auto& block : params.blocks()) {
       const Series diff = problem.bounds.lower->at(block.name).sub(problem.bounds.upper->at(block.name));
       if (max_positive_scalar_(diff) > 0.0) {
-        throw std::runtime_error("subsp::math::optim::evaluate_problem: lower bound exceeds upper bound");
+        ::pluss::throw_error("subsp::math::optim::evaluate_problem: lower bound exceeds upper bound");
       }
     }
   }
@@ -1599,24 +1599,24 @@ inline void validate_problem_(const ConstrainedProblem& problem, const Parameter
   if (problem.linear.Aeq.has_value()) {
     require_defined_(*problem.linear.Aeq, "evaluate_problem");
     if (problem.linear.Aeq->sizes().size() != 2 || problem.linear.Aeq->sizes()[1] != n) {
-      throw std::runtime_error("subsp::math::optim::evaluate_problem: Aeq shape mismatch");
+      ::pluss::throw_error("subsp::math::optim::evaluate_problem: Aeq shape mismatch");
     }
     if (problem.linear.beq.has_value() && problem.linear.beq->numel() != problem.linear.Aeq->sizes()[0]) {
-      throw std::runtime_error("subsp::math::optim::evaluate_problem: beq length mismatch");
+      ::pluss::throw_error("subsp::math::optim::evaluate_problem: beq length mismatch");
     }
   } else if (problem.linear.beq.has_value() && problem.linear.beq->numel() != 0) {
-    throw std::runtime_error("subsp::math::optim::evaluate_problem: beq provided without Aeq");
+    ::pluss::throw_error("subsp::math::optim::evaluate_problem: beq provided without Aeq");
   }
   if (problem.linear.Aineq.has_value()) {
     require_defined_(*problem.linear.Aineq, "evaluate_problem");
     if (problem.linear.Aineq->sizes().size() != 2 || problem.linear.Aineq->sizes()[1] != n) {
-      throw std::runtime_error("subsp::math::optim::evaluate_problem: Aineq shape mismatch");
+      ::pluss::throw_error("subsp::math::optim::evaluate_problem: Aineq shape mismatch");
     }
     if (problem.linear.bineq.has_value() && problem.linear.bineq->numel() != problem.linear.Aineq->sizes()[0]) {
-      throw std::runtime_error("subsp::math::optim::evaluate_problem: bineq length mismatch");
+      ::pluss::throw_error("subsp::math::optim::evaluate_problem: bineq length mismatch");
     }
   } else if (problem.linear.bineq.has_value() && problem.linear.bineq->numel() != 0) {
-    throw std::runtime_error("subsp::math::optim::evaluate_problem: bineq provided without Aineq");
+    ::pluss::throw_error("subsp::math::optim::evaluate_problem: bineq provided without Aineq");
   }
 }
 
@@ -1667,12 +1667,12 @@ template <class AD>
 AD dense_matvec_autodiff_(const Series& matrix, const AD& vector) {
   require_defined_(matrix, "dense_matvec_autodiff");
   if (matrix.sizes().size() != 2) {
-    throw std::runtime_error("subsp::math::optim::dense_matvec_autodiff_: expected a rank-2 matrix");
+    ::pluss::throw_error("subsp::math::optim::dense_matvec_autodiff_: expected a rank-2 matrix");
   }
   const std::int64_t rows = matrix.sizes()[0];
   const std::int64_t cols = matrix.sizes()[1];
   if (vector.value().numel() != cols) {
-    throw std::runtime_error("subsp::math::optim::dense_matvec_autodiff_: matrix/vector shape mismatch");
+    ::pluss::throw_error("subsp::math::optim::dense_matvec_autodiff_: matrix/vector shape mismatch");
   }
   const Series aligned =
       matrix.to(ScalarType::Float64).to(vector.value().platform()).reshape({rows, cols});
@@ -1709,7 +1709,7 @@ inline std::pair<Series, ParameterPack<Series>> objective_autodiff_value_and_gra
         },
         params);
   }
-  throw std::runtime_error(
+  ::pluss::throw_error(
       "subsp::math::optim::objective_autodiff_value_and_grad_: objective callback is not defined");
 }
 
@@ -1721,7 +1721,7 @@ AD call_objective_autodiff_(const ConstrainedProblem& problem, const ParameterPa
   } else {
     if (problem.objective.autodiff_dual) return problem.objective.autodiff_dual(params);
   }
-  throw std::runtime_error(
+  ::pluss::throw_error(
       "subsp::math::optim::call_objective_autodiff_: requested curvature mode requires autodiff callback support");
 }
 
@@ -1787,7 +1787,7 @@ AD barrier_objective_autodiff_(const ConstrainedProblem& problem,
 
   if constexpr (std::is_same_v<AD, DualTrace>) {
     if (!supports_exact_curvature_(problem, OptimaHessianApproximation::Exact)) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "subsp::math::optim::barrier_objective_autodiff_: exact internal-protocol curvature requires objective.autodiff_dual and dual nonlinear callbacks");
     }
   }
@@ -1884,7 +1884,7 @@ inline ParameterPack<Series> lift_flat_gradient_(const ParameterPack<Series>& pa
 
 inline ParameterPack<Series> add_pack_(const ParameterPack<Series>& lhs, const ParameterPack<Series>& rhs) {
   if (!lhs.same_layout(rhs)) {
-    throw std::runtime_error("subsp::math::optim::add_pack_: layout mismatch");
+    ::pluss::throw_error("subsp::math::optim::add_pack_: layout mismatch");
   }
   std::vector<typename ParameterPack<Series>::Block> out;
   out.reserve(lhs.size());
@@ -1985,7 +1985,7 @@ inline ParameterPack<Series> project_bounds_(const ParameterPack<Series>& params
 inline ParameterPack<Series> lift_flat_std_(const ParameterPack<Series>& like,
                                             const std::vector<double>& flat) {
   if (flat.size() != static_cast<std::size_t>(like.total_numel())) {
-    throw std::runtime_error("subsp::math::optim::lift_flat_std_: size mismatch");
+    ::pluss::throw_error("subsp::math::optim::lift_flat_std_: size mismatch");
   }
   if (like.empty()) return like;
   Series flat_series =
@@ -2217,7 +2217,7 @@ inline Series solve_dense_system_series_(const Series& matrix,
   require_defined_(matrix, "solve_dense_system_series");
   require_defined_(rhs, "solve_dense_system_series");
   if (matrix.sizes().size() != 2 || matrix.sizes()[0] != matrix.sizes()[1]) {
-    throw std::runtime_error("subsp::math::optim::solve_dense_system_series_: expected square matrix");
+    ::pluss::throw_error("subsp::math::optim::solve_dense_system_series_: expected square matrix");
   }
   const std::int64_t n = matrix.sizes()[0];
   const auto platform = matrix.platform();
@@ -2363,7 +2363,7 @@ inline Series solve_spd_system_cg_series_(const Series& matrix,
   require_defined_(matrix, "solve_spd_system_cg_series");
   require_defined_(rhs, "solve_spd_system_cg_series");
   if (matrix.sizes().size() != 2 || matrix.sizes()[0] != matrix.sizes()[1]) {
-    throw std::runtime_error("subsp::math::optim::solve_spd_system_cg_series_: expected square matrix");
+    ::pluss::throw_error("subsp::math::optim::solve_spd_system_cg_series_: expected square matrix");
   }
   const std::int64_t n = matrix.sizes()[0];
   const auto platform = matrix.platform();
@@ -2574,7 +2574,7 @@ inline Series jacobian_row_from_pack_(const ParameterPack<Series>& params,
       continue;
     }
     if (block_jacobian.sizes().size() != 2 || block_jacobian.sizes()[0] <= row || block_jacobian.sizes()[1] != cols) {
-      throw std::runtime_error("subsp::math::optim::jacobian_row_from_pack_: shape mismatch");
+      ::pluss::throw_error("subsp::math::optim::jacobian_row_from_pack_: shape mismatch");
     }
     row_pieces.push_back(
         block_jacobian.to(ScalarType::Float64).to(platform).reshape({block_jacobian.sizes()[0], cols}).select(0, row).reshape({cols}));
@@ -3238,7 +3238,7 @@ inline double barrier_value_(const ProblemEvaluation& evaluation,
                              double barrier_parameter,
                              double equality_penalty) {
   if (!(barrier_parameter > 0.0) || !std::isfinite(barrier_parameter)) {
-    throw std::runtime_error("subsp::math::optim::barrier_value_: barrier parameter must be positive");
+    ::pluss::throw_error("subsp::math::optim::barrier_value_: barrier parameter must be positive");
   }
 
   double value = evaluation.value.item<double>();
@@ -3258,7 +3258,7 @@ inline double barrier_value_(const ProblemEvaluation& evaluation,
                              double equality_penalty,
                              const OptimaNormalizationStats& normalization) {
   if (!(barrier_parameter > 0.0) || !std::isfinite(barrier_parameter)) {
-    throw std::runtime_error("subsp::math::optim::barrier_value_: barrier parameter must be positive");
+    ::pluss::throw_error("subsp::math::optim::barrier_value_: barrier parameter must be positive");
   }
   double value = normalization.objective_scale * evaluation.value.item<double>();
   const Series eq_scales = normalization.equality_row_scale.defined()
@@ -3694,7 +3694,7 @@ inline Series bfgs_hessian_update_(const Series& hessian,
                                                 double curvature_tolerance) {
   const std::int64_t n = s.numel();
   if (!hessian.defined() || hessian.numel() != n * n || y.numel() != n) {
-    throw std::runtime_error("subsp::math::optim::bfgs_hessian_update_: shape mismatch");
+    ::pluss::throw_error("subsp::math::optim::bfgs_hessian_update_: shape mismatch");
   }
 
   const double sy = series_dot_(s, y);
@@ -4451,7 +4451,7 @@ inline ParameterPack<Series> combine_constraint_gradient_(
         const std::int64_t cols = param_block.value.numel();
         const std::int64_t rows = residual.numel();
         if (block_jacobian.numel() != rows * cols) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "subsp::math::optim::combine_constraint_gradient_: jacobian/residual shape mismatch");
         }
         const auto platform = param_block.value.platform();
@@ -7333,7 +7333,7 @@ inline OptimaState optima(const ConstrainedProblem& problem,
     }
   }
 
-  throw std::runtime_error("subsp::math::optim::optima: unknown algorithm");
+  ::pluss::throw_error("subsp::math::optim::optima: unknown algorithm");
 }
 
 inline OptimaState optima(const ConstrainedProblem& problem,
@@ -7502,7 +7502,7 @@ inline void adam_step_inplace(std::vector<Series>& params,
                               AdamState& state,
                               const AdamOptions& opt = {}) {
   if (params.size() != sensitivities.size()) {
-    throw std::runtime_error("subsp::math::optim::adam_step_inplace: params/sensitivities size mismatch");
+    ::pluss::throw_error("subsp::math::optim::adam_step_inplace: params/sensitivities size mismatch");
   }
   if (state.m.size() != params.size() || state.v.size() != params.size()) {
     state = adam_state_like(params);
@@ -7527,7 +7527,7 @@ inline void adam_step_inplace(std::vector<Series>& params,
       if (p.numel() == 1 && g.numel() == 1) {
         g = g.sum();
       } else {
-        throw std::runtime_error("subsp::math::optim::adam_step_inplace: sensitivity shape mismatch");
+        ::pluss::throw_error("subsp::math::optim::adam_step_inplace: sensitivity shape mismatch");
       }
     }
 
@@ -7599,41 +7599,41 @@ inline bool minimax_finite_(const std::vector<Series>& xs) {
 
 inline void minimax_validate_options_(const MinimaxOptions& options) {
   if (!(options.adam.learning_rate > 0.0) || !std::isfinite(options.adam.learning_rate)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: learning_rate must be positive and finite");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: learning_rate must be positive and finite");
   }
   if (!(options.adam.beta1 >= 0.0 && options.adam.beta1 < 1.0) || !std::isfinite(options.adam.beta1)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: beta1 must be in [0,1)");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: beta1 must be in [0,1)");
   }
   if (!(options.adam.beta2 >= 0.0 && options.adam.beta2 < 1.0) || !std::isfinite(options.adam.beta2)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: beta2 must be in [0,1)");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: beta2 must be in [0,1)");
   }
   if (!(options.adam.eps > 0.0) || !std::isfinite(options.adam.eps)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: eps must be positive and finite");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: eps must be positive and finite");
   }
   if (options.adam.weight_decay < 0.0 || !std::isfinite(options.adam.weight_decay)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: weight_decay must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: weight_decay must be finite and >= 0");
   }
   if (options.dual_learning_rate < 0.0 || !std::isfinite(options.dual_learning_rate)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: dual_learning_rate must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: dual_learning_rate must be finite and >= 0");
   }
   if (options.equality_penalty < 0.0 || !std::isfinite(options.equality_penalty)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: equality_penalty must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: equality_penalty must be finite and >= 0");
   }
   if (options.inequality_penalty < 0.0 || !std::isfinite(options.inequality_penalty)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: inequality_penalty must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: inequality_penalty must be finite and >= 0");
   }
   if (options.nan_recovery_attempts < 0) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: nan_recovery_attempts must be >= 0");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: nan_recovery_attempts must be >= 0");
   }
   if (!(options.nan_recovery_shrink > 0.0 && options.nan_recovery_shrink < 1.0) ||
       !std::isfinite(options.nan_recovery_shrink)) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: nan_recovery_shrink must be in (0,1)");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: nan_recovery_shrink must be in (0,1)");
   }
 }
 
 inline void minimax_validate_params_(const std::vector<Series>& params) {
   if (params.empty()) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: expected non-empty params");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: expected non-empty params");
   }
   for (const auto& p : params) {
     require_defined_(p, "minimax_step_inplace");
@@ -7645,31 +7645,31 @@ inline void minimax_validate_constraints_(const std::vector<Series>& params,
                                           const MinimaxConstraints& constraints,
                                           bool require_trace_callbacks) {
   if (!constraints.lbs.empty() && constraints.lbs.size() != params.size()) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: lbs size mismatch");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbs size mismatch");
   }
   if (!constraints.ubs.empty() && constraints.ubs.size() != params.size()) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: ubs size mismatch");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: ubs size mismatch");
   }
 
   for (std::size_t i = 1; i < params.size(); ++i) {
     if (params[i].platform() != params[0].platform()) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "subsp::math::optim::minimax_step_inplace: constrained updates require params on one platform");
     }
   }
 
   if (!constraints.equalities && constraints.equalities_trace) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: equalities_trace requires equalities");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: equalities_trace requires equalities");
   }
   if (!constraints.inequalities && constraints.inequalities_trace) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: inequalities_trace requires inequalities");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: inequalities_trace requires inequalities");
   }
   if (require_trace_callbacks && constraints.equalities && !constraints.equalities_trace) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optim::minimax_step_inplace: equalities callback requires equalities_trace");
   }
   if (require_trace_callbacks && constraints.inequalities && !constraints.inequalities_trace) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optim::minimax_step_inplace: inequalities callback requires inequalities_trace");
   }
 
@@ -7679,7 +7679,7 @@ inline void minimax_validate_constraints_(const std::vector<Series>& params,
       require_same_platform_(params[i], bounds[i], "minimax_step_inplace");
       if (!same_shape_(params[i], bounds[i])) {
         if (!(params[i].numel() == 1 && bounds[i].numel() == 1)) {
-          throw std::runtime_error(std::string("subsp::math::optim::minimax_step_inplace: ") + name +
+          ::pluss::throw_error(std::string("subsp::math::optim::minimax_step_inplace: ") + name +
                                    " shape mismatch");
         }
       }
@@ -7701,7 +7701,7 @@ inline std::vector<Series> minimax_evaluate_residuals_(
     require_float_dtype_(r, "minimax_step_inplace");
   }
   if (out.empty()) {
-    throw std::runtime_error(std::string("subsp::math::optim::minimax_step_inplace: empty ") + name +
+    ::pluss::throw_error(std::string("subsp::math::optim::minimax_step_inplace: empty ") + name +
                              " residual vector");
   }
   return out;
@@ -7750,7 +7750,7 @@ inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
   if (constraints.equalities_trace) {
     const auto residuals = constraints.equalities_trace(vars);
     if (residuals.size() != state.lambda_equalities.size()) {
-      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: equality multiplier size mismatch");
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: equality multiplier size mismatch");
     }
     for (std::size_t i = 0; i < residuals.size(); ++i) {
       objective = objective +
@@ -7762,7 +7762,7 @@ inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
   if (constraints.inequalities_trace) {
     const auto residuals = constraints.inequalities_trace(vars);
     if (residuals.size() != state.lambda_inequalities.size()) {
-      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: inequality multiplier size mismatch");
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: inequality multiplier size mismatch");
     }
     for (std::size_t i = 0; i < residuals.size(); ++i) {
       const Trace violation = relu(residuals[i]);
@@ -7806,7 +7806,7 @@ inline void minimax_step_inplace(std::vector<Series>& params,
   detail::minimax_validate_constraints_(params, constraints, options.enable_constraint_autodiff);
 
   if (sensitivities.size() != params.size()) {
-    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: params/sensitivities size mismatch");
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: params/sensitivities size mismatch");
   }
   if (state.adam.m.size() != params.size() || state.adam.v.size() != params.size()) {
     state = minimax_state_like(params, constraints);
@@ -7824,7 +7824,7 @@ inline void minimax_step_inplace(std::vector<Series>& params,
       if (params[i].numel() == 1 && g.numel() == 1) {
         g = g.sum();
       } else {
-        throw std::runtime_error("subsp::math::optim::minimax_step_inplace: sensitivity shape mismatch");
+        ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: sensitivity shape mismatch");
       }
     }
     grads.push_back(std::move(g));
@@ -7848,7 +7848,7 @@ inline void minimax_step_inplace(std::vector<Series>& params,
     (void)constraint_loss;
 
     if (constraint_grads.size() != grads.size()) {
-      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: constraint gradient size mismatch");
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: constraint gradient size mismatch");
     }
     for (std::size_t i = 0; i < grads.size(); ++i) {
       grads[i] = grads[i].add(constraint_grads[i]);
@@ -7917,7 +7917,7 @@ inline void minimax_step_inplace(std::vector<Series>& params,
   for (const auto& p : params) {
     const Series g = p.sensitivity();
     if (!g.defined()) {
-      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: undefined sensitivity in params");
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: undefined sensitivity in params");
     }
     sensitivities.push_back(g);
   }

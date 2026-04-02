@@ -75,6 +75,20 @@ std::array<double, 4> beta_params(double low, double high, double alpha, double 
   return {low, high, alpha, beta};
 }
 
+double series_scalar_param_(const Series& param, const char* op, const char* name) {
+  PLUSS_CHECK(param.defined(), std::string(op) + ": missing " + name + " Series parameter");
+  PLUSS_CHECK(param.numel() == 1, std::string(op) + ": " + name + " Series parameter must be scalar for sampling");
+  return param.to(ScalarType::Float64).item<double>();
+}
+
+std::int64_t series_scalar_int_param_(const Series& param, const char* op, const char* name) {
+  const double value = series_scalar_param_(param, op, name);
+  const double rounded = std::round(value);
+  PLUSS_CHECK(std::abs(value - rounded) <= 1e-9,
+              std::string(op) + ": " + name + " Series parameter must be an integer");
+  return static_cast<std::int64_t>(rounded);
+}
+
 Series pack_2x2_(const Series& a, const Series& b, const Series& c, const Series& d) {
   const auto platform = a.platform();
   const Series row0 = a.reshape({1}).unite({b.reshape({1})}, 0).reshape({1, 2});
@@ -220,11 +234,11 @@ double log_mgf_from_moments_series(const std::function<long double(std::int64_t)
       break;
     }
     if (n == max_terms) {
-      throw std::runtime_error(std::string(name) + "::cgf series did not converge");
+      ::pluss::throw_error(std::string(name) + "::cgf series did not converge");
     }
   }
   if (!(sum > 0.0L) || !std::isfinite(static_cast<double>(sum))) {
-    throw std::runtime_error(std::string(name) + "::cgf encountered a non-positive or non-finite mgf");
+    ::pluss::throw_error(std::string(name) + "::cgf encountered a non-positive or non-finite mgf");
   }
   return std::log(static_cast<double>(sum));
 }
@@ -474,6 +488,11 @@ NormalFit Normal::MLE(const Series& x) const {
 }
 
 Series Normal::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (mean_series.defined() || stddev_series.defined()) {
+    const double mean_value = series_scalar_param_(mean_series, "Normal::sample", "mean_series");
+    const double stddev_value = series_scalar_param_(stddev_series, "Normal::sample", "stddev_series");
+    return detail::sample_with_params(dst::Normal, normal_params(mean_value, stddev_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Normal, normal_params(mean, stddev), sizes, cfg, seed);
 }
 
@@ -482,26 +501,53 @@ Series Normal::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std
 }
 
 Series Normal::sample_like(const Series& like, std::uint64_t seed) const {
+  if (mean_series.defined() || stddev_series.defined()) {
+    const double mean_value = series_scalar_param_(mean_series, "Normal::sample_like", "mean_series");
+    const double stddev_value = series_scalar_param_(stddev_series, "Normal::sample_like", "stddev_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Normal, normal_params(mean_value, stddev_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Normal, normal_params(mean, stddev), like, seed), like);
 }
 
-Series Normal::pdf(const Series& x) const { return detail::pdf_with_params(dst::Normal, x, normal_params(mean, stddev)); }
+Series Normal::pdf(const Series& x) const {
+  if (mean_series.defined() || stddev_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Normal, x, pluss::sign_list(mean_series, stddev_series));
+  }
+  return detail::pdf_with_params(dst::Normal, x, normal_params(mean, stddev));
+}
 
 Series Normal::logpdf(const Series& x) const {
+  if (mean_series.defined() || stddev_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Normal, x, pluss::sign_list(mean_series, stddev_series));
+  }
   return detail::logpdf_with_params(dst::Normal, x, normal_params(mean, stddev));
 }
 
 Series Normal::logcdf(const Series& x) const {
+  if (mean_series.defined() || stddev_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Normal, x, pluss::sign_list(mean_series, stddev_series));
+  }
   return detail::logcdf_with_params(dst::Normal, x, normal_params(mean, stddev));
 }
 
-Series Normal::cdf(const Series& x) const { return detail::cdf_with_params(dst::Normal, x, normal_params(mean, stddev)); }
+Series Normal::cdf(const Series& x) const {
+  if (mean_series.defined() || stddev_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Normal, x, pluss::sign_list(mean_series, stddev_series));
+  }
+  return detail::cdf_with_params(dst::Normal, x, normal_params(mean, stddev));
+}
 
 Series Normal::cgf(const Series& t) const {
+  PLUSS_CHECK(!(mean_series.defined() || stddev_series.defined()),
+              "Normal::cgf: Series parameters are unsupported here; use scalar-object parameters");
   return t.mul(mean).add(t.mul(t).mul(0.5 * stddev * stddev));
 }
 
 Series Normal::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(mean_series.defined() || stddev_series.defined()),
+              "Normal::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Normal::cumulant");
   if (order == 1) return detail::scalar_f64(mean);
   if (order == 2) return detail::scalar_f64(stddev * stddev);
@@ -509,6 +555,12 @@ Series Normal::cumulant(std::int64_t order) const {
 }
 
 Series Gamma::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    const double shape_value = series_scalar_param_(shape_series, "Gamma::sample", "shape_series");
+    const double scale_value = series_scalar_param_(scale_series, "Gamma::sample", "scale_series");
+    const double location_value = series_scalar_param_(location_series, "Gamma::sample", "location_series");
+    return detail::sample_with_params(dst::Gamma, gamma_params(shape_value, scale_value, location_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Gamma, gamma_params(shape, scale, location), sizes, cfg, seed);
 }
 
@@ -517,27 +569,55 @@ Series Gamma::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std:
 }
 
 Series Gamma::sample_like(const Series& like, std::uint64_t seed) const {
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    const double shape_value = series_scalar_param_(shape_series, "Gamma::sample_like", "shape_series");
+    const double scale_value = series_scalar_param_(scale_series, "Gamma::sample_like", "scale_series");
+    const double location_value = series_scalar_param_(location_series, "Gamma::sample_like", "location_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Gamma, gamma_params(shape_value, scale_value, location_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Gamma, gamma_params(shape, scale, location), like, seed), like);
 }
 
-Series Gamma::pdf(const Series& x) const { return detail::pdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location)); }
+Series Gamma::pdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Gamma, x, pluss::sign_list(location_series, scale_series, shape_series));
+  }
+  return detail::pdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location));
+}
 
 Series Gamma::logpdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Gamma, x, pluss::sign_list(location_series, scale_series, shape_series));
+  }
   return detail::logpdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location));
 }
 
 Series Gamma::logcdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Gamma, x, pluss::sign_list(location_series, scale_series, shape_series));
+  }
   return detail::logcdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location));
 }
 
-Series Gamma::cdf(const Series& x) const { return detail::cdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location)); }
+Series Gamma::cdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Gamma, x, pluss::sign_list(location_series, scale_series, shape_series));
+  }
+  return detail::cdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location));
+}
 
 Series Gamma::cgf(const Series& t) const {
+  PLUSS_CHECK(!(shape_series.defined() || scale_series.defined() || location_series.defined()),
+              "Gamma::cgf: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_all_true(t.lt(1.0 / scale), "Gamma::cgf requires every t element to satisfy t < 1 / scale");
   return t.mul(location).sub(t.mul(scale).neg().log1p().mul(shape));
 }
 
 Series Gamma::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(shape_series.defined() || scale_series.defined() || location_series.defined()),
+              "Gamma::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Gamma::cumulant");
   if (order == 1) {
     return detail::scalar_f64(location + shape * scale);
@@ -546,6 +626,11 @@ Series Gamma::cumulant(std::int64_t order) const {
 }
 
 Series ChiSquare::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (degrees_of_freedom_series.defined()) {
+    const std::int64_t dof_value =
+        series_scalar_int_param_(degrees_of_freedom_series, "ChiSquare::sample", "degrees_of_freedom_series");
+    return detail::sample_with_params(dst::ChiSquare, chisq_params(dof_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::ChiSquare, chisq_params(degrees_of_freedom), sizes, cfg, seed);
 }
 
@@ -554,34 +639,64 @@ Series ChiSquare::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series ChiSquare::sample_like(const Series& like, std::uint64_t seed) const {
+  if (degrees_of_freedom_series.defined()) {
+    const std::int64_t dof_value =
+        series_scalar_int_param_(degrees_of_freedom_series, "ChiSquare::sample_like", "degrees_of_freedom_series");
+    return detail::preserve_like(detail::sample_like_with_params(dst::ChiSquare, chisq_params(dof_value), like, seed), like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::ChiSquare, chisq_params(degrees_of_freedom), like, seed), like);
 }
 
-Series ChiSquare::pdf(const Series& x) const { return detail::pdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom)); }
+Series ChiSquare::pdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::ChiSquare, x, pluss::sign_list(degrees_of_freedom_series));
+  }
+  return detail::pdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom));
+}
 
 Series ChiSquare::logpdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::ChiSquare, x, pluss::sign_list(degrees_of_freedom_series));
+  }
   return detail::logpdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom));
 }
 
 Series ChiSquare::logcdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::ChiSquare, x, pluss::sign_list(degrees_of_freedom_series));
+  }
   return detail::logcdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom));
 }
 
-Series ChiSquare::cdf(const Series& x) const { return detail::cdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom)); }
+Series ChiSquare::cdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::ChiSquare, x, pluss::sign_list(degrees_of_freedom_series));
+  }
+  return detail::cdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom));
+}
 
 Series ChiSquare::cgf(const Series& t) const {
+  PLUSS_CHECK(!degrees_of_freedom_series.defined(),
+              "ChiSquare::cgf: Series parameter is unsupported here; use scalar-object parameter");
   const double half_df = 0.5 * static_cast<double>(degrees_of_freedom);
   detail::require_all_true(t.lt(0.5), "ChiSquare::cgf requires every t element to satisfy t < 1/2");
   return t.mul(-2.0).log1p().mul(-half_df);
 }
 
 Series ChiSquare::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!degrees_of_freedom_series.defined(),
+              "ChiSquare::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "ChiSquare::cumulant");
   return detail::scalar_f64(static_cast<double>(degrees_of_freedom) *
                             detail::factorial(order - 1) * std::pow(2.0, static_cast<double>(order - 1)));
 }
 
 Series InverseGaussian::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (theta_series.defined() || chi_series.defined()) {
+    const double theta_value = series_scalar_param_(theta_series, "InverseGaussian::sample", "theta_series");
+    const double chi_value = series_scalar_param_(chi_series, "InverseGaussian::sample", "chi_series");
+    return detail::sample_with_params(dst::InverseGaussian, inverse_gaussian_params(theta_value, chi_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::InverseGaussian, inverse_gaussian_params(theta, chi), sizes, cfg, seed);
 }
 
@@ -590,36 +705,64 @@ Series InverseGaussian::sample(std::initializer_list<std::int64_t> sizes, Config
 }
 
 Series InverseGaussian::sample_like(const Series& like, std::uint64_t seed) const {
+  if (theta_series.defined() || chi_series.defined()) {
+    const double theta_value = series_scalar_param_(theta_series, "InverseGaussian::sample_like", "theta_series");
+    const double chi_value = series_scalar_param_(chi_series, "InverseGaussian::sample_like", "chi_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::InverseGaussian, inverse_gaussian_params(theta_value, chi_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::InverseGaussian, inverse_gaussian_params(theta, chi), like, seed), like);
 }
 
 Series InverseGaussian::pdf(const Series& x) const {
+  if (theta_series.defined() || chi_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::InverseGaussian, x, pluss::sign_list(theta_series, chi_series));
+  }
   return detail::pdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::logpdf(const Series& x) const {
+  if (theta_series.defined() || chi_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::InverseGaussian, x, pluss::sign_list(theta_series, chi_series));
+  }
   return detail::logpdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::logcdf(const Series& x) const {
+  if (theta_series.defined() || chi_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::InverseGaussian, x, pluss::sign_list(theta_series, chi_series));
+  }
   return detail::logcdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::cdf(const Series& x) const {
+  if (theta_series.defined() || chi_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::InverseGaussian, x, pluss::sign_list(theta_series, chi_series));
+  }
   return detail::cdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::cgf(const Series& t) const {
+  PLUSS_CHECK(!(theta_series.defined() || chi_series.defined()),
+              "InverseGaussian::cgf: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_all_true(t.mul(2.0 * theta * theta / chi).lt(1.0),
                            "InverseGaussian::cgf requires every t element to satisfy 2 * theta^2 * t / chi < 1");
   return t.mul(-2.0 * theta * theta / chi).add(1.0).sqrt().mul(-chi / theta).add(chi / theta);
 }
 
 Series InverseGaussian::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(theta_series.defined() || chi_series.defined()),
+              "InverseGaussian::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   return detail::scalar_f64(inverse_gaussian_cumulant_scalar(theta, chi, order));
 }
 
 Series Lognormal::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    const double mean_log_value = series_scalar_param_(mean_log_series, "Lognormal::sample", "mean_log_series");
+    const double stddev_log_value = series_scalar_param_(stddev_log_series, "Lognormal::sample", "stddev_log_series");
+    return detail::sample_with_params(dst::Lognormal, lognormal_params(mean_log_value, stddev_log_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Lognormal, lognormal_params(mean_log, stddev_log), sizes, cfg, seed);
 }
 
@@ -628,22 +771,47 @@ Series Lognormal::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series Lognormal::sample_like(const Series& like, std::uint64_t seed) const {
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    const double mean_log_value = series_scalar_param_(mean_log_series, "Lognormal::sample_like", "mean_log_series");
+    const double stddev_log_value = series_scalar_param_(stddev_log_series, "Lognormal::sample_like", "stddev_log_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Lognormal, lognormal_params(mean_log_value, stddev_log_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Lognormal, lognormal_params(mean_log, stddev_log), like, seed), like);
 }
 
-Series Lognormal::pdf(const Series& x) const { return detail::pdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log)); }
+Series Lognormal::pdf(const Series& x) const {
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Lognormal, x, pluss::sign_list(mean_log_series, stddev_log_series));
+  }
+  return detail::pdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log));
+}
 
 Series Lognormal::logpdf(const Series& x) const {
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Lognormal, x, pluss::sign_list(mean_log_series, stddev_log_series));
+  }
   return detail::logpdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log));
 }
 
 Series Lognormal::logcdf(const Series& x) const {
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Lognormal, x, pluss::sign_list(mean_log_series, stddev_log_series));
+  }
   return detail::logcdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log));
 }
 
-Series Lognormal::cdf(const Series& x) const { return detail::cdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log)); }
+Series Lognormal::cdf(const Series& x) const {
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Lognormal, x, pluss::sign_list(mean_log_series, stddev_log_series));
+  }
+  return detail::cdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log));
+}
 
 Series Lognormal::cgf(const Series& t) const {
+  PLUSS_CHECK(!(mean_log_series.defined() || stddev_log_series.defined()),
+              "Lognormal::cgf: Series parameters are unsupported here; use scalar-object parameters");
   const double mean_log_value = mean_log;
   const double stddev_log_value = stddev_log;
   detail::require_all_true(t.le(0.0), "Lognormal::cgf only supports t <= 0 because the mgf diverges for t > 0");
@@ -661,6 +829,8 @@ Series Lognormal::cgf(const Series& t) const {
 }
 
 Series Lognormal::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(mean_log_series.defined() || stddev_log_series.defined()),
+              "Lognormal::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Lognormal::cumulant");
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
@@ -783,6 +953,11 @@ LognormalFit Lognormal::MLE(const Series& x) const {
 }
 
 Series Uniform::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (low_series.defined() || high_series.defined()) {
+    const double low_value = series_scalar_param_(low_series, "Uniform::sample", "low_series");
+    const double high_value = series_scalar_param_(high_series, "Uniform::sample", "high_series");
+    return detail::sample_with_params(dst::Uniform, uniform_params(low_value, high_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Uniform, uniform_params(low, high), sizes, cfg, seed);
 }
 
@@ -791,28 +966,55 @@ Series Uniform::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Uniform::sample_like(const Series& like, std::uint64_t seed) const {
+  if (low_series.defined() || high_series.defined()) {
+    const double low_value = series_scalar_param_(low_series, "Uniform::sample_like", "low_series");
+    const double high_value = series_scalar_param_(high_series, "Uniform::sample_like", "high_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Uniform, uniform_params(low_value, high_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Uniform, uniform_params(low, high), like, seed), like);
 }
 
-Series Uniform::pdf(const Series& x) const { return detail::pdf_with_params(dst::Uniform, x, uniform_params(low, high)); }
+Series Uniform::pdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Uniform, x, pluss::sign_list(low_series, high_series));
+  }
+  return detail::pdf_with_params(dst::Uniform, x, uniform_params(low, high));
+}
 
 Series Uniform::logpdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Uniform, x, pluss::sign_list(low_series, high_series));
+  }
   return detail::logpdf_with_params(dst::Uniform, x, uniform_params(low, high));
 }
 
 Series Uniform::logcdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Uniform, x, pluss::sign_list(low_series, high_series));
+  }
   return detail::logcdf_with_params(dst::Uniform, x, uniform_params(low, high));
 }
 
-Series Uniform::cdf(const Series& x) const { return detail::cdf_with_params(dst::Uniform, x, uniform_params(low, high)); }
+Series Uniform::cdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Uniform, x, pluss::sign_list(low_series, high_series));
+  }
+  return detail::cdf_with_params(dst::Uniform, x, uniform_params(low, high));
+}
 
 Series Uniform::cgf(const Series& t) const {
+  PLUSS_CHECK(!(low_series.defined() || high_series.defined()),
+              "Uniform::cgf: Series parameters are unsupported here; use scalar-object parameters");
   const double width = high - low;
   const Series scaled = t.mul(width);
   return t.mul(low).add(stable_log_expm1_over_x(scaled));
 }
 
 Series Uniform::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(low_series.defined() || high_series.defined()),
+              "Uniform::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Uniform::cumulant");
   const double width = high - low;
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
@@ -902,6 +1104,10 @@ UniformFit Uniform::MLE(const Series& x) const {
 }
 
 Series Exponential::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (rate_series.defined()) {
+    const double rate_value = series_scalar_param_(rate_series, "Exponential::sample", "rate_series");
+    return detail::sample_with_params(dst::Exponential, exponential_params(rate_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Exponential, exponential_params(rate), sizes, cfg, seed);
 }
 
@@ -910,31 +1116,53 @@ Series Exponential::sample(std::initializer_list<std::int64_t> sizes, Config cfg
 }
 
 Series Exponential::sample_like(const Series& like, std::uint64_t seed) const {
+  if (rate_series.defined()) {
+    const double rate_value = series_scalar_param_(rate_series, "Exponential::sample_like", "rate_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Exponential, exponential_params(rate_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Exponential, exponential_params(rate), like, seed), like);
 }
 
 Series Exponential::pdf(const Series& x) const {
+  if (rate_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Exponential, x, pluss::sign_list(rate_series));
+  }
   return detail::pdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::logpdf(const Series& x) const {
+  if (rate_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Exponential, x, pluss::sign_list(rate_series));
+  }
   return detail::logpdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::logcdf(const Series& x) const {
+  if (rate_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Exponential, x, pluss::sign_list(rate_series));
+  }
   return detail::logcdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::cdf(const Series& x) const {
+  if (rate_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Exponential, x, pluss::sign_list(rate_series));
+  }
   return detail::cdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::cgf(const Series& t) const {
+  PLUSS_CHECK(!rate_series.defined(),
+              "Exponential::cgf: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_all_true(t.lt(rate), "Exponential::cgf requires every t element to satisfy t < rate");
   return t.div(-rate).log1p().neg();
 }
 
 Series Exponential::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!rate_series.defined(),
+              "Exponential::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Exponential::cumulant");
   return detail::scalar_f64(detail::factorial(order - 1) / std::pow(rate, static_cast<double>(order)));
 }
@@ -1007,6 +1235,11 @@ ExponentialFit Exponential::MLE(const Series& x) const {
 }
 
 Series Laplace::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (location_series.defined() || scale_series.defined()) {
+    const double location_value = series_scalar_param_(location_series, "Laplace::sample", "location_series");
+    const double scale_value = series_scalar_param_(scale_series, "Laplace::sample", "scale_series");
+    return detail::sample_with_params(dst::Laplace, laplace_params(location_value, scale_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Laplace, laplace_params(location, scale), sizes, cfg, seed);
 }
 
@@ -1015,27 +1248,54 @@ Series Laplace::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Laplace::sample_like(const Series& like, std::uint64_t seed) const {
+  if (location_series.defined() || scale_series.defined()) {
+    const double location_value = series_scalar_param_(location_series, "Laplace::sample_like", "location_series");
+    const double scale_value = series_scalar_param_(scale_series, "Laplace::sample_like", "scale_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Laplace, laplace_params(location_value, scale_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Laplace, laplace_params(location, scale), like, seed), like);
 }
 
-Series Laplace::pdf(const Series& x) const { return detail::pdf_with_params(dst::Laplace, x, laplace_params(location, scale)); }
+Series Laplace::pdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Laplace, x, pluss::sign_list(location_series, scale_series));
+  }
+  return detail::pdf_with_params(dst::Laplace, x, laplace_params(location, scale));
+}
 
 Series Laplace::logpdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Laplace, x, pluss::sign_list(location_series, scale_series));
+  }
   return detail::logpdf_with_params(dst::Laplace, x, laplace_params(location, scale));
 }
 
 Series Laplace::logcdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Laplace, x, pluss::sign_list(location_series, scale_series));
+  }
   return detail::logcdf_with_params(dst::Laplace, x, laplace_params(location, scale));
 }
 
-Series Laplace::cdf(const Series& x) const { return detail::cdf_with_params(dst::Laplace, x, laplace_params(location, scale)); }
+Series Laplace::cdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Laplace, x, pluss::sign_list(location_series, scale_series));
+  }
+  return detail::cdf_with_params(dst::Laplace, x, laplace_params(location, scale));
+}
 
 Series Laplace::cgf(const Series& t) const {
+  PLUSS_CHECK(!(location_series.defined() || scale_series.defined()),
+              "Laplace::cgf: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_all_true(t.abs().lt(1.0 / scale), "Laplace::cgf requires every t element to satisfy |t| < 1 / scale");
   return t.mul(location).sub(t.mul(scale).square().neg().log1p());
 }
 
 Series Laplace::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(location_series.defined() || scale_series.defined()),
+              "Laplace::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Laplace::cumulant");
   if (order == 1) return detail::scalar_f64(location);
   if (order % 2 == 1) return detail::scalar_f64(0.0);
@@ -1045,6 +1305,11 @@ Series Laplace::cumulant(std::int64_t order) const {
 }
 
 Series Logistic::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (location_series.defined() || scale_series.defined()) {
+    const double location_value = series_scalar_param_(location_series, "Logistic::sample", "location_series");
+    const double scale_value = series_scalar_param_(scale_series, "Logistic::sample", "scale_series");
+    return detail::sample_with_params(dst::Logistic, logistic_params(location_value, scale_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Logistic, logistic_params(location, scale), sizes, cfg, seed);
 }
 
@@ -1053,28 +1318,55 @@ Series Logistic::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series Logistic::sample_like(const Series& like, std::uint64_t seed) const {
+  if (location_series.defined() || scale_series.defined()) {
+    const double location_value = series_scalar_param_(location_series, "Logistic::sample_like", "location_series");
+    const double scale_value = series_scalar_param_(scale_series, "Logistic::sample_like", "scale_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Logistic, logistic_params(location_value, scale_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Logistic, logistic_params(location, scale), like, seed), like);
 }
 
-Series Logistic::pdf(const Series& x) const { return detail::pdf_with_params(dst::Logistic, x, logistic_params(location, scale)); }
+Series Logistic::pdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Logistic, x, pluss::sign_list(location_series, scale_series));
+  }
+  return detail::pdf_with_params(dst::Logistic, x, logistic_params(location, scale));
+}
 
 Series Logistic::logpdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Logistic, x, pluss::sign_list(location_series, scale_series));
+  }
   return detail::logpdf_with_params(dst::Logistic, x, logistic_params(location, scale));
 }
 
 Series Logistic::logcdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Logistic, x, pluss::sign_list(location_series, scale_series));
+  }
   return detail::logcdf_with_params(dst::Logistic, x, logistic_params(location, scale));
 }
 
-Series Logistic::cdf(const Series& x) const { return detail::cdf_with_params(dst::Logistic, x, logistic_params(location, scale)); }
+Series Logistic::cdf(const Series& x) const {
+  if (location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Logistic, x, pluss::sign_list(location_series, scale_series));
+  }
+  return detail::cdf_with_params(dst::Logistic, x, logistic_params(location, scale));
+}
 
 Series Logistic::cgf(const Series& t) const {
+  PLUSS_CHECK(!(location_series.defined() || scale_series.defined()),
+              "Logistic::cgf: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_all_true(t.mul(scale).abs().lt(1.0), "Logistic::cgf requires every t element to satisfy |scale * t| < 1");
   const Series scaled = t.mul(std::numbers::pi_v<double> * scale);
   return t.mul(location).add(stable_log_x_over_sin_x(scaled));
 }
 
 Series Logistic::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(location_series.defined() || scale_series.defined()),
+              "Logistic::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Logistic::cumulant");
   if (order == 1) return detail::scalar_f64(location);
   if (order % 2 == 1) return detail::scalar_f64(0.0);
@@ -1086,6 +1378,10 @@ Series Logistic::cumulant(std::int64_t order) const {
 }
 
 Series Rayleigh::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (sigma_series.defined()) {
+    const double sigma_value = series_scalar_param_(sigma_series, "Rayleigh::sample", "sigma_series");
+    return detail::sample_with_params(dst::Rayleigh, rayleigh_params(sigma_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Rayleigh, rayleigh_params(sigma), sizes, cfg, seed);
 }
 
@@ -1094,22 +1390,46 @@ Series Rayleigh::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series Rayleigh::sample_like(const Series& like, std::uint64_t seed) const {
+  if (sigma_series.defined()) {
+    const double sigma_value = series_scalar_param_(sigma_series, "Rayleigh::sample_like", "sigma_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Rayleigh, rayleigh_params(sigma_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Rayleigh, rayleigh_params(sigma), like, seed), like);
 }
 
-Series Rayleigh::pdf(const Series& x) const { return detail::pdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma)); }
+Series Rayleigh::pdf(const Series& x) const {
+  if (sigma_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Rayleigh, x, pluss::sign_list(sigma_series));
+  }
+  return detail::pdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma));
+}
 
 Series Rayleigh::logpdf(const Series& x) const {
+  if (sigma_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Rayleigh, x, pluss::sign_list(sigma_series));
+  }
   return detail::logpdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma));
 }
 
 Series Rayleigh::logcdf(const Series& x) const {
+  if (sigma_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Rayleigh, x, pluss::sign_list(sigma_series));
+  }
   return detail::logcdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma));
 }
 
-Series Rayleigh::cdf(const Series& x) const { return detail::cdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma)); }
+Series Rayleigh::cdf(const Series& x) const {
+  if (sigma_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Rayleigh, x, pluss::sign_list(sigma_series));
+  }
+  return detail::cdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma));
+}
 
 Series Rayleigh::cgf(const Series& t) const {
+  PLUSS_CHECK(!sigma_series.defined(),
+              "Rayleigh::cgf: Series parameter is unsupported here; use scalar-object parameter");
   const Series scaled = t.mul(sigma);
   const Series term = scaled.mul(std::sqrt(std::numbers::pi_v<double> / 2.0))
                           .mul(scaled.square().mul(0.5).exp())
@@ -1118,6 +1438,8 @@ Series Rayleigh::cgf(const Series& t) const {
 }
 
 Series Rayleigh::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!sigma_series.defined(),
+              "Rayleigh::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Rayleigh::cumulant");
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
@@ -1192,6 +1514,8 @@ Series RayleighFit::confint(const Series& x, double level) const {
 }
 
 RayleighFit Rayleigh::MLE(const Series& x) const {
+  PLUSS_CHECK(!sigma_series.defined(),
+              "Rayleigh::MLE: Series parameter is unsupported; fit APIs return scalar parameter estimates");
   const auto values = fit_data_f64_(x, "Rayleigh::MLE");
   const double sum_x2 = sumsq_nonnegative_(values, "Rayleigh::MLE");
   const double n = static_cast<double>(values.size());
@@ -1286,6 +1610,8 @@ Series GammaFit::confint(const Series& x, double level) const {
 }
 
 GammaFit Gamma::MLE(const Series& x) const {
+  PLUSS_CHECK(!(shape_series.defined() || scale_series.defined() || location_series.defined()),
+              "Gamma::MLE: Series parameters are unsupported; fit APIs return scalar parameter estimates");
   const auto values = fit_data_f64_(x, "Gamma::MLE");
   std::vector<double> shifted(values.size(), 0.0);
   std::transform(values.begin(), values.end(), shifted.begin(), [loc = location](double v) {
@@ -1391,6 +1717,8 @@ Series InverseGaussianFit::confint(const Series& x, double level) const {
 }
 
 InverseGaussianFit InverseGaussian::MLE(const Series& x) const {
+  PLUSS_CHECK(!(theta_series.defined() || chi_series.defined()),
+              "InverseGaussian::MLE: Series parameters are unsupported; fit APIs return scalar parameter estimates");
   const auto values = fit_data_f64_(x, "InverseGaussian::MLE");
   PLUSS_CHECK(std::all_of(values.begin(), values.end(), [](double v) { return v > 0.0; }),
               "InverseGaussian::MLE: x must be > 0");
@@ -1590,6 +1918,8 @@ Series BetaFit::confint(const Series& x, double level) const {
 }
 
 BetaFit Beta::MLE(const Series& x) const {
+  PLUSS_CHECK(!(low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()),
+              "Beta::MLE: Series parameters are unsupported; fit APIs return scalar parameter estimates");
   const auto values = fit_data_f64_(x, "Beta::MLE");
   const double width = high - low;
   PLUSS_CHECK(width > 0.0, "Beta::MLE: high must be > low");
@@ -1690,6 +2020,15 @@ Series NormalTrunc::cumulant(std::int64_t order) const {
 }
 
 Series StudentT::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()) {
+    const double dof_value =
+        series_scalar_param_(degrees_of_freedom_series, "StudentT::sample", "degrees_of_freedom_series");
+    const double location_value =
+        series_scalar_param_(location_series, "StudentT::sample", "location_series");
+    const double scale_value =
+        series_scalar_param_(scale_series, "StudentT::sample", "scale_series");
+    return detail::sample_with_params(dst::StudentT, student_t_params(dof_value, location_value, scale_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::StudentT, student_t_params(degrees_of_freedom, location, scale), sizes, cfg, seed);
 }
 
@@ -1698,26 +2037,61 @@ Series StudentT::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series StudentT::sample_like(const Series& like, std::uint64_t seed) const {
+  if (degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()) {
+    const double dof_value =
+        series_scalar_param_(degrees_of_freedom_series, "StudentT::sample_like", "degrees_of_freedom_series");
+    const double location_value =
+        series_scalar_param_(location_series, "StudentT::sample_like", "location_series");
+    const double scale_value =
+        series_scalar_param_(scale_series, "StudentT::sample_like", "scale_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::StudentT, student_t_params(dof_value, location_value, scale_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::StudentT, student_t_params(degrees_of_freedom, location, scale), like, seed), like);
 }
 
-Series StudentT::pdf(const Series& x) const { return detail::pdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale)); }
+Series StudentT::pdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(
+        dst::StudentT, x, pluss::sign_list(degrees_of_freedom_series, location_series, scale_series));
+  }
+  return detail::pdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale));
+}
 
 Series StudentT::logpdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(
+        dst::StudentT, x, pluss::sign_list(degrees_of_freedom_series, location_series, scale_series));
+  }
   return detail::logpdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale));
 }
 
 Series StudentT::logcdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(
+        dst::StudentT, x, pluss::sign_list(degrees_of_freedom_series, location_series, scale_series));
+  }
   return detail::logcdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale));
 }
 
-Series StudentT::cdf(const Series& x) const { return detail::cdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale)); }
+Series StudentT::cdf(const Series& x) const {
+  if (degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(
+        dst::StudentT, x, pluss::sign_list(degrees_of_freedom_series, location_series, scale_series));
+  }
+  return detail::cdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale));
+}
 
 Series StudentT::cgf(const Series& t) const {
+  PLUSS_CHECK(!(degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()),
+              "StudentT::cgf: Series parameters are unsupported here; use scalar-object parameters");
   return detail::zero_only_cgf(t, "StudentT");
 }
 
 Series StudentT::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(degrees_of_freedom_series.defined() || location_series.defined() || scale_series.defined()),
+              "StudentT::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "StudentT::cumulant");
   if (!(degrees_of_freedom > static_cast<double>(order))) {
     throw std::domain_error("StudentT::cumulant requires degrees_of_freedom > order");
@@ -1776,6 +2150,11 @@ Series FDistribution::cumulant(std::int64_t order) const {
 }
 
 Series Weibull::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (shape_series.defined() || scale_series.defined()) {
+    const double shape_value = series_scalar_param_(shape_series, "Weibull::sample", "shape_series");
+    const double scale_value = series_scalar_param_(scale_series, "Weibull::sample", "scale_series");
+    return detail::sample_with_params(dst::Weibull, weibull_params(shape_value, scale_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Weibull, weibull_params(shape, scale), sizes, cfg, seed);
 }
 
@@ -1784,22 +2163,47 @@ Series Weibull::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Weibull::sample_like(const Series& like, std::uint64_t seed) const {
+  if (shape_series.defined() || scale_series.defined()) {
+    const double shape_value = series_scalar_param_(shape_series, "Weibull::sample_like", "shape_series");
+    const double scale_value = series_scalar_param_(scale_series, "Weibull::sample_like", "scale_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Weibull, weibull_params(shape_value, scale_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Weibull, weibull_params(shape, scale), like, seed), like);
 }
 
-Series Weibull::pdf(const Series& x) const { return detail::pdf_with_params(dst::Weibull, x, weibull_params(shape, scale)); }
+Series Weibull::pdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Weibull, x, pluss::sign_list(shape_series, scale_series));
+  }
+  return detail::pdf_with_params(dst::Weibull, x, weibull_params(shape, scale));
+}
 
 Series Weibull::logpdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Weibull, x, pluss::sign_list(shape_series, scale_series));
+  }
   return detail::logpdf_with_params(dst::Weibull, x, weibull_params(shape, scale));
 }
 
 Series Weibull::logcdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Weibull, x, pluss::sign_list(shape_series, scale_series));
+  }
   return detail::logcdf_with_params(dst::Weibull, x, weibull_params(shape, scale));
 }
 
-Series Weibull::cdf(const Series& x) const { return detail::cdf_with_params(dst::Weibull, x, weibull_params(shape, scale)); }
+Series Weibull::cdf(const Series& x) const {
+  if (shape_series.defined() || scale_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Weibull, x, pluss::sign_list(shape_series, scale_series));
+  }
+  return detail::cdf_with_params(dst::Weibull, x, weibull_params(shape, scale));
+}
 
 Series Weibull::cgf(const Series& t) const {
+  PLUSS_CHECK(!(shape_series.defined() || scale_series.defined()),
+              "Weibull::cgf: Series parameters are unsupported here; use scalar-object parameters");
   const double shape_value = shape;
   const double scale_value = scale;
   if (!(shape > 0.0) || !(scale > 0.0)) {
@@ -1828,6 +2232,8 @@ Series Weibull::cgf(const Series& t) const {
 }
 
 Series Weibull::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(shape_series.defined() || scale_series.defined()),
+              "Weibull::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Weibull::cumulant");
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
@@ -1838,6 +2244,13 @@ Series Weibull::cumulant(std::int64_t order) const {
 }
 
 Series Beta::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()) {
+    const double low_value = series_scalar_param_(low_series, "Beta::sample", "low_series");
+    const double high_value = series_scalar_param_(high_series, "Beta::sample", "high_series");
+    const double alpha_value = series_scalar_param_(alpha_series, "Beta::sample", "alpha_series");
+    const double beta_value = series_scalar_param_(beta_series, "Beta::sample", "beta_series");
+    return detail::sample_with_params(dst::Beta, beta_params(low_value, high_value, alpha_value, beta_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Beta, beta_params(low, high, alpha, beta), sizes, cfg, seed);
 }
 
@@ -1846,22 +2259,49 @@ Series Beta::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::
 }
 
 Series Beta::sample_like(const Series& like, std::uint64_t seed) const {
+  if (low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()) {
+    const double low_value = series_scalar_param_(low_series, "Beta::sample_like", "low_series");
+    const double high_value = series_scalar_param_(high_series, "Beta::sample_like", "high_series");
+    const double alpha_value = series_scalar_param_(alpha_series, "Beta::sample_like", "alpha_series");
+    const double beta_value = series_scalar_param_(beta_series, "Beta::sample_like", "beta_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Beta, beta_params(low_value, high_value, alpha_value, beta_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Beta, beta_params(low, high, alpha, beta), like, seed), like);
 }
 
-Series Beta::pdf(const Series& x) const { return detail::pdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta)); }
+Series Beta::pdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Beta, x, pluss::sign_list(low_series, high_series, alpha_series, beta_series));
+  }
+  return detail::pdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta));
+}
 
 Series Beta::logpdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Beta, x, pluss::sign_list(low_series, high_series, alpha_series, beta_series));
+  }
   return detail::logpdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta));
 }
 
 Series Beta::logcdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Beta, x, pluss::sign_list(low_series, high_series, alpha_series, beta_series));
+  }
   return detail::logcdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta));
 }
 
-Series Beta::cdf(const Series& x) const { return detail::cdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta)); }
+Series Beta::cdf(const Series& x) const {
+  if (low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Beta, x, pluss::sign_list(low_series, high_series, alpha_series, beta_series));
+  }
+  return detail::cdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta));
+}
 
 Series Beta::cgf(const Series& t) const {
+  PLUSS_CHECK(!(low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()),
+              "Beta::cgf: Series parameters are unsupported here; use scalar-object parameters");
   const double low_value = low;
   const double high_value = high;
   const double alpha_value = alpha;
@@ -1874,6 +2314,8 @@ Series Beta::cgf(const Series& t) const {
 }
 
 Series Beta::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()),
+              "Beta::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Beta::cumulant");
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;

@@ -367,6 +367,11 @@ NoteBase::value_type NoteBase::scalar() const {
   return out;
 }
 
+pluss::msharp::RangeView::Int Note::sizes_view() const {
+  PLUSS_CHECK(defined(), "Note::sizes_view on undefined Note");
+  return pluss::msharp::RangeView::Int{impl()->sizes()};
+}
+
 ::std::string_view Note::at(::std::int64_t linear) const {
   PLUSS_CHECK(defined(), "Note::at on undefined Note");
   const auto& impl = this->impl();
@@ -386,7 +391,7 @@ Note Note::render_latex(::std::int64_t mode) const {
   return ops_internal::tex_render(*this, mode);
 }
 
-Note Note::take(::std::span<const ::std::int64_t> indices) const {
+Note Note::take(pluss::msharp::RangeView::Int indices) const {
   if (!defined()) return Note::undefined();
   const auto& p = impl();
   PLUSS_CHECK(p, "Note::take on undefined Note");

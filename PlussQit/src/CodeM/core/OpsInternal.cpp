@@ -56,6 +56,7 @@
 #include "CodeM/native/mps/Scatter.h"
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
+#include "pluss/codem/stack_array.h"
 #include "pluss/tils/aux/rng_seed.h"
 
 #ifdef PLUSS_ENABLE_TORCH
@@ -4261,11 +4262,11 @@ Series Series::undefined() {
   return Series();
 }
 
-Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st) {
+Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   return empty(sizes, st, scoped_platform_or_cpu_());
 }
 
-Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st, Platform platform) {
+Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform) {
   if (platform == Platform::CUDA) {
     if (!native::cuda::runtime_available()) {
       throw_error(
@@ -4297,7 +4298,8 @@ Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st, Platfor
 }
 
 
-Series Series::make_from_doubles(const std::vector<double>& flat, std::span<const std::int64_t> sizes, ScalarType st) {
+Series Series::make_from_doubles(
+    const std::vector<double>& flat, pluss::msharp::RangeView::Int sizes, ScalarType st) {
   const std::int64_t n = compute_numel(sizes);
   PLUSS_CHECK((std::int64_t)flat.size() == n, "make_from_doubles: size mismatch");
   Series out = Series::empty(sizes, st);
@@ -4308,14 +4310,14 @@ Series Series::make_from_doubles(const std::vector<double>& flat, std::span<cons
   return out;
 }
 
-Series Series::zeros(std::span<const std::int64_t> sizes, ScalarType st) {
+Series Series::zeros(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   auto t = empty(sizes, st);
   const auto dt = t.dtype();
   std::memset(t.raw_data(), 0, static_cast<std::size_t>(t.numel()) * dt.itemsize);
   return t;
 }
 
-Series Series::ones(std::span<const std::int64_t> sizes, ScalarType st) {
+Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   auto t = empty(sizes, st);
   const auto n = t.numel();
   switch (st) {
@@ -4387,7 +4389,7 @@ Series Series::ones(std::span<const std::int64_t> sizes, ScalarType st) {
   throw_error("ones: dtype not implemented");
 }
 
-Series Series::full(std::span<const std::int64_t> sizes, double value, ScalarType st) {
+Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st) {
   auto t = empty(sizes, st);
   const auto n = t.numel();
   switch (st) {
@@ -4492,7 +4494,7 @@ Series Series::full(std::span<const std::int64_t> sizes, double value, ScalarTyp
   throw_error("full: dtype not implemented");
 }
 
-Series Series::view(std::span<const std::int64_t> new_sizes) const {
+Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
   if (!defined()) throw_error("view: undefined");
   if (!can_view_as(*this, new_sizes)) throw_error("view: requires contiguous in v0");
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
@@ -4511,7 +4513,7 @@ Series Series::view(std::span<const std::int64_t> new_sizes) const {
   return out;
 }
 
-Series Series::reshape(std::span<const std::int64_t> new_sizes) const {
+Series Series::reshape(pluss::msharp::RangeView::Int new_sizes) const {
   if (!defined()) throw_error("reshape: undefined");
   if (can_view_as(*this, new_sizes)) return view(new_sizes);
   Series c = contiguous();
@@ -4550,7 +4552,7 @@ Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
 }
 
 
-Series Series::permute(std::span<const std::int64_t> dims) const {
+Series Series::permute(pluss::msharp::RangeView::Int dims) const {
   if (!defined()) throw_error("permute: undefined");
   const auto nd = dim();
   PLUSS_CHECK((std::int64_t)dims.size() == nd, "permute: dims must have length == dim()");
@@ -5236,7 +5238,7 @@ Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
   return out;
 }
 
-Series Series::rand(std::span<const std::int64_t> sizes, ScalarType dtype, std::uint64_t seed) {
+Series Series::rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed) {
   if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
     throw_error("rand: dtype must be float");
   Series out = Series::empty(sizes, dtype);
@@ -5252,7 +5254,7 @@ Series Series::rand(std::span<const std::int64_t> sizes, ScalarType dtype, std::
   return out;
 }
 
-Series Series::randn(std::span<const std::int64_t> sizes, ScalarType dtype, std::uint64_t seed) {
+Series Series::randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed) {
   if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
     throw_error("randn: dtype must be float");
   Series out = Series::empty(sizes, dtype);
@@ -5531,10 +5533,35 @@ Series& Series::sin_() { guard_direct_inplace_value_op_("sin_", *this); *this = 
 Series& Series::cos_() { guard_direct_inplace_value_op_("cos_", *this); *this = cos(); return finish_direct_inplace_value_op_(*this); }
 Series& Series::tanh_() { guard_direct_inplace_value_op_("tanh_", *this); *this = tanh(); return finish_direct_inplace_value_op_(*this); }
 
-Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const {
+Series Series::unite(const std::vector<Series>& others, std::int64_t dim, bool strict_dtype) const {
   for (const auto& t : others) {
     require_same_platform(*this, t, "unite");
   }
+
+  std::vector<Series> xs;
+  xs.reserve(others.size() + 1);
+  xs.push_back(*this);
+  for (const auto& t : others) xs.push_back(t);
+
+  if (strict_dtype) {
+    const ScalarType ref = xs.front().scalar_type();
+    for (const auto& x : xs) {
+      PLUSS_CHECK(
+          x.scalar_type() == ref,
+          "unite: dtype mismatch (set strict_dtype=false to enable promotion/coercion)");
+    }
+  } else {
+    ScalarType promoted = xs.front().scalar_type();
+    for (std::size_t i = 1; i < xs.size(); ++i) {
+      promoted = promote_types(promoted, xs[i].scalar_type());
+    }
+    for (auto& x : xs) {
+      if (x.scalar_type() != promoted) {
+        x = x.to(promoted);
+      }
+    }
+  }
+
   Series out;
   if (platform() == Platform::MPS) {
     const auto nd = this->dim();
@@ -5542,23 +5569,14 @@ Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const 
     PLUSS_CHECK(dim >= 0 && dim < nd, "unite: dim out of range");
     if (series_tape::recording_enabled()) {
       std::vector<Series> xs_cpu;
-      xs_cpu.reserve(others.size() + 1);
-      xs_cpu.push_back(this->to(Platform::CPU));
-      for (const auto& t : others) xs_cpu.push_back(t.to(Platform::CPU));
+      xs_cpu.reserve(xs.size());
+      for (const auto& t : xs) xs_cpu.push_back(t.to(Platform::CPU));
       out = native::cpu::cat(xs_cpu, dim).to(Platform::MPS);
     } else {
-      std::vector<Series> xs;
-      xs.reserve(others.size() + 1);
-      xs.push_back(*this);
-      for (const auto& t : others) xs.push_back(t);
       out = ops_internal::mps_cat_along_dim_(xs, dim, "unite");
     }
   } else if (platform() == Platform::CUDA) {
     auto cpu_route = [&]() -> Series {
-      std::vector<Series> xs;
-      xs.reserve(others.size() + 1);
-      xs.push_back(*this);
-      for (const auto& t : others) xs.push_back(t);
       return native::cpu::cat(xs, dim);
     };
     const bool native_enabled = native::cuda::native_compose_enabled();
@@ -5572,10 +5590,6 @@ Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const 
         cpu_route);
   } else {
     require_backend_dispatch_supported_(platform(), "unite");
-    std::vector<Series> xs;
-    xs.reserve(others.size() + 1);
-    xs.push_back(*this);
-    for (const auto& t : others) xs.push_back(t);
     out = native::cpu::cat(xs, dim);
   }
 
@@ -5784,32 +5798,126 @@ Series& Series::maximum_(double rhs) {
   return finish_direct_inplace_value_op_(*this);
 }
 
+static bool is_integer_index_dtype_(ScalarType st) {
+  switch (st) {
+    case ScalarType::UInt8:
+    case ScalarType::UInt16:
+    case ScalarType::UInt32:
+    case ScalarType::UInt64:
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool supports_tracked_index_backward_(
+    const Series& input,
+    const std::vector<Series>& indices) {
+  if (input.dim() < 1) return false;
+  if (indices.size() != 1) return false;
+  if (!indices.front().defined()) return false;
+  return is_integer_index_dtype_(indices.front().scalar_type());
+}
+
+static void bind_cpu_index_backward_(
+    const Series& out,
+    const Series& input,
+    const std::vector<Series>& indices) {
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "index";
+  link->parents = {input};
+  link->propagate = [input, indices](const Series& out_sens) {
+    Series sens = out_sens;
+    if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
+    if (sens.platform() != Platform::CPU) sens = sens.to(Platform::CPU, input.scalar_type());
+    sens = sens.contiguous();
+
+    Series base = Series::zeros(input.sizes(), input.scalar_type());
+    Series grad = pluss::codem::native::cpu::index_put(base, indices, sens, /*accumulate=*/true);
+    series_tape::accumulate_sensitivity(input, grad);
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
+static void bind_single_integer_index_backward_(
+    const Series& out,
+    const Series& input,
+    const Series& index) {
+  const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "index";
+  link->parents = {input};
+  link->propagate = [input, idx](const Series& out_sens) {
+    Series sens = out_sens;
+    if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
+    if (sens.platform() != input.platform()) sens = sens.to(input.platform(), input.scalar_type());
+    sens = sens.contiguous();
+
+    PLUSS_CHECK(input.dim() >= 1, "index: tracked backward expects rank >= 1 input");
+    const std::int64_t dim0 = input.sizes()[0];
+    PLUSS_CHECK(dim0 > 0, "index: tracked backward does not support empty dim0 inputs");
+    const std::int64_t trailing = std::max<std::int64_t>(1, input.numel() / dim0);
+
+    const std::array<std::int64_t, 1> flat_index_shape{{idx.numel()}};
+    const std::array<std::int64_t, 2> flat_lane_shape{{idx.numel(), trailing}};
+    Series idx_flat = idx.reshape(std::span<const std::int64_t>(flat_index_shape.data(), flat_index_shape.size()))
+                          .contiguous();
+    idx_flat = idx_flat.remainder(static_cast<double>(dim0));
+    idx_flat = where(idx_flat.lt(0.0), idx_flat.add(static_cast<double>(dim0)), idx_flat).to(ScalarType::Int64);
+    const std::array<std::int64_t, 2> flat_col_shape{{idx.numel(), 1}};
+    const Series idx_col = idx_flat.reshape(std::span<const std::int64_t>(flat_col_shape.data(), flat_col_shape.size()));
+    const Series idx_expanded =
+        idx_col.expand(std::span<const std::int64_t>(flat_lane_shape.data(), flat_lane_shape.size()), true)
+            .contiguous();
+    const Series sens_flat =
+        sens.reshape(std::span<const std::int64_t>(flat_lane_shape.data(), flat_lane_shape.size()));
+
+    Series base_flat = Series::zeros({dim0, trailing}, input.scalar_type()).to(input.platform());
+    Series grad_flat = scatter_add(base_flat, /*dim=*/0, idx_expanded, sens_flat);
+    series_tape::accumulate_sensitivity(input, grad_flat.reshape(input.sizes()));
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
 Series Series::index(const std::vector<Series>& indices) const {
   for (const auto& idx : indices) {
     require_same_platform(*this, idx, "index");
   }
-  if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
-    throw_error(
-        "index: reverse-mode sensitivity for advanced indexing is not implemented yet; "
-        "use gather/take/select for differentiable indexing paths");
-  }
+  Series out;
   if (platform() == Platform::MPS) {
     PLUSS_CHECK(indices.size() == 1, "index: MPS path currently supports exactly one index tensor");
-    return take(indices.front());
-  }
-  if (platform() == Platform::CUDA) {
+    out = take(indices.front());
+  } else if (platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_indexing_enabled();
     const bool native_strict = native::cuda::native_indexing_strict();
     const bool route_supported = native::cuda::supports_index(*this, indices);
-    return cuda_indexing_route_or_bridge_(
+    out = cuda_indexing_route_or_bridge_(
         "index",
         native_enabled,
         native_strict,
         route_supported,
         [&]() { return pluss::codem::native::cpu::index(*this, indices); });
+  } else {
+    require_backend_dispatch_supported_(platform(), "index");
+    out = pluss::codem::native::cpu::index(*this, indices);
   }
-  require_backend_dispatch_supported_(platform(), "index");
-  return pluss::codem::native::cpu::index(*this, indices);
+
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
+    if (platform() == Platform::CPU) {
+      bind_cpu_index_backward_(out, *this, indices);
+    } else if (platform() != Platform::MPS && supports_tracked_index_backward_(*this, indices)) {
+      bind_single_integer_index_backward_(out, *this, indices.front());
+    } else if (platform() != Platform::MPS) {
+      throw_error(
+          "index: reverse-mode sensitivity currently supports tracked paths only for one integer index tensor on dim0; "
+          "use gather/take/select for other differentiable indexing patterns");
+    }
+  }
+  return out;
 }
 Series Series::take(const Series& index) const {
   require_same_platform(*this, index, "take");
@@ -6166,6 +6274,61 @@ Series Series::amax(std::int64_t dim, bool keepdim) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   return ops_internal::amax(*this, dim, keepdim);
+}
+
+::pluss::StackArray<Series> Series::max_pair(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return ::pluss::StackArray<Series>{max(dim, keepdim), argmax(dim, keepdim)};
+}
+
+::pluss::StackArray<Series> Series::min_pair(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return ::pluss::StackArray<Series>{min(dim, keepdim), argmin(dim, keepdim)};
+}
+
+::pluss::StackArray<Series> Series::argmax_pair(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return max_pair(dim, keepdim);
+}
+
+::pluss::StackArray<Series> Series::argmin_pair(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return min_pair(dim, keepdim);
+}
+
+::pluss::StackArray<Series> Series::sort_pair(std::int64_t dim, bool descending, bool stable) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return ::pluss::StackArray<Series>{sort(dim, descending, stable), argsort(dim, descending, stable)};
+}
+
+::pluss::StackArray<Series> Series::topk_pair(
+    std::int64_t k, std::int64_t dim, bool largest, bool sorted) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  PLUSS_CHECK(sorted, "topk_pair: sorted=false is not supported yet");
+
+  const auto nd = this->dim();
+  std::int64_t d = dim;
+  if (d < 0) d += nd;
+  PLUSS_CHECK(d >= 0 && d < nd, "topk_pair: dim out of range");
+  const std::int64_t n = size(d);
+  const std::int64_t k_eff = std::clamp<std::int64_t>(k, 0, n);
+
+  Series values = topk(k, d, largest, sorted);
+  Series order = argsort(d, largest, false);
+  Series head = Series::arange(
+                    0.0,
+                    static_cast<double>(k_eff),
+                    1.0,
+                    ScalarType::Int64)
+                    .to(platform(), ScalarType::Int64);
+  Series indices = order.index_select(d, head);
+  return ::pluss::StackArray<Series>{values, indices};
 }
 
 Series Series::amin(std::int64_t dim, bool keepdim) const {

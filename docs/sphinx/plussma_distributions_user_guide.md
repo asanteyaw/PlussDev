@@ -89,12 +89,58 @@ const Series dens = pdt::pdf(dst::Normal, x, {0.0, 1.0});
 const Series logdens = pdt::logpdf(dst::Nig, x, {2.0, 0.5, 0.0, 1.0});
 const Series dist = pdt::cdf(dst::StudentT, x, {5.0});
 const Series logdist = pdt::logcdf(dst::Normal, x, {0.0, 1.0});
+
+const Series mu = zeros_like(x);
+const Series sigma = ones_like(x);
+const Series lp_series_params = pdt::logpdf(dst::Normal, x, pluss::sign_list(mu, sigma));
+const Series lp_series_braces = pdt::logpdf(dst::Normal, x, {mu, sigma});
 ```
 
 ### Expected output
 
 - `draws`/`draws_like` contain random samples.
 - `dens`, `logdens`, `dist`, `logdist` contain elementwise evaluation on `x`.
+
+### Series Parameter Inputs
+
+Use Series-valued parameters (broadcast-scalar or elementwise) with either `pluss::sign_list(...)` (type-construction form) or brace-init:
+
+```cpp
+const Series x = make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64);
+const Series lo = make_series(std::vector<double>{-1.0, -0.5, 0.0}, {3}, f64);
+const Series hi = make_series(std::vector<double>{1.0, 0.5, 2.0}, {3}, f64);
+const Series rate = make_series(std::vector<double>{1.0, 2.0, 0.5}, {3}, f64);
+
+const Series u = pdt::pdf(dst::Uniform, x, pluss::sign_list(lo, hi));
+const Series e = pdt::logpdf(dst::Exponential, x.abs(), {rate});
+const Series ga = pdt::logpdf(dst::Gamma, x.abs().add(0.5), pluss::sign_list(zeros_like(x), ones_like(x), make_series(std::vector<double>{2.0, 3.0, 4.0}, {3})));
+const Series be = pdt::logpdf(dst::Beta, x.add(1.0).div(2.0), pluss::sign_list(zeros_like(x), ones_like(x),
+                                                            make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}),
+                                                            make_series(std::vector<double>{5.0, 2.0, 1.5}, {3})));
+const Series chi = pdt::logpdf(dst::ChiSquare, x.abs().add(1.0), {make_series(std::vector<double>{1.0, 2.0, 5.0}, {3})});
+const Series g = pdt::logpdf(dst::Geometric, make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}), {make_series(std::vector<double>{0.2, 0.3, 0.4}, {3})});
+const Series n = pdt::logpdf(dst::NegativeBinomial,
+                             make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}),
+                             pluss::sign_list(make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}),
+                                              make_series(std::vector<double>{0.3, 0.4, 0.5}, {3})));
+const Series h = pdt::pdf(dst::Hypergeometric,
+                          make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}),
+                          pluss::sign_list(make_series(std::vector<double>{20.0, 20.0, 20.0}, {3}),
+                                           make_series(std::vector<double>{7.0, 7.0, 7.0}, {3}),
+                                           make_series(std::vector<double>{5.0, 5.0, 5.0}, {3})));
+```
+
+`Gh`/`Nig` also accept Series parameter packs through the same call shape.
+
+For function signatures, use `pluss::sign_list` (alias: `pluss::SignList`):
+
+```cpp
+double calc_tip(const pluss::sign_list& list) {
+  return list[0].item<double>() + list[1].item<double>();
+}
+
+const auto out = calc_tip({make_series(1.0), make_series(2.0)});
+```
 
 ## Gaussian Mixture (Functional)
 
@@ -241,6 +287,7 @@ Fit result methods (shared pattern):
 - `vcov(x) -> Series`
 - `stderr(x) -> Series`
 - `confint(x, level = 0.95) -> Series`
+- `confint_view(x, level = 0.95) -> MSharp::RangeView::Double` (flat host view of `confint`)
 
 Fit result types:
 
@@ -277,6 +324,7 @@ MLE is exposed from the object API and returns fit objects with inference diagno
 ### Options
 
 - `confint(level)` confidence level, default `0.95`
+- `confint_view` is a lightweight host view intended for immediate read-only use.
 
 ### Examples
 
@@ -290,6 +338,7 @@ const Series ll = nfit.loglik(x);
 const Series score = nfit.score(x);
 const Series info = nfit.fisher_inf(x);
 const Series ci = nfit.confint(x, 0.95);
+const auto ci_view = nfit.confint_view(x, 0.95); // MSharp::RangeView::Double
 ```
 
 ### Expected output
@@ -367,4 +416,3 @@ const Series b = pdt::sample(dst::Normal, {0.0, 1.0}, {16}, f64, 123ULL, pluss::
 ### Expected output
 
 - `a` and `b` match under identical settings.
-

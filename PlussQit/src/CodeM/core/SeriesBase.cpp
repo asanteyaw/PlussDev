@@ -13,13 +13,20 @@ DType SeriesBase::dtype() const {
   if (!defined()) throw_error("SeriesBase: undefined");
   return impl_->dtype();
 }
-std::span<const std::int64_t> SeriesBase::sizes() const {
+pluss::msharp::RangeView::Int SeriesBase::sizes() const {
   if (!defined()) throw_error("SeriesBase: undefined");
-  return impl_->sizes();
+  return pluss::msharp::RangeView::Int{impl_->sizes()};
 }
-std::span<const std::int64_t> SeriesBase::strides() const {
+std::int64_t SeriesBase::size(std::int64_t dim) const {
   if (!defined()) throw_error("SeriesBase: undefined");
-  return impl_->strides();
+  auto nd = this->dim();
+  if (dim < 0) dim += nd;
+  if (dim < 0 || dim >= nd) throw_error("SeriesBase::size: dim out of range");
+  return sizes()[static_cast<std::size_t>(dim)];
+}
+pluss::msharp::RangeView::Int SeriesBase::strides() const {
+  if (!defined()) throw_error("SeriesBase: undefined");
+  return pluss::msharp::RangeView::Int{impl_->strides()};
 }
 std::int64_t SeriesBase::dim() const { return static_cast<std::int64_t>(sizes().size()); }
 std::int64_t SeriesBase::numel() const { return impl_->numel(); }
@@ -31,6 +38,29 @@ Series SeriesBase::pos(std::int64_t index) const {
   if (index < 0 || index >= size0) throw_error("Series::pos: index out of range");
   const Series self = ops_internal::SeriesFactoryAccess::wrap(impl_);
   return self.select(0, index);
+}
+Series SeriesBase::pos(std::int64_t row, std::int64_t col) const {
+  if (!defined()) throw_error("Series::pos: undefined");
+  if (dim() != 2) throw_error("Series::pos: expected 2-D Series for scalar selection");
+  const auto nrows = sizes()[0];
+  const auto ncols = sizes()[1];
+  if (row < 0 || row >= nrows || col < 0 || col >= ncols) {
+    throw_error("Series::pos: index out of range");
+  }
+  const Series self = ops_internal::SeriesFactoryAccess::wrap(impl_);
+  return self.select(0, row).select(0, col);
+}
+Series SeriesBase::pos(std::int64_t i, std::int64_t j, std::int64_t k) const {
+  if (!defined()) throw_error("Series::pos: undefined");
+  if (dim() != 3) throw_error("Series::pos: expected 3-D Series for scalar selection");
+  const auto n0 = sizes()[0];
+  const auto n1 = sizes()[1];
+  const auto n2 = sizes()[2];
+  if (i < 0 || i >= n0 || j < 0 || j >= n1 || k < 0 || k >= n2) {
+    throw_error("Series::pos: index out of range");
+  }
+  const Series self = ops_internal::SeriesFactoryAccess::wrap(impl_);
+  return self.select(0, i).select(0, j).select(0, k);
 }
 std::byte* SeriesBase::raw_data() {
   if (!defined()) throw_error("SeriesBase: undefined");

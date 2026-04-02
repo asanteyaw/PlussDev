@@ -3,6 +3,8 @@
 #include "pluss/msharp/msharp.h"
 #include "CodeM/CodeM.h"
 #include "CodeM/core/Printing.h"
+#include "pluss/error.h"
+#include "pluss/slicing.h"
 #include <cstddef>
 #include <cstdint>
 #include <functional>

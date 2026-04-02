@@ -12,6 +12,7 @@ The large, repetitive Timeline method families are driven by TSV specs.
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 
@@ -26,6 +27,30 @@ def read_tsv(path: Path) -> list[tuple[str, str]]:
         name, value = line.split("\t", 1)
         rows.append((name.strip(), value.strip()))
     return rows
+
+
+_INVOKE_ARGS_RE = re.compile(
+    r'(::pluss::codeh::_compat::invoke<[^>]+>\("[^"]+",\s*[^,]+),\s*(.+)\);'
+)
+
+
+def normalize_codeh_invoke_lines(lines: list[str]) -> list[str]:
+    out: list[str] = []
+    for line in lines:
+        m = _INVOKE_ARGS_RE.search(line)
+        if not m:
+            out.append(line)
+            continue
+        args = m.group(2).strip()
+        if args.startswith("{"):
+            out.append(line)
+            continue
+        out.append(
+            line[: m.start()]
+            + f"{m.group(1)}, {{{args}}});"
+            + line[m.end() :]
+        )
+    return out
 
 
 def emit_timeline(out_dir: Path, dt_fields: list[tuple[str, str]],
@@ -108,6 +133,7 @@ def emit_timeline(out_dir: Path, dt_fields: list[tuple[str, str]],
         emitted.add(name)
         lines.append(f"  inline pluss::coden::Note {name}() const {{ return ::pluss::codeh::_compat::invoke<pluss::coden::Note>(\"strftime\", *this, std::string(\"{fmt}\")); }}")
 
+    lines = normalize_codeh_invoke_lines(lines)
     out_path = out_dir / "TimelineMethodsGen.h"
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -280,6 +306,7 @@ def emit_duration(out_dir: Path) -> None:
     lines.append("pluss::coden::Note tostring() const { return to_note(); }")
     lines.append("pluss::coden::Note to_string() const { return to_note(); }")
     lines.append("")
+    lines = normalize_codeh_invoke_lines(lines)
     out_path = out_dir / "DurationMethodsGen.h"
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -446,6 +473,7 @@ def emit_timeindex(out_dir: Path) -> None:
     lines.append("TimeIndex intersect(const TimeIndex& other) const { return intersection(other); }")
     lines.append("TimeIndex diffIndex(const TimeIndex& other) const { return difference(other); }")
     lines.append("")
+    lines = normalize_codeh_invoke_lines(lines)
     out_path = out_dir / "TimeIndexMethodsGen.h"
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

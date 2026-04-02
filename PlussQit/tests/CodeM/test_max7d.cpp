@@ -10,5 +10,5 @@ TEST_CASE("max 7D enforced", "[shape]") {
   // 7D should work
   REQUIRE_NOTHROW(Series::zeros({1,1,1,1,1,1,1}, ScalarType::Float32));
   // 8D should throw
-  REQUIRE_THROWS_AS(Series::zeros({1,1,1,1,1,1,1,1}, ScalarType::Float32), pluss::codem::Error);
+  REQUIRE_THROWS_AS(Series::zeros({1,1,1,1,1,1,1,1}, ScalarType::Float32), pluss::Error);
 }

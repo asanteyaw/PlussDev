@@ -178,6 +178,12 @@ public:
   Thread numeric_binary(const Thread& other, ThreadBinaryMathOp op) const;
   Thread compare(double other, ThreadBinaryCompareOp op) const;
   Thread compare(const Thread& other, ThreadBinaryCompareOp op) const;
+  Thread btw(double a, double b, bool inclusive = false) const;
+  Thread btw(double a, double b, bool include_left, bool include_right) const;
+  Thread btw(std::string_view lo, std::string_view hi, bool inclusive = true) const;
+  Thread btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const;
+  Thread btw(const Thread& lo, const Thread& hi, bool inclusive = true) const;
+  Thread btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const;
   int compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last = true) const;
   Thread window(std::int64_t window, ThreadWindowOp op, std::int64_t min_periods = 1) const;
   Thread cast(ThreadCastTarget target,

@@ -2,8 +2,10 @@
 #include "CodeM/core/Half.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
+#include "CodeM/native/cpu/ReduceKernels.h"
 #include "CodeM/native/cpu/Reductions.h"
 
+#include <algorithm>
 #include <limits>
 #include <cstring>
 
@@ -11,6 +13,47 @@ namespace pluss::codem::native::cpu {
 
 // Implemented in ReduceAndIndex.cpp.
 Series sum(const Series& a, std::int64_t dim, bool keepdim);
+
+static float load_f16_(Float16 x) { return float16_to_float(x); }
+static float load_bf16_(BFloat16 x) { return bfloat16_to_float(x); }
+static float load_f8e4m3fn_(Float8E4M3FN x) { return float8e4m3fn_to_float(x); }
+static float load_f8e5m2_(Float8E5M2 x) { return float8e5m2_to_float(x); }
+
+template <class CmpT, class InT, class Load, class Better, class Init>
+static void arg_reduce_dim_impl_(
+    const Series& a,
+    std::int64_t dim,
+    Series& out,
+    Load load,
+    Better better,
+    Init init_best) {
+  const auto nd = a.dim();
+  if (dim < 0) dim += nd;
+
+  const auto reduce_n = a.sizes()[(std::size_t)dim];
+  std::int64_t outer = 1;
+  for (std::int64_t i = 0; i < dim; ++i) outer *= a.sizes()[(std::size_t)i];
+  std::int64_t inner = 1;
+  for (std::int64_t i = dim + 1; i < nd; ++i) inner *= a.sizes()[(std::size_t)i];
+
+  const auto* p = reinterpret_cast<const InT*>(a.raw_data());
+  auto* q = reinterpret_cast<std::int64_t*>(out.raw_data());
+  for (std::int64_t o = 0; o < outer; ++o) {
+    for (std::int64_t i = 0; i < inner; ++i) {
+      CmpT best = init_best();
+      std::int64_t arg = 0;
+      const std::int64_t base = o * reduce_n * inner + i;
+      for (std::int64_t r = 0; r < reduce_n; ++r) {
+        const CmpT v = static_cast<CmpT>(load(p[base + r * inner]));
+        if (better(v, best)) {
+          best = v;
+          arg = r;
+        }
+      }
+      q[o * inner + i] = arg;
+    }
+  }
+}
 
 Series mean(const Series& a, std::int64_t dim, bool keepdim) {
   auto s = sum(a, dim, keepdim);
@@ -46,40 +89,8 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
   Series out = Series::empty(out_sizes, aa.scalar_type());
-
-  const auto reduce_n = aa.sizes()[(std::size_t)dim];
-  std::int64_t outer = 1;
-  for (std::int64_t i=0;i<dim;++i) outer *= aa.sizes()[(std::size_t)i];
-  std::int64_t inner = 1;
-  for (std::int64_t i=dim+1;i<nd;++i) inner *= aa.sizes()[(std::size_t)i];
-
-  if (aa.scalar_type() == ScalarType::Float64) {
-    const auto* p = reinterpret_cast<const double*>(aa.raw_data());
-    auto* q = reinterpret_cast<double*>(out.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        double m = -std::numeric_limits<double>::infinity();
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r) m = std::max(m, p[base + r*inner]);
-        q[o*inner + i] = m;
-      }
-    }
-    return out;
-  }
-  if (aa.scalar_type() == ScalarType::Float32) {
-    const auto* p = reinterpret_cast<const float*>(aa.raw_data());
-    auto* q = reinterpret_cast<float*>(out.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        float m = -std::numeric_limits<float>::infinity();
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r) m = std::max(m, p[base + r*inner]);
-        q[o*inner + i] = m;
-      }
-    }
-    return out;
-  }
-  throw_error("amax: dtype not implemented");
+  amax_dim(aa, dim, out);
+  return out;
 }
 
 Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
@@ -98,54 +109,65 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
   Series out = Series::empty(out_sizes, ScalarType::Int64);
-
-  const auto reduce_n = aa.sizes()[(std::size_t)dim];
-  std::int64_t outer = 1;
-  for (std::int64_t i=0;i<dim;++i) outer *= aa.sizes()[(std::size_t)i];
-  std::int64_t inner = 1;
-  for (std::int64_t i=dim+1;i<nd;++i) inner *= aa.sizes()[(std::size_t)i];
-
-  auto* q = reinterpret_cast<std::int64_t*>(out.raw_data());
-
-  if (aa.scalar_type() == ScalarType::Float64) {
-    const auto* p = reinterpret_cast<const double*>(aa.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        double best = -std::numeric_limits<double>::infinity();
-        std::int64_t arg = 0;
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r){
-          const double v = p[base + r*inner];
-          if (v > best) { best = v; arg = r; }
-        }
-        q[o*inner + i] = arg;
-      }
-    }
-    return out;
-  }
-  if (aa.scalar_type() == ScalarType::Float32) {
-    const auto* p = reinterpret_cast<const float*>(aa.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        float best = -std::numeric_limits<float>::infinity();
-        std::int64_t arg = 0;
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r){
-          const float v = p[base + r*inner];
-          if (v > best) { best = v; arg = r; }
-        }
-        q[o*inner + i] = arg;
-      }
-    }
-    return out;
+  switch (aa.scalar_type()) {
+    case ScalarType::Float64:
+      arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, [](double v, double best){ return v > best; }, [](){ return -std::numeric_limits<double>::infinity(); });
+      return out;
+    case ScalarType::Float32:
+      arg_reduce_dim_impl_<float,float>(aa, dim, out, [](float x){ return x; }, [](float v, float best){ return v > best; }, [](){ return -std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Float16:
+      arg_reduce_dim_impl_<float,Float16>(aa, dim, out, load_f16_, [](float v, float best){ return v > best; }, [](){ return -std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::BFloat16:
+      arg_reduce_dim_impl_<float,BFloat16>(aa, dim, out, load_bf16_, [](float v, float best){ return v > best; }, [](){ return -std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Float8E4M3FN:
+      arg_reduce_dim_impl_<float,Float8E4M3FN>(
+          aa, dim, out, load_f8e4m3fn_,
+          [](float v, float best){ return v > best; },
+          [](){ return -std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Float8E5M2:
+      arg_reduce_dim_impl_<float,Float8E5M2>(
+          aa, dim, out, load_f8e5m2_,
+          [](float v, float best){ return v > best; },
+          [](){ return -std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Bool:
+      arg_reduce_dim_impl_<std::uint8_t,std::uint8_t>(aa, dim, out, [](std::uint8_t x){ return x; }, [](std::uint8_t v, std::uint8_t best){ return v > best; }, [](){ return (std::uint8_t)0; });
+      return out;
+    case ScalarType::Int8:
+      arg_reduce_dim_impl_<std::int8_t,std::int8_t>(aa, dim, out, [](std::int8_t x){ return x; }, [](std::int8_t v, std::int8_t best){ return v > best; }, [](){ return std::numeric_limits<std::int8_t>::min(); });
+      return out;
+    case ScalarType::Int16:
+      arg_reduce_dim_impl_<std::int16_t,std::int16_t>(aa, dim, out, [](std::int16_t x){ return x; }, [](std::int16_t v, std::int16_t best){ return v > best; }, [](){ return std::numeric_limits<std::int16_t>::min(); });
+      return out;
+    case ScalarType::Int32:
+      arg_reduce_dim_impl_<std::int32_t,std::int32_t>(aa, dim, out, [](std::int32_t x){ return x; }, [](std::int32_t v, std::int32_t best){ return v > best; }, [](){ return std::numeric_limits<std::int32_t>::min(); });
+      return out;
+    case ScalarType::Int64:
+      arg_reduce_dim_impl_<std::int64_t,std::int64_t>(aa, dim, out, [](std::int64_t x){ return x; }, [](std::int64_t v, std::int64_t best){ return v > best; }, [](){ return std::numeric_limits<std::int64_t>::min(); });
+      return out;
+    case ScalarType::UInt8:
+      arg_reduce_dim_impl_<std::uint8_t,std::uint8_t>(aa, dim, out, [](std::uint8_t x){ return x; }, [](std::uint8_t v, std::uint8_t best){ return v > best; }, [](){ return (std::uint8_t)0; });
+      return out;
+    case ScalarType::UInt16:
+      arg_reduce_dim_impl_<std::uint16_t,std::uint16_t>(aa, dim, out, [](std::uint16_t x){ return x; }, [](std::uint16_t v, std::uint16_t best){ return v > best; }, [](){ return (std::uint16_t)0; });
+      return out;
+    case ScalarType::UInt32:
+      arg_reduce_dim_impl_<std::uint32_t,std::uint32_t>(aa, dim, out, [](std::uint32_t x){ return x; }, [](std::uint32_t v, std::uint32_t best){ return v > best; }, [](){ return (std::uint32_t)0; });
+      return out;
+    case ScalarType::UInt64:
+      arg_reduce_dim_impl_<std::uint64_t,std::uint64_t>(aa, dim, out, [](std::uint64_t x){ return x; }, [](std::uint64_t v, std::uint64_t best){ return v > best; }, [](){ return (std::uint64_t)0; });
+      return out;
+    default:
+      break;
   }
   throw_error("argmax: dtype not implemented");
 }
 
 } // namespace pluss::codem::native::cpu
-
-
-#include <limits>
 
 namespace pluss::codem::native::cpu {
 
@@ -161,40 +183,8 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
   Series out = Series::empty(out_sizes, aa.scalar_type());
-
-  const auto reduce_n = aa.sizes()[(std::size_t)dim];
-  std::int64_t outer = 1;
-  for (std::int64_t i=0;i<dim;++i) outer *= aa.sizes()[(std::size_t)i];
-  std::int64_t inner = 1;
-  for (std::int64_t i=dim+1;i<nd;++i) inner *= aa.sizes()[(std::size_t)i];
-
-  if (aa.scalar_type() == ScalarType::Float64) {
-    const auto* p = reinterpret_cast<const double*>(aa.raw_data());
-    auto* q = reinterpret_cast<double*>(out.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        double m = std::numeric_limits<double>::infinity();
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r) m = std::min(m, p[base + r*inner]);
-        q[o*inner + i] = m;
-      }
-    }
-    return out;
-  }
-  if (aa.scalar_type() == ScalarType::Float32) {
-    const auto* p = reinterpret_cast<const float*>(aa.raw_data());
-    auto* q = reinterpret_cast<float*>(out.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        float m = std::numeric_limits<float>::infinity();
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r) m = std::min(m, p[base + r*inner]);
-        q[o*inner + i] = m;
-      }
-    }
-    return out;
-  }
-  throw_error("amin: dtype not implemented");
+  amin_dim(aa, dim, out);
+  return out;
 }
 
 Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
@@ -213,46 +203,60 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   if (keepdim) out_sizes[(std::size_t)dim] = 1;
   else out_sizes.erase(out_sizes.begin() + dim);
   Series out = Series::empty(out_sizes, ScalarType::Int64);
-
-  const auto reduce_n = aa.sizes()[(std::size_t)dim];
-  std::int64_t outer = 1;
-  for (std::int64_t i=0;i<dim;++i) outer *= aa.sizes()[(std::size_t)i];
-  std::int64_t inner = 1;
-  for (std::int64_t i=dim+1;i<nd;++i) inner *= aa.sizes()[(std::size_t)i];
-
-  auto* q = reinterpret_cast<std::int64_t*>(out.raw_data());
-
-  if (aa.scalar_type() == ScalarType::Float64) {
-    const auto* p = reinterpret_cast<const double*>(aa.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        double best = std::numeric_limits<double>::infinity();
-        std::int64_t arg = 0;
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r){
-          const double v = p[base + r*inner];
-          if (v < best) { best = v; arg = r; }
-        }
-        q[o*inner + i] = arg;
-      }
-    }
-    return out;
-  }
-  if (aa.scalar_type() == ScalarType::Float32) {
-    const auto* p = reinterpret_cast<const float*>(aa.raw_data());
-    for (std::int64_t o=0;o<outer;++o){
-      for (std::int64_t i=0;i<inner;++i){
-        float best = std::numeric_limits<float>::infinity();
-        std::int64_t arg = 0;
-        const std::int64_t base = o*reduce_n*inner + i;
-        for (std::int64_t r=0;r<reduce_n;++r){
-          const float v = p[base + r*inner];
-          if (v < best) { best = v; arg = r; }
-        }
-        q[o*inner + i] = arg;
-      }
-    }
-    return out;
+  switch (aa.scalar_type()) {
+    case ScalarType::Float64:
+      arg_reduce_dim_impl_<double,double>(aa, dim, out, [](double x){ return x; }, [](double v, double best){ return v < best; }, [](){ return std::numeric_limits<double>::infinity(); });
+      return out;
+    case ScalarType::Float32:
+      arg_reduce_dim_impl_<float,float>(aa, dim, out, [](float x){ return x; }, [](float v, float best){ return v < best; }, [](){ return std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Float16:
+      arg_reduce_dim_impl_<float,Float16>(aa, dim, out, load_f16_, [](float v, float best){ return v < best; }, [](){ return std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::BFloat16:
+      arg_reduce_dim_impl_<float,BFloat16>(aa, dim, out, load_bf16_, [](float v, float best){ return v < best; }, [](){ return std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Float8E4M3FN:
+      arg_reduce_dim_impl_<float,Float8E4M3FN>(
+          aa, dim, out, load_f8e4m3fn_,
+          [](float v, float best){ return v < best; },
+          [](){ return std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Float8E5M2:
+      arg_reduce_dim_impl_<float,Float8E5M2>(
+          aa, dim, out, load_f8e5m2_,
+          [](float v, float best){ return v < best; },
+          [](){ return std::numeric_limits<float>::infinity(); });
+      return out;
+    case ScalarType::Bool:
+      arg_reduce_dim_impl_<std::uint8_t,std::uint8_t>(aa, dim, out, [](std::uint8_t x){ return x; }, [](std::uint8_t v, std::uint8_t best){ return v < best; }, [](){ return (std::uint8_t)1; });
+      return out;
+    case ScalarType::Int8:
+      arg_reduce_dim_impl_<std::int8_t,std::int8_t>(aa, dim, out, [](std::int8_t x){ return x; }, [](std::int8_t v, std::int8_t best){ return v < best; }, [](){ return std::numeric_limits<std::int8_t>::max(); });
+      return out;
+    case ScalarType::Int16:
+      arg_reduce_dim_impl_<std::int16_t,std::int16_t>(aa, dim, out, [](std::int16_t x){ return x; }, [](std::int16_t v, std::int16_t best){ return v < best; }, [](){ return std::numeric_limits<std::int16_t>::max(); });
+      return out;
+    case ScalarType::Int32:
+      arg_reduce_dim_impl_<std::int32_t,std::int32_t>(aa, dim, out, [](std::int32_t x){ return x; }, [](std::int32_t v, std::int32_t best){ return v < best; }, [](){ return std::numeric_limits<std::int32_t>::max(); });
+      return out;
+    case ScalarType::Int64:
+      arg_reduce_dim_impl_<std::int64_t,std::int64_t>(aa, dim, out, [](std::int64_t x){ return x; }, [](std::int64_t v, std::int64_t best){ return v < best; }, [](){ return std::numeric_limits<std::int64_t>::max(); });
+      return out;
+    case ScalarType::UInt8:
+      arg_reduce_dim_impl_<std::uint8_t,std::uint8_t>(aa, dim, out, [](std::uint8_t x){ return x; }, [](std::uint8_t v, std::uint8_t best){ return v < best; }, [](){ return std::numeric_limits<std::uint8_t>::max(); });
+      return out;
+    case ScalarType::UInt16:
+      arg_reduce_dim_impl_<std::uint16_t,std::uint16_t>(aa, dim, out, [](std::uint16_t x){ return x; }, [](std::uint16_t v, std::uint16_t best){ return v < best; }, [](){ return std::numeric_limits<std::uint16_t>::max(); });
+      return out;
+    case ScalarType::UInt32:
+      arg_reduce_dim_impl_<std::uint32_t,std::uint32_t>(aa, dim, out, [](std::uint32_t x){ return x; }, [](std::uint32_t v, std::uint32_t best){ return v < best; }, [](){ return std::numeric_limits<std::uint32_t>::max(); });
+      return out;
+    case ScalarType::UInt64:
+      arg_reduce_dim_impl_<std::uint64_t,std::uint64_t>(aa, dim, out, [](std::uint64_t x){ return x; }, [](std::uint64_t v, std::uint64_t best){ return v < best; }, [](){ return std::numeric_limits<std::uint64_t>::max(); });
+      return out;
+    default:
+      break;
   }
   throw_error("argmin: dtype not implemented");
 }

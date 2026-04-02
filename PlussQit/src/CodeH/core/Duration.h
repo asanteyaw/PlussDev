@@ -13,6 +13,7 @@
 #include "CodeH/compat/InvokeFwd.h"
 #include "CodeM/core/Series.h"
 #include "CodeM/core/SeriesIterator.h"
+#include "MSharp/RangeView.h"
 
 #include "CodeN/core/Note.h"
 
@@ -85,7 +86,7 @@ public:
 #endif
 
   bool defined() const noexcept { return nanos_.defined(); }
-  std::span<const std::int64_t> sizes() const { return nanos_.sizes(); }
+  pluss::msharp::RangeView::Int sizes() const { return nanos_.sizes(); }
   std::int64_t dim() const { return nanos_.dim(); }
   std::int64_t numel() const { return nanos_.numel(); }
 

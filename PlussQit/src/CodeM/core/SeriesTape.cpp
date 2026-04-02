@@ -15,7 +15,9 @@ namespace {
 struct TapeState {
   bool tracks_slope{false};
   bool keep_sensitivity{false};
+  bool source_link_released{false};
   std::optional<Series> sensitivity{};
+  std::string released_op_name{};
   std::shared_ptr<SourceLink> source_link{};
 };
 
@@ -176,6 +178,8 @@ void set_tracks_slope(const Series& s, bool enabled) {
   st.sensitivity.reset();
   if (!enabled) {
     st.source_link.reset();
+    st.source_link_released = false;
+    st.released_op_name.clear();
   }
   maybe_prune_locked_(key_of_(s));
 }
@@ -229,10 +233,15 @@ void bind_source_link(
       link->parent_versions.push_back(p.defined() ? p.storage().version() : 0);
     }
   }
+  if (link) {
+    link->output_version = s.storage().version();
+  }
   std::scoped_lock lk(g_mu);
   auto& st = ensure_locked_(s);
   st.tracks_slope = true;
   st.sensitivity.reset();
+  st.source_link_released = false;
+  st.released_op_name.clear();
   st.source_link = std::move(link);
 }
 
@@ -241,6 +250,10 @@ void clear_source_link(const Series& s) {
   std::scoped_lock lk(g_mu);
   auto* st = find_locked_(s);
   if (!st) return;
+  if (st->source_link) {
+    st->source_link_released = true;
+    st->released_op_name = st->source_link->op_name;
+  }
   st->source_link.reset();
   maybe_prune_locked_(key_of_(s));
 }
@@ -271,10 +284,35 @@ Series sensitivity_or_zeros(const Series& s) {
   return Series::zeros(s.sizes(), s.scalar_type()).to(s.platform());
 }
 
+void prepare_tracked_leaves(std::span<Series* const> leaves) {
+  if (leaves.empty()) return;
+  std::scoped_lock lk(g_mu);
+  for (Series* leaf : leaves) {
+    if (leaf == nullptr || !leaf->defined()) continue;
+    auto& st = ensure_locked_(*leaf);
+    st.tracks_slope = true;
+    st.sensitivity.reset();
+  }
+}
+
 void backpropagate(const Series& loss,
                    const std::optional<Series>& seed,
                    const BackpropOptions& options) {
   PLUSS_CHECK(loss.defined(), "series_tape::backpropagate: expected defined loss");
+
+  {
+    std::scoped_lock lk(g_mu);
+    auto* root_state = find_locked_(loss);
+    if (root_state && !root_state->source_link && root_state->source_link_released) {
+      std::ostringstream oss;
+      oss << "series_tape::backpropagate: graph links for this objective were released by a prior one-shot reverse pass";
+      if (!root_state->released_op_name.empty()) {
+        oss << " [op=" << root_state->released_op_name << "]";
+      }
+      oss << "; run with keep_graph=true for reusable reverse passes";
+      throw_error(oss.str());
+    }
+  }
 
   std::vector<Series> topo;
   std::unordered_set<const SeriesImpl*> seen;
@@ -339,6 +377,10 @@ void backpropagate(const Series& loss,
     PLUSS_CHECK(
         compatible_shape_or_scalar_(cur, *sens),
         "series_tape::backpropagate: internal sensitivity shape mismatch for node");
+    PLUSS_CHECK(
+        cur.storage().version() == link->output_version,
+        std::string("series_tape::backpropagate: captured output Series was modified after graph capture [op=") +
+            op_name_of_(link) + ", captured_at=" + captured_at_of_(link) + "]");
     if (!link->parent_versions.empty()) {
       PLUSS_CHECK(
           link->parent_versions.size() == link->parents.size(),

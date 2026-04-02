@@ -29,7 +29,7 @@ template <class T>
 T resolve(StatusOr<T> value_or, std::string_view where = {}) {
   if (!value_or.ok()) {
     const std::string prefix = where.empty() ? std::string{} : (std::string(where) + ": ");
-    throw std::runtime_error(prefix + value_or.status().message);
+    ::pluss::throw_error(prefix + value_or.status().message);
   }
   return value_or.move_value();
 }
@@ -37,7 +37,7 @@ T resolve(StatusOr<T> value_or, std::string_view where = {}) {
 inline void resolve(Status status, std::string_view where = {}) {
   if (status.ok()) return;
   const std::string prefix = where.empty() ? std::string{} : (std::string(where) + ": ");
-  throw std::runtime_error(prefix + status.message);
+  ::pluss::throw_error(prefix + status.message);
 }
 
 class WorkflowModel;
@@ -693,7 +693,7 @@ struct SeriesCompareReport {
   const Series a = lhs.to(pluss::pCPU, ScalarType::Float64).reshape({lhs.numel()});
   const Series b = rhs.to(pluss::pCPU, ScalarType::Float64).reshape({rhs.numel()});
   if (a.numel() != b.numel()) {
-    throw std::runtime_error("compare_series: shape mismatch.");
+    ::pluss::throw_error("compare_series: shape mismatch.");
   }
   const Series abs = a.sub(b).abs();
   return SeriesCompareReport{
@@ -818,7 +818,7 @@ struct CrossValidationReport {
     const char* where) {
   const auto names = frame.series_features().feature_names();
   if (names.empty()) {
-    throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+    ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
   }
   return names;
 }
@@ -1246,27 +1246,27 @@ public:
   [[nodiscard]] LinearParameters linear_parameters() const {
     const auto& spec_opt = workflow_.model_spec();
     if (!spec_opt.has_value()) {
-      throw std::runtime_error("linear_parameters: workflow has no model specification.");
+      ::pluss::throw_error("linear_parameters: workflow has no model specification.");
     }
     if (spec_opt->family != ModelFamily::Linear) {
-      throw std::runtime_error("linear_parameters: only available for linear models.");
+      ::pluss::throw_error("linear_parameters: only available for linear models.");
     }
 
     const auto* linear_options = std::get_if<LinearFamilyOptions>(&spec_opt->options);
     if (linear_options == nullptr) {
-      throw std::runtime_error("linear_parameters: model options do not contain LinearFamilyOptions.");
+      ::pluss::throw_error("linear_parameters: model options do not contain LinearFamilyOptions.");
     }
     const bool fit_intercept = linear_options->fit_intercept;
 
     const std::vector<Series> state = resolve(workflow_.dump_model_state(), "dump_model_state");
     if (state.size() < 2 || !state[1].defined()) {
-      throw std::runtime_error("linear_parameters: missing coefficient state.");
+      ::pluss::throw_error("linear_parameters: missing coefficient state.");
     }
 
     const std::vector<double> beta =
         state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).to_vec<double>();
     if (beta.empty()) {
-      throw std::runtime_error("linear_parameters: coefficient vector is empty.");
+      ::pluss::throw_error("linear_parameters: coefficient vector is empty.");
     }
 
     LinearParameters out{};
@@ -1372,7 +1372,7 @@ private:
                                                                                const char* where) {
     const auto names = frame.series_features().feature_names();
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+      ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
     return names;
   }
@@ -1389,7 +1389,7 @@ private:
       names.erase(std::remove(names.begin(), names.end(), *options.sample_weight_feature), names.end());
     }
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": resolved zero feature names.");
+      ::pluss::throw_error(std::string(where) + ": resolved zero feature names.");
     }
     return names;
   }
@@ -1450,10 +1450,10 @@ private:
 
   [[nodiscard]] WorkflowModel clone_for_out_of_place_() const {
     if (workflow_.has_opaque_transforms()) {
-      throw std::runtime_error("learn(out-of-place): workflow has opaque transforms that cannot be cloned.");
+      ::pluss::throw_error("learn(out-of-place): workflow has opaque transforms that cannot be cloned.");
     }
     if (!workflow_.model_spec().has_value() && workflow_.has_model()) {
-      throw std::runtime_error("learn(out-of-place): workflow model has no clonable ModelSpec.");
+      ::pluss::throw_error("learn(out-of-place): workflow model has no clonable ModelSpec.");
     }
 
     ::pluss::ai::nodej::Workflow cloned =
@@ -1544,14 +1544,14 @@ private:
                                                           AssessOptions assess_options = {}) {
   resolve(validate_labeled(batch), "cross_validate(model).validate_labeled");
   if (!model.workflow().has_model()) {
-    throw std::runtime_error("cross_validate(model,...): workflow has no model.");
+    ::pluss::throw_error("cross_validate(model,...): workflow has no model.");
   }
 
   const auto spec_opt = model.workflow().model_spec();
   const TaskKind task = spec_opt.has_value() ? spec_opt->task : model.workflow().task_kind();
   const std::vector<MetricKind> metrics = default_assess_metrics_(task, assess_options);
   if (metrics.empty()) {
-    throw std::runtime_error("cross_validate(model,...): no assessment metrics requested.");
+    ::pluss::throw_error("cross_validate(model,...): no assessment metrics requested.");
   }
 
   const auto make_plan = [&](const SplitOptions& split) -> SplitPlan {
@@ -1571,11 +1571,11 @@ private:
     }
     if (split.plan == CVPlanKind::StratifiedKFold) {
       if (task != TaskKind::Classification) {
-        throw std::runtime_error("cross_validate(model,...): StratifiedKFold requires classification task.");
+        ::pluss::throw_error("cross_validate(model,...): StratifiedKFold requires classification task.");
       }
       return resolve(pluss::ai::nodej::strat_fold_plan(batch.y, split), "strat_fold_plan");
     }
-    throw std::runtime_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold are currently supported.");
+    ::pluss::throw_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold are currently supported.");
   };
 
   SplitOptions split = make_cross_validation_split_options(cv);
@@ -1586,7 +1586,7 @@ private:
   }
   const SplitPlan plan = make_plan(split);
   if (plan.folds.empty()) {
-    throw std::runtime_error("cross_validate(model,...): empty fold plan.");
+    ::pluss::throw_error("cross_validate(model,...): empty fold plan.");
   }
 
   CrossAssessReport report{};
@@ -1789,7 +1789,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
     names.erase(std::remove(names.begin(), names.end(), *data_options.sample_weight_feature), names.end());
   }
   if (names.empty()) {
-    throw std::runtime_error("make_feature_transformer: resolved zero feature names.");
+    ::pluss::throw_error("make_feature_transformer: resolved zero feature names.");
   }
   return names;
 }
@@ -1845,7 +1845,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
       return std::make_unique<::pluss::ai::nodej::prep::PolynomialLift>(
           std::get<prep::PolynomialLiftOptions>(spec.options));
   }
-  throw std::runtime_error("make_feature_transformer: unsupported transform kind.");
+  ::pluss::throw_error("make_feature_transformer: unsupported transform kind.");
 }
 
 [[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
@@ -1853,10 +1853,10 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
     const std::vector<workflow::feature::Branch>& branches,
     prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
   if (feature_order.empty()) {
-    throw std::runtime_error("make_feature_transformer: feature_order cannot be empty.");
+    ::pluss::throw_error("make_feature_transformer: feature_order cannot be empty.");
   }
   if (branches.empty()) {
-    throw std::runtime_error("make_feature_transformer: requires at least one branch.");
+    ::pluss::throw_error("make_feature_transformer: requires at least one branch.");
   }
 
   std::unordered_map<std::string, std::int64_t> index_by_name{};
@@ -1869,12 +1869,12 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
   for (std::size_t i = 0; i < branches.size(); ++i) {
     const auto& branch = branches[i];
     if (branch.transforms.empty()) {
-      throw std::runtime_error("make_feature_transformer: branch requires at least one transform stage.");
+      ::pluss::throw_error("make_feature_transformer: branch requires at least one transform stage.");
     }
     std::vector<std::int64_t> route{};
     if (!branch.feature_names.empty() || !branch.feature_route.empty()) {
       if (!branch.feature_names.empty() && !branch.feature_route.empty()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "make_feature_transformer: branch cannot specify both feature_names and feature_route.");
       }
       if (!branch.feature_names.empty()) {
@@ -1882,7 +1882,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
         for (const auto& name : branch.feature_names) {
           auto it = index_by_name.find(name);
           if (it == index_by_name.end()) {
-            throw std::runtime_error(
+            ::pluss::throw_error(
                 "make_feature_transformer: feature '" + name + "' was not found in feature_order.");
           }
           route.push_back(it->second);
@@ -1892,7 +1892,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
       }
       for (const auto& stage : branch.transforms) {
         if (!stage.feature_route.empty()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "make_feature_transformer: when branch-level routing is set, per-stage feature_route must be empty.");
         }
       }
@@ -1905,7 +1905,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
           continue;
         }
         if (*inferred_route != stage.feature_route) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "make_feature_transformer: all per-stage feature_route values in a branch must match.");
         }
       }
@@ -1914,7 +1914,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
       }
     }
     if (route.empty()) {
-      throw std::runtime_error("make_feature_transformer: each branch must select at least one feature.");
+      ::pluss::throw_error("make_feature_transformer: each branch must select at least one feature.");
     }
 
     std::vector<std::unique_ptr<TransformerBase>> branch_chain{};
@@ -2246,7 +2246,7 @@ public:
 private:
   void ensure_model_(const char* where) const {
     if (!model.has_value()) {
-      throw std::runtime_error(std::string("Workflow::") + where + ": construct as Workflow{ .model = ..., .stages = {...} }.");
+      ::pluss::throw_error(std::string("Workflow::") + where + ": construct as Workflow{ .model = ..., .stages = {...} }.");
     }
     const_cast<Workflow*>(this)->replay_transforms_();
   }
@@ -2361,14 +2361,14 @@ private:
   if (feature_names_pinned) {
     for (const auto& name : pinned_feature_names) {
       if (!frame.has_feature(name)) {
-        throw std::runtime_error(std::string(where) + ": missing feature '" + name + "' in input DataFrame.");
+        ::pluss::throw_error(std::string(where) + ": missing feature '" + name + "' in input DataFrame.");
       }
     }
     return pinned_feature_names;
   }
   const auto names = frame.series_features().feature_names();
   if (names.empty()) {
-    throw std::runtime_error(std::string(where) + ": no Series-backed features found in input DataFrame.");
+    ::pluss::throw_error(std::string(where) + ": no Series-backed features found in input DataFrame.");
   }
   return names;
 }
@@ -2399,7 +2399,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2414,7 +2414,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2429,7 +2429,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2444,7 +2444,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2494,16 +2494,16 @@ template <>
     const Series& mapped,
     const char* where) {
   if (mapped.dim() != 2) {
-    throw std::runtime_error(std::string(where) + ": mapped feature matrix must be rank-2.");
+    ::pluss::throw_error(std::string(where) + ": mapped feature matrix must be rank-2.");
   }
   const auto sizes = mapped.sizes();
   if (sizes.size() != 2) {
-    throw std::runtime_error(std::string(where) + ": mapped feature matrix must have two dimensions.");
+    ::pluss::throw_error(std::string(where) + ": mapped feature matrix must have two dimensions.");
   }
   const std::int64_t sample_count = sizes[0];
   const std::int64_t feature_count = sizes[1];
   if (sample_count != frame.ncases()) {
-    throw std::runtime_error(std::string(where) + ": mapped sample count mismatch.");
+    ::pluss::throw_error(std::string(where) + ": mapped sample count mismatch.");
   }
   if (feature_count != static_cast<std::int64_t>(names.size())) {
     std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
@@ -2603,7 +2603,7 @@ inline prep::SimpleImputer& prep::SimpleImputer::learn(const pluss::table::DataF
 
 inline pluss::table::DataFrame prep::SimpleImputer::map(const pluss::table::DataFrame& frame, const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::SimpleImputer.map: call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::SimpleImputer.map: call learn() or learn_map() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::SimpleImputer.map");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2640,7 +2640,7 @@ inline prep::StandardScaler& prep::StandardScaler::learn(const pluss::table::Dat
 
 inline pluss::table::DataFrame prep::StandardScaler::map(const pluss::table::DataFrame& frame, const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::StandardScaler.map: call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::StandardScaler.map: call learn() or learn_map() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::StandardScaler.map");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2687,7 +2687,7 @@ inline prep::OutlierIsolator& prep::OutlierIsolator::learn(const pluss::table::D
 inline pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::DataFrame& frame,
                                                          const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::OutlierIsolator.infer: call learn() or learn_infer() first.");
+    ::pluss::throw_error("prep::OutlierIsolator.infer: call learn() or learn_infer() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.infer");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2698,7 +2698,7 @@ inline pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::Dat
 inline pluss::table::Thread prep::OutlierIsolator::score_samples(const pluss::table::DataFrame& frame,
                                                                  const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::OutlierIsolator.score_samples: call learn() or learn_infer() first.");
+    ::pluss::throw_error("prep::OutlierIsolator.score_samples: call learn() or learn_infer() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.score_samples");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2774,7 +2774,7 @@ inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss
   inline pluss::table::DataFrame prep::WrapperName::map(const pluss::table::DataFrame& frame,    \
                                                          const InferOptions& options) const {     \
     if (!learned_) {                                                                              \
-      throw std::runtime_error(std::string(Label) + ".map: call learn() or learn_map() first."); \
+      ::pluss::throw_error(std::string(Label) + ".map: call learn() or learn_map() first."); \
     }                                                                                             \
     const auto names = resolved_feature_names_(frame, Label ".map");                             \
     const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),   \
@@ -2816,7 +2816,7 @@ inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss
   inline Series prep::WrapperName::map(const pluss::table::Thread& feature,                      \
                                         const InferOptions& options) const {                      \
     if (!learned_) {                                                                              \
-      throw std::runtime_error(std::string(Label) + ".map(Thread): call learn() or learn_map() first."); \
+      ::pluss::throw_error(std::string(Label) + ".map(Thread): call learn() or learn_map() first."); \
     }                                                                                             \
     return resolve(core_.map(feature, options), Label ".map(Thread)");                           \
   }                                                                                               \
@@ -3147,11 +3147,11 @@ inline Series prep::CategoryIndexer::encode_feature_(const OneHotEncoder& encode
   (void)where;
   const Series hot = encoder.map(feature, options);
   if (!hot.defined() || hot.dim() != 2) {
-    throw std::runtime_error(std::string(where) + ": encoded feature matrix must be rank-2.");
+    ::pluss::throw_error(std::string(where) + ": encoded feature matrix must be rank-2.");
   }
   const auto sizes = hot.sizes();
   if (sizes.size() != 2 || sizes[1] <= 0) {
-    throw std::runtime_error(std::string(where) + ": encoded feature matrix must have nonzero width.");
+    ::pluss::throw_error(std::string(where) + ": encoded feature matrix must have nonzero width.");
   }
   const std::int64_t rows = sizes[0];
   const std::int64_t width = sizes[1];
@@ -3191,7 +3191,7 @@ inline void prep::CategoryIndexer::refresh_from_encoders_() {
 inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::Thread& feature,
                                                            const TrainOptions& options) {
   if (!feature.defined()) {
-    throw std::runtime_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
+    ::pluss::throw_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
   }
   if (feature.has_display_name()) {
     feature_names_ = {feature.display_name()};
@@ -3213,14 +3213,14 @@ inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::T
 inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::DataFrame& frame,
                                                            const TrainOptions& options) {
   if (!feature_names_pinned_ || feature_names_.empty()) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "prep::CategoryIndexer.learn(DataFrame): explicit feature selection is required; call .features({...}).");
   }
   encoders_.clear();
   encoders_.reserve(feature_names_.size());
   for (const auto& name : feature_names_) {
     if (!frame.has_feature(name)) {
-      throw std::runtime_error("prep::CategoryIndexer.learn(DataFrame): missing feature '" + name + "'.");
+      ::pluss::throw_error("prep::CategoryIndexer.learn(DataFrame): missing feature '" + name + "'.");
     }
     OneHotEncoder encoder(to_one_hot_options_(options_));
     encoder.learn(frame.features(name), options);
@@ -3233,10 +3233,10 @@ inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::D
 
 inline Series prep::CategoryIndexer::map(const pluss::table::Thread& feature, const InferOptions& options) const {
   if (!learned_ || encoders_.empty()) {
-    throw std::runtime_error("prep::CategoryIndexer.map(Thread): call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(Thread): call learn() or learn_map() first.");
   }
   if (encoders_.size() != 1) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "prep::CategoryIndexer.map(Thread): encoder was trained for multiple features; map(DataFrame) is required.");
   }
   return encode_feature_(encoders_.front(), feature, options_.one_based, options, "prep::CategoryIndexer.map(Thread)");
@@ -3245,10 +3245,10 @@ inline Series prep::CategoryIndexer::map(const pluss::table::Thread& feature, co
 inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame& frame,
                                                           const InferOptions& options) const {
   if (!learned_ || encoders_.empty()) {
-    throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): call learn() or learn_map() first.");
   }
   if (encoders_.size() != feature_names_.size()) {
-    throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): internal encoder state is inconsistent.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): internal encoder state is inconsistent.");
   }
 
   std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
@@ -3256,7 +3256,7 @@ inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::Da
   for (std::size_t i = 0; i < feature_names_.size(); ++i) {
     const auto& name = feature_names_[i];
     if (!frame.has_feature(name)) {
-      throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): missing feature '" + name + "'.");
+      ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): missing feature '" + name + "'.");
     }
     const auto& encoder = encoders_[i];
     const Series idx = encode_feature_(
@@ -3664,7 +3664,7 @@ private:
                                                                                const char* where) {
     const auto names = frame.series_features().feature_names();
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+      ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
     return names;
   }
@@ -3806,7 +3806,7 @@ private:
                                                                                const char* where) {
     const auto names = frame.series_features().feature_names();
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+      ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
     return names;
   }
@@ -3904,7 +3904,7 @@ struct SpecTuneResult {
   for (std::size_t i = 0; i < n && i < values.size(); ++i) {
     if (report.requested[i] == metric) return values[i];
   }
-  throw std::runtime_error("selection::tune: objective metric not present in assessment metrics.");
+  ::pluss::throw_error("selection::tune: objective metric not present in assessment metrics.");
 }
 
 [[nodiscard]] inline TuneResult tune(std::vector<Candidate> candidates,
@@ -3916,7 +3916,7 @@ struct SpecTuneResult {
                                      MetricKind objective_metric = MetricKind::Accuracy,
                                      TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
   if (candidates.empty()) {
-    throw std::runtime_error("selection::tune: at least one candidate is required.");
+    ::pluss::throw_error("selection::tune: at least one candidate is required.");
   }
   if (assess_options.metrics.empty()) {
     assess_options.metrics = {objective_metric};
@@ -3994,7 +3994,7 @@ struct SpecTuneResult {
                                                   objective_policy),
                         "selection::tune_specs.sweep");
   if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
-    throw std::runtime_error("selection::tune_specs: best_index is out of range.");
+    ::pluss::throw_error("selection::tune_specs: best_index is out of range.");
   }
   return SpecTuneResult{
       .report = report,
@@ -4053,7 +4053,7 @@ struct SpecTuneResult {
                                                   random),
                         "selection::probe_specs.probe");
   if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
-    throw std::runtime_error("selection::probe_specs: best_index is out of range.");
+    ::pluss::throw_error("selection::probe_specs: best_index is out of range.");
   }
   return SpecTuneResult{
       .report = report,

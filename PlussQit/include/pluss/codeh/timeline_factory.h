@@ -129,7 +129,7 @@ inline pluss::codeh::Timeline date_range(const pluss::codeh::Timeline& start,
                                          const pluss::codeh::Timeline& end,
                                          std::string_view freq,
                                          std::int64_t step = 1) {
-  return ::pluss::codeh::_compat::invoke<pluss::codeh::Timeline>("date_range", start, end, std::string(freq), step);
+  return ::pluss::codeh::_compat::invoke<pluss::codeh::Timeline>("date_range", start, {end, std::string(freq), step});
 }
 
 } // namespace pluss

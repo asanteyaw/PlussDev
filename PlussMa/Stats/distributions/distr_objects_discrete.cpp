@@ -33,6 +33,12 @@ std::array<double, 2> negbinom_params(double r, double p) {
   return {r, p};
 }
 
+double series_scalar_param_(const Series& param, const char* op, const char* name) {
+  PLUSS_CHECK(param.defined(), std::string(op) + ": missing " + name + " Series parameter");
+  PLUSS_CHECK(param.numel() == 1, std::string(op) + ": " + name + " Series parameter must be scalar for sampling");
+  return param.to(ScalarType::Float64).item<double>();
+}
+
 Series bernoulli_log_mgf_kernel(const Series& t, double p) {
   return t.expm1().mul(p).log1p();
 }
@@ -180,6 +186,10 @@ Series confint_matrix_series_(const std::vector<double>& params,
 } // namespace
 
 Series Bernoulli::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (p_series.defined()) {
+    const double p_value = series_scalar_param_(p_series, "Bernoulli::sample", "p_series");
+    return detail::sample_with_params(dst::Bernoulli, bernoulli_params(p_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Bernoulli, bernoulli_params(p), sizes, cfg, seed);
 }
 
@@ -188,26 +198,50 @@ Series Bernoulli::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series Bernoulli::sample_like(const Series& like, std::uint64_t seed) const {
+  if (p_series.defined()) {
+    const double p_value = series_scalar_param_(p_series, "Bernoulli::sample_like", "p_series");
+    return detail::preserve_like(detail::sample_like_with_params(dst::Bernoulli, bernoulli_params(p_value), like, seed), like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Bernoulli, bernoulli_params(p), like, seed), like);
 }
 
-Series Bernoulli::pdf(const Series& x) const { return detail::pdf_with_params(dst::Bernoulli, x, bernoulli_params(p)); }
+Series Bernoulli::pdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Bernoulli, x, pluss::sign_list(p_series));
+  }
+  return detail::pdf_with_params(dst::Bernoulli, x, bernoulli_params(p));
+}
 
 Series Bernoulli::logpdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Bernoulli, x, pluss::sign_list(p_series));
+  }
   return detail::logpdf_with_params(dst::Bernoulli, x, bernoulli_params(p));
 }
 
 Series Bernoulli::logcdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Bernoulli, x, pluss::sign_list(p_series));
+  }
   return detail::logcdf_with_params(dst::Bernoulli, x, bernoulli_params(p));
 }
 
-Series Bernoulli::cdf(const Series& x) const { return detail::cdf_with_params(dst::Bernoulli, x, bernoulli_params(p)); }
+Series Bernoulli::cdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Bernoulli, x, pluss::sign_list(p_series));
+  }
+  return detail::cdf_with_params(dst::Bernoulli, x, bernoulli_params(p));
+}
 
 Series Bernoulli::cgf(const Series& t) const {
+  PLUSS_CHECK(!p_series.defined(),
+              "Bernoulli::cgf: Series parameter is unsupported here; use scalar-object parameter");
   return bernoulli_log_mgf_kernel(t, p);
 }
 
 Series Bernoulli::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!p_series.defined(),
+              "Bernoulli::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Bernoulli::cumulant");
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
@@ -288,6 +322,15 @@ BernoulliFit Bernoulli::MLE(const Series& x) const {
 }
 
 Series Binomial::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (count_series.defined() || p_series.defined()) {
+    const double count_value = series_scalar_param_(count_series, "Binomial::sample", "count_series");
+    const double p_value = series_scalar_param_(p_series, "Binomial::sample", "p_series");
+    return detail::sample_with_params(dst::Binomial,
+                                      binomial_params(static_cast<std::int64_t>(std::llround(count_value)), p_value),
+                                      sizes,
+                                      cfg,
+                                      seed);
+  }
   return detail::sample_with_params(dst::Binomial, binomial_params(count, p), sizes, cfg, seed);
 }
 
@@ -296,26 +339,56 @@ Series Binomial::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series Binomial::sample_like(const Series& like, std::uint64_t seed) const {
+  if (count_series.defined() || p_series.defined()) {
+    const double count_value = series_scalar_param_(count_series, "Binomial::sample_like", "count_series");
+    const double p_value = series_scalar_param_(p_series, "Binomial::sample_like", "p_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::Binomial,
+                                        binomial_params(static_cast<std::int64_t>(std::llround(count_value)), p_value),
+                                        like,
+                                        seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Binomial, binomial_params(count, p), like, seed), like);
 }
 
-Series Binomial::pdf(const Series& x) const { return detail::pdf_with_params(dst::Binomial, x, binomial_params(count, p)); }
+Series Binomial::pdf(const Series& x) const {
+  if (count_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Binomial, x, pluss::sign_list(count_series, p_series));
+  }
+  return detail::pdf_with_params(dst::Binomial, x, binomial_params(count, p));
+}
 
 Series Binomial::logpdf(const Series& x) const {
+  if (count_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Binomial, x, pluss::sign_list(count_series, p_series));
+  }
   return detail::logpdf_with_params(dst::Binomial, x, binomial_params(count, p));
 }
 
 Series Binomial::logcdf(const Series& x) const {
+  if (count_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Binomial, x, pluss::sign_list(count_series, p_series));
+  }
   return detail::logcdf_with_params(dst::Binomial, x, binomial_params(count, p));
 }
 
-Series Binomial::cdf(const Series& x) const { return detail::cdf_with_params(dst::Binomial, x, binomial_params(count, p)); }
+Series Binomial::cdf(const Series& x) const {
+  if (count_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Binomial, x, pluss::sign_list(count_series, p_series));
+  }
+  return detail::cdf_with_params(dst::Binomial, x, binomial_params(count, p));
+}
 
 Series Binomial::cgf(const Series& t) const {
+  PLUSS_CHECK(!(count_series.defined() || p_series.defined()),
+              "Binomial::cgf: Series parameters are unsupported here; use scalar-object parameters");
   return bernoulli_log_mgf_kernel(t, p).mul(static_cast<double>(count));
 }
 
 Series Binomial::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(count_series.defined() || p_series.defined()),
+              "Binomial::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Binomial::cumulant");
   return Bernoulli{p}.cumulant(order).mul(static_cast<double>(count));
 }
@@ -394,6 +467,10 @@ BinomialFit Binomial::MLE(const Series& x) const {
 }
 
 Series Poisson::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (lambda_series.defined()) {
+    const double lambda_value = series_scalar_param_(lambda_series, "Poisson::sample", "lambda_series");
+    return detail::sample_with_params(dst::Poisson, poisson_params(lambda_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Poisson, poisson_params(lambda), sizes, cfg, seed);
 }
 
@@ -402,26 +479,50 @@ Series Poisson::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Poisson::sample_like(const Series& like, std::uint64_t seed) const {
+  if (lambda_series.defined()) {
+    const double lambda_value = series_scalar_param_(lambda_series, "Poisson::sample_like", "lambda_series");
+    return detail::preserve_like(detail::sample_like_with_params(dst::Poisson, poisson_params(lambda_value), like, seed), like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Poisson, poisson_params(lambda), like, seed), like);
 }
 
-Series Poisson::pdf(const Series& x) const { return detail::pdf_with_params(dst::Poisson, x, poisson_params(lambda)); }
+Series Poisson::pdf(const Series& x) const {
+  if (lambda_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Poisson, x, pluss::sign_list(lambda_series));
+  }
+  return detail::pdf_with_params(dst::Poisson, x, poisson_params(lambda));
+}
 
 Series Poisson::logpdf(const Series& x) const {
+  if (lambda_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Poisson, x, pluss::sign_list(lambda_series));
+  }
   return detail::logpdf_with_params(dst::Poisson, x, poisson_params(lambda));
 }
 
 Series Poisson::logcdf(const Series& x) const {
+  if (lambda_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Poisson, x, pluss::sign_list(lambda_series));
+  }
   return detail::logcdf_with_params(dst::Poisson, x, poisson_params(lambda));
 }
 
-Series Poisson::cdf(const Series& x) const { return detail::cdf_with_params(dst::Poisson, x, poisson_params(lambda)); }
+Series Poisson::cdf(const Series& x) const {
+  if (lambda_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Poisson, x, pluss::sign_list(lambda_series));
+  }
+  return detail::cdf_with_params(dst::Poisson, x, poisson_params(lambda));
+}
 
 Series Poisson::cgf(const Series& t) const {
+  PLUSS_CHECK(!lambda_series.defined(),
+              "Poisson::cgf: Series parameter is unsupported here; use scalar-object parameter");
   return t.exp().sub(1.0).mul(lambda);
 }
 
 Series Poisson::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!lambda_series.defined(),
+              "Poisson::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Poisson::cumulant");
   return detail::scalar_f64(lambda);
 }
@@ -493,6 +594,10 @@ PoissonFit Poisson::MLE(const Series& x) const {
 }
 
 Series Geometric::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (p_series.defined()) {
+    const double p_value = series_scalar_param_(p_series, "Geometric::sample", "p_series");
+    return detail::sample_with_params(dst::Geometric, geometric_params(p_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::Geometric, geometric_params(p), sizes, cfg, seed);
 }
 
@@ -501,27 +606,51 @@ Series Geometric::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series Geometric::sample_like(const Series& like, std::uint64_t seed) const {
+  if (p_series.defined()) {
+    const double p_value = series_scalar_param_(p_series, "Geometric::sample_like", "p_series");
+    return detail::preserve_like(detail::sample_like_with_params(dst::Geometric, geometric_params(p_value), like, seed), like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::Geometric, geometric_params(p), like, seed), like);
 }
 
-Series Geometric::pdf(const Series& x) const { return detail::pdf_with_params(dst::Geometric, x, geometric_params(p)); }
+Series Geometric::pdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::Geometric, x, pluss::sign_list(p_series));
+  }
+  return detail::pdf_with_params(dst::Geometric, x, geometric_params(p));
+}
 
 Series Geometric::logpdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::Geometric, x, pluss::sign_list(p_series));
+  }
   return detail::logpdf_with_params(dst::Geometric, x, geometric_params(p));
 }
 
 Series Geometric::logcdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::Geometric, x, pluss::sign_list(p_series));
+  }
   return detail::logcdf_with_params(dst::Geometric, x, geometric_params(p));
 }
 
-Series Geometric::cdf(const Series& x) const { return detail::cdf_with_params(dst::Geometric, x, geometric_params(p)); }
+Series Geometric::cdf(const Series& x) const {
+  if (p_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::Geometric, x, pluss::sign_list(p_series));
+  }
+  return detail::cdf_with_params(dst::Geometric, x, geometric_params(p));
+}
 
 Series Geometric::cgf(const Series& t) const {
+  PLUSS_CHECK(!p_series.defined(),
+              "Geometric::cgf: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_all_true(t.lt(-std::log1p(-p)), "Geometric::cgf requires every t element to satisfy t < -log(1 - p)");
   return t.add(std::log(p)).sub(t.exp().mul(1.0 - p).mul(-1.0).add(1.0).log());
 }
 
 Series Geometric::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!p_series.defined(),
+              "Geometric::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Geometric::cumulant");
   if (!(p > 0.0 && p <= 1.0)) {
     throw std::domain_error("Geometric::cumulant requires 0 < p <= 1");
@@ -608,6 +737,11 @@ GeometricFit Geometric::MLE(const Series& x) const {
 }
 
 Series NegativeBinomial::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
+  if (r_series.defined() || p_series.defined()) {
+    const double r_value = series_scalar_param_(r_series, "NegativeBinomial::sample", "r_series");
+    const double p_value = series_scalar_param_(p_series, "NegativeBinomial::sample", "p_series");
+    return detail::sample_with_params(dst::NegativeBinomial, negbinom_params(r_value, p_value), sizes, cfg, seed);
+  }
   return detail::sample_with_params(dst::NegativeBinomial, negbinom_params(r, p), sizes, cfg, seed);
 }
 
@@ -616,27 +750,54 @@ Series NegativeBinomial::sample(std::initializer_list<std::int64_t> sizes, Confi
 }
 
 Series NegativeBinomial::sample_like(const Series& like, std::uint64_t seed) const {
+  if (r_series.defined() || p_series.defined()) {
+    const double r_value = series_scalar_param_(r_series, "NegativeBinomial::sample_like", "r_series");
+    const double p_value = series_scalar_param_(p_series, "NegativeBinomial::sample_like", "p_series");
+    return detail::preserve_like(
+        detail::sample_like_with_params(dst::NegativeBinomial, negbinom_params(r_value, p_value), like, seed),
+        like);
+  }
   return detail::preserve_like(detail::sample_like_with_params(dst::NegativeBinomial, negbinom_params(r, p), like, seed), like);
 }
 
-Series NegativeBinomial::pdf(const Series& x) const { return detail::pdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p)); }
+Series NegativeBinomial::pdf(const Series& x) const {
+  if (r_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::pdf(dst::NegativeBinomial, x, pluss::sign_list(r_series, p_series));
+  }
+  return detail::pdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p));
+}
 
 Series NegativeBinomial::logpdf(const Series& x) const {
+  if (r_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logpdf(dst::NegativeBinomial, x, pluss::sign_list(r_series, p_series));
+  }
   return detail::logpdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p));
 }
 
 Series NegativeBinomial::logcdf(const Series& x) const {
+  if (r_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::logcdf(dst::NegativeBinomial, x, pluss::sign_list(r_series, p_series));
+  }
   return detail::logcdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p));
 }
 
-Series NegativeBinomial::cdf(const Series& x) const { return detail::cdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p)); }
+Series NegativeBinomial::cdf(const Series& x) const {
+  if (r_series.defined() || p_series.defined()) {
+    return ::pluss::subsp::stats::distr::cdf(dst::NegativeBinomial, x, pluss::sign_list(r_series, p_series));
+  }
+  return detail::cdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p));
+}
 
 Series NegativeBinomial::cgf(const Series& t) const {
+  PLUSS_CHECK(!(r_series.defined() || p_series.defined()),
+              "NegativeBinomial::cgf: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_all_true(t.lt(-std::log1p(-p)), "NegativeBinomial::cgf requires every t element to satisfy t < -log(1 - p)");
   return detail::scalar_f64(std::log(p)).mul(r).sub(t.exp().mul(1.0 - p).mul(-1.0).add(1.0).log().mul(r));
 }
 
 Series NegativeBinomial::cumulant(std::int64_t order) const {
+  PLUSS_CHECK(!(r_series.defined() || p_series.defined()),
+              "NegativeBinomial::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   return detail::scalar_f64(negbinom_cumulant_scalar(r, p, order));
 }
 

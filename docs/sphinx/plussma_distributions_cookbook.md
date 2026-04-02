@@ -76,11 +76,46 @@ const Series dens = pdt::pdf(dst::Normal, x, {0.0, 1.0});
 const Series logdens = pdt::logpdf(dst::Normal, x, {0.0, 1.0});
 const Series dist = pdt::cdf(dst::StudentT, x, {5.0});
 const Series logdist = pdt::logcdf(dst::Normal, x, {0.0, 1.0});
+const Series logdens_series = pdt::logpdf(dst::Normal, x, pluss::sign_list(zeros_like(x), ones_like(x)));
+const Series logdens_series_braces = pdt::logpdf(dst::Normal, x, {zeros_like(x), ones_like(x)});
 ```
 
 ### Expected output
 
 - `dens` positive; `logdens` finite for valid inputs; `dist` and `logdist` monotone in `x`.
+
+### Series Param Recipe
+
+```cpp
+const Series x = make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3});
+const Series lo = make_series(std::vector<double>{-1.0, -0.5, 0.0}, {3});
+const Series hi = make_series(std::vector<double>{1.0, 0.5, 2.0}, {3});
+
+const Series u = pdt::pdf(dst::Uniform, x, {lo, hi});
+const Series e = pdt::logpdf(dst::Exponential, x.abs(), {make_series(std::vector<double>{1.0, 2.0, 0.5}, {3})});
+const Series l = pdt::logpdf(dst::Logistic, x, pluss::sign_list(zeros_like(x), ones_like(x)));
+const Series ga = pdt::logpdf(dst::Gamma, x.abs().add(0.5), pluss::sign_list(zeros_like(x), ones_like(x),
+                                                                     make_series(std::vector<double>{2.0, 3.0, 4.0}, {3})));
+const Series be = pdt::logpdf(dst::Beta, x.add(1.0).div(2.0), pluss::sign_list(zeros_like(x), ones_like(x),
+                                                                   make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}),
+                                                                   make_series(std::vector<double>{5.0, 2.0, 1.5}, {3})));
+const Series chi = pdt::logpdf(dst::ChiSquare, x.abs().add(1.0), {make_series(std::vector<double>{1.0, 2.0, 5.0}, {3})});
+const Series g = pdt::logpdf(dst::Geometric, make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}), {make_series(std::vector<double>{0.2, 0.3, 0.4}, {3})});
+const Series nb = pdt::logpdf(dst::NegativeBinomial,
+                              make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}),
+                              pluss::sign_list(make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}),
+                                               make_series(std::vector<double>{0.3, 0.4, 0.5}, {3})));
+const Series h = pdt::pdf(dst::Hypergeometric,
+                          make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}),
+                          pluss::sign_list(make_series(std::vector<double>{20.0, 20.0, 20.0}, {3}),
+                                           make_series(std::vector<double>{7.0, 7.0, 7.0}, {3}),
+                                           make_series(std::vector<double>{5.0, 5.0, 5.0}, {3})));
+const Series gh = pdt::logpdf(dst::Gh, x, pluss::sign_list(make_series(std::vector<double>{-0.4, -0.3, -0.2}, {3}),
+                                                            make_series(std::vector<double>{2.0, 2.1, 2.2}, {3}),
+                                                            make_series(std::vector<double>{0.3, 0.2, 0.1}, {3}),
+                                                            make_series(std::vector<double>{0.0, 0.1, 0.2}, {3}),
+                                                            make_series(std::vector<double>{1.0, 1.1, 1.2}, {3})));
+```
 
 ## Recipe 3: `sample_like` For Shape/Dtype/Platform Inheritance
 
@@ -362,7 +397,7 @@ const Series dens = gm.pdf(make_series(std::vector<double>{-2.0, 0.0, 2.0}, {3})
 ### API Signature
 
 - `<Distribution>::MLE(x) -> <Distribution>Fit`
-- `<Distribution>Fit::{loglik, score, fisher_inf, vcov, stderr, confint, ...}`
+- `<Distribution>Fit::{loglik, score, fisher_inf, vcov, stderr, confint, confint_view, ...}`
 
 ### Notes
 
@@ -392,6 +427,8 @@ const Series ll = nfit.loglik(xn);
 const Series score = nfit.score(xn);
 const Series se = nfit.stderr(xn);
 const Series ci95 = nfit.confint(xn, 0.95);
+const auto ci95_view = nfit.confint_view(xn, 0.95); // MSharp::RangeView::Double
+// read ci95_view immediately (lightweight host view)
 ```
 
 ### Expected output
@@ -501,4 +538,3 @@ const bool ok = pdt::supports(dst::Gig);
 ### Expected output
 
 - `ok` is `true` for implemented kind constants.
-

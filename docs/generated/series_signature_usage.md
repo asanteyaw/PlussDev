@@ -225,13 +225,13 @@ auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
 - Signature: `Series& put_(const Series&, const Series&, bool)`
   Example: `auto t = x.clone(); pluss::codem::_compat::invoke_("put_", t, flat_idx, flat_src, false);`
 - Signature: `Series pdf()`
-  Example: `auto out = pos.pdf();`
+  Example: `auto out = pos.stat.pdf();`
 - Signature: `Series logpdf()`
-  Example: `auto out = pos.logpdf();`
+  Example: `auto out = pos.stat.logpdf();`
 - Signature: `Series logcdf()`
-  Example: `auto out = pos.logcdf();`
+  Example: `auto out = pos.stat.logcdf();`
 - Signature: `Series cdf()`
-  Example: `auto out = pos.cdf();`
+  Example: `auto out = pos.stat.cdf();`
 - Signature: `Series dct()`
   Example: `auto out = x.dct();`
 - Signature: `Series idct()`
@@ -245,9 +245,9 @@ auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
 - Signature: `Series histcounts(std::int64_t, double, double)`
   Example: `auto out = pos.histcounts(5, 0.0, 5.0);`
 - Signature: `Series skewness()`
-  Example: `auto out = x.skewness();`
+  Example: `auto out = x.stat.skewness();`
 - Signature: `Series kurtosis()`
-  Example: `auto out = x.kurtosis();`
+  Example: `auto out = x.stat.kurtosis();`
 - Signature: `Series nanvar()`
   Example: `auto out = x.nanvar();`
 - Signature: `Series nanstd()`
@@ -255,17 +255,17 @@ auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
 - Signature: `Series ediff1d()`
   Example: `auto out = x.ediff1d();`
 - Signature: `Series movsum(std::int64_t)`
-  Example: `auto out = x.movsum(3);`
+  Example: `auto out = x.stat.movsum(3);`
 - Signature: `Series movmean(std::int64_t)`
-  Example: `auto out = x.movmean(3);`
+  Example: `auto out = x.stat.movmean(3);`
 - Signature: `Series movmax(std::int64_t)`
-  Example: `auto out = x.movmax(3);`
+  Example: `auto out = x.stat.movmax(3);`
 - Signature: `Series movmin(std::int64_t)`
-  Example: `auto out = x.movmin(3);`
+  Example: `auto out = x.stat.movmin(3);`
 - Signature: `Series movstd(std::int64_t)`
-  Example: `auto out = x.movstd(3);`
+  Example: `auto out = x.stat.movstd(3);`
 - Signature: `Series movvar(std::int64_t)`
-  Example: `auto out = x.movvar(3);`
+  Example: `auto out = x.stat.movvar(3);`
 - Signature: `Series pdist2(const Series&)`
   Example: `auto out = m.pdist2(n);`
 - Signature: `Series cdist(const Series&)`

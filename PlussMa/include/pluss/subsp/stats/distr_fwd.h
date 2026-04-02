@@ -1,6 +1,8 @@
 #pragma once
 
 #include "pluss/codem/codem.h"
+#include "pluss/codem/stack_array.h"
+#include "pluss/msharp/msharp.h"
 #include "pluss/config.h"
 #include "pluss/export.h"
 #include "pluss/subsp/stats/rng.h"
@@ -137,13 +139,13 @@ CODEM_API bool supports(dst::Kind kind) noexcept;
 
 CODEM_API pluss::codem::Series sample(dst::Kind kind,
                                       std::span<const double> params,
-                                      std::span<const std::int64_t> sizes,
+                                      pluss::msharp::RangeView::Int sizes,
                                       pluss::codem::Config cfg = {},
                                       std::uint64_t seed = 0,
                                       rng::Method method = rng::Method::Pseudo);
 CODEM_API pluss::codem::Series sample(dst::Kind kind,
                                       std::initializer_list<double> params,
-                                      std::span<const std::int64_t> sizes,
+                                      pluss::msharp::RangeView::Int sizes,
                                       pluss::codem::Config cfg = {},
                                       std::uint64_t seed = 0,
                                       rng::Method method = rng::Method::Pseudo);
@@ -154,7 +156,7 @@ CODEM_API pluss::codem::Series sample(dst::Kind kind,
                                       std::uint64_t seed = 0,
                                       rng::Method method = rng::Method::Pseudo);
 CODEM_API pluss::codem::Series sample(dst::Kind kind,
-                                      std::span<const std::int64_t> sizes,
+                                      pluss::msharp::RangeView::Int sizes,
                                       pluss::codem::Config cfg = {},
                                       std::uint64_t seed = 0,
                                       rng::Method method = rng::Method::Pseudo);
@@ -182,7 +184,7 @@ CODEM_API pluss::codem::Series sample_like(dst::Kind kind,
 CODEM_API pluss::codem::Series mixture_normal(const pluss::codem::Series& weights,
                                               const pluss::codem::Series& means,
                                               const pluss::codem::Series& stddevs,
-                                              std::span<const std::int64_t> sizes,
+                                              pluss::msharp::RangeView::Int sizes,
                                               pluss::codem::Config cfg = {},
                                               std::uint64_t seed = 0,
                                               bool use_sobol = false);
@@ -193,22 +195,75 @@ CODEM_API pluss::codem::Series mixture_normal(const pluss::codem::Series& weight
                                               pluss::codem::Config cfg = {},
                                               std::uint64_t seed = 0,
                                               bool use_sobol = false);
+CODEM_API pluss::codem::Series mixture_normal(std::span<const double> weights,
+                                              std::span<const double> means,
+                                              std::span<const double> stddevs,
+                                              pluss::msharp::RangeView::Int sizes,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0,
+                                              bool use_sobol = false);
+CODEM_API pluss::codem::Series mixture_normal(std::initializer_list<double> weights,
+                                              std::initializer_list<double> means,
+                                              std::initializer_list<double> stddevs,
+                                              pluss::msharp::RangeView::Int sizes,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0,
+                                              bool use_sobol = false);
+CODEM_API pluss::codem::Series mixture_normal(std::initializer_list<double> weights,
+                                              std::initializer_list<double> means,
+                                              std::initializer_list<double> stddevs,
+                                              std::initializer_list<std::int64_t> sizes,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0,
+                                              bool use_sobol = false);
 CODEM_API pluss::codem::Series mixture_normal_pdf(const pluss::codem::Series& x,
                                                   const pluss::codem::Series& weights,
                                                   const pluss::codem::Series& means,
                                                   const pluss::codem::Series& stddevs);
+CODEM_API pluss::codem::Series mixture_normal_pdf(const pluss::codem::Series& x,
+                                                  std::span<const double> weights,
+                                                  std::span<const double> means,
+                                                  std::span<const double> stddevs);
+CODEM_API pluss::codem::Series mixture_normal_pdf(const pluss::codem::Series& x,
+                                                  std::initializer_list<double> weights,
+                                                  std::initializer_list<double> means,
+                                                  std::initializer_list<double> stddevs);
 CODEM_API pluss::codem::Series mixture_normal_logpdf(const pluss::codem::Series& x,
                                                      const pluss::codem::Series& weights,
                                                      const pluss::codem::Series& means,
                                                      const pluss::codem::Series& stddevs);
+CODEM_API pluss::codem::Series mixture_normal_logpdf(const pluss::codem::Series& x,
+                                                     std::span<const double> weights,
+                                                     std::span<const double> means,
+                                                     std::span<const double> stddevs);
+CODEM_API pluss::codem::Series mixture_normal_logpdf(const pluss::codem::Series& x,
+                                                     std::initializer_list<double> weights,
+                                                     std::initializer_list<double> means,
+                                                     std::initializer_list<double> stddevs);
 CODEM_API pluss::codem::Series mixture_normal_cdf(const pluss::codem::Series& x,
                                                   const pluss::codem::Series& weights,
                                                   const pluss::codem::Series& means,
                                                   const pluss::codem::Series& stddevs);
+CODEM_API pluss::codem::Series mixture_normal_cdf(const pluss::codem::Series& x,
+                                                  std::span<const double> weights,
+                                                  std::span<const double> means,
+                                                  std::span<const double> stddevs);
+CODEM_API pluss::codem::Series mixture_normal_cdf(const pluss::codem::Series& x,
+                                                  std::initializer_list<double> weights,
+                                                  std::initializer_list<double> means,
+                                                  std::initializer_list<double> stddevs);
 CODEM_API pluss::codem::Series mixture_normal_logcdf(const pluss::codem::Series& x,
                                                      const pluss::codem::Series& weights,
                                                      const pluss::codem::Series& means,
                                                      const pluss::codem::Series& stddevs);
+CODEM_API pluss::codem::Series mixture_normal_logcdf(const pluss::codem::Series& x,
+                                                     std::span<const double> weights,
+                                                     std::span<const double> means,
+                                                     std::span<const double> stddevs);
+CODEM_API pluss::codem::Series mixture_normal_logcdf(const pluss::codem::Series& x,
+                                                     std::initializer_list<double> weights,
+                                                     std::initializer_list<double> means,
+                                                     std::initializer_list<double> stddevs);
 
 CODEM_API pluss::codem::Series pdf(dst::Kind kind,
                                    const pluss::codem::Series& x,
@@ -216,6 +271,12 @@ CODEM_API pluss::codem::Series pdf(dst::Kind kind,
 CODEM_API pluss::codem::Series pdf(dst::Kind kind,
                                    const pluss::codem::Series& x,
                                    std::initializer_list<double> params);
+CODEM_API pluss::codem::Series pdf(dst::Kind kind,
+                                   const pluss::codem::Series& x,
+                                   pluss::msharp::RangeView::Series params);
+CODEM_API pluss::codem::Series pdf(dst::Kind kind,
+                                   const pluss::codem::Series& x,
+                                   const pluss::StackArray<pluss::Series>& params);
 
 CODEM_API pluss::codem::Series logpdf(dst::Kind kind,
                                       const pluss::codem::Series& x,
@@ -223,6 +284,12 @@ CODEM_API pluss::codem::Series logpdf(dst::Kind kind,
 CODEM_API pluss::codem::Series logpdf(dst::Kind kind,
                                       const pluss::codem::Series& x,
                                       std::initializer_list<double> params);
+CODEM_API pluss::codem::Series logpdf(dst::Kind kind,
+                                      const pluss::codem::Series& x,
+                                      pluss::msharp::RangeView::Series params);
+CODEM_API pluss::codem::Series logpdf(dst::Kind kind,
+                                      const pluss::codem::Series& x,
+                                      const pluss::StackArray<pluss::Series>& params);
 
 CODEM_API pluss::codem::Series cdf(dst::Kind kind,
                                    const pluss::codem::Series& x,
@@ -230,6 +297,12 @@ CODEM_API pluss::codem::Series cdf(dst::Kind kind,
 CODEM_API pluss::codem::Series cdf(dst::Kind kind,
                                    const pluss::codem::Series& x,
                                    std::initializer_list<double> params);
+CODEM_API pluss::codem::Series cdf(dst::Kind kind,
+                                   const pluss::codem::Series& x,
+                                   pluss::msharp::RangeView::Series params);
+CODEM_API pluss::codem::Series cdf(dst::Kind kind,
+                                   const pluss::codem::Series& x,
+                                   const pluss::StackArray<pluss::Series>& params);
 
 CODEM_API pluss::codem::Series logcdf(dst::Kind kind,
                                       const pluss::codem::Series& x,
@@ -237,5 +310,11 @@ CODEM_API pluss::codem::Series logcdf(dst::Kind kind,
 CODEM_API pluss::codem::Series logcdf(dst::Kind kind,
                                       const pluss::codem::Series& x,
                                       std::initializer_list<double> params);
+CODEM_API pluss::codem::Series logcdf(dst::Kind kind,
+                                      const pluss::codem::Series& x,
+                                      pluss::msharp::RangeView::Series params);
+CODEM_API pluss::codem::Series logcdf(dst::Kind kind,
+                                      const pluss::codem::Series& x,
+                                      const pluss::StackArray<pluss::Series>& params);
 
 } // namespace pluss::subsp::stats::distr

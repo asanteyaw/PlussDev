@@ -140,10 +140,12 @@ set(CODEM_NATIVE_YAML ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/native_functi
 set(CODEM_GEN_SCRIPT  ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ops.py)
 set(SERIES_METHODS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_methods_gen_h.py)
 set(SERIES_METHODS_SEED_LIST ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_seed.txt)
+set(SERIES_METHODS_TYPED_YAML ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_typed.yaml)
 
 
 set(SERIES_OPSINTERNAL_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_methods_from_opsinternal.py)
 set(SERIES_OPSINTERNAL_H ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/OpsInternal.h)
+set(SERIES_OPSINTERNAL_CPP ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/OpsInternal.cpp)
 
 set(SERIES_OPSINTERNAL_DECLS ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.inc)
 set(SERIES_OPSINTERNAL_DEFS  ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.cpp.inc)
@@ -156,7 +158,7 @@ add_custom_command(
           --series-header ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/Series.h
           --out-decls ${SERIES_OPSINTERNAL_DECLS}
           --out-defs  ${SERIES_OPSINTERNAL_DEFS}
-  DEPENDS ${SERIES_OPSINTERNAL_H} ${SERIES_OPSINTERNAL_GEN_SCRIPT}
+  DEPENDS ${SERIES_OPSINTERNAL_H} ${SERIES_OPSINTERNAL_CPP} ${SERIES_OPSINTERNAL_GEN_SCRIPT}
   COMMENT "Generating Series method wrappers from OpsInternal.h"
 )
 
@@ -168,8 +170,9 @@ add_custom_command(
           --yaml ${CODEM_NATIVE_YAML}
           --opsinternal ${SERIES_OPSINTERNAL_H}
           --seed-list ${SERIES_METHODS_SEED_LIST}
+          --typed-yaml ${SERIES_METHODS_TYPED_YAML}
           --out ${SERIES_METHODS_GEN_HEADER}
-  DEPENDS ${CODEM_NATIVE_YAML} ${SERIES_OPSINTERNAL_H} ${SERIES_METHODS_SEED_LIST} ${SERIES_METHODS_GEN_SCRIPT}
+  DEPENDS ${CODEM_NATIVE_YAML} ${SERIES_OPSINTERNAL_H} ${SERIES_METHODS_SEED_LIST} ${SERIES_METHODS_TYPED_YAML} ${SERIES_METHODS_GEN_SCRIPT}
   COMMENT "Generating SeriesMethodsGen.h from native_functions.yaml"
 )
 
@@ -700,6 +703,7 @@ if (PLUSSQIT_BUILD_TESTS)
 
     add_executable(plussqit_codem_autodiff_tests
       tests/CodeM/test_patch67_autodiff_transforms.cpp
+      tests/CodeM/test_patch167_cpu_autodiff_parity.cpp
     )
     target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)

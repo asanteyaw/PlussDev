@@ -48,6 +48,21 @@ using pluss::codem::warn;
 
 constexpr double kPi = 3.14159265358979323846;
 
+Series invoke(std::string_view op, const Series& self, ArgView args_view) {
+  Args args(args_view.begin(), args_view.end());
+  return invoke_any(op, self, args);
+}
+
+Series& invoke_(std::string_view op, Series& self, ArgView args_view) {
+  Args args(args_view.begin(), args_view.end());
+  return invoke_any_(op, self, args);
+}
+
+Series& invoke_(std::string_view op, const Series& self, ArgView args_view) {
+  Args args(args_view.begin(), args_view.end());
+  return invoke_any_(op, mut_(self), args);
+}
+
 
 static std::string sig(std::string_view op, const Args& args) {
   std::ostringstream os;
@@ -3541,13 +3556,21 @@ static void throw_outsourced_linalg_(std::string_view op) {
       std::string(op) + "(...) instead.");
 }
 
+[[noreturn]] static void rethrow_dispatch_error_(std::string_view lane, std::string_view op, const std::exception& e) {
+  throw_error(
+      std::string("CodeM ") + std::string(lane) + " dispatch failed for '" + std::string(op) +
+      "': " + e.what());
+}
+
 Series invoke_any(std::string_view op, const Series& self, const Args& args) {
-  op = canonical_op(op);
-  if (is_outsourced_linalg_op(op)) {
-    throw_outsourced_linalg_(op);
-  }
-  ops_internal::PlatformScope platform_scope(self.platform());
-  validate_series_arg_platforms(op, self, args);
+  const std::string op_snapshot(op);
+  try {
+    op = canonical_op(op);
+    if (is_outsourced_linalg_op(op)) {
+      throw_outsourced_linalg_(op);
+    }
+    ops_internal::PlatformScope platform_scope(self.platform());
+    validate_series_arg_platforms(op, self, args);
 
   if (op == "_backward" || op == "reverse") {
     std::optional<Series> seed;
@@ -3736,6 +3759,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
     if (op == "alias") return self;
     if (op == "data") return self;
+    if (op == "values_view") return self;
+    if (op == "values_copy") return self.clone();
     if (op == "detach") return series_tape::separate(self);
     if (op == "_lazy_clone") return self.clone();
     if (op == "_neg_view") return ops_internal::neg(self);
@@ -3918,6 +3943,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "float_power") return pow_scalar(self, s);
       if (op == "floor_divide") return ops_internal::floor(div_scalar(self, s));
       if (op == "pow") return pow_scalar(self, s);
+      if (op == "norm") return self.norm(s);
       if (op == "copysign") {
         const double sign = std::signbit(s) ? -1.0 : 1.0;
         return mul_scalar(ops_internal::abs(self), sign);
@@ -4257,6 +4283,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "chunk" || op == "unsafe_chunk") return chunk_first(self, (std::int64_t)x, (std::int64_t)y);
       if (op == "tensor_split") return tensor_split_first(self, args[0], (std::int64_t)y);
       if (op == "diff") return diff_impl(self, (std::int64_t)x, (std::int64_t)y);
+      if (op == "flatten") return self.flatten((std::int64_t)x, (std::int64_t)y);
       if (op == "movsum") return mov_impl(self, (std::int64_t)x, (std::int64_t)y, MovKind::Sum);
       if (op == "movmean") return mov_impl(self, (std::int64_t)x, (std::int64_t)y, MovKind::Mean);
       if (op == "movmax") return mov_impl(self, (std::int64_t)x, (std::int64_t)y, MovKind::Max);
@@ -4369,6 +4396,9 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (std::holds_alternative<const Series*>(a0) && is_numeric_scalar_arg(args[1])) {
       const Series& other = as_series(args[0]);
       const double s = as_double(args[1]);
+      // Torch-style add/sub signatures: add(other, alpha), sub(other, alpha)
+      if (op == "add") return ops_internal::add(self, mul_scalar(other, s));
+      if (op == "sub") return ops_internal::sub(self, mul_scalar(other, s));
       if (op == "where") return self.where(other, s);
       if (op == "diagonal_scatter") return diagonal_scatter_impl(self, other, (std::int64_t)s);
       if (op == "cholesky_solve") return cholesky_solve_impl(self, other, s != 0.0);
@@ -4392,6 +4422,10 @@ if (is_numeric_scalar_arg(args[0]) &&
     std::holds_alternative<const Series*>(a1)) {
   const auto dim = as_i64(args[0]);
   const Series& other = as_series(args[1]);
+  if (op == "index_put" || op == "put") {
+    Series index = Series::full({1}, static_cast<double>(dim), ScalarType::Int64).to(self.platform(), ScalarType::Int64);
+    return put_dispatch_copy_(self, index, other, /*accumulate=*/false);
+  }
   if (op == "gather") return self.gather(dim, other);
   if (op == "take_along_dim") return self.gather(dim, other);
   if (op == "index_select") return index_select_dispatch_(self, dim, other);
@@ -4454,6 +4488,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       const bool b = as_bool(args[2]);
       if (op == "topk") return topk_values_only(self, x, y, b, /*sorted=*/true);
       if (op == "kthvalue") return kthvalue_values_only(self, x, y, b);
+      if (op == "norm") return self.norm(as_double(args[0]), y, b);
       return not_impl(op, args, self);
     }
 
@@ -4776,15 +4811,26 @@ if (is_numeric_scalar_arg(args[0]) &&
     return not_impl(op, args, self);
   }
 
-  return not_impl(op, args, self);
+    return not_impl(op, args, self);
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const std::exception& e) {
+    rethrow_dispatch_error_("out-of-place", op_snapshot, e);
+  } catch (...) {
+    throw_error(
+        std::string("CodeM out-of-place dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
-  op = canonical_inplace_op(op);
-  ops_internal::PlatformScope platform_scope(self.platform());
-  validate_series_arg_platforms(op, self, args);
-  check_inplace_autograd_write_(op, self);
-  InplaceVersionGuard version_guard(self, inplace_op_mutates_value_(op));
+  const std::string op_snapshot(op);
+  try {
+    op = canonical_inplace_op(op);
+    ops_internal::PlatformScope platform_scope(self.platform());
+    validate_series_arg_platforms(op, self, args);
+    check_inplace_autograd_write_(op, self);
+    InplaceVersionGuard version_guard(self, inplace_op_mutates_value_(op));
 
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;
@@ -4870,6 +4916,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     }
     if (op == "rename_" || op == "set_") return self;
     if (op == "abs_") { self = ops_internal::abs(self); return self; }
+    if (op == "signbit_") {
+      self = ops_internal::lt(self, scalar_like(self, 0.0)).to(self.scalar_type());
+      return self;
+    }
     if (op == "bitwise_not_") return ops_internal::bitwise_not_(self);
     if (op == "squeeze_") { self = ops_internal::squeeze(self); return self; }
     if (op == "t_") {
@@ -5084,6 +5134,14 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (std::holds_alternative<const Series*>(a0) && is_numeric_scalar_arg(args[1])) {
       const Series& other = as_series(args[0]);
       const double s = as_double(args[1]);
+      if (op == "add_") {
+        self = ops_internal::add(self, mul_scalar(other, s));
+        return self;
+      }
+      if (op == "sub_") {
+        self = ops_internal::sub(self, mul_scalar(other, s));
+        return self;
+      }
       if (op == "lerp_") {
         self = ops_internal::add(self, mul_scalar(ops_internal::sub(other, self), s));
         return self;
@@ -5097,6 +5155,16 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
             Series::full({other.numel()}, s, self.scalar_type()).to(self.platform()),
             /*accumulate=*/false);
         return self;
+      }
+      return not_impl_inplace(op, args, self);
+    }
+    if (is_numeric_scalar_arg(args[0]) && std::holds_alternative<const Series*>(a1)) {
+      const auto index_value = as_i64(args[0]);
+      const Series& src = as_series(args[1]);
+      if (op == "index_put_" || op == "put_") {
+        Series index = Series::full({1}, static_cast<double>(index_value), ScalarType::Int64)
+                           .to(self.platform(), ScalarType::Int64);
+        return put_dispatch_inplace_(self, index, src, /*accumulate=*/false);
       }
       return not_impl_inplace(op, args, self);
     }
@@ -5318,7 +5386,16 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     return not_impl_inplace(op, args, self);
   }
 
-  return not_impl_inplace(op, args, self);
+    return not_impl_inplace(op, args, self);
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const std::exception& e) {
+    rethrow_dispatch_error_("in-place", op_snapshot, e);
+  } catch (...) {
+    throw_error(
+        std::string("CodeM in-place dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 } // namespace pluss::codem::_compat

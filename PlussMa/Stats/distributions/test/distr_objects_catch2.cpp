@@ -703,7 +703,7 @@ TEST_CASE("functional and object normal logcdf stay finite in the far left tail"
 
   const double functional = as_f64_scalar(logcdf(dst::Normal, x, std::initializer_list<double>{}));
   const double object = as_f64_scalar(Normal{}.logcdf(x));
-  const double shortcut = as_f64_scalar(x.logcdf());
+  const double shortcut = as_f64_scalar(x.stat.logcdf());
   const double naive = as_f64_scalar(cdf(dst::Normal, x, std::initializer_list<double>{}).log());
 
   REQUIRE(std::isfinite(functional));

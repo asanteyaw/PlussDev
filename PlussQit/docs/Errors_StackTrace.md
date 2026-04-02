@@ -2,10 +2,18 @@
 
 PlussQit provides deterministic, portable error reporting suitable for production.
 
-- Throws `pluss::codem::Error` with:
+- Throws `pluss::Error` with:
   - user-visible message
   - triggering C++ source location (`std::source_location`)
   - logical stack trace of library calls
+
+`pluss::codem::Error` is a compatibility alias to `pluss::Error`.
+
+Native trace controls:
+
+- default: focused `file -> pluss trigger` call trace
+- `PLUSS_ERROR_NATIVE_TRACE=full`: full native trace
+- `PLUSS_ERROR_NATIVE_TRACE=0` (or `off`/`false`): disable native trace section
 
 ## Call guards
 

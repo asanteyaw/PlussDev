@@ -76,4 +76,8 @@ ols_regression_test 8 0.0335488
 glm_regression_test 4 0.0803258
 quantile_regression_test 4 0.0678699
 poly_regression_test 3 0.0877934
+scalar overloads for add/sub/mul/div/pow and comparisons 1 0.312377
+index_put overwrite and accumulate 1 0.0110671
+index_put_ writes into original storage 1 0.00862817
+index_put_ mixed bool/int uses torch-like path 1 0.00762867
 ---

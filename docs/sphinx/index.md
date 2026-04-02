@@ -41,6 +41,8 @@ aux
 aux_tutorial
 tils_env
 loader
+io_save_load_guide
+error_handling
 autograd
 autograd_api_reference
 autodiff_architecture

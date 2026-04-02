@@ -133,7 +133,7 @@ public:
 
   void set_group_options(std::size_t group_index, const MinimaxOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -183,13 +183,13 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::restore_state: group count mismatch");
     }
     if (state.step < 0) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax::restore_state: step must be non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::restore_state: step must be non-negative");
     }
     if (!std::isfinite(state.moving_violation) || state.moving_violation < 0.0) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax::restore_state: moving_violation must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::restore_state: moving_violation must be finite and >= 0");
     }
     for (const auto& options : state.group_options) {
       validate_options_(options);
@@ -248,70 +248,70 @@ private:
 
   static void validate_options_(const MinimaxOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: learning_rate must be positive and finite");
     }
     if (!(options.beta1 >= 0.0 && options.beta1 < 1.0) || !std::isfinite(options.beta1)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: beta1 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: beta1 must be in [0, 1)");
     }
     if (!(options.beta2 >= 0.0 && options.beta2 < 1.0) || !std::isfinite(options.beta2)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: beta2 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: beta2 must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: epsilon must be positive and finite");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: weight_decay must be finite and non-negative");
     }
     if (!(options.momentum >= 0.0) || !std::isfinite(options.momentum)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: momentum must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: momentum must be finite and >= 0");
     }
     if (!(options.rmsprop_alpha >= 0.0 && options.rmsprop_alpha < 1.0) || !std::isfinite(options.rmsprop_alpha)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: rmsprop_alpha must be in [0,1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: rmsprop_alpha must be in [0,1)");
     }
     if (!(options.dual_learning_rate >= 0.0) || !std::isfinite(options.dual_learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: dual_learning_rate must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: dual_learning_rate must be finite and >= 0");
     }
     if (!(options.equality_penalty >= 0.0) || !std::isfinite(options.equality_penalty)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: equality_penalty must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: equality_penalty must be finite and >= 0");
     }
     if (!(options.inequality_penalty >= 0.0) || !std::isfinite(options.inequality_penalty)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: inequality_penalty must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: inequality_penalty must be finite and >= 0");
     }
     if (options.nan_recovery_attempts < 0) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: nan_recovery_attempts must be >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: nan_recovery_attempts must be >= 0");
     }
     if (!(options.nan_recovery_shrink > 0.0 && options.nan_recovery_shrink < 1.0) ||
         !std::isfinite(options.nan_recovery_shrink)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: nan_recovery_shrink must be in (0,1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: nan_recovery_shrink must be in (0,1)");
     }
     if (!(options.dual_exponential_decay > 0.0) || !std::isfinite(options.dual_exponential_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: dual_exponential_decay must be finite and > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: dual_exponential_decay must be finite and > 0");
     }
     if (!(options.penalty_exponential_growth > 0.0) || !std::isfinite(options.penalty_exponential_growth)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: penalty_exponential_growth must be finite and > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: penalty_exponential_growth must be finite and > 0");
     }
     if (!(options.violation_target > 0.0) || !std::isfinite(options.violation_target)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: violation_target must be finite and > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: violation_target must be finite and > 0");
     }
     if (!(options.schedule_min_scale > 0.0 && options.schedule_min_scale <= options.schedule_max_scale) ||
         !std::isfinite(options.schedule_min_scale) || !std::isfinite(options.schedule_max_scale)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: invalid schedule scale bounds");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: invalid schedule scale bounds");
     }
   }
 
   static std::vector<Series*> flatten_groups_(const std::vector<MinimaxGroup>& groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Minimax: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Minimax: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::Minimax: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::Minimax: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -360,7 +360,7 @@ private:
     }
     for (std::size_t i = 1; i < groups_.size(); ++i) {
       if (!same_constraint_controls_(groups_[0].options, groups_[i].options)) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Minimax: all groups must share identical constraint control options");
       }
     }
@@ -377,20 +377,20 @@ private:
                                          const std::vector<Series>& ref,
                                          const char* where) {
     if (state.size() != ref.size()) {
-      throw std::runtime_error(std::string(where) + ": state size mismatch");
+      ::pluss::throw_error(std::string(where) + ": state size mismatch");
     }
     for (std::size_t i = 0; i < state.size(); ++i) {
       const Series& s = state[i];
       const Series& r = ref[i];
       if (s.defined() != r.defined()) {
-        throw std::runtime_error(std::string(where) + ": definedness mismatch");
+        ::pluss::throw_error(std::string(where) + ": definedness mismatch");
       }
       if (!s.defined()) continue;
       if (s.platform() != r.platform()) {
-        throw std::runtime_error(std::string(where) + ": platform mismatch");
+        ::pluss::throw_error(std::string(where) + ": platform mismatch");
       }
       if (!same_shape_(s, r)) {
-        throw std::runtime_error(std::string(where) + ": shape mismatch");
+        ::pluss::throw_error(std::string(where) + ": shape mismatch");
       }
     }
   }
@@ -398,16 +398,16 @@ private:
   void validate_bounds_vector_(const std::vector<Series>& bounds, const char* name) const {
     if (bounds.empty()) return;
     if (bounds.size() != size()) {
-      throw std::runtime_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " size mismatch");
+      ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " size mismatch");
     }
     const auto& params = parameters();
     for (std::size_t i = 0; i < bounds.size(); ++i) {
       if (!bounds[i].defined()) continue;
       if (bounds[i].platform() != params[i]->platform()) {
-        throw std::runtime_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " platform mismatch");
+        ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " platform mismatch");
       }
       if (!same_shape_(bounds[i], *params[i]) && bounds[i].numel() != 1) {
-        throw std::runtime_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " shape mismatch");
+        ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " shape mismatch");
       }
     }
   }
@@ -417,21 +417,21 @@ private:
     validate_bounds_vector_(constraints_.upper_bounds, "upper_bounds");
 
     if (!constraints_.equalities && constraints_.equalities_trace) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Minimax: equalities_trace requires equalities callback");
     }
     if (!constraints_.inequalities && constraints_.inequalities_trace) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Minimax: inequalities_trace requires inequalities callback");
     }
 
     if (!constraint_options_().enable_constraint_autodiff) return;
     if (constraints_.equalities && !constraints_.equalities_trace) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Minimax: equalities callback requires equalities_trace for autodiff constraints");
     }
     if (constraints_.inequalities && !constraints_.inequalities_trace) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Minimax: inequalities callback requires inequalities_trace for autodiff constraints");
     }
   }
@@ -658,11 +658,11 @@ private:
     if (constraints_.equalities) {
       const auto residuals = constraints_.equalities(params_value);
       if (residuals.size() != eq_multipliers_.size()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Minimax: equalities residual size changed at runtime");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: equalities residual size changed at runtime");
       }
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         if (!same_shape_(residuals[i], eq_multipliers_[i])) {
-          throw std::runtime_error("pluss::ai::nn::optim::Minimax: equality residual shape changed at runtime");
+          ::pluss::throw_error("pluss::ai::nn::optim::Minimax: equality residual shape changed at runtime");
         }
         eq_multipliers_[i] = eq_multipliers_[i].add(residuals[i].mul(dual_lr));
         max_violation = std::max(max_violation, reduction_max_abs_(residuals[i]));
@@ -672,11 +672,11 @@ private:
     if (constraints_.inequalities) {
       const auto residuals = constraints_.inequalities(params_value);
       if (residuals.size() != ineq_multipliers_.size()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Minimax: inequalities residual size changed at runtime");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: inequalities residual size changed at runtime");
       }
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         if (!same_shape_(residuals[i], ineq_multipliers_[i])) {
-          throw std::runtime_error("pluss::ai::nn::optim::Minimax: inequality residual shape changed at runtime");
+          ::pluss::throw_error("pluss::ai::nn::optim::Minimax: inequality residual shape changed at runtime");
         }
         const Series violation = residuals[i].relu();
         ineq_multipliers_[i] = ineq_multipliers_[i]
@@ -809,7 +809,7 @@ private:
           params_value);
       (void)penalty_value;
       if (constraint_grads.size() != total_grads.size()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Minimax: constraint gradient size mismatch");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: constraint gradient size mismatch");
       }
       for (std::size_t i = 0; i < total_grads.size(); ++i) {
         if (!constraint_grads[i].defined()) continue;

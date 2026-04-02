@@ -715,8 +715,8 @@ namespace pluss {
     return pile(values.data(), dim);
   }
 
-  inline pluss::Series unite(StackArray<Series> values, std::int64_t dim = 0) {
-    return unite(values.data(), dim);
+  inline pluss::Series unite(StackArray<Series> values, std::int64_t dim = 0, bool strict_dtype = true) {
+    return unite(values.data(), dim, strict_dtype);
   }
 
 } // namespace pluss

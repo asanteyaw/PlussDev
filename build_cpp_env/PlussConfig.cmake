@@ -34,6 +34,7 @@ endif()
 
 string(FIND "${_pluss_targets_content}" "Arrow::arrow" _pluss_needs_arrow)
 string(FIND "${_pluss_targets_content}" "Parquet::parquet" _pluss_needs_parquet)
+string(FIND "${_pluss_targets_content}" "CURL::libcurl" _pluss_needs_curl)
 
 if(NOT _pluss_needs_arrow EQUAL -1)
   find_dependency(Arrow CONFIG QUIET)
@@ -57,6 +58,10 @@ if(NOT _pluss_needs_parquet EQUAL -1)
   endif()
 endif()
 
+if(NOT _pluss_needs_curl EQUAL -1)
+  find_dependency(CURL QUIET)
+endif()
+
 if(NOT _pluss_needs_arrow EQUAL -1 AND NOT TARGET Arrow::arrow AND NOT TARGET Arrow::arrow_shared)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
@@ -70,6 +75,14 @@ if(NOT _pluss_needs_parquet EQUAL -1 AND NOT TARGET Parquet::parquet AND NOT TAR
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
       "Pluss SDK requires Parquet for PlussMic parquet support, but Parquet CMake targets were not found. "
       "Install Arrow/Parquet and add their prefix to CMAKE_PREFIX_PATH (for example your conda env).")
+  return()
+endif()
+
+if(NOT _pluss_needs_curl EQUAL -1 AND NOT TARGET CURL::libcurl)
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+      "Pluss SDK requires libcurl for URL loading support, but CURL::libcurl was not found. "
+      "Install libcurl (or build Pluss SDK with bundled curl enabled) and retry.")
   return()
 endif()
 

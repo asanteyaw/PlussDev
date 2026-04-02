@@ -6,6 +6,7 @@
 #include <numbers>
 #include <stdexcept>
 #include <string>
+#include <array>
 #include <vector>
 
 namespace {
@@ -123,7 +124,7 @@ int main() {
 
   const Series zero = pluss::make_series(0.0, f64);
   expect(
-      approx(as_f64_scalar(pdf(dst::Normal, zero, std::initializer_list<double>{})),
+      approx(as_f64_scalar(pdf(dst::Normal, zero, {})),
              1.0 / std::sqrt(2.0 * std::numbers::pi_v<double>),
              1e-10),
       "normal pdf at 0",
@@ -135,27 +136,27 @@ int main() {
          "normal logcdf at 0",
          &failures);
   expect(
-      approx(as_f64_scalar(zero.pdf()),
+      approx(as_f64_scalar(zero.stat.pdf()),
              1.0 / std::sqrt(2.0 * std::numbers::pi_v<double>),
              1e-10),
       "Series pdf() standard normal shortcut",
       &failures);
   expect(
-      approx(as_f64_scalar(zero.logpdf()),
+      approx(as_f64_scalar(zero.stat.logpdf()),
              std::log(1.0 / std::sqrt(2.0 * std::numbers::pi_v<double>)),
              1e-10),
       "Series logpdf() standard normal shortcut",
       &failures);
-  expect(approx(as_f64_scalar(zero.logcdf()), std::log(0.5), 1e-12), "Series logcdf() standard normal shortcut", &failures);
-  expect(approx(as_f64_scalar(zero.cdf()), 0.5, 1e-12), "Series cdf() standard normal shortcut", &failures);
+  expect(approx(as_f64_scalar(zero.stat.logcdf()), std::log(0.5), 1e-12), "Series logcdf() standard normal shortcut", &failures);
+  expect(approx(as_f64_scalar(zero.stat.cdf()), 0.5, 1e-12), "Series cdf() standard normal shortcut", &failures);
   expect(
-      approx(as_f64_scalar(zero.pdf(1.5)),
+      approx(as_f64_scalar(zero.stat.pdf(1.5)),
              as_f64_scalar(pdf(dst::Normal, zero, {0.0, 1.5})),
              1e-12),
       "Series pdf(stddev) shortcut",
       &failures);
   expect(
-      approx(as_f64_scalar(zero.cdf(0.0, 2.0)),
+      approx(as_f64_scalar(zero.stat.cdf(0.0, 2.0)),
              as_f64_scalar(cdf(dst::Normal, zero, {0.0, 2.0})),
              1e-12),
       "Series cdf(mean, stddev) shortcut",
@@ -486,7 +487,7 @@ int main() {
   const Series left_tail = pluss::make_series(-12.0, f64);
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Normal, left_tail, std::initializer_list<double>{}))), "normal logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(normal_obj.logcdf(left_tail))), "Normal object logcdf left tail finite", &failures);
-  expect(std::isfinite(as_f64_scalar(left_tail.logcdf())), "Series logcdf left tail finite", &failures);
+  expect(std::isfinite(as_f64_scalar(left_tail.stat.logcdf())), "Series logcdf left tail finite", &failures);
   expect(std::isinf(as_f64_scalar(cdf(dst::Normal, left_tail, std::initializer_list<double>{}).log())), "normal cdf().log() underflows in left tail", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Logistic, pluss::make_series(-50.0, f64), {0.0, 1.0}))), "logistic logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Laplace, pluss::make_series(-50.0, f64), {0.0, 1.0}))), "laplace logcdf left tail finite", &failures);
@@ -580,8 +581,8 @@ int main() {
   expect(std::isfinite(as_f64_scalar(logpdf(dst::Gig, one, {1.0, 2.0, 3.0}))), "gig logpdf finite", &failures);
   expect(std::isfinite(as_f64_scalar(logpdf(dst::Gh, zero, {1.0, 2.0, 0.5, 0.0, 1.0}))), "gh logpdf finite", &failures);
   expect(std::isfinite(as_f64_scalar(logpdf(dst::Nig, zero, {2.0, 0.5, 0.0, 1.0}))), "nig logpdf finite", &failures);
-  expect(approx(as_f64_scalar(cdf(dst::UShape, zero, {})), 0.5, 1e-12), "u cdf at 0", &failures);
-  expect(approx(as_f64_scalar(pdf(dst::Rademacher, pluss::make_series(1.0, f64), {})), 0.5, 1e-12),
+  expect(approx(as_f64_scalar(cdf(dst::UShape, zero, std::initializer_list<double>{})), 0.5, 1e-12), "u cdf at 0", &failures);
+  expect(approx(as_f64_scalar(pdf(dst::Rademacher, pluss::make_series(1.0, f64), std::initializer_list<double>{})), 0.5, 1e-12),
          "rademacher pdf at 1",
          &failures);
   expect(std::isfinite(as_f64_scalar(logpdf(dst::VonMises, zero, {0.0, 2.0}))), "vonmises logpdf finite", &failures);
@@ -797,6 +798,302 @@ int main() {
   expect(approx(sobol_2d.at(4), 0.75) && approx(sobol_2d.at(5), 0.25), "sobol 2d point 2", &failures);
   expect(approx(sobol_2d.at(6), 0.25) && approx(sobol_2d.at(7), 0.75), "sobol 2d point 3", &failures);
 
+  {
+    const Series x_vec = pluss::make_series(std::vector<double>{-1.0, 0.5, 2.0}, {3}, f64);
+    const Series mu_vec = pluss::make_series(std::vector<double>{0.0, 0.25, 1.0}, {3}, f64);
+    const Series sd_vec = pluss::make_series(std::vector<double>{1.0, 2.0, 0.5}, {3}, f64);
+    const std::array<Series, 2> normal_params{mu_vec, sd_vec};
+    const auto got = logpdf(dst::Normal, x_vec, pluss::sign_list(mu_vec, sd_vec)).to_vec<double>();
+    const auto got_span = logpdf(
+        dst::Normal,
+        x_vec,
+        pluss::msharp::RangeView::Series(std::span<const Series>(normal_params))).to_vec<double>();
+    const auto got_braces = logpdf(dst::Normal, x_vec, pluss::sign_list(mu_vec, sd_vec)).to_vec<double>();
+    const auto xh = x_vec.to_vec<double>();
+    const auto mh = mu_vec.to_vec<double>();
+    const auto sh = sd_vec.to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      const double z = (xh[i] - mh[i]) / sh[i];
+      const double expected = -0.5 * z * z - std::log(sh[i]) - 0.5 * std::log(2.0 * std::numbers::pi_v<double>);
+      expect(approx(got[i], expected, 1e-12), "normal logpdf Series params", &failures);
+      expect(approx(got_span[i], expected, 1e-12), "normal logpdf Series span params", &failures);
+      expect(approx(got_braces[i], expected, 1e-12), "normal logpdf Series brace params", &failures);
+    }
+
+    const auto calc_tip = [](const pluss::sign_list& list) {
+      return list[0].item<double>() + list[1].item<double>();
+    };
+    const Series s1 = pluss::make_series(1.25, f64);
+    const Series s2 = pluss::make_series(2.75, f64);
+    expect(approx(calc_tip({s1, s2}), 4.0, 1e-12), "SignList function signature with brace call", &failures);
+
+    const auto obj = pluss::distr::Normal{mu_vec, sd_vec}.logpdf(x_vec).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Normal object Series params parity", &failures);
+    }
+
+    const auto obj_inline =
+        pluss::distr::Normal{pluss::zeros_like(x_vec), pluss::ones_like(x_vec)}.logpdf(x_vec).to_vec<double>();
+    const auto stdn = logpdf(dst::Normal, x_vec, std::initializer_list<double>{0.0, 1.0}).to_vec<double>();
+    for (std::size_t i = 0; i < stdn.size(); ++i) {
+      expect(approx(obj_inline[i], stdn[i], 1e-12), "Normal inline object Series constructor usage", &failures);
+    }
+  }
+
+  {
+    const Series bx = pluss::make_series(std::vector<double>{0.0, 1.0, 1.0}, {3}, f64);
+    const Series bp = pluss::make_series(std::vector<double>{0.1, 0.2, 0.8}, {3}, f64);
+    const auto got = logpdf(dst::Bernoulli, bx, pluss::sign_list(bp)).to_vec<double>();
+    expect(approx(got[0], std::log(0.9), 1e-12), "bernoulli logpdf Series params [0]", &failures);
+    expect(approx(got[1], std::log(0.2), 1e-12), "bernoulli logpdf Series params [1]", &failures);
+    expect(approx(got[2], std::log(0.8), 1e-12), "bernoulli logpdf Series params [2]", &failures);
+
+    const auto obj = pluss::distr::Bernoulli{bp}.logpdf(bx).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Bernoulli object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series px = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64);
+    const Series pl = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, f64);
+    const auto got = logpdf(dst::Poisson, px, pluss::sign_list(pl)).to_vec<double>();
+    expect(approx(got[0], -1.0, 1e-12), "poisson logpdf Series params [0]", &failures);
+    expect(approx(got[1], -2.0 + std::log(2.0), 1e-12), "poisson logpdf Series params [1]", &failures);
+    expect(approx(got[2], -3.0 + 2.0 * std::log(3.0) - std::log(2.0), 1e-12), "poisson logpdf Series params [2]", &failures);
+
+    const auto obj = pluss::distr::Poisson{pl}.logpdf(px).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Poisson object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series bx = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64);
+    const Series bn = pluss::make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}, f64);
+    const Series bp = pluss::make_series(std::vector<double>{0.5, 0.4, 0.7}, {3}, f64);
+    const auto got = logpdf(dst::Binomial, bx, pluss::sign_list(bn, bp)).to_vec<double>();
+    expect(approx(got[0], std::log(0.25), 1e-12), "binomial logpdf Series params [0]", &failures);
+    expect(approx(got[1], std::log(3.0 * 0.4 * 0.6 * 0.6), 1e-12), "binomial logpdf Series params [1]", &failures);
+    expect(approx(got[2], std::log(6.0 * 0.7 * 0.7 * 0.3 * 0.3), 1e-12), "binomial logpdf Series params [2]", &failures);
+
+    const auto obj = pluss::distr::Binomial{bn, bp}.logpdf(bx).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Binomial object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series x_vec = pluss::make_series(std::vector<double>{0.8, 1.2, 2.1}, {3}, f64);
+    const Series m_vec = pluss::make_series(std::vector<double>{0.0, 0.1, 0.2}, {3}, f64);
+    const Series s_vec = pluss::make_series(std::vector<double>{0.5, 0.8, 1.1}, {3}, f64);
+    const auto fn = logpdf(dst::Lognormal, x_vec, pluss::sign_list(m_vec, s_vec)).to_vec<double>();
+    const auto obj = pluss::distr::Lognormal{m_vec, s_vec}.logpdf(x_vec).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      const bool same = (std::isnan(obj[i]) && std::isnan(fn[i])) || approx(obj[i], fn[i], 1e-12);
+      expect(same, "Lognormal object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series x_vec = pluss::make_series(std::vector<double>{-1.0, 0.2, 1.5}, {3}, f64);
+    const Series l_vec = pluss::make_series(std::vector<double>{0.0, 0.1, 0.2}, {3}, f64);
+    const Series s_vec = pluss::make_series(std::vector<double>{1.0, 0.7, 0.5}, {3}, f64);
+    const auto fn = logpdf(dst::Laplace, x_vec, pluss::sign_list(l_vec, s_vec)).to_vec<double>();
+    const auto obj = pluss::distr::Laplace{l_vec, s_vec}.logpdf(x_vec).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "Laplace object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series ux = pluss::make_series(std::vector<double>{-0.5, 0.25, 2.0}, {3}, f64);
+    const Series ulo = pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64);
+    const Series uhi = pluss::make_series(std::vector<double>{1.0, 1.0, 3.0}, {3}, f64);
+    const auto got = pdf(dst::Uniform, ux, pluss::sign_list(ulo, uhi)).to_vec<double>();
+    expect(approx(got[0], 0.5, 1e-12), "uniform pdf Series params [0]", &failures);
+    expect(approx(got[1], 1.0, 1e-12), "uniform pdf Series params [1]", &failures);
+    expect(approx(got[2], 0.5, 1e-12), "uniform pdf Series params [2]", &failures);
+    const auto obj = pluss::distr::Uniform{ulo, uhi}.pdf(ux).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Uniform object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series ex = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64);
+    const Series er = pluss::make_series(std::vector<double>{1.0, 2.0, 0.5}, {3}, f64);
+    const auto got = logpdf(dst::Exponential, ex, pluss::sign_list(er)).to_vec<double>();
+    expect(approx(got[0], 0.0, 1e-12), "exponential logpdf Series params [0]", &failures);
+    expect(approx(got[1], std::log(2.0) - 2.0, 1e-12), "exponential logpdf Series params [1]", &failures);
+    expect(approx(got[2], std::log(0.5) - 1.0, 1e-12), "exponential logpdf Series params [2]", &failures);
+    const auto obj = pluss::distr::Exponential{er}.logpdf(ex).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Exponential object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series lx = pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64);
+    const Series lloc = pluss::make_series(std::vector<double>{0.0, 0.1, -0.2}, {3}, f64);
+    const Series lsc = pluss::make_series(std::vector<double>{1.0, 0.5, 1.5}, {3}, f64);
+    const auto fn = logpdf(dst::Logistic, lx, pluss::sign_list(lloc, lsc)).to_vec<double>();
+    const auto obj = pluss::distr::Logistic{lloc, lsc}.logpdf(lx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "Logistic object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series ix = pluss::make_series(std::vector<double>{0.7, 1.2, 2.0}, {3}, f64);
+    const Series itheta = pluss::make_series(std::vector<double>{1.0, 1.5, 2.2}, {3}, f64);
+    const Series ichi = pluss::make_series(std::vector<double>{2.0, 2.5, 3.0}, {3}, f64);
+    const auto fn = logpdf(dst::InverseGaussian, ix, pluss::sign_list(itheta, ichi)).to_vec<double>();
+    const auto ig_obj = pluss::distr::InverseGaussian{itheta, ichi};
+    expect(ig_obj.theta_series.defined() && ig_obj.chi_series.defined(),
+           "InverseGaussian Series constructor stores series parameters",
+           &failures);
+    const auto obj = ig_obj.logpdf(ix).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-10), "InverseGaussian object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series rx = pluss::make_series(std::vector<double>{0.2, 1.0, 2.0}, {3}, f64);
+    const Series rs = pluss::make_series(std::vector<double>{0.5, 1.2, 2.0}, {3}, f64);
+    const auto fn = pdf(dst::Rayleigh, rx, pluss::sign_list(rs)).to_vec<double>();
+    const auto obj = pluss::distr::Rayleigh{rs}.pdf(rx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "Rayleigh object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series tx = pluss::make_series(std::vector<double>{-1.0, 0.5, 2.0}, {3}, f64);
+    const Series tnu = pluss::make_series(std::vector<double>{3.0, 5.0, 10.0}, {3}, f64);
+    const Series tloc = pluss::make_series(std::vector<double>{0.0, 0.2, 1.0}, {3}, f64);
+    const Series tsc = pluss::make_series(std::vector<double>{1.0, 0.8, 1.5}, {3}, f64);
+    const auto fn = logpdf(dst::StudentT, tx, pluss::sign_list(tnu, tloc, tsc)).to_vec<double>();
+    const auto obj = pluss::distr::StudentT{tnu, tloc, tsc}.logpdf(tx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-10), "StudentT object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series gx = pluss::make_series(std::vector<double>{0.5, 1.6, 3.2}, {3}, f64);
+    const Series gshape = pluss::make_series(std::vector<double>{2.0, 3.0, 1.5}, {3}, f64);
+    const Series gscale = pluss::make_series(std::vector<double>{1.0, 1.25, 0.8}, {3}, f64);
+    const Series gloc = pluss::make_series(std::vector<double>{0.0, 0.2, 0.1}, {3}, f64);
+    const auto fn = logpdf(dst::Gamma, gx, pluss::sign_list(gloc, gscale, gshape)).to_vec<double>();
+    const auto obj = pluss::distr::Gamma{gshape, gscale, gloc}.logpdf(gx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "Gamma object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series wx = pluss::make_series(std::vector<double>{0.5, 1.2, 3.0}, {3}, f64);
+    const Series wshape = pluss::make_series(std::vector<double>{1.5, 2.0, 3.0}, {3}, f64);
+    const Series wscale = pluss::make_series(std::vector<double>{1.0, 1.2, 0.8}, {3}, f64);
+    const auto fn = logpdf(dst::Weibull, wx, pluss::sign_list(wshape, wscale)).to_vec<double>();
+    const auto w_obj = pluss::distr::Weibull{wshape, wscale};
+    expect(w_obj.shape_series.defined() && w_obj.scale_series.defined(),
+           "Weibull Series constructor stores series parameters",
+           &failures);
+    const auto obj = w_obj.logpdf(wx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "Weibull object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series bx = pluss::make_series(std::vector<double>{0.2, 0.5, 0.8}, {3}, f64);
+    const Series blo = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0}, {3}, f64);
+    const Series bhi = pluss::make_series(std::vector<double>{1.0, 1.0, 1.0}, {3}, f64);
+    const Series ba = pluss::make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}, f64);
+    const Series bb = pluss::make_series(std::vector<double>{5.0, 2.0, 1.5}, {3}, f64);
+    const auto fn = logpdf(dst::Beta, bx, pluss::sign_list(blo, bhi, ba, bb)).to_vec<double>();
+    const auto obj = pluss::distr::Beta{blo, bhi, ba, bb}.logpdf(bx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "Beta object Series params parity", &failures);
+    }
+    const auto short_params = logpdf(dst::Beta, bx, pluss::sign_list(ba, bb)).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(short_params[i], fn[i], 1e-12), "Beta Series short param form parity", &failures);
+    }
+  }
+
+  {
+    const Series cx = pluss::make_series(std::vector<double>{1.0, 2.0, 4.0}, {3}, f64);
+    const Series cdf = pluss::make_series(std::vector<double>{1.0, 2.0, 5.0}, {3}, f64);
+    const auto fn = logpdf(dst::ChiSquare, cx, pluss::sign_list(cdf)).to_vec<double>();
+    const auto obj = pluss::distr::ChiSquare{cdf}.logpdf(cx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "ChiSquare object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series gx = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, f64);
+    const Series gp = pluss::make_series(std::vector<double>{0.2, 0.5, 1.0}, {3}, f64);
+    const auto got = pdf(dst::Geometric, gx, pluss::sign_list(gp)).to_vec<double>();
+    expect(approx(got[0], 0.2, 1e-12), "geometric pdf Series params [0]", &failures);
+    expect(approx(got[1], 0.25, 1e-12), "geometric pdf Series params [1]", &failures);
+    expect(approx(got[2], 0.0, 1e-12), "geometric pdf Series params [2]", &failures);
+    const auto obj = pluss::distr::Geometric{gp}.pdf(gx).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      expect(approx(obj[i], got[i], 1e-12), "Geometric object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series hx = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64);
+    const Series hN = pluss::make_series(std::vector<double>{20.0, 20.0, 20.0}, {3}, f64);
+    const Series hM = pluss::make_series(std::vector<double>{7.0, 7.0, 7.0}, {3}, f64);
+    const Series hn = pluss::make_series(std::vector<double>{5.0, 5.0, 5.0}, {3}, f64);
+    const auto got = pdf(dst::Hypergeometric, hx, pluss::sign_list(hN, hM, hn)).to_vec<double>();
+    for (std::size_t i = 0; i < got.size(); ++i) {
+      const Series xi = pluss::make_series(static_cast<double>(i), f64);
+      const double expected =
+          pdf(dst::Hypergeometric, xi, std::initializer_list<double>{20.0, 7.0, 5.0}).item<double>();
+      expect(approx(got[i], expected, 1e-12), "Hypergeometric Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series nx = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64);
+    const Series nr = pluss::make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}, f64);
+    const Series np = pluss::make_series(std::vector<double>{0.3, 0.4, 0.5}, {3}, f64);
+    const auto fn = logpdf(dst::NegativeBinomial, nx, pluss::sign_list(nr, np)).to_vec<double>();
+    const auto obj = pluss::distr::NegativeBinomial{nr, np}.logpdf(nx).to_vec<double>();
+    for (std::size_t i = 0; i < fn.size(); ++i) {
+      expect(approx(obj[i], fn[i], 1e-12), "NegativeBinomial object Series params parity", &failures);
+    }
+  }
+
+  {
+    const Series x_vec = pluss::make_series(std::vector<double>{-0.5, 0.0, 1.0}, {3}, f64);
+    const Series a_vec = pluss::make_series(std::vector<double>{2.0, 2.1, 2.2}, {3}, f64);
+    const Series b_vec = pluss::make_series(std::vector<double>{0.3, 0.2, 0.1}, {3}, f64);
+    const Series m_vec = pluss::make_series(std::vector<double>{0.0, 0.1, 0.2}, {3}, f64);
+    const Series s_vec = pluss::make_series(std::vector<double>{1.0, 1.1, 1.2}, {3}, f64);
+
+    const auto nig_fn = logpdf(dst::Nig, x_vec, pluss::sign_list(a_vec, b_vec, m_vec, s_vec)).to_vec<double>();
+    const auto nig_obj = pluss::distr::Nig{a_vec, b_vec, m_vec, s_vec}.logpdf(x_vec).to_vec<double>();
+    for (std::size_t i = 0; i < nig_fn.size(); ++i) {
+      expect(approx(nig_obj[i], nig_fn[i], 1e-9), "Nig object Series params parity", &failures);
+    }
+
+    const Series l_vec = pluss::make_series(std::vector<double>{-0.4, -0.3, -0.2}, {3}, f64);
+    const auto gh_fn = logpdf(dst::Gh, x_vec, pluss::sign_list(l_vec, a_vec, b_vec, m_vec, s_vec)).to_vec<double>();
+    const auto gh_obj = pluss::distr::Gh{l_vec, a_vec, b_vec, m_vec, s_vec}.logpdf(x_vec).to_vec<double>();
+    for (std::size_t i = 0; i < gh_fn.size(); ++i) {
+      expect(approx(gh_obj[i], gh_fn[i], 1e-9), "Gh object Series params parity", &failures);
+    }
+  }
+
   const Series mix_weights = pluss::make_series(std::vector<double>{1.0, 0.0}, {2}, f64);
   const Series mix_means = pluss::make_series(std::vector<double>{3.0, -4.0}, {2}, f64);
   const Series mix_stds = pluss::make_series(std::vector<double>{0.0, 5.0}, {2}, f64);
@@ -884,6 +1181,23 @@ int main() {
                            .to_vec<double>();
   expect(approx(deg_pdf[0], 0.0) && std::isinf(deg_pdf[1]) && approx(deg_pdf[2], 0.0),
          "mixture_normal_pdf degenerate component mass", &failures);
+
+  {
+    const Series x0 = pluss::make_series(std::vector<double>{0.0}, {1}, f64);
+    const double native_pdf =
+        mixture_normal_pdf(x0, std::initializer_list<double>{1.0, 0.0}, std::initializer_list<double>{0.0, 5.0}, std::initializer_list<double>{1.0, 2.0})
+            .item<double>();
+    const double series_pdf =
+        mixture_normal_pdf(x0, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).item<double>();
+    expect(approx(native_pdf, series_pdf, 1e-12), "mixture_normal_pdf native params parity", &failures);
+
+    const double native_cdf =
+        mixture_normal_cdf(x0, std::initializer_list<double>{1.0, 0.0}, std::initializer_list<double>{0.0, 5.0}, std::initializer_list<double>{1.0, 2.0})
+            .item<double>();
+    const double series_cdf =
+        mixture_normal_cdf(x0, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).item<double>();
+    expect(approx(native_cdf, series_cdf, 1e-12), "mixture_normal_cdf native params parity", &failures);
+  }
 
   if (failures != 0) {
     std::cerr << "distr_test: " << failures << " failure(s)\n";

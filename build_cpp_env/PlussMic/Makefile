@@ -518,6 +518,30 @@ src/loader/Loader.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/loader/Loader.cpp.s
 .PHONY : src/loader/Loader.cpp.s
 
+src/loader/SourceResolver.o: src/loader/SourceResolver.cpp.o
+.PHONY : src/loader/SourceResolver.o
+
+# target to build an object file
+src/loader/SourceResolver.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/loader/SourceResolver.cpp.o
+.PHONY : src/loader/SourceResolver.cpp.o
+
+src/loader/SourceResolver.i: src/loader/SourceResolver.cpp.i
+.PHONY : src/loader/SourceResolver.i
+
+# target to preprocess a source file
+src/loader/SourceResolver.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/loader/SourceResolver.cpp.i
+.PHONY : src/loader/SourceResolver.cpp.i
+
+src/loader/SourceResolver.s: src/loader/SourceResolver.cpp.s
+.PHONY : src/loader/SourceResolver.s
+
+# target to generate assembly for a file
+src/loader/SourceResolver.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/loader/SourceResolver.cpp.s
+.PHONY : src/loader/SourceResolver.cpp.s
+
 src/loader/parallel_csv_reader.o: src/loader/parallel_csv_reader.cpp.o
 .PHONY : src/loader/parallel_csv_reader.o
 
@@ -909,6 +933,9 @@ help:
 	@echo "... src/loader/Loader.o"
 	@echo "... src/loader/Loader.i"
 	@echo "... src/loader/Loader.s"
+	@echo "... src/loader/SourceResolver.o"
+	@echo "... src/loader/SourceResolver.i"
+	@echo "... src/loader/SourceResolver.s"
 	@echo "... src/loader/parallel_csv_reader.o"
 	@echo "... src/loader/parallel_csv_reader.i"
 	@echo "... src/loader/parallel_csv_reader.s"

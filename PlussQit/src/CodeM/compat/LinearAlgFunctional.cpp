@@ -213,7 +213,7 @@ inline Series invoke_pair_(std::string_view op, const char* opname, const Series
   require_defined_(a, opname);
   require_defined_(b, opname);
   require_same_platform_(a, b, opname);
-  return pluss::codem::_compat::invoke(op, a, b);
+  return pluss::codem::_compat::invoke(op, a, {b});
 }
 
 inline void require_square_2d_(const Series& a, const char* op) {

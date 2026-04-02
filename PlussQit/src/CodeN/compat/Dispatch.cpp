@@ -28,6 +28,12 @@ namespace pluss::coden::_compat {
   PLUSS_CHECK(false, oss.str());
 }
 
+[[noreturn]] static void rethrow_dispatch_error_(::std::string_view lane, ::std::string_view op, const ::std::exception& e) {
+  ::pluss::codem::throw_error(
+      ::std::string("CodeN ") + ::std::string(lane) + " dispatch failed for '" + ::std::string(op) +
+      "': " + e.what());
+}
+
 template <class DeclArray>
 static bool has_decl_sig(const DeclArray& decls, ::std::string_view op, ::std::size_t nargs) {
   for (const auto& sig : decls) {
@@ -320,6 +326,8 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
 }
 
 ::pluss::coden::Chord call_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "lower" && args.empty()) return ops_internal::lower(self);
   if (op == "upper" && args.empty()) return ops_internal::upper(self);
   if (op == "title" && args.empty()) return ops_internal::title(self);
@@ -551,17 +559,39 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
 
   if (has_decl_sig(kDeclChordSigs, op, args.size())) return self;
   fail("Chord", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Chord", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Chord dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 bool call_bool_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "contains" && args.size() == 1) return ops_internal::contains(self, as_str(args[0]));
   if (op == "regex_match" && args.size() == 1) return ops_internal::regex_match(self, as_str(args[0]));
   if (op == "regex_search" && args.size() == 1) return ops_internal::regex_search(self, as_str(args[0]));
   if (has_decl_sig(kDeclChordBoolSigs, op, args.size())) return default_bool_chord(op, self, args);
   fail("Chord->bool", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Chord->bool", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Chord->bool dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "split" && args.size() == 1) return ops_internal::split(self, as_str(args[0]));
   if (op == "split" && args.size() == 2) return ops_internal::split(self, as_str(args[0]), as_i64(args[1]));
   if (op == "split_whitespace" && args.empty()) return ops_internal::split_whitespace(self);
@@ -592,9 +622,20 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
   }
   if (has_decl_sig(kDeclChordTokenBatchSigs, op, args.size())) return ops_internal::split_whitespace(self);
   fail("Chord->TokenBatch", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Chord->TokenBatch", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Chord->TokenBatch dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 ::pluss::coden::Note call_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "lower" && args.empty()) return ops_internal::lower(self);
   if (op == "upper" && args.empty()) return ops_internal::upper(self);
   if (op == "title" && args.empty()) return ops_internal::title(self);
@@ -882,9 +923,20 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
 
   if (has_decl_sig(kDeclNoteSigs, op, args.size())) return self;
   fail("Note", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Note", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Note dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 ::pluss::coden::Chord call_chord_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "join" && (args.size() == 0 || args.size() == 1)) {
     ::std::string_view sep = args.empty() ? ::std::string_view{} : as_str(args[0]);
     const auto joined = ops_internal::join(self, sep);
@@ -896,23 +948,56 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
     return ops_internal::chord_from_utf8(self.at(0));
   }
   fail("Note->Chord", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Note->Chord", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Note->Chord dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 ::std::vector<::std::uint8_t> call_u8list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "contains" && args.size() == 1) return ops_internal::contains(self, as_str(args[0]));
   if (op == "regex_match" && args.size() == 1) return ops_internal::regex_match(self, as_str(args[0]));
   if (op == "regex_search" && args.size() == 1) return ops_internal::regex_search(self, as_str(args[0]));
   if (has_decl_sig(kDeclNoteU8ListSigs, op, args.size())) return default_u8list_note(op, self, args);
   fail("Note->u8list", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Note->u8list", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Note->u8list dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 ::std::vector<::std::int64_t> call_i64list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "lengths_bytes" && args.empty()) return ops_internal::lengths_bytes(self);
   if (has_decl_sig(kDeclNoteI64ListSigs, op, args.size())) return default_i64list_note(op, self, args);
   fail("Note->i64list", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Note->i64list", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Note->i64list dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
+  const ::std::string op_snapshot(op);
+  try {
   if (op == "split_whitespace" && args.empty()) return ops_internal::split_whitespace(self);
   if (op == "split_whitespace" && args.size() == 1) return ops_internal::split_whitespace(self, as_i64(args[0]));
   if (op == "split" && args.size() == 1) return ops_internal::split(self, as_str(args[0]));
@@ -953,6 +1038,15 @@ TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Not
   }
   if (has_decl_sig(kDeclNoteTokenBatchSigs, op, args.size())) return ops_internal::split_whitespace(self);
   fail("Note->TokenBatch", op, args.size());
+  } catch (const ::pluss::Error&) {
+    throw;
+  } catch (const ::std::exception& e) {
+    rethrow_dispatch_error_("Note->TokenBatch", op_snapshot, e);
+  } catch (...) {
+    ::pluss::codem::throw_error(
+        ::std::string("CodeN Note->TokenBatch dispatch failed for '") + op_snapshot +
+        "': unknown non-std exception");
+  }
 }
 
 } // namespace pluss::coden::_compat

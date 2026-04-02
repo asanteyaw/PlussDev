@@ -27,7 +27,7 @@ public:
 
   void eval() noexcept { train(false); }
 
-  void zero_grad() {
+  void clear() {
     for (Series* p : parameters()) {
       if (p && p->defined()) {
         p->clear_sensitivity();
@@ -553,7 +553,7 @@ public:
   void reset(std::nullptr_t = nullptr) noexcept { impl_.reset(); }
   void train(bool enabled = true) { this->operator->()->train(enabled); }
   void eval() { this->operator->()->eval(); }
-  void zero_grad() { this->operator->()->zero_grad(); }
+  void clear() { this->operator->()->clear(); }
   Module& to(Platform platform) { return this->operator->()->to(platform); }
   Module& to(ScalarType dtype) { return this->operator->()->to(dtype); }
   Module& to(Platform platform, ScalarType dtype) { return this->operator->()->to(platform, dtype); }

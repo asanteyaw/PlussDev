@@ -4,6 +4,17 @@ Loops(and nested loops) only when inevitable or needed for correctness. Linear p
 ### Doctrine for PyTorch Inspiration
 Largely the same as MATLAB's except that you avoid naming like 'torch/Torch/TORCH', and also avoid the method/function names given in the torch implementation in favor of your own concise but descriptive naming to make it feel pluss native.
 
+### Doctrine for Error Handling
+All library/runtime code must use the centralized Pluss error system.
+
+- Do not throw `std::runtime_error` (or other raw std exceptions) from product/runtime code.
+- Throw via `::pluss::throw_error("message")` for direct failures.
+- Prefer `PLUSS_CHECK(...)` / `PLUSS_FAIL(...)` / `PLUSS_WARN(...)` where those macros are available.
+- Public/user-facing code may use `pluss::validate::check/warn/fail/inspect/check_eq` as a function-style facade over the same centralized error path.
+- At user-facing boundaries, catch with `catch (const pluss::Error& e)` when handling is needed.
+- Keep error messages actionable and explicit about operation/context.
+- Preserve trace fidelity: do not bypass centralized throw paths that attach source location and call trace metadata.
+
 ### Optimizer Surface Doctrine
 Keep functional and OOP optimizers explicitly separated by namespace and purpose so users can infer intent from code.
 

@@ -26,20 +26,20 @@ struct SimplexState {
 
 double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error(std::string(op) + ": expected scalar Series");
+    ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
   return x.to(ScalarType::Float64).item<double>();
 }
 
 void require_valid_initial(const Series& initial) {
   if (!initial.defined()) {
-    throw std::runtime_error("subsp::math::optimization::nelder_mead_minimizer: initial point is undefined");
+    ::pluss::throw_error("subsp::math::optimization::nelder_mead_minimizer: initial point is undefined");
   }
   if (initial.numel() < 1) {
-    throw std::runtime_error("subsp::math::optimization::nelder_mead_minimizer: initial point must be non-empty");
+    ::pluss::throw_error("subsp::math::optimization::nelder_mead_minimizer: initial point must be non-empty");
   }
   if (!initial.dtype().is_floating() || initial.dtype().is_complex()) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optimization::nelder_mead_minimizer: initial point must be real floating-point");
   }
 }
@@ -92,17 +92,17 @@ Series evaluate(
   const Series x = flat_x.reshape(std::span<const std::int64_t>(original_shape.data(), original_shape.size()));
   const Series value = objective(x);
   if (!value.defined() || value.numel() != 1) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optimization::nelder_mead_minimizer: objective must return a scalar Series");
   }
   if (value.dtype().is_complex()) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optimization::nelder_mead_minimizer: objective must return a real scalar Series");
   }
 
   const double host_value = scalar_as_f64(value, "nelder_mead_minimizer");
   if (!std::isfinite(host_value)) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "subsp::math::optimization::nelder_mead_minimizer: objective returned a non-finite value");
   }
 

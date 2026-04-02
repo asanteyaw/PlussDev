@@ -68,7 +68,7 @@ public:
 
   void set_group_options(std::size_t group_index, const RMSpropOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -99,7 +99,7 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop::restore_state: group count mismatch");
     }
     validate_state_vector_(state.square_avg, "pluss::ai::nn::optim::RMSprop::restore_state[square_avg]");
     validate_state_vector_(state.momentum_buffer, "pluss::ai::nn::optim::RMSprop::restore_state[momentum_buffer]");
@@ -418,35 +418,35 @@ private:
 
   static void validate_options_(const RMSpropOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: learning_rate must be positive and finite");
     }
     if (!(options.alpha >= 0.0 && options.alpha < 1.0) || !std::isfinite(options.alpha)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: alpha must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: alpha must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: epsilon must be positive and finite");
     }
     if (options.momentum < 0.0 || !std::isfinite(options.momentum)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: momentum must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: momentum must be finite and non-negative");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: weight_decay must be finite and non-negative");
     }
   }
 
   static std::vector<Series*> flatten_groups_(const std::vector<RMSpropGroup>& groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::RMSprop: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::RMSprop: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -484,17 +484,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::RMSprop: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::RMSprop: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::RMSprop: capturable mode requires same dtype across each group");
         }
       }

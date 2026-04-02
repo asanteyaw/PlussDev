@@ -21,25 +21,25 @@ TimeIndex drop_duplicates() const { return unique(); }
 pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("argsort", *this); }
 
 // ---- Indexing helpers ----
-TimeIndex take(const pluss::codem::Series& indices) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("take", *this, indices); }
-TimeIndex slice_index(std::int64_t start, std::int64_t stop) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("slice_index", *this, start, stop); }
+TimeIndex take(const pluss::codem::Series& indices) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("take", *this, {indices}); }
+TimeIndex slice_index(std::int64_t start, std::int64_t stop) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("slice_index", *this, {start, stop}); }
 TimeIndex head(std::int64_t n = 5) const { return slice_index(0, n); }
-TimeIndex tail(std::int64_t n = 5) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("tail", *this, n); }
+TimeIndex tail(std::int64_t n = 5) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("tail", *this, {n}); }
 
 // ---- Set-like operations (pandas Index semantics) ----
-TimeIndex union_(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("union", *this, other); }
-TimeIndex intersection(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("intersection", *this, other); }
-TimeIndex difference(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("difference", *this, other); }
+TimeIndex union_(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("union", *this, {other}); }
+TimeIndex intersection(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("intersection", *this, {other}); }
+TimeIndex difference(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("difference", *this, {other}); }
 
 // ---- Time zone operations (metadata-preserving) ----
-TimeIndex tz_convert(std::string_view tz_name) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("tz_convert", *this, tz_name); }
-TimeIndex tz_localize(std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") const { return ::pluss::codeh::_compat::invoke<TimeIndex>("tz_localize", *this, tz_name, fold, nonexistent); }
+TimeIndex tz_convert(std::string_view tz_name) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("tz_convert", *this, {tz_name}); }
+TimeIndex tz_localize(std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") const { return ::pluss::codeh::_compat::invoke<TimeIndex>("tz_localize", *this, {tz_name, fold, nonexistent}); }
 TimeIndex to_utc() const { return tz_convert("UTC"); }
 
 // ---- Rounding / normalization on the axis ----
-TimeIndex floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("floor", *this, unit); }
-TimeIndex ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("ceil", *this, unit); }
-TimeIndex round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("round", *this, unit); }
+TimeIndex floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("floor", *this, {unit}); }
+TimeIndex ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("ceil", *this, {unit}); }
+TimeIndex round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<TimeIndex>("round", *this, {unit}); }
 TimeIndex normalize() const { return floor("D"); }
 
 // Unit-specific wrappers (discoverability)
@@ -62,7 +62,7 @@ CODEH_TIMEINDEX_ROUNDING_WRAPPERS(W,  "W")
 // ---- Resample (multi-agg entry point) ----
 // Generic aggregation driver. op in {"count","sum","mean","min","max","first","last","ohlc"}
 pluss::codem::Series resample_agg(const pluss::codem::Series& values, std::string_view freq, std::string_view op, std::int64_t step = 1) const {
-  return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_agg", *this, values, freq, op, step);
+  return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("resample_agg", *this, {values, freq, op, step});
 }
 
 
@@ -71,7 +71,7 @@ pluss::codem::Series resample_size(std::string_view freq, std::int64_t step = 1)
 
 // ---- Rolling (multi-agg) ----
 pluss::codem::Series rolling_agg(const pluss::codem::Series& values, const Duration& window, std::string_view op) const {
-  return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("rolling_agg", *this, values, window, op);
+  return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("rolling_agg", *this, {values, window, op});
 }
 pluss::codem::Series rolling_mean(const pluss::codem::Series& values, const Duration& window) const { return rolling_agg(values, window, "mean"); }
 pluss::codem::Series rolling_min(const pluss::codem::Series& values, const Duration& window) const { return rolling_agg(values, window, "min"); }

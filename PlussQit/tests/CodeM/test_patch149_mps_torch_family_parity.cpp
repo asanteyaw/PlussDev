@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <pluss/pluss.h>
 #include <pluss/subsp/linearalg/linearalg.h>
 
@@ -189,6 +190,60 @@ TEST_CASE("MPS parity stress loop stays stable", "[mps][parity][torch][stress]")
         "stress-sort",
         2e-4f);
   }
+}
+
+TEST_CASE("MPS autodiff parity tracks CPU value and sensitivity baselines", "[mps][parity][autodiff]") {
+  const ScopedEnvVar fallback_on("PLUSS_MPS_ALLOW_CPU_FALLBACK", "1");
+  const ScopedEnvVar native_take_put("PLUSS_MPS_NATIVE_TAKE_PUT", "1");
+  const ScopedEnvVar native_sort("PLUSS_MPS_NATIVE_SORT_SELECTION", "1");
+
+  if (!pluss::mps::is_ready()) {
+    SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+
+  pluss::Series x_cpu =
+      pluss::make_series(std::vector<float>{0.5f, -1.25f, 2.0f, 0.1f, -0.4f, 1.7f}, {2, 3});
+  pluss::Series x_mps = x_cpu.to(pluss::pMPS);
+  x_cpu.tracks_slope_(true);
+  x_mps.tracks_slope_(true);
+
+  const pluss::Series idx_cpu = pluss::make_series(std::vector<std::int64_t>{5, 0, 3, 2}, {4});
+  const pluss::Series idx_mps = idx_cpu.to(pluss::pMPS);
+
+  const pluss::Series flat_cpu = x_cpu.reshape({x_cpu.numel()});
+  const pluss::Series flat_mps = x_mps.reshape({x_mps.numel()});
+  const pluss::Series loss_cpu = flat_cpu.take(idx_cpu).square().sum().add(x_cpu.sin().mean());
+  const pluss::Series loss_mps = flat_mps.take(idx_mps).square().sum().add(x_mps.sin().mean());
+
+  loss_cpu.reverse();
+  loss_mps.reverse();
+
+  REQUIRE(std::fabs(loss_mps.to(pluss::pCPU).item<float>() - loss_cpu.item<float>()) <= 2e-4f);
+  require_close_(
+      x_mps.sensitivity().to(pluss::pCPU).to_vec<float>(),
+      x_cpu.sensitivity().to_vec<float>(),
+      "autodiff-sensitivity",
+      3e-4f);
+}
+
+TEST_CASE("MPS autodiff one-shot reverse fails loudly after graph release", "[mps][parity][autodiff]") {
+  const ScopedEnvVar fallback_on("PLUSS_MPS_ALLOW_CPU_FALLBACK", "1");
+  if (!pluss::mps::is_ready()) {
+    SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+
+  pluss::Series x =
+      pluss::make_series(std::vector<float>{1.f, -2.f, 0.5f, 3.f}, {2, 2}).to(pluss::pMPS);
+  x.tracks_slope_(true);
+  const pluss::Series loss = x.square().sum();
+
+  loss.reverse(/*keep_graph=*/false);
+  x.clear_sensitivity();
+  REQUIRE_THROWS_WITH(
+      loss.reverse(),
+      Catch::Matchers::ContainsSubstring("one-shot reverse pass"));
 }
 
 TEST_CASE("MPS strict parity lane works without CPU fallback", "[mps][parity][torch][strict]") {

@@ -163,7 +163,7 @@ pluss::codem::Series evaluate_loss_(Loss loss,
     case Loss::MSE:
       return pluss::mse(prediction, target);
     case Loss::RelativeMSE:
-      return pluss::relative_mse(prediction, target);
+      return pluss::rel_mse(prediction, target);
     case Loss::MAE:
       return pluss::mae(prediction, target);
     case Loss::Huber:

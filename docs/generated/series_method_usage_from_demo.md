@@ -147,27 +147,27 @@ Each bullet is an actual call body used in the demo.
 - `scatter_add_`: `auto t = scatter_base.clone(); pluss::codem::_compat::invoke_("scatter_add_", t, 1LL, gather_idx, scatter_val); return t;`
 - `masked_scatter_`: `auto t = m.clone(); pluss::codem::_compat::invoke_("masked_scatter_", t, mask, n); return t;`
 - `put_`: `auto t = gather_src.clone(); pluss::codem::_compat::invoke_("put_", t, flat_idx, flat_src, false); return t;`
-- `pdf()`: `return pos.pdf();`
-- `logpdf()`: `return pos.logpdf();`
-- `logcdf()`: `return pos.logcdf();`
-- `cdf()`: `return pos.cdf();`
+- `pdf()`: `return pos.stat.pdf();`
+- `logpdf()`: `return pos.stat.logpdf();`
+- `logcdf()`: `return pos.stat.logcdf();`
+- `cdf()`: `return pos.stat.cdf();`
 - `dct`: `return x.dct();`
 - `idct`: `return x.dct().idct();`
 - `dst`: `return x.dst();`
 - `idst`: `return x.dst().idst();`
 - `hilbert`: `return x.hilbert();`
 - `histcounts`: `return pos.histcounts(5, 0.0, 5.0);`
-- `skewness`: `return x.skewness();`
-- `kurtosis`: `return x.kurtosis();`
+- `skewness`: `return x.stat.skewness();`
+- `kurtosis`: `return x.stat.kurtosis();`
 - `nanvar`: `return x.nanvar();`
 - `nanstd`: `return x.nanstd();`
 - `ediff1d`: `return x.ediff1d();`
-- `movsum`: `return x.movsum(3);`
-- `movmean`: `return x.movmean(3);`
-- `movmax`: `return x.movmax(3);`
-- `movmin`: `return x.movmin(3);`
-- `movstd`: `return x.movstd(3);`
-- `movvar`: `return x.movvar(3);`
+- `movsum`: `return x.stat.movsum(3);`
+- `movmean`: `return x.stat.movmean(3);`
+- `movmax`: `return x.stat.movmax(3);`
+- `movmin`: `return x.stat.movmin(3);`
+- `movstd`: `return x.stat.movstd(3);`
+- `movvar`: `return x.stat.movvar(3);`
 - `pdist2`: `return m.pdist2(n);`
 - `cdist`: `return m.cdist(n);`
 - `normr`: `return m.normr();`

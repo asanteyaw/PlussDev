@@ -40,7 +40,7 @@ TEST_CASE("index_put_ overlap without accumulate throws", "[indexing][fail]") {
   pluss::Series i = pluss::make_series(std::vector<std::int64_t>{1,1}, {2});
   std::vector<pluss::Series> idx = { i };
   pluss::Series v = pluss::full({2}, 3, pluss::ScalarType::Int64);
-  REQUIRE_THROWS_AS(pluss::index_put(a, idx, v, false), pluss::codem::Error);
+  REQUIRE_THROWS_AS(pluss::index_put(a, idx, v, false), pluss::Error);
 }
 
 TEST_CASE("index_put_ out of bounds throws", "[indexing][fail]") {
@@ -48,5 +48,5 @@ TEST_CASE("index_put_ out of bounds throws", "[indexing][fail]") {
   pluss::Series i = pluss::make_series(std::vector<std::int64_t>{2}, {1});
   std::vector<pluss::Series> idx = { i };
   pluss::Series v = pluss::full({1}, 1, pluss::ScalarType::Int64);
-  REQUIRE_THROWS_AS(pluss::index_put(a, idx, v, false), pluss::codem::Error);
+  REQUIRE_THROWS_AS(pluss::index_put(a, idx, v, false), pluss::Error);
 }

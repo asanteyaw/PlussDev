@@ -12,12 +12,12 @@ pluss::codem::Series isfinite() const { return isvalid(); }
 pluss::codem::Series isnan() const { return isnat(); }
 
 // ---- Comparisons (elementwise; return Series[bool]) ----
-pluss::codem::Series eq(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("eq", *this, other); }
-pluss::codem::Series ne(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ne", *this, other); }
-pluss::codem::Series lt(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("lt", *this, other); }
-pluss::codem::Series le(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("le", *this, other); }
-pluss::codem::Series gt(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("gt", *this, other); }
-pluss::codem::Series ge(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ge", *this, other); }
+pluss::codem::Series eq(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("eq", *this, {other}); }
+pluss::codem::Series ne(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ne", *this, {other}); }
+pluss::codem::Series lt(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("lt", *this, {other}); }
+pluss::codem::Series le(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("le", *this, {other}); }
+pluss::codem::Series gt(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("gt", *this, {other}); }
+pluss::codem::Series ge(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ge", *this, {other}); }
 
 // Operator sugar
 pluss::codem::Series operator==(const Duration& other) const { return eq(other); }
@@ -30,29 +30,29 @@ pluss::codem::Series operator>=(const Duration& other) const { return ge(other);
 // ---- Unary transforms ----
 Duration abs() const { return ::pluss::codeh::_compat::invoke<Duration>("abs", *this); }
 Duration sign() const { return ::pluss::codeh::_compat::invoke<Duration>("sign", *this); }
-Duration clip(const Duration& lo, const Duration& hi) const { return ::pluss::codeh::_compat::invoke<Duration>("clip", *this, lo, hi); }
+Duration clip(const Duration& lo, const Duration& hi) const { return ::pluss::codeh::_compat::invoke<Duration>("clip", *this, {lo, hi}); }
 
 // ---- Fill / where ----
-Duration fill_nat(const Duration& value) const { return ::pluss::codeh::_compat::invoke<Duration>("fill_nat", *this, value); }
-Duration where(const pluss::codem::Series& mask, const Duration& other) const { return ::pluss::codeh::_compat::invoke<Duration>("where", *this, mask, other); }
+Duration fill_nat(const Duration& value) const { return ::pluss::codeh::_compat::invoke<Duration>("fill_nat", *this, {value}); }
+Duration where(const pluss::codem::Series& mask, const Duration& other) const { return ::pluss::codeh::_compat::invoke<Duration>("where", *this, {mask, other}); }
 
 // ---- Arithmetic with integer scalars ----
-Duration mul(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("mul_i64", *this, k); }
-Duration div(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("div_i64", *this, k); }
-Duration floordiv(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("floordiv_i64", *this, k); }
-Duration mod(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("mod_i64", *this, k); }
+Duration mul(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("mul_i64", *this, {k}); }
+Duration div(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("div_i64", *this, {k}); }
+Duration floordiv(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("floordiv_i64", *this, {k}); }
+Duration mod(std::int64_t k) const { return ::pluss::codeh::_compat::invoke<Duration>("mod_i64", *this, {k}); }
 Duration operator*(std::int64_t k) const { return mul(k); }
 Duration operator/(std::int64_t k) const { return div(k); }
 
 // ---- Unit conversions (vectorized; pandas-style total_seconds, etc.) ----
-pluss::codem::Series total_nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "ns"); }
-pluss::codem::Series total_microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "us"); }
-pluss::codem::Series total_milliseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "ms"); }
-pluss::codem::Series total_seconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "s"); }
-pluss::codem::Series total_minutes() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "min"); }
-pluss::codem::Series total_hours() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "h"); }
-pluss::codem::Series total_days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "D"); }
-pluss::codem::Series total_weeks() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, "W"); }
+pluss::codem::Series total_nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"ns"}); }
+pluss::codem::Series total_microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"us"}); }
+pluss::codem::Series total_milliseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"ms"}); }
+pluss::codem::Series total_seconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"s"}); }
+pluss::codem::Series total_minutes() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"min"}); }
+pluss::codem::Series total_hours() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"h"}); }
+pluss::codem::Series total_days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"D"}); }
+pluss::codem::Series total_weeks() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("total", *this, {"W"}); }
 
 // Additional naming variants (MATLAB/pandas discoverability)
 pluss::codem::Series totalWeeks() const { return total_weeks(); }
@@ -82,13 +82,13 @@ pluss::codem::Series total_us() const { return total_microseconds(); }
 pluss::codem::Series total_ms() const { return total_milliseconds(); }
 
 // ---- Components extraction (like Timedelta components) ----
-pluss::codem::Series days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "days"); }
-pluss::codem::Series hours() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "hours"); }
-pluss::codem::Series minutes() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "minutes"); }
-pluss::codem::Series seconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "seconds"); }
-pluss::codem::Series milliseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "milliseconds"); }
-pluss::codem::Series microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "microseconds"); }
-pluss::codem::Series nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, "nanoseconds"); }
+pluss::codem::Series days() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"days"}); }
+pluss::codem::Series hours() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"hours"}); }
+pluss::codem::Series minutes() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"minutes"}); }
+pluss::codem::Series seconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"seconds"}); }
+pluss::codem::Series milliseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"milliseconds"}); }
+pluss::codem::Series microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"microseconds"}); }
+pluss::codem::Series nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"nanoseconds"}); }
 
 // Component aliases (camelCase)
 pluss::codem::Series milliSeconds() const { return milliseconds(); }
@@ -109,9 +109,9 @@ pluss::codem::Series microsecond() const { return microseconds(); }
 pluss::codem::Series nanosecond() const { return nanoseconds(); }
 
 // ---- Rounding ----
-Duration floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("floor", *this, unit); }
-Duration ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("ceil", *this, unit); }
-Duration round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("round", *this, unit); }
+Duration floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("floor", *this, {unit}); }
+Duration ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("ceil", *this, {unit}); }
+Duration round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("round", *this, {unit}); }
 
 // Unit-specific wrappers (lots of discoverability)
 #define CODEH_DURATION_ROUNDING_WRAPPERS(U, TOK) \

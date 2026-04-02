@@ -6,6 +6,7 @@
 #include "CodeM/core/Platform.h"
 #include "CodeM/core/SeriesImpl.h"
 #include "MSharp/IntrusivePtr.h"
+#include "MSharp/RangeView.h"
 #include "pluss/export.h"
 
 namespace pluss::codem {
@@ -35,8 +36,9 @@ public:
   // Shape / dtype introspection
   ScalarType scalar_type() const;
   DType dtype() const;
-  std::span<const std::int64_t> sizes() const;
-  std::span<const std::int64_t> strides() const;
+  pluss::msharp::RangeView::Int sizes() const;
+  std::int64_t size(std::int64_t dim) const;
+  pluss::msharp::RangeView::Int strides() const;
   std::int64_t dim() const;
   std::int64_t numel() const;
   std::int64_t itemsize() const { return static_cast<std::int64_t>(dtype().itemsize); }
@@ -49,6 +51,12 @@ public:
   // Vector-style bounds-checked scalar selection for 1-D Series.
   // Returns a rank-0 Series view of the selected element.
   Series pos(std::int64_t index) const;
+  // Matrix-style bounds-checked scalar selection for 2-D Series.
+  // Returns a rank-0 Series view of the selected element.
+  Series pos(std::int64_t row, std::int64_t col) const;
+  // 3-D bounds-checked scalar selection.
+  // Returns a rank-0 Series view of the selected element.
+  Series pos(std::int64_t i, std::int64_t j, std::int64_t k) const;
 
   // Raw storage access (byte-addressable).
   std::byte* raw_data();

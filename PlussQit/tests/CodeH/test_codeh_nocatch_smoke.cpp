@@ -42,7 +42,7 @@ void expect_throw(Fn&& fn, const std::string& msg) {
   bool threw = false;
   try {
     fn();
-  } catch (const pluss::codem::Error&) {
+  } catch (const pluss::Error&) {
     threw = true;
   } catch (...) {
     threw = true;

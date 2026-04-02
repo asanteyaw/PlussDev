@@ -3,6 +3,10 @@
 #include <iostream>
 #include <vector>
 
+double calc_tip(const pluss::sign_list& list) {
+  return list[0].item<double>() + list[1].item<double>();
+}
+
 int main() {
   using namespace pluss;
   using namespace pluss::subsp::stats::distr;
@@ -17,6 +21,10 @@ int main() {
   const distr::Bernoulli bernoulli{0.35};
 
   const Series bell = distr::pdf(dst::Normal, grid, {0.0, 1.0});
+  const Series bell_series_params =
+      distr::logpdf(dst::Normal, grid, pluss::sign_list(pluss::zeros_like(grid), pluss::ones_like(grid)));
+  const Series bell_series_braces =
+      distr::logpdf(dst::Normal, grid, {pluss::zeros_like(grid), pluss::ones_like(grid)});
   const Series bell_log = distr::Normal{0.0, 1.0}.logpdf(grid);
   const Series bern_logcdf = bernoulli.logcdf(make_series(std::vector<double>{0.0, 1.0}, {2}, f64));
   const Series normal_cgf = normal.cgf(make_series(std::vector<double>{0.0, 1.0}, {2}, f64));
@@ -34,12 +42,15 @@ int main() {
   std::cout << "arcsin sample: " << arcsin_draws << "\n";
   std::cout << "vonmises sample: " << circular << "\n";
   std::cout << "normal pdf grid: " << bell << "\n";
+  std::cout << "normal logpdf grid (Series params): " << bell_series_params << "\n";
+  std::cout << "normal logpdf grid (Series params braces): " << bell_series_braces << "\n";
   std::cout << "normal logpdf grid (object): " << bell_log << "\n";
   std::cout << "normal cgf (object): " << normal_cgf << "\n";
   std::cout << "bernoulli logcdf (object): " << bern_logcdf << "\n";
   std::cout << "student-t cdf grid: " << tail << "\n";
   std::cout << "sample_like gamma dtype=" << static_cast<int>(shaped.scalar_type()) << " sizes=" << shaped.sizes().size() << "\n";
   std::cout << "mixture sample: " << mixture << "\n";
+  std::cout << "sign_list function example: " << calc_tip({pluss::make_series(1.0), pluss::make_series(2.0)}) << "\n";
 
   return 0;
 }

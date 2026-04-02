@@ -40,7 +40,7 @@ TEST_CASE("scatter_reduce complex sum works, amax throws", "[scatter][complex]")
   pluss::Series idx  = pluss::full({2,2}, 0, pluss::ScalarType::Int64);
   pluss::Series out = self.scatter_reduce_sum(1, idx, src, false, 0.0);
   REQUIRE(out.scalar_type() == pluss::ScalarType::Complex64);
-  REQUIRE_THROWS_AS(self.scatter_reduce_amax(1, idx, src, false, 0.0), pluss::codem::Error);
+  REQUIRE_THROWS_AS(self.scatter_reduce_amax(1, idx, src, false, 0.0), pluss::Error);
 }
 
 TEST_CASE("printing is stable for small tensors", "[printing]") {

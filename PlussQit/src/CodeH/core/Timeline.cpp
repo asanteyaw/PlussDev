@@ -1461,7 +1461,7 @@ Timeline TimelineBase::to_period(std::string_view freq) const {
 TimeIndex TimelineBase::to_timeindex(bool require_sorted) const {
   return ::pluss::codeh::_compat::invoke<TimeIndex>("make_timeindex",
                                                      as_timeline(*this),
-                                                     require_sorted);
+                                                     {require_sorted});
 }
 
 Timeline TimelineBase::from_ymd(const pluss::codem::Series& year,

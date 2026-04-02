@@ -66,20 +66,20 @@ struct CandidateBatchOutcome {
 
 double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error(std::string(op) + ": expected scalar Series");
+    ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
   return x.to(ScalarType::Float64).item<double>();
 }
 
 void require_valid_initial(const Series& initial, const char* op) {
   if (!initial.defined()) {
-    throw std::runtime_error(std::string(op) + ": initial point is undefined");
+    ::pluss::throw_error(std::string(op) + ": initial point is undefined");
   }
   if (initial.numel() < 1) {
-    throw std::runtime_error(std::string(op) + ": initial point must be non-empty");
+    ::pluss::throw_error(std::string(op) + ": initial point must be non-empty");
   }
   if (!initial.dtype().is_floating() || initial.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": initial point must be real floating-point");
+    ::pluss::throw_error(std::string(op) + ": initial point must be real floating-point");
   }
 }
 
@@ -112,7 +112,7 @@ BoundsPack prepare_bounds(
     return bounds;
   }
   if (!lower_defined || !upper_defined) {
-    throw std::runtime_error(std::string(op) + ": both lower_bounds and upper_bounds must be defined");
+    ::pluss::throw_error(std::string(op) + ": both lower_bounds and upper_bounds must be defined");
   }
 
   const Series flat_lower =
@@ -121,10 +121,10 @@ BoundsPack prepare_bounds(
       upper.reshape({setup.dimension}).to(setup.work_cfg.platform, setup.work_cfg.dtype).contiguous();
 
   if (flat_lower.numel() != setup.dimension || flat_upper.numel() != setup.dimension) {
-    throw std::runtime_error(std::string(op) + ": bounds must have same number of elements as initial point");
+    ::pluss::throw_error(std::string(op) + ": bounds must have same number of elements as initial point");
   }
   if (!flat_lower.le(flat_upper).all().item<bool>()) {
-    throw std::runtime_error(std::string(op) + ": expected lower_bounds <= upper_bounds elementwise");
+    ::pluss::throw_error(std::string(op) + ": expected lower_bounds <= upper_bounds elementwise");
   }
 
   bounds.enabled = true;
@@ -160,7 +160,7 @@ double eval_candidate(
       std::span<const std::int64_t>(original_shape.data(), original_shape.size()));
   const Series out = objective(x);
   if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": objective must return real scalar Series");
+    ::pluss::throw_error(std::string(op) + ": objective must return real scalar Series");
   }
   const double value = scalar_as_f64(out, op);
   return std::isfinite(value) ? value : std::numeric_limits<double>::infinity();
@@ -368,13 +368,13 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
 
   if (config.mesh_refine_factor <= 0.0 || config.mesh_refine_factor >= 1.0 ||
       config.frame_refine_factor <= 0.0 || config.frame_refine_factor >= 1.0) {
-    throw std::runtime_error(std::string(op) + ": refine factors must be in (0,1)");
+    ::pluss::throw_error(std::string(op) + ": refine factors must be in (0,1)");
   }
   if (config.mesh_expand_factor < 1.0 || config.frame_expand_factor < 1.0) {
-    throw std::runtime_error(std::string(op) + ": expand factors must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": expand factors must be >= 1");
   }
   if (config.mesh_tolerance <= 0.0) {
-    throw std::runtime_error(std::string(op) + ": mesh_tolerance must be > 0");
+    ::pluss::throw_error(std::string(op) + ": mesh_tolerance must be > 0");
   }
 
   const CommonSetup setup = make_common_setup(initial, config.promote_cpu_to_float64);
@@ -571,7 +571,7 @@ double positive_violation_sum(
   double sum = 0.0;
   for (double v : values) {
     if (!std::isfinite(v)) {
-      throw std::runtime_error(std::string(op) + ": constraint values must be finite");
+      ::pluss::throw_error(std::string(op) + ": constraint values must be finite");
     }
     const double pos = v - tolerance;
     if (pos > 0.0) {
@@ -712,19 +712,19 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
 
   if (config.mesh_refine_factor <= 0.0 || config.mesh_refine_factor >= 1.0 ||
       config.frame_refine_factor <= 0.0 || config.frame_refine_factor >= 1.0) {
-    throw std::runtime_error(std::string(op) + ": refine factors must be in (0,1)");
+    ::pluss::throw_error(std::string(op) + ": refine factors must be in (0,1)");
   }
   if (config.mesh_expand_factor < 1.0 || config.frame_expand_factor < 1.0) {
-    throw std::runtime_error(std::string(op) + ": expand factors must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": expand factors must be >= 1");
   }
   if (config.mesh_tolerance <= 0.0) {
-    throw std::runtime_error(std::string(op) + ": mesh_tolerance must be > 0");
+    ::pluss::throw_error(std::string(op) + ": mesh_tolerance must be > 0");
   }
   if (config.progressive_barrier_penalty < 0.0) {
-    throw std::runtime_error(std::string(op) + ": progressive_barrier_penalty must be >= 0");
+    ::pluss::throw_error(std::string(op) + ": progressive_barrier_penalty must be >= 0");
   }
   if (config.constraint_tolerance < 0.0) {
-    throw std::runtime_error(std::string(op) + ": constraint_tolerance must be >= 0");
+    ::pluss::throw_error(std::string(op) + ": constraint_tolerance must be >= 0");
   }
 
   const CommonSetup setup = make_common_setup(initial, config.promote_cpu_to_float64);
@@ -764,14 +764,14 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       return;
     }
     if (obj_dim < 1) {
-      throw std::runtime_error(std::string(op) + ": objective dimension must be >= 1");
+      ::pluss::throw_error(std::string(op) + ": objective dimension must be >= 1");
     }
     if (config.objective_weights.defined()) {
       const Series w = config.objective_weights.reshape({config.objective_weights.numel()})
                            .to(ScalarType::Float64)
                            .contiguous();
       if (w.numel() != obj_dim) {
-        throw std::runtime_error(std::string(op) + ": objective_weights size mismatch");
+        ::pluss::throw_error(std::string(op) + ": objective_weights size mismatch");
       }
       objective_weights = w.to_vec<double>();
     } else {
@@ -783,7 +783,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
                            .to(ScalarType::Float64)
                            .contiguous();
       if (r.numel() != obj_dim) {
-        throw std::runtime_error(std::string(op) + ": objective_reference size mismatch");
+        ::pluss::throw_error(std::string(op) + ": objective_reference size mismatch");
       }
       objective_reference = r.to_vec<double>();
     } else {
@@ -793,7 +793,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
 
   auto scalarize_objectives = [&](const std::vector<double>& obj_values) {
     if (obj_values.empty()) {
-      throw std::runtime_error(std::string(op) + ": objective vector must be non-empty");
+      ::pluss::throw_error(std::string(op) + ": objective vector must be non-empty");
     }
     if (obj_values.size() == 1) {
       return obj_values.front();
@@ -894,7 +894,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     }
 
     if (!raw.objectives.defined() || raw.objectives.numel() < 1 || raw.objectives.dtype().is_complex()) {
-      throw std::runtime_error(std::string(op) + ": blackbox must provide real objective values");
+      ::pluss::throw_error(std::string(op) + ": blackbox must provide real objective values");
     }
 
     out.objectives = raw.objectives
@@ -904,12 +904,12 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     if (state.objective_dim < 0) {
       state.objective_dim = out.objectives.numel();
     } else if (state.objective_dim != out.objectives.numel()) {
-      throw std::runtime_error(std::string(op) + ": objective dimension changed across evaluations");
+      ::pluss::throw_error(std::string(op) + ": objective dimension changed across evaluations");
     }
 
     if (raw.constraints.defined()) {
       if (raw.constraints.dtype().is_complex()) {
-        throw std::runtime_error(std::string(op) + ": constraints must be real-valued");
+        ::pluss::throw_error(std::string(op) + ": constraints must be real-valued");
       }
       out.constraints = raw.constraints
                             .reshape({raw.constraints.numel()})
@@ -918,7 +918,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       if (state.constraint_dim < 0) {
         state.constraint_dim = out.constraints.numel();
       } else if (state.constraint_dim != out.constraints.numel()) {
-        throw std::runtime_error(std::string(op) + ": constraint dimension changed across evaluations");
+        ::pluss::throw_error(std::string(op) + ": constraint dimension changed across evaluations");
       }
     } else if (state.constraint_dim < 0) {
       state.constraint_dim = 0;

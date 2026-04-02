@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "CodeM/core/Errors.h"
+
 namespace pluss::codem::factories {
 
 //------------------------------------------------------------------------------
@@ -65,7 +67,7 @@ static void infer_shape_and_flatten(const List& list,
   else {
     // ragged check
     if (sizes[(std::size_t)level] != n) {
-      throw std::runtime_error("pluss::value: ragged nested initializer_list is not supported");
+      ::pluss::throw_error("pluss::value: ragged nested initializer_list is not supported");
     }
   }
 

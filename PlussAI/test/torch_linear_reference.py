@@ -21,6 +21,20 @@ def make_data() -> tuple[torch.Tensor, torch.Tensor]:
     return x, y
 
 
+def resolve_device(name: str) -> torch.device:
+    if name == "cpu":
+        return torch.device("cpu")
+    if name == "mps":
+        if not torch.backends.mps.is_available():
+            raise RuntimeError("requested --device mps but torch MPS backend is unavailable")
+        return torch.device("mps")
+    if name == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("requested --device cuda but torch CUDA backend is unavailable")
+        return torch.device("cuda")
+    raise RuntimeError(f"unsupported device '{name}'")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate deterministic Torch loss trajectory CSV for Pluss parity test.")
     parser.add_argument("--out", type=Path, required=True, help="Output CSV path.")
@@ -32,16 +46,20 @@ def main() -> None:
         choices=["adam", "adamw", "sgd", "rmsprop", "adagrad", "nadam"],
         help="Optimizer family for the reference trace.",
     )
+    parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "mps", "cuda"])
     args = parser.parse_args()
 
     torch.manual_seed(20260318)
     torch.set_num_threads(1)
+    device = resolve_device(args.device)
 
     x, y = make_data()
-    model = torch.nn.Linear(2, 1, bias=True, dtype=torch.float32)
+    x = x.to(device)
+    y = y.to(device)
+    model = torch.nn.Linear(2, 1, bias=True, dtype=torch.float32).to(device=device)
     with torch.no_grad():
-        model.weight.copy_(torch.tensor([[0.10, -0.20]], dtype=torch.float32))
-        model.bias.copy_(torch.tensor([0.05], dtype=torch.float32))
+        model.weight.copy_(torch.tensor([[0.10, -0.20]], dtype=torch.float32, device=device))
+        model.bias.copy_(torch.tensor([0.05], dtype=torch.float32, device=device))
 
     if args.optimizer == "adam":
         optimizer = torch.optim.Adam(model.parameters(), lr=5e-2)
@@ -66,7 +84,7 @@ def main() -> None:
         loss = criterion(pred, y)
         loss.backward()
         optimizer.step()
-        losses.append(float(loss.detach().cpu().item()))
+        losses.append(float(loss.detach().to("cpu").item()))
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as f:

@@ -29,16 +29,16 @@ inline Series invoke_self_window_(std::string_view op,
                                   std::int64_t dim) {
   require_defined_(x, opname);
   if (dim == -1) {
-    return pluss::codem::_compat::invoke(op, x, window);
+    return pluss::codem::_compat::invoke(op, x, {window});
   }
-  return pluss::codem::_compat::invoke(op, x, window, dim);
+  return pluss::codem::_compat::invoke(op, x, {window, dim});
 }
 
 inline Series invoke_pair_(std::string_view op, const char* opname, const Series& x, const Series& y) {
   require_defined_(x, opname);
   require_defined_(y, opname);
   require_same_platform_(x, y, opname);
-  return pluss::codem::_compat::invoke(op, x, y);
+  return pluss::codem::_compat::invoke(op, x, {y});
 }
 
 } // namespace

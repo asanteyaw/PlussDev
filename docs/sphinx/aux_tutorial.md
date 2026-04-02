@@ -953,6 +953,13 @@ Pathing now emits stronger diagnostics:
   - rooted path input is supplied to `file_path(...)`, `file_dir(...)`, or `DirRef::file(...)` (input is rewritten as subpath under root/parent).
   - `absolute_path(...)` cannot be normalized with `std::filesystem::absolute` and falls back to lexical normalization.
 
+You can also use the function-style facade:
+
+```cpp
+pluss::validate::check(!data_path.string().empty(), "data path resolved empty");
+pluss::validate::warn("falling back to default split ratio");
+```
+
 ---
 
 ## 8) Data Loader Family (`pluss::loader` re-exported from aux)

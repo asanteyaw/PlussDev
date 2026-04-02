@@ -116,7 +116,30 @@ endmacro()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
+
+# Single-config generators (Ninja/Unix Makefiles): default to RelWithDebInfo
+# so users get optimized binaries with useful file/line stack traces.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+
+option(
+    PLUSS_TRACE_FRIENDLY_RELEASE
+    "Keep frame pointers and minimal line tables in Release builds for readable stack traces"
+    ON
+)
+
+if(PLUSS_TRACE_FRIENDLY_RELEASE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
+        add_compile_options($<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-fno-omit-frame-pointer>)
+        if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang")
+            add_compile_options($<$<AND:$<CONFIG:Release>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-gline-tables-only>)
+        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            add_compile_options($<$<AND:$<CONFIG:Release>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-g1>)
+        endif()
+    endif()
+endif()
 
 option(
     PLUSS_FORCE_GLIBCXX_ABI0

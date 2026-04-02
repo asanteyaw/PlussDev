@@ -81,7 +81,7 @@ struct NonlinearSnapshot {
 
 double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error(std::string(op) + ": expected scalar Series");
+    ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
   return x.to(ScalarType::Float64).item<double>();
 }
@@ -94,7 +94,7 @@ std::vector<double> flatten_real_series(
     return {};
   }
   if (x.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": " + name + " must be real");
+    ::pluss::throw_error(std::string(op) + ": " + name + " must be real");
   }
   const Series flat = x.reshape({x.numel()}).to(pluss::pCPU, ScalarType::Float64);
   return flat.to_vec<double>();
@@ -144,7 +144,7 @@ double augmented_lagrangian_term(
     double rho,
     const char* op) {
   if (c.ineq.size() != lambda_ineq.size() || c.eq.size() != lambda_eq.size()) {
-    throw std::runtime_error(std::string(op) + ": nonlinear constraint dimensionality changed across evaluations");
+    ::pluss::throw_error(std::string(op) + ": nonlinear constraint dimensionality changed across evaluations");
   }
 
   double term = 0.0;
@@ -161,13 +161,13 @@ double augmented_lagrangian_term(
 
 void require_valid_initial(const Series& initial, const char* op) {
   if (!initial.defined()) {
-    throw std::runtime_error(std::string(op) + ": initial point is undefined");
+    ::pluss::throw_error(std::string(op) + ": initial point is undefined");
   }
   if (initial.numel() < 1) {
-    throw std::runtime_error(std::string(op) + ": initial point must be non-empty");
+    ::pluss::throw_error(std::string(op) + ": initial point must be non-empty");
   }
   if (!initial.dtype().is_floating() || initial.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": initial point must be real floating-point");
+    ::pluss::throw_error(std::string(op) + ": initial point must be real floating-point");
   }
 }
 
@@ -175,64 +175,64 @@ void require_valid_config(const PSConfig& cfg, const char* op) {
   if (cfg.mesh_tolerance <= 0.0 || cfg.step_tolerance <= 0.0 ||
       cfg.value_tolerance <= 0.0 || cfg.constraint_tolerance <= 0.0 ||
       cfg.active_constraint_tolerance <= 0.0) {
-    throw std::runtime_error(std::string(op) + ": tolerances must be > 0");
+    ::pluss::throw_error(std::string(op) + ": tolerances must be > 0");
   }
   if (cfg.initial_mesh_size <= 0.0 || cfg.max_mesh_size <= 0.0) {
-    throw std::runtime_error(std::string(op) + ": mesh sizes must be > 0");
+    ::pluss::throw_error(std::string(op) + ": mesh sizes must be > 0");
   }
   if (cfg.mesh_expansion < 1.0 || cfg.mesh_contraction <= 0.0 ||
       cfg.mesh_contraction >= 1.0) {
-    throw std::runtime_error(std::string(op) + ": invalid mesh expansion/contraction factors");
+    ::pluss::throw_error(std::string(op) + ": invalid mesh expansion/contraction factors");
   }
   if (cfg.search_expansion < 1.0) {
-    throw std::runtime_error(std::string(op) + ": search_expansion must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": search_expansion must be >= 1");
   }
   if (cfg.search_trials < 0) {
-    throw std::runtime_error(std::string(op) + ": search_trials must be >= 0");
+    ::pluss::throw_error(std::string(op) + ": search_trials must be >= 0");
   }
   if ((cfg.search_strategy == PSSearchStrategy::RandomDirections ||
        cfg.search_strategy == PSSearchStrategy::ExpandAndRandomDirections) &&
       cfg.search_trials < 1) {
-    throw std::runtime_error(std::string(op) + ": random-direction search requires search_trials >= 1");
+    ::pluss::throw_error(std::string(op) + ": random-direction search requires search_trials >= 1");
   }
   if (cfg.initial_penalty <= 0.0 || cfg.penalty_growth < 1.0) {
-    throw std::runtime_error(std::string(op) + ": invalid penalty parameters");
+    ::pluss::throw_error(std::string(op) + ": invalid penalty parameters");
   }
   if (cfg.enable_cache && cfg.cache_max_entries < 1) {
-    throw std::runtime_error(std::string(op) + ": cache_max_entries must be >= 1 when cache is enabled");
+    ::pluss::throw_error(std::string(op) + ": cache_max_entries must be >= 1 when cache is enabled");
   }
   if (cfg.enable_cache && cfg.cache_tolerance <= 0.0) {
-    throw std::runtime_error(std::string(op) + ": cache_tolerance must be > 0 when cache is enabled");
+    ::pluss::throw_error(std::string(op) + ": cache_tolerance must be > 0 when cache is enabled");
   }
   if (cfg.basis_refresh_interval < 1) {
-    throw std::runtime_error(std::string(op) + ": basis_refresh_interval must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": basis_refresh_interval must be >= 1");
   }
   if (cfg.al_max_outer_iterations < 1) {
-    throw std::runtime_error(std::string(op) + ": al_max_outer_iterations must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": al_max_outer_iterations must be >= 1");
   }
   if (cfg.al_penalty_growth < 1.0) {
-    throw std::runtime_error(std::string(op) + ": al_penalty_growth must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": al_penalty_growth must be >= 1");
   }
   if (cfg.al_violation_reduction_ratio <= 0.0 || cfg.al_violation_reduction_ratio >= 1.0) {
-    throw std::runtime_error(std::string(op) + ": al_violation_reduction_ratio must be in (0,1)");
+    ::pluss::throw_error(std::string(op) + ": al_violation_reduction_ratio must be in (0,1)");
   }
   if (cfg.al_multiplier_clip <= 0.0) {
-    throw std::runtime_error(std::string(op) + ": al_multiplier_clip must be > 0");
+    ::pluss::throw_error(std::string(op) + ": al_multiplier_clip must be > 0");
   }
   if (cfg.nups_expansion < 1.0) {
-    throw std::runtime_error(std::string(op) + ": nups_expansion must be >= 1");
+    ::pluss::throw_error(std::string(op) + ": nups_expansion must be >= 1");
   }
   if (cfg.nups_contraction <= 0.0 || cfg.nups_contraction >= 1.0) {
-    throw std::runtime_error(std::string(op) + ": nups_contraction must be in (0,1)");
+    ::pluss::throw_error(std::string(op) + ": nups_contraction must be in (0,1)");
   }
   if (cfg.nups_decay <= 0.0 || cfg.nups_decay > 1.0) {
-    throw std::runtime_error(std::string(op) + ": nups_decay must be in (0,1]");
+    ::pluss::throw_error(std::string(op) + ": nups_decay must be in (0,1]");
   }
   if (cfg.nups_min_scale <= 0.0 || cfg.nups_max_scale < cfg.nups_min_scale) {
-    throw std::runtime_error(std::string(op) + ": invalid nups_min_scale/nups_max_scale");
+    ::pluss::throw_error(std::string(op) + ": invalid nups_min_scale/nups_max_scale");
   }
   if (!(cfg.time_limit_seconds > 0.0 || std::isinf(cfg.time_limit_seconds))) {
-    throw std::runtime_error(std::string(op) + ": time_limit_seconds must be positive or +inf");
+    ::pluss::throw_error(std::string(op) + ": time_limit_seconds must be positive or +inf");
   }
 }
 
@@ -279,7 +279,7 @@ BoundsPack prepare_bounds(
     return bounds;
   }
   if (!lower_defined || !upper_defined) {
-    throw std::runtime_error(std::string(op) + ": both lower_bounds and upper_bounds must be defined");
+    ::pluss::throw_error(std::string(op) + ": both lower_bounds and upper_bounds must be defined");
   }
 
   const Series flat_lower =
@@ -288,10 +288,10 @@ BoundsPack prepare_bounds(
       upper.reshape({setup.dimension}).to(setup.work_cfg.platform, setup.work_cfg.dtype).contiguous();
 
   if (flat_lower.numel() != setup.dimension || flat_upper.numel() != setup.dimension) {
-    throw std::runtime_error(std::string(op) + ": bounds must match initial point size");
+    ::pluss::throw_error(std::string(op) + ": bounds must match initial point size");
   }
   if (!flat_lower.le(flat_upper).all().item<bool>()) {
-    throw std::runtime_error(std::string(op) + ": expected lower_bounds <= upper_bounds elementwise");
+    ::pluss::throw_error(std::string(op) + ": expected lower_bounds <= upper_bounds elementwise");
   }
 
   bounds.enabled = true;
@@ -307,10 +307,10 @@ std::pair<std::int64_t, std::int64_t> require_matrix_shape(
     const char* name,
     const char* op) {
   if (!matrix.defined()) {
-    throw std::runtime_error(std::string(op) + ": undefined matrix for " + name);
+    ::pluss::throw_error(std::string(op) + ": undefined matrix for " + name);
   }
   if (matrix.sizes().size() != 2) {
-    throw std::runtime_error(std::string(op) + ": " + name + " must be rank-2");
+    ::pluss::throw_error(std::string(op) + ": " + name + " must be rank-2");
   }
   const auto& sizes = matrix.sizes();
   return {sizes[0], sizes[1]};
@@ -326,16 +326,16 @@ LinearConstraints prepare_linear_constraints(
   const bool has_ineq_matrix = cfg.linear_ineq_matrix.defined();
   const bool has_ineq_rhs = cfg.linear_ineq_rhs.defined();
   if (has_ineq_matrix != has_ineq_rhs) {
-    throw std::runtime_error(std::string(op) + ": linear_ineq_matrix and linear_ineq_rhs must be provided together");
+    ::pluss::throw_error(std::string(op) + ": linear_ineq_matrix and linear_ineq_rhs must be provided together");
   }
   if (has_ineq_matrix) {
     const auto [m, n] = require_matrix_shape(cfg.linear_ineq_matrix, "linear_ineq_matrix", op);
     if (n != setup.dimension) {
-      throw std::runtime_error(std::string(op) + ": linear_ineq_matrix column count must match initial size");
+      ::pluss::throw_error(std::string(op) + ": linear_ineq_matrix column count must match initial size");
     }
     const Series rhs = cfg.linear_ineq_rhs.reshape({m}).to(ScalarType::Float64);
     if (rhs.numel() != m) {
-      throw std::runtime_error(std::string(op) + ": linear_ineq_rhs length mismatch");
+      ::pluss::throw_error(std::string(op) + ": linear_ineq_rhs length mismatch");
     }
     out.has_ineq = m > 0;
     out.n_ineq = m;
@@ -346,16 +346,16 @@ LinearConstraints prepare_linear_constraints(
   const bool has_eq_matrix = cfg.linear_eq_matrix.defined();
   const bool has_eq_rhs = cfg.linear_eq_rhs.defined();
   if (has_eq_matrix != has_eq_rhs) {
-    throw std::runtime_error(std::string(op) + ": linear_eq_matrix and linear_eq_rhs must be provided together");
+    ::pluss::throw_error(std::string(op) + ": linear_eq_matrix and linear_eq_rhs must be provided together");
   }
   if (has_eq_matrix) {
     const auto [m, n] = require_matrix_shape(cfg.linear_eq_matrix, "linear_eq_matrix", op);
     if (n != setup.dimension) {
-      throw std::runtime_error(std::string(op) + ": linear_eq_matrix column count must match initial size");
+      ::pluss::throw_error(std::string(op) + ": linear_eq_matrix column count must match initial size");
     }
     const Series rhs = cfg.linear_eq_rhs.reshape({m}).to(ScalarType::Float64);
     if (rhs.numel() != m) {
-      throw std::runtime_error(std::string(op) + ": linear_eq_rhs length mismatch");
+      ::pluss::throw_error(std::string(op) + ": linear_eq_rhs length mismatch");
     }
     out.has_eq = m > 0;
     out.n_eq = m;
@@ -540,7 +540,7 @@ CandidateEvaluation evaluate_candidate(
   const Series shaped_x = host_vector_to_shaped_series(x, setup);
   const Series y = objective(shaped_x);
   if (!y.defined() || y.numel() != 1 || y.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": objective must return real scalar Series");
+    ::pluss::throw_error(std::string(op) + ": objective must return real scalar Series");
   }
   ++(*evaluations);
 
@@ -1533,7 +1533,7 @@ PSOutcome pattern_search_minimizer(
       const NonlinearSnapshot c_final =
           evaluate_nonlinear_snapshot(config.nonlinear_constraints, inner_out.minimizer, op);
       if (c_final.ineq.size() != lambda_ineq.size() || c_final.eq.size() != lambda_eq.size()) {
-        throw std::runtime_error(std::string(op) + ": nonlinear constraint dimensionality changed across outer iterations");
+        ::pluss::throw_error(std::string(op) + ": nonlinear constraint dimensionality changed across outer iterations");
       }
 
       const double cv = std::max(inner_out.diagnostics.max_constraint_violation, c_final.max_violation);
@@ -1616,7 +1616,7 @@ PSOutcome pattern_search_minimizer(
     }
 
     if (!have_best) {
-      throw std::runtime_error(std::string(op) + ": augmented Lagrangian loop failed to produce an iterate");
+      ::pluss::throw_error(std::string(op) + ": augmented Lagrangian loop failed to produce an iterate");
     }
 
     best_out.diagnostics.iterations = total_iterations;

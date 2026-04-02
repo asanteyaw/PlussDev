@@ -250,15 +250,15 @@ auto hil = x.hilbert();
 auto hst = x.histcounts(8, -3.0, 3.0);
 
 // distribution/stat helpers
-auto pdf = x.abs().pdf(0.0, 1.5);
-auto logpdf = x.abs().logpdf(0.0, 1.5);
-auto logcdf = x.abs().logcdf(0.0, 1.5);
-auto cdf = x.abs().cdf(0.0, 1.5);
-auto sk = x.skewness();
-auto ku = x.kurtosis();
+auto pdf = x.abs().stat.pdf(0.0, 1.5);
+auto logpdf = x.abs().stat.logpdf(0.0, 1.5);
+auto logcdf = x.abs().stat.logcdf(0.0, 1.5);
+auto cdf = x.abs().stat.cdf(0.0, 1.5);
+auto sk = x.stat.skewness();
+auto ku = x.stat.kurtosis();
 
 // moving window helpers
-auto ms = x.movsum(3);
-auto mmn = x.movmean(3);
-auto mstd = x.movstd(3);
+auto ms = x.stat.movsum(3);
+auto mmn = x.stat.movmean(3);
+auto mstd = x.stat.movstd(3);
 ```

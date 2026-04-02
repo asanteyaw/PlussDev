@@ -190,8 +190,8 @@ auto xdct = x.dct();
 auto xrec = xdct.idct();
 auto h = x.hilbert();
 auto hist = x.histcounts(8, -3.0, 3.0);
-auto skew = x.skewness();
-auto kurt = x.kurtosis();
+auto skew = x.stat.skewness();
+auto kurt = x.stat.kurtosis();
 \end{lstlisting}
 
 \subsection{Series Demo Map}

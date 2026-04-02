@@ -69,7 +69,7 @@ inline Series pile_span(std::span<const Series> values, std::int64_t dim = 0) {
   return values.front().pile(tail, dim);
 }
 
-inline Series unite_span(std::span<const Series> values, std::int64_t dim = 0) {
+inline Series unite_span(std::span<const Series> values, std::int64_t dim = 0, bool strict_dtype = true) {
   if (values.empty()) {
     return {};
   }
@@ -77,7 +77,7 @@ inline Series unite_span(std::span<const Series> values, std::int64_t dim = 0) {
     return values.front();
   }
   std::vector<Series> tail(values.begin() + 1, values.end());
-  return values.front().unite(tail, dim);
+  return values.front().unite(tail, dim, strict_dtype);
 }
 
 } // namespace detail::stack_array
@@ -116,6 +116,8 @@ public:
 
   [[nodiscard]] bool empty() const noexcept { return values_.empty(); }
   [[nodiscard]] std::size_t size() const noexcept { return values_.size(); }
+  [[nodiscard]] const Series& operator[](std::size_t i) const { return values_.at(i); }
+  [[nodiscard]] Series& operator[](std::size_t i) { return values_.at(i); }
 
   [[nodiscard]] detail::stack_array::StackSpan data() const noexcept {
     return detail::stack_array::StackSpan{std::span<const Series>(values_.data(), values_.size())};
@@ -200,18 +202,15 @@ private:
   storage_type views_{};
 };
 
-template <class... Items>
-  requires(sizeof...(Items) > 0)
-inline StackArray<Series> sign_list(Items&&... items) {
-  return StackArray<Series>(std::forward<Items>(items)...);
-}
+using sign_list = StackArray<Series>;
+using SignList = sign_list;
 
 inline Series pile(detail::stack_array::StackSpan values, std::int64_t dim = 0) {
   return detail::stack_array::pile_span(values.values, dim);
 }
 
-inline Series unite(detail::stack_array::StackSpan values, std::int64_t dim = 0) {
-  return detail::stack_array::unite_span(values.values, dim);
+inline Series unite(detail::stack_array::StackSpan values, std::int64_t dim = 0, bool strict_dtype = true) {
+  return detail::stack_array::unite_span(values.values, dim, strict_dtype);
 }
 
 } // namespace pluss

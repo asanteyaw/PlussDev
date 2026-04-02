@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <source_location>
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@ namespace pluss::codem::series_tape {
 struct SourceLink {
   std::vector<Series> parents{};
   std::vector<std::int64_t> parent_versions{};
+  std::int64_t output_version{0};
   std::string op_name{};
   std::string capture_file{};
   std::string capture_function{};
@@ -96,6 +98,7 @@ void clear_sensitivity(const Series& s);
 void accumulate_sensitivity(const Series& s, const Series& sens);
 std::optional<Series> sensitivity(const Series& s);
 Series sensitivity_or_zeros(const Series& s);
+void prepare_tracked_leaves(std::span<Series* const> leaves);
 
 void backpropagate(const Series& loss,
                    const std::optional<Series>& seed = std::nullopt,

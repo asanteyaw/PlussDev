@@ -125,7 +125,7 @@ For each generated method name, call it as shown below.
 - `x.cauchy_(...);`
 - `auto y = x.cbrt(...);`
 - `auto y = x.ccol_indices(...);`
-- `auto y = x.cdf(...);`
+- `auto y = x.stat.cdf(...);`
 - `auto y = x.cdist(...);`
 - `auto y = x.ceil(...);`
 - `auto y = x.center(...);`
@@ -308,7 +308,7 @@ For each generated method name, call it as shown below.
 - `auto y = x.item(...);`
 - `auto y = x.kron(...);`
 - `auto y = x.kthvalue(...);`
-- `auto y = x.kurtosis(...);`
+- `auto y = x.stat.kurtosis(...);`
 - `auto y = x.lcm(...);`
 - `x.lcm_(...);`
 - `auto y = x.ldexp(...);`
@@ -374,12 +374,12 @@ For each generated method name, call it as shown below.
 - `auto y = x.mode(...);`
 - `auto y = x.moveaxis(...);`
 - `auto y = x.movedim(...);`
-- `auto y = x.movmax(...);`
-- `auto y = x.movmean(...);`
-- `auto y = x.movmin(...);`
-- `auto y = x.movstd(...);`
-- `auto y = x.movsum(...);`
-- `auto y = x.movvar(...);`
+- `auto y = x.stat.movmax(...);`
+- `auto y = x.stat.movmean(...);`
+- `auto y = x.stat.movmin(...);`
+- `auto y = x.stat.movstd(...);`
+- `auto y = x.stat.movsum(...);`
+- `auto y = x.stat.movvar(...);`
 - `auto y = x.msort(...);`
 - `auto y = x.mul(...);`
 - `x.mul_(...);`
@@ -424,7 +424,7 @@ For each generated method name, call it as shown below.
 - `auto y = x.ormqr(...);`
 - `auto y = x.outer(...);`
 - `auto y = x.output_nr(...);`
-- `auto y = x.pdf(...);`
+- `auto y = x.stat.pdf(...);`
 - `auto y = x.pdist2(...);`
 - `auto y = x.pin_memory(...);`
 - `auto y = x.pinverse(...);`
@@ -504,7 +504,7 @@ For each generated method name, call it as shown below.
 - `auto y = x.sinh(...);`
 - `x.sinh_(...);`
 - `auto y = x.size(...);`
-- `auto y = x.skewness(...);`
+- `auto y = x.stat.skewness(...);`
 - `auto y = x.slice_inverse(...);`
 - `auto y = x.slice_scatter(...);`
 - `auto y = x.slogdet(...);`

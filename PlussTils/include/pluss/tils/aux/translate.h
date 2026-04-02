@@ -150,9 +150,7 @@ auto transform_axis(F&& fn,
       slice = ::pluss::codem::_compat::invoke(
           "select",
           slice,
-          layout.fixed_dims[p],
-          fixed_index[p],
-          static_cast<std::int64_t>(1));
+          {layout.fixed_dims[p], fixed_index[p], static_cast<std::int64_t>(1)});
     }
     return slice;
   };
@@ -182,8 +180,7 @@ auto transform_axis(F&& fn,
       slice = ::pluss::coden::_compat::invoke<pluss::Note>(
           "select",
           slice,
-          layout.fixed_dims[p],
-          fixed_index[p]);
+          {layout.fixed_dims[p], fixed_index[p]});
     }
     return slice;
   };
@@ -217,9 +214,7 @@ auto transform_axis(F&& fn,
       ticks_slice = ::pluss::codem::_compat::invoke(
           "select",
           ticks_slice,
-          layout.fixed_dims[p],
-          fixed_index[p],
-          static_cast<std::int64_t>(1));
+          {layout.fixed_dims[p], fixed_index[p], static_cast<std::int64_t>(1)});
     }
     return ::pluss::codeh::Timeline::fromSeries(ticks_slice);
   };

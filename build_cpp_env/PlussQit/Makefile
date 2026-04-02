@@ -5158,6 +5158,57 @@ tests/CodeM/test_patch166_parallel_iterator_indexing_regression.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch166_parallel_iterator_indexing_regression.cpp.s
 .PHONY : tests/CodeM/test_patch166_parallel_iterator_indexing_regression.cpp.s
 
+tests/CodeM/test_patch167_cpu_autodiff_parity.o: tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.o
+.PHONY : tests/CodeM/test_patch167_cpu_autodiff_parity.o
+
+# target to build an object file
+tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.o
+.PHONY : tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.o
+
+tests/CodeM/test_patch167_cpu_autodiff_parity.i: tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.i
+.PHONY : tests/CodeM/test_patch167_cpu_autodiff_parity.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.i
+.PHONY : tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.i
+
+tests/CodeM/test_patch167_cpu_autodiff_parity.s: tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.s
+.PHONY : tests/CodeM/test_patch167_cpu_autodiff_parity.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.s
+.PHONY : tests/CodeM/test_patch167_cpu_autodiff_parity.cpp.s
+
+tests/CodeM/test_patch167_io_save_load_roundtrip.o: tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.o
+.PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.o
+
+# target to build an object file
+tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.o
+.PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.o
+
+tests/CodeM/test_patch167_io_save_load_roundtrip.i: tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.i
+.PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.i
+.PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.i
+
+tests/CodeM/test_patch167_io_save_load_roundtrip.s: tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
+.PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
+.PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
+
 tests/CodeM/test_patch17_unary_cat_scatter.o: tests/CodeM/test_patch17_unary_cat_scatter.cpp.o
 .PHONY : tests/CodeM/test_patch17_unary_cat_scatter.o
 
@@ -8298,6 +8349,12 @@ help:
 	@echo "... tests/CodeM/test_patch166_parallel_iterator_indexing_regression.o"
 	@echo "... tests/CodeM/test_patch166_parallel_iterator_indexing_regression.i"
 	@echo "... tests/CodeM/test_patch166_parallel_iterator_indexing_regression.s"
+	@echo "... tests/CodeM/test_patch167_cpu_autodiff_parity.o"
+	@echo "... tests/CodeM/test_patch167_cpu_autodiff_parity.i"
+	@echo "... tests/CodeM/test_patch167_cpu_autodiff_parity.s"
+	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.o"
+	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.i"
+	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.s"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.o"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.i"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.s"

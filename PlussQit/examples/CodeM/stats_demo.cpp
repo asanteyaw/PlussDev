@@ -14,17 +14,17 @@ int main() {
   std::cout << "stat.mean (dot style):\n" << x.stat.mean() << "\n\n";
   std::cout << "var(unbiased=false):\n" << x.var(false) << "\n\n";
   std::cout << "std(unbiased=false):\n" << x.std(false) << "\n\n";
-  std::cout << "skewness:\n" << x.skewness() << "\n\n";
-  std::cout << "kurtosis:\n" << x.kurtosis() << "\n\n";
+  std::cout << "skewness:\n" << x.stat.skewness() << "\n\n";
+  std::cout << "kurtosis:\n" << x.stat.kurtosis() << "\n\n";
   std::cout << "histcounts(8 bins, [-3, 3]):\n" << x.histcounts(8, -3.0, 3.0) << "\n\n";
 
-  std::cout << "pdf():\n" << x.pdf() << "\n\n";
-  std::cout << "logpdf():\n" << x.logpdf() << "\n\n";
-  std::cout << "logcdf():\n" << x.logcdf() << "\n\n";
-  std::cout << "cdf():\n" << x.cdf() << "\n\n";
+  std::cout << "stat.pdf():\n" << x.stat.pdf() << "\n\n";
+  std::cout << "stat.logpdf():\n" << x.stat.logpdf() << "\n\n";
+  std::cout << "stat.logcdf():\n" << x.stat.logcdf() << "\n\n";
+  std::cout << "stat.cdf():\n" << x.stat.cdf() << "\n\n";
 
-  std::cout << "movmean(window=4):\n" << x.movmean(4) << "\n\n";
-  std::cout << "movstd(window=4):\n" << x.movstd(4) << "\n\n";
+  std::cout << "movmean(window=4):\n" << x.stat.movmean(4) << "\n\n";
+  std::cout << "movstd(window=4):\n" << x.stat.movstd(4) << "\n\n";
   std::cout << "standardize:\n" << x.standardize() << "\n\n";
   std::cout << "center:\n" << x.center() << "\n\n";
 

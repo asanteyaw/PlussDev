@@ -192,7 +192,7 @@ inline Series MSE(const Series& prediction, const Series& target, const MSEOptio
   ::pluss::detail::nn::require_training_float_dtype_(prediction.scalar_type(), "nn::losses::MSE", "prediction");
   ::pluss::detail::nn::require_training_float_dtype_(target.scalar_type(), "nn::losses::MSE", "target");
   detail::require_same_platform_(prediction, target, "nn::losses::MSE");
-  const Series per = prediction.sub(target).square();
+  const Series per = prediction.add(target.neg()).square();
   return detail::reduce_loss_(per, options.reduction, "nn::losses::MSE");
 }
 
@@ -216,7 +216,7 @@ inline Series RelativeMSE(const Series& prediction,
   if (options.use_absolute_divisor) denom = denom.abs();
   denom = denom.clamp_min(options.epsilon);
 
-  const Series per = prediction.sub(target).square().div(denom);
+  const Series per = prediction.add(target.neg()).square().div(denom);
   return detail::reduce_loss_(per, options.reduction, "nn::losses::RelativeMSE");
 }
 
@@ -230,7 +230,7 @@ inline Series Huber(const Series& prediction, const Series& target, const HuberO
       options.delta > 0.0 && std::isfinite(options.delta),
       "pluss::nn::losses::Huber: delta must be positive and finite");
 
-  const Series err = prediction.sub(target);
+  const Series err = prediction.add(target.neg());
   const Series abs_err = err.abs();
   const Series quadratic = abs_err.clamp(0.0, options.delta);
   const Series linear = abs_err.sub(quadratic);

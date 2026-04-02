@@ -266,9 +266,9 @@
   TokenBatch tex_extract_identifiers() const;
   Note join() const;
   Note join(::std::string_view sep) const;
-  Note reshape(::std::span<const ::std::int64_t> sizes) const;
+  Note reshape(::pluss::msharp::RangeView::Int sizes) const;
   Note transpose(::std::int64_t dim0, ::std::int64_t dim1) const;
-  Note permute(::std::span<const ::std::int64_t> dims) const;
+  Note permute(::pluss::msharp::RangeView::Int dims) const;
   Note select(::std::int64_t dim, ::std::int64_t index) const;
   Note narrow(::std::int64_t dim, ::std::int64_t start, ::std::int64_t length) const;
   Note flatten() const;
@@ -439,6 +439,6 @@
   Note squeeze(::std::int64_t dim) const;
   Note unsqueeze(::std::int64_t dim) const;
   Note expand_dims(::std::int64_t dim) const;
-  Note repeat(::std::span<const ::std::int64_t> repeats) const;
+  Note repeat(::pluss::msharp::RangeView::Int repeats) const;
   Note repeat_interleave(::std::int64_t repeats, ::std::int64_t dim) const;
-  Note tile(::std::span<const ::std::int64_t> reps) const;
+  Note tile(::pluss::msharp::RangeView::Int reps) const;

@@ -3,44 +3,44 @@
 // This file is included *inside* class pluss::codeh::Timeline.
 // Keep this header self-contained: no includes here.
 
-  inline Timeline add_duration(const Duration& d) const { return ::pluss::codeh::_compat::invoke<Timeline>("add_duration", *this, d); }
-  inline Timeline sub_duration(const Duration& d) const { return ::pluss::codeh::_compat::invoke<Timeline>("sub_duration", *this, d); }
-  inline Duration diff(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<Duration>("diff", *this, other); }
+  inline Timeline add_duration(const Duration& d) const { return ::pluss::codeh::_compat::invoke<Timeline>("add_duration", *this, {d}); }
+  inline Timeline sub_duration(const Duration& d) const { return ::pluss::codeh::_compat::invoke<Timeline>("sub_duration", *this, {d}); }
+  inline Duration diff(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<Duration>("diff", *this, {other}); }
 
-  inline pluss::codem::Series eq(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("eq", *this, other); }
-  inline pluss::codem::Series ne(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ne", *this, other); }
-  inline pluss::codem::Series lt(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("lt", *this, other); }
-  inline pluss::codem::Series le(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("le", *this, other); }
-  inline pluss::codem::Series gt(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("gt", *this, other); }
-  inline pluss::codem::Series ge(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ge", *this, other); }
+  inline pluss::codem::Series eq(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("eq", *this, {other}); }
+  inline pluss::codem::Series ne(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ne", *this, {other}); }
+  inline pluss::codem::Series lt(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("lt", *this, {other}); }
+  inline pluss::codem::Series le(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("le", *this, {other}); }
+  inline pluss::codem::Series gt(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("gt", *this, {other}); }
+  inline pluss::codem::Series ge(const Timeline& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("ge", *this, {other}); }
   inline pluss::codem::Series isnat() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("isnat", *this); }
   inline pluss::codem::Series isvalid() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("isvalid", *this); }
   inline pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("argsort", *this); }
   inline bool isnat_scalar() const { return ::pluss::codeh::_compat::invoke<bool>("isnat_scalar", *this); }
   inline std::string isoformat() const { return ::pluss::codeh::_compat::invoke<std::string>("isoformat", *this); }
-  inline pluss::coden::Note strftime(std::string_view fmt) const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string(fmt)); }
-  inline pluss::coden::Note to_note_iso() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S.%f%z")); }
+  inline pluss::coden::Note strftime(std::string_view fmt) const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string(fmt)}); }
+  inline pluss::coden::Note to_note_iso() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S.%f%z")}); }
   inline pluss::coden::Note weekday_name() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("weekday_name", *this); }
   inline pluss::coden::Note month_name() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("month_name", *this); }
-  inline Timeline floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>("floor", *this, std::string(unit)); }
-  inline Timeline ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>("ceil", *this, std::string(unit)); }
-  inline Timeline round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>("round", *this, std::string(unit)); }
-  inline Timeline normalize() const { return ::pluss::codeh::_compat::invoke<Timeline>("floor", *this, std::string("D")); }
-  inline Timeline date() const { return ::pluss::codeh::_compat::invoke<Timeline>("floor", *this, std::string("D")); }
+  inline Timeline floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>("floor", *this, {std::string(unit)}); }
+  inline Timeline ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>("ceil", *this, {std::string(unit)}); }
+  inline Timeline round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Timeline>("round", *this, {std::string(unit)}); }
+  inline Timeline normalize() const { return ::pluss::codeh::_compat::invoke<Timeline>("floor", *this, {std::string("D")}); }
+  inline Timeline date() const { return ::pluss::codeh::_compat::invoke<Timeline>("floor", *this, {std::string("D")}); }
   inline Timeline time() const { return ::pluss::codeh::_compat::invoke<Timeline>("time_of_day", *this); }
-  inline Timeline tz_convert(std::string_view tz_name) const { return ::pluss::codeh::_compat::invoke<Timeline>("tz_convert", *this, std::string(tz_name)); }
-  inline Timeline tz_localize(std::string_view tz_name, int fold=0, std::string_view nonexistent="raise") const { return ::pluss::codeh::_compat::invoke<Timeline>("tz_localize", *this, std::string(tz_name), (std::int64_t)fold, std::string(nonexistent)); }
-  inline Timeline to_utc() const { return ::pluss::codeh::_compat::invoke<Timeline>("tz_convert", *this, std::string("UTC")); }
+  inline Timeline tz_convert(std::string_view tz_name) const { return ::pluss::codeh::_compat::invoke<Timeline>("tz_convert", *this, {std::string(tz_name)}); }
+  inline Timeline tz_localize(std::string_view tz_name, int fold=0, std::string_view nonexistent="raise") const { return ::pluss::codeh::_compat::invoke<Timeline>("tz_localize", *this, {std::string(tz_name), (std::int64_t)fold, std::string(nonexistent)}); }
+  inline Timeline to_utc() const { return ::pluss::codeh::_compat::invoke<Timeline>("tz_convert", *this, {std::string("UTC")}); }
   inline Timeline min() const { return ::pluss::codeh::_compat::invoke<Timeline>("min", *this); }
   inline Timeline max() const { return ::pluss::codeh::_compat::invoke<Timeline>("max", *this); }
   inline Timeline sort() const { return ::pluss::codeh::_compat::invoke<Timeline>("sort", *this); }
   inline Timeline unique() const { return ::pluss::codeh::_compat::invoke<Timeline>("unique", *this); }
   inline Timeline drop_duplicates() const { return ::pluss::codeh::_compat::invoke<Timeline>("unique", *this); }
-  inline Timeline fill_nat(const Timeline& value) const { return ::pluss::codeh::_compat::invoke<Timeline>("fill_nat", *this, value); }
-  inline Timeline where(const pluss::codem::Series& mask, const Timeline& other) const { return ::pluss::codeh::_compat::invoke<Timeline>("where", *this, mask, other); }
-  inline Timeline add_nanos(std::int64_t nanos) const { return ::pluss::codeh::_compat::invoke<Timeline>("add_nanos", *this, nanos); }
-  inline pluss::codem::Series searchsorted_left(const Timeline& values) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("searchsorted_left", *this, values); }
-  inline pluss::codem::Series searchsorted_right(const Timeline& values) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("searchsorted_right", *this, values); }
+  inline Timeline fill_nat(const Timeline& value) const { return ::pluss::codeh::_compat::invoke<Timeline>("fill_nat", *this, {value}); }
+  inline Timeline where(const pluss::codem::Series& mask, const Timeline& other) const { return ::pluss::codeh::_compat::invoke<Timeline>("where", *this, {mask, other}); }
+  inline Timeline add_nanos(std::int64_t nanos) const { return ::pluss::codeh::_compat::invoke<Timeline>("add_nanos", *this, {nanos}); }
+  inline pluss::codem::Series searchsorted_left(const Timeline& values) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("searchsorted_left", *this, {values}); }
+  inline pluss::codem::Series searchsorted_right(const Timeline& values) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("searchsorted_right", *this, {values}); }
   inline std::vector<std::int64_t> to_epoch_nanos_flat() const { return ::pluss::codeh::_compat::invoke<std::vector<std::int64_t>>("to_epoch_nanos_flat", *this); }
 
   inline pluss::codem::Series year() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("dt_year", *this); }
@@ -155,196 +155,196 @@
   inline pluss::codem::Series is_sunday() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("is_sunday", *this); }
   inline pluss::codem::Series sun_is() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("is_sunday", *this); }
   inline pluss::codem::Series is_sun() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("is_sunday", *this); }
-  inline pluss::coden::Note to_note_date() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d")); }
-  inline pluss::coden::Note to_note_date_compact() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y%m%d")); }
-  inline pluss::coden::Note to_note_time() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M:%S")); }
-  inline pluss::coden::Note to_note_time_hm() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M")); }
-  inline pluss::coden::Note to_note_datetime() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S")); }
-  inline pluss::coden::Note to_note_rfc3339() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_rfc3339_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_ym() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m")); }
-  inline pluss::coden::Note to_note_my() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%Y")); }
-  inline pluss::coden::Note to_note_md() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d")); }
-  inline pluss::coden::Note to_note_dmy() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M:%S")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M:%S")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M:%S")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M:%S")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M:%S")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M:%S")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M:%S")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M:%S")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M:%S")); }
-  inline pluss::coden::Note to_note_date_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d%z")); }
-  inline pluss::coden::Note to_note_date_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d.%f")); }
-  inline pluss::coden::Note to_note_date_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d.%f%z")); }
-  inline pluss::coden::Note to_note_date_compact_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y%m%d%z")); }
-  inline pluss::coden::Note to_note_date_compact_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y%m%d.%f")); }
-  inline pluss::coden::Note to_note_date_compact_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y%m%d.%f%z")); }
-  inline pluss::coden::Note to_note_time_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_time_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_time_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_time_hm_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M%z")); }
-  inline pluss::coden::Note to_note_time_hm_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M.%f")); }
-  inline pluss::coden::Note to_note_time_hm_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_datetime_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_datetime_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_datetime_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_rfc3339_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S%z%z")); }
-  inline pluss::coden::Note to_note_rfc3339_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S%z.%f%z")); }
-  inline pluss::coden::Note to_note_rfc3339_nano_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S.%f%z.%f")); }
-  inline pluss::coden::Note to_note_rfc3339_nano_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S.%f%z.%f%z")); }
-  inline pluss::coden::Note to_note_ym_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m%z")); }
-  inline pluss::coden::Note to_note_ym_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m.%f")); }
-  inline pluss::coden::Note to_note_ym_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m.%f%z")); }
-  inline pluss::coden::Note to_note_my_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%Y%z")); }
-  inline pluss::coden::Note to_note_my_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%Y.%f")); }
-  inline pluss::coden::Note to_note_my_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%Y.%f%z")); }
-  inline pluss::coden::Note to_note_md_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d%z")); }
-  inline pluss::coden::Note to_note_md_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d.%f")); }
-  inline pluss::coden::Note to_note_md_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d.%f%z")); }
-  inline pluss::coden::Note to_note_dmy_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y%z")); }
-  inline pluss::coden::Note to_note_dmy_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y.%f")); }
-  inline pluss::coden::Note to_note_dmy_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%dT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M.%f")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%Y %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d-%m-%YT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M.%f")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%Y %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m-%d-%YT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%d %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y/%m/%dT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M.%f")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%Y %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d/%m/%YT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M.%f")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%Y %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m/%d/%YT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hm_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M%z")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hm_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hms_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%d %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_Ymd_hms_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y.%m.%dT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M.%f")); }
-  inline pluss::coden::Note to_note_dmY_hm_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M%z")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_dmY_hm_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_dmY_hms_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%Y %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_dmY_hms_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%d.%m.%YT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M.%f")); }
-  inline pluss::coden::Note to_note_mdY_hm_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M%z")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M.%f")); }
-  inline pluss::coden::Note to_note_mdY_hm_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_mdY_hms_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%Y %H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M:%S%z")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M:%S.%f")); }
-  inline pluss::coden::Note to_note_mdY_hms_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%m.%d.%YT%H:%M:%S.%f%z")); }
-  inline pluss::coden::Note to_note_weekday() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d (%a)")); }
-  inline pluss::coden::Note to_note_weekday_long() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%m-%d (%A)")); }
-  inline pluss::coden::Note to_note_month_name() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%b-%d")); }
-  inline pluss::coden::Note to_note_month_name_long() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%Y-%B-%d")); }
-  inline pluss::coden::Note to_note_month_year_name() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%B %Y")); }
-  inline pluss::coden::Note to_note_iso_week() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%G-W%V-%u")); }
-  inline pluss::coden::Note to_note_iso_week_compact() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, std::string("%G%V%u")); }
+  inline pluss::coden::Note to_note_date() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d")}); }
+  inline pluss::coden::Note to_note_date_compact() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y%m%d")}); }
+  inline pluss::coden::Note to_note_time() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_time_hm() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M")}); }
+  inline pluss::coden::Note to_note_datetime() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_rfc3339() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_rfc3339_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_ym() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m")}); }
+  inline pluss::coden::Note to_note_my() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%Y")}); }
+  inline pluss::coden::Note to_note_md() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d")}); }
+  inline pluss::coden::Note to_note_dmy() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_slash() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M:%S")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dot() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M:%S")}); }
+  inline pluss::coden::Note to_note_date_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d%z")}); }
+  inline pluss::coden::Note to_note_date_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d.%f")}); }
+  inline pluss::coden::Note to_note_date_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d.%f%z")}); }
+  inline pluss::coden::Note to_note_date_compact_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y%m%d%z")}); }
+  inline pluss::coden::Note to_note_date_compact_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y%m%d.%f")}); }
+  inline pluss::coden::Note to_note_date_compact_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y%m%d.%f%z")}); }
+  inline pluss::coden::Note to_note_time_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_time_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_time_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_time_hm_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M%z")}); }
+  inline pluss::coden::Note to_note_time_hm_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_time_hm_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_datetime_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_datetime_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_datetime_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_rfc3339_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S%z%z")}); }
+  inline pluss::coden::Note to_note_rfc3339_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S%z.%f%z")}); }
+  inline pluss::coden::Note to_note_rfc3339_nano_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S.%f%z.%f")}); }
+  inline pluss::coden::Note to_note_rfc3339_nano_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S.%f%z.%f%z")}); }
+  inline pluss::coden::Note to_note_ym_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m%z")}); }
+  inline pluss::coden::Note to_note_ym_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m.%f")}); }
+  inline pluss::coden::Note to_note_ym_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m.%f%z")}); }
+  inline pluss::coden::Note to_note_my_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%Y%z")}); }
+  inline pluss::coden::Note to_note_my_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%Y.%f")}); }
+  inline pluss::coden::Note to_note_my_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%Y.%f%z")}); }
+  inline pluss::coden::Note to_note_md_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d%z")}); }
+  inline pluss::coden::Note to_note_md_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d.%f")}); }
+  inline pluss::coden::Note to_note_md_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d.%f%z")}); }
+  inline pluss::coden::Note to_note_dmy_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y%z")}); }
+  inline pluss::coden::Note to_note_dmy_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y.%f")}); }
+  inline pluss::coden::Note to_note_dmy_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%dT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%Y %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d-%m-%YT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%Y %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m-%d-%YT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%d %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y/%m/%dT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%Y %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d/%m/%YT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%Y %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_slash_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_slash_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_slash_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m/%d/%YT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hm_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%d %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_Ymd_hms_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y.%m.%dT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hm_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hm_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hms_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%Y %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_dmY_hms_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%d.%m.%YT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hm_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M%z")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hm_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hms_sp_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%Y %H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dot_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M:%S%z")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dot_nano() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M:%S.%f")}); }
+  inline pluss::coden::Note to_note_mdY_hms_t_dot_nano_z() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%m.%d.%YT%H:%M:%S.%f%z")}); }
+  inline pluss::coden::Note to_note_weekday() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d (%a)")}); }
+  inline pluss::coden::Note to_note_weekday_long() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%m-%d (%A)")}); }
+  inline pluss::coden::Note to_note_month_name() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%b-%d")}); }
+  inline pluss::coden::Note to_note_month_name_long() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%Y-%B-%d")}); }
+  inline pluss::coden::Note to_note_month_year_name() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%B %Y")}); }
+  inline pluss::coden::Note to_note_iso_week() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%G-W%V-%u")}); }
+  inline pluss::coden::Note to_note_iso_week_compact() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("strftime", *this, {std::string("%G%V%u")}); }

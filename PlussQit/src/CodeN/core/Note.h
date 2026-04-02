@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/export.h"
+#include "MSharp/RangeView.h"
 
 #include <cstdint>
 #include <array>
@@ -43,11 +44,12 @@ public:
 
   // Minimal core API remains implemented in Note.cpp
   ::std::vector<::std::int64_t> sizes() const;
+  pluss::msharp::RangeView::Int sizes_view() const;
   ::std::string_view at(::std::int64_t linear) const;
   Note latex_to_text(::std::int64_t mode = 0) const;
   Note text_to_latex(::std::int64_t mode = 0) const;
   Note render_latex(::std::int64_t mode = 0) const;
-  Note take(::std::span<const ::std::int64_t> indices) const;
+  Note take(pluss::msharp::RangeView::Int indices) const;
 
   // Full surface (hundreds of methods + factories)
   #include "CodeN/generated/NoteMethodDeclsGen.h"

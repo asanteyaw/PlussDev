@@ -14,6 +14,11 @@ enum class LossReduce : std::uint8_t {
   Sum = 2,
 };
 
+enum class RelMseDivisor : std::uint8_t {
+  Target = 0,
+  Prediction = 1,
+};
+
 namespace detail {
 
 inline void validate_loss_inputs_(const Series& prediction, const Series& target, const char* op) {
@@ -69,16 +74,16 @@ inline Series huber_loss(const Series& prediction,
   return detail::reduce_loss_(per, reduction);
 }
 
-inline Series relative_mse(const Series& prediction,
-                           const Series& target,
-                           const Series& divisor,
-                           double epsilon = 1e-12,
-                           bool use_absolute_divisor = true,
-                           LossReduce reduction = LossReduce::Mean) {
-  detail::validate_loss_inputs_(prediction, target, "relative_mse");
-  PLUSS_CHECK(divisor.defined(), "pluss::relative_mse: divisor must be defined");
-  PLUSS_CHECK(divisor.platform() == prediction.platform(), "pluss::relative_mse: divisor platform mismatch");
-  PLUSS_CHECK(std::isfinite(epsilon) && epsilon > 0.0, "pluss::relative_mse: epsilon must be finite and > 0");
+inline Series rel_mse(const Series& prediction,
+                      const Series& target,
+                      const Series& divisor,
+                      double epsilon = 1e-12,
+                      bool use_absolute_divisor = true,
+                      LossReduce reduction = LossReduce::Mean) {
+  detail::validate_loss_inputs_(prediction, target, "rel_mse");
+  PLUSS_CHECK(divisor.defined(), "pluss::rel_mse: divisor must be defined");
+  PLUSS_CHECK(divisor.platform() == prediction.platform(), "pluss::rel_mse: divisor platform mismatch");
+  PLUSS_CHECK(std::isfinite(epsilon) && epsilon > 0.0, "pluss::rel_mse: epsilon must be finite and > 0");
 
   Series denom = (divisor.scalar_type() == prediction.scalar_type()) ? divisor : divisor.to(prediction.scalar_type());
   if (use_absolute_divisor) {
@@ -89,12 +94,14 @@ inline Series relative_mse(const Series& prediction,
   return detail::reduce_loss_(per, reduction);
 }
 
-inline Series relative_mse(const Series& prediction,
-                           const Series& target,
-                           double epsilon = 1e-12,
-                           bool use_absolute_divisor = true,
-                           LossReduce reduction = LossReduce::Mean) {
-  return relative_mse(prediction, target, target, epsilon, use_absolute_divisor, reduction);
+inline Series rel_mse(const Series& prediction,
+                      const Series& target,
+                      RelMseDivisor divisor_source = RelMseDivisor::Target,
+                      double epsilon = 1e-12,
+                      bool use_absolute_divisor = true,
+                      LossReduce reduction = LossReduce::Mean) {
+  const Series& divisor = (divisor_source == RelMseDivisor::Prediction) ? prediction : target;
+  return rel_mse(prediction, target, divisor, epsilon, use_absolute_divisor, reduction);
 }
 
 } // namespace pluss

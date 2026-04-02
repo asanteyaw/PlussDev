@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -34,6 +35,9 @@ public:
   bool is_bytes() const noexcept { return enc_ == Encoding::Bytes; }
   ::std::int64_t dim() const noexcept { return dim_; }
   ::std::array<::std::int64_t, 3> sizes3() const noexcept { return sizes_; }
+  ::std::span<const ::std::int64_t> sizes() const noexcept {
+    return {sizes_.data(), static_cast<::std::size_t>(dim_)};
+  }
   ::std::int64_t numel() const noexcept {
     ::std::int64_t n = 1;
     for (int i = 0; i < dim_; ++i) n *= sizes_[i];

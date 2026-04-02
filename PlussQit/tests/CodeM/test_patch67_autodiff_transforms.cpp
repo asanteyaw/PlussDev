@@ -2,7 +2,9 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
-#include <pluss/pluss.h>
+#include <pluss/codem/codem.h>
+#include <pluss/codem/series_factory.h>
+#include <pluss/subsp/math/diff.h>
 
 #include <cmath>
 #include <string>
@@ -176,13 +178,90 @@ TEST_CASE("autodiff reverse reports gather operator in saved-value mutation diag
       Catch::Matchers::ContainsSubstring("[op=gather,"));
 }
 
-TEST_CASE("autodiff advanced index fails loudly when used on tracked tensors", "[autodiff][diagnostics]") {
+TEST_CASE("autodiff reverse reports captured-output mutation diagnostics", "[autodiff][diagnostics]") {
+  Series x = make_series(1.5).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Series loss = x.square().sum();
+  loss.storage().bump_version();
+  REQUIRE_THROWS_WITH(
+      loss.reverse(),
+      Catch::Matchers::ContainsSubstring("captured output Series was modified"));
+  REQUIRE_THROWS_WITH(
+      loss.reverse(),
+      Catch::Matchers::ContainsSubstring("[op="));
+}
+
+TEST_CASE("autodiff reverse one-shot keep_graph=false fails on reuse", "[autodiff][diagnostics]") {
+  Series x = make_series(2.0).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Series loss = x.square().sum();
+
+  ReversePolicy one_shot{};
+  one_shot.keep_graph = false;
+  Trace(loss).reverse(one_shot);
+
+  x.clear_sensitivity();
+  REQUIRE_THROWS_WITH(
+      Trace(loss).reverse(),
+      Catch::Matchers::ContainsSubstring("one-shot reverse pass"));
+}
+
+TEST_CASE("autodiff in-place mutation is rejected for tracked series", "[autodiff][diagnostics]") {
+  Series x = make_series(3.0).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  REQUIRE_THROWS_WITH(
+      x.add_(1.0),
+      Catch::Matchers::ContainsSubstring("in-place mutation on autograd-tracked Series is disallowed"));
+}
+
+TEST_CASE("autodiff index propagates sensitivities for single integer index tensor", "[autodiff][reverse]") {
   Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
   x.tracks_slope_(true);
   const Series idx = make_series(std::vector<std::int64_t>{3, 1, 0}, {3});
-  REQUIRE_THROWS_WITH(
-      x.index(std::vector<Series>{idx}),
-      Catch::Matchers::ContainsSubstring("reverse-mode sensitivity for advanced indexing is not implemented"));
+  const Series loss = x.index(std::vector<Series>{idx}).sum();
+  loss.reverse();
+  REQUIRE(x.has_sensitivity());
+  const auto g = x.sensitivity().to_vec<double>();
+  REQUIRE(g.size() == 4);
+  REQUIRE(g[0] == Approx(1.0));
+  REQUIRE(g[1] == Approx(1.0));
+  REQUIRE(g[2] == Approx(0.0));
+  REQUIRE(g[3] == Approx(1.0));
+}
+
+TEST_CASE("autodiff index propagates sensitivities for mixed integer advanced indexing on CPU", "[autodiff][reverse]") {
+  Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {2, 3}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Series i0 = make_series(std::vector<std::int64_t>{0, 1, 1, 0}, {4});
+  const Series i1 = make_series(std::vector<std::int64_t>{2, 0, 2, 2}, {4});
+  const Series loss = x.index(std::vector<Series>{i0, i1}).sum();
+  loss.reverse();
+
+  REQUIRE(x.has_sensitivity());
+  const auto g = x.sensitivity().to_vec<double>();
+  REQUIRE(g.size() == 6);
+  REQUIRE(g[0] == Approx(0.0));
+  REQUIRE(g[1] == Approx(0.0));
+  REQUIRE(g[2] == Approx(2.0));
+  REQUIRE(g[3] == Approx(1.0));
+  REQUIRE(g[4] == Approx(0.0));
+  REQUIRE(g[5] == Approx(1.0));
+}
+
+TEST_CASE("autodiff index propagates sensitivities for bool-mask indexing on CPU", "[autodiff][reverse]") {
+  Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Series mask = make_series(std::vector<std::int64_t>{1, 0, 1, 1}, {4}).to(ScalarType::Bool);
+  const Series loss = x.index(std::vector<Series>{mask}).sum();
+  loss.reverse();
+
+  REQUIRE(x.has_sensitivity());
+  const auto g = x.sensitivity().to_vec<double>();
+  REQUIRE(g.size() == 4);
+  REQUIRE(g[0] == Approx(1.0));
+  REQUIRE(g[1] == Approx(0.0));
+  REQUIRE(g[2] == Approx(1.0));
+  REQUIRE(g[3] == Approx(1.0));
 }
 
 TEST_CASE("autodiff slope_source reports captured op metadata", "[autodiff][diagnostics]") {
@@ -401,6 +480,24 @@ TEST_CASE("autodiff vjp keep_graph=false computes pullback", "[autodiff][transfo
   const Series seed = make_series(1.0).to(ScalarType::Float64);
   const Series g1 = pullback(seed);
   REQUIRE(g1.item<double>() == Approx(12.0).margin(1e-12));
+}
+
+TEST_CASE("autodiff vjp keep_graph=false pullback is one-shot", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  DerivativePolicy policy{};
+  policy.keep_graph = false;
+  auto [value, pullback] = vjp(
+      [](const Trace& z) -> Trace { return z * z * z; },
+      x,
+      policy);
+  REQUIRE(value.item<double>() == Approx(8.0).margin(1e-12));
+
+  const Series seed = make_series(1.0).to(ScalarType::Float64);
+  const Series g1 = pullback(seed);
+  REQUIRE(g1.item<double>() == Approx(12.0).margin(1e-12));
+  REQUIRE_THROWS_WITH(
+      pullback(seed),
+      Catch::Matchers::ContainsSubstring("one-shot"));
 }
 
 TEST_CASE("autodiff grad policy can accumulate input sensitivities", "[autodiff][transforms]") {
@@ -952,6 +1049,34 @@ TEST_CASE("vjp_lanes computes multiple pullbacks with consistent value", "[autod
       [](const Trace& z) -> Trace { return vector_objective(z); },
       x,
       cotangent_lanes);
+  REQUIRE(value.sizes()[0] == 3);
+  REQUIRE(lanes.size() == cotangent_lanes.size());
+
+  const auto slope = analytic_slope(x.to_vec<double>());
+  for (std::size_t lane = 0; lane < lanes.size(); ++lane) {
+    const auto c = cotangent_lanes[lane].to_vec<double>();
+    const auto g = lanes[lane].to_vec<double>();
+    REQUIRE(g.size() == c.size());
+    for (std::size_t i = 0; i < g.size(); ++i) {
+      REQUIRE(g[i] == Approx(slope[i] * c[i]).margin(1e-12));
+    }
+  }
+}
+
+TEST_CASE("vjp_lanes auto-retains graph for multi-lane pullbacks", "[autodiff][vjp]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const std::vector<Series> cotangent_lanes{
+      make_f64({1.0, -0.5, 0.25}),
+      make_f64({-0.2, 0.4, 0.1}),
+  };
+
+  DerivativePolicy policy{};
+  policy.keep_graph = false;
+  const auto [value, lanes] = vjp_lanes(
+      [](const Trace& z) -> Trace { return vector_objective(z); },
+      x,
+      cotangent_lanes,
+      policy);
   REQUIRE(value.sizes()[0] == 3);
   REQUIRE(lanes.size() == cotangent_lanes.size());
 

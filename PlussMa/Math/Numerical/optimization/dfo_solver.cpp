@@ -24,20 +24,20 @@ struct Selection {
 
 double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error(std::string(op) + ": expected scalar Series");
+    ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
   return x.to(ScalarType::Float64).item<double>();
 }
 
 void require_valid_initial(const Series& initial, const char* op) {
   if (!initial.defined()) {
-    throw std::runtime_error(std::string(op) + ": initial point is undefined");
+    ::pluss::throw_error(std::string(op) + ": initial point is undefined");
   }
   if (initial.numel() < 1) {
-    throw std::runtime_error(std::string(op) + ": initial point must be non-empty");
+    ::pluss::throw_error(std::string(op) + ": initial point must be non-empty");
   }
   if (!initial.dtype().is_floating() || initial.dtype().is_complex()) {
-    throw std::runtime_error(std::string(op) + ": initial point must be real floating-point");
+    ::pluss::throw_error(std::string(op) + ": initial point must be real floating-point");
   }
 }
 
@@ -47,12 +47,12 @@ ProblemTraits inspect_problem(const DfoProblem& problem) {
   const bool lower_defined = problem.lower_bounds.defined();
   const bool upper_defined = problem.upper_bounds.defined();
   if (lower_defined != upper_defined) {
-    throw std::runtime_error("DFO::solve: both lower_bounds and upper_bounds must be defined together");
+    ::pluss::throw_error("DFO::solve: both lower_bounds and upper_bounds must be defined together");
   }
   if (lower_defined && upper_defined) {
     if (problem.lower_bounds.numel() != problem.initial.numel() ||
         problem.upper_bounds.numel() != problem.initial.numel()) {
-      throw std::runtime_error("DFO::solve: bounds must have same number of elements as initial point");
+      ::pluss::throw_error("DFO::solve: bounds must have same number of elements as initial point");
     }
   }
 
@@ -65,14 +65,14 @@ ProblemTraits inspect_problem(const DfoProblem& problem) {
   out.has_bounds = lower_defined && upper_defined;
 
   if (problem.constraints && problem.constraints_values) {
-    throw std::runtime_error("DFO::solve: provide either constraints or constraints_values, not both");
+    ::pluss::throw_error("DFO::solve: provide either constraints or constraints_values, not both");
   }
 
   if (!out.has_objective && !out.has_blackbox) {
-    throw std::runtime_error("DFO::solve: provide either objective or blackbox callback");
+    ::pluss::throw_error("DFO::solve: provide either objective or blackbox callback");
   }
   if (out.has_constraints && !out.has_objective && !out.has_blackbox) {
-    throw std::runtime_error("DFO::solve: constraints require objective or blackbox callback");
+    ::pluss::throw_error("DFO::solve: constraints require objective or blackbox callback");
   }
   return out;
 }
@@ -121,7 +121,7 @@ std::function<Series(const Series&)> make_scalar_objective(
     return [objective = std::move(objective), solver](const Series& x) -> Series {
       const Series out = objective(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("DFO::solve(" + to_string(solver) +
+        ::pluss::throw_error("DFO::solve(" + to_string(solver) +
                                  "): objective must return real scalar Series");
       }
       return out;
@@ -129,7 +129,7 @@ std::function<Series(const Series&)> make_scalar_objective(
   }
 
   if (!problem.blackbox) {
-    throw std::runtime_error("DFO::solve(" + to_string(solver) + "): objective callback is required");
+    ::pluss::throw_error("DFO::solve(" + to_string(solver) + "): objective callback is required");
   }
 
   auto blackbox = problem.blackbox;
@@ -137,11 +137,11 @@ std::function<Series(const Series&)> make_scalar_objective(
     const BlackboxEvaluation eval = blackbox(x);
     if (!eval.objectives.defined() || eval.objectives.numel() != 1 ||
         eval.objectives.dtype().is_complex()) {
-      throw std::runtime_error("DFO::solve(" + to_string(solver) +
+      ::pluss::throw_error("DFO::solve(" + to_string(solver) +
                                "): blackbox objective must be real scalar for this solver");
     }
     if (eval.constraints.defined() && eval.constraints.numel() > 0) {
-      throw std::runtime_error("DFO::solve(" + to_string(solver) +
+      ::pluss::throw_error("DFO::solve(" + to_string(solver) +
                                "): constraints require a MADS/blackbox solver");
     }
     return eval.objectives;
@@ -154,7 +154,7 @@ std::function<BlackboxEvaluation(const Series&)> make_blackbox_objective(const D
   }
 
   if (!problem.objective) {
-    throw std::runtime_error("DFO::solve: blackbox adaptation requires objective callback");
+    ::pluss::throw_error("DFO::solve: blackbox adaptation requires objective callback");
   }
 
   auto objective = problem.objective;
@@ -169,7 +169,7 @@ std::function<BlackboxEvaluation(const Series&)> make_blackbox_objective(const D
     if (constraints_values) {
       const DfoConstraintValues c = constraints_values(x);
       if (c.equality.defined() && c.equality.numel() > 0) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "DFO::solve: constraints_values.equality is only supported by PatternSearch route");
       }
       out.constraints = c.inequality;
@@ -659,7 +659,7 @@ DfoResult DFO::run(const DfoProblem& problem) const {
       result = run_mads(problem, options_, choice.solver);
       break;
     case DfoSolverKind::Auto:
-      throw std::runtime_error("DFO::solve: internal error, unresolved Auto solver selection");
+      ::pluss::throw_error("DFO::solve: internal error, unresolved Auto solver selection");
   }
 
   result.selected_solver = choice.solver;

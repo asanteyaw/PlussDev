@@ -2182,134 +2182,147 @@ plussqit_coden_tests/fast:
 .PHONY : plussqit_coden_tests/fast
 
 #=============================================================================
-# Target rules for targets named PlussView
+# Target rules for targets named PlussTilsCore
 
 # Build rule for target.
-PlussView: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussView
-.PHONY : PlussView
+PlussTilsCore: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTilsCore
+.PHONY : PlussTilsCore
 
 # fast build rule for target.
-PlussView/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/PlussView.dir/build.make PlussView/CMakeFiles/PlussView.dir/build
-.PHONY : PlussView/fast
+PlussTilsCore/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/PlussTilsCore.dir/build.make PlussTils/CMakeFiles/PlussTilsCore.dir/build
+.PHONY : PlussTilsCore/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_runtime_demo
+# Target rules for targets named PlussTilsView
 
 # Build rule for target.
-plussview_window_runtime_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_runtime_demo
-.PHONY : plussview_window_runtime_demo
+PlussTilsView: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTilsView
+.PHONY : PlussTilsView
 
 # fast build rule for target.
-plussview_window_runtime_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_runtime_demo.dir/build.make PlussView/CMakeFiles/plussview_window_runtime_demo.dir/build
-.PHONY : plussview_window_runtime_demo/fast
+PlussTilsView/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/build
+.PHONY : PlussTilsView/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_first_plot_demo
+# Target rules for targets named plusstils_view_window_runtime_demo
 
 # Build rule for target.
-plussview_window_first_plot_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_first_plot_demo
-.PHONY : plussview_window_first_plot_demo
+plusstils_view_window_runtime_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_runtime_demo
+.PHONY : plusstils_view_window_runtime_demo
 
 # fast build rule for target.
-plussview_window_first_plot_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_first_plot_demo.dir/build.make PlussView/CMakeFiles/plussview_window_first_plot_demo.dir/build
-.PHONY : plussview_window_first_plot_demo/fast
+plusstils_view_window_runtime_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_runtime_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_runtime_demo.dir/build
+.PHONY : plusstils_view_window_runtime_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_interaction_core_demo
+# Target rules for targets named plusstils_view_window_first_plot_demo
 
 # Build rule for target.
-plussview_window_interaction_core_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_interaction_core_demo
-.PHONY : plussview_window_interaction_core_demo
+plusstils_view_window_first_plot_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_first_plot_demo
+.PHONY : plusstils_view_window_first_plot_demo
 
 # fast build rule for target.
-plussview_window_interaction_core_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_interaction_core_demo.dir/build.make PlussView/CMakeFiles/plussview_window_interaction_core_demo.dir/build
-.PHONY : plussview_window_interaction_core_demo/fast
+plusstils_view_window_first_plot_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_first_plot_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_first_plot_demo.dir/build
+.PHONY : plusstils_view_window_first_plot_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_session_demo
+# Target rules for targets named plusstils_view_window_interaction_core_demo
 
 # Build rule for target.
-plussview_window_session_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_session_demo
-.PHONY : plussview_window_session_demo
+plusstils_view_window_interaction_core_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_interaction_core_demo
+.PHONY : plusstils_view_window_interaction_core_demo
 
 # fast build rule for target.
-plussview_window_session_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_session_demo.dir/build.make PlussView/CMakeFiles/plussview_window_session_demo.dir/build
-.PHONY : plussview_window_session_demo/fast
+plusstils_view_window_interaction_core_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_interaction_core_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_interaction_core_demo.dir/build
+.PHONY : plusstils_view_window_interaction_core_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_registry_demo
+# Target rules for targets named plusstils_view_window_session_demo
 
 # Build rule for target.
-plussview_window_registry_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_registry_demo
-.PHONY : plussview_window_registry_demo
+plusstils_view_window_session_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_session_demo
+.PHONY : plusstils_view_window_session_demo
 
 # fast build rule for target.
-plussview_window_registry_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_registry_demo.dir/build.make PlussView/CMakeFiles/plussview_window_registry_demo.dir/build
-.PHONY : plussview_window_registry_demo/fast
+plusstils_view_window_session_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_session_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_session_demo.dir/build
+.PHONY : plusstils_view_window_session_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_table_demo
+# Target rules for targets named plusstils_view_window_registry_demo
 
 # Build rule for target.
-plussview_window_table_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_table_demo
-.PHONY : plussview_window_table_demo
+plusstils_view_window_registry_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_registry_demo
+.PHONY : plusstils_view_window_registry_demo
 
 # fast build rule for target.
-plussview_window_table_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_table_demo.dir/build.make PlussView/CMakeFiles/plussview_window_table_demo.dir/build
-.PHONY : plussview_window_table_demo/fast
+plusstils_view_window_registry_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_registry_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_registry_demo.dir/build
+.PHONY : plusstils_view_window_registry_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_export_smoke_demo
+# Target rules for targets named plusstils_view_window_table_demo
 
 # Build rule for target.
-plussview_window_export_smoke_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_export_smoke_demo
-.PHONY : plussview_window_export_smoke_demo
+plusstils_view_window_table_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_table_demo
+.PHONY : plusstils_view_window_table_demo
 
 # fast build rule for target.
-plussview_window_export_smoke_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_export_smoke_demo.dir/build.make PlussView/CMakeFiles/plussview_window_export_smoke_demo.dir/build
-.PHONY : plussview_window_export_smoke_demo/fast
+plusstils_view_window_table_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_table_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_table_demo.dir/build
+.PHONY : plusstils_view_window_table_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_window_shell_backend_demo
+# Target rules for targets named plusstils_view_window_export_smoke_demo
 
 # Build rule for target.
-plussview_window_shell_backend_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_window_shell_backend_demo
-.PHONY : plussview_window_shell_backend_demo
+plusstils_view_window_export_smoke_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_export_smoke_demo
+.PHONY : plusstils_view_window_export_smoke_demo
 
 # fast build rule for target.
-plussview_window_shell_backend_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_window_shell_backend_demo.dir/build.make PlussView/CMakeFiles/plussview_window_shell_backend_demo.dir/build
-.PHONY : plussview_window_shell_backend_demo/fast
+plusstils_view_window_export_smoke_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_export_smoke_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_export_smoke_demo.dir/build
+.PHONY : plusstils_view_window_export_smoke_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussview_inhouse_html_render_demo
+# Target rules for targets named plusstils_view_window_shell_backend_demo
 
 # Build rule for target.
-plussview_inhouse_html_render_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_inhouse_html_render_demo
-.PHONY : plussview_inhouse_html_render_demo
+plusstils_view_window_shell_backend_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_window_shell_backend_demo
+.PHONY : plusstils_view_window_shell_backend_demo
 
 # fast build rule for target.
-plussview_inhouse_html_render_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussView/CMakeFiles/plussview_inhouse_html_render_demo.dir/build.make PlussView/CMakeFiles/plussview_inhouse_html_render_demo.dir/build
-.PHONY : plussview_inhouse_html_render_demo/fast
+plusstils_view_window_shell_backend_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_shell_backend_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_shell_backend_demo.dir/build
+.PHONY : plusstils_view_window_shell_backend_demo/fast
+
+#=============================================================================
+# Target rules for targets named plusstils_view_inhouse_html_render_demo
+
+# Build rule for target.
+plusstils_view_inhouse_html_render_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_inhouse_html_render_demo
+.PHONY : plusstils_view_inhouse_html_render_demo
+
+# fast build rule for target.
+plusstils_view_inhouse_html_render_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_html_render_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_html_render_demo.dir/build
+.PHONY : plusstils_view_inhouse_html_render_demo/fast
 
 #=============================================================================
 # Target rules for targets named PlussPl
@@ -7252,7 +7265,8 @@ help:
 	@echo "... plusspl_gallery_outputs"
 	@echo "... PlussMic"
 	@echo "... PlussPl"
-	@echo "... PlussView"
+	@echo "... PlussTilsCore"
+	@echo "... PlussTilsView"
 	@echo "... arima_test"
 	@echo "... astro_test"
 	@echo "... attention_transformer_test"
@@ -7534,15 +7548,15 @@ help:
 	@echo "... plussqit_queue_demo"
 	@echo "... plussqit_tests"
 	@echo "... plussqit_translate_demo"
-	@echo "... plussview_inhouse_html_render_demo"
-	@echo "... plussview_window_export_smoke_demo"
-	@echo "... plussview_window_first_plot_demo"
-	@echo "... plussview_window_interaction_core_demo"
-	@echo "... plussview_window_registry_demo"
-	@echo "... plussview_window_runtime_demo"
-	@echo "... plussview_window_session_demo"
-	@echo "... plussview_window_shell_backend_demo"
-	@echo "... plussview_window_table_demo"
+	@echo "... plusstils_view_inhouse_html_render_demo"
+	@echo "... plusstils_view_window_export_smoke_demo"
+	@echo "... plusstils_view_window_first_plot_demo"
+	@echo "... plusstils_view_window_interaction_core_demo"
+	@echo "... plusstils_view_window_registry_demo"
+	@echo "... plusstils_view_window_runtime_demo"
+	@echo "... plusstils_view_window_session_demo"
+	@echo "... plusstils_view_window_shell_backend_demo"
+	@echo "... plusstils_view_window_table_demo"
 	@echo "... poly_regression_test"
 	@echo "... population_test"
 	@echo "... quantile_regression_test"

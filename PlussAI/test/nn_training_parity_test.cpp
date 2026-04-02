@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <unordered_set>
 #include <sstream>
 #include <stdexcept>
@@ -43,6 +44,40 @@ int env_int_or_(const char* name, int fallback) {
   }
 }
 
+class ScopedEnvVar final {
+public:
+  ScopedEnvVar(const char* key, const char* value) : key_(key) {
+    if (const char* old = std::getenv(key_)) {
+      old_ = std::string(old);
+    }
+#if defined(_WIN32)
+    _putenv_s(key_, value);
+#else
+    setenv(key_, value, 1);
+#endif
+  }
+
+  ~ScopedEnvVar() {
+    if (old_.has_value()) {
+#if defined(_WIN32)
+      _putenv_s(key_, old_->c_str());
+#else
+      setenv(key_, old_->c_str(), 1);
+#endif
+    } else {
+#if defined(_WIN32)
+      _putenv_s(key_, "");
+#else
+      unsetenv(key_);
+#endif
+    }
+  }
+
+private:
+  const char* key_;
+  std::optional<std::string> old_{};
+};
+
 const char* platform_name_(Platform platform) noexcept {
   switch (platform) {
     case pluss::pCPU: return "cpu";
@@ -50,6 +85,23 @@ const char* platform_name_(Platform platform) noexcept {
     case pluss::pCUDA: return "cuda";
     default: return "unknown";
   }
+}
+
+enum class ParityBackendMode {
+  All,
+  CPU,
+  MPS,
+  CUDA,
+};
+
+ParityBackendMode parity_backend_mode_() {
+  const char* raw = std::getenv("PLUSS_PARITY_BACKEND");
+  if (!raw) return ParityBackendMode::All;
+  const std::string mode(raw);
+  if (mode == "cpu" || mode == "CPU") return ParityBackendMode::CPU;
+  if (mode == "mps" || mode == "MPS") return ParityBackendMode::MPS;
+  if (mode == "cuda" || mode == "CUDA") return ParityBackendMode::CUDA;
+  return ParityBackendMode::All;
 }
 
 struct TrainingTrace {
@@ -97,6 +149,30 @@ const char* torch_env_for_linear_optimizer(LinearOptimizerKind kind) {
     case LinearOptimizerKind::RMSprop: return "PLUSS_TORCH_LINEAR_RMSPROP_REF_CSV";
     case LinearOptimizerKind::Adagrad: return "PLUSS_TORCH_LINEAR_ADAGRAD_REF_CSV";
     case LinearOptimizerKind::NAdam: return "PLUSS_TORCH_LINEAR_NADAM_REF_CSV";
+    default: return nullptr;
+  }
+}
+
+const char* torch_env_for_linear_optimizer_mps(LinearOptimizerKind kind) {
+  switch (kind) {
+    case LinearOptimizerKind::Adam: return "PLUSS_TORCH_MPS_LINEAR_REF_CSV";
+    case LinearOptimizerKind::AdamW: return "PLUSS_TORCH_MPS_LINEAR_ADAMW_REF_CSV";
+    case LinearOptimizerKind::SGD: return "PLUSS_TORCH_MPS_LINEAR_SGD_REF_CSV";
+    case LinearOptimizerKind::RMSprop: return "PLUSS_TORCH_MPS_LINEAR_RMSPROP_REF_CSV";
+    case LinearOptimizerKind::Adagrad: return "PLUSS_TORCH_MPS_LINEAR_ADAGRAD_REF_CSV";
+    case LinearOptimizerKind::NAdam: return "PLUSS_TORCH_MPS_LINEAR_NADAM_REF_CSV";
+    default: return nullptr;
+  }
+}
+
+const char* torch_env_for_linear_optimizer_cuda(LinearOptimizerKind kind) {
+  switch (kind) {
+    case LinearOptimizerKind::Adam: return "PLUSS_TORCH_CUDA_LINEAR_REF_CSV";
+    case LinearOptimizerKind::AdamW: return "PLUSS_TORCH_CUDA_LINEAR_ADAMW_REF_CSV";
+    case LinearOptimizerKind::SGD: return "PLUSS_TORCH_CUDA_LINEAR_SGD_REF_CSV";
+    case LinearOptimizerKind::RMSprop: return "PLUSS_TORCH_CUDA_LINEAR_RMSPROP_REF_CSV";
+    case LinearOptimizerKind::Adagrad: return "PLUSS_TORCH_CUDA_LINEAR_ADAGRAD_REF_CSV";
+    case LinearOptimizerKind::NAdam: return "PLUSS_TORCH_CUDA_LINEAR_NADAM_REF_CSV";
     default: return nullptr;
   }
 }
@@ -198,6 +274,73 @@ struct TinyLSTMParityRegressorImpl final : pluss::nn::Module {
 
 PLUSS_MODULE(TinyLSTMParityRegressor);
 
+struct TinyRNNParityRegressorImpl final : pluss::nn::Module {
+  pluss::nn::RNN rnn;
+  pluss::nn::Fusion head;
+
+  explicit TinyRNNParityRegressorImpl(const Config& cfg)
+      : Module(true),
+        rnn(pluss::nn::RNNOptions{
+            .input_size = 1,
+            .hidden_size = 10,
+            .num_layers = 1,
+            .nonlinearity = "tanh",
+            .bias = true,
+            .batch_first = true,
+            .dropout = 0.0,
+            .bidirectional = false,
+            .split_bias = true,
+            .cfg = cfg,
+            .seed = 29ULL,
+            .training = true,
+        }),
+        head(10, 1, true, cfg, 31ULL) {
+    module_record("rnn", rnn);
+    module_record("head", head);
+  }
+
+  Series forward(const Series& x) const {
+    const auto [seq, state] = rnn->forward(x);
+    (void)state;
+    return head->forward(seq);
+  }
+};
+
+PLUSS_MODULE(TinyRNNParityRegressor);
+
+struct TinyGRUParityRegressorImpl final : pluss::nn::Module {
+  pluss::nn::GRU gru;
+  pluss::nn::Fusion head;
+
+  explicit TinyGRUParityRegressorImpl(const Config& cfg)
+      : Module(true),
+        gru(pluss::nn::GRUOptions{
+            .input_size = 1,
+            .hidden_size = 10,
+            .num_layers = 1,
+            .bias = true,
+            .batch_first = true,
+            .dropout = 0.0,
+            .bidirectional = false,
+            .split_bias = true,
+            .cfg = cfg,
+            .seed = 33ULL,
+            .training = true,
+        }),
+        head(10, 1, true, cfg, 35ULL) {
+    module_record("gru", gru);
+    module_record("head", head);
+  }
+
+  Series forward(const Series& x) const {
+    const auto [seq, state] = gru->forward(x);
+    (void)state;
+    return head->forward(seq);
+  }
+};
+
+PLUSS_MODULE(TinyGRUParityRegressor);
+
 Series take_range(const Series& x, std::int64_t dim, std::int64_t start, std::int64_t length) {
   std::vector<std::int64_t> idx(static_cast<std::size_t>(length));
   for (std::int64_t i = 0; i < length; ++i) idx[static_cast<std::size_t>(i)] = start + i;
@@ -218,6 +361,77 @@ std::pair<Series, Series> make_lstm_data() {
   }
   const Series seq = pluss::make_series(values, {batch, steps, 1}, cfg);
   return {take_range(seq, 1, 0, 19), take_range(seq, 1, 1, 19)};
+}
+
+std::pair<Series, Series> make_rnn_data() {
+  const Config cfg = f32_cpu();
+  constexpr std::int64_t batch = 20;
+  constexpr std::int64_t steps = 18;
+  std::vector<float> values(static_cast<std::size_t>(batch * steps));
+  for (std::int64_t b = 0; b < batch; ++b) {
+    for (std::int64_t t = 0; t < steps; ++t) {
+      const float x = 0.11f * static_cast<float>(t) + 0.09f * static_cast<float>(b);
+      values[static_cast<std::size_t>(b * steps + t)] = std::sin(x) + 0.05f * std::cos(3.0f * x);
+    }
+  }
+  const Series seq = pluss::make_series(values, {batch, steps, 1}, cfg);
+  return {take_range(seq, 1, 0, 17), take_range(seq, 1, 1, 17)};
+}
+
+std::pair<Series, Series> make_conv_data() {
+  const Config cfg = f32_cpu();
+  constexpr std::int64_t batch = 24;
+  constexpr std::int64_t length = 15;
+  std::vector<float> values(static_cast<std::size_t>(batch * length));
+  for (std::int64_t b = 0; b < batch; ++b) {
+    for (std::int64_t t = 0; t < length; ++t) {
+      const float x = 0.17f * static_cast<float>(t) + 0.05f * static_cast<float>(b);
+      values[static_cast<std::size_t>(b * length + t)] = std::sin(x) + 0.2f * std::cos(2.0f * x);
+    }
+  }
+  const Series input = pluss::make_series(values, {batch, 1, length}, cfg);
+  const Series kernel = pluss::make_series(std::vector<float>{0.25f, -0.1f, 0.35f}, {1, 1, 3}, cfg);
+  const Series bias = pluss::make_series(std::vector<float>{0.05f}, {1}, cfg);
+  const Series target = pluss::conv1d(input, kernel, bias, 1, 1, 1, 1);
+  return {input, target};
+}
+
+std::pair<Series, Series> make_transformer_autoencode_data() {
+  const Config cfg = f32_cpu();
+  constexpr std::int64_t batch = 8;
+  constexpr std::int64_t seq = 6;
+  constexpr std::int64_t d_model = 8;
+  std::vector<float> values(static_cast<std::size_t>(batch * seq * d_model));
+  for (std::int64_t b = 0; b < batch; ++b) {
+    for (std::int64_t t = 0; t < seq; ++t) {
+      for (std::int64_t d = 0; d < d_model; ++d) {
+        const float x = 0.09f * static_cast<float>(t) + 0.07f * static_cast<float>(d) + 0.03f * static_cast<float>(b);
+        const float v = std::sin(x) + 0.15f * std::cos(1.7f * x);
+        values[static_cast<std::size_t>(((b * seq) + t) * d_model + d)] = v;
+      }
+    }
+  }
+  const Series src = pluss::make_series(values, {batch, seq, d_model}, cfg);
+  return {src, src};
+}
+
+std::pair<Series, Series> make_custom_objective_data() {
+  const Config cfg = f32_cpu();
+  constexpr std::int64_t n = 16;
+  std::vector<float> xbuf(static_cast<std::size_t>(n * 3));
+  std::vector<float> ybuf(static_cast<std::size_t>(n));
+  for (std::int64_t i = 0; i < n; ++i) {
+    const float a = static_cast<float>((i % 7) - 3) / 3.0f;
+    const float b = static_cast<float>(((i * 3) % 11) - 5) / 4.0f;
+    const float c = static_cast<float>(((i * 5) % 13) - 6) / 5.0f;
+    xbuf[static_cast<std::size_t>(i * 3 + 0)] = a;
+    xbuf[static_cast<std::size_t>(i * 3 + 1)] = b;
+    xbuf[static_cast<std::size_t>(i * 3 + 2)] = c;
+    ybuf[static_cast<std::size_t>(i)] = 0.7f * a - 1.1f * b + 0.4f * c + 0.2f;
+  }
+  const Series x = pluss::make_series(xbuf, {n, 3}, cfg);
+  const Series y = pluss::make_series(ybuf, {n, 1}, cfg);
+  return {x, y};
 }
 
 void seed_lstm_model_parameters_(TinyLSTMParityRegressor& model) {
@@ -252,6 +466,15 @@ void verify_lstm_seeded_parameters_(const TinyLSTMParityRegressor& model, Platfo
   }
 }
 
+template <class ModelT>
+void seed_model_parameters_(ModelT& model, float value) {
+  auto params = model->parameters();
+  for (Series* p : params) {
+    if (!p || !p->defined()) continue;
+    *p = pluss::full_like(*p, value, ScalarType::Float32);
+  }
+}
+
 std::unique_ptr<pluss::nn::optim::Optimizer> make_linear_optimizer(
     LinearOptimizerKind kind,
     pluss::nn::Fusion& model) {
@@ -259,12 +482,14 @@ std::unique_ptr<pluss::nn::optim::Optimizer> make_linear_optimizer(
     case LinearOptimizerKind::Adam: {
       pluss::nn::optim::AdamOptions opt{};
       opt.learning_rate = 5e-2;
+      opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
       return std::make_unique<pluss::nn::optim::Adam>(*model, opt);
     }
     case LinearOptimizerKind::AdamW: {
       pluss::nn::optim::AdamWOptions opt{};
       opt.learning_rate = 5e-2;
       opt.weight_decay = 1e-2;
+      opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
       return std::make_unique<pluss::nn::optim::AdamW>(*model, opt);
     }
     case LinearOptimizerKind::SGD: {
@@ -272,22 +497,26 @@ std::unique_ptr<pluss::nn::optim::Optimizer> make_linear_optimizer(
       opt.learning_rate = 1e-1;
       opt.momentum = 0.9;
       opt.nesterov = true;
+      opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
       return std::make_unique<pluss::nn::optim::SGD>(*model, opt);
     }
     case LinearOptimizerKind::RMSprop: {
       pluss::nn::optim::RMSpropOptions opt{};
       opt.learning_rate = 1e-2;
       opt.momentum = 0.5;
+      opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
       return std::make_unique<pluss::nn::optim::RMSprop>(*model, opt);
     }
     case LinearOptimizerKind::Adagrad: {
       pluss::nn::optim::AdagradOptions opt{};
       opt.learning_rate = 5e-2;
+      opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
       return std::make_unique<pluss::nn::optim::Adagrad>(*model, opt);
     }
     case LinearOptimizerKind::NAdam: {
       pluss::nn::optim::NAdamOptions opt{};
       opt.learning_rate = 5e-2;
+      opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
       return std::make_unique<pluss::nn::optim::NAdam>(*model, opt);
     }
     default:
@@ -296,13 +525,11 @@ std::unique_ptr<pluss::nn::optim::Optimizer> make_linear_optimizer(
 }
 
 TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOptimizerKind kind) {
-  // Correctness-first MPS parity bridge for linear optimizer trajectories.
-  // We execute on CPU and compare traces against CPU/PyTorch references.
-  const Platform run_platform = (platform == pluss::pMPS) ? pluss::pCPU : platform;
-  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(run_platform);
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
   const auto [x_cpu, y_cpu] = make_linear_data();
-  const Series x = x_cpu.to(run_platform, ScalarType::Float32);
-  const Series y = y_cpu.to(run_platform, ScalarType::Float32);
+  const Series x = x_cpu.to(platform, ScalarType::Float32);
+  const Series y = y_cpu.to(platform, ScalarType::Float32);
+  const bool debug_trace = env_flag_is_true_("PLUSS_LINEAR_DEBUG_TRACE");
 
   pluss::nn::Fusion model(2, 1, true, cfg, 20260318ULL);
   model->weight() = pluss::make_series(std::vector<float>{0.10f, -0.20f}, {1, 2}, cfg);
@@ -317,7 +544,19 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
     const Series loss = optimizer->step([&]() -> Series {
       return pluss::nn::losses::MSE(model->forward(x), y);
     });
-    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+    const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
+    trace.epoch_loss.push_back(loss_value);
+    if (debug_trace) {
+      const auto w_dbg = model->weight().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto b_dbg = model->bias().reshape({1}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      std::cout << "[linear-debug] platform=" << platform_name_(platform)
+                << " optimizer=" << linear_optimizer_name(kind)
+                << " epoch=" << (epoch + 1)
+                << " loss=" << loss_value
+                << " w0=" << w_dbg[0]
+                << " w1=" << w_dbg[1]
+                << " b=" << b_dbg[0] << "\n";
+    }
   }
 
   const auto w = model->weight().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
@@ -469,6 +708,272 @@ TrainingTrace run_lstm_training_trace(Platform platform, int epochs) {
   return trace;
 }
 
+TrainingTrace run_rnn_training_trace(Platform platform, int epochs) {
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
+  const auto [x_cpu, y_cpu] = make_rnn_data();
+  const Series x = x_cpu.to(platform, ScalarType::Float32);
+  const Series y = y_cpu.to(platform, ScalarType::Float32);
+
+  TinyRNNParityRegressor model(cfg);
+  model->train(true);
+  model->to(platform, ScalarType::Float32);
+  seed_model_parameters_(model, 0.02f);
+
+  pluss::nn::optim::AdamOptions opt{};
+  opt.learning_rate = 1e-2;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  pluss::nn::optim::Adam optimizer(*model, opt);
+  pluss::nn::optim::StepDiagnosticsOptions diag{};
+  diag.fail_if_no_sensitivity = true;
+  optimizer.set_step_diagnostics(diag);
+
+  TrainingTrace trace{};
+  trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    optimizer.clear();
+    const Series pred = model->forward(x);
+    const Series loss = pluss::nn::losses::MSE(pred, y);
+    loss.reverse();
+    optimizer.step();
+    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  }
+
+  double l1 = 0.0;
+  double l2 = 0.0;
+  auto params = model->parameters();
+  for (Series* p : params) {
+    if (!p || !p->defined()) continue;
+    const Series cpu = p->to(pluss::pCPU, ScalarType::Float64);
+    l1 += cpu.abs().sum().item<double>();
+    l2 += cpu.square().sum().item<double>();
+  }
+  trace.flat_parameters = {l1, l2};
+  return trace;
+}
+
+TrainingTrace run_gru_training_trace(Platform platform, int epochs) {
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
+  const auto [x_cpu, y_cpu] = make_rnn_data();
+  const Series x = x_cpu.to(platform, ScalarType::Float32);
+  const Series y = y_cpu.to(platform, ScalarType::Float32);
+
+  TinyGRUParityRegressor model(cfg);
+  model->train(true);
+  model->to(platform, ScalarType::Float32);
+  seed_model_parameters_(model, 0.02f);
+
+  pluss::nn::optim::AdamOptions opt{};
+  opt.learning_rate = 1e-2;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  pluss::nn::optim::Adam optimizer(*model, opt);
+  pluss::nn::optim::StepDiagnosticsOptions diag{};
+  diag.fail_if_no_sensitivity = true;
+  optimizer.set_step_diagnostics(diag);
+
+  TrainingTrace trace{};
+  trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    optimizer.clear();
+    const Series pred = model->forward(x);
+    const Series loss = pluss::nn::losses::MSE(pred, y);
+    loss.reverse();
+    optimizer.step();
+    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  }
+
+  double l1 = 0.0;
+  double l2 = 0.0;
+  auto params = model->parameters();
+  for (Series* p : params) {
+    if (!p || !p->defined()) continue;
+    const Series cpu = p->to(pluss::pCPU, ScalarType::Float64);
+    l1 += cpu.abs().sum().item<double>();
+    l2 += cpu.square().sum().item<double>();
+  }
+  trace.flat_parameters = {l1, l2};
+  return trace;
+}
+
+TrainingTrace run_schedule_training_trace(Platform platform, int epochs) {
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
+  const auto [x_cpu, y_cpu] = make_linear_data();
+  const Series x = x_cpu.to(platform, ScalarType::Float32);
+  const Series y = y_cpu.to(platform, ScalarType::Float32);
+
+  pluss::nn::Schedule model;
+  model.then("encoder", pluss::nn::Fusion(2, 12, true, cfg, 41ULL))
+      .then("activation", pluss::nn::Tanh())
+      .then("head", pluss::nn::Fusion(12, 1, true, cfg, 43ULL));
+  model->train(true);
+  model->to(platform, ScalarType::Float32);
+
+  pluss::nn::optim::AdamOptions opt{};
+  opt.learning_rate = 2e-2;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  pluss::nn::optim::Adam optimizer(*model, opt);
+
+  TrainingTrace trace{};
+  trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    const Series loss = optimizer.step([&]() -> Series {
+      return pluss::nn::losses::MSE(model->forward(x), y);
+    });
+    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  }
+
+  double l1 = 0.0;
+  double l2 = 0.0;
+  auto params = model->parameters();
+  for (Series* p : params) {
+    if (!p || !p->defined()) continue;
+    const Series cpu = p->to(pluss::pCPU, ScalarType::Float64);
+    l1 += cpu.abs().sum().item<double>();
+    l2 += cpu.square().sum().item<double>();
+  }
+  trace.flat_parameters = {l1, l2};
+  return trace;
+}
+
+TrainingTrace run_conv_training_trace(Platform platform, int epochs) {
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
+  const auto [x_cpu, y_cpu] = make_conv_data();
+  const Series x = x_cpu.to(platform, ScalarType::Float32);
+  const Series y = y_cpu.to(platform, ScalarType::Float32);
+
+  pluss::nn::Conv1d model(pluss::nn::Conv1dOptions{
+      .in_channels = 1,
+      .out_channels = 1,
+      .kernel_size = 3,
+      .stride = 1,
+      .padding = 1,
+      .dilation = 1,
+      .groups = 1,
+      .bias = true,
+      .cfg = cfg,
+      .seed = 47ULL,
+  });
+  model->train(true);
+  model->to(platform, ScalarType::Float32);
+  seed_model_parameters_(model, 0.02f);
+
+  pluss::nn::optim::AdamOptions opt{};
+  opt.learning_rate = 1e-2;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  pluss::nn::optim::Adam optimizer(*model, opt);
+
+  TrainingTrace trace{};
+  trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    const Series loss = optimizer.step([&]() -> Series {
+      return pluss::nn::losses::MSE(model->forward(x), y);
+    });
+    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  }
+
+  const Series w_cpu = model->weight().to(pluss::pCPU, ScalarType::Float64);
+  const Series b_cpu = model->bias().to(pluss::pCPU, ScalarType::Float64);
+  trace.flat_parameters = {
+      w_cpu.abs().sum().item<double>() + b_cpu.abs().sum().item<double>(),
+      w_cpu.square().sum().item<double>() + b_cpu.square().sum().item<double>(),
+  };
+  return trace;
+}
+
+TrainingTrace run_transformer_training_trace(Platform platform, int epochs) {
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
+  const auto [src_cpu, tgt_cpu] = make_transformer_autoencode_data();
+  const Series src = src_cpu.to(platform, ScalarType::Float32);
+  const Series tgt = tgt_cpu.to(platform, ScalarType::Float32);
+
+  pluss::nn::Transformer model(pluss::nn::TransformerOptions{
+      .d_model = 8,
+      .nhead = 2,
+      .num_encoder_layers = 1,
+      .num_decoder_layers = 1,
+      .dim_feedforward = 16,
+      .dropout = 0.0,
+      .activation = pluss::nn::TransformerActivation::ReLU,
+      .layer_norm_eps = 1e-5,
+      .batch_first = true,
+      .norm_first = false,
+      .bias = true,
+      .cfg = cfg,
+      .seed = 53ULL,
+      .training = true,
+  });
+  model->train(true);
+  model->to(platform, ScalarType::Float32);
+  seed_model_parameters_(model, 0.02f);
+
+  pluss::nn::optim::AdamOptions opt{};
+  opt.learning_rate = 5e-3;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  pluss::nn::optim::Adam optimizer(*model, opt);
+
+  TrainingTrace trace{};
+  trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    const Series loss = optimizer.step([&]() -> Series {
+      return pluss::nn::losses::MSE(model->forward(src, tgt), tgt);
+    });
+    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  }
+
+  double l1 = 0.0;
+  double l2 = 0.0;
+  auto params = model->parameters();
+  for (Series* p : params) {
+    if (!p || !p->defined()) continue;
+    const Series cpu = p->to(pluss::pCPU, ScalarType::Float64);
+    l1 += cpu.abs().sum().item<double>();
+    l2 += cpu.square().sum().item<double>();
+  }
+  trace.flat_parameters = {l1, l2};
+  return trace;
+}
+
+TrainingTrace run_custom_objective_training_trace(Platform platform, int epochs) {
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(platform);
+  const auto [x_cpu, y_cpu] = make_custom_objective_data();
+  const Series x = x_cpu.to(platform, ScalarType::Float32);
+  const Series y = y_cpu.to(platform, ScalarType::Float32);
+
+  Series w = pluss::make_series(std::vector<float>{0.2f, -0.1f, 0.05f}, {3}, cfg);
+  w.tracks_slope_(true);
+
+  pluss::nn::optim::AdamOptions opt{};
+  opt.learning_rate = 2e-2;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  pluss::nn::optim::Adam optimizer(std::vector<Series*>{&w}, opt);
+
+  const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+  const Series idx = pluss::make_series(std::vector<std::int64_t>{2, 0}, {2}, icfg);
+
+  TrainingTrace trace{};
+  trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    const Series loss = optimizer.step([&]() -> Series {
+      const Series pred = x.matmul(w.reshape({3, 1})).reshape({x.sizes()[0], 1});
+      const Series resid = pred.sub(y);
+      const Series mse = resid.square().mean();
+      const Series reg1 = w.sin().square().mean().mul(0.10);
+      const Series reg2 = w.abs().mean().mul(0.05);
+      const Series reg3 = w.take(idx).square().sum().mul(0.01);
+      return mse.add(reg1).add(reg2).add(reg3);
+    });
+    trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  }
+
+  const auto wv = w.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  trace.flat_parameters = wv;
+  return trace;
+}
+
+bool trace_descends(const TrainingTrace& trace) {
+  if (trace.epoch_loss.empty()) return false;
+  return trace.epoch_loss.back() < trace.epoch_loss.front();
+}
+
 bool compare_traces(const TrainingTrace& lhs,
                     const TrainingTrace& rhs,
                     double loss_atol,
@@ -561,6 +1066,46 @@ bool compare_losses_to_torch_reference_(const std::vector<double>& losses,
   return true;
 }
 
+bool compare_losses_to_torch_reference_any_(const std::vector<double>& losses,
+                                            std::initializer_list<const char*> env_var_names,
+                                            double atol,
+                                            double rtol,
+                                            std::ostream* err = nullptr) {
+  const char* selected = nullptr;
+  const char* selected_name = nullptr;
+  for (const char* name : env_var_names) {
+    if (!name) continue;
+    const char* path = std::getenv(name);
+    if (!path || *path == '\0') continue;
+    selected = path;
+    selected_name = name;
+    break;
+  }
+  if (!selected || !selected_name) return true;
+
+  const auto torch_losses = load_torch_reference_losses_csv_(selected);
+  if (torch_losses.empty()) return true;
+  if (torch_losses.size() != losses.size()) {
+    if (err) {
+      *err << "Torch reference epoch count mismatch for " << selected_name
+           << " (torch=" << torch_losses.size() << ", pluss=" << losses.size() << ")\n";
+    }
+    return false;
+  }
+  for (std::size_t i = 0; i < torch_losses.size(); ++i) {
+    if (!approx(losses[i], torch_losses[i], atol, rtol)) {
+      if (err) {
+        *err << "Torch reference mismatch for " << selected_name
+             << " at epoch " << (i + 1)
+             << " pluss=" << losses[i]
+             << " torch=" << torch_losses[i] << "\n";
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
 bool run_training_parity_checks(std::ostream* err = nullptr) {
   auto guarded = [&](const char* stage, auto&& fn) -> bool {
     try {
@@ -574,117 +1119,300 @@ bool run_training_parity_checks(std::ostream* err = nullptr) {
     }
   };
 
+  const ParityBackendMode mode = parity_backend_mode_();
+  const bool want_cpu = mode == ParityBackendMode::All || mode == ParityBackendMode::CPU;
+  const bool want_mps = mode == ParityBackendMode::All || mode == ParityBackendMode::MPS;
+  const bool want_cuda = mode == ParityBackendMode::All || mode == ParityBackendMode::CUDA;
+
+  const bool run_cpu = want_cpu;
+  const bool run_mps = want_mps && pluss::mps::is_ready();
+  const bool run_cuda = want_cuda && pluss::cuda::is_ready();
+  if (want_mps && !run_mps) {
+    if (err) *err << "MPS backend requested but runtime is unavailable\n";
+    return false;
+  }
+  if (want_cuda && !run_cuda) {
+    if (err) *err << "CUDA backend requested but runtime is unavailable\n";
+    return false;
+  }
+
+  std::optional<ScopedEnvVar> mps_fallback_off{};
+  std::optional<ScopedEnvVar> mps_native_take_put{};
+  std::optional<ScopedEnvVar> mps_native_sort{};
+  if (run_mps) {
+    mps_fallback_off.emplace("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    mps_native_take_put.emplace("PLUSS_MPS_NATIVE_TAKE_PUT", "1");
+    mps_native_sort.emplace("PLUSS_MPS_NATIVE_SORT_SELECTION", "1");
+  }
+  std::optional<ScopedEnvVar> cuda_bridge_off{};
+  if (run_cuda) {
+    cuda_bridge_off.emplace("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "0");
+  }
+
   constexpr int kLinearEpochs = 32;
-  TrainingTrace cpu_linear{};
-  if (!guarded("cpu_linear", [&]() {
-        cpu_linear = run_linear_training_trace(pluss::pCPU, kLinearEpochs);
-        return true;
-      })) {
-    return false;
-  }
-  if (!(cpu_linear.epoch_loss.back() < cpu_linear.epoch_loss.front())) {
-    if (err) {
-      *err << "CPU linear training should reduce loss (first=" << cpu_linear.epoch_loss.front()
-           << ", last=" << cpu_linear.epoch_loss.back() << ")\n";
-    }
-    return false;
-  }
-
   constexpr int kLstmEpochs = 36;
-  TrainingTrace cpu_lstm{};
-  if (!guarded("cpu_lstm", [&]() {
-        cpu_lstm = run_lstm_training_trace(pluss::pCPU, kLstmEpochs);
-        return true;
-      })) {
-    return false;
+  constexpr int kRnnEpochs = 34;
+  constexpr int kGruEpochs = 34;
+  constexpr int kScheduleEpochs = 30;
+  constexpr int kConvEpochs = 28;
+  constexpr int kTransformerEpochs = 20;
+  constexpr int kObjectiveEpochs = 30;
+
+  auto check_trace = [&](const char* label, const TrainingTrace& trace) -> bool {
+    if (!trace_descends(trace)) {
+      if (err) {
+        *err << label << " training should reduce loss (first=" << trace.epoch_loss.front()
+             << ", last=" << trace.epoch_loss.back() << ")\n";
+      }
+      return false;
+    }
+    if (!trace_is_finite(trace)) {
+      if (err) *err << label << " trace has non-finite values\n";
+      return false;
+    }
+    return true;
+  };
+
+  auto check_replay = [&](const char* lane,
+                          auto&& rerun,
+                          const TrainingTrace& baseline,
+                          double loss_atol,
+                          double loss_rtol,
+                          double param_atol,
+                          double param_rtol) -> bool {
+    TrainingTrace replay{};
+    if (!guarded(lane, [&]() {
+          replay = rerun();
+          return true;
+        })) {
+      return false;
+    }
+    if (!compare_traces(baseline, replay, loss_atol, loss_rtol, param_atol, param_rtol, err)) {
+      if (err) *err << "determinism mismatch for " << lane << "\n";
+      return false;
+    }
+    return true;
+  };
+
+  struct BackendSuite {
+    TrainingTrace linear{};
+    TrainingTrace lstm{};
+    TrainingTrace rnn{};
+    TrainingTrace gru{};
+    TrainingTrace schedule{};
+    TrainingTrace conv{};
+    TrainingTrace transformer{};
+    TrainingTrace objective{};
+  };
+
+  auto run_suite = [&](Platform platform, const char* tag, BackendSuite* suite) -> bool {
+    if (!guarded((std::string(tag) + "_linear").c_str(), [&]() {
+          suite->linear = run_linear_training_trace(platform, kLinearEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " linear").c_str(), suite->linear)) return false;
+
+    if (!guarded((std::string(tag) + "_lstm").c_str(), [&]() {
+          suite->lstm = run_lstm_training_trace(platform, kLstmEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " lstm").c_str(), suite->lstm)) return false;
+
+    if (!guarded((std::string(tag) + "_rnn").c_str(), [&]() {
+          suite->rnn = run_rnn_training_trace(platform, kRnnEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " rnn").c_str(), suite->rnn)) return false;
+
+    if (!guarded((std::string(tag) + "_gru").c_str(), [&]() {
+          suite->gru = run_gru_training_trace(platform, kGruEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " gru").c_str(), suite->gru)) return false;
+
+    if (!guarded((std::string(tag) + "_schedule").c_str(), [&]() {
+          suite->schedule = run_schedule_training_trace(platform, kScheduleEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " schedule").c_str(), suite->schedule)) return false;
+
+    if (!guarded((std::string(tag) + "_conv").c_str(), [&]() {
+          suite->conv = run_conv_training_trace(platform, kConvEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " conv").c_str(), suite->conv)) return false;
+
+    if (!guarded((std::string(tag) + "_transformer").c_str(), [&]() {
+          suite->transformer = run_transformer_training_trace(platform, kTransformerEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " transformer").c_str(), suite->transformer)) return false;
+
+    if (!guarded((std::string(tag) + "_objective").c_str(), [&]() {
+          suite->objective = run_custom_objective_training_trace(platform, kObjectiveEpochs);
+          return true;
+        })) return false;
+    if (!check_trace((std::string(tag) + " objective").c_str(), suite->objective)) return false;
+
+    const bool cpu_like = platform == pluss::pCPU;
+    const double replay_loss_atol = cpu_like ? 1e-7 : 5e-4;
+    const double replay_loss_rtol = cpu_like ? 1e-6 : 5e-3;
+    const double replay_param_atol = cpu_like ? 1e-6 : 5e-4;
+    const double replay_param_rtol = cpu_like ? 1e-5 : 5e-3;
+    if (!check_replay(
+            (std::string(tag) + "_replay_linear").c_str(),
+            [&]() { return run_linear_training_trace(platform, kLinearEpochs); },
+            suite->linear,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_lstm").c_str(),
+            [&]() { return run_lstm_training_trace(platform, kLstmEpochs); },
+            suite->lstm,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_rnn").c_str(),
+            [&]() { return run_rnn_training_trace(platform, kRnnEpochs); },
+            suite->rnn,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_gru").c_str(),
+            [&]() { return run_gru_training_trace(platform, kGruEpochs); },
+            suite->gru,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_schedule").c_str(),
+            [&]() { return run_schedule_training_trace(platform, kScheduleEpochs); },
+            suite->schedule,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_conv").c_str(),
+            [&]() { return run_conv_training_trace(platform, kConvEpochs); },
+            suite->conv,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_transformer").c_str(),
+            [&]() { return run_transformer_training_trace(platform, kTransformerEpochs); },
+            suite->transformer,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    if (!check_replay(
+            (std::string(tag) + "_replay_objective").c_str(),
+            [&]() { return run_custom_objective_training_trace(platform, kObjectiveEpochs); },
+            suite->objective,
+            replay_loss_atol,
+            replay_loss_rtol,
+            replay_param_atol,
+            replay_param_rtol)) return false;
+    return true;
+  };
+
+  auto compare_suite_to_torch = [&](Platform platform, const BackendSuite& suite) -> bool {
+    const bool is_mps = platform == pluss::pMPS;
+    const bool is_cuda = platform == pluss::pCUDA;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.linear.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_LINEAR_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_LINEAR_REF_CSV" : nullptr,
+             "PLUSS_TORCH_LINEAR_REF_CSV"},
+            2e-3,
+            0.25,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.lstm.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_LSTM_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_LSTM_REF_CSV" : nullptr,
+             "PLUSS_TORCH_LSTM_REF_CSV"},
+            1.2e-1,
+            0.75,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.rnn.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_RNN_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_RNN_REF_CSV" : nullptr,
+             "PLUSS_TORCH_RNN_REF_CSV"},
+            1.5e-1,
+            0.80,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.gru.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_GRU_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_GRU_REF_CSV" : nullptr,
+             "PLUSS_TORCH_GRU_REF_CSV"},
+            1.5e-1,
+            0.80,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.schedule.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_SCHEDULE_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_SCHEDULE_REF_CSV" : nullptr,
+             "PLUSS_TORCH_SCHEDULE_REF_CSV"},
+            9e-2,
+            1.00,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.conv.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_CONV_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_CONV_REF_CSV" : nullptr,
+             "PLUSS_TORCH_CONV_REF_CSV"},
+            4e-2,
+            0.60,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.transformer.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_TRANSFORMER_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_TRANSFORMER_REF_CSV" : nullptr,
+             "PLUSS_TORCH_TRANSFORMER_REF_CSV"},
+            6e-2,
+            0.80,
+            err)) return false;
+    if (!compare_losses_to_torch_reference_any_(
+            suite.objective.epoch_loss,
+            {is_mps ? "PLUSS_TORCH_MPS_OBJECTIVE_REF_CSV" : nullptr,
+             is_cuda ? "PLUSS_TORCH_CUDA_OBJECTIVE_REF_CSV" : nullptr,
+             "PLUSS_TORCH_OBJECTIVE_REF_CSV"},
+            8e-3,
+            0.20,
+            err)) return false;
+    return true;
+  };
+
+  std::optional<BackendSuite> cpu_suite{};
+  std::optional<BackendSuite> mps_suite{};
+  std::optional<BackendSuite> cuda_suite{};
+  if (run_cpu) {
+    cpu_suite.emplace();
+    if (!run_suite(pluss::pCPU, "cpu", &*cpu_suite)) return false;
+    if (!compare_suite_to_torch(pluss::pCPU, *cpu_suite)) return false;
   }
-  if (!(cpu_lstm.epoch_loss.back() < cpu_lstm.epoch_loss.front())) {
-    if (err) {
-      *err << "CPU LSTM training should reduce loss (first=" << cpu_lstm.epoch_loss.front()
-           << ", last=" << cpu_lstm.epoch_loss.back() << ")\n";
-    }
-    return false;
+  if (run_mps) {
+    mps_suite.emplace();
+    if (!run_suite(pluss::pMPS, "mps", &*mps_suite)) return false;
+    if (!compare_suite_to_torch(pluss::pMPS, *mps_suite)) return false;
   }
-
-  if (pluss::mps::is_ready()) {
-    TrainingTrace mps_linear{};
-    if (!guarded("mps_linear", [&]() {
-          mps_linear = run_linear_training_trace(pluss::pMPS, kLinearEpochs);
-          return true;
-        })) {
-      return false;
-    }
-    if (!(mps_linear.epoch_loss.back() < mps_linear.epoch_loss.front())) {
-      if (err) {
-        *err << "MPS linear training should reduce loss (first=" << mps_linear.epoch_loss.front()
-             << ", last=" << mps_linear.epoch_loss.back() << ")\n";
-      }
-      return false;
-    }
-    if (!compare_traces(cpu_linear, mps_linear, 2e-3, 0.20, 2e-2, 0.10, err)) {
-      if (err) *err << "CPU/MPS training trajectory parity mismatch\n";
-      return false;
-    }
-
-    TrainingTrace mps_lstm{};
-    if (!guarded("mps_lstm", [&]() {
-          mps_lstm = run_lstm_training_trace(pluss::pMPS, kLstmEpochs);
-          return true;
-        })) {
-      return false;
-    }
-    if (!(mps_lstm.epoch_loss.back() < mps_lstm.epoch_loss.front())) {
-      if (err) {
-        *err << "MPS LSTM training should reduce loss (first=" << mps_lstm.epoch_loss.front()
-             << ", last=" << mps_lstm.epoch_loss.back() << ")\n";
-      }
-      return false;
-    }
-    // Native MPS LSTM/autograd path should stay in a tighter parity envelope.
-    if (!compare_traces(cpu_lstm, mps_lstm, 6e-2, 0.40, 2.5, 0.75, err)) {
-      if (err) *err << "CPU/MPS LSTM trajectory parity mismatch\n";
-      return false;
-    }
-  }
-
-  if (pluss::cuda::is_ready()) {
-    TrainingTrace cuda_linear{};
-    if (!guarded("cuda_linear", [&]() {
-          cuda_linear = run_linear_training_trace(pluss::pCUDA, kLinearEpochs);
-          return true;
-        })) {
-      return false;
-    }
-    if (!(cuda_linear.epoch_loss.back() < cuda_linear.epoch_loss.front())) {
-      if (err) {
-        *err << "CUDA linear training should reduce loss (first=" << cuda_linear.epoch_loss.front()
-             << ", last=" << cuda_linear.epoch_loss.back() << ")\n";
-      }
-      return false;
-    }
-    if (!compare_traces(cpu_linear, cuda_linear, 2e-3, 0.20, 2e-2, 0.10, err)) {
-      if (err) *err << "CPU/CUDA training trajectory parity mismatch\n";
-      return false;
-    }
-
-    TrainingTrace cuda_lstm{};
-    if (!guarded("cuda_lstm", [&]() {
-          cuda_lstm = run_lstm_training_trace(pluss::pCUDA, kLstmEpochs);
-          return true;
-        })) {
-      return false;
-    }
-    if (!(cuda_lstm.epoch_loss.back() < cuda_lstm.epoch_loss.front())) {
-      if (err) {
-        *err << "CUDA LSTM training should reduce loss (first=" << cuda_lstm.epoch_loss.front()
-             << ", last=" << cuda_lstm.epoch_loss.back() << ")\n";
-      }
-      return false;
-    }
-    if (!compare_traces(cpu_lstm, cuda_lstm, 6e-3, 0.35, 2e-1, 0.35, err)) {
-      if (err) *err << "CPU/CUDA LSTM trajectory parity mismatch\n";
-      return false;
-    }
+  if (run_cuda) {
+    cuda_suite.emplace();
+    if (!run_suite(pluss::pCUDA, "cuda", &*cuda_suite)) return false;
+    if (!compare_suite_to_torch(pluss::pCUDA, *cuda_suite)) return false;
   }
 
   const std::vector<LinearOptimizerKind> matrix_kinds{
@@ -698,111 +1426,78 @@ bool run_training_parity_checks(std::ostream* err = nullptr) {
   constexpr int kLinearMatrixEpochs = 24;
   for (const auto kind : matrix_kinds) {
     const char* name = linear_optimizer_name(kind);
-    TrainingTrace cpu{};
-    {
-      std::string stage = std::string("cpu_linear_matrix_") + name;
-      if (!guarded(stage.c_str(), [&]() {
+    const auto [atol, rtol] = torch_linear_loss_tolerance(kind);
+    if (run_cpu) {
+      TrainingTrace cpu{};
+      if (!guarded((std::string("cpu_linear_matrix_") + name).c_str(), [&]() {
             cpu = run_linear_training_trace(pluss::pCPU, kLinearMatrixEpochs, kind);
             return true;
-          })) {
-        return false;
-      }
+          })) return false;
+      if (!check_trace((std::string("CPU ") + name).c_str(), cpu)) return false;
+      if (!check_replay(
+              (std::string("cpu_linear_matrix_replay_") + name).c_str(),
+              [&]() { return run_linear_training_trace(pluss::pCPU, kLinearMatrixEpochs, kind); },
+              cpu,
+              1e-7,
+              1e-6,
+              1e-7,
+              1e-6)) return false;
+      if (!compare_losses_to_torch_reference_any_(
+              cpu.epoch_loss,
+              {torch_env_for_linear_optimizer(kind), "PLUSS_TORCH_LINEAR_REF_CSV"},
+              atol,
+              rtol,
+              err)) return false;
     }
-    if (!trace_is_finite(cpu)) {
-      if (err) *err << "CPU " << name << " produced non-finite training trace\n";
-      return false;
-    }
-    if (!(cpu.epoch_loss.back() < cpu.epoch_loss.front())) {
-      if (err) {
-        *err << "CPU " << name << " should reduce loss (first=" << cpu.epoch_loss.front()
-             << ", last=" << cpu.epoch_loss.back() << ")\n";
-      }
-      return false;
-    }
-    TrainingTrace cpu_replay{};
-    {
-      std::string stage = std::string("cpu_linear_matrix_replay_") + name;
-      if (!guarded(stage.c_str(), [&]() {
-            cpu_replay = run_linear_training_trace(pluss::pCPU, kLinearMatrixEpochs, kind);
-            return true;
-          })) {
-        return false;
-      }
-    }
-    if (!compare_traces(cpu, cpu_replay, 1e-7, 1e-6, 1e-7, 1e-6, err)) {
-      if (err) *err << "CPU determinism mismatch for " << name << "\n";
-      return false;
-    }
-
-    const TraceTolerance tol = backend_linear_tolerance(kind);
-    if (pluss::mps::is_ready()) {
+    if (run_mps) {
       TrainingTrace mps{};
-      {
-        std::string stage = std::string("mps_linear_matrix_") + name;
-        if (!guarded(stage.c_str(), [&]() {
-              mps = run_linear_training_trace(pluss::pMPS, kLinearMatrixEpochs, kind);
-              return true;
-            })) {
-          return false;
-        }
-      }
-      if (!trace_is_finite(mps)) {
-        if (err) *err << "MPS " << name << " produced non-finite training trace\n";
-        return false;
-      }
-      if (!compare_traces(cpu, mps, tol.loss_atol, tol.loss_rtol, tol.param_atol, tol.param_rtol, err)) {
-        if (err) *err << "CPU/MPS linear trajectory mismatch for " << name << "\n";
-        return false;
-      }
+      if (!guarded((std::string("mps_linear_matrix_") + name).c_str(), [&]() {
+            mps = run_linear_training_trace(pluss::pMPS, kLinearMatrixEpochs, kind);
+            return true;
+          })) return false;
+      if (!check_trace((std::string("MPS ") + name).c_str(), mps)) return false;
+      if (!check_replay(
+              (std::string("mps_linear_matrix_replay_") + name).c_str(),
+              [&]() { return run_linear_training_trace(pluss::pMPS, kLinearMatrixEpochs, kind); },
+              mps,
+              5e-4,
+              5e-3,
+              5e-4,
+              5e-3)) return false;
+      if (!compare_losses_to_torch_reference_any_(
+              mps.epoch_loss,
+              {torch_env_for_linear_optimizer_mps(kind),
+               torch_env_for_linear_optimizer(kind),
+               "PLUSS_TORCH_LINEAR_REF_CSV"},
+              atol,
+              rtol,
+              err)) return false;
     }
-    if (pluss::cuda::is_ready()) {
+    if (run_cuda) {
       TrainingTrace cuda{};
-      {
-        std::string stage = std::string("cuda_linear_matrix_") + name;
-        if (!guarded(stage.c_str(), [&]() {
-              cuda = run_linear_training_trace(pluss::pCUDA, kLinearMatrixEpochs, kind);
-              return true;
-            })) {
-          return false;
-        }
-      }
-      if (!trace_is_finite(cuda)) {
-        if (err) *err << "CUDA " << name << " produced non-finite training trace\n";
-        return false;
-      }
-      if (!compare_traces(cpu, cuda, tol.loss_atol, tol.loss_rtol, tol.param_atol, tol.param_rtol, err)) {
-        if (err) *err << "CPU/CUDA linear trajectory mismatch for " << name << "\n";
-        return false;
-      }
-    }
-
-    const char* env = torch_env_for_linear_optimizer(kind);
-    if (env != nullptr) {
-      const auto [atol, rtol] = torch_linear_loss_tolerance(kind);
-      if (!compare_losses_to_torch_reference_(cpu.epoch_loss, env, atol, rtol, err)) {
-        if (err) *err << "Torch linear loss trajectory mismatch for " << name << "\n";
-        return false;
-      }
+      if (!guarded((std::string("cuda_linear_matrix_") + name).c_str(), [&]() {
+            cuda = run_linear_training_trace(pluss::pCUDA, kLinearMatrixEpochs, kind);
+            return true;
+          })) return false;
+      if (!check_trace((std::string("CUDA ") + name).c_str(), cuda)) return false;
+      if (!check_replay(
+              (std::string("cuda_linear_matrix_replay_") + name).c_str(),
+              [&]() { return run_linear_training_trace(pluss::pCUDA, kLinearMatrixEpochs, kind); },
+              cuda,
+              5e-4,
+              5e-3,
+              5e-4,
+              5e-3)) return false;
+      if (!compare_losses_to_torch_reference_any_(
+              cuda.epoch_loss,
+              {torch_env_for_linear_optimizer_cuda(kind),
+               torch_env_for_linear_optimizer(kind),
+               "PLUSS_TORCH_LINEAR_REF_CSV"},
+              atol,
+              rtol,
+              err)) return false;
     }
   }
-
-  if (!compare_losses_to_torch_reference_(
-          cpu_linear.epoch_loss,
-          "PLUSS_TORCH_LINEAR_REF_CSV",
-          2e-3,
-          0.25,
-          err)) {
-    return false;
-  }
-  if (!compare_losses_to_torch_reference_(
-          cpu_lstm.epoch_loss,
-          "PLUSS_TORCH_LSTM_REF_CSV",
-          1.2e-1,
-          0.75,
-          err)) {
-    return false;
-  }
-
   return true;
 }
 
