@@ -97,8 +97,23 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
     }
   }
 
+  // Batch-apply updates with at most one reindex/validation pass.
+  // This avoids O(k * reindex) behavior when assigning many features at once.
+  auto& w = owner_->mut_impl_();
+  bool touched_schema = (w.columns_.empty() && !values.empty());
   for (std::size_t i = 0; i < names_.size(); ++i) {
-    owner_->set_features_(names_[i], values[i]);
+    const auto& key = names_[i];
+    const auto it = w.name_to_idx_.find(key);
+    if (it == w.name_to_idx_.end()) {
+      w.names_.push_back(key);
+      w.columns_.push_back(values[i]);
+      touched_schema = true;
+    } else {
+      w.columns_[it->second] = values[i];
+    }
+  }
+  if (touched_schema) {
+    w.validate_and_reindex_();
   }
 }
 
@@ -228,7 +243,7 @@ DataFrame DataFrame::load(std::string_view source_type,
                           std::string_view filepath,
                           char sep,
                           std::optional<std::size_t> ncases,
-                          std::initializer_list<std::string_view> usefeats,
+                          pluss::msharp::RangeView::Of<std::string_view> usefeats,
                           std::optional<std::string> case_col,
                           pluss::loader::BadLinePolicy on_bad_lines) {
   return load(source_type, filepath, sep, ncases, normalize_name_list(usefeats), std::move(case_col), on_bad_lines);
@@ -301,7 +316,7 @@ DataFrame DataFrame::load_csv(std::string_view filepath,
 DataFrame DataFrame::load_csv(std::string_view filepath,
                               char sep,
                               std::optional<std::size_t> ncases,
-                              std::initializer_list<std::string_view> usefeats,
+                              pluss::msharp::RangeView::Of<std::string_view> usefeats,
                               std::optional<std::string> case_col,
                               pluss::loader::BadLinePolicy on_bad_lines) {
   return load_csv(filepath, sep, ncases, normalize_name_list(usefeats), std::move(case_col), on_bad_lines);
@@ -404,6 +419,12 @@ pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
 pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
                                                 std::initializer_list<std::string_view> sheet_names,
                                                 bool header) {
+  return load_excel(filepath, pluss::msharp::RangeView::Of<std::string_view>(sheet_names), header);
+}
+
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
+                                                pluss::msharp::RangeView::Of<std::string_view> sheet_names,
+                                                bool header) {
   std::vector<std::string> names;
   names.reserve(sheet_names.size());
   for (const auto sv : sheet_names) {
@@ -433,6 +454,12 @@ pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
 
 pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
                                                 std::initializer_list<std::int64_t> sheet_indices,
+                                                bool header) {
+  return load_excel(filepath, pluss::msharp::RangeView::Int(sheet_indices), header);
+}
+
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
+                                                pluss::msharp::RangeView::Int sheet_indices,
                                                 bool header) {
   std::vector<std::int64_t> indices;
   indices.reserve(sheet_indices.size());

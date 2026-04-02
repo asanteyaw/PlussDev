@@ -398,6 +398,9 @@
   // Typed wrappers for `bitwise_xor_` (staged migration off variadic surface).
   Series& bitwise_xor_(const Series& rhs) const { return pluss::codem::_compat::invoke_("bitwise_xor_", *this, {rhs}); }
 
+  // Typed wrappers for `block` (staged migration off variadic surface).
+  Series block(std::int64_t row_start, std::int64_t row_count, std::int64_t col_start, std::int64_t col_count) const { return pluss::codem::_compat::invoke("block", *this, {row_start, row_count, col_start, col_count}); }
+
   // Typed wrappers for `bmm` (staged migration off variadic surface).
   Series bmm(const Series& rhs) const { return pluss::codem::_compat::invoke("bmm", *this, {rhs}); }
 

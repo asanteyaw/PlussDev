@@ -202,23 +202,23 @@ DataFrame DataFrame::features(std::initializer_list<std::string_view> names) con
   return select(names);
 }
 
-DataFrame DataFrame::features(std::span<const std::string_view> names) {
+DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) {
   return select(names);
 }
 
-DataFrame DataFrame::features(std::span<const std::string_view> names) const {
+DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) const {
   return select(names);
 }
 
 DataFrame DataFrame::features(StackArray<std::string_view> names) {
-  return select(names.data().values);
+  return select(pluss::msharp::RangeView::Of<std::string_view>(names.data().values));
 }
 
 DataFrame DataFrame::features(StackArray<std::string_view> names) const {
-  return select(names.data().values);
+  return select(pluss::msharp::RangeView::Of<std::string_view>(names.data().values));
 }
 
-DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const {
+DataFrame DataFrame::select(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto picked = normalize_name_list(names);
   const auto& src = impl_ref_();
 
@@ -234,24 +234,6 @@ DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const
     out_cols.push_back(src.columns_[it->second]);
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::select(std::span<const std::string_view> names) const {
-  const auto& src = impl_ref_();
-  std::vector<std::string> out_names;
-  std::vector<Thread> out_cols;
-  out_names.reserve(names.size());
-  out_cols.reserve(names.size());
-
-  for (const auto n_sv : names) {
-    const auto n = owned_name(n_sv);
-    const auto it = src.name_to_idx_.find(n);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::select: unknown column '" + n + "'");
-    out_names.push_back(n);
-    out_cols.push_back(src.columns_[it->second]);
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::select_like(std::string_view needle, bool case_sensitive) const {
@@ -357,7 +339,7 @@ DataFrame DataFrame::timeline_features() const {
       std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::cast_series(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::cast_series(pluss::msharp::RangeView::Of<std::string_view> features,
                                  std::optional<pluss::codem::ScalarType> dtype) const {
   if (features.size() == 0) {
     return *this;
@@ -379,7 +361,7 @@ DataFrame DataFrame::cast_series(std::initializer_list<std::string_view> feature
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::cast_note(std::initializer_list<std::string_view> features) const {
+DataFrame DataFrame::cast_note(pluss::msharp::RangeView::Of<std::string_view> features) const {
   if (features.size() == 0) {
     return *this;
   }
@@ -400,7 +382,7 @@ DataFrame DataFrame::cast_note(std::initializer_list<std::string_view> features)
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::cast_timeline(std::initializer_list<std::string_view> features) const {
+DataFrame DataFrame::cast_timeline(pluss::msharp::RangeView::Of<std::string_view> features) const {
   if (features.size() == 0) {
     return *this;
   }
@@ -421,7 +403,7 @@ DataFrame DataFrame::cast_timeline(std::initializer_list<std::string_view> featu
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::cast_timeindex(std::initializer_list<std::string_view> features) const {
+DataFrame DataFrame::cast_timeindex(pluss::msharp::RangeView::Of<std::string_view> features) const {
   if (features.size() == 0) {
     return *this;
   }
@@ -442,7 +424,7 @@ DataFrame DataFrame::cast_timeindex(std::initializer_list<std::string_view> feat
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::astype(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::astype(pluss::msharp::RangeView::Of<std::string_view> features,
                             pluss::codem::ScalarType dtype) const {
   return cast_series(features, dtype);
 }
@@ -465,7 +447,7 @@ DataFrame DataFrame::insert(std::int64_t feature_index, std::string name, const 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::drop(std::initializer_list<std::string_view> names) const {
+DataFrame DataFrame::drop(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto drop_names = normalize_name_list(names);
   const auto& src = impl_ref_();
   std::unordered_set<std::string> drop_set;
@@ -489,7 +471,7 @@ DataFrame DataFrame::drop(std::initializer_list<std::string_view> names) const {
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::reorder(std::initializer_list<std::string_view> names) const {
+DataFrame DataFrame::reorder(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto ordered = normalize_name_list(names);
   const auto& src = impl_ref_();
 
@@ -523,7 +505,7 @@ DataFrame DataFrame::add_suffix(std::string_view suffix) const {
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), src.columns_, src.cases_));
 }
 
-DataFrame DataFrame::arrange(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::arrange(pluss::msharp::RangeView::Of<std::string_view> features,
                              bool ascending,
                              bool nulls_last) const {
   std::vector<ArrangeSpec> specs;
@@ -534,17 +516,17 @@ DataFrame DataFrame::arrange(std::initializer_list<std::string_view> features,
   return arrange_impl_frame(*this, specs);
 }
 
-DataFrame DataFrame::arrange(std::initializer_list<ArrangeSpec> specs) const {
+DataFrame DataFrame::arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const {
   return arrange_impl_frame(*this, std::vector<ArrangeSpec>(specs.begin(), specs.end()));
 }
 
-DataFrame DataFrame::sort_values(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::sort_values(pluss::msharp::RangeView::Of<std::string_view> features,
                                  bool ascending,
                                  bool nulls_last) const {
   return arrange(features, ascending, nulls_last);
 }
 
-DataFrame DataFrame::sort_values(std::initializer_list<ArrangeSpec> specs) const {
+DataFrame DataFrame::sort_values(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const {
   return arrange(specs);
 }
 
@@ -577,7 +559,7 @@ DataFrame DataFrame::bottom(std::string_view feature_name, std::int64_t n) const
       .head(n, false);
 }
 
-pluss::Series DataFrame::repeated_cases(std::initializer_list<std::string_view> features) const {
+pluss::Series DataFrame::repeated_cases(pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
   std::vector<std::size_t> feature_idx;
   if (features.size() == 0) {
@@ -618,14 +600,8 @@ pluss::Series DataFrame::repeated_cases(std::initializer_list<std::string_view> 
   return out;
 }
 
-DataFrame DataFrame::unique_cases(std::initializer_list<std::string_view> features) const {
-  const auto dup = repeated_cases(features).to_vec<bool>();
-  auto keep = pluss::Series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
-  auto* p = reinterpret_cast<bool*>(keep.raw_data());
-  for (std::int64_t i = 0; i < ncases(); ++i) {
-    p[i] = !dup[static_cast<std::size_t>(i)];
-  }
-  return filter(keep);
+DataFrame DataFrame::unique_cases(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return filter(repeated_cases(features).logical_not());
 }
 
 DataFrame DataFrame::set_cases(std::string_view feature_name, bool drop_feature) const {
@@ -679,7 +655,7 @@ DataFrame::LetSlot DataFrame::set(std::string_view name) {
   return LetSlot(*this, owned_name(name));
 }
 
-DataFrame::LetSlots DataFrame::set(std::initializer_list<std::string_view> names) {
+DataFrame::LetSlots DataFrame::set(pluss::msharp::RangeView::Of<std::string_view> names) {
   return LetSlots(*this, normalize_name_list(names));
 }
 
@@ -723,27 +699,23 @@ DataFrame& DataFrame::set_features_(std::string_view name, const Thread& value) 
   return *this;
 }
 
-DataFrame DataFrame::set_features(std::initializer_list<std::string_view> names,
-                                  std::initializer_list<Thread> values) const {
+DataFrame DataFrame::set_features(pluss::msharp::RangeView::Of<std::string_view> names,
+                                  pluss::msharp::RangeView::Of<Thread> values) const {
   PLUSS_CHECK(names.size() == values.size(),
               "DataFrame::set_features: names/value size mismatch");
   DataFrame out = *this;
-  auto value_it = values.begin();
-  for (const auto name : names) {
-    out = out.set_features(name, *value_it);
-    ++value_it;
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    out = out.set_features(names[i], values[i]);
   }
   return out;
 }
 
-DataFrame& DataFrame::set_features_(std::initializer_list<std::string_view> names,
-                                    std::initializer_list<Thread> values) {
+DataFrame& DataFrame::set_features_(pluss::msharp::RangeView::Of<std::string_view> names,
+                                    pluss::msharp::RangeView::Of<Thread> values) {
   PLUSS_CHECK(names.size() == values.size(),
               "DataFrame::set_features_: names/value size mismatch");
-  auto value_it = values.begin();
-  for (const auto name : names) {
-    set_features_(name, *value_it);
-    ++value_it;
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    set_features_(names[i], values[i]);
   }
   return *this;
 }
@@ -777,7 +749,7 @@ DataFrame& DataFrame::rename_(std::string_view old_name, std::string new_name) {
 }
 
 DataFrame DataFrame::rename_features(
-    std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const {
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> renames) const {
   DataFrame out = *this;
   for (const auto& [old_name, new_name] : renames) {
     out = out.rename(old_name, std::string(new_name));
@@ -785,7 +757,7 @@ DataFrame DataFrame::rename_features(
   return out;
 }
 
-DataFrame DataFrame::relabel_features(std::initializer_list<std::string_view> feature_names) const {
+DataFrame DataFrame::relabel_features(pluss::msharp::RangeView::Of<std::string_view> feature_names) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(feature_names.size() == src.names_.size(),
               "DataFrame::relabel_features: number of names must match feature count");
@@ -804,11 +776,11 @@ DataFrame DataFrame::relabel_features(std::initializer_list<std::string_view> fe
       std::move(out_names), src.columns_, src.cases_));
 }
 
-DataFrame DataFrame::set_feature_axis(std::initializer_list<std::string_view> feature_names) const {
+DataFrame DataFrame::set_feature_axis(pluss::msharp::RangeView::Of<std::string_view> feature_names) const {
   return relabel_features(feature_names);
 }
 
-DataFrame DataFrame::set_axis(std::initializer_list<std::string_view> feature_names) const {
+DataFrame DataFrame::set_axis(pluss::msharp::RangeView::Of<std::string_view> feature_names) const {
   return set_feature_axis(feature_names);
 }
 
@@ -913,9 +885,9 @@ DataFrame DataFrame::stitch_on(std::string_view left_feature,
   return DataFrame(std::move(out_cols));
 }
 
-DataFrame DataFrame::stitch_on(std::initializer_list<std::string_view> left_features,
+DataFrame DataFrame::stitch_on(pluss::msharp::RangeView::Of<std::string_view> left_features,
                                const DataFrame& right,
-                               std::initializer_list<std::string_view> right_features,
+                               pluss::msharp::RangeView::Of<std::string_view> right_features,
                                std::string right_suffix) const {
   PLUSS_CHECK(left_features.size() > 0, "DataFrame::stitch_on: at least one left key feature is required");
   std::vector<std::string> left_keys = normalize_name_list(left_features);
@@ -1005,4 +977,14 @@ DataFrame DataFrame::stitch_on(std::initializer_list<std::string_view> left_feat
   }
 
   return DataFrame(std::move(out_cols));
+}
+
+DataFrame DataFrame::stitch_on(std::initializer_list<std::string_view> left_features,
+                               const DataFrame& right,
+                               std::initializer_list<std::string_view> right_features,
+                               std::string right_suffix) const {
+  return stitch_on(pluss::msharp::RangeView::Of<std::string_view>(left_features),
+                   right,
+                   pluss::msharp::RangeView::Of<std::string_view>(right_features),
+                   std::move(right_suffix));
 }

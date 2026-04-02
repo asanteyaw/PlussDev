@@ -11,7 +11,8 @@ PlussQit provides deterministic, portable error reporting suitable for productio
 
 Native trace controls:
 
-- default: focused `file -> pluss trigger` call trace
+- default: full native trace
+- `PLUSS_ERROR_NATIVE_TRACE=focused`: focused `file -> pluss trigger` call trace
 - `PLUSS_ERROR_NATIVE_TRACE=full`: full native trace
 - `PLUSS_ERROR_NATIVE_TRACE=0` (or `off`/`false`): disable native trace section
 

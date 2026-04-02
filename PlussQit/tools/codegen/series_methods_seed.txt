@@ -89,6 +89,7 @@ baddbmm_
 bernoulli
 bernoulli_
 bincount
+block
 bitwise_and
 bitwise_and_
 bitwise_left_shift

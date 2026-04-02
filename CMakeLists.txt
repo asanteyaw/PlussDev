@@ -304,6 +304,25 @@ if(TARGET PlussTiq)
     target_link_libraries(pluss_sdk INTERFACE PlussTiq)
 endif()
 
+# Propagate traceback-friendly flags to SDK consumers so user-code frames are
+# visible without requiring manual build-flag tuning in downstream projects.
+if(PLUSS_TRACE_FRIENDLY_RELEASE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
+        target_compile_options(pluss_sdk INTERFACE
+            $<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-fno-omit-frame-pointer>
+        )
+        if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang")
+            target_compile_options(pluss_sdk INTERFACE
+                $<$<AND:$<CONFIG:Release>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-gline-tables-only>
+            )
+        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(pluss_sdk INTERFACE
+                $<$<AND:$<CONFIG:Release>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-g1>
+            )
+        endif()
+    endif()
+endif()
+
 install(TARGETS pluss
     EXPORT PlussTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

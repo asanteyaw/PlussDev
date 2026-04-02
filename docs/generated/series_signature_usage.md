@@ -36,6 +36,8 @@ auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
   Example: `auto out = mm.flatten(0, 1);`
 - Signature: `Series select(std::int64_t, std::int64_t)`
   Example: `auto out = mm.select(0, 1);`
+- Signature: `Series block(std::int64_t, std::int64_t, std::int64_t, std::int64_t)`
+  Example: `auto out = mm.block(1, 2, 0, 2);`
 - Signature: `Series take(const Series&)`
   Example: `auto out = gather_src.take(flat_idx);`
 - Signature: `Series nonzero()`

@@ -132,6 +132,17 @@ static void validate_series_arg_platforms(std::string_view op, const Series& sel
   }
 }
 
+static Series as_strided_impl(
+    const Series& self,
+    std::span<const std::int64_t> sizes,
+    std::span<const std::int64_t> strides,
+    std::int64_t storage_offset_elems);
+
+static Series as_strided_impl(
+    const Series& self,
+    std::span<const std::int64_t> sizes,
+    std::span<const std::int64_t> strides);
+
 static Series cuda_native_matmul_reference_(const Series& a, const Series& b) {
   if (a.scalar_type() == ScalarType::Float16 || a.scalar_type() == ScalarType::BFloat16) {
     return native::cpu::matmul(a.to(ScalarType::Float32), b.to(ScalarType::Float32)).to(a.scalar_type());
@@ -669,6 +680,39 @@ static Series select_range(const Series& self, std::int64_t dim, std::int64_t st
   for (std::int64_t i = 0; i < len; ++i) idx[(std::size_t)i] = start + i;
   Series index = i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), self.platform());
   return index_select_dispatch_(self, dim, index);
+}
+
+static Series block_2d_impl(
+    const Series& self,
+    std::int64_t row_start,
+    std::int64_t row_count,
+    std::int64_t col_start,
+    std::int64_t col_count) {
+  PLUSS_CHECK(self.dim() == 2, "block: expected a 2D Series");
+  PLUSS_CHECK(row_count >= 0, "block: row_count must be >= 0");
+  PLUSS_CHECK(col_count >= 0, "block: col_count must be >= 0");
+
+  const auto rows = self.sizes()[0];
+  const auto cols = self.sizes()[1];
+  if (row_start < 0) row_start += rows;
+  if (col_start < 0) col_start += cols;
+
+  PLUSS_CHECK(row_start >= 0 && row_start <= rows, "block: row_start out of range");
+  PLUSS_CHECK(col_start >= 0 && col_start <= cols, "block: col_start out of range");
+  PLUSS_CHECK(row_start + row_count <= rows, "block: requested rows exceed dim-0 bounds");
+  PLUSS_CHECK(col_start + col_count <= cols, "block: requested cols exceed dim-1 bounds");
+
+  const auto base_off = self.storage_offset() / std::max<std::int64_t>(1, self.itemsize());
+  const auto row_stride = self.strides()[0];
+  const auto col_stride = self.strides()[1];
+  const auto view_off = base_off + row_start * row_stride + col_start * col_stride;
+  const std::array<std::int64_t, 2> view_sizes{{row_count, col_count}};
+  const std::array<std::int64_t, 2> view_strides{{row_stride, col_stride}};
+  return as_strided_impl(
+      self,
+      std::span<const std::int64_t>(view_sizes.data(), view_sizes.size()),
+      std::span<const std::int64_t>(view_strides.data(), view_strides.size()),
+      view_off);
 }
 
 static Series split_first_by_size(const Series& self, std::int64_t split_size, std::int64_t dim) {
@@ -4656,6 +4700,15 @@ if (is_numeric_scalar_arg(args[0]) &&
 
   // 4-arg
   if (args.size() == 4) {
+    if (is_numeric_scalar_arg(args[0]) &&
+        is_numeric_scalar_arg(args[1]) &&
+        is_numeric_scalar_arg(args[2]) &&
+        is_numeric_scalar_arg(args[3])) {
+      if (op == "block") {
+        return block_2d_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]), as_i64(args[3]));
+      }
+    }
+
     if (std::holds_alternative<const Series*>(args[0].v) &&
         std::holds_alternative<Arg::IntList>(args[1].v) &&
         std::holds_alternative<Arg::IntList>(args[2].v) &&

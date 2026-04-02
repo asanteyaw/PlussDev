@@ -88,6 +88,7 @@ auto s0 = u.squeeze(0);       // remove a specific axis
 // flatten/select/take/nonzero
 auto fl = mm.flatten(0, 1);   // [3,3] -> [9]
 auto row1 = mm.select(0, 1);  // select axis0 index1
+auto blk = mm.block(1, 2, 0, 2); // 2D block: rows [1..2], cols [0..1] -> [[4,5],[7,8]]
 auto picked = m.take(flat_idx);
 auto nz = x.gt(0.0).nonzero();
 ```

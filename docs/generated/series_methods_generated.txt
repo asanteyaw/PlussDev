@@ -104,6 +104,7 @@ bessely
 beta
 betaln
 bincount
+block
 bitwise_and
 bitwise_and_
 bitwise_left_shift

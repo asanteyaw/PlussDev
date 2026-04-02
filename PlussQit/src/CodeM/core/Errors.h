@@ -53,8 +53,15 @@ inline bool native_trace_enabled_() {
 
 inline bool native_trace_full_() {
   const char* raw = std::getenv("PLUSS_ERROR_NATIVE_TRACE");
-  if (!raw || *raw == '\0') return false; // default to focused user->trigger view
-  return std::strcmp(raw, "full") == 0 || std::strcmp(raw, "FULL") == 0;
+  if (!raw || *raw == '\0') return true; // default to full native trace
+  if (std::strcmp(raw, "focused") == 0 || std::strcmp(raw, "FOCUSED") == 0) return false;
+  return std::strcmp(raw, "full") == 0 ||
+         std::strcmp(raw, "FULL") == 0 ||
+         std::strcmp(raw, "1") == 0 ||
+         std::strcmp(raw, "on") == 0 ||
+         std::strcmp(raw, "ON") == 0 ||
+         std::strcmp(raw, "true") == 0 ||
+         std::strcmp(raw, "TRUE") == 0;
 }
 
 [[noreturn]] inline void throw_error(

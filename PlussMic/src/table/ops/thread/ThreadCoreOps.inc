@@ -580,8 +580,8 @@ Thread Thread::bfill() const {
   return backward_fill_thread(*this);
 }
 
-Thread Thread::bucketize(std::initializer_list<double> bins,
-                         std::initializer_list<std::int64_t> labels,
+Thread Thread::bucketize(pluss::msharp::RangeView::Double bins,
+                         pluss::msharp::RangeView::Int labels,
                          bool right,
                          bool include_lowest) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::bucketize is only valid for Series payload");

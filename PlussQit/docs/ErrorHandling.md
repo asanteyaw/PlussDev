@@ -36,7 +36,8 @@ try {
 `throw_error(...)` now appends a native call trace by default to help pinpoint
 user-site call chains without `std::cout` hunting.
 
-- `PLUSS_ERROR_NATIVE_TRACE` unset: focused `file -> pluss trigger` view (default)
+- `PLUSS_ERROR_NATIVE_TRACE` unset: full native stack trace (default)
+- `PLUSS_ERROR_NATIVE_TRACE=focused`: focused `file -> pluss trigger` view
 - `PLUSS_ERROR_NATIVE_TRACE=full`: full native stack trace
 - `PLUSS_ERROR_NATIVE_TRACE=0` (or `off`/`false`): disable native stack trace section
 

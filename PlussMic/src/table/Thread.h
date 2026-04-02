@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <initializer_list>
 #include <iosfwd>
 #include <memory>
 #include <optional>
@@ -10,6 +9,7 @@
 #include <string_view>
 
 #include "MSharp/IntrusivePtr.h"
+#include "MSharp/RangeView.h"
 #include "table/display/Display.h"
 #include "pluss/codem/codem.h"
 #include "pluss/coden/coden.h"
@@ -143,8 +143,8 @@ public:
   Thread distinct(bool dropna = true) const;
   DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
   ThreadView describe(bool render = true) const;
-  Thread bucketize(std::initializer_list<double> bins,
-                   std::initializer_list<std::int64_t> labels = {},
+  Thread bucketize(pluss::msharp::RangeView::Double bins,
+                   pluss::msharp::RangeView::Int labels = {},
                    bool right = true,
                    bool include_lowest = true) const;
 

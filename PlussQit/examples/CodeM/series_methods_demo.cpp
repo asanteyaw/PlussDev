@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
   add_case("squeeze(dim)", [&]{ return x.unsqueeze(0).squeeze(0); });
   add_case("flatten", [&]{ return mm.flatten(0, 1); });
   add_case("select", [&]{ return mm.select(0, 1); });
+  add_case("block", [&]{ return mm.block(1, 2, 0, 2); });
   add_case("take", [&]{ return gather_src.take(flat_idx); });
   add_case("nonzero", [&]{ return cond.nonzero(); });
 

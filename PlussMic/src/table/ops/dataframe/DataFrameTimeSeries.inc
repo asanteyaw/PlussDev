@@ -5,7 +5,7 @@ using pluss::ScalarType;
 using pluss::Series;
 
 std::vector<std::string> normalize_ts_features_(const DataFrame& frame,
-                                                std::initializer_list<std::string_view> features,
+                                                pluss::msharp::RangeView::Of<std::string_view> features,
                                                 std::string_view where) {
   PLUSS_CHECK(features.size() > 0, std::string(where) + ": at least one feature is required");
   std::unordered_set<std::string> seen;
@@ -85,10 +85,16 @@ DataFrameTsAccessor::DataFrameTsAccessor(DataFrame frame, std::vector<std::strin
 }
 
 DataFrameTsAccessor DataFrame::ts(std::string_view feature) const {
-  return ts({feature});
+  const auto single = std::array<std::string_view, 1>{feature};
+  return ts(pluss::msharp::RangeView::Of<std::string_view>(
+      std::span<const std::string_view>(single.data(), single.size())));
 }
 
 DataFrameTsAccessor DataFrame::ts(std::initializer_list<std::string_view> features) const {
+  return ts(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+DataFrameTsAccessor DataFrame::ts(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return DataFrameTsAccessor(*this, normalize_ts_features_(*this, features, "DataFrame::ts"));
 }
 
@@ -374,7 +380,7 @@ DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const {
   return make_frame_from_columns_(std::move(out), frame_.cases());
 }
 
-DataFrame DataFrameTsAccessor::lag_block(std::initializer_list<std::int64_t> lags) const {
+DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) const {
   PLUSS_CHECK(lags.size() > 0, "DataFrameTsAccessor::lag_block: expected at least one lag");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size() * lags.size());
@@ -387,7 +393,7 @@ DataFrame DataFrameTsAccessor::lag_block(std::initializer_list<std::int64_t> lag
   return make_frame_from_columns_(std::move(out), frame_.cases());
 }
 
-DataFrame DataFrameTsAccessor::rolling_block(std::initializer_list<std::int64_t> windows,
+DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windows,
                                              const TsRollingBlockOptions& options) const {
   PLUSS_CHECK(windows.size() > 0, "DataFrameTsAccessor::rolling_block: expected at least one window");
   std::vector<std::pair<std::string, Thread>> out;

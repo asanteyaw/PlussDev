@@ -417,6 +417,10 @@ methods:
     signature: "Series flatten(std::int64_t start_dim) const"
     forward: "start_dim, -1"
 
+  - name: block
+    signature: "Series block(std::int64_t row_start, std::int64_t row_count, std::int64_t col_start, std::int64_t col_count) const"
+    forward: "row_start, row_count, col_start, col_count"
+
   - name: norm
     signature: "Series norm() const"
     forward: "2.0"

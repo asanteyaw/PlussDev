@@ -204,6 +204,15 @@ std::vector<std::string> normalize_name_list(std::initializer_list<std::string_v
   return out;
 }
 
+std::vector<std::string> normalize_name_list(pluss::msharp::RangeView::Of<std::string_view> names) {
+  std::vector<std::string> out;
+  out.reserve(names.size());
+  for (const auto n : names) {
+    out.push_back(owned_name(n));
+  }
+  return out;
+}
+
 bool is_none_token(std::string_view s) {
   auto t = lower_copy(owned_name(s));
   std::size_t b = 0;

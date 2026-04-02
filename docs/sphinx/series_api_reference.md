@@ -111,6 +111,36 @@ auto w = pluss::zeros({2,3});
 w.extract_put_(pluss::make_series({9.0,8.0}, {2}), {1, {1,3}});
 ```
 
+### `block`
+
+#### Signature
+
+```cpp
+Series block(std::int64_t row_start, std::int64_t row_count,
+             std::int64_t col_start, std::int64_t col_count) const
+```
+
+#### Notes
+
+- Fast 2D-only rectangular view extraction.
+- Throws `pluss::Error` if input is not rank-2.
+- `row_start` and `col_start` accept negative indices (from end).
+- `row_count` and `col_count` must be non-negative.
+- Bounds are strict: requested rectangle must stay inside matrix bounds.
+
+#### Examples
+
+```cpp
+auto mm = pluss::make_series({
+  {1.0, 2.0, 3.0, 4.0},
+  {5.0, 6.0, 7.0, 8.0},
+  {9.0,10.0,11.0,12.0}
+});
+
+auto b1 = mm.block(1, 2, 1, 3);    // [[6,7,8],[10,11,12]]
+auto b2 = mm.block(-2, 1, -3, 2);  // [[6,7]]
+```
+
 ### `abs2`
 
 #### Signature

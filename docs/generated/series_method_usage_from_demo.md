@@ -11,6 +11,7 @@ Each bullet is an actual call body used in the demo.
 - `squeeze(dim)`: `return x.unsqueeze(0).squeeze(0);`
 - `flatten`: `return mm.flatten(0, 1);`
 - `select`: `return mm.select(0, 1);`
+- `block`: `return mm.block(1, 2, 0, 2);`
 - `take`: `return gather_src.take(flat_idx);`
 - `nonzero`: `return cond.nonzero();`
 - `add(scalar)`: `return x.add(1.5);`

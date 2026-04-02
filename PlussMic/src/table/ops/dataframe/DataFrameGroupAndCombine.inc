@@ -29,16 +29,16 @@ DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool
   return DataFrame(std::move(out_cols), make_note_thread({"summary"}));
 }
 
-DataFrame DataFrame::summarize(std::initializer_list<SummarySpec> specs, bool render) const {
+DataFrame DataFrame::summarize(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render) const {
   return summarize_specs(std::vector<SummarySpec>(specs.begin(), specs.end()), render);
 }
 
-DataFrameView DataFrame::aggregate(std::initializer_list<SummarySpec> specs, bool render) const {
+DataFrameView DataFrame::aggregate(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render) const {
   return DataFrameView(summarize(specs, false), render, "aggregate", title());
 }
 
-DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
-                           std::initializer_list<GroupSpec> specs,
+DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
+                           pluss::msharp::RangeView::Of<GroupSpec> specs,
                            bool dropna_keys,
                            bool render) const {
   PLUSS_CHECK(keys.size() != 0, "DataFrame::group: at least one key feature is required");
@@ -77,6 +77,10 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
     Thread col{};
     Thread value_col{};
     std::optional<std::vector<bool>> valid;
+    // Perf cache for numeric ops: convert once, reuse raw pointer in hot loop.
+    bool numeric_cached{false};
+    pluss::Series numeric_values{};
+    const double* numeric_ptr{nullptr};
   };
 
   std::vector<SpecInfo> spec_infos;
@@ -117,14 +121,20 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
     }
     PLUSS_CHECK(out_seen.insert(out_name).second, "DataFrame::group: duplicate output feature '" + out_name + "'");
 
-    spec_infos.push_back({
-        spec.op,
-        std::move(out_name),
-        has_feature,
-        std::move(col),
-        std::move(value_col),
-        std::move(valid),
-    });
+    SpecInfo info{};
+    info.op = spec.op;
+    info.out_name = std::move(out_name);
+    info.has_feature = has_feature;
+    info.col = std::move(col);
+    info.value_col = std::move(value_col);
+    info.valid = std::move(valid);
+    if (has_feature
+        && (spec.op == GroupOp::Sum || spec.op == GroupOp::Mean || spec.op == GroupOp::Min || spec.op == GroupOp::Max)) {
+      info.numeric_values = info.col.as_series().to(pluss::codem::ScalarType::Float64);
+      info.numeric_ptr = reinterpret_cast<const double*>(info.numeric_values.raw_data());
+      info.numeric_cached = true;
+    }
+    spec_infos.push_back(std::move(info));
   }
 
   struct AggState {
@@ -146,8 +156,10 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
   std::unordered_map<std::string, std::size_t> index_by_key;
   index_by_key.reserve(groups.capacity());
 
+  std::vector<std::string> key_vals(key_infos.size());
+  std::string composite;
+  composite.reserve(key_vals.size() * 16);
   for (std::int64_t r = 0; r < ncases(); ++r) {
-    std::vector<std::string> key_vals(key_infos.size());
     bool skip = false;
     for (std::size_t k = 0; k < key_infos.size(); ++k) {
       const auto& key_info = key_infos[k];
@@ -162,7 +174,7 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
       continue;
     }
 
-    std::string composite;
+    composite.clear();
     for (std::size_t k = 0; k < key_vals.size(); ++k) {
       if (k) {
         composite.push_back('\x1f');
@@ -172,7 +184,7 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
 
     const auto [it, inserted] = index_by_key.emplace(composite, groups.size());
     if (inserted) {
-      groups.push_back({std::move(key_vals), std::vector<AggState>(spec_infos.size())});
+      groups.push_back({key_vals, std::vector<AggState>(spec_infos.size())});
     }
     auto& g = groups[it->second];
 
@@ -199,10 +211,9 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
         continue;
       }
 
-      double x = 0.0;
-      if (!extract_numeric_value(spec.col.as_series(), r, x)) {
-        continue;
-      }
+      PLUSS_CHECK(spec.numeric_cached && spec.numeric_ptr != nullptr,
+                  "DataFrame::group: numeric cache unavailable for numeric aggregation");
+      const double x = spec.numeric_ptr[r];
       agg.count += 1;
       agg.sum += x;
       if (!agg.has_numeric) {
@@ -266,8 +277,8 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
   return DataFrame(std::move(out_cols));
 }
 
-DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
-                                  std::initializer_list<GroupSpec> specs,
+DataFrameView DataFrame::group_by(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                  pluss::msharp::RangeView::Of<GroupSpec> specs,
                                   bool dropna_keys,
                                   bool render) const {
   return DataFrameView(group(keys, specs, dropna_keys, false), render, "group_by", title());
@@ -283,8 +294,8 @@ DataFrameView DataFrame::pivot(std::string_view case_feature,
       {GroupSpec{"__pivot_cell_count__", "", GroupOp::Count}},
       dropna_keys,
       false);
-  const auto counts = dup.features("__pivot_cell_count__").as_series().to_vec<std::int64_t>();
-  const bool has_duplicate = std::any_of(counts.begin(), counts.end(), [](std::int64_t v) { return v > 1; });
+  const auto counts = dup.features("__pivot_cell_count__").as_series();
+  const bool has_duplicate = counts.gt(1).any().item<bool>();
   PLUSS_CHECK(!has_duplicate,
               "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
   auto out = pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, false);
@@ -314,7 +325,12 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   const auto case_vals = case_col.has_validity_mask() ? case_col.clear_validity_mask() : case_col;
   const auto feat_vals = feat_col.has_validity_mask() ? feat_col.clear_validity_mask() : feat_col;
   const auto value_vals = value_col.has_validity_mask() ? value_col.clear_validity_mask() : value_col;
-  const auto* value_series = (value_col.kind() == ThreadKind::Series) ? &value_col.as_series() : nullptr;
+  std::optional<pluss::Series> value_numeric = std::nullopt;
+  const double* value_numeric_ptr = nullptr;
+  if (needs_numeric) {
+    value_numeric = value_col.as_series().to(pluss::codem::ScalarType::Float64);
+    value_numeric_ptr = reinterpret_cast<const double*>(value_numeric->raw_data());
+  }
 
   struct PivotAgg {
     std::int64_t count{0};
@@ -380,10 +396,9 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
       continue;
     }
 
-    double x = 0.0;
-    if (!extract_numeric_value(*value_series, r, x)) {
-      continue;
-    }
+    PLUSS_CHECK(value_numeric_ptr != nullptr,
+                "DataFrame::pivot_table: numeric cache unavailable for numeric aggregation");
+    const double x = value_numeric_ptr[r];
     agg.count += 1;
     agg.sum += x;
     if (!agg.has_numeric) {

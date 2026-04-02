@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstdint>
 #include <algorithm>
+#include <sstream>
 #include <type_traits>
 #if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
 #include <Accelerate/Accelerate.h>
@@ -256,6 +257,11 @@ void mul(const Series& a, const Series& b, const Series& out_) {
     }
   }
   switch (a.scalar_type()) {
+    case ScalarType::Bool:
+      binary_apply<std::uint8_t>(a, b, out, [](std::uint8_t x, std::uint8_t y) {
+        return static_cast<std::uint8_t>((x != 0) && (y != 0));
+      });
+      return;
     case ScalarType::Float64: binary_apply<double>(a,b,out,[](double x,double y){ return x * y; }); return;
     case ScalarType::Float32: binary_apply<float>(a,b,out,[](float x,float y){ return x * y; }); return;
     case ScalarType::Float16: binary_half_apply<Float16>(a,b,out,[](float x,float y){ return x * y; }, float16_from_float, float16_to_float); return;
@@ -270,7 +276,14 @@ void mul(const Series& a, const Series& b, const Series& out_) {
     case ScalarType::UInt32: binary_apply<std::uint32_t>(a,b,out,[](auto x,auto y){ return (std::uint32_t)(x * y); }); return;
     case ScalarType::Int64: binary_apply<std::int64_t>(a,b,out,[](auto x,auto y){ return (std::int64_t)(x * y); }); return;
     case ScalarType::UInt64: binary_apply<std::uint64_t>(a,b,out,[](auto x,auto y){ return (std::uint64_t)(x * y); }); return;
-    default: throw_error("mul: dtype not implemented");
+    default: {
+      std::ostringstream oss;
+      oss << "mul: dtype not implemented (lhs=" << dtype_of(a.scalar_type()).name
+          << ", rhs=" << dtype_of(b.scalar_type()).name
+          << ", out=" << dtype_of(out.scalar_type()).name
+          << ").";
+      throw_error(oss.str());
+    }
   }
 }
 

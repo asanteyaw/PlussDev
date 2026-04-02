@@ -4,7 +4,6 @@
 #include <array>
 #include <cmath>
 #include <iomanip>
-#include <initializer_list>
 #include <limits>
 #include <numeric>
 #include <ranges>
@@ -12,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 #include "CodeM/core/Errors.h"
@@ -77,13 +77,16 @@ std::int64_t normalize_frame_index(std::int64_t idx, std::int64_t depth) {
   return out;
 }
 
-std::vector<std::int64_t> normalize_frame_indices(std::initializer_list<std::int64_t> indices, std::int64_t depth) {
+std::vector<std::int64_t> normalize_frame_indices(pluss::msharp::RangeView::Int indices, std::int64_t depth) {
   PLUSS_CHECK(indices.size() != 0, "Atlas::plot().frames: at least one frame index is required");
   std::vector<std::int64_t> out;
   out.reserve(indices.size());
+  std::vector<std::uint8_t> seen(static_cast<std::size_t>(depth), static_cast<std::uint8_t>(0));
   for (const auto idx : indices) {
     const auto normalized = normalize_frame_index(idx, depth);
-    if (std::find(out.begin(), out.end(), normalized) == out.end()) {
+    auto& visited = seen[static_cast<std::size_t>(normalized)];
+    if (visited == static_cast<std::uint8_t>(0)) {
+      visited = static_cast<std::uint8_t>(1);
       out.push_back(normalized);
     }
   }
@@ -336,16 +339,28 @@ std::vector<std::string> default_triplet_features(const std::vector<DataFrame>& 
   return names;
 }
 
-std::vector<std::string> resolve_triplet_features(std::initializer_list<std::string_view> requested,
+std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<std::string_view> requested,
                                                   const std::vector<DataFrame>& frames) {
   if (requested.size() == 0) {
     return default_triplet_features(frames);
   }
+  PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
+  const auto numeric_names = frames.front().series_features().feature_names();
+  std::unordered_set<std::string> available_set;
+  available_set.reserve(numeric_names.size());
+  for (const auto& name : numeric_names) {
+    available_set.insert(name);
+  }
   std::vector<std::string> features;
   features.reserve(requested.size());
+  std::unordered_set<std::string> selected_set;
+  selected_set.reserve(requested.size());
   for (const auto name : requested) {
     const std::string feature(name);
-    if (std::find(features.begin(), features.end(), feature) == features.end()) {
+    PLUSS_CHECK(
+        available_set.contains(feature),
+        "Atlas::plot().triplot: feature '" + feature + "' is missing or not numeric");
+    if (selected_set.insert(feature).second) {
       features.push_back(feature);
     }
   }
@@ -355,26 +370,33 @@ std::vector<std::string> resolve_triplet_features(std::initializer_list<std::str
   return features;
 }
 
-std::vector<std::string> resolve_depth_features(std::initializer_list<std::string_view> requested,
+std::vector<std::string> resolve_depth_features(pluss::msharp::RangeView::Of<std::string_view> requested,
                                                 const std::vector<DataFrame>& frames,
                                                 std::int64_t max_features,
                                                 std::string_view where) {
   PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
   const auto numeric = frames.front().series_features();
   const auto numeric_names = numeric.feature_names();
+  std::unordered_set<std::string> available_set;
+  available_set.reserve(numeric_names.size());
+  for (const auto& name : numeric_names) {
+    available_set.insert(name);
+  }
 
   std::vector<std::string> features;
   if (requested.size() == 0) {
     features = numeric_names;
   } else {
     features.reserve(requested.size());
+    std::unordered_set<std::string> selected_set;
+    selected_set.reserve(requested.size());
     for (const auto name_view : requested) {
       const std::string name(name_view);
-      if (std::find(features.begin(), features.end(), name) != features.end()) {
+      if (!selected_set.insert(name).second) {
         continue;
       }
       PLUSS_CHECK(
-          std::find(numeric_names.begin(), numeric_names.end(), name) != numeric_names.end(),
+          available_set.contains(name),
           std::string(where) + ": feature '" + name + "' is missing or not numeric");
       features.push_back(name);
     }
@@ -549,13 +571,13 @@ DataFramePlotAccessor AtlasPlotAccessor::frames(std::int64_t frame_index) const 
   return frames_[static_cast<std::size_t>(idx)].plot(options_.figure);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::frames(std::initializer_list<std::int64_t> frame_indices,
+pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                             std::string_view y_feature,
                                             std::optional<std::string_view> x_feature) const {
   return frames(frame_indices, y_feature, x_feature, options_.frames);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::frames(std::initializer_list<std::int64_t> frame_indices,
+pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
                                             std::string_view y_feature,
                                             std::optional<std::string_view> x_feature,
                                             const AtlasFramesPlotOptions& options) const {
@@ -808,11 +830,11 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
   return fig;
 }
 
-pluss::pl::Studio AtlasPlotAccessor::depth_compare(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return depth_compare(features, options_.depth_compare);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::depth_compare(std::initializer_list<std::string_view> features,
+pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<std::string_view> features,
                                                    const AtlasDepthComparePlotOptions& options) const {
   const auto selected = resolve_depth_features(
       features, frames_, options.max_features, "Atlas::plot().depth_compare");
@@ -843,11 +865,11 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(std::initializer_list<std::st
   return fig;
 }
 
-pluss::pl::Studio AtlasPlotAccessor::depth_facet(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return depth_facet(features, options_.depth_facet);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::depth_facet(std::initializer_list<std::string_view> features,
+pluss::pl::Studio AtlasPlotAccessor::depth_facet(pluss::msharp::RangeView::Of<std::string_view> features,
                                                  const AtlasDepthFacetPlotOptions& options) const {
   const auto selected = resolve_depth_features(
       features, frames_, options.max_features, "Atlas::plot().depth_facet");
@@ -939,11 +961,11 @@ pluss::pl::Studio AtlasPlotAccessor::triplot(const pluss::pl::flash::TriplotOpti
   return triplot({}, options);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::triplot(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return triplot(features, options_.triplot);
 }
 
-pluss::pl::Studio AtlasPlotAccessor::triplot(std::initializer_list<std::string_view> features,
+pluss::pl::Studio AtlasPlotAccessor::triplot(pluss::msharp::RangeView::Of<std::string_view> features,
                                              const pluss::pl::flash::TriplotOptions& options) const {
   const auto selected = resolve_triplet_features(features, frames_);
   auto columns = flatten_feature_columns(frames_, selected, "Atlas::plot().triplot");

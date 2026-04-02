@@ -596,6 +596,26 @@ static std::vector<std::int64_t> broadcast_out_shape_(std::span<const std::int64
   return SeriesIterator::broadcast_shape(a, b);
 }
 
+ScalarType promoted_binary_dtype_(native::cpu::BinaryOpId op, ScalarType a, ScalarType b) {
+  ScalarType dt = promote_types(a, b);
+  if (dt != ScalarType::Bool) {
+    return dt;
+  }
+
+  // Keep bool-only multiplication as logical masking, but route other bool
+  // arithmetic ops through numeric dtypes so mask formulas work without casts.
+  switch (op) {
+    case native::cpu::BinaryOpId::Add:
+    case native::cpu::BinaryOpId::Sub:
+      return ScalarType::Int64;
+    case native::cpu::BinaryOpId::Div:
+    case native::cpu::BinaryOpId::Pow:
+      return ScalarType::Float32;
+    default:
+      return dt;
+  }
+}
+
 static std::uint64_t splitmix64_(std::uint64_t& x) {
   x += 0x9e3779b97f4a7c15ULL;
   std::uint64_t z = x;
@@ -611,7 +631,7 @@ static double u01_(std::uint64_t& state) {
 
 static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Series& b0) {
   require_same_platform(a0, b0, "binary op");
-  ScalarType dt = promote_types(a0.scalar_type(), b0.scalar_type());
+  ScalarType dt = promoted_binary_dtype_(op, a0.scalar_type(), b0.scalar_type());
   Series a = (a0.scalar_type()==dt) ? a0 : a0.to(dt);
   Series b = (b0.scalar_type()==dt) ? b0 : b0.to(dt);
   auto out_shape = broadcast_out_shape_(a.sizes(), b.sizes());
@@ -889,7 +909,7 @@ static Series i64_index_vector_on_(std::span<const std::int64_t> values, Platfor
 }
 
 Series add(const Series& a, const Series& b) {
-  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Add, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Add, aa, bb);
@@ -901,7 +921,7 @@ Series add(const Series& a, const Series& b) {
 }
 
 Series sub(const Series& a, const Series& b) {
-  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Sub, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Sub, aa, bb);
@@ -927,7 +947,7 @@ static Series mul_backward_product_(const Series& lhs, const Series& rhs) {
 }
 
 Series mul(const Series& a, const Series& b) {
-  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Mul, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Mul, aa, bb);
@@ -938,7 +958,7 @@ Series mul(const Series& a, const Series& b) {
   return out;
 }
 Series div(const Series& a, const Series& b) {
-  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Div, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Div, aa, bb);
@@ -952,7 +972,7 @@ Series div(const Series& a, const Series& b) {
   return out;
 }
 Series pow(const Series& a, const Series& b) {
-  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Pow, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);

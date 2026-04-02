@@ -6,7 +6,7 @@ bool is_time_like_thread_(ThreadKind kind) {
 
 std::vector<std::size_t> resolve_time_feature_indices_(
     const detail::DataFrameImpl& src,
-    std::initializer_list<std::string_view> features,
+    pluss::msharp::RangeView::Of<std::string_view> features,
     std::string_view where) {
   std::vector<std::size_t> indices;
   if (features.size() == 0) {
@@ -39,7 +39,7 @@ std::vector<std::size_t> resolve_time_feature_indices_(
 
 std::vector<std::size_t> resolve_shift_feature_indices_(
     const detail::DataFrameImpl& src,
-    std::initializer_list<std::string_view> features,
+    pluss::msharp::RangeView::Of<std::string_view> features,
     std::string_view where) {
   std::vector<std::size_t> indices;
   if (features.size() == 0) {
@@ -75,7 +75,7 @@ pluss::TimeIndex time_axis_to_index_(const Thread& axis, std::string_view where)
 std::vector<std::size_t> resolve_resample_value_indices_(
     const detail::DataFrameImpl& src,
     std::size_t axis_idx,
-    std::initializer_list<std::string_view> value_features,
+    pluss::msharp::RangeView::Of<std::string_view> value_features,
     std::string_view where) {
   std::vector<std::size_t> indices;
   if (value_features.size() == 0) {
@@ -167,7 +167,7 @@ DataFrame DataFrame::shift(std::int64_t periods) const {
   return shift({}, periods);
 }
 
-DataFrame DataFrame::shift(std::initializer_list<std::string_view> features, std::int64_t periods) const {
+DataFrame DataFrame::shift(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods) const {
   const auto& src = impl_ref_();
   if (src.columns_.empty() || src.nrows_ == 0 || periods == 0) {
     return *this;
@@ -196,8 +196,20 @@ DataFrame DataFrame::slice(std::int64_t start, std::int64_t stop) const {
   return take(idx);
 }
 
-DataFrame DataFrame::take(std::span<const std::int64_t> indices) const {
+DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const {
   const auto& src = impl_ref_();
+  if (indices.size() == static_cast<std::size_t>(src.nrows_)) {
+    bool is_identity = true;
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+      if (indices[i] != static_cast<std::int64_t>(i)) {
+        is_identity = false;
+        break;
+      }
+    }
+    if (is_identity) {
+      return *this;
+    }
+  }
   std::vector<Thread> out_cols;
   out_cols.reserve(src.columns_.size());
   for (const auto& c : src.columns_) {
@@ -254,7 +266,7 @@ DataFrame DataFrame::query(std::string_view expression) const {
   return where(mask);
 }
 
-DataFrame DataFrame::derive(std::initializer_list<std::pair<std::string, Thread>> assignments) const {
+DataFrame DataFrame::derive(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const {
   DataFrame out = *this;
   for (const auto& assignment : assignments) {
     PLUSS_CHECK(!assignment.first.empty(), "DataFrame::derive: feature name cannot be empty");
@@ -263,7 +275,7 @@ DataFrame DataFrame::derive(std::initializer_list<std::pair<std::string, Thread>
   return out;
 }
 
-DataFrame DataFrame::derive(std::initializer_list<DeriveSpec> specs) const {
+DataFrame DataFrame::derive(pluss::msharp::RangeView::Of<DeriveSpec> specs) const {
   DataFrame out = *this;
   for (const auto& spec : specs) {
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::derive: feature name cannot be empty");
@@ -273,11 +285,11 @@ DataFrame DataFrame::derive(std::initializer_list<DeriveSpec> specs) const {
   return out;
 }
 
-DataFrame DataFrame::assign(std::initializer_list<std::pair<std::string, Thread>> assignments) const {
+DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const {
   return derive(assignments);
 }
 
-DataFrame DataFrame::assign(std::initializer_list<DeriveSpec> specs) const {
+DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const {
   return derive(specs);
 }
 
@@ -298,10 +310,11 @@ DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) c
 
 DataFrame DataFrame::transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn), "DataFrame::transform(feature): transform function is empty");
-  return transform({TransformSpec{owned_name(feature), fn}});
+  const std::array<TransformSpec, 1> spec{{TransformSpec{owned_name(feature), fn}}};
+  return transform(pluss::msharp::RangeView::Of<TransformSpec>(spec));
 }
 
-DataFrame DataFrame::transform(std::initializer_list<TransformSpec> specs) const {
+DataFrame DataFrame::transform(pluss::msharp::RangeView::Of<TransformSpec> specs) const {
   PLUSS_CHECK(specs.size() > 0, "DataFrame::transform: at least one TransformSpec is required");
   const auto& src = impl_ref_();
 
@@ -328,7 +341,7 @@ DataFrame DataFrame::transform(std::initializer_list<TransformSpec> specs) const
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::tz_convert(std::initializer_list<std::string_view> features, std::string_view tz_name) const {
+DataFrame DataFrame::tz_convert(pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name) const {
   const auto tz = owned_name(tz_name);
   PLUSS_CHECK(!tz.empty(), "DataFrame::tz_convert: tz_name cannot be empty");
   const auto& src = impl_ref_();
@@ -345,7 +358,7 @@ DataFrame DataFrame::tz_convert(std::initializer_list<std::string_view> features
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::tz_localize(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::tz_localize(pluss::msharp::RangeView::Of<std::string_view> features,
                                  std::string_view tz_name,
                                  int fold,
                                  std::string_view nonexistent) const {
@@ -367,11 +380,11 @@ DataFrame DataFrame::tz_localize(std::initializer_list<std::string_view> feature
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::to_utc(std::initializer_list<std::string_view> features) const {
+DataFrame DataFrame::to_utc(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return tz_convert(features, "UTC");
 }
 
-DataFrame DataFrame::shift_time(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::shift_time(pluss::msharp::RangeView::Of<std::string_view> features,
                                 int periods,
                                 std::string_view freq) const {
   const auto freq_owned = owned_name(freq);
@@ -391,7 +404,7 @@ DataFrame DataFrame::shift_time(std::initializer_list<std::string_view> features
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::floor_time(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::floor_time(pluss::msharp::RangeView::Of<std::string_view> features,
                                 std::string_view unit) const {
   const auto unit_owned = owned_name(unit);
   PLUSS_CHECK(!unit_owned.empty(), "DataFrame::floor_time: unit cannot be empty");
@@ -409,7 +422,7 @@ DataFrame DataFrame::floor_time(std::initializer_list<std::string_view> features
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::ceil_time(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::ceil_time(pluss::msharp::RangeView::Of<std::string_view> features,
                                std::string_view unit) const {
   const auto unit_owned = owned_name(unit);
   PLUSS_CHECK(!unit_owned.empty(), "DataFrame::ceil_time: unit cannot be empty");
@@ -427,7 +440,7 @@ DataFrame DataFrame::ceil_time(std::initializer_list<std::string_view> features,
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::round_time(std::initializer_list<std::string_view> features,
+DataFrame DataFrame::round_time(pluss::msharp::RangeView::Of<std::string_view> features,
                                 std::string_view unit) const {
   const auto unit_owned = owned_name(unit);
   PLUSS_CHECK(!unit_owned.empty(), "DataFrame::round_time: unit cannot be empty");
@@ -446,7 +459,7 @@ DataFrame DataFrame::round_time(std::initializer_list<std::string_view> features
 }
 
 DataFrameView DataFrame::resample(std::string_view time_feature,
-                                  std::initializer_list<std::string_view> value_features,
+                                  pluss::msharp::RangeView::Of<std::string_view> value_features,
                                   std::string_view freq,
                                   std::string_view op,
                                   std::int64_t step,

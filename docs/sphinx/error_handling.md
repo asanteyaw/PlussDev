@@ -58,6 +58,7 @@ void run_step(const pluss::Series& y_pred, const pluss::Series& y_true) {
 - Native call trace uses demangled C++ symbols and attempts source-line resolution (`atos` on macOS, `addr2line` on Linux) when symbols are available.
 - For best file:line traces, build with debug info (for example `-g`) in both your app and linked Pluss binaries.
 - Native trace mode is controlled by `PLUSS_ERROR_NATIVE_TRACE`:
-  - unset: focused `file -> pluss trigger` trace (default)
+  - unset: full native stack trace (default)
+  - `focused`: focused `file -> pluss trigger` trace
   - `full`: full native stack trace
   - `0`/`off`/`false`: disable native trace section
