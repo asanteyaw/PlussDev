@@ -2501,7 +2501,8 @@ Controls tick/label spacing and angle to prevent overlaps in dense dashboards.
 #### Signature
 
 ```cpp
-Pane& x_ticks(self: Pane, positions: SeriesLike, labels: std::vector<std::string>);
+Pane& x_ticks(self: Pane, positions: SeriesLike, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Pane& x_ticks(self: Pane, positions: SeriesLike, labels: std::initializer_list<std::string_view>);
 ```
 
 #### Notes
@@ -2531,7 +2532,8 @@ Switches between explicit numeric tick positions and category-axis labels.
 #### Signature
 
 ```cpp
-Pane& x_categories(self: Pane, labels: std::vector<std::string>, first: double = 1.0, step: double = 1.0);
+Pane& x_categories(self: Pane, labels: pluss::msharp::RangeView::Of<std::string_view>, first: double = 1.0, step: double = 1.0);
+Pane& x_categories(self: Pane, labels: std::initializer_list<std::string_view>, first: double = 1.0, step: double = 1.0);
 ```
 
 #### Notes
@@ -2561,7 +2563,8 @@ Switches between explicit numeric tick positions and category-axis labels.
 #### Signature
 
 ```cpp
-Pane& y_categories(self: Pane, labels: std::vector<std::string>, first: double = 1.0, step: double = 1.0);
+Pane& y_categories(self: Pane, labels: pluss::msharp::RangeView::Of<std::string_view>, first: double = 1.0, step: double = 1.0);
+Pane& y_categories(self: Pane, labels: std::initializer_list<std::string_view>, first: double = 1.0, step: double = 1.0);
 ```
 
 #### Notes
@@ -5381,7 +5384,8 @@ Sets Z axis label text.
 #### Signature
 
 ```cpp
-Pane& y_ticks(self: Pane, Series positions, std::vector<std::string> labels);
+Pane& y_ticks(self: Pane, Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+Pane& y_ticks(self: Pane, Series positions, std::initializer_list<std::string_view> labels);
 ```
 
 #### Notes
@@ -5411,7 +5415,8 @@ Sets explicit Y tick positions and labels.
 #### Signature
 
 ```cpp
-Pane& z_ticks(self: Pane, Series positions, std::vector<std::string> labels);
+Pane& z_ticks(self: Pane, Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+Pane& z_ticks(self: Pane, Series positions, std::initializer_list<std::string_view> labels);
 ```
 
 #### Notes
@@ -5531,7 +5536,8 @@ Clears custom Z ticks.
 #### Signature
 
 ```cpp
-Pane& z_categories(self: Pane, std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+Pane& z_categories(self: Pane, pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+Pane& z_categories(self: Pane, std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0);
 ```
 
 #### Notes
@@ -6641,7 +6647,8 @@ Renders an HTML viewer payload (optionally launches a window).
 #### Signature
 
 ```cpp
-Pane& x_categories(self: Pane, std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+Pane& x_categories(self: Pane, pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+Pane& x_categories(self: Pane, std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0);
 ```
 
 #### Notes
@@ -6671,7 +6678,8 @@ Assigns categorical labels on the X axis.
 #### Signature
 
 ```cpp
-Pane& y_categories(self: Pane, std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+Pane& y_categories(self: Pane, pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+Pane& y_categories(self: Pane, std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0);
 ```
 
 #### Notes
@@ -10001,7 +10009,8 @@ Rotates X tick labels to improve readability for dense or long labels.
 #### Signature
 
 ```cpp
-Pane& x_ticks(self: Pane, positions: Series, labels: std::vector<std::string>);
+Pane& x_ticks(self: Pane, positions: Series, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Pane& x_ticks(self: Pane, positions: Series, labels: std::initializer_list<std::string_view>);
 ```
 
 #### Notes

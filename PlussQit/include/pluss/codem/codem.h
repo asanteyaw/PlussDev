@@ -391,10 +391,6 @@ namespace pluss {
   using codem::platform_available;
   using codem::operator<<;
 
-  inline Series index(const Series& self, const std::vector<Series>& indices) {
-    return self.index(indices);
-  }
-
   inline Series index_put(const Series& self,
                           const std::vector<Series>& indices,
                           const Series& values,

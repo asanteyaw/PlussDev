@@ -1,10 +1,10 @@
 // AUTO-GENERATED. Do not edit.
 // Extracted from CodeM/core/OpsInternal.cpp Series:: definitions.
 
-Series view(std::span<const std::int64_t> new_sizes) const;
-Series reshape(std::span<const std::int64_t> new_sizes) const;
+Series view(pluss::msharp::RangeView::Int new_sizes) const;
+Series reshape(pluss::msharp::RangeView::Int new_sizes) const;
 Series transpose(std::int64_t d0, std::int64_t d1) const;
-Series permute(std::span<const std::int64_t> dims) const;
+Series permute(pluss::msharp::RangeView::Int dims) const;
 Series unsqueeze(std::int64_t dim_) const;
 Series squeeze() const;
 Series squeeze(std::int64_t dim_) const;
@@ -13,6 +13,7 @@ Series norm(double p) const;
 Series var(bool unbiased) const;
 Series std(bool unbiased) const;
 Series select(std::int64_t dim, std::int64_t index) const;
+Series slice(std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step) const;
 Series& add_(const Series& rhs, double alpha);
 Series& add_(const Series& other, double alpha, const Series& out);
 Series& add_(double other, double alpha);
@@ -24,8 +25,8 @@ Series& div_(const Series& rhs);
 static Series arange(double start, double end, double step, ScalarType dtype);
 static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype);
 static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype);
-static Series rand(std::span<const std::int64_t> sizes, ScalarType dtype, std::uint64_t seed);
-static Series randn(std::span<const std::int64_t> sizes, ScalarType dtype, std::uint64_t seed);
+static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed);
+static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed);
 static Series from_storage(const Storage& storage, std::int64_t storage_offset, const std::vector<std::int64_t>& sizes, const std::vector<std::int64_t>& strides, ScalarType dtype);
 Series bitwise_and(const Series& rhs) const;
 Series bitwise_or(const Series& rhs) const;
@@ -73,7 +74,6 @@ Series& div_(double rhs);
 Series& pow_(double rhs);
 Series& minimum_(double rhs);
 Series& maximum_(double rhs);
-Series index(const std::vector<Series>& indices) const;
 Series take(const Series& index) const;
 Series put_(const Series& index, const Series& source, bool accumulate);
 Series nonzero() const;

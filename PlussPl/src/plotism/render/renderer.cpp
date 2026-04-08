@@ -355,6 +355,9 @@ struct WedgeSlice {
 }
 
 [[nodiscard]] std::vector<double> to_f64(const Series& series) {
+  if (series.scalar_type() == ScalarType::Float64) {
+    return series.to_vec<double>();
+  }
   return series.to(ScalarType::Float64).to_vec<double>();
 }
 
@@ -363,6 +366,9 @@ struct WedgeSlice {
 }
 
 [[nodiscard]] double scalar_f64(const Series& series) {
+  if (series.scalar_type() == ScalarType::Float64) {
+    return series.item<double>();
+  }
   return series.to(ScalarType::Float64).item<double>();
 }
 
@@ -385,15 +391,9 @@ struct WedgeSlice {
     return pluss::full({rows, cols}, scalar_f64(values), ScalarType::Float64);
   }
   if (series_is_vector(values) && values.numel() == rows) {
-    const auto host = to_f64(values.reshape({rows}));
-    std::vector<double> tiled;
-    tiled.reserve(static_cast<std::size_t>(rows * cols));
-    for (std::int64_t row = 0; row < rows; ++row) {
-      for (std::int64_t col = 0; col < cols; ++col) {
-        tiled.push_back(host[static_cast<std::size_t>(row)]);
-      }
-    }
-    return pluss::make_series(tiled, {rows, cols});
+    const Series col_vec = values.reshape({rows, 1});
+    const std::array<std::int64_t, 2> tile_dims{1, cols};
+    return col_vec.tile(std::span<const std::int64_t>(tile_dims.data(), tile_dims.size()));
   }
   if (values.dim() == 2 && values.sizes()[0] == rows && values.sizes()[1] == cols) {
     return values;

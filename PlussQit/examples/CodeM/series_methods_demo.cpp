@@ -29,14 +29,14 @@ int main(int argc, char** argv) {
   const ScalarType run_float_dt = (run_platform == pluss::pMPS) ? ScalarType::Float32 : ScalarType::Float64;
 
   auto make_f = [&](std::vector<double> vals, std::vector<std::int64_t> shape) {
-    return Series::make_from_doubles(vals, shape, run_float_dt).to(run_platform);
+    return pluss::make_series(std::move(vals), std::move(shape)).to(run_platform, run_float_dt);
   };
 
   let x = make_f({-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {7});
   let y = make_f({3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -3.0}, {7});
   let pos = make_f({0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0}, {7});
   let unit = make_f({-0.9, -0.5, -0.1, 0.0, 0.1, 0.5, 0.9}, {7});
-
+  
   let m = make_f({1, 2, 3, 4, 5, 6}, {2, 3});
   let n = make_f({6, 5, 4, 3, 2, 1}, {2, 3});
   let mm = make_f({1,2,3,4,5,6,7,8,9}, {3,3});

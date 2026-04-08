@@ -517,26 +517,13 @@ double normal_pdf_scalar_(double x, double mean, double stddev) {
 
 double normal_cdf_scalar_(double x, double mean, double stddev) {
   const double z = (x - mean) / stddev;
-  if (z <= -8.0) return 0.0;
-  if (z >= 8.0) return 1.0;
-  double s = z;
-  double t = std::numeric_limits<double>::infinity();
-  double b = z;
-  const double q = z * z;
-  double i = 1.0;
-  while (s != t) {
-    t = s;
-    i += 2.0;
-    b *= q / i;
-    s += b;
-  }
-  return 0.5 + s * std::exp(-0.5 * q - 0.91893853320467274178);
+  return 0.5 * std::erfc(-z / kSqrt2);
 }
 
 double normal_logcdf_scalar_(double x, double mean, double stddev) {
   const double z = (x - mean) / stddev;
   if (std::isnan(z)) return z;
-  if (z < -10.0) {
+  if (z < -37.0) {
     const double inv = 1.0 / z;
     const double inv2 = inv * inv;
     const double corr = 1.0 - inv2 + 3.0 * inv2 * inv2 - 15.0 * inv2 * inv2 * inv2;
@@ -653,33 +640,41 @@ Series normal_logpdf_(const Series& x, double mean, double stddev) {
 
 Series norm_cdf_(const Series& X) {
   const Series xx = as_f64_(X, "cdf");
-  const Series zero = zeros_like_f64_(xx);
-  const Series one = ones_like_f64_(xx);
-  const Series lower = xx.lt(-8.0);
-  const Series upper = xx.gt(8.0);
-  const Series central = lower.logical_or(upper).logical_not();
-
-  Series s = central.where(xx, zero);
-  Series t = full_like_f64_(xx, std::numeric_limits<double>::infinity());
-  Series b = s.clone();
-  const Series q = s.square();
-  Series i = one;
-
-  while (s.ne(t).any().item<bool>()) {
-    t = s;
-    i = i.add(2.0);
-    b = b.mul(q.div(i));
-    s = s.add(b);
-  }
-
-  const Series central_result = s.mul(q.mul(-0.5).sub(0.91893853320467274178).exp()).add(0.5);
-  return upper.where(one, central.where(central_result, zero));
+  // p = 0.5 * erfc(-z / sqrt(2))
+  return xx.div(-kSqrt2).erfc().mul(0.5);
 }
 
 Series norm_logcdf_(const Series& x) {
-  return map_series_f64_(as_f64_(x, "logcdf"), [](double xv) {
-    return normal_logcdf_scalar_(xv, 0.0, 1.0);
-  });
+  const Series xx = as_f64_(x, "logcdf");
+  const Series nan_mask = xx.isnan();
+  const Series xx_work = xx.masked_fill(nan_mask, 0.0);
+  const Series left_mask = xx_work.lt(-37.0);
+  const Series right_mask = xx_work.gt(8.0);
+  const Series side_mask = left_mask.logical_or(right_mask).logical_or(nan_mask);
+  const Series central_mask = side_mask.logical_not();
+
+  const Series x_central = xx_work.clamp_min(-37.0).clamp_max(8.0);
+  const Series central = x_central.div(-kSqrt2).erfc().mul(0.5).log();
+
+  const Series x_right = xx_work.clamp_min(8.0);
+  const Series right_tail = x_right.div(kSqrt2).erfc().mul(0.5);
+  const Series right = right_tail.mul(-1.0).log1p();
+
+  const Series x_left = xx_work.clamp_max(-37.0);
+  const Series inv = x_left.reciprocal();
+  const Series inv2 = inv.square();
+  const Series inv4 = inv2.square();
+  const Series corr = full_like_f64_(xx, 1.0)
+                          .sub(inv2)
+                          .add(inv4.mul(3.0))
+                          .sub(inv4.mul(inv2).mul(15.0))
+                          .clamp_min(kEps);
+  const Series left = x_left.square().mul(-0.5).sub(x_left.mul(-1.0).log()).sub(0.5 * kLog2Pi).add(corr.log());
+
+  Series out = central_mask.where(central, zeros_like_f64_(xx));
+  out = left_mask.where(left, out);
+  out = right_mask.where(right, out);
+  return out.masked_fill(nan_mask, std::numeric_limits<double>::quiet_NaN());
 }
 
 Series normal_cdf_(const Series& x, double mean, double stddev) {

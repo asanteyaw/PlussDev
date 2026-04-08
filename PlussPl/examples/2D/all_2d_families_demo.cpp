@@ -73,7 +73,7 @@ int main() {
   pane4.wedge(
            std::vector<double>{21.0, 18.0, 15.0, 24.0, 22.0},
            std::vector<double>{0.0, 0.8, 0.0, 0.0, 0.5},
-           std::vector<std::string>{"infra", "models", "data", "ops", "qa"})
+           {"infra", "models", "data", "ops", "qa"})
       .label("wedge")
       .palette(pl::PaletteRamp::thermal());
 

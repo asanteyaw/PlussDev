@@ -136,6 +136,145 @@ bool mps_exact_f32_roundtrip_lane_dtype_(ScalarType dtype) noexcept {
   }
 }
 
+ScalarType stable_special_work_dtype_(const Series& input) {
+  if (input.platform() == Platform::MPS) {
+    return ScalarType::Float32;
+  }
+  if (input.scalar_type() == ScalarType::Float64) {
+    return ScalarType::Float64;
+  }
+  return ScalarType::Float32;
+}
+
+Series stable_erfc_piecewise_(const Series& x) {
+  PLUSS_CHECK(
+      x.scalar_type() == ScalarType::Float32 || x.scalar_type() == ScalarType::Float64,
+      "stable_erfc_piecewise_: expected float32 or float64 working dtype");
+  const double tiny =
+      (x.scalar_type() == ScalarType::Float64) ? 1e-300 : std::numeric_limits<float>::min();
+  constexpr double erx = 8.45062911510467529297e-01;
+  constexpr double pp0 = 1.28379167095512558561e-01;
+  constexpr double pp1 = -3.25042107247001499370e-01;
+  constexpr double pp2 = -2.84817495755985104766e-02;
+  constexpr double pp3 = -5.77027029648944159157e-03;
+  constexpr double pp4 = -2.37630166566501626084e-05;
+  constexpr double qq1 = 3.97917223959155352819e-01;
+  constexpr double qq2 = 6.50222499887672944485e-02;
+  constexpr double qq3 = 5.08130628187576562776e-03;
+  constexpr double qq4 = 1.32494738004321644526e-04;
+  constexpr double qq5 = -3.96022827877536812320e-06;
+  constexpr double pa0 = -2.36211856075265944077e-03;
+  constexpr double pa1 = 4.14856118683748331666e-01;
+  constexpr double pa2 = -3.72207876035701323847e-01;
+  constexpr double pa3 = 3.18346619901161753674e-01;
+  constexpr double pa4 = -1.10894694282396677476e-01;
+  constexpr double pa5 = 3.54783043256182359371e-02;
+  constexpr double pa6 = -2.16637559486879084300e-03;
+  constexpr double qa1 = 1.06420880400844228286e-01;
+  constexpr double qa2 = 5.40397917702171048937e-01;
+  constexpr double qa3 = 7.18286544141962662868e-02;
+  constexpr double qa4 = 1.26171219808761642112e-01;
+  constexpr double qa5 = 1.36370839120290507362e-02;
+  constexpr double qa6 = 1.19844998467991074170e-02;
+  constexpr double ra0 = -9.86494403484714822705e-03;
+  constexpr double ra1 = -6.93858572707181764372e-01;
+  constexpr double ra2 = -1.05586262253232909814e+01;
+  constexpr double ra3 = -6.23753324503260060396e+01;
+  constexpr double ra4 = -1.62396669462573470355e+02;
+  constexpr double ra5 = -1.84605092906711035994e+02;
+  constexpr double ra6 = -8.12874355063065934246e+01;
+  constexpr double ra7 = -9.81432934416914548592e+00;
+  constexpr double sa1 = 1.96512716674392571292e+01;
+  constexpr double sa2 = 1.37657754143519042600e+02;
+  constexpr double sa3 = 4.34565877475229228821e+02;
+  constexpr double sa4 = 6.45387271733267880336e+02;
+  constexpr double sa5 = 4.29008140027567833386e+02;
+  constexpr double sa6 = 1.08635005541779435134e+02;
+  constexpr double sa7 = 6.57024977031928170135e+00;
+  constexpr double sa8 = -6.04244152148580987438e-02;
+  constexpr double rb0 = -9.86494292470009928597e-03;
+  constexpr double rb1 = -7.99283237680523006574e-01;
+  constexpr double rb2 = -1.77579549177547519889e+01;
+  constexpr double rb3 = -1.60636384855821916062e+02;
+  constexpr double rb4 = -6.37566443368389627722e+02;
+  constexpr double rb5 = -1.02509513161107724954e+03;
+  constexpr double rb6 = -4.83519191608651397019e+02;
+  constexpr double sb1 = 3.03380607434824582924e+01;
+  constexpr double sb2 = 3.25792512996573918826e+02;
+  constexpr double sb3 = 1.53672958608443695994e+03;
+  constexpr double sb4 = 3.19985821950859553908e+03;
+  constexpr double sb5 = 2.55305040643316442583e+03;
+  constexpr double sb6 = 4.74528541206955367215e+02;
+  constexpr double sb7 = -2.24409524465858183362e+01;
+
+  const Series absx = x.abs();
+  const Series nan_mask = x.isnan();
+  const Series inf_mask = x.isinf();
+  const Series neg = x.lt(0.0);
+  const Series zero = x.mul(0.0);
+  const auto const_like = [&](double c) { return zero.add(c); };
+
+  const Series z = absx.square();
+  const Series r_small = z.mul(pp4).add(pp3).mul(z).add(pp2).mul(z).add(pp1).mul(z).add(pp0);
+  const Series s_small =
+      z.mul(qq5).add(qq4).mul(z).add(qq3).mul(z).add(qq2).mul(z).add(qq1).mul(z).add(1.0);
+  const Series y_small_core = r_small.div(s_small);
+  const Series y_small_lo = x.mul(y_small_core).add(x).mul(-1.0).add(1.0);
+  const Series y_small_hi = x.mul(y_small_core).add(x.sub(0.5)).mul(-1.0).add(0.5);
+  Series y_small = x.lt(0.25).where(y_small_lo, y_small_hi);
+  y_small = absx.lt(std::ldexp(1.0, -56)).where(x.mul(-1.0).add(1.0), y_small);
+
+  const Series s_mid = absx.sub(1.0);
+  const Series p_mid =
+      s_mid.mul(pa6).add(pa5).mul(s_mid).add(pa4).mul(s_mid).add(pa3).mul(s_mid).add(pa2).mul(s_mid).add(pa1).mul(s_mid).add(pa0);
+  const Series q_mid =
+      s_mid.mul(qa6).add(qa5).mul(s_mid).add(qa4).mul(s_mid).add(qa3).mul(s_mid).add(qa2).mul(s_mid).add(qa1).mul(s_mid).add(1.0);
+  const Series mid_ratio = p_mid.div(q_mid);
+  const Series y_mid_pos = const_like(1.0 - erx).sub(mid_ratio);
+  const Series y_mid_neg = const_like(1.0 + erx).add(mid_ratio);
+  const Series y_mid = neg.where(y_mid_neg, y_mid_pos);
+
+  const Series inv_z = z.reciprocal();
+  const Series r_tail_a = inv_z.mul(ra7).add(ra6).mul(inv_z).add(ra5).mul(inv_z).add(ra4).mul(inv_z).add(ra3).mul(inv_z).add(ra2).mul(inv_z).add(ra1).mul(inv_z).add(ra0);
+  const Series s_tail_a = inv_z.mul(sa8).add(sa7).mul(inv_z).add(sa6).mul(inv_z).add(sa5).mul(inv_z).add(sa4).mul(inv_z).add(sa3).mul(inv_z).add(sa2).mul(inv_z).add(sa1).mul(inv_z).add(1.0);
+  const Series r_tail_b = inv_z.mul(rb6).add(rb5).mul(inv_z).add(rb4).mul(inv_z).add(rb3).mul(inv_z).add(rb2).mul(inv_z).add(rb1).mul(inv_z).add(rb0);
+  const Series s_tail_b = inv_z.mul(sb7).add(sb6).mul(inv_z).add(sb5).mul(inv_z).add(sb4).mul(inv_z).add(sb3).mul(inv_z).add(sb2).mul(inv_z).add(sb1).mul(inv_z).add(1.0);
+  const Series use_a = absx.lt(2.8571414947509766);
+  const Series r_tail = use_a.where(r_tail_a, r_tail_b);
+  const Series s_tail = use_a.where(s_tail_a, s_tail_b);
+  Series y_tail = absx.square().mul(-1.0).sub(0.5625).add(r_tail.div(s_tail)).exp().div(absx);
+  y_tail = neg.where(y_tail.mul(-1.0).add(2.0), y_tail);
+  y_tail = x.lt(-6.0).where(const_like(2.0 - tiny), y_tail);
+  y_tail = x.ge(28.0).where(const_like(tiny * tiny), y_tail);
+
+  const Series small_mask = absx.lt(0.84375);
+  const Series mid_mask = absx.ge(0.84375).logical_and(absx.lt(1.25));
+  Series out = small_mask.where(y_small, mid_mask.where(y_mid, y_tail));
+  out = inf_mask.where(neg.where(const_like(2.0), const_like(0.0)), out);
+  out = nan_mask.where(x, out);
+  return out;
+}
+
+Series stable_erfc_noncpu_(const Series& input) {
+  const Series x = input.to(stable_special_work_dtype_(input));
+  return stable_erfc_piecewise_(x).to(input.scalar_type());
+}
+
+Series stable_erf_noncpu_(const Series& input) {
+  const Series x = input.to(stable_special_work_dtype_(input));
+  const Series nan_mask = x.isnan();
+  const Series inf_mask = x.isinf();
+  const Series neg = x.lt(0.0);
+  const Series zero = x.mul(0.0);
+  const auto const_like = [&](double c) { return zero.add(c); };
+  const Series erfc_abs = stable_erfc_piecewise_(x.abs());
+  Series out = const_like(1.0).sub(erfc_abs);
+  out = neg.where(out.neg(), out);
+  out = inf_mask.where(neg.where(const_like(-1.0), const_like(1.0)), out);
+  out = nan_mask.where(x, out);
+  return out.to(input.scalar_type());
+}
+
 void require_mps_native_dispatch_supported_(std::string_view op) {
   if (mps_cpu_fallback_enabled_()) {
     return;
@@ -146,7 +285,7 @@ void require_mps_native_dispatch_supported_(std::string_view op) {
   if (op.rfind("Series::to(", 0) == 0 || op.rfind("Series::platform(", 0) == 0) {
     return;
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": no native MPS kernel yet for this dtype/op. "
       "CPU fallback is disabled by policy. "
@@ -162,7 +301,7 @@ void require_backend_dispatch_supported_(Platform platform, std::string_view op)
       return;
     case Platform::CUDA:
       if (!native::cuda::runtime_available()) {
-        throw_error(
+        PLUSS_FAIL(
             std::string(op) +
             ": CUDA runtime unavailable (" +
             native::cuda::runtime_error_cstr() + ")");
@@ -170,11 +309,11 @@ void require_backend_dispatch_supported_(Platform platform, std::string_view op)
       if (native::cuda::cpu_bridge_enabled()) {
         return;
       }
-      throw_error(
+      PLUSS_FAIL(
           std::string(op) +
           ": no native CUDA kernel yet. CPU fallback is not enabled for CUDA backend.");
     default:
-      throw_error(std::string(op) + ": unsupported backend platform");
+      PLUSS_FAIL(std::string(op) + ": unsupported backend platform");
   }
 }
 
@@ -191,16 +330,16 @@ void require_mps_support_or_policy_(bool supported, std::string_view op) {
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native indexing route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA indexing path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -217,7 +356,7 @@ Series cuda_indexing_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -233,16 +372,16 @@ Series cuda_indexing_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native scatter/gather route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA scatter/gather path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -259,7 +398,7 @@ Series cuda_scatter_gather_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -275,16 +414,16 @@ Series cuda_scatter_gather_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native elementwise route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA elementwise path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -301,7 +440,7 @@ Series cuda_elementwise_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -317,16 +456,16 @@ Series cuda_elementwise_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native reduction route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA reduction path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -343,7 +482,7 @@ Series cuda_reduction_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -359,16 +498,16 @@ Series cuda_reduction_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native scan route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA scan path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -385,7 +524,7 @@ Series cuda_scan_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -401,16 +540,16 @@ Series cuda_scan_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native masking route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA masking path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -427,7 +566,7 @@ Series cuda_masking_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -443,16 +582,16 @@ Series cuda_masking_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native bitwise route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA bitwise path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -469,7 +608,7 @@ Series cuda_bitwise_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -485,16 +624,16 @@ Series cuda_bitwise_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native compose route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA compose path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -511,7 +650,7 @@ Series cuda_compose_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -527,16 +666,16 @@ Series cuda_compose_route_or_bridge_(
     bool native_strict,
     bool route_supported) {
   if (native_strict && (!native_enabled || !route_supported)) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native_enabled && route_supported) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": CUDA native counting route declared but kernel is not implemented yet");
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": CUDA counting path unavailable in this tranche; no CPU fallback allowed. "
       "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
@@ -553,7 +692,7 @@ Series cuda_counting_route_or_bridge_(
     return cpu_route();
   }
   if (native_strict) {
-    throw_error(
+    PLUSS_FAIL(
         std::string(op) +
         ": strict native CUDA route requested but kernel is unsupported");
   }
@@ -586,7 +725,7 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   if (a.platform() == b.platform()) {
     return;
   }
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) + ": expected all Series on same platform, got " +
       platform_name_(a.platform()) + " and " + platform_name_(b.platform()));
 }
@@ -806,7 +945,7 @@ static Series reduce_broadcasted_sensitivity_to_like_(const Series& sens, const 
   std::vector<std::int64_t> sens_shape(sens.sizes().begin(), sens.sizes().end());
   std::vector<std::int64_t> like_shape(like.sizes().begin(), like.sizes().end());
   if (sens_shape.size() < like_shape.size()) {
-    throw_error(std::string(op) + ": unsupported sensitivity reduction rank mismatch");
+    PLUSS_FAIL(std::string(op) + ": unsupported sensitivity reduction rank mismatch");
   }
 
   const std::size_t prefix = sens_shape.size() - like_shape.size();
@@ -821,7 +960,7 @@ static Series reduce_broadcasted_sensitivity_to_like_(const Series& sens, const 
     const auto ld = aligned_like[i];
     if (sd == ld) continue;
     if (ld != 1) {
-      throw_error(std::string(op) + ": unsupported sensitivity reduction for non-broadcasted dims");
+      PLUSS_FAIL(std::string(op) + ": unsupported sensitivity reduction for non-broadcasted dims");
     }
     out = out.sum(static_cast<std::int64_t>(i), /*keepdim=*/true);
   }
@@ -1531,31 +1670,14 @@ Series reciprocal(const Series& a) {
 }
 
 Series erf(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    const auto x = a.contiguous().to(ScalarType::Float32);
-    const auto one = scalar_like_(x, 1.0);
-    const auto neg_one = scalar_like_(x, -1.0);
-    const auto p = scalar_like_(x, 0.3275911);
-    const auto a1 = scalar_like_(x, 0.254829592);
-    const auto a2 = scalar_like_(x, -0.284496736);
-    const auto a3 = scalar_like_(x, 1.421413741);
-    const auto a4 = scalar_like_(x, -1.453152027);
-    const auto a5 = scalar_like_(x, 1.061405429);
-    const auto ax = abs(x);
-    const auto t = reciprocal(add(one, mul(p, ax)));
-    const auto poly = mul(
-        t,
-        add(a1, mul(t, add(a2, mul(t, add(a3, mul(t, add(a4, mul(t, a5)))))))));
-    const auto y = sub(one, mul(poly, exp(neg(mul(ax, ax)))));
-    const auto sign = where(lt(x, scalar_like_(x, 0.0)), neg_one, one);
-    return mul(sign, y).to(a.scalar_type());
+  if (a.platform() != Platform::CPU) {
+    return stable_erf_noncpu_(a);
   }
   return unary_op_(native::cpu::UnaryOpId::Erf, a);
 }
 Series erfc(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    const auto x = a.contiguous().to(ScalarType::Float32);
-    return sub(scalar_like_(x, 1.0), erf(x)).to(a.scalar_type());
+  if (a.platform() != Platform::CPU) {
+    return stable_erfc_noncpu_(a);
   }
   return unary_op_(native::cpu::UnaryOpId::Erfc, a);
 }
@@ -2487,7 +2609,7 @@ Series& clamp_(Series& a, double min, double max) {
     std::memcpy(a.raw_mutable_data(), aa.raw_data(), (std::size_t)(aa.dtype().itemsize * aa.numel()));
     return a;
   }
-  throw_error("clamp_: non-contiguous target not supported yet");
+  PLUSS_FAIL("clamp_: non-contiguous target not supported yet");
 }
 
 Series relu(const Series& a) {
@@ -2812,7 +2934,7 @@ static native::mps::ScatterReduceOp mps_scatter_reduce_op_(const std::string& re
   if (reduce == "sum") return native::mps::ScatterReduceOp::Sum;
   if (reduce == "amax") return native::mps::ScatterReduceOp::AMax;
   if (reduce == "amin") return native::mps::ScatterReduceOp::AMin;
-  throw_error("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
+  PLUSS_FAIL("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
 }
 
 static double scatter_reduce_identity_(const std::string& reduce) {
@@ -2820,7 +2942,7 @@ static double scatter_reduce_identity_(const std::string& reduce) {
   if (reduce == "mean") return 0.0;
   if (reduce == "amax") return -std::numeric_limits<double>::infinity();
   if (reduce == "amin") return +std::numeric_limits<double>::infinity();
-  throw_error("scatter_reduce: unsupported reduce (expected sum|mean|amax|amin)");
+  PLUSS_FAIL("scatter_reduce: unsupported reduce (expected sum|mean|amax|amin)");
 }
 
 static void maybe_link_scatter_reduce_(
@@ -2838,7 +2960,7 @@ static void maybe_link_scatter_reduce_(
 
   // Keep parity fail-loud until remaining scatter_reduce backward rules are implemented.
   if (reduce != "sum" && reduce != "mean" && reduce != "amax" && reduce != "amin") {
-    throw_error(
+    PLUSS_FAIL(
         std::string("scatter_reduce: autodiff currently supports reduce in {'sum','mean','amax','amin'} only; got reduce='") +
         reduce + "'");
   }
@@ -3120,7 +3242,7 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
         if (reduce == "sum") out = add(out, aa);
         else if (reduce == "amax") out = maximum(out, aa);
         else if (reduce == "amin") out = minimum(out, aa);
-        else throw_error("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
+        else PLUSS_FAIL("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
       }
       const Series ss = src.expand(idx.sizes(), true).to(out_dt).contiguous();
       native::mps::scatter_reduce_(out, dim, idx, ss, rop);
@@ -3141,7 +3263,7 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
           if (reduce == "sum") out_f = add(out_f, aa_f);
           else if (reduce == "amax") out_f = maximum(out_f, aa_f);
           else if (reduce == "amin") out_f = minimum(out_f, aa_f);
-          else throw_error("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
+          else PLUSS_FAIL("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
         }
         const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
         native::mps::scatter_reduce_(out_f, dim, idx, ss_f, rop);
@@ -3875,7 +3997,7 @@ static std::int64_t read_i64_element(const Series& x, std::int64_t i) {
     case ScalarType::Int16: return reinterpret_cast<const std::int16_t*>(x.raw_data())[i];
     case ScalarType::Int32: return reinterpret_cast<const std::int32_t*>(x.raw_data())[i];
     case ScalarType::Int64: return reinterpret_cast<const std::int64_t*>(x.raw_data())[i];
-    default: throw_error("read_i64_element: expected integral/bool dtype");
+    default: PLUSS_FAIL("read_i64_element: expected integral/bool dtype");
   }
 }
 
@@ -4289,14 +4411,14 @@ Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st) {
 Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform) {
   if (platform == Platform::CUDA) {
     if (!native::cuda::runtime_available()) {
-      throw_error(
+      PLUSS_FAIL(
           std::string("Series::empty(..., CUDA): CUDA runtime unavailable: ") +
           native::cuda::runtime_error_cstr());
     }
   }
   if (platform == Platform::MPS) {
     if (!native::mps::runtime_available()) {
-      throw_error(
+      PLUSS_FAIL(
           std::string("Series::empty(..., MPS): MPS runtime unavailable: ") +
           native::mps::runtime_error_cstr());
     }
@@ -4317,18 +4439,6 @@ Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platfor
   return SeriesFactoryAccess::wrap(std::move(impl));
 }
 
-
-Series Series::make_from_doubles(
-    const std::vector<double>& flat, pluss::msharp::RangeView::Int sizes, ScalarType st) {
-  const std::int64_t n = compute_numel(sizes);
-  PLUSS_CHECK((std::int64_t)flat.size() == n, "make_from_doubles: size mismatch");
-  Series out = Series::empty(sizes, st);
-  // Write via float64 temp for simplicity, then cast if needed.
-  Series tmp = Series::empty(sizes, ScalarType::Float64);
-  std::memcpy(tmp.raw_mutable_data(), flat.data(), sizeof(double) * (std::size_t)n);
-  out.copy_(tmp.to(st), false);
-  return out;
-}
 
 Series Series::zeros(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   auto t = empty(sizes, st);
@@ -4406,7 +4516,7 @@ Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st) {
     default:
       break;
   }
-  throw_error("ones: dtype not implemented");
+  PLUSS_FAIL("ones: dtype not implemented");
 }
 
 Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st) {
@@ -4511,12 +4621,12 @@ Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarTyp
     default:
       break;
   }
-  throw_error("full: dtype not implemented");
+  PLUSS_FAIL("full: dtype not implemented");
 }
 
 Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
-  if (!defined()) throw_error("view: undefined");
-  if (!can_view_as(*this, new_sizes)) throw_error("view: requires contiguous in v0");
+  if (!defined()) PLUSS_FAIL("view: undefined");
+  if (!can_view_as(*this, new_sizes)) PLUSS_FAIL("view: requires contiguous in v0");
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::vector<std::int64_t>(new_sizes.begin(), new_sizes.end()),
@@ -4534,7 +4644,7 @@ Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
 }
 
 Series Series::reshape(pluss::msharp::RangeView::Int new_sizes) const {
-  if (!defined()) throw_error("reshape: undefined");
+  if (!defined()) PLUSS_FAIL("reshape: undefined");
   if (can_view_as(*this, new_sizes)) return view(new_sizes);
   Series c = contiguous();
   // Preserve reverse-mode connectivity through the contiguous staging copy
@@ -4544,11 +4654,11 @@ Series Series::reshape(pluss::msharp::RangeView::Int new_sizes) const {
 }
 
 Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
-  if (!defined()) throw_error("transpose: undefined");
+  if (!defined()) PLUSS_FAIL("transpose: undefined");
   const auto nd = dim();
   if (d0 < 0) d0 += nd;
   if (d1 < 0) d1 += nd;
-  if (d0 < 0 || d0 >= nd || d1 < 0 || d1 >= nd) throw_error("transpose: dim out of range");
+  if (d0 < 0 || d0 >= nd || d1 < 0 || d1 >= nd) PLUSS_FAIL("transpose: dim out of range");
   if (d0 == d1) return *this;
 
   auto ns = std::vector<std::int64_t>(sizes().begin(), sizes().end());
@@ -4573,7 +4683,7 @@ Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
 
 
 Series Series::permute(pluss::msharp::RangeView::Int dims) const {
-  if (!defined()) throw_error("permute: undefined");
+  if (!defined()) PLUSS_FAIL("permute: undefined");
   const auto nd = dim();
   PLUSS_CHECK((std::int64_t)dims.size() == nd, "permute: dims must have length == dim()");
   std::vector<std::int64_t> dd(dims.begin(), dims.end());
@@ -4611,7 +4721,7 @@ Series Series::permute(pluss::msharp::RangeView::Int dims) const {
 }
 
 Series Series::unsqueeze(std::int64_t dim_) const {
-  if (!defined()) throw_error("unsqueeze: undefined");
+  if (!defined()) PLUSS_FAIL("unsqueeze: undefined");
   const auto nd = dim();
   if (dim_ < 0) dim_ += (nd + 1);
   PLUSS_CHECK(dim_ >= 0 && dim_ <= nd, "unsqueeze: dim out of range");
@@ -4640,7 +4750,7 @@ Series Series::unsqueeze(std::int64_t dim_) const {
 }
 
 Series Series::squeeze() const {
-  if (!defined()) throw_error("squeeze: undefined");
+  if (!defined()) PLUSS_FAIL("squeeze: undefined");
   const auto nd = dim();
   std::vector<std::int64_t> ns;
   std::vector<std::int64_t> nt;
@@ -4669,7 +4779,7 @@ Series Series::squeeze() const {
 }
 
 Series Series::squeeze(std::int64_t dim_) const {
-  if (!defined()) throw_error("squeeze(dim): undefined");
+  if (!defined()) PLUSS_FAIL("squeeze(dim): undefined");
   const auto nd = dim();
   if (dim_ < 0) dim_ += nd;
   PLUSS_CHECK(dim_ >= 0 && dim_ < nd, "squeeze(dim): dim out of range");
@@ -4696,7 +4806,7 @@ Series Series::squeeze(std::int64_t dim_) const {
 }
 
 Series Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const {
-  if (!defined()) throw_error("flatten: undefined");
+  if (!defined()) PLUSS_FAIL("flatten: undefined");
   const auto nd = dim();
   if (start_dim < 0) start_dim += nd;
   if (end_dim < 0) end_dim += nd;
@@ -4716,7 +4826,7 @@ Series Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const {
 }
 
 Series Series::norm(double p) const {
-  if (!defined()) throw_error("norm: undefined");
+  if (!defined()) PLUSS_FAIL("norm: undefined");
   // complex norms use abs-based definition
 
   if (p == 2.0) {
@@ -4736,7 +4846,7 @@ Series Series::norm(double p) const {
 }
 
 Series Series::norm(double p, std::int64_t dim_, bool keepdim) const {
-  if (!defined()) throw_error("norm(dim): undefined");
+  if (!defined()) PLUSS_FAIL("norm(dim): undefined");
   // complex norms use abs-based definition
 
   if (p == 2.0) {
@@ -4809,7 +4919,7 @@ Series Series::std(std::int64_t dim_, bool unbiased, bool keepdim) const {
   return var(dim_, unbiased, keepdim).sqrt();
 }
 Series Series::clone() const {
-  if (!defined()) throw_error("clone: undefined");
+  if (!defined()) PLUSS_FAIL("clone: undefined");
 
   Series out = Series::empty(sizes(), scalar_type(), platform());
   SeriesIterator it = SeriesIterator::unary(*this, out);
@@ -4818,7 +4928,7 @@ Series Series::clone() const {
 }
 
 Series Series::contiguous() const {
-  if (!defined()) throw_error("contiguous: undefined");
+  if (!defined()) PLUSS_FAIL("contiguous: undefined");
   if (is_contiguous()) return *this;
 
   Series out = Series::empty(sizes(), scalar_type(), platform());
@@ -4830,7 +4940,7 @@ Series Series::contiguous() const {
 }
 
 Series Series::platform(Platform target) const {
-  if (!defined()) throw_error("platform: undefined");
+  if (!defined()) PLUSS_FAIL("platform: undefined");
   const auto src_platform = platform();
   if (src_platform == target) {
     return *this;
@@ -4841,14 +4951,14 @@ Series Series::platform(Platform target) const {
       break;
     case Platform::CUDA:
       if (!native::cuda::runtime_available()) {
-        throw_error(
+        PLUSS_FAIL(
             std::string("Series::platform(CUDA): CUDA runtime unavailable: ") +
             native::cuda::runtime_error_cstr());
       }
       break;
     case Platform::MPS:
       if (!native::mps::runtime_available()) {
-        throw_error(
+        PLUSS_FAIL(
             std::string("Series::platform(MPS): MPS runtime unavailable: ") +
             native::mps::runtime_error_cstr());
       }
@@ -4857,7 +4967,7 @@ Series Series::platform(Platform target) const {
           "Series::platform(MPS): float64 is unsupported on MPS; cast to float32/float16/bfloat16 first");
       break;
     default:
-      throw_error("Series::platform: unsupported platform");
+      PLUSS_FAIL("Series::platform: unsupported platform");
   }
 
   auto src = contiguous();
@@ -4893,7 +5003,7 @@ Series Series::to(Platform target, ScalarType dst) const {
 #endif
 
 Series Series::to(ScalarType dst) const {
-  if (!defined()) throw_error("to: undefined");
+  if (!defined()) PLUSS_FAIL("to: undefined");
   if (dst == scalar_type()) return *this;
   if (platform() == Platform::MPS) {
     PLUSS_CHECK(dst != ScalarType::Float64,
@@ -4950,7 +5060,7 @@ Series Series::to(ScalarType dst) const {
         return static_cast<double>(reinterpret_cast<const Complex64*>(src.raw_data())[i].real());
       case ScalarType::Complex128:
         return reinterpret_cast<const Complex128*>(src.raw_data())[i].real();
-      default: throw_error("to: unsupported source dtype"); return 0.0;
+      default: PLUSS_FAIL("to: unsupported source dtype"); return 0.0;
     }
   };
 
@@ -4977,7 +5087,7 @@ Series Series::to(ScalarType dst) const {
       case ScalarType::Complex128:
         reinterpret_cast<Complex128*>(out.raw_data())[i] = Complex128(v, 0.0);
         return;
-      default: throw_error("to: unsupported destination dtype"); return;
+      default: PLUSS_FAIL("to: unsupported destination dtype"); return;
     }
   };
 
@@ -4993,15 +5103,15 @@ Series Series::to(ScalarType dst) const {
 }
 
 Series Series::select(std::int64_t dim, std::int64_t index) const {
-  if (!defined()) throw_error("select: undefined");
-  auto nd = this->dim();
+  if (!defined()) PLUSS_FAIL("select: undefined");
+  const auto nd = this->dim();
+  PLUSS_CHECK(nd > 0, "select: cannot be applied to a 0-dim Series");
   if (dim < 0) dim += nd;
-  if (dim < 0 || dim >= nd) throw_error("select: dim out of range");
-  auto sizes_v = std::vector<std::int64_t>(sizes().begin(), sizes().end());
+  PLUSS_CHECK(dim >= 0 && dim < nd, "select: dim out of range");  auto sizes_v = std::vector<std::int64_t>(sizes().begin(), sizes().end());
   auto strides_v = std::vector<std::int64_t>(strides().begin(), strides().end());
   const auto size_dim = sizes_v[static_cast<std::size_t>(dim)];
   if (index < 0) index += size_dim;
-  if (index < 0 || index >= size_dim) throw_error("select: index out of range");
+  if (index < 0 || index >= size_dim) PLUSS_FAIL("select: index out of range");
   if (platform() == Platform::MPS) {
     // MPS view-select backward is currently unstable for autograd-sensitive paths.
     // Bridge this op through CPU while preserving tape links via to()/transport ops.
@@ -5052,8 +5162,58 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
   return out;
 }
 
+Series Series::slice(
+    std::int64_t dim,
+    std::int64_t start,
+    std::int64_t end,
+    std::int64_t step) const {
+  PLUSS_CHECK(defined(), "Series::slice: undefined Series");
+  const std::int64_t ndim = this->dim();
+  std::int64_t d = dim;
+  if (d < 0) d += ndim;
+  PLUSS_CHECK(d >= 0 && d < ndim, "Series::slice: dim out of range");
+  PLUSS_CHECK(step != 0, "Series::slice: step must be non-zero");
+
+  const std::int64_t n = size(d);
+  auto normalize_bound = [n](std::int64_t v, bool is_end) -> std::int64_t {
+    if (v == std::numeric_limits<std::int64_t>::max()) return is_end ? n : 0;
+    if (v < 0) v += n;
+    if (v < 0) return 0;
+    if (v > n) return n;
+    return v;
+  };
+
+  const std::int64_t s = normalize_bound(start, false);
+  const std::int64_t e = normalize_bound(end, true);
+
+  PLUSS_CHECK(step > 0,
+              "Series::slice: negative-step slices are not supported by this cheap view helper");
+
+  const std::int64_t len = (e <= s) ? 0 : (1 + (e - 1 - s) / step);
+
+  const auto size_view = sizes();
+  const auto stride_view = strides();
+  std::vector<std::int64_t> out_sizes(size_view.begin(), size_view.end());
+  std::vector<std::int64_t> out_strides(stride_view.begin(), stride_view.end());
+
+  const std::size_t ud = static_cast<std::size_t>(d);
+  const std::int64_t base_stride = out_strides[ud];
+  out_sizes[ud] = len;
+  out_strides[ud] = base_stride * step;
+
+  const std::int64_t base_off_elems =
+      storage_offset() / std::max<std::int64_t>(1, itemsize());
+
+  return pluss::codem::_compat::invoke(
+      "as_strided",
+      *this,
+      {pluss::msharp::RangeView::Int(out_sizes),
+       pluss::msharp::RangeView::Int(out_strides),
+       base_off_elems + s * base_stride});
+}
+
 static void ensure_writable_(Series& self) {
-  if (!self.defined()) throw_error("inplace: undefined");
+  if (!self.defined()) PLUSS_FAIL("inplace: undefined");
 }
 
 static void copy_into_existing_(Series& dst, const Series& src) {
@@ -5088,7 +5248,7 @@ static Series expand_to_self_(const Series& rhs, const Series& self) {
 static void guard_direct_inplace_value_op_(std::string_view op, const Series& self) {
   if (!series_tape::recording_enabled()) return;
   if (!series_tape::tracks_slope(self)) return;
-  throw_error(
+  PLUSS_FAIL(
       std::string(op) +
       ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
 }
@@ -5178,7 +5338,7 @@ Series& Series::div_(const Series& rhs) {
 }
 
 Series Series::arange(double start, double end, double step, ScalarType dtype) {
-  if (step == 0.0) throw_error("arange: step cannot be 0");
+  if (step == 0.0) PLUSS_FAIL("arange: step cannot be 0");
   const double nreal = (end - start) / step;
   std::int64_t n = (std::int64_t)std::ceil(nreal);
   if (n < 0) n = 0;
@@ -5201,14 +5361,14 @@ Series Series::arange(double start, double end, double step, ScalarType dtype) {
       case ScalarType::UInt16: reinterpret_cast<std::uint16_t*>(out.raw_data())[i] = (std::uint16_t)v; break;
       case ScalarType::UInt8: reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = (std::uint8_t)v; break;
       case ScalarType::Bool: reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = (v != 0.0) ? 1 : 0; break;
-      default: throw_error("arange: dtype not implemented");
+      default: PLUSS_FAIL("arange: dtype not implemented");
     }
   }
   return out;
 }
 
 Series Series::linspace(double start, double end, std::int64_t steps, ScalarType dtype) {
-  if (steps < 0) throw_error("linspace: steps must be >= 0");
+  if (steps < 0) PLUSS_FAIL("linspace: steps must be >= 0");
   Series out = Series::empty({steps}, dtype);
   if (steps == 0) return out;
   if (steps == 1) {
@@ -5223,7 +5383,7 @@ Series Series::linspace(double start, double end, std::int64_t steps, ScalarType
       case ScalarType::Float32: reinterpret_cast<float*>(out.raw_data())[i] = (float)v; break;
       case ScalarType::Float16: reinterpret_cast<Float16*>(out.raw_data())[i] = float16_from_float((float)v); break;
       case ScalarType::BFloat16: reinterpret_cast<BFloat16*>(out.raw_data())[i] = bfloat16_from_float((float)v); break;
-      default: throw_error("linspace: dtype not implemented (float types only for now)");
+      default: PLUSS_FAIL("linspace: dtype not implemented (float types only for now)");
     }
   }
   return out;
@@ -5233,7 +5393,7 @@ Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
   if (m < 0) {
     m = n;
   }
-  if (n < 0 || m < 0) throw_error("eye: sizes must be >= 0");
+  if (n < 0 || m < 0) PLUSS_FAIL("eye: sizes must be >= 0");
   Series out = Series::zeros({n,m}, dtype);
   const std::int64_t k = (n < m) ? n : m;
   for (std::int64_t i=0;i<k;++i) {
@@ -5252,7 +5412,7 @@ Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
       case ScalarType::UInt16: reinterpret_cast<std::uint16_t*>(out.raw_data())[idx] = 1; break;
       case ScalarType::UInt8: reinterpret_cast<std::uint8_t*>(out.raw_data())[idx] = 1; break;
       case ScalarType::Bool: reinterpret_cast<std::uint8_t*>(out.raw_data())[idx] = 1; break;
-      default: throw_error("eye: dtype not implemented");
+      default: PLUSS_FAIL("eye: dtype not implemented");
     }
   }
   return out;
@@ -5260,7 +5420,7 @@ Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
 
 Series Series::rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed) {
   if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
-    throw_error("rand: dtype must be float");
+    PLUSS_FAIL("rand: dtype must be float");
   Series out = Series::empty(sizes, dtype);
   auto state = pluss::aux::seed_or_next(seed);
   const auto n = out.numel();
@@ -5276,7 +5436,7 @@ Series Series::rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::
 
 Series Series::randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed) {
   if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
-    throw_error("randn: dtype must be float");
+    PLUSS_FAIL("randn: dtype must be float");
   Series out = Series::empty(sizes, dtype);
   auto state = pluss::aux::seed_or_next(seed);
   const auto n = out.numel();
@@ -5303,7 +5463,7 @@ Series Series::from_storage(const Storage& storage, std::int64_t storage_offset,
                             const std::vector<std::int64_t>& sizes,
                             const std::vector<std::int64_t>& strides,
                             ScalarType dtype) {
-  if (!storage.defined()) throw_error("from_storage: undefined storage");
+  if (!storage.defined()) PLUSS_FAIL("from_storage: undefined storage");
   // Interop / external views must be non-overlapping & dense (debug-enforced).
   check_view_invariants(sizes, strides);
   return ops_internal::SeriesFactoryAccess::wrap(
@@ -5742,7 +5902,7 @@ Series Series::gather(std::int64_t dim, const Series& index) const {
 }
 Series Series::factorial(std::int64_t n) const {
   (void)n;
-  throw_error("factorial: not implemented");
+  PLUSS_FAIL("factorial: not implemented");
 }
 Series Series::scatter(std::int64_t dim, const Series& index, const Series& src) const {
   return ops_internal::scatter(*this, dim, index, src);
@@ -5903,36 +6063,54 @@ static void bind_single_integer_index_backward_(
   series_tape::bind_source_link(out, std::move(link));
 }
 
-Series Series::index(const std::vector<Series>& indices) const {
-  for (const auto& idx : indices) {
+Series Series::index(pluss::msharp::RangeView::Of<ExtractSpec> specs) const {
+  const bool all_advanced =
+      std::all_of(specs.begin(), specs.end(), [](const ExtractSpec& s) {
+        return s.kind == ExtractSpec::Kind::AdvancedIndex;
+      });
+  if (!all_advanced) {
+    return extract(specs);
+  }
+
+  std::vector<Series> packed_indices;
+  packed_indices.reserve(specs.size());
+  for (const auto& spec : specs) {
+    PLUSS_CHECK(spec.advanced_impl,
+                "Series::index: advanced index Series is undefined");
+    Series idx;
+    idx.impl() = spec.advanced_impl;
+    packed_indices.push_back(std::move(idx));
+  }
+
+  for (const auto& idx : packed_indices) {
     require_same_platform(*this, idx, "index");
   }
   Series out;
   if (platform() == Platform::MPS) {
-    PLUSS_CHECK(indices.size() == 1, "index: MPS path currently supports exactly one index tensor");
-    out = take(indices.front());
+    PLUSS_CHECK(packed_indices.size() == 1, "index: MPS path currently supports exactly one index tensor");
+    out = take(packed_indices.front());
   } else if (platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_indexing_enabled();
     const bool native_strict = native::cuda::native_indexing_strict();
-    const bool route_supported = native::cuda::supports_index(*this, indices);
+    const bool route_supported = native::cuda::supports_index(*this, packed_indices);
     out = cuda_indexing_route_or_bridge_(
         "index",
         native_enabled,
         native_strict,
         route_supported,
-        [&]() { return pluss::codem::native::cpu::index(*this, indices); });
+        [&]() { return pluss::codem::native::cpu::index(*this, packed_indices); });
   } else {
     require_backend_dispatch_supported_(platform(), "index");
-    out = pluss::codem::native::cpu::index(*this, indices);
+    out = pluss::codem::native::cpu::index(*this, packed_indices);
   }
 
   if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
     if (platform() == Platform::CPU) {
-      bind_cpu_index_backward_(out, *this, indices);
-    } else if (platform() != Platform::MPS && supports_tracked_index_backward_(*this, indices)) {
-      bind_single_integer_index_backward_(out, *this, indices.front());
+      bind_cpu_index_backward_(out, *this, packed_indices);
+    } else if (platform() != Platform::MPS && supports_tracked_index_backward_(*this, packed_indices)) {
+      bind_single_integer_index_backward_(out, *this, packed_indices.front());
     } else if (platform() != Platform::MPS) {
-      throw_error(
+      PLUSS_FAIL(
           "index: reverse-mode sensitivity currently supports tracked paths only for one integer index tensor on dim0; "
           "use gather/take/select for other differentiable indexing patterns");
     }

@@ -49,7 +49,14 @@ inline Series value(std::initializer_list<T> list, ScalarType dtype = ScalarType
   static_assert(pluss::codem::factories::depth<std::initializer_list<T>>::value <= 7,
                 "pluss::value: supports up to 7D nested initializer_list");
   auto inf = pluss::codem::factories::infer(list);
-  return Series::make_from_doubles(inf.data, inf.sizes, dtype);
+  Series out = Series::empty(inf.sizes, dtype);
+  Series tmp = Series::empty(inf.sizes, ScalarType::Float64);
+  std::memcpy(
+      tmp.raw_mutable_data(),
+      inf.data.data(),
+      sizeof(double) * static_cast<std::size_t>(tmp.numel()));
+  out.copy_(tmp.to(dtype), false);
+  return out;
 }
 
 // Create a Series by copying from an lvalue buffer (e.g. std::vector / span).

@@ -530,6 +530,9 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
   const Series x = x_cpu.to(platform, ScalarType::Float32);
   const Series y = y_cpu.to(platform, ScalarType::Float32);
   const bool debug_trace = env_flag_is_true_("PLUSS_LINEAR_DEBUG_TRACE");
+  const bool debug_grad = env_flag_is_true_("PLUSS_LINEAR_DEBUG_GRAD");
+  const bool manual_step = env_flag_is_true_("PLUSS_LINEAR_MANUAL_STEP");
+  const bool debug_arith = env_flag_is_true_("PLUSS_LINEAR_DEBUG_ARITH");
 
   pluss::nn::Fusion model(2, 1, true, cfg, 20260318ULL);
   model->weight() = pluss::make_series(std::vector<float>{0.10f, -0.20f}, {1, 2}, cfg);
@@ -541,9 +544,95 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
   TrainingTrace trace{};
   trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
   for (int epoch = 0; epoch < epochs; ++epoch) {
-    const Series loss = optimizer->step([&]() -> Series {
-      return pluss::nn::losses::MSE(model->forward(x), y);
-    });
+    Series loss;
+    if (manual_step) {
+      optimizer->clear();
+      loss = pluss::nn::losses::MSE(model->forward(x), y);
+      loss.reverse();
+      if (debug_grad) {
+        const auto gw = model->weight().sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto gb = model->bias().sensitivity().reshape({1}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        std::cout << "[linear-grad] platform=" << platform_name_(platform)
+                  << " optimizer=" << linear_optimizer_name(kind)
+                  << " epoch=" << (epoch + 1)
+                  << " gw0=" << gw[0]
+                  << " gw1=" << gw[1]
+                  << " gb=" << gb[0] << "\n";
+      }
+      if (debug_arith && epoch == 0) {
+        const Series p = model->weight().reshape({2});
+        const Series g = model->weight().sensitivity().reshape({2});
+        const Series lr = Series::full({}, 5e-2, p.scalar_type()).to(p.platform());
+        const Series z = pluss::zeros_like(p, p.scalar_type());
+        const Series z_mul = z.mul(Series::full({}, 0.9, p.scalar_type()).to(p.platform()));
+        const Series one = Series::full({}, 1.0, p.scalar_type()).to(p.platform());
+        const Series beta1 = Series::full({}, 0.9, p.scalar_type()).to(p.platform());
+        const Series beta2 = Series::full({}, 0.999, p.scalar_type()).to(p.platform());
+        const Series eps = Series::full({}, 1e-8, p.scalar_type()).to(p.platform());
+        const Series b1_corr = Series::full({}, 0.1, p.scalar_type()).to(p.platform());
+        const Series b2_corr = Series::full({}, 0.001, p.scalar_type()).to(p.platform());
+        const Series one_minus_beta1 = one.sub(beta1);
+        const Series one_minus_beta2 = one.sub(beta2);
+        const Series m1_sim = z.mul(beta1).add(g.mul(one_minus_beta1));
+        const Series m2_sim = z.mul(beta2).add(g.square().mul(one_minus_beta2));
+        const Series first_hat_sim = m1_sim.div(b1_corr);
+        const Series second_hat_sim = m2_sim.div(b2_corr);
+        const Series den_sim = second_hat_sim.sqrt().add(eps);
+        const Series delta_sim = first_hat_sim.div(den_sim).mul(lr);
+        const Series next_sim = p.sub(delta_sim);
+        const Series gb = model->bias().sensitivity().reshape({1});
+        const Series zb = pluss::zeros_like(gb, gb.scalar_type());
+        const Series one_b = Series::full({}, 1.0, gb.scalar_type()).to(gb.platform());
+        const Series beta1_b = Series::full({}, 0.9, gb.scalar_type()).to(gb.platform());
+        const Series one_minus_beta1_b = one_b.sub(beta1_b);
+        const Series zbm = zb.mul(beta1_b);
+        const Series m1b_sim = zbm.add(gb.mul(one_minus_beta1_b));
+        const Series p_sub_g = p.sub(g);
+        const Series g_mul_lr = g.mul(lr);
+        const Series p_sub_glr = p.sub(g_mul_lr);
+        const auto p_cpu = p.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto g_cpu = g.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto z_cpu = z.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto zm_cpu = z_mul.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto psg_cpu = p_sub_g.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto gml_cpu = g_mul_lr.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto psglr_cpu = p_sub_glr.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto omb1_cpu = one_minus_beta1.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto m1sim_cpu = m1_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto m2sim_cpu = m2_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto fhsim_cpu = first_hat_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto densim_cpu = den_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto dsim_cpu = delta_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto nsim_cpu = next_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto gb_cpu = gb.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto zbm_cpu = zbm.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto m1b_cpu = m1b_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const double lr_cpu = lr.to(pluss::pCPU, ScalarType::Float64).item<double>();
+        std::cout << "[linear-arith] platform=" << platform_name_(platform)
+                  << " p0=" << p_cpu[0] << " p1=" << p_cpu[1]
+                  << " g0=" << g_cpu[0] << " g1=" << g_cpu[1]
+                  << " z0=" << z_cpu[0] << " z1=" << z_cpu[1]
+                  << " z_mul0=" << zm_cpu[0] << " z_mul1=" << zm_cpu[1]
+                  << " omb1_0=" << omb1_cpu[0] << " omb1_1=" << omb1_cpu[1]
+                  << " m1sim0=" << m1sim_cpu[0] << " m1sim1=" << m1sim_cpu[1]
+                  << " m2sim0=" << m2sim_cpu[0] << " m2sim1=" << m2sim_cpu[1]
+                  << " fhsim0=" << fhsim_cpu[0] << " fhsim1=" << fhsim_cpu[1]
+                  << " densim0=" << densim_cpu[0] << " densim1=" << densim_cpu[1]
+                  << " dsim0=" << dsim_cpu[0] << " dsim1=" << dsim_cpu[1]
+                  << " nsim0=" << nsim_cpu[0] << " nsim1=" << nsim_cpu[1]
+                  << " gb=" << gb_cpu[0] << " zbm=" << zbm_cpu[0] << " m1b=" << m1b_cpu[0]
+                  << " lr=" << lr_cpu
+                  << " p_sub_g0=" << psg_cpu[0] << " p_sub_g1=" << psg_cpu[1]
+                  << " g_mul_lr0=" << gml_cpu[0] << " g_mul_lr1=" << gml_cpu[1]
+                  << " p_sub_glr0=" << psglr_cpu[0] << " p_sub_glr1=" << psglr_cpu[1]
+                  << "\n";
+      }
+      optimizer->step();
+    } else {
+      loss = optimizer->step([&]() -> Series {
+        return pluss::nn::losses::MSE(model->forward(x), y);
+      });
+    }
     const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
     trace.epoch_loss.push_back(loss_value);
     if (debug_trace) {

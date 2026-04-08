@@ -432,8 +432,8 @@ struct BinaryLabelEncoding {
 
   const Series idx0 = pluss::make_series(std::vector<std::int64_t>{0}, {1}, i64_cpu());
   const Series idx1 = pluss::make_series(std::vector<std::int64_t>{1}, {1}, i64_cpu());
-  const double negative = pluss::index(classes, std::vector<Series>{idx0}).reshape({1}).item<double>();
-  const double positive = pluss::index(classes, std::vector<Series>{idx1}).reshape({1}).item<double>();
+  const double negative = classes.index({idx0}).reshape({1}).item<double>();
+  const double positive = classes.index({idx1}).reshape({1}).item<double>();
   const Series y01 = y64.eq(positive).to(ScalarType::Float64);
 
   BinaryLabelEncoding out{};

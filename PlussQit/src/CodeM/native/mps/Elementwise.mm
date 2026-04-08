@@ -663,12 +663,22 @@ bool supports_maximum_minimum(ScalarType dt) noexcept {
 
 void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
   if (!is_available()) {
-    fail_("binary: MPS backend unavailable");
+    fail_("binary: MPS backend unavailable (" + ctx_().error + ")");
   }
-  validate_mps_tensor_(a, "binary");
-  validate_mps_tensor_(b, "binary");
+  Series lhs = a;
+  Series rhs = b;
+  // Typed scalar invocations (e.g., Series::mul(double)) may supply a host
+  // 1-element tensor. Promote those scalars to MPS to keep the op native.
+  if (lhs.platform() != Platform::MPS && lhs.defined() && lhs.numel() == 1) {
+    lhs = lhs.to(Platform::MPS, ScalarType::Float32);
+  }
+  if (rhs.platform() != Platform::MPS && rhs.defined() && rhs.numel() == 1) {
+    rhs = rhs.to(Platform::MPS, ScalarType::Float32);
+  }
+  validate_mps_tensor_(lhs, "binary");
+  validate_mps_tensor_(rhs, "binary");
   validate_mps_tensor_(out, "binary");
-  if (a.scalar_type() != ScalarType::Float32 || b.scalar_type() != ScalarType::Float32) {
+  if (lhs.scalar_type() != ScalarType::Float32 || rhs.scalar_type() != ScalarType::Float32) {
     fail_("binary: only float32 inputs are supported on current MPS path");
   }
 
@@ -683,11 +693,11 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
 
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
-    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * sizeof(float);
+    const std::size_t a_bytes = static_cast<std::size_t>(lhs.numel()) * sizeof(float);
+    const std::size_t b_bytes = static_cast<std::size_t>(rhs.numel()) * sizeof(float);
     const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * (is_cmp ? sizeof(std::uint8_t) : sizeof(float));
-    id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(a, c.device, a_bytes);
-    id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(b, c.device, b_bytes);
+    id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(lhs, c.device, a_bytes);
+    id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(rhs, c.device, b_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
     if (a_buf == nil || b_buf == nil || out_buf == nil) {
       fail_("binary: failed to allocate Metal buffers");
@@ -697,8 +707,8 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
     if (op_code == 999) {
       fail_("binary: unsupported op code on current MPS path");
     }
-    const std::uint32_t mode = binary_mode_(a, b, out);
-    const auto aux = make_binary_cache_aux_(op_code, mode, a, b, out);
+    const std::uint32_t mode = binary_mode_(lhs, rhs, out);
+    const auto aux = make_binary_cache_aux_(op_code, mode, lhs, rhs, out);
     const GraphCacheKeyView cache_key{
         is_cmp ? "elementwise.binary_cmp" : "elementwise.binary",
         ScalarType::Float32,
@@ -710,8 +720,8 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
       meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
       fill_out_sizes_(out.sizes(), meta.out_sizes, "binary");
       if (meta.mode == 3) {
-        fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "binary", "lhs");
-        fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "binary", "rhs");
+        fill_broadcast_strides_(lhs, out.sizes(), meta.a_strides, "binary", "lhs");
+        fill_broadcast_strides_(rhs, out.sizes(), meta.b_strides, "binary", "rhs");
       }
       graph_cache_store(cache_key, &meta, sizeof(meta));
     }

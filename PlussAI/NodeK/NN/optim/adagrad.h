@@ -438,7 +438,7 @@ private:
     sum_square_.reserve(params.size());
 
     for (const Series* p : params) {
-      sum_square_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      sum_square_.push_back(state_zeros_like_(*p));
     }
 
     for (const auto& group : groups_) {

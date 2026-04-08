@@ -12,6 +12,7 @@
 namespace pluss::codem {
 
 class Series;
+struct ExtractSpec;
 
 // Handle type (Torch-like TensorBase): cheap copy, shared underlying impl.
 class CODEM_API SeriesBase {
@@ -24,6 +25,7 @@ protected:
   explicit SeriesBase(pluss::msharp::intrusive_ptr<SeriesImpl> impl) : impl_(std::move(impl)) {}
 
 public:
+  friend struct ExtractSpec;
 
   bool defined() const noexcept { return (bool)impl_; }
   bool unique() const noexcept { return impl_.unique(); }

@@ -158,7 +158,10 @@ add_custom_command(
           --series-header ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/Series.h
           --out-decls ${SERIES_OPSINTERNAL_DECLS}
           --out-defs  ${SERIES_OPSINTERNAL_DEFS}
-  DEPENDS ${SERIES_OPSINTERNAL_H} ${SERIES_OPSINTERNAL_CPP} ${SERIES_OPSINTERNAL_GEN_SCRIPT}
+  DEPENDS ${SERIES_OPSINTERNAL_H}
+          ${SERIES_OPSINTERNAL_CPP}
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/Series.h
+          ${SERIES_OPSINTERNAL_GEN_SCRIPT}
   COMMENT "Generating Series method wrappers from OpsInternal.h"
 )
 
@@ -238,6 +241,7 @@ add_custom_command(
 # source layout is intentionally regular.
 file(GLOB_RECURSE PLUSSQIT_CODEM_CORE_CPP CONFIGURE_DEPENDS
   "src/CodeM/core/*.cpp"
+  "src/CodeM/Traverse/*.cpp"
   "src/CodeM/core/ops_impl/*.cpp"
   "src/CodeM/compat/*.cpp"
   "src/CodeM/native/cpu/*.cpp"
@@ -891,6 +895,24 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/compat/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/compat
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/Indexing/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/Indexing
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/Traverse/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/Traverse
   FILES_MATCHING
   PATTERN "*.h"
   PATTERN "*.hpp"

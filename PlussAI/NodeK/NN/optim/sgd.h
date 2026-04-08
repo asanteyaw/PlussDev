@@ -465,7 +465,7 @@ private:
     velocity_.clear();
     velocity_.reserve(params.size());
     for (const Series* p : params) {
-      velocity_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      velocity_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

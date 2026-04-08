@@ -13,6 +13,7 @@
 #include <sstream>
 #include <span>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -377,6 +378,19 @@ std::string simplify_midnight_datetime_label(std::string_view label) {
   return std::string(label);
 }
 
+template <std::ranges::input_range Range>
+  requires std::convertible_to<std::ranges::range_reference_t<const Range>, std::string_view>
+[[nodiscard]] std::vector<std::string_view> label_views(const Range& labels) {
+  std::vector<std::string_view> out;
+  if constexpr (requires { labels.size(); }) {
+    out.reserve(static_cast<std::size_t>(labels.size()));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
 void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOptions& options) {
   pane.x_label(axis.label);
   if (!axis.labels.empty()) {
@@ -385,7 +399,8 @@ void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOpt
     normalized_labels.reserve(tick_labels.size());
     std::transform(tick_labels.begin(), tick_labels.end(), std::back_inserter(normalized_labels),
                    [](const std::string& label) { return simplify_midnight_datetime_label(label); });
-    pane.x_ticks(tick_values, std::move(normalized_labels));
+    const auto tick_label_views = label_views(normalized_labels);
+    pane.x_ticks(tick_values, pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
     apply_x_tick_rotation(pane, options, axis.labels.size() > tick_labels.size());
   }
 }
@@ -592,7 +607,9 @@ Studio corr_heatmap_from_names(const DataFrame& frame,
   auto& trace = flash::heatmap(pane, axis_positions, axis_positions, z, to_flash_options(options));
   trace.label("corr").shade(pluss::pl::ShadeMode::Smooth);
 
-  pane.x_ticks(axis_positions, names).y_ticks(axis_positions, names);
+  const auto name_views = label_views(names);
+  const auto name_range = pluss::msharp::RangeView::Of<std::string_view>(name_views);
+  pane.x_ticks(axis_positions, name_range).y_ticks(axis_positions, name_range);
   apply_x_tick_rotation(pane, plot_options, false);
   apply_y_tick_rotation(pane, plot_options, options.borderless ? std::nullopt : std::optional<double>{30.0});
   pane.x_label("feature").y_label("feature");
@@ -782,7 +799,8 @@ Studio box_from_names(const DataFrame& frame,
   style_trace(trace, 0, options.alpha, options.line_width);
 
   const auto centers = positional_plot_x(static_cast<std::int64_t>(names.size()));
-  pane.x_ticks(centers, names);
+  const auto name_views = label_views(names);
+  pane.x_ticks(centers, pluss::msharp::RangeView::Of<std::string_view>(name_views));
   apply_x_tick_rotation(pane, plot_options, false);
   pane.x_label("feature").y_label("value");
   return fig;
@@ -822,7 +840,8 @@ Studio violin_from_names(const DataFrame& frame,
   style_trace(trace, 0, options.alpha, options.line_width);
 
   const auto centers = positional_plot_x(static_cast<std::int64_t>(names.size()));
-  pane.x_ticks(centers, names);
+  const auto name_views = label_views(names);
+  pane.x_ticks(centers, pluss::msharp::RangeView::Of<std::string_view>(name_views));
   apply_x_tick_rotation(pane, plot_options, false);
   pane.x_label("feature").y_label("value");
   return fig;
@@ -1348,7 +1367,8 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   if (options.horizontal) {
     pane.y_label(axis.label);
     if (!axis.labels.empty()) {
-      pane.y_ticks(axis.values, axis.labels);
+      const auto axis_label_views = label_views(axis.labels);
+      pane.y_ticks(axis.values, pluss::msharp::RangeView::Of<std::string_view>(axis_label_views));
       apply_y_tick_rotation(pane, options_, std::nullopt);
     }
   } else {
@@ -1777,8 +1797,13 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(pluss::msharp::RangeView::
   auto z = columns_to_matrix_series(columns, frame_.ncases(), false).transpose(0, 1).contiguous();
   auto& trace = flash::heatmap(pane, x_positions, y_positions, z, to_flash_options(options));
   trace.label("value").shade(pluss::pl::ShadeMode::Smooth);
-  pane.x_ticks(positional_plot_x(frame_.ncases()), labels_for_cases(frame_, "DataFrame::plot().heatmap", options_));
-  pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())), y_labels);
+  auto case_labels = labels_for_cases(frame_, "DataFrame::plot().heatmap", options_);
+  const auto case_label_views = label_views(case_labels);
+  const auto y_label_views = label_views(y_labels);
+  pane.x_ticks(positional_plot_x(frame_.ncases()),
+               pluss::msharp::RangeView::Of<std::string_view>(case_label_views));
+  pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())),
+               pluss::msharp::RangeView::Of<std::string_view>(y_label_views));
   apply_x_tick_rotation(pane, options_, false);
   apply_y_tick_rotation(pane, options_, options.borderless ? std::nullopt : std::optional<double>{30.0});
   pane.x_label("case").y_label("feature");
@@ -1839,10 +1864,14 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
   auto z = columns_to_matrix_series(columns, pivoted.ncases(), true);
   auto& trace = flash::heatmap(pane, x_positions, y_positions, z, to_flash_options(options));
   trace.label(std::string(value_feature)).shade(pluss::pl::ShadeMode::Smooth);
+  std::vector<std::string> feature_labels(pivot_features.begin(), pivot_features.end());
+  auto case_labels = labels_for_cases(pivoted, "DataFrame::plot().heatmap", options_);
+  const auto feature_label_views = label_views(feature_labels);
+  const auto case_label_views = label_views(case_labels);
   pane.x_ticks(positional_plot_x(static_cast<std::int64_t>(pivot_features.size())),
-               std::vector<std::string>(pivot_features.begin(), pivot_features.end()));
+               pluss::msharp::RangeView::Of<std::string_view>(feature_label_views));
   pane.y_ticks(positional_plot_x(pivoted.ncases()),
-               labels_for_cases(pivoted, "DataFrame::plot().heatmap", options_));
+               pluss::msharp::RangeView::Of<std::string_view>(case_label_views));
   apply_x_tick_rotation(pane, options_, false);
   apply_y_tick_rotation(pane, options_, options.borderless ? std::nullopt : std::optional<double>{30.0});
   pane.x_label(std::string(feature_feature)).y_label(std::string(case_feature));

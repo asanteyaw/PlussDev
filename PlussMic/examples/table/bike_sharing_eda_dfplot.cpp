@@ -246,6 +246,15 @@ void configure_pane(pl::Pane& pane, bool legend = true) {
   pane.legend(legend ? pl::KeyPlace::Auto : pl::KeyPlace::None);
 }
 
+[[nodiscard]] std::vector<std::string_view> label_views(const std::vector<std::string>& labels) {
+  std::vector<std::string_view> out;
+  out.reserve(labels.size());
+  for (const auto& label : labels) {
+    out.emplace_back(label);
+  }
+  return out;
+}
+
 pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const DataFrame& casual) {
   auto fig = pl::studio("03_registered_vs_casual_by_weekday");
   fig.theme(pl::themes::paper());
@@ -261,7 +270,8 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
 
   const auto draw_panel = [&](pl::Pane& pane, const DataFrame& frame) {
     configure_pane(pane, true);
-    pane.x_ticks(x, x_labels);
+    const auto x_label_views = label_views(x_labels);
+    pane.x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(x_label_views));
     pane.x_label("Hour").y_label("Mean rentals");
     for (const auto weekday : kWeekdayLabels) {
       if (!frame.has_feature(weekday)) {
@@ -292,7 +302,8 @@ void draw_grouped_bar_panel(pl::Pane& pane, const DataFrame& pivoted, std::strin
   for (const auto value : x) {
     x_labels.push_back(compact_label(value));
   }
-  pane.x_ticks(x, x_labels);
+  const auto x_label_views = label_views(x_labels);
+  pane.x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(x_label_views));
   pane.x_label(std::string(x_label)).y_label("Mean rentals");
 
   constexpr double group_span = 0.8;
@@ -367,7 +378,8 @@ void draw_box_features(pl::Pane& pane,
   for (std::size_t i = 0; i < labels.size(); ++i) {
     ticks[i] = static_cast<double>(i);
   }
-  pane.x_ticks(ticks, labels);
+  const auto tick_label_views = label_views(labels);
+  pane.x_ticks(ticks, pluss::msharp::RangeView::Of<std::string_view>(tick_label_views));
   pane.x_label("feature").y_label(std::string(y_label));
 }
 

@@ -1,6 +1,7 @@
 #include "CodeN/core/Note.h"
 
 #include <algorithm>
+#include <cstring>
 #include <sstream>
 #include <utility>
 
@@ -540,11 +541,15 @@ pluss::codem::Series Note::argsort(bool descending, bool stable) const {
   PLUSS_CHECK(defined(), "Note::argsort on undefined Note");
   const auto n = numel();
   auto order = ops_internal::note_argsort_indices_1d(*this, descending, stable);
-
-  ::std::vector<double> out(order.size());
-  for (::std::size_t i = 0; i < order.size(); ++i) out[i] = static_cast<double>(order[i]);
   const ::std::vector<::std::int64_t> shape{n};
-  return pluss::codem::Series::make_from_doubles(out, shape, pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  if (!order.empty()) {
+    std::memcpy(
+        out.raw_mutable_data(),
+        order.data(),
+        sizeof(::std::int64_t) * order.size());
+  }
+  return out;
 }
 
 pluss::codem::Series Note::contains_series(::std::string_view needle) const {

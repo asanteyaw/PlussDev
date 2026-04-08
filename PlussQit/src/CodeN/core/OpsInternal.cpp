@@ -5777,16 +5777,18 @@ namespace pluss::coden::ops_internal {
 
 pluss::codem::Series note_contains_series(const Note& a, ::std::string_view needle) {
   auto mask = a.contains(needle); // uint8_t per element
-  ::std::vector<double> tmp(mask.size());
-  for (::std::size_t i = 0; i < mask.size(); ++i) tmp[i] = static_cast<double>(mask[i] != 0);
-  return pluss::codem::Series::make_from_doubles(tmp, a.sizes(), pluss::codem::ScalarType::Bool);
+  auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Bool);
+  auto* p = reinterpret_cast<bool*>(out.raw_mutable_data());
+  for (::std::size_t i = 0; i < mask.size(); ++i) p[i] = (mask[i] != 0);
+  return out;
 }
 
 pluss::codem::Series note_lengths_bytes_series(const Note& a) {
   auto lens = a.lengths_bytes();
-  ::std::vector<double> tmp(lens.size());
-  for (::std::size_t i = 0; i < lens.size(); ++i) tmp[i] = static_cast<double>(lens[i]);
-  return pluss::codem::Series::make_from_doubles(tmp, a.sizes(), pluss::codem::ScalarType::Int64);
+  auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Int64);
+  auto* p = reinterpret_cast<::std::int64_t*>(out.raw_mutable_data());
+  for (::std::size_t i = 0; i < lens.size(); ++i) p[i] = static_cast<::std::int64_t>(lens[i]);
+  return out;
 }
 
 } // namespace pluss::coden::ops_internal

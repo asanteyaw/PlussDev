@@ -464,7 +464,9 @@ void validate_trace_payload(TraceKind kind, const TracePayload& payload) {
   return cue;
 }
 
-void require_tick_spec(const Series& positions, const std::vector<std::string>& labels, std::string_view axis_name) {
+void require_tick_spec(const Series& positions,
+                       pluss::msharp::RangeView::Of<std::string_view> labels,
+                       std::string_view axis_name) {
   if (!series_is_vector(positions) || positions.numel() == 0) {
     throw std::invalid_argument(std::string(axis_name) + ": tick positions must be a non-empty vector");
   }
@@ -473,8 +475,17 @@ void require_tick_spec(const Series& positions, const std::vector<std::string>& 
   }
 }
 
+[[nodiscard]] std::vector<std::string> own_tick_labels(pluss::msharp::RangeView::Of<std::string_view> labels) {
+  std::vector<std::string> out;
+  out.reserve(labels.size());
+  for (const auto label : labels) {
+    out.emplace_back(label);
+  }
+  return out;
+}
+
 void require_category_spec(
-    const std::vector<std::string>& labels,
+    pluss::msharp::RangeView::Of<std::string_view> labels,
     double first,
     double step,
     std::string_view where) {
@@ -487,12 +498,11 @@ void require_category_spec(
 }
 
 [[nodiscard]] Series category_positions(double first, double step, std::size_t count) {
-  std::vector<double> values;
-  values.reserve(count);
-  for (std::size_t i = 0; i < count; ++i) {
-    values.push_back(first + step * static_cast<double>(i));
+  if (count == 0) {
+    return pluss::empty({0}, ScalarType::Float64);
   }
-  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())});
+  const auto idx = pluss::arange(0, static_cast<std::int64_t>(count), 1, ScalarType::Float64);
+  return idx.mul(step).add(first);
 }
 
 [[nodiscard]] bool finite_and_increasing(Range1d range) noexcept {
@@ -890,21 +900,21 @@ Pane& Pane::z_label(std::string label) {
   return *this;
 }
 
-Pane& Pane::x_ticks(Series positions, std::vector<std::string> labels) {
+Pane& Pane::x_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels) {
   require_tick_spec(positions, labels, "x_ticks");
-  x_axis_.ticks = AxisTicks{std::move(positions), std::move(labels)};
+  x_axis_.ticks = AxisTicks{std::move(positions), own_tick_labels(labels)};
   return *this;
 }
 
-Pane& Pane::y_ticks(Series positions, std::vector<std::string> labels) {
+Pane& Pane::y_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels) {
   require_tick_spec(positions, labels, "y_ticks");
-  y_axis_.ticks = AxisTicks{std::move(positions), std::move(labels)};
+  y_axis_.ticks = AxisTicks{std::move(positions), own_tick_labels(labels)};
   return *this;
 }
 
-Pane& Pane::z_ticks(Series positions, std::vector<std::string> labels) {
+Pane& Pane::z_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels) {
   require_tick_spec(positions, labels, "z_ticks");
-  z_axis_.ticks = AxisTicks{std::move(positions), std::move(labels)};
+  z_axis_.ticks = AxisTicks{std::move(positions), own_tick_labels(labels)};
   return *this;
 }
 
@@ -923,19 +933,19 @@ Pane& Pane::clear_z_ticks() noexcept {
   return *this;
 }
 
-Pane& Pane::x_categories(std::vector<std::string> labels, double first, double step) {
+Pane& Pane::x_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first, double step) {
   require_category_spec(labels, first, step, "x_categories");
-  return x_ticks(category_positions(first, step, labels.size()), std::move(labels));
+  return x_ticks(category_positions(first, step, labels.size()), labels);
 }
 
-Pane& Pane::y_categories(std::vector<std::string> labels, double first, double step) {
+Pane& Pane::y_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first, double step) {
   require_category_spec(labels, first, step, "y_categories");
-  return y_ticks(category_positions(first, step, labels.size()), std::move(labels));
+  return y_ticks(category_positions(first, step, labels.size()), labels);
 }
 
-Pane& Pane::z_categories(std::vector<std::string> labels, double first, double step) {
+Pane& Pane::z_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first, double step) {
   require_category_spec(labels, first, step, "z_categories");
-  return z_ticks(category_positions(first, step, labels.size()), std::move(labels));
+  return z_ticks(category_positions(first, step, labels.size()), labels);
 }
 
 Pane& Pane::legend(KeyPlace place) noexcept {

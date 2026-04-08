@@ -37,7 +37,7 @@
 #include "pluss/subsp/stats/stats.h"
 #endif
 
-#include "pluss/queue.h"
+#include "pluss/pluss_type.h"
 #include "pluss/dispense.h"
 
 // Backward-compat RNG seed forwarding.

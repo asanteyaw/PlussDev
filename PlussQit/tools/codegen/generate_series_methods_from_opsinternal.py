@@ -16,7 +16,6 @@ from pathlib import Path
 STATIC_METHODS = {
     "undefined",
     "empty",
-    "make_from_doubles",
     "zeros",
     "ones",
     "full",

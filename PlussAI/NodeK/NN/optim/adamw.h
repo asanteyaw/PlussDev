@@ -521,9 +521,9 @@ private:
     max_second_hat_.reserve(params.size());
 
     for (const Series* p : params) {
-      first_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      second_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      max_second_hat_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      first_moment_.push_back(state_zeros_like_(*p));
+      second_moment_.push_back(state_zeros_like_(*p));
+      max_second_hat_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

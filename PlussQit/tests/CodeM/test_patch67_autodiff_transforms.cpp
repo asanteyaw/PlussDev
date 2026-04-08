@@ -218,7 +218,7 @@ TEST_CASE("autodiff index propagates sensitivities for single integer index tens
   Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
   x.tracks_slope_(true);
   const Series idx = make_series(std::vector<std::int64_t>{3, 1, 0}, {3});
-  const Series loss = x.index(std::vector<Series>{idx}).sum();
+  const Series loss = x.index({idx}).sum();
   loss.reverse();
   REQUIRE(x.has_sensitivity());
   const auto g = x.sensitivity().to_vec<double>();
@@ -234,7 +234,7 @@ TEST_CASE("autodiff index propagates sensitivities for mixed integer advanced in
   x.tracks_slope_(true);
   const Series i0 = make_series(std::vector<std::int64_t>{0, 1, 1, 0}, {4});
   const Series i1 = make_series(std::vector<std::int64_t>{2, 0, 2, 2}, {4});
-  const Series loss = x.index(std::vector<Series>{i0, i1}).sum();
+  const Series loss = x.index({i0, i1}).sum();
   loss.reverse();
 
   REQUIRE(x.has_sensitivity());
@@ -252,7 +252,7 @@ TEST_CASE("autodiff index propagates sensitivities for bool-mask indexing on CPU
   Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
   x.tracks_slope_(true);
   const Series mask = make_series(std::vector<std::int64_t>{1, 0, 1, 1}, {4}).to(ScalarType::Bool);
-  const Series loss = x.index(std::vector<Series>{mask}).sum();
+  const Series loss = x.index({mask}).sum();
   loss.reverse();
 
   REQUIRE(x.has_sensitivity());

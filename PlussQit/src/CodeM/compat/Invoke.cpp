@@ -447,10 +447,10 @@ static Series& assign_inplace_preserve_storage_(Series& self, const Series& valu
       }
     }
   }
-  if (!(same_platform && same_dtype && same_shape)) {
-    self = value;
-    return self;
-  }
+  PLUSS_CHECK(same_platform, "copy_: source and destination must be on the same platform in this path");
+  PLUSS_CHECK(same_dtype, "copy_: dtype conversion must be completed before in-place copy");
+  PLUSS_CHECK(same_shape, "copy_: source must have the same shape as destination in this path");
+  
   if (self.is_contiguous() && value.is_contiguous() && self.itemsize() == value.itemsize()) {
     const auto nbytes = static_cast<std::size_t>(self.numel()) * static_cast<std::size_t>(self.itemsize());
     if (nbytes > 0) {
@@ -680,6 +680,46 @@ static Series select_range(const Series& self, std::int64_t dim, std::int64_t st
   for (std::int64_t i = 0; i < len; ++i) idx[(std::size_t)i] = start + i;
   Series index = i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), self.platform());
   return index_select_dispatch_(self, dim, index);
+}
+
+static Series slice_view_impl(
+    const Series& self,
+    std::int64_t dim,
+    std::int64_t start,
+    std::int64_t end,
+    std::int64_t step) {
+  PLUSS_CHECK(self.defined(), "slice: undefined Series");
+  const std::int64_t nd = self.dim();
+  const std::int64_t d = wrap_dim(dim, nd, "slice");
+  PLUSS_CHECK(step != 0, "slice: step must be non-zero");
+  PLUSS_CHECK(step > 0, "slice: negative-step slices are unsupported");
+
+  const std::int64_t n = self.sizes()[static_cast<std::size_t>(d)];
+  auto normalize_bound = [n](std::int64_t v, bool is_end) -> std::int64_t {
+    if (v == std::numeric_limits<std::int64_t>::max()) return is_end ? n : 0;
+    if (v < 0) v += n;
+    if (v < 0) return 0;
+    if (v > n) return n;
+    return v;
+  };
+
+  const std::int64_t s = normalize_bound(start, false);
+  const std::int64_t e = normalize_bound(end, true);
+  const std::int64_t len = (e <= s) ? 0 : (1 + (e - 1 - s) / step);
+
+  std::vector<std::int64_t> out_sizes(self.sizes().begin(), self.sizes().end());
+  std::vector<std::int64_t> out_strides(self.strides().begin(), self.strides().end());
+  const std::size_t ud = static_cast<std::size_t>(d);
+  const std::int64_t base_stride = out_strides[ud];
+  out_sizes[ud] = len;
+  out_strides[ud] = base_stride * step;
+
+  const std::int64_t base_off = self.storage_offset() / std::max<std::int64_t>(1, self.itemsize());
+  return as_strided_impl(
+      self,
+      std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()),
+      std::span<const std::int64_t>(out_strides.data(), out_strides.size()),
+      base_off + s * base_stride);
 }
 
 static Series block_2d_impl(
@@ -3514,7 +3554,6 @@ static std::string_view canonical_op(std::string_view op) {
   if (op == "not_equal") return "ne";
   if (op == "negative") return "neg";
   if (op == "argwhere") return "nonzero";
-  if (op == "nonzero_numpy") return "nonzero";
   if (op == "nonzero_static") return "nonzero";
   if (op == "split_with_sizes") return "split";
   if (op == "unsafe_split_with_sizes") return "split";
@@ -3713,6 +3752,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "exp2") return ops_internal::exp2(self);
     if (op == "cbrt") return ops_internal::cbrt(self);
     if (op == "square") return ops_internal::square(self);
+    if (op == "cube") return self.pow(3.0);
     if (op == "reciprocal") return ops_internal::reciprocal(self);
 
     if (op == "trunc") return ops_internal::trunc(self);
@@ -4121,7 +4161,12 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // bool
     if (std::holds_alternative<const std::vector<Series>*>(a0)) {
       const auto& indices = as_series_list(args[0]);
-      if (op == "index") return self.index(indices);
+      if (op == "index") {
+        std::vector<ExtractSpec> specs;
+        specs.reserve(indices.size());
+        for (const auto& idx : indices) specs.emplace_back(idx);
+        return self.index(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+      }
       return not_impl(op, args, self);
     }
 
@@ -4504,7 +4549,12 @@ if (is_numeric_scalar_arg(args[0]) &&
 
     if (std::holds_alternative<const std::vector<Series>*>(a0)) {
       const auto& indices = as_series_list(args[0]);
-      if (op == "index") return self.index(indices);
+      if (op == "index") {
+        std::vector<ExtractSpec> specs;
+        specs.reserve(indices.size());
+        for (const auto& idx : indices) specs.emplace_back(idx);
+        return self.index(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+      }
       return not_impl(op, args, self);
     }
 
@@ -4704,6 +4754,14 @@ if (is_numeric_scalar_arg(args[0]) &&
         is_numeric_scalar_arg(args[1]) &&
         is_numeric_scalar_arg(args[2]) &&
         is_numeric_scalar_arg(args[3])) {
+      if (op == "slice") {
+        return slice_view_impl(
+            self,
+            as_i64(args[0]),
+            as_i64(args[1]),
+            as_i64(args[2]),
+            as_i64(args[3]));
+      }
       if (op == "block") {
         return block_2d_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]), as_i64(args[3]));
       }
@@ -5124,8 +5182,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "xlogy_") { self = ops_internal::mul(self, ops_internal::log(other)); return self; }
       if (op == "type_as_") { self = self.to(other.scalar_type()); return self; }
       if (op == "copy_") {
-        self = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
-        return self;
+        Series src = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
+        return assign_inplace_preserve_storage_(self, src);
       }
       if (op == "set_" || op == "set_data") {
         self = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
@@ -5225,8 +5283,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& other = as_series(args[0]);
       if (op == "copy_") {
         // CPU path ignores non_blocking flag; keep dtype behavior aligned with copy_(Tensor).
-        self = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
-        return self;
+        Series src = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
+        return assign_inplace_preserve_storage_(self, src);
       }
       return not_impl_inplace(op, args, self);
     }

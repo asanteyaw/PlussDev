@@ -45,7 +45,7 @@ TEST_CASE("cpu autograd parity harness matches reference indexing gradients", "[
     REQUIRE(x.platform() == Platform::CPU);
     x.tracks_slope_(true);
     const Series idx = make_series(std::vector<std::int64_t>{3, 1, 0}, {3});
-    x.index(std::vector<Series>{idx}).sum().reverse();
+    x.index({idx}).sum().reverse();
     require_close_vec(x.sensitivity(), {1.0, 1.0, 0.0, 1.0}, tol, "index_single");
   }
 
@@ -55,7 +55,7 @@ TEST_CASE("cpu autograd parity harness matches reference indexing gradients", "[
     x.tracks_slope_(true);
     const Series i0 = make_series(std::vector<std::int64_t>{0, 1, 1, 0}, {4});
     const Series i1 = make_series(std::vector<std::int64_t>{2, 0, 2, 2}, {4});
-    x.index(std::vector<Series>{i0, i1}).sum().reverse();
+    x.index({i0, i1}).sum().reverse();
     require_close_vec(x.sensitivity(), {0.0, 0.0, 2.0, 1.0, 0.0, 1.0}, tol, "index_mixed");
   }
 
@@ -64,7 +64,7 @@ TEST_CASE("cpu autograd parity harness matches reference indexing gradients", "[
     REQUIRE(x.platform() == Platform::CPU);
     x.tracks_slope_(true);
     const Series mask = make_series(std::vector<std::int64_t>{1, 0, 1, 1}, {4}).to(ScalarType::Bool);
-    x.index(std::vector<Series>{mask}).sum().reverse();
+    x.index({mask}).sum().reverse();
     require_close_vec(x.sensitivity(), {1.0, 0.0, 1.0, 1.0}, tol, "index_mask");
   }
 

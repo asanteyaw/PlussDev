@@ -90,7 +90,7 @@ inline Series rel_mse(const Series& prediction,
     denom = denom.abs();
   }
   denom = denom.clamp_min(epsilon);
-  const Series per = prediction.sub(target).square().div(denom);
+  const Series per = prediction.sub(target).div(denom).square();
   return detail::reduce_loss_(per, reduction);
 }
 

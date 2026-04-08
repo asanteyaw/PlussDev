@@ -135,6 +135,16 @@ int main() {
   expect(approx(as_f64_scalar(logcdf(dst::Normal, zero, std::initializer_list<double>{})), std::log(0.5), 1e-12),
          "normal logcdf at 0",
          &failures);
+  const Series far_left = pluss::make_series(-40.0, f64);
+  const double far_left_logcdf = as_f64_scalar(logcdf(dst::Normal, far_left, std::initializer_list<double>{}));
+  expect(std::isfinite(far_left_logcdf) && far_left_logcdf < -700.0,
+         "normal logcdf should stay finite in extreme left tail",
+         &failures);
+  const Series far_right = pluss::make_series(12.0, f64);
+  const double far_right_cdf = as_f64_scalar(cdf(dst::Normal, far_right, std::initializer_list<double>{}));
+  const double far_right_logcdf = as_f64_scalar(logcdf(dst::Normal, far_right, std::initializer_list<double>{}));
+  expect(approx(far_right_cdf, 1.0, 1e-15), "normal cdf at far right tail should be ~1", &failures);
+  expect(std::abs(far_right_logcdf) < 1e-12, "normal logcdf at far right tail should be ~0", &failures);
   expect(
       approx(as_f64_scalar(zero.stat.pdf()),
              1.0 / std::sqrt(2.0 * std::numbers::pi_v<double>),
@@ -488,7 +498,10 @@ int main() {
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Normal, left_tail, std::initializer_list<double>{}))), "normal logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(normal_obj.logcdf(left_tail))), "Normal object logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(left_tail.stat.logcdf())), "Series logcdf left tail finite", &failures);
-  expect(std::isinf(as_f64_scalar(cdf(dst::Normal, left_tail, std::initializer_list<double>{}).log())), "normal cdf().log() underflows in left tail", &failures);
+  const double normal_logcdf_left = as_f64_scalar(logcdf(dst::Normal, left_tail, std::initializer_list<double>{}));
+  const double normal_log_from_cdf_left = as_f64_scalar(cdf(dst::Normal, left_tail, std::initializer_list<double>{}).log());
+  expect(std::isfinite(normal_log_from_cdf_left), "normal cdf().log() stays finite in left tail", &failures);
+  expect(approx(normal_log_from_cdf_left, normal_logcdf_left, 1e-9), "normal cdf().log() left-tail parity with logcdf", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Logistic, pluss::make_series(-50.0, f64), {0.0, 1.0}))), "logistic logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Laplace, pluss::make_series(-50.0, f64), {0.0, 1.0}))), "laplace logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf(dst::Rayleigh, pluss::make_series(10.0, f64), {1.0}))), "rayleigh logcdf finite", &failures);
@@ -1158,8 +1171,13 @@ int main() {
   expect(std::isfinite(as_f64_scalar(gaussian_mixture_obj.logcdf(mix_left_tail))),
          "GaussianMixture object logcdf left tail finite",
          &failures);
-  expect(std::isinf(as_f64_scalar(mixture_normal_cdf(mix_left_tail, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).log())),
-         "mixture_normal_cdf().log() underflows in left tail",
+  const double mix_logcdf_left =
+      as_f64_scalar(mixture_normal_logcdf(mix_left_tail, mix_pdf_weights, mix_pdf_means, mix_pdf_stds));
+  const double mix_log_from_cdf_left =
+      as_f64_scalar(mixture_normal_cdf(mix_left_tail, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).log());
+  expect(std::isfinite(mix_log_from_cdf_left), "mixture_normal_cdf().log() stays finite in left tail", &failures);
+  expect(approx(mix_log_from_cdf_left, mix_logcdf_left, 1e-9),
+         "mixture_normal_cdf().log() left-tail parity with mixture_normal_logcdf",
          &failures);
 
   const Series deg_weights = pluss::make_series(std::vector<double>{1.0}, {1}, f64);

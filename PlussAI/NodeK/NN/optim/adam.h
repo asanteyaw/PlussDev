@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <unordered_set>
@@ -330,22 +333,29 @@ private:
       Series m1_value = first_moment_[i];
       Series m2_value = second_moment_[i];
       Series mmax_value = max_second_hat_[i];
+      const Series m1_before = m1_value;
+      const Series m2_before = m2_value;
 
-      const Series one = scalar_on_(1.0, parameter_value);
-      const Series beta1 = scalar_on_(options.beta1, parameter_value);
-      const Series beta2 = scalar_on_(options.beta2, parameter_value);
-      const Series one_minus_beta1 = one.sub(beta1);
-      const Series one_minus_beta2 = one.sub(beta2);
       if (options.weight_decay != 0.0) {
-        sensitivity = sensitivity.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
+        sensitivity = sensitivity.add(parameter_value.mul(options.weight_decay));
       }
 
-      m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
-      m2_value = m2_value.mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      if (use_capturable) {
+        const Series one = scalar_on_(1.0, parameter_value);
+        const Series beta1 = scalar_on_(options.beta1, parameter_value);
+        const Series beta2 = scalar_on_(options.beta2, parameter_value);
+        const Series one_minus_beta1 = one.sub(beta1);
+        const Series one_minus_beta2 = one.sub(beta2);
+        m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
+        m2_value = m2_value.mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      } else {
+        m1_value = m1_value.mul(options.beta1).add(sensitivity.mul(1.0 - options.beta1));
+        m2_value = m2_value.mul(options.beta2).add(sensitivity.square().mul(1.0 - options.beta2));
+      }
 
       Series second_hat = use_capturable
                               ? m2_value.div(b2_corr_series)
-                              : m2_value.div(scalar_on_(b2_correction, parameter_value));
+                              : m2_value.div(b2_correction);
       if (options.amsgrad) {
         mmax_value = mmax_value.maximum(second_hat);
         second_hat = mmax_value;
@@ -353,10 +363,42 @@ private:
 
       const Series first_hat = use_capturable
                                    ? m1_value.div(b1_corr_series)
-                                   : m1_value.div(scalar_on_(b1_correction, parameter_value));
-      const Series denominator = second_hat.sqrt().add(scalar_on_(options.epsilon, parameter_value));
-      const Series delta = first_hat.div(denominator).mul(scalar_on_(options.learning_rate, parameter_value));
+                                   : m1_value.div(b1_correction);
+      const Series denominator = second_hat.sqrt().add(options.epsilon);
+      const Series delta = first_hat.div(denominator).mul(options.learning_rate);
       Series next_value = parameter_value.sub(delta);
+
+      const bool debug_adam_update = []() {
+        const char* raw = std::getenv("PLUSS_DEBUG_ADAM_UPDATE");
+        if (!raw) return false;
+        return std::strcmp(raw, "1") == 0 || std::strcmp(raw, "true") == 0 || std::strcmp(raw, "TRUE") == 0;
+      }();
+      if (debug_adam_update && parameter_value.platform() == pluss::pMPS && step_ <= 3) {
+        auto print_vec = [&](const char* label, const Series& s) {
+          const auto v = s.reshape({s.numel()}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+          std::cerr << " " << label << "=";
+          for (std::size_t k = 0; k < v.size(); ++k) {
+            if (k) std::cerr << ",";
+            std::cerr << v[k];
+          }
+        };
+        std::cerr << "[adam-loop-debug] step=" << step_ << " param_index=" << i;
+        std::cerr << " p_contig=" << (parameter_value.is_contiguous() ? 1 : 0)
+                  << " g_contig=" << (sensitivity.is_contiguous() ? 1 : 0)
+                  << " m1_contig=" << (m1_before.is_contiguous() ? 1 : 0)
+                  << " m2_contig=" << (m2_before.is_contiguous() ? 1 : 0);
+        print_vec("p", parameter_value);
+        print_vec("g", sensitivity);
+        print_vec("m1_before", m1_before);
+        print_vec("m2_before", m2_before);
+        print_vec("m1", m1_value);
+        print_vec("m2", m2_value);
+        print_vec("fh", first_hat);
+        print_vec("den", denominator);
+        print_vec("delta", delta);
+        print_vec("next", next_value);
+        std::cerr << "\n";
+      }
 
       first_moment_[i] = m1_value;
       second_moment_[i] = m2_value;
@@ -532,9 +574,9 @@ private:
     max_second_hat_.reserve(params.size());
 
     for (const Series* p : params) {
-      first_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      second_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      max_second_hat_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      first_moment_.push_back(state_zeros_like_(*p));
+      second_moment_.push_back(state_zeros_like_(*p));
+      max_second_hat_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

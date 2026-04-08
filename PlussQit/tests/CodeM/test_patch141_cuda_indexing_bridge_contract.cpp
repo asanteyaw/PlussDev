@@ -86,8 +86,8 @@ TEST_CASE("CUDA bridge enables indexing fallback when strict native is off", "[c
   REQUIRE(nonzero_cuda.platform() == pluss::pCUDA);
   REQUIRE(nonzero_cuda.to(pluss::pCPU).to_vec<std::int64_t>() == nonzero_cpu.to_vec<std::int64_t>());
 
-  const auto index_cpu = x_cpu.index(std::vector<pluss::Series>{idx_cpu});
-  const auto index_cuda = x_cuda.index(std::vector<pluss::Series>{idx_cuda});
+  const auto index_cpu = x_cpu.index({idx_cpu});
+  const auto index_cuda = x_cuda.index({idx_cuda});
   REQUIRE(index_cuda.platform() == pluss::pCUDA);
   require_close_(index_cuda.to(pluss::pCPU).to_vec<float>(), index_cpu.to_vec<float>());
 }

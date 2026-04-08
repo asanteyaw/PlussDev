@@ -1775,7 +1775,8 @@ Sets Z axis label text.
 #### Signature
 
 ```cpp
-Pane& y_ticks(self: Pane, Series positions, std::vector<std::string> labels);
+Pane& y_ticks(self: Pane, Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+Pane& y_ticks(self: Pane, Series positions, std::initializer_list<std::string_view> labels);
 ```
 
 #### Notes
@@ -1803,7 +1804,8 @@ Sets explicit Y tick positions and labels.
 #### Signature
 
 ```cpp
-Pane& z_ticks(self: Pane, Series positions, std::vector<std::string> labels);
+Pane& z_ticks(self: Pane, Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+Pane& z_ticks(self: Pane, Series positions, std::initializer_list<std::string_view> labels);
 ```
 
 #### Notes
@@ -1915,7 +1917,8 @@ Clears custom Z ticks.
 #### Signature
 
 ```cpp
-Pane& z_categories(self: Pane, std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+Pane& z_categories(self: Pane, pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+Pane& z_categories(self: Pane, std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0);
 ```
 
 #### Notes
@@ -2951,7 +2954,8 @@ Renders an HTML viewer payload (optionally launches a window).
 #### Signature
 
 ```cpp
-Pane& x_categories(self: Pane, std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+Pane& x_categories(self: Pane, pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+Pane& x_categories(self: Pane, std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0);
 ```
 
 #### Notes
@@ -2979,7 +2983,8 @@ Assigns categorical labels on the X axis.
 #### Signature
 
 ```cpp
-Pane& y_categories(self: Pane, std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+Pane& y_categories(self: Pane, pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+Pane& y_categories(self: Pane, std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0);
 ```
 
 #### Notes

@@ -81,12 +81,32 @@ concept HueSeriesLike =
   return out;
 }
 
+template <std::ranges::input_range Range>
+  requires std::convertible_to<std::ranges::range_reference_t<const Range>, std::string_view>
+[[nodiscard]] inline std::vector<std::string_view> label_views(const Range& labels) {
+  std::vector<std::string_view> out;
+  if constexpr (requires { labels.size(); }) {
+    out.reserve(static_cast<std::size_t>(labels.size()));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
 [[nodiscard]] inline std::vector<double> to_f64_vector(const Series& values) {
   return values.to(ScalarType::Float64).to_vec<double>();
 }
 
 [[nodiscard]] inline Series flatten_f64(const Series& values) {
   return values.to(ScalarType::Float64).reshape({values.numel()});
+}
+
+[[nodiscard]] inline double scalar_f64(const Series& value) {
+  if (value.scalar_type() == ScalarType::Float64) {
+    return value.item<double>();
+  }
+  return value.to(ScalarType::Float64).item<double>();
 }
 
 [[nodiscard]] inline std::pair<std::vector<double>, std::vector<std::string>> encode_categories(
@@ -169,8 +189,8 @@ inline void require_equal_xy_hue_lengths(
     return {hue, {}};
   }
   const std::int64_t bins = std::max<std::int64_t>(bin_count, 2);
-  const double low = to_f64_vector(hue.min())[0];
-  const double high = to_f64_vector(hue.max())[0];
+  const double low = scalar_f64(hue.min());
+  const double high = scalar_f64(hue.max());
   if (!(high > low)) {
     return {pluss::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
   }
@@ -1525,7 +1545,7 @@ Trace& hist3d(Pane& pane, X&& x, Y&& y, const Hist3DOptions& options = {}) {
     grid.z = detail::smooth_grid(grid.z, std::max<std::int64_t>(1, options.smooth_passes));
   }
   if (options.normalize) {
-    const double total = detail::to_f64_vector(grid.z.sum())[0];
+    const double total = detail::scalar_f64(grid.z.sum());
     if (total > 0.0 && std::isfinite(total)) {
       grid.z = grid.z.div(total);
     }
@@ -1773,13 +1793,15 @@ Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
 template <class Values>
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
-  const std::vector<double> y(static_cast<std::size_t>(x.numel()), std::max(height, 1e-4));
-  return pane.spike(x, ::pluss::make_series(y, {x.numel()}), 0.0);
+  const double spike_height = std::max(height, 1e-4);
+  const Series y = ::pluss::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
+  return pane.spike(x, y, 0.0);
 }
 
 inline Trace& stripplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.cloud(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
@@ -1802,7 +1824,8 @@ Trace& boxplot(Pane& pane, Values&& values) {
 
 inline Trace& boxplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.quartet(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
@@ -1825,13 +1848,15 @@ Trace& violinplot(Pane& pane, Values&& values, const ViolinOptions& options) {
 
 inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.violin(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values, const ViolinOptions& options) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.violin(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values, options);
 }
 
@@ -1972,11 +1997,12 @@ Trace& barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {}) {
 
 inline Trace& barplot(Pane& pane, const Note& categories, const Series& values, const BarPlotOptions& options = {}) {
   const auto [encoded, labels] = detail::encode_categories(categories);
+  const auto label_vec = detail::label_views(labels);
   if (options.horizontal) {
-    pane.y_categories(labels);
+    pane.y_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
     return pane.columns_h(values, ::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}));
   }
-  pane.x_categories(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.columns(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
@@ -1999,7 +2025,8 @@ inline Trace& countplot(Pane& pane, const Note& categories) {
     labels.push_back(label);
     y.push_back(count);
   }
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.columns(::pluss::make_series(y, {static_cast<std::int64_t>(y.size())}));
 }
 
@@ -2611,7 +2638,8 @@ inline Trace& catplot(
       buckets[idx].sumsq += v * v;
     }
 
-    pane.x_ticks(group_centers, group_levels);
+    const auto group_level_views = detail::label_views(group_levels);
+    pane.x_ticks(group_centers, pluss::msharp::RangeView::Of<std::string_view>(group_level_views));
     Trace* last = nullptr;
     for (const auto h : std::views::iota(std::size_t{0}, nh)) {
       std::vector<double> x_vals;
@@ -2687,7 +2715,8 @@ inline Trace& catplot(
     per_hue_y[h].push_back(v);
   }
 
-  pane.x_ticks(group_centers, group_levels);
+  const auto group_level_views = detail::label_views(group_levels);
+  pane.x_ticks(group_centers, pluss::msharp::RangeView::Of<std::string_view>(group_level_views));
   Trace* last = nullptr;
   for (const auto h : std::views::iota(std::size_t{0}, nh)) {
     if (per_hue_x[h].empty()) {
@@ -3768,9 +3797,10 @@ inline Studio& parallelplot(
   const auto flat_values = detail::row_major_values(prepared, plotted_rows);
 
   auto& pane = studio.pane2();
+  const auto label_views = detail::label_views(labels);
   pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
       .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
-      .x_ticks(x, labels)
+      .x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
       .y_label(options.normalize ? "normalized value" : "value");
 
@@ -3826,9 +3856,10 @@ inline Studio& parallelplot(
   }
 
   auto& pane = studio.pane2();
+  const auto feature_label_views = detail::label_views(feature_labels);
   pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
       .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
-      .x_ticks(x, feature_labels)
+      .x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(feature_label_views))
       .x_label("feature")
       .y_label(options.normalize ? "normalized value" : "value");
   const auto colors = detail::categorical_colors(static_cast<std::int64_t>(ordered_classes.size()));

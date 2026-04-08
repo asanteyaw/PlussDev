@@ -412,7 +412,6 @@ For each generated method name, call it as shown below.
 - `auto y = x.nextafter(...);`
 - `x.nextafter_(...);`
 - `auto y = x.nonzero(...);`
-- `auto y = x.nonzero_numpy(...);`
 - `auto y = x.nonzero_static(...);`
 - `x.normal_(...);`
 - `auto y = x.normc(...);`

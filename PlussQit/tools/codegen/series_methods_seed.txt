@@ -347,7 +347,6 @@ new_zeros
 nextafter
 nextafter_
 nonzero
-nonzero_numpy
 nonzero_static
 normal_
 not_equal

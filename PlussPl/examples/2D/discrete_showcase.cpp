@@ -30,7 +30,7 @@ int main() {
   share.wedge(
            std::vector<double>{18.0, 27.0, 14.0, 22.0, 19.0},
            std::vector<double>{0.0, 1.0, 0.0, 0.0, 0.7},
-           std::vector<std::string>{"Infra", "Models", "Data", "Ops", "QA"})
+           {"Infra", "Models", "Data", "Ops", "QA"})
       .label("budget mix")
       .palette(pl::PaletteRamp::thermal());
 

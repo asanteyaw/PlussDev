@@ -909,9 +909,12 @@ Controls tick/label spacing and angle to prevent overlaps in dense dashboards.
 #### Signature
 
 ```cpp
-Pane& x_ticks(self: Pane, positions: SeriesLike, labels: std::vector<std::string>);
-Pane& x_categories(self: Pane, labels: std::vector<std::string>, first: double = 1.0, step: double = 1.0);
-Pane& y_categories(self: Pane, labels: std::vector<std::string>, first: double = 1.0, step: double = 1.0);
+Pane& x_ticks(self: Pane, positions: SeriesLike, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Pane& x_ticks(self: Pane, positions: SeriesLike, labels: std::initializer_list<std::string_view>);
+Pane& x_categories(self: Pane, labels: pluss::msharp::RangeView::Of<std::string_view>, first: double = 1.0, step: double = 1.0);
+Pane& x_categories(self: Pane, labels: std::initializer_list<std::string_view>, first: double = 1.0, step: double = 1.0);
+Pane& y_categories(self: Pane, labels: pluss::msharp::RangeView::Of<std::string_view>, first: double = 1.0, step: double = 1.0);
+Pane& y_categories(self: Pane, labels: std::initializer_list<std::string_view>, first: double = 1.0, step: double = 1.0);
 ```
 
 #### Notes

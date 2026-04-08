@@ -293,9 +293,11 @@ Timeline timeline_from_epoch_nanos(std::span<const std::int64_t> ticks_flat,
   }
   if (ticks_flat.empty()) {
     // Some Series backends keep empty tensors as undefined storage if built via
-    // empty(...). Route empty shape construction through make_from_doubles to
-    // preserve a defined, shape-carrying handle.
-    auto s = pluss::codem::Series::make_from_doubles({}, shape, pluss::codem::ScalarType::Int64);
+    // empty(...). Route empty shape construction through an explicit float64
+    // staging copy to preserve a defined, shape-carrying handle.
+    auto s = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+    auto tmp = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Float64);
+    s.copy_(tmp.to(pluss::codem::ScalarType::Int64), false);
     check_timeline_core(s);
     return Timeline(std::move(s), "UTC");
   }

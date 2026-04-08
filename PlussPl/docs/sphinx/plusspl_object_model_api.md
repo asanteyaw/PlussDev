@@ -2764,7 +2764,8 @@ Rotates X tick labels to improve readability for dense or long labels.
 #### Signature
 
 ```cpp
-Pane& x_ticks(self: Pane, positions: Series, labels: std::vector<std::string>);
+Pane& x_ticks(self: Pane, positions: Series, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Pane& x_ticks(self: Pane, positions: Series, labels: std::initializer_list<std::string_view>);
 ```
 
 #### Notes

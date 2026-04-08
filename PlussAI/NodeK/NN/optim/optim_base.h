@@ -10,6 +10,8 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <span>
 #include <stdexcept>
@@ -125,7 +127,11 @@ public:
         if (tracked) {
           ++covered_count;
         }
-        grads.push_back(p->sensitivity());
+        Series sens = p->sensitivity();
+        if (sens.defined() && !sens.is_contiguous()) {
+          sens = sens.contiguous();
+        }
+        grads.push_back(std::move(sens));
       }
     }
     validate_step_diagnostics_(tracked_count, covered_count);
@@ -137,7 +143,12 @@ public:
       ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer::step: gradients size must match parameter count");
     }
-    if (requires_recording_during_step_()) {
+    const bool force_recording_step = []() {
+      const char* raw = std::getenv("PLUSS_OPTIM_STEP_KEEP_RECORDING");
+      if (!raw) return false;
+      return std::strcmp(raw, "1") == 0 || std::strcmp(raw, "true") == 0 || std::strcmp(raw, "TRUE") == 0;
+    }();
+    if (requires_recording_during_step_() || force_recording_step) {
       validate_parameter_finiteness_();
       validate_gradients_(gradients);
       apply_step_(gradients);
@@ -393,6 +404,10 @@ protected:
 
   static Series scalar_on_(double value, const Series& like) {
     return Series::full({}, value, like.scalar_type()).to(like.platform());
+  }
+
+  static Series state_zeros_like_(const Series& like) {
+    return pluss::zeros_like(like, like.scalar_type());
   }
 
   void reset_step_lane_telemetry_() {

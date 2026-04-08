@@ -512,9 +512,9 @@ private:
     grad_avg_.reserve(params.size());
 
     for (const Series* p : params) {
-      square_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      momentum_buffer_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      grad_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      square_avg_.push_back(state_zeros_like_(*p));
+      momentum_buffer_.push_back(state_zeros_like_(*p));
+      grad_avg_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

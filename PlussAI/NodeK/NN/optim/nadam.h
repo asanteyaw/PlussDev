@@ -618,8 +618,8 @@ private:
     exp_avg_.reserve(params.size());
     exp_avg_sq_.reserve(params.size());
     for (const Series* p : params) {
-      exp_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      exp_avg_sq_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      exp_avg_.push_back(state_zeros_like_(*p));
+      exp_avg_sq_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

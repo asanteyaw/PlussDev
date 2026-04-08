@@ -40,5 +40,5 @@ cmake --build --preset core-dev
 - `Timeline`: datetime tensor-style type (CodeH)
 - `Duration`: time-delta tensor-style type (CodeH)
 - `TimeIndex`: 1D datetime index operations (CodeH)
-- `Queue`: runtime union over `Series` / `Note` / `Timeline` / `TimeIndex`
+- `Type`: runtime union over `Series` / `Note` / `Timeline` / `TimeIndex`
 - `pluss::subsp::math::diff`: gradient/Jacobian/JVP/VJP/HVP transform layer

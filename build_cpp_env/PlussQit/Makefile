@@ -5209,6 +5209,54 @@ tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
 .PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
 
+tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.o: tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.o
+.PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.o
+
+# target to build an object file
+tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.o
+.PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.o
+
+tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.i: tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.i
+.PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.i
+.PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.i
+
+tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.s: tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.s
+.PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.s
+.PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.s
+
+tests/CodeM/test_patch169_block_2d_selection.o: tests/CodeM/test_patch169_block_2d_selection.cpp.o
+.PHONY : tests/CodeM/test_patch169_block_2d_selection.o
+
+# target to build an object file
+tests/CodeM/test_patch169_block_2d_selection.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_block_2d_selection.cpp.o
+.PHONY : tests/CodeM/test_patch169_block_2d_selection.cpp.o
+
+tests/CodeM/test_patch169_block_2d_selection.i: tests/CodeM/test_patch169_block_2d_selection.cpp.i
+.PHONY : tests/CodeM/test_patch169_block_2d_selection.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch169_block_2d_selection.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_block_2d_selection.cpp.i
+.PHONY : tests/CodeM/test_patch169_block_2d_selection.cpp.i
+
+tests/CodeM/test_patch169_block_2d_selection.s: tests/CodeM/test_patch169_block_2d_selection.cpp.s
+.PHONY : tests/CodeM/test_patch169_block_2d_selection.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch169_block_2d_selection.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_block_2d_selection.cpp.s
+.PHONY : tests/CodeM/test_patch169_block_2d_selection.cpp.s
+
 tests/CodeM/test_patch17_unary_cat_scatter.o: tests/CodeM/test_patch17_unary_cat_scatter.cpp.o
 .PHONY : tests/CodeM/test_patch17_unary_cat_scatter.o
 
@@ -8355,6 +8403,12 @@ help:
 	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.o"
 	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.i"
 	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.s"
+	@echo "... tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.o"
+	@echo "... tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.i"
+	@echo "... tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.s"
+	@echo "... tests/CodeM/test_patch169_block_2d_selection.o"
+	@echo "... tests/CodeM/test_patch169_block_2d_selection.i"
+	@echo "... tests/CodeM/test_patch169_block_2d_selection.s"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.o"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.i"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.s"

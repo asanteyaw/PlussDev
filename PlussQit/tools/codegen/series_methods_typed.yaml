@@ -1109,10 +1109,6 @@ methods:
     signature: "Series matrix_H() const"
     forward: ""
 
-  - name: nonzero_numpy
-    signature: "Series nonzero_numpy() const"
-    forward: ""
-
   - name: nonzero_static
     signature: "Series nonzero_static() const"
     forward: ""
@@ -2626,6 +2622,9 @@ methods:
     forward: ""
   - name: square_
     signature: "Series& square_() const"
+    forward: ""
+  - name: cube
+    signature: "Series cube() const"
     forward: ""
 
 skip_methods:

@@ -134,6 +134,19 @@ std::vector<std::string> thread_to_labels(const Thread& thread) {
   return labels;
 }
 
+template <std::ranges::input_range Range>
+  requires std::convertible_to<std::ranges::range_reference_t<const Range>, std::string_view>
+[[nodiscard]] std::vector<std::string_view> label_views(const Range& labels) {
+  std::vector<std::string_view> out;
+  if constexpr (requires { labels.size(); }) {
+    out.reserve(static_cast<std::size_t>(labels.size()));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
 pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, std::string_view feature_name) {
   Thread numeric_thread = t;
   switch (t.kind()) {
@@ -630,7 +643,8 @@ pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_
       .x_label(axes.front().label)
       .y_label(std::string(y_feature));
   if (!axes.front().labels.empty()) {
-    pane.x_ticks(axes.front().values, axes.front().labels);
+    const auto axis_label_views = label_views(axes.front().labels);
+    pane.x_ticks(axes.front().values, pluss::msharp::RangeView::Of<std::string_view>(axis_label_views));
   }
   for (const auto i : std::views::iota(std::size_t{0}, y_values.size())) {
     flash::lineplot(pane, axes[i].values, y_values[i])
@@ -665,10 +679,12 @@ pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature,
   pane.grid(pluss::pl::GridStyle::Major).legend(pluss::pl::KeyPlace::Auto);
   pane.x_label("case").y_label("depth").z_label(std::string(feature));
   if (!grid.x_labels.empty()) {
-    pane.x_ticks(grid.x_axis, grid.x_labels);
+    const auto x_label_views = label_views(grid.x_labels);
+    pane.x_ticks(grid.x_axis, pluss::msharp::RangeView::Of<std::string_view>(x_label_views));
   }
   if (!grid.y_labels.empty()) {
-    pane.y_ticks(grid.y_axis, grid.y_labels);
+    const auto y_label_views = label_views(grid.y_labels);
+    pane.y_ticks(grid.y_axis, pluss::msharp::RangeView::Of<std::string_view>(y_label_views));
   }
   plot::detail::apply_3d_scene_options(pane, options.scene);
   auto& trace = flash::sheet(pane, grid.x_axis, grid.y_axis, grid.z).label(std::string(feature));
@@ -691,10 +707,12 @@ pluss::pl::Studio AtlasPlotAccessor::wireframe(std::string_view feature,
   pane.grid(pluss::pl::GridStyle::Major).legend(pluss::pl::KeyPlace::Auto);
   pane.x_label("case").y_label("depth").z_label(std::string(feature));
   if (!grid.x_labels.empty()) {
-    pane.x_ticks(grid.x_axis, grid.x_labels);
+    const auto x_label_views = label_views(grid.x_labels);
+    pane.x_ticks(grid.x_axis, pluss::msharp::RangeView::Of<std::string_view>(x_label_views));
   }
   if (!grid.y_labels.empty()) {
-    pane.y_ticks(grid.y_axis, grid.y_labels);
+    const auto y_label_views = label_views(grid.y_labels);
+    pane.y_ticks(grid.y_axis, pluss::msharp::RangeView::Of<std::string_view>(y_label_views));
   }
   plot::detail::apply_3d_scene_options(pane, options.scene);
   auto& trace = flash::lattice(pane, grid.x_axis, grid.y_axis, grid.z).label(std::string(feature));
@@ -806,7 +824,8 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
       .x_label("depth")
       .y_label(std::string(feature));
   if (!depth_axis.labels.empty()) {
-    pane.x_ticks(depth_axis.values, depth_axis.labels);
+    const auto depth_label_views = label_views(depth_axis.labels);
+    pane.x_ticks(depth_axis.values, pluss::msharp::RangeView::Of<std::string_view>(depth_label_views));
   }
 
   if (use_lower) {
@@ -848,7 +867,8 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(pluss::msharp::RangeView::Of<
       .x_label("depth")
       .y_label("value");
   if (!depth_axis.labels.empty()) {
-    pane.x_ticks(depth_axis.values, depth_axis.labels);
+    const auto depth_label_views = label_views(depth_axis.labels);
+    pane.x_ticks(depth_axis.values, pluss::msharp::RangeView::Of<std::string_view>(depth_label_views));
   }
 
   for (const auto feature_index : std::views::iota(std::size_t{0}, selected.size())) {
@@ -937,7 +957,8 @@ pluss::pl::Studio AtlasPlotAccessor::depth_rolling(std::string_view feature,
       .x_label("depth")
       .y_label(std::string(feature));
   if (!depth_axis.labels.empty()) {
-    pane.x_ticks(depth_axis.values, depth_axis.labels);
+    const auto depth_label_views = label_views(depth_axis.labels);
+    pane.x_ticks(depth_axis.values, pluss::msharp::RangeView::Of<std::string_view>(depth_label_views));
   }
   if (options.show_raw) {
     flash::lineplot(pane, depth_axis.values, raw_values)

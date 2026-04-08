@@ -432,35 +432,35 @@ void test_3d_non_generated_timeline_support() {
 void test_queue_dynamic_dispatch() {
   std::cout << "[RUN] codeh:queue_dynamic_dispatch\n";
 
-  pluss::Queue qt = pluss::make_timeline("2024-01-15T10:11:12Z");
+  pluss::Type qt = pluss::make_timeline("2024-01-15T10:11:12Z");
   expect_true(qt.as_timeline().year().to_vec<std::int32_t>(0) == 2024,
-              "Queue.as_timeline() exposes Timeline surface");
+              "Type.as_timeline() exposes Timeline surface");
 
   const auto qf = qt.invoke("floor", {"D"});
-  expect_true(qf.kind() == pluss::Queue::Kind::Timeline, "Queue floor returns Timeline");
+  expect_true(qf.kind() == pluss::Type::Kind::Timeline, "Type floor returns Timeline");
   expect_true(qf.as<pluss::codeh::Timeline>().hour().to_vec<std::int32_t>(0) == 0,
-              "Queue floor(D) zeroes hour");
+              "Type floor(D) zeroes hour");
 
   const auto qy = qt.invoke("year");
-  expect_true(qy.kind() == pluss::Queue::Kind::Series, "Queue year returns Series");
+  expect_true(qy.kind() == pluss::Type::Kind::Series, "Type year returns Series");
   expect_true(qy.as<pluss::Series>().to_vec<std::int32_t>(0) == 2024,
-              "Queue year value");
+              "Type year value");
 
   const auto qn = qt.invoke("strftime", {"%Y-%m-%d"});
-  expect_true(qn.kind() == pluss::Queue::Kind::Note, "Queue strftime returns Note");
-  expect_true(qn.as<pluss::Note>().at(0) == "2024-01-15", "Queue strftime formatted value");
+  expect_true(qn.kind() == pluss::Type::Kind::Note, "Type strftime returns Note");
+  expect_true(qn.as<pluss::Note>().at(0) == "2024-01-15", "Type strftime formatted value");
 
-  pluss::Queue qt1d = pluss::make_timeline({
+  pluss::Type qt1d = pluss::make_timeline({
       "2024-01-15T10:11:12Z",
       "2024-01-16T10:11:12Z",
   });
   const auto qidx = qt1d.invoke("to_timeindex", {true});
-  expect_true(qidx.kind() == pluss::Queue::Kind::TimeIndex, "Queue to_timeindex returns TimeIndex");
-  expect_true(qidx.as<pluss::codeh::TimeIndex>().size() == 2, "Queue to_timeindex size");
-  expect_true(qidx.as_timeindex().size() == 2, "Queue.as_timeindex() exposes TimeIndex surface");
+  expect_true(qidx.kind() == pluss::Type::Kind::TimeIndex, "Type to_timeindex returns TimeIndex");
+  expect_true(qidx.as<pluss::codeh::TimeIndex>().size() == 2, "Type to_timeindex size");
+  expect_true(qidx.as_timeindex().size() == 2, "Type.as_timeindex() exposes TimeIndex surface");
 
   const auto qidx_sorted = qidx.invoke("sort_values");
-  expect_true(qidx_sorted.kind() == pluss::Queue::Kind::TimeIndex, "Queue TimeIndex sort_values returns TimeIndex");
+  expect_true(qidx_sorted.kind() == pluss::Type::Kind::TimeIndex, "Type TimeIndex sort_values returns TimeIndex");
 }
 
 void test_dynamic_dispense_utility() {

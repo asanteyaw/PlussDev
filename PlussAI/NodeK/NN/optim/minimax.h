@@ -451,11 +451,11 @@ private:
     rmsprop_avg_.reserve(params.size());
 
     for (const Series* p : params) {
-      first_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      second_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      max_second_hat_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      momentum_buffer_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      rmsprop_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      first_moment_.push_back(state_zeros_like_(*p));
+      second_moment_.push_back(state_zeros_like_(*p));
+      max_second_hat_.push_back(state_zeros_like_(*p));
+      momentum_buffer_.push_back(state_zeros_like_(*p));
+      rmsprop_avg_.push_back(state_zeros_like_(*p));
     }
 
     moving_violation_ = 0.0;

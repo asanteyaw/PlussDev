@@ -655,15 +655,33 @@ class Pane {
   Pane& x_label(std::string label);
   Pane& y_label(std::string label);
   Pane& z_label(std::string label);
-  Pane& x_ticks(Series positions, std::vector<std::string> labels);
-  Pane& y_ticks(Series positions, std::vector<std::string> labels);
-  Pane& z_ticks(Series positions, std::vector<std::string> labels);
+  Pane& x_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+  Pane& y_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+  Pane& z_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels);
+  Pane& x_ticks(Series positions, std::initializer_list<std::string_view> labels) {
+    return x_ticks(std::move(positions), pluss::msharp::RangeView::Of<std::string_view>(labels));
+  }
+  Pane& y_ticks(Series positions, std::initializer_list<std::string_view> labels) {
+    return y_ticks(std::move(positions), pluss::msharp::RangeView::Of<std::string_view>(labels));
+  }
+  Pane& z_ticks(Series positions, std::initializer_list<std::string_view> labels) {
+    return z_ticks(std::move(positions), pluss::msharp::RangeView::Of<std::string_view>(labels));
+  }
   Pane& clear_x_ticks() noexcept;
   Pane& clear_y_ticks() noexcept;
   Pane& clear_z_ticks() noexcept;
-  Pane& x_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
-  Pane& y_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
-  Pane& z_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+  Pane& x_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+  Pane& y_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+  Pane& z_categories(pluss::msharp::RangeView::Of<std::string_view> labels, double first = 1.0, double step = 1.0);
+  Pane& x_categories(std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0) {
+    return x_categories(pluss::msharp::RangeView::Of<std::string_view>(labels), first, step);
+  }
+  Pane& y_categories(std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0) {
+    return y_categories(pluss::msharp::RangeView::Of<std::string_view>(labels), first, step);
+  }
+  Pane& z_categories(std::initializer_list<std::string_view> labels, double first = 1.0, double step = 1.0) {
+    return z_categories(pluss::msharp::RangeView::Of<std::string_view>(labels), first, step);
+  }
   Pane& legend(KeyPlace place) noexcept;
   Pane& legend_frame(KeyFrame frame) noexcept;
   Pane& legend_shape(KeyShape shape) noexcept;
@@ -702,24 +720,45 @@ class Pane {
   Pane& place(std::int64_t row, std::int64_t col, std::int64_t row_span, std::int64_t col_span);
 
   template <class Positions>
-  Pane& x_ticks(Positions&& positions, std::vector<std::string> labels)
+  Pane& x_ticks(Positions&& positions, pluss::msharp::RangeView::Of<std::string_view> labels)
     requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
   {
-    return x_ticks(detail::to_series(std::forward<Positions>(positions)), std::move(labels));
+    return x_ticks(detail::to_series(std::forward<Positions>(positions)), labels);
   }
 
   template <class Positions>
-  Pane& y_ticks(Positions&& positions, std::vector<std::string> labels)
+  Pane& y_ticks(Positions&& positions, pluss::msharp::RangeView::Of<std::string_view> labels)
     requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
   {
-    return y_ticks(detail::to_series(std::forward<Positions>(positions)), std::move(labels));
+    return y_ticks(detail::to_series(std::forward<Positions>(positions)), labels);
   }
 
   template <class Positions>
-  Pane& z_ticks(Positions&& positions, std::vector<std::string> labels)
+  Pane& z_ticks(Positions&& positions, pluss::msharp::RangeView::Of<std::string_view> labels)
     requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
   {
-    return z_ticks(detail::to_series(std::forward<Positions>(positions)), std::move(labels));
+    return z_ticks(detail::to_series(std::forward<Positions>(positions)), labels);
+  }
+
+  template <class Positions>
+  Pane& x_ticks(Positions&& positions, std::initializer_list<std::string_view> labels)
+    requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
+  {
+    return x_ticks(detail::to_series(std::forward<Positions>(positions)), labels);
+  }
+
+  template <class Positions>
+  Pane& y_ticks(Positions&& positions, std::initializer_list<std::string_view> labels)
+    requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
+  {
+    return y_ticks(detail::to_series(std::forward<Positions>(positions)), labels);
+  }
+
+  template <class Positions>
+  Pane& z_ticks(Positions&& positions, std::initializer_list<std::string_view> labels)
+    requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
+  {
+    return z_ticks(detail::to_series(std::forward<Positions>(positions)), labels);
   }
 
   template <class X, class Y>

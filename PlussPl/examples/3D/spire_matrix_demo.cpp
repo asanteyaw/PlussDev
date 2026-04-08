@@ -29,8 +29,8 @@ int main() {
       .x_label("Sector")
       .y_label("Horizon")
       .z_label("Intensity")
-      .x_ticks(sectors, std::vector<std::string>{"A", "B", "C", "D", "E"})
-      .y_ticks(horizons, std::vector<std::string>{"Q1", "Q2", "Q3", "Q4"})
+      .x_ticks(sectors, {"A", "B", "C", "D", "E"})
+      .y_ticks(horizons, {"Q1", "Q2", "Q3", "Q4"})
       .scale_guide()
       .caption("3D prism family");
   pane.lens().look(-126.0, 22.0);

@@ -57,7 +57,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
       .x_label("frequency")
       .y_label("gain")
       .x_ticks(std::array<double, 3>{1.0, 10.0, 100.0},
-               std::vector<std::string>{"low", "mid", "high"})
+               {"low", "mid", "high"})
       .legend(KeyPlace::NorthEast)
       .caption("signal pane")
       .rule_x(10.0, "pivot")
@@ -88,7 +88,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
       .label("spike");
   pane2.wedge(std::array<double, 4>{4.0, 3.0, 2.0, 1.0},
               std::array<double, 4>{0.0, 1.0, 0.0, 0.0},
-              std::vector<std::string>{"a", "b", "c", "d"})
+              {"a", "b", "c", "d"})
       .label("wedge");
   auto contour_z = pluss::make_series(
       std::vector<double>{
@@ -128,11 +128,11 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
   auto& pane3 = book.pane3("surface");
   pane3.grid(GridStyle::Major).place(0, 1, 2, 1).x_label("x").y_label("y").z_label("z").legend(KeyPlace::NorthEast).scale_guide();
   pane3.x_ticks(std::array<double, 2>{0.0, 1.0},
-                std::vector<std::string>{"near", "far"});
+                {"near", "far"});
   pane3.y_ticks(std::array<double, 2>{0.0, 1.0},
-                std::vector<std::string>{"left", "right"});
+                {"left", "right"});
   pane3.z_ticks(std::array<double, 3>{0.0, 1.5, 3.0},
-                std::vector<std::string>{"floor", "mid", "crest"});
+                {"floor", "mid", "crest"});
   pane3.align_xy("terrain").rule_z(1.0, "slice").band_z({0.2, 0.8}, "window");
   pane3.lens().spin(12.0, 8.0);
   pane3.lights().sun_key();
@@ -322,7 +322,7 @@ TEST_CASE("PlussPl layout and uncertainty validation reject degenerate inputs", 
                              pluss::make_series(std::vector<double>{0.1, 0.2, 0.3, 0.4}, {4, 1})));
   REQUIRE_THROWS(pane.wedge(std::array<double, 2>{0.0, 0.0}));
   REQUIRE_THROWS(pane.x_ticks(std::array<double, 2>{1.0, 2.0},
-                              std::vector<std::string>{"only one"}));
+                              {"only one"}));
 }
 
 TEST_CASE("PlussPl axis policy validation rejects invalid scales and ranges", "[plusspl][validation][axis]") {
@@ -408,7 +408,7 @@ TEST_CASE("PlussPl normalizes TeX-style text in labels and ticks", "[plusspl][te
   auto& pane = book.pane2();
   pane.x_label("$\\alpha + \\beta \\leq \\gamma$")
       .y_label("u \\geq 0")
-      .x_ticks(std::array<double, 2>{0.0, 1.0}, std::vector<std::string>{"t \\leq 1", "t \\geq 1"});
+      .x_ticks(std::array<double, 2>{0.0, 1.0}, {"t \\leq 1", "t \\geq 1"});
   pane.trend(std::array<double, 2>{0.0, 1.0}, std::array<double, 2>{0.0, 1.0});
 
   const std::string svg = book.to_svg();
@@ -683,8 +683,8 @@ TEST_CASE("PlussPl keeps planar tick labels visible without grid", "[plusspl][ax
   Studio book("planar-ticks-no-grid");
   auto& pane = book.pane2("no-grid");
   pane.grid(GridStyle::None)
-      .x_ticks(std::array<double, 3>{1.0, 2.0, 3.0}, std::vector<std::string>{"alpha", "beta", "gamma"})
-      .y_ticks(std::array<double, 2>{10.0, 20.0}, std::vector<std::string>{"low", "high"});
+      .x_ticks(std::array<double, 3>{1.0, 2.0, 3.0}, {"alpha", "beta", "gamma"})
+      .y_ticks(std::array<double, 2>{10.0, 20.0}, {"low", "high"});
   pane.trend(std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{10.0, 15.0, 20.0});
 
   const std::string svg = book.to_svg();
@@ -740,7 +740,7 @@ TEST_CASE("PlussPl projects volume z ticks without screen-space pinning", "[plus
       .y_label("y")
       .z_label("z")
       .z_ticks(std::array<double, 3>{0.0, 1.0, 2.0},
-               std::vector<std::string>{"z_lo", "z_mid", "z_hi"});
+               {"z_lo", "z_mid", "z_hi"});
   pane.lens().look(-37.5, 30.0).project(ProjectionKind::Perspective);
 
   const auto z = pluss::make_series(

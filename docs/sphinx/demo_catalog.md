@@ -30,7 +30,7 @@
 
 ## Dynamic / Aux
 
-- `PlussQit/examples/queue_demo.cpp`: `pluss::Queue`, dynamic `invoke(...)`, and `Queue::where(...)`.
+- `PlussQit/examples/queue_demo.cpp`: `pluss::Type`, dynamic `invoke(...)`, and `Type::where(...)`.
 - `PlussQit/examples/dispense_demo.cpp`: method-pointer dispatch with `dispense(...)` and `dispense_as<T>(...)`.
 
 ## PlussAI (NN)

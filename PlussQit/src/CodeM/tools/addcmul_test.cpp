@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstring>
+#include <span>
 #include "CodeM/core/Series.h"
 #include "CodeM/core/OpsInternal.h"
 
@@ -7,11 +9,20 @@ using namespace pluss::codem::ops_internal;
 
 int main() {
   // small broadcast test
+  auto make_f64 = [](const std::vector<double>& data,
+                     std::span<const std::int64_t> shape) {
+    Series out = Series::empty(shape, ScalarType::Float64);
+    if (!data.empty()) {
+      std::memcpy(out.raw_mutable_data(), data.data(), sizeof(double) * data.size());
+    }
+    return out;
+  };
+
   std::vector<double> a_flat = {1.0, 2.0, 3.0, 4.0};
   std::vector<std::int64_t> shape = {4};
-  Series a = Series::make_from_doubles(a_flat, shape, ScalarType::Float64);
-  Series b = Series::make_from_doubles({10.0,20.0,30.0,40.0}, shape, ScalarType::Float64);
-  Series c = Series::make_from_doubles({2.0,2.0,2.0,2.0}, shape, ScalarType::Float64);
+  Series a = make_f64(a_flat, shape);
+  Series b = make_f64({10.0,20.0,30.0,40.0}, shape);
+  Series c = make_f64({2.0,2.0,2.0,2.0}, shape);
 
   Series out = addcmul(a,b,c,0.5);
   Series expected = add(a, mul(mul(b,c), 0.5));
@@ -31,7 +42,7 @@ int main() {
   }
 
   // inplace
-  Series a2 = Series::make_from_doubles(a_flat, shape, ScalarType::Float64);
+  Series a2 = make_f64(a_flat, shape);
   addcmul_(a2, b, c, 0.5);
   if (!equal(a2, expected)) {
     std::cerr << "addcmul_ test failed\n";
@@ -50,7 +61,7 @@ int main() {
   }
 
   // inplace addcdiv
-  Series a3 = Series::make_from_doubles(a_flat, shape, ScalarType::Float64);
+  Series a3 = make_f64(a_flat, shape);
   addcdiv_(a3, b, c, 0.5);
   if (!equal(a3, expected2b)) {
     std::cerr << "addcdiv_ test failed\n";

@@ -173,7 +173,7 @@ using NumericMap = std::map<std::string, std::vector<double>>;
       .x_limits({0.8, 3.2})
       .y_limits({0.5, 9.5})
       .y_ticks(std::array<double, 3>{1.0, 5.0, 9.0},
-               std::vector<std::string>{"low", "mid", "high"});
+               {"low", "mid", "high"});
   pane.trend(std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{1.0, 4.0, 9.0});
   const auto labels = numeric_labels(book.to_svg());
   std::vector<double> filtered;
@@ -193,7 +193,7 @@ using NumericMap = std::map<std::string, std::vector<double>>;
       .scale_x(ScalePolicy::log10())
       .x_limits({1e-1, 1e3})
       .y_ticks(std::array<double, 3>{0.0, 1.0, 2.0},
-               std::vector<std::string>{"a", "b", "c"});
+               {"a", "b", "c"});
   pane.trend(std::array<double, 5>{0.1, 1.0, 10.0, 100.0, 1000.0},
              std::array<double, 5>{0.0, 0.5, 1.0, 1.5, 2.0});
   const auto labels = numeric_labels(book.to_svg());
