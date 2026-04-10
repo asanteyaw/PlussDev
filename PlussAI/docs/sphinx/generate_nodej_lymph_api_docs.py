@@ -198,6 +198,9 @@ def clean_type_for_docs(type_text: str) -> str:
     t = normalize_ws(type_text.strip())
     t = re.sub(r"\b(virtual|inline|constexpr|friend|static)\b", "", t)
     t = normalize_ws(t)
+    # Keep docs concise: present msharp views as short RangeView aliases.
+    t = t.replace("pluss::msharp::RangeView::", "RangeView::")
+    t = t.replace("::pluss::msharp::RangeView::", "RangeView::")
     return t
 
 

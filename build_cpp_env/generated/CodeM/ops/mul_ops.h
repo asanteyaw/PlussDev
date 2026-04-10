@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::mul_ops {
   Series mul(const Series& a, const Series& b);

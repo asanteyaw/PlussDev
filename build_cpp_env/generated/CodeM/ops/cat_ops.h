@@ -2,13 +2,14 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::cat_ops {
-  Series cat(const std::vector<Series>& tensors, std::int64_t dim);
+  Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);
 }
 
 namespace pluss::codem::ops {
-  inline Series cat(const std::vector<Series>& tensors, std::int64_t dim) {
+  inline Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
     return pluss::codem::cat_ops::cat(tensors, dim);
   }
 }

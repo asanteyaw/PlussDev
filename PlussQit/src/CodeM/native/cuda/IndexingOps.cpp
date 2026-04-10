@@ -116,7 +116,7 @@ bool supports_nonzero(const Series& self) noexcept {
   return supports_nonzero_baseline(self.scalar_type()) && is_cuda_series_(self);
 }
 
-bool supports_index(const Series& self, const std::vector<Series>& indices) noexcept {
+bool supports_index(const Series& self, pluss::msharp::RangeView::Of<Series> indices) noexcept {
   if (indices.size() != 1) {
     return false;
   }

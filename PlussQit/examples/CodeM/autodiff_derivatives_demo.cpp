@@ -10,7 +10,6 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::math::diff::nth_derivative;
 using pluss::subsp::math::diff::trace;
 
 template <class Fn>

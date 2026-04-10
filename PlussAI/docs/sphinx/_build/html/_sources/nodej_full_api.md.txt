@@ -4,9 +4,9 @@ NodeJ method-centric reference generated from public headers.
 Each page follows **API Signature -> Inputs -> Output -> Options -> Examples (with expected outputs)**.
 Options/enums are documented under the methods that consume them.
 
-- Method pages: **102**
-- Data-type pages: **14**
-- Overloads covered: **105**
+- Method pages: **127**
+- Data-type pages: **16**
+- Overloads covered: **130**
 
 ## Function and Method Reference
 

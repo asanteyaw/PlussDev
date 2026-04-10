@@ -53,21 +53,45 @@ int main() {
   const pluss::Series truth_beta = pluss::make_series(0.90, cfg);
 
   const pluss::Series returns = simulate_garch11(truth_omega, truth_alpha, truth_beta, 200, 20260306ULL, cfg);
-  const auto objective_args = pluss::optim::pack_args(returns, cfg);
   const ConstrainedProblem problem =
       pluss::optim::problem()
-          .objective_fn(garch11_negloglik, objective_args)
+          .objective([returns, cfg](const pluss::optim::ParameterPack<pluss::optim::Trace>& p) -> pluss::optim::Trace {
+            const auto omega = p.at("omega");
+            const auto alpha = p.at("alpha");
+            const auto beta = p.at("beta");
+            auto nll = pluss::optim::trace(pluss::make_series(0.0, cfg), false);
+            auto variance = omega / (pluss::optim::trace(pluss::make_series(1.0, cfg), false) - alpha - beta);
+            const std::int64_t n = returns.numel();
+            for (std::int64_t t = 0; t < n; ++t) {
+              if (t > 0) {
+                const auto prev = pluss::optim::trace(returns.select(0, t - 1), false);
+                variance = omega + alpha * (prev * prev) + beta * variance;
+              }
+              const auto r = pluss::optim::trace(returns.select(0, t), false);
+              nll = nll + 0.5 * (pluss::optim::log(variance) + (r * r) / variance);
+            }
+            return nll;
+          })
           .ln_ineq(
               pluss::make_series({0.0, 1.0, 1.0}, cfg).reshape({1, 3}),
               pluss::make_series({0.999}, cfg))
           .nl_ineq([](const pluss::optim::ParameterPack<pluss::optim::Trace>& p) -> pluss::optim::Trace {
-            return pluss::optim::sum(p.at("x") * p.at("x")) - 2.0;
+            const auto omega = p.at("omega");
+            const auto alpha = p.at("alpha");
+            const auto beta = p.at("beta");
+            return omega * omega + alpha * alpha + beta * beta - 2.0;
           })
-          .lbs(pluss::make_series({1e-6, 1e-6, 1e-6}, cfg))
-          .ubs(pluss::make_series({1.0, 0.999, 0.999}, cfg))
+          .lbs(pluss::optim::pack_scalars({{"omega", pluss::make_series(1e-6, cfg)},
+                                           {"alpha", pluss::make_series(1e-6, cfg)},
+                                           {"beta", pluss::make_series(1e-6, cfg)}}))
+          .ubs(pluss::optim::pack_scalars({{"omega", pluss::make_series(1.0, cfg)},
+                                           {"alpha", pluss::make_series(0.999, cfg)},
+                                           {"beta", pluss::make_series(0.999, cfg)}}))
           .build();
 
-  const pluss::Series initial = pluss::make_series({0.01, 0.15, 0.70}, cfg);
+  const auto initial = pluss::optim::pack_scalars({{"omega", pluss::make_series(0.01, cfg)},
+                                                    {"alpha", pluss::make_series(0.15, cfg)},
+                                                    {"beta", pluss::make_series(0.70, cfg)}});
 
   OptimaOptions options = pluss::optim::presets::internal_protocol();
   options.internal_protocol.max_iterations = 120;
@@ -78,12 +102,13 @@ int main() {
 
   std::cout << std::fixed << std::setprecision(6);
   pluss::optim::reports::compact_summary(std::cout, result) << '\n';
-  const pluss::Series x_hat = result.params.at("x").reshape({3});
-  std::cout << "estimated omega=" << x_hat.select(0, 0) << '\n';
-  std::cout << "estimated alpha=" << x_hat.select(0, 1) << '\n';
-  std::cout << "estimated beta=" << x_hat.select(0, 2) << '\n';
-  std::cout << "estimated persistence="
-            << (x_hat.select(0, 1) + x_hat.select(0, 2)) << '\n';
+  const pluss::Series omega_hat = result.params.at("omega");
+  const pluss::Series alpha_hat = result.params.at("alpha");
+  const pluss::Series beta_hat = result.params.at("beta");
+  std::cout << "estimated omega=" << omega_hat << '\n';
+  std::cout << "estimated alpha=" << alpha_hat << '\n';
+  std::cout << "estimated beta=" << beta_hat << '\n';
+  std::cout << "estimated persistence=" << (alpha_hat + beta_hat) << '\n';
 
   return 0;
 }

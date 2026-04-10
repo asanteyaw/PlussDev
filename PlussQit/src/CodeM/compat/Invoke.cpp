@@ -71,7 +71,7 @@ static std::string sig(std::string_view op, const Args& args) {
     if (i) os << ", ";
     const auto& v = args[i].v;
     if (std::holds_alternative<const Series*>(v)) os << "Series";
-    else if (std::holds_alternative<const std::vector<Series>*>(v)) os << "Series[]";
+    else if (std::holds_alternative<Arg::SeriesList>(v)) os << "Series[]";
     else if (std::holds_alternative<Scalar>(v)) os << "Scalar";
     else if (std::holds_alternative<double>(v)) os << "double";
     else if (std::holds_alternative<std::int64_t>(v)) os << "int64";
@@ -112,15 +112,15 @@ static const Series& as_series(const Arg& a) {
   return *std::get<const Series*>(a.v);
 }
 
-static const std::vector<Series>& as_series_list(const Arg& a) {
-  PLUSS_CHECK(std::holds_alternative<const std::vector<Series>*>(a.v), "Expected Series list");
-  return *std::get<const std::vector<Series>*>(a.v);
+static Arg::SeriesList as_series_list(const Arg& a) {
+  PLUSS_CHECK(std::holds_alternative<Arg::SeriesList>(a.v), "Expected Series list");
+  return std::get<Arg::SeriesList>(a.v);
 }
 
 static void validate_series_arg_platforms(std::string_view op, const Series& self, const Args& args) {
   for (const auto& arg : args) {
     if (!std::holds_alternative<const Series*>(arg.v)) {
-      if (std::holds_alternative<const std::vector<Series>*>(arg.v)) {
+      if (std::holds_alternative<Arg::SeriesList>(arg.v)) {
         for (const auto& other : as_series_list(arg)) {
           ops_internal::require_same_platform(self, other, op);
         }
@@ -428,7 +428,7 @@ static Series add_scalar(const Series& a, double s) { return ops_internal::add(a
 static Series sub_scalar(const Series& a, double s) { return ops_internal::sub(a, scalar_like(a, s)); }
 static Series mul_scalar(const Series& a, double s) { return ops_internal::mul(a, scalar_like(a, s)); }
 static Series div_scalar(const Series& a, double s) { return ops_internal::div(a, scalar_like(a, s)); }
-static Series pow_scalar(const Series& a, double s) { return ops_internal::pow(a, scalar_like(a, s)); }
+static Series pow_scalar(const Series& a, double s) { return ops_internal::pow(a, s); }
 
 static Series& assign_inplace_preserve_storage_(Series& self, const Series& value) {
   if (!self.defined() || !value.defined()) {
@@ -487,19 +487,257 @@ static Series i64_vector_on(std::span<const std::int64_t> values, Platform platf
   return i64_vector(values).to(platform);
 }
 
+static std::vector<Series> normalize_index_list_for_put_(
+    const Arg::SeriesList& indices,
+    const Series& like) {
+  std::vector<Series> out;
+  out.reserve(indices.size());
+  for (const auto& idx_raw : indices) {
+    if (!idx_raw.defined()) {
+      out.push_back(Series::undefined());
+      continue;
+    }
+    Series idx = idx_raw;
+    if (idx.platform() != like.platform()) idx = idx.to(like.platform());
+    if (idx.scalar_type() != ScalarType::Int64) idx = idx.to(ScalarType::Int64);
+    out.push_back(std::move(idx));
+  }
+  return out;
+}
+
+static bool is_integer_index_dtype_(ScalarType st) {
+  switch (st) {
+    case ScalarType::UInt8:
+    case ScalarType::UInt16:
+    case ScalarType::UInt32:
+    case ScalarType::UInt64:
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool supports_put_autodiff_1d_(
+    const Series& self,
+    const Series& index,
+    const Series& src) {
+  if (self.dim() != 1) return false;
+  if (index.dim() != 1) return false;
+  if (!is_integer_index_dtype_(index.scalar_type())) return false;
+  if (index.numel() <= 0) return false;
+  return (src.numel() == 1 || src.numel() == index.numel());
+}
+
+static bool shares_storage_(const Series& a, const Series& b) {
+  if (!a.defined() || !b.defined()) return false;
+  return a.storage().handle().get() == b.storage().handle().get();
+}
+
+static Series alias_view_on_(const Series& base, const Series& view_like) {
+  PLUSS_CHECK(base.defined() && view_like.defined(), "copy_ backward: expected defined Series");
+  PLUSS_CHECK(
+      base.scalar_type() == view_like.scalar_type(),
+      "copy_ backward: expected matching dtype for base/view aliasing");
+  const auto storage_offset_elems =
+      view_like.storage_offset() / std::max<std::int64_t>(1, view_like.itemsize());
+  return Series::from_storage(
+      base.storage(),
+      storage_offset_elems,
+      std::vector<std::int64_t>(view_like.sizes().begin(), view_like.sizes().end()),
+      std::vector<std::int64_t>(view_like.strides().begin(), view_like.strides().end()),
+      base.scalar_type());
+}
+
+static Series find_root_alias_for_view_(const Series& view) {
+  Series cur = view;
+  constexpr int kMaxAliasHops = 64;
+  for (int hop = 0; hop < kMaxAliasHops; ++hop) {
+    const auto link = series_tape::source_link(cur);
+    if (!link) break;
+    if (link->parents.size() != 1) break;
+    const Series& parent = link->parents.front();
+    if (!parent.defined()) break;
+    if (!shares_storage_(parent, cur)) break;
+    cur = parent;
+  }
+  return cur;
+}
+
+static Series make_pre_copy_parent_snapshot_(const Series& root_before) {
+  const auto root_link = series_tape::source_link(root_before);
+  if (!root_link) return Series::undefined();
+
+  Series snapshot = series_tape::separate(root_before);
+  series_tape::set_tracks_slope(snapshot, true);
+  auto snapshot_link = std::make_shared<series_tape::SourceLink>(*root_link);
+  series_tape::bind_source_link(snapshot, std::move(snapshot_link));
+  return snapshot;
+}
+
+static Series select_with_index_list_(const Series& self, const std::vector<Series>& indices) {
+  std::vector<ExtractSpec> specs;
+  specs.reserve(indices.size());
+  for (const auto& idx : indices) {
+    if (idx.defined()) {
+      specs.emplace_back(idx);
+    } else {
+      specs.emplace_back(pluss::Slicing::SliceAll());
+    }
+  }
+  return self.index(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+}
+
+static void bind_put_backward_index_list_(
+    const Series& out,
+    const Series& self_before,
+    const std::vector<Series>& indices_i64,
+    const Series& src,
+    bool accumulate) {
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "index_put_";
+  link->parents = {self_before, src};
+  link->propagate = [self_before, indices_i64, src, accumulate](const Series& out_sens) {
+    Series sens = out_sens;
+    if (sens.platform() != self_before.platform()) sens = sens.to(self_before.platform());
+    if (sens.scalar_type() != self_before.scalar_type()) sens = sens.to(self_before.scalar_type());
+
+    if (series_tape::tracks_slope(self_before)) {
+      Series g_self = sens.clone();
+      if (!accumulate) {
+        Series zeros = Series::zeros({}, self_before.scalar_type()).to(self_before.platform());
+        native::cpu::index_put_inplace(g_self, indices_i64, zeros, /*accumulate=*/false);
+      }
+      series_tape::accumulate_sensitivity(self_before, g_self);
+    }
+
+    if (series_tape::tracks_slope(src)) {
+      Series g_src = select_with_index_list_(sens, indices_i64);
+      if (src.numel() == 1) {
+        g_src = g_src.sum().reshape(src.sizes());
+      } else {
+        PLUSS_CHECK(
+            g_src.numel() == src.numel(),
+            "index_put_ backward: source shape mismatch with indexed selection");
+        g_src = g_src.reshape(src.sizes());
+      }
+      if (g_src.platform() != src.platform()) g_src = g_src.to(src.platform());
+      if (g_src.scalar_type() != src.scalar_type()) g_src = g_src.to(src.scalar_type());
+      series_tape::accumulate_sensitivity(src, g_src);
+    }
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
+static void bind_put_backward_1d_(
+    const Series& out,
+    const Series& self_before,
+    const Series& index_i64,
+    const Series& src,
+    bool accumulate) {
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "index_put_";
+  link->parents = {self_before, src};
+  link->propagate = [self_before, index_i64, src, accumulate](const Series& out_sens) {
+    Series sens = out_sens;
+    if (sens.platform() != self_before.platform()) sens = sens.to(self_before.platform());
+    if (sens.scalar_type() != self_before.scalar_type()) sens = sens.to(self_before.scalar_type());
+
+    if (series_tape::tracks_slope(self_before)) {
+      Series g_self = sens;
+      if (!accumulate) {
+        Series zeros = Series::zeros({index_i64.numel()}, self_before.scalar_type()).to(self_before.platform());
+        auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+        g_self = (g_self.*put_fn)(index_i64, zeros, /*accumulate=*/false);
+      }
+      series_tape::accumulate_sensitivity(self_before, g_self);
+    }
+
+    if (series_tape::tracks_slope(src)) {
+      Series g_src = sens.take(index_i64);
+      if (src.numel() == 1) {
+        g_src = g_src.sum().reshape(src.sizes());
+      } else {
+        PLUSS_CHECK(
+            src.numel() == index_i64.numel(),
+            "index_put_ backward: source must be scalar or have the same length as index");
+        g_src = g_src.reshape(src.sizes());
+      }
+      if (g_src.platform() != src.platform()) g_src = g_src.to(src.platform());
+      if (g_src.scalar_type() != src.scalar_type()) g_src = g_src.to(src.scalar_type());
+      series_tape::accumulate_sensitivity(src, g_src);
+    }
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
+static Series put_dispatch_copy_indices_(
+    const Series& self,
+    const Arg::SeriesList& indices,
+    const Series& src,
+    bool accumulate) {
+  PLUSS_CHECK(!indices.empty(), "index_put: indices list cannot be empty");
+  const bool track_self = series_tape::recording_enabled() && series_tape::tracks_slope(self);
+  auto out = self.clone();
+  series_tape::set_tracks_slope(out, false);
+
+  const std::vector<Series> normalized_indices = normalize_index_list_for_put_(indices, out);
+  Series val = src;
+  if (val.platform() != out.platform()) val = val.to(out.platform());
+  if (val.scalar_type() != out.scalar_type()) val = val.to(out.scalar_type());
+
+  if (normalized_indices.size() == 1 && normalized_indices.front().defined()) {
+    auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+    out = (out.*put_fn)(normalized_indices.front(), val, accumulate);
+  } else {
+    native::cpu::index_put_inplace(out, normalized_indices, val, accumulate);
+  }
+
+  const bool track_src = series_tape::recording_enabled() && series_tape::tracks_slope(val);
+  if (series_tape::recording_enabled() && (track_self || track_src)) {
+    if (normalized_indices.size() == 1 &&
+        normalized_indices.front().defined() &&
+        supports_put_autodiff_1d_(self, normalized_indices.front(), val)) {
+      bind_put_backward_1d_(out, self, normalized_indices.front(), val, accumulate);
+    } else {
+      bind_put_backward_index_list_(out, self, normalized_indices, val, accumulate);
+    }
+  }
+  return out;
+}
+
 static Series put_dispatch_copy_(
     const Series& self,
     const Series& index,
     const Series& src,
     bool accumulate) {
+  const bool track_self = series_tape::recording_enabled() && series_tape::tracks_slope(self);
   auto out = self.clone();
+  // Build value update on a detached working buffer; we manually re-attach
+  // the autograd link for supported index_put_ patterns below.
+  series_tape::set_tracks_slope(out, false);
   Series idx = index;
   if (idx.platform() != out.platform()) idx = idx.to(out.platform());
+  if (idx.scalar_type() != ScalarType::Int64) idx = idx.to(ScalarType::Int64);
   Series val = src;
   if (val.platform() != out.platform()) val = val.to(out.platform());
   if (val.scalar_type() != out.scalar_type()) val = val.to(out.scalar_type());
   auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
   out = (out.*put_fn)(idx, val, accumulate);
+
+  const bool track_src = series_tape::recording_enabled() && series_tape::tracks_slope(val);
+  if (series_tape::recording_enabled() && (track_self || track_src)) {
+    if (supports_put_autodiff_1d_(self, idx, val)) {
+      bind_put_backward_1d_(out, self, idx, val, accumulate);
+    } else {
+      warn(
+          "index_put_: autograd link not yet implemented for this indexing pattern; "
+          "sensitivity may disconnect (supported now: 1D integer index with scalar/equal-length source).");
+    }
+  }
   return out;
 }
 
@@ -513,8 +751,95 @@ static Series& put_dispatch_inplace_(
   Series val = src;
   if (val.platform() != self.platform()) val = val.to(self.platform());
   if (val.scalar_type() != self.scalar_type()) val = val.to(self.scalar_type());
-  auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
-  self = (self.*put_fn)(idx, val, accumulate);
+  // Route through functional copy path so autograd links are preserved.
+  self = put_dispatch_copy_(self, idx, val, accumulate);
+  return self;
+}
+
+static Series& put_dispatch_inplace_indices_(
+    Series& self,
+    const Arg::SeriesList& indices,
+    const Series& src,
+    bool accumulate) {
+  self = put_dispatch_copy_indices_(self, indices, src, accumulate);
+  return self;
+}
+
+static Series& copy_dispatch_inplace_(Series& self, const Series& other) {
+  const Series src_user = other;
+  Series src = other;
+  if (src.platform() != self.platform()) src = src.to(self.platform());
+  if (src.scalar_type() != self.scalar_type()) src = src.to(self.scalar_type());
+
+  const bool recording = series_tape::recording_enabled();
+  const Series self_before = self;
+  const Series root_before = find_root_alias_for_view_(self_before);
+  const bool track_root = recording && series_tape::tracks_slope(root_before);
+  const bool track_src = recording && series_tape::tracks_slope(src_user);
+  Series root_parent_snapshot = Series::undefined();
+  if (track_root) series_tape::set_tracks_slope(root_before, true);
+  if (track_root) {
+    root_parent_snapshot = make_pre_copy_parent_snapshot_(root_before);
+  }
+  if (track_src) series_tape::set_tracks_slope(src_user, true);
+
+  assign_inplace_preserve_storage_(self, src);
+  // copy_ is a true storage write; bump immediately so captured output version
+  // matches post-mutation state when we bind the new source link.
+  if (self.defined()) self.storage().bump_version();
+  if (recording && (track_root || track_src)) {
+    Series root_after = root_before;
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->op_name = "copy_";
+    if (root_parent_snapshot.defined()) {
+      link->parents.push_back(root_parent_snapshot);
+    }
+    if (track_src) {
+      link->parents.push_back(src_user);
+    }
+    link->propagate = [root_before,
+                       self_before,
+                       root_parent_snapshot,
+                       src_user,
+                       track_root,
+                       track_src](const Series& out_sens) {
+      Series sens = out_sens;
+      if (sens.platform() != root_before.platform()) sens = sens.to(root_before.platform());
+      if (sens.scalar_type() != root_before.scalar_type()) sens = sens.to(root_before.scalar_type());
+
+      if (track_root) {
+        Series g_root = sens.clone();
+        Series g_view = alias_view_on_(g_root, self_before);
+        const Series zeros =
+            Series::zeros(g_view.sizes(), g_view.scalar_type()).to(g_view.platform());
+        assign_inplace_preserve_storage_(g_view, zeros);
+        if (root_parent_snapshot.defined()) {
+          series_tape::accumulate_sensitivity(root_parent_snapshot, g_root);
+        } else {
+          // Leaf root: avoid self-cycle double counting by replacing the
+          // current sensitivity with masked pre-copy sensitivity.
+          series_tape::clear_sensitivity(root_before);
+          series_tape::accumulate_sensitivity(root_before, g_root);
+        }
+      }
+
+      if (track_src) {
+        Series g_src = alias_view_on_(sens, self_before).contiguous();
+        if (src_user.numel() == 1) {
+          g_src = g_src.sum().reshape(src_user.sizes());
+        } else {
+          PLUSS_CHECK(
+              g_src.numel() == src_user.numel(),
+              "copy_ backward: source shape mismatch with destination view");
+          g_src = g_src.reshape(src_user.sizes());
+        }
+        if (g_src.platform() != src_user.platform()) g_src = g_src.to(src_user.platform());
+        if (g_src.scalar_type() != src_user.scalar_type()) g_src = g_src.to(src_user.scalar_type());
+        series_tape::accumulate_sensitivity(src_user, g_src);
+      }
+    };
+    series_tape::bind_source_link(root_after, std::move(link));
+  }
   return self;
 }
 
@@ -3597,10 +3922,15 @@ static bool inplace_op_mutates_value_(std::string_view op) {
   return true;
 }
 
+static bool inplace_op_has_autodiff_write_support_(std::string_view op) {
+  return op == "copy_" || op == "put_" || op == "index_put_";
+}
+
 static void check_inplace_autograd_write_(std::string_view op, const Series& self) {
   if (!inplace_op_mutates_value_(op)) return;
   if (!series_tape::recording_enabled()) return;
   if (!series_tape::tracks_slope(self)) return;
+  if (inplace_op_has_autodiff_write_support_(op)) return;
   throw_error(
       std::string(op) +
       ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
@@ -3752,7 +4082,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "exp2") return ops_internal::exp2(self);
     if (op == "cbrt") return ops_internal::cbrt(self);
     if (op == "square") return ops_internal::square(self);
-    if (op == "cube") return self.pow(3.0);
+    if (op == "cube") return ops_internal::pow(self, 3.0);
     if (op == "reciprocal") return ops_internal::reciprocal(self);
 
     if (op == "trunc") return ops_internal::trunc(self);
@@ -4159,7 +4489,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
 
     // bool
-    if (std::holds_alternative<const std::vector<Series>*>(a0)) {
+    if (std::holds_alternative<Arg::SeriesList>(a0)) {
       const auto& indices = as_series_list(args[0]);
       if (op == "index") {
         std::vector<ExtractSpec> specs;
@@ -4188,6 +4518,19 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // Series
     if (std::holds_alternative<const Series*>(a0)) {
       const Series& other = as_series(args[0]);
+      if (op == "set_data" || op == "set_") {
+        // Backward-compat shim:
+        // some call sites use `x.set_data(y)` in a mutating style and ignore
+        // the return value. Route this through an in-place assignment path.
+        Series src = other;
+        if (self.defined()) {
+          if (src.platform() != self.platform()) src = src.to(self.platform(), src.scalar_type());
+          if (src.scalar_type() != self.scalar_type()) src = src.to(self.scalar_type());
+        }
+        Series& self_mut = mut_(self);
+        self_mut = src;
+        return self_mut;
+      }
       if (op == "kron") return kron_impl(self, other);
       if (op == "ldexp") return ldexp_impl(self, other);
       if (op == "prelu") return prelu_impl(self, other);
@@ -4547,7 +4890,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       return not_impl(op, args, self);
     }
 
-    if (std::holds_alternative<const std::vector<Series>*>(a0)) {
+    if (std::holds_alternative<Arg::SeriesList>(a0)) {
       const auto& indices = as_series_list(args[0]);
       if (op == "index") {
         std::vector<ExtractSpec> specs;
@@ -4726,13 +5069,13 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "triangular_solve") return triangular_solve_impl(self, index, /*upper=*/true, /*unitriangular=*/accumulate);
     }
 
-    if (std::holds_alternative<const std::vector<Series>*>(args[0].v) &&
+    if (std::holds_alternative<Arg::SeriesList>(args[0].v) &&
         std::holds_alternative<const Series*>(args[1].v) &&
         std::holds_alternative<bool>(args[2].v)) {
       const auto& indices = as_series_list(args[0]);
       const Series& src = as_series(args[1]);
       const bool accumulate = as_bool(args[2]);
-      if (op == "index_put") return native::cpu::index_put(self, indices, src, accumulate);
+      if (op == "index_put") return put_dispatch_copy_indices_(self, indices, src, accumulate);
     }
 
     if (std::holds_alternative<const Series*>(args[0].v) &&
@@ -4941,7 +5284,9 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     ops_internal::PlatformScope platform_scope(self.platform());
     validate_series_arg_platforms(op, self, args);
     check_inplace_autograd_write_(op, self);
-    InplaceVersionGuard version_guard(self, inplace_op_mutates_value_(op));
+    const bool guard_version_bump =
+        inplace_op_mutates_value_(op) && op != "copy_";
+    InplaceVersionGuard version_guard(self, guard_version_bump);
 
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;
@@ -5182,8 +5527,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "xlogy_") { self = ops_internal::mul(self, ops_internal::log(other)); return self; }
       if (op == "type_as_") { self = self.to(other.scalar_type()); return self; }
       if (op == "copy_") {
-        Series src = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
-        return assign_inplace_preserve_storage_(self, src);
+        return copy_dispatch_inplace_(self, other);
       }
       if (op == "set_" || op == "set_data") {
         self = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
@@ -5282,9 +5626,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (std::holds_alternative<const Series*>(a0) && std::holds_alternative<bool>(a1)) {
       const Series& other = as_series(args[0]);
       if (op == "copy_") {
-        // CPU path ignores non_blocking flag; keep dtype behavior aligned with copy_(Tensor).
-        Series src = (other.scalar_type() == self.scalar_type()) ? other : other.to(self.scalar_type());
-        return assign_inplace_preserve_storage_(self, src);
+        // non_blocking is currently ignored.
+        return copy_dispatch_inplace_(self, other);
       }
       return not_impl_inplace(op, args, self);
     }
@@ -5376,15 +5719,14 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "put_") { return put_dispatch_inplace_(self, index, src, accumulate); }
       return not_impl_inplace(op, args, self);
     }
-    if (std::holds_alternative<const std::vector<Series>*>(args[0].v) &&
+    if (std::holds_alternative<Arg::SeriesList>(args[0].v) &&
         std::holds_alternative<const Series*>(args[1].v) &&
         std::holds_alternative<bool>(args[2].v)) {
       const auto& indices = as_series_list(args[0]);
       const Series& src = as_series(args[1]);
       const bool accumulate = as_bool(args[2]);
       if (op == "index_put_") {
-        native::cpu::index_put_inplace(self, indices, src, accumulate);
-        return self;
+        return put_dispatch_inplace_indices_(self, indices, src, accumulate);
       }
       return not_impl_inplace(op, args, self);
     }

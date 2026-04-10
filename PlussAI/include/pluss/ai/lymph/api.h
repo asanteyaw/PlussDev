@@ -40,6 +40,13 @@ inline void resolve(Status status, std::string_view where = {}) {
   ::pluss::throw_error(prefix + status.message);
 }
 
+[[nodiscard]] inline std::vector<std::int64_t> copy_feature_route(pluss::msharp::RangeView::Int feature_route) {
+  std::vector<std::int64_t> out{};
+  out.reserve(feature_route.size());
+  out.insert(out.end(), feature_route.begin(), feature_route.end());
+  return out;
+}
+
 class WorkflowModel;
 
 namespace prep {
@@ -286,7 +293,7 @@ public:
   explicit SimpleImputer(SimpleImputerOptions options = {})
       : options_(options), core_(options) {}
 
-  SimpleImputer& features(std::initializer_list<std::string_view> names) {
+  SimpleImputer& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -295,6 +302,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  SimpleImputer& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   SimpleImputer& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -322,9 +332,9 @@ public:
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
-  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names);
   [[nodiscard]] static pluss::table::DataFrame merge_mapped_(const pluss::table::DataFrame& frame,
-                                                             const std::vector<std::string>& names,
+                                                             pluss::msharp::RangeView::Of<std::string> names,
                                                              const Series& mapped,
                                                              const char* where);
   void refresh_statistics_();
@@ -338,7 +348,7 @@ public:
   explicit StandardScaler(StandardScalerOptions options = {})
       : options_(options), core_(options) {}
 
-  StandardScaler& features(std::initializer_list<std::string_view> names) {
+  StandardScaler& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -347,6 +357,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  StandardScaler& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   StandardScaler& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -371,9 +384,9 @@ public:
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
-  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names);
   [[nodiscard]] static pluss::table::DataFrame merge_mapped_(const pluss::table::DataFrame& frame,
-                                                             const std::vector<std::string>& names,
+                                                             pluss::msharp::RangeView::Of<std::string> names,
                                                              const Series& mapped,
                                                              const char* where);
   void refresh_statistics_();
@@ -387,7 +400,7 @@ public:
   explicit OutlierIsolator(OutlierIsolatorOptions options = {})
       : options_(options), core_(options) {}
 
-  OutlierIsolator& features(std::initializer_list<std::string_view> names) {
+  OutlierIsolator& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -396,6 +409,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  OutlierIsolator& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   OutlierIsolator& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -429,7 +445,7 @@ public:
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
-  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names);
   ::pluss::ai::nodej::prep::OutlierIsolator core_{};
   bool feature_names_pinned_{false};
   bool learned_{false};
@@ -441,7 +457,7 @@ private:
     explicit WrapperName(OptionsType options = {})                                               \
         : options_(options), core_(options) {}                                                   \
                                                                                                  \
-    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+    WrapperName& features(pluss::msharp::RangeView::Of<std::string_view> names) {               \
       feature_names_.clear();                                                                    \
       feature_names_.reserve(names.size());                                                      \
       for (auto name : names) {                                                                  \
@@ -450,6 +466,9 @@ private:
       }                                                                                          \
       feature_names_pinned_ = !feature_names_.empty();                                           \
       return *this;                                                                              \
+    }                                                                                            \
+    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+      return features(pluss::msharp::RangeView::Of<std::string_view>(names));                   \
     }                                                                                            \
                                                                                                  \
     WrapperName& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {}); \
@@ -475,10 +494,10 @@ private:
     [[nodiscard]] std::vector<std::string> resolved_feature_names_(                              \
         const pluss::table::DataFrame& frame,                                                    \
         const char* where) const;                                                                \
-    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names); \
+    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names); \
     [[nodiscard]] static pluss::table::DataFrame merge_mapped_(                                  \
         const pluss::table::DataFrame& frame,                                                    \
-        const std::vector<std::string>& names,                                                   \
+        pluss::msharp::RangeView::Of<std::string> names,                                                   \
         const Series& mapped,                                                                    \
         const char* where);                                                                      \
     void refresh_state_();                                                                       \
@@ -493,7 +512,7 @@ private:
     explicit WrapperName(OptionsType options = {})                                               \
         : options_(options), core_(options) {}                                                   \
                                                                                                  \
-    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+    WrapperName& features(pluss::msharp::RangeView::Of<std::string_view> names) {               \
       feature_names_.clear();                                                                    \
       feature_names_.reserve(names.size());                                                      \
       for (auto name : names) {                                                                  \
@@ -502,6 +521,9 @@ private:
       }                                                                                          \
       feature_names_pinned_ = !feature_names_.empty();                                           \
       return *this;                                                                              \
+    }                                                                                            \
+    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+      return features(pluss::msharp::RangeView::Of<std::string_view>(names));                   \
     }                                                                                            \
                                                                                                  \
     WrapperName& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {}); \
@@ -538,10 +560,10 @@ private:
     [[nodiscard]] std::vector<std::string> resolved_feature_names_(                              \
         const pluss::table::DataFrame& frame,                                                    \
         const char* where) const;                                                                \
-    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names); \
+    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names); \
     [[nodiscard]] static pluss::table::DataFrame merge_mapped_(                                  \
         const pluss::table::DataFrame& frame,                                                    \
-        const std::vector<std::string>& names,                                                   \
+        pluss::msharp::RangeView::Of<std::string> names,                                                   \
         const Series& mapped,                                                                    \
         const char* where);                                                                      \
     void refresh_state_();                                                                       \
@@ -585,7 +607,7 @@ public:
   explicit CategoryIndexer(CategoryIndexerOptions options = {})
       : options_(options) {}
 
-  CategoryIndexer& features(std::initializer_list<std::string_view> names) {
+  CategoryIndexer& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -594,6 +616,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  CategoryIndexer& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   CategoryIndexer& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -779,7 +804,7 @@ struct CrossValidationReport {
   return pluss::make_series(std::vector<double>{value}, {1}, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
 }
 
-[[nodiscard]] inline MetricReport metric_report_from_series_(const Series& metrics, const std::vector<MetricKind>& requested) {
+[[nodiscard]] inline MetricReport metric_report_from_series_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
   MetricReport report{};
   report.requested = requested;
   report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
@@ -823,7 +848,7 @@ struct CrossValidationReport {
   return names;
 }
 
-[[nodiscard]] inline DataFrameBatchOptions cross_validate_default_data_options_(const std::vector<std::string>& names) {
+[[nodiscard]] inline DataFrameBatchOptions cross_validate_default_data_options_(pluss::msharp::RangeView::Of<std::string> names) {
   DataFrameBatchOptions options{};
   options.feature_names = names;
   options.layout = ObservationLayout::Rows;
@@ -834,7 +859,7 @@ struct CrossValidationReport {
 
 [[nodiscard]] inline LabeledBatch cross_validate_labeled_from_xy_(const pluss::table::DataFrame& x,
                                                                   const Series& y,
-                                                                  const std::vector<std::string>& feature_names,
+                                                                  pluss::msharp::RangeView::Of<std::string> feature_names,
                                                                   const char* where) {
   const auto x_batch = resolve(feature_batch_from_dataframe(x, cross_validate_default_data_options_(feature_names)),
                                std::string(where) + ".feature_batch_from_dataframe");
@@ -973,83 +998,84 @@ public:
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept { return workflow_.model_spec(); }
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept { return workflow_.transform_specs(); }
 
-  WorkflowModel& standard_scaler(prep::StandardScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_standard_scaler(options, std::move(feature_route)), "standard_scaler");
+  WorkflowModel& standard_scaler(prep::StandardScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_standard_scaler(options, feature_route), "standard_scaler");
     return *this;
   }
 
-  WorkflowModel& minmax_scaler(prep::MinMaxScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_minmax_scaler(options, std::move(feature_route)), "minmax_scaler");
+  WorkflowModel& minmax_scaler(prep::MinMaxScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_minmax_scaler(options, feature_route), "minmax_scaler");
     return *this;
   }
 
-  WorkflowModel& robust_scaler(prep::RobustScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_robust_scaler(options, std::move(feature_route)), "robust_scaler");
+  WorkflowModel& robust_scaler(prep::RobustScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_robust_scaler(options, feature_route), "robust_scaler");
     return *this;
   }
 
-  WorkflowModel& simple_imputer(prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_simple_imputer(options, std::move(feature_route)), "simple_imputer");
+  WorkflowModel& simple_imputer(prep::SimpleImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_simple_imputer(options, feature_route), "simple_imputer");
     return *this;
   }
 
-  WorkflowModel& neighbor_imputer(prep::NeighborImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_neighbor_imputer(options, std::move(feature_route)), "neighbor_imputer");
+  WorkflowModel& neighbor_imputer(prep::NeighborImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_neighbor_imputer(options, feature_route), "neighbor_imputer");
     return *this;
   }
 
-  WorkflowModel& iterative_imputer(prep::IterativeImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_iterative_imputer(options, std::move(feature_route)), "iterative_imputer");
+  WorkflowModel& iterative_imputer(prep::IterativeImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_iterative_imputer(options, feature_route), "iterative_imputer");
     return *this;
   }
 
-  WorkflowModel& one_hot_encoder(prep::OneHotEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_one_hot_encoder(options, std::move(feature_route)), "one_hot_encoder");
+  WorkflowModel& one_hot_encoder(prep::OneHotEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_one_hot_encoder(options, feature_route), "one_hot_encoder");
     return *this;
   }
 
-  WorkflowModel& frequency_encoder(prep::FrequencyEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_frequency_encoder(options, std::move(feature_route)), "frequency_encoder");
+  WorkflowModel& frequency_encoder(prep::FrequencyEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_frequency_encoder(options, feature_route), "frequency_encoder");
     return *this;
   }
 
-  WorkflowModel& ordinal_encoder(prep::OrdinalEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_ordinal_encoder(options, std::move(feature_route)), "ordinal_encoder");
+  WorkflowModel& ordinal_encoder(prep::OrdinalEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_ordinal_encoder(options, feature_route), "ordinal_encoder");
     return *this;
   }
 
-  WorkflowModel& label_encoder(prep::LabelEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_label_encoder(options, std::move(feature_route)), "label_encoder");
+  WorkflowModel& label_encoder(prep::LabelEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_label_encoder(options, feature_route), "label_encoder");
     return *this;
   }
 
-  WorkflowModel& vector_normalizer(prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_vector_normalizer(options, std::move(feature_route)), "vector_normalizer");
+  WorkflowModel& vector_normalizer(prep::VectorNormalizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_vector_normalizer(options, feature_route), "vector_normalizer");
     return *this;
   }
 
-  WorkflowModel& maxabs_scaler(prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_maxabs_scaler(options, std::move(feature_route)), "maxabs_scaler");
+  WorkflowModel& maxabs_scaler(prep::MaxAbsScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_maxabs_scaler(options, feature_route), "maxabs_scaler");
     return *this;
   }
 
-  WorkflowModel& quantile_map(prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_quantile_map(options, std::move(feature_route)), "quantile_map");
+  WorkflowModel& quantile_map(prep::QuantileMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_quantile_map(options, feature_route), "quantile_map");
     return *this;
   }
 
-  WorkflowModel& power_map(prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_power_map(options, std::move(feature_route)), "power_map");
+  WorkflowModel& power_map(prep::PowerMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_power_map(options, feature_route), "power_map");
     return *this;
   }
 
-  WorkflowModel& threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_threshold_binarizer(options, std::move(feature_route)), "threshold_binarizer");
+  WorkflowModel& threshold_binarizer(prep::ThresholdBinarizerOptions options = {},
+                                     pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_threshold_binarizer(options, feature_route), "threshold_binarizer");
     return *this;
   }
 
-  WorkflowModel& polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_polynomial_lift(options, std::move(feature_route)), "polynomial_lift");
+  WorkflowModel& polynomial_lift(prep::PolynomialLiftOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_polynomial_lift(options, feature_route), "polynomial_lift");
     return *this;
   }
 
@@ -1332,13 +1358,13 @@ public:
     return resolve(workflow_.dump_model_state(), "dump_model_state");
   }
 
-  WorkflowModel& load_transform_states_(const std::vector<std::vector<Series>>& states) {
+  WorkflowModel& load_transform_states_(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
     resolve(workflow_.load_transform_states(states), "load_transform_states");
     refresh_linear_summary_();
     return *this;
   }
 
-  WorkflowModel& load_model_state_(const std::vector<Series>& state) {
+  WorkflowModel& load_model_state_(pluss::msharp::RangeView::Series state) {
     resolve(workflow_.load_model_state(state), "load_model_state");
     refresh_linear_summary_();
     return *this;
@@ -1359,7 +1385,7 @@ public:
   [[nodiscard]] Workflow& workflow() noexcept { return workflow_; }
 
 private:
-  [[nodiscard]] static DataFrameBatchOptions default_data_options_(const std::vector<std::string>& feature_names) {
+  [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
     options.feature_names = feature_names;
     options.layout = ObservationLayout::Rows;
@@ -1396,7 +1422,7 @@ private:
 
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
-                                                     const std::vector<std::string>& feature_names,
+                                                     pluss::msharp::RangeView::Of<std::string> feature_names,
                                                      const char* where) {
     const auto x_batch =
         resolve(feature_batch_from_dataframe(x, default_data_options_(feature_names)), std::string(where) + ".feature_batch_from_dataframe");
@@ -1496,7 +1522,7 @@ private:
     return {};
   }
 
-  [[nodiscard]] static MetricReport as_metric_report_(const Series& metrics, const std::vector<MetricKind>& requested) {
+  [[nodiscard]] static MetricReport as_metric_report_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
     MetricReport report{};
     report.requested = requested;
     report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
@@ -1668,7 +1694,7 @@ struct FeatureSelectorOptions {
   std::vector<std::string> selected{};
   selected.reserve(names.size());
 
-  const auto has_kind = [](const std::vector<pluss::table::ThreadKind>& kinds, pluss::table::ThreadKind kind) {
+  const auto has_kind = [](pluss::msharp::RangeView::Of<pluss::table::ThreadKind> kinds, pluss::table::ThreadKind kind) {
     return std::find(kinds.begin(), kinds.end(), kind) != kinds.end();
   };
 
@@ -1699,18 +1725,18 @@ struct Branch {
 
 [[nodiscard]] inline Branch compose(std::vector<TransformSpec> transforms,
                                     std::vector<std::string> feature_names = {},
-                                    std::vector<std::int64_t> feature_route = {}) {
+                                    pluss::msharp::RangeView::Int feature_route = {}) {
   return Branch{
       .transforms = std::move(transforms),
       .feature_names = std::move(feature_names),
-      .feature_route = std::move(feature_route),
+      .feature_route = copy_feature_route(feature_route),
   };
 }
 
 #define PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(FuncName, KindName, OptionsType)                                 \
   [[nodiscard]] inline Branch FuncName(OptionsType options = {},                                             \
                                        std::vector<std::string> feature_names = {},                          \
-                                       std::vector<std::int64_t> feature_route = {}) {                       \
+                                       pluss::msharp::RangeView::Int feature_route = {}) {                   \
     return Branch{                                                                                            \
         .transforms = {TransformSpec{                                                                         \
             .kind = TransformKind::KindName,                                                                  \
@@ -1718,7 +1744,7 @@ struct Branch {
             .feature_route = {},                                                                              \
         }},                                                                                                   \
         .feature_names = std::move(feature_names),                                                            \
-        .feature_route = std::move(feature_route),                                                            \
+        .feature_route = copy_feature_route(feature_route),                                                   \
     };                                                                                                        \
   }
 
@@ -1748,11 +1774,11 @@ namespace stage {
 #define PLUSS_LYMPH_STAGE_BUILDER(FuncName, KindName, OptionsType)                                 \
   [[nodiscard]] inline TransformSpec FuncName(                                                      \
       OptionsType options = {},                                                                     \
-      std::vector<std::int64_t> feature_route = {}) {                                              \
+      pluss::msharp::RangeView::Int feature_route = {}) {                                           \
     return TransformSpec{                                                                           \
         .kind = TransformKind::KindName,                                                            \
         .options = options,                                                                         \
-        .feature_route = std::move(feature_route),                                                  \
+        .feature_route = copy_feature_route(feature_route),                                         \
     };                                                                                              \
   }
 
@@ -2191,13 +2217,13 @@ public:
     return model->dump_model_state();
   }
 
-  Workflow& load_transform_states_(const std::vector<std::vector<Series>>& states) {
+  Workflow& load_transform_states_(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
     ensure_model_("load_transform_states_");
     model->load_transform_states_(states);
     return *this;
   }
 
-  Workflow& load_model_state_(const std::vector<Series>& state) {
+  Workflow& load_model_state_(pluss::msharp::RangeView::Series state) {
     ensure_model_("load_model_state_");
     model->load_model_state_(state);
     return *this;
@@ -2373,7 +2399,7 @@ private:
   return names;
 }
 
-[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_(const std::vector<std::string>& names) {
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   DataFrameBatchOptions options{};
   options.feature_names = names;
   options.layout = ObservationLayout::Rows;
@@ -2452,13 +2478,13 @@ template <>
 }
 
 template <class WrapperT>
-[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_(const std::vector<std::string>& names) {
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::OneHotEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2466,7 +2492,7 @@ template <>
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::FrequencyEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2474,7 +2500,7 @@ template <>
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::OrdinalEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2482,7 +2508,7 @@ template <>
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::LabelEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2490,7 +2516,7 @@ template <>
 
 [[nodiscard]] inline pluss::table::DataFrame prep_merge_mapped_(
     const pluss::table::DataFrame& frame,
-    const std::vector<std::string>& names,
+    pluss::msharp::RangeView::Of<std::string> names,
     const Series& mapped,
     const char* where) {
   if (mapped.dim() != 2) {
@@ -2542,12 +2568,12 @@ inline std::vector<std::string> prep::SimpleImputer::resolved_feature_names_(con
   return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
 }
 
-inline DataFrameBatchOptions prep::SimpleImputer::batch_options_for_(const std::vector<std::string>& names) {
+inline DataFrameBatchOptions prep::SimpleImputer::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
 inline pluss::table::DataFrame prep::SimpleImputer::merge_mapped_(const pluss::table::DataFrame& frame,
-                                                                   const std::vector<std::string>& names,
+                                                                   pluss::msharp::RangeView::Of<std::string> names,
                                                                    const Series& mapped,
                                                                    const char* where) {
   return prep_merge_mapped_(frame, names, mapped, where);
@@ -2567,12 +2593,12 @@ inline std::vector<std::string> prep::StandardScaler::resolved_feature_names_(co
   return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
 }
 
-inline DataFrameBatchOptions prep::StandardScaler::batch_options_for_(const std::vector<std::string>& names) {
+inline DataFrameBatchOptions prep::StandardScaler::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
 inline pluss::table::DataFrame prep::StandardScaler::merge_mapped_(const pluss::table::DataFrame& frame,
-                                                                    const std::vector<std::string>& names,
+                                                                    pluss::msharp::RangeView::Of<std::string> names,
                                                                     const Series& mapped,
                                                                     const char* where) {
   return prep_merge_mapped_(frame, names, mapped, where);
@@ -2668,7 +2694,7 @@ inline std::vector<std::string> prep::OutlierIsolator::resolved_feature_names_(c
   return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
 }
 
-inline DataFrameBatchOptions prep::OutlierIsolator::batch_options_for_(const std::vector<std::string>& names) {
+inline DataFrameBatchOptions prep::OutlierIsolator::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
@@ -2735,13 +2761,13 @@ inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss
         where);                                                                                   \
   }                                                                                               \
                                                                                                   \
-  inline DataFrameBatchOptions prep::WrapperName::batch_options_for_(const std::vector<std::string>& names) { \
+  inline DataFrameBatchOptions prep::WrapperName::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) { \
     return prep_batch_options_for_wrapper_<prep::WrapperName>(names);                             \
   }                                                                                               \
                                                                                                   \
   inline pluss::table::DataFrame prep::WrapperName::merge_mapped_(                                \
       const pluss::table::DataFrame& frame,                                                       \
-      const std::vector<std::string>& names,                                                      \
+      pluss::msharp::RangeView::Of<std::string> names,                                                      \
       const Series& mapped,                                                                       \
       const char* where) {                                                                        \
     return prep_merge_mapped_(frame, names, mapped, where);                                       \
@@ -3651,7 +3677,7 @@ public:
   [[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearClassifier& core() noexcept { return core_; }
 
 private:
-  [[nodiscard]] static DataFrameBatchOptions default_data_options_(const std::vector<std::string>& feature_names) {
+  [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
     options.feature_names = feature_names;
     options.layout = ObservationLayout::Rows;
@@ -3670,14 +3696,14 @@ private:
   }
 
   [[nodiscard]] static FeatureBatch feature_from_x_(const pluss::table::DataFrame& x,
-                                                    const std::vector<std::string>& names,
+                                                    pluss::msharp::RangeView::Of<std::string> names,
                                                     const char* where) {
     return resolve(feature_batch_from_dataframe(x, default_data_options_(names)), std::string(where) + ".feature_batch_from_dataframe");
   }
 
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
-                                                     const std::vector<std::string>& names,
+                                                     pluss::msharp::RangeView::Of<std::string> names,
                                                      const char* where) {
     const FeatureBatch x_batch = feature_from_x_(x, names, where);
     LabeledBatch batch{
@@ -3793,7 +3819,7 @@ public:
   [[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearRegressor& core() noexcept { return core_; }
 
 private:
-  [[nodiscard]] static DataFrameBatchOptions default_data_options_(const std::vector<std::string>& feature_names) {
+  [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
     options.feature_names = feature_names;
     options.layout = ObservationLayout::Rows;
@@ -3812,14 +3838,14 @@ private:
   }
 
   [[nodiscard]] static FeatureBatch feature_from_x_(const pluss::table::DataFrame& x,
-                                                    const std::vector<std::string>& names,
+                                                    pluss::msharp::RangeView::Of<std::string> names,
                                                     const char* where) {
     return resolve(feature_batch_from_dataframe(x, default_data_options_(names)), std::string(where) + ".feature_batch_from_dataframe");
   }
 
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
-                                                     const std::vector<std::string>& names,
+                                                     pluss::msharp::RangeView::Of<std::string> names,
                                                      const char* where) {
     const FeatureBatch x_batch = feature_from_x_(x, names, where);
     LabeledBatch batch{
@@ -3978,7 +4004,7 @@ struct SpecTuneResult {
               objective_policy);
 }
 
-[[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<ModelSpec>& candidates,
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const LabeledBatch& batch,
                                                const SplitOptions& split = {},
                                                const TrainOptions& train_options = {},
@@ -4002,7 +4028,7 @@ struct SpecTuneResult {
   };
 }
 
-[[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<ModelSpec>& candidates,
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
                                                const Series& y,
                                                const SplitOptions& split = {},
@@ -4015,7 +4041,7 @@ struct SpecTuneResult {
   return tune_specs(candidates, batch, split, train_options, assess_options, objective_metric, objective_policy);
 }
 
-[[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<ModelSpec>& candidates,
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
                                                const pluss::table::Thread& y,
                                                const SplitOptions& split = {},

@@ -37,6 +37,7 @@ demo_catalog
 plussmic_docs_hub
 time_series_accessor_guide
 series
+series_query_user_guide
 aux
 aux_tutorial
 tils_env

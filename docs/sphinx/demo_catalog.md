@@ -4,6 +4,7 @@
 
 - `PlussQit/examples/CodeM/series_usage_demo.cpp`: construction, dtype/platform transfer, host extraction, printing.
 - `PlussQit/examples/CodeM/series_methods_demo.cpp`: broad method-family sweep with pass/fail output.
+- `PlussQit/examples/CodeM/traverse_demo.cpp`: `traverse`, `traverse_slice`, `traverse_put_`, and `select_from` workflows.
 - `PlussQit/examples/CodeM/stats_demo.cpp`: distribution/stats/moving-window use.
 - `PlussQit/examples/CodeM/signal_demo.cpp`: DCT/DST/Hilbert/shift workflows.
 - `PlussQit/examples/CodeM/transmit_demo.cpp`: unary, zipped, and parallel `pluss::transmit(...)` usage.

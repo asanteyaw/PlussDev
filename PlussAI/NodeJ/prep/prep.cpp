@@ -892,7 +892,7 @@ StatusOr<std::vector<Series>> FunctionTransformer::dump_state() const {
       Status::not_implemented("FunctionTransformer::dump_state is unavailable for callable-based stages."));
 }
 
-Status FunctionTransformer::load_state(const std::vector<Series>& state) {
+Status FunctionTransformer::load_state(pluss::msharp::RangeView::Series state) {
   (void)state;
   return Status::not_implemented("FunctionTransformer::load_state is unavailable for callable-based stages.");
 }
@@ -901,14 +901,15 @@ FeatureTransformer::FeatureTransformer(FeatureRemainderPolicy remainder) : remai
 
 bool FeatureTransformer::trained() const noexcept { return trained_; }
 
-Status FeatureTransformer::add_stage(std::unique_ptr<TransformerBase> transformer, std::vector<std::int64_t> feature_route) {
+Status FeatureTransformer::add_stage(std::unique_ptr<TransformerBase> transformer,
+                                     pluss::msharp::RangeView::Int feature_route) {
   std::vector<std::unique_ptr<TransformerBase>> pipeline{};
   pipeline.push_back(std::move(transformer));
-  return add_pipeline(std::move(pipeline), std::move(feature_route));
+  return add_pipeline(std::move(pipeline), feature_route);
 }
 
 Status FeatureTransformer::add_pipeline(std::vector<std::unique_ptr<TransformerBase>> transformers,
-                                        std::vector<std::int64_t> feature_route) {
+                                        pluss::msharp::RangeView::Int feature_route) {
   if (transformers.empty()) {
     return Status::invalid_argument("FeatureTransformer::add_pipeline requires at least one transformer.");
   }
@@ -920,9 +921,12 @@ Status FeatureTransformer::add_pipeline(std::vector<std::unique_ptr<TransformerB
   if (feature_route.empty()) {
     return Status::invalid_argument("FeatureTransformer::add_pipeline requires a non-empty feature_route.");
   }
+  std::vector<std::int64_t> route{};
+  route.reserve(feature_route.size());
+  route.insert(route.end(), feature_route.begin(), feature_route.end());
   stages_.push_back(Stage{
       .transformers = std::move(transformers),
-      .feature_route = std::move(feature_route),
+      .feature_route = std::move(route),
   });
   trained_ = false;
   return Status::success();
@@ -1189,7 +1193,7 @@ StatusOr<std::vector<Series>> FeatureTransformer::dump_state() const {
   return StatusOr<std::vector<Series>>(std::move(state));
 }
 
-Status FeatureTransformer::load_state(const std::vector<Series>& state) {
+Status FeatureTransformer::load_state(pluss::msharp::RangeView::Series state) {
   if (state.empty()) {
     return Status::invalid_argument("FeatureTransformer::load_state expects at least metadata tensor.");
   }
@@ -2788,7 +2792,7 @@ StatusOr<std::vector<Series>> OrdinalEncoder::dump_state() const {
   });
 }
 
-Status OrdinalEncoder::load_state(const std::vector<Series>& state) {
+Status OrdinalEncoder::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("OrdinalEncoder::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("OrdinalEncoder::load_state invalid metadata.");
@@ -2887,7 +2891,7 @@ StatusOr<std::vector<Series>> LabelEncoder::dump_state() const {
   });
 }
 
-Status LabelEncoder::load_state(const std::vector<Series>& state) {
+Status LabelEncoder::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("LabelEncoder::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("LabelEncoder::load_state invalid metadata.");
@@ -3268,7 +3272,7 @@ StatusOr<std::vector<Series>> StandardScaler::dump_state() const {
   });
 }
 
-Status StandardScaler::load_state(const std::vector<Series>& state) {
+Status StandardScaler::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("StandardScaler::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("StandardScaler::load_state invalid metadata.");
@@ -3292,7 +3296,7 @@ StatusOr<std::vector<Series>> MinMaxScaler::dump_state() const {
   });
 }
 
-Status MinMaxScaler::load_state(const std::vector<Series>& state) {
+Status MinMaxScaler::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("MinMaxScaler::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("MinMaxScaler::load_state invalid metadata.");
@@ -3316,7 +3320,7 @@ StatusOr<std::vector<Series>> RobustScaler::dump_state() const {
   });
 }
 
-Status RobustScaler::load_state(const std::vector<Series>& state) {
+Status RobustScaler::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("RobustScaler::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("RobustScaler::load_state invalid metadata.");
@@ -3339,7 +3343,7 @@ StatusOr<std::vector<Series>> SimpleImputer::dump_state() const {
   });
 }
 
-Status SimpleImputer::load_state(const std::vector<Series>& state) {
+Status SimpleImputer::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 2) return Status::invalid_argument("SimpleImputer::load_state expects 2 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("SimpleImputer::load_state invalid metadata.");
@@ -3362,7 +3366,7 @@ StatusOr<std::vector<Series>> NeighborImputer::dump_state() const {
   });
 }
 
-Status NeighborImputer::load_state(const std::vector<Series>& state) {
+Status NeighborImputer::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("NeighborImputer::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 4) return Status::invalid_argument("NeighborImputer::load_state invalid metadata.");
@@ -3390,7 +3394,7 @@ StatusOr<std::vector<Series>> IterativeImputer::dump_state() const {
   });
 }
 
-Status IterativeImputer::load_state(const std::vector<Series>& state) {
+Status IterativeImputer::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 5) return Status::invalid_argument("IterativeImputer::load_state expects 5 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("IterativeImputer::load_state invalid metadata.");
@@ -3414,7 +3418,7 @@ StatusOr<std::vector<Series>> VectorNormalizer::dump_state() const {
   });
 }
 
-Status VectorNormalizer::load_state(const std::vector<Series>& state) {
+Status VectorNormalizer::load_state(pluss::msharp::RangeView::Series state) {
   if (state.empty()) return Status::invalid_argument("VectorNormalizer::load_state expects metadata tensor.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("VectorNormalizer::load_state invalid metadata.");
@@ -3431,7 +3435,7 @@ StatusOr<std::vector<Series>> MaxAbsScaler::dump_state() const {
   });
 }
 
-Status MaxAbsScaler::load_state(const std::vector<Series>& state) {
+Status MaxAbsScaler::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 2) return Status::invalid_argument("MaxAbsScaler::load_state expects 2 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("MaxAbsScaler::load_state invalid metadata.");
@@ -3451,7 +3455,7 @@ StatusOr<std::vector<Series>> QuantileMap::dump_state() const {
   });
 }
 
-Status QuantileMap::load_state(const std::vector<Series>& state) {
+Status QuantileMap::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("QuantileMap::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("QuantileMap::load_state invalid metadata.");
@@ -3472,7 +3476,7 @@ StatusOr<std::vector<Series>> PowerMap::dump_state() const {
   });
 }
 
-Status PowerMap::load_state(const std::vector<Series>& state) {
+Status PowerMap::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 4) return Status::invalid_argument("PowerMap::load_state expects 4 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("PowerMap::load_state invalid metadata.");
@@ -3496,7 +3500,7 @@ StatusOr<std::vector<Series>> ThresholdBinarizer::dump_state() const {
   });
 }
 
-Status ThresholdBinarizer::load_state(const std::vector<Series>& state) {
+Status ThresholdBinarizer::load_state(pluss::msharp::RangeView::Series state) {
   if (state.empty()) return Status::invalid_argument("ThresholdBinarizer::load_state expects metadata tensor.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("ThresholdBinarizer::load_state invalid metadata.");
@@ -3524,7 +3528,7 @@ StatusOr<std::vector<Series>> PolynomialLift::dump_state() const {
   });
 }
 
-Status PolynomialLift::load_state(const std::vector<Series>& state) {
+Status PolynomialLift::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("PolynomialLift::load_state expects 3 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 4) return Status::invalid_argument("PolynomialLift::load_state invalid metadata.");
@@ -3562,7 +3566,7 @@ StatusOr<std::vector<Series>> OneHotEncoder::dump_state() const {
   });
 }
 
-Status OneHotEncoder::load_state(const std::vector<Series>& state) {
+Status OneHotEncoder::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 5) return Status::invalid_argument("OneHotEncoder::load_state expects 5 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 4) return Status::invalid_argument("OneHotEncoder::load_state invalid metadata.");
@@ -3611,7 +3615,7 @@ StatusOr<std::vector<Series>> FrequencyEncoder::dump_state() const {
   });
 }
 
-Status FrequencyEncoder::load_state(const std::vector<Series>& state) {
+Status FrequencyEncoder::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 5) return Status::invalid_argument("FrequencyEncoder::load_state expects 5 state tensors.");
   const auto meta = vec_f64(state[0]);
   if (meta.size() < 3) return Status::invalid_argument("FrequencyEncoder::load_state invalid metadata.");

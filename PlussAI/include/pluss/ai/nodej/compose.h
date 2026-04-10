@@ -3,6 +3,7 @@
 #include "pluss/ai/nodej/builders.h"
 #include "pluss/ai/nodej/data.h"
 #include "pluss/ai/nodej/prep.h"
+#include "MSharp/RangeView.h"
 
 #include <cstdint>
 #include <memory>
@@ -74,22 +75,22 @@ public:
   Status append_transform(std::unique_ptr<TransformerBase> transformer);
   void clear_transforms() noexcept;
 
-  Status add_standard_scaler(prep::StandardScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_minmax_scaler(prep::MinMaxScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_robust_scaler(prep::RobustScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_simple_imputer(prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_neighbor_imputer(prep::NeighborImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_iterative_imputer(prep::IterativeImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_one_hot_encoder(prep::OneHotEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_frequency_encoder(prep::FrequencyEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_vector_normalizer(prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_maxabs_scaler(prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_quantile_map(prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_power_map(prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_ordinal_encoder(prep::OrdinalEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_label_encoder(prep::LabelEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
+  Status add_standard_scaler(prep::StandardScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_minmax_scaler(prep::MinMaxScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_robust_scaler(prep::RobustScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_simple_imputer(prep::SimpleImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_neighbor_imputer(prep::NeighborImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_iterative_imputer(prep::IterativeImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_one_hot_encoder(prep::OneHotEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_frequency_encoder(prep::FrequencyEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_vector_normalizer(prep::VectorNormalizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_maxabs_scaler(prep::MaxAbsScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_quantile_map(prep::QuantileMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_power_map(prep::PowerMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_polynomial_lift(prep::PolynomialLiftOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_ordinal_encoder(prep::OrdinalEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_label_encoder(prep::LabelEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
   Status add_function_transformer(prep::FunctionTransformer transformer);
   Status add_feature_transformer(prep::FeatureTransformer transformer);
 
@@ -123,8 +124,8 @@ public:
 
   [[nodiscard]] StatusOr<std::vector<std::vector<Series>>> dump_transform_states() const;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_model_state() const;
-  Status load_transform_states(const std::vector<std::vector<Series>>& states);
-  Status load_model_state(const std::vector<Series>& state);
+  Status load_transform_states(pluss::msharp::RangeView::Of<std::vector<Series>> states);
+  Status load_model_state(pluss::msharp::RangeView::Series state);
   void mark_trained(bool trained) noexcept;
 
 private:

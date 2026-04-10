@@ -217,6 +217,8 @@ std::optional<SourceInfo> source_info(const Series& s) {
   return info;
 }
 
+std::shared_ptr<SourceLink> source_link(const Series& s) { return source_link_copy_(s); }
+
 void bind_source_link(
     const Series& s,
     std::shared_ptr<SourceLink> link,

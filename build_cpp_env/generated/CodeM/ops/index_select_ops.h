@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::index_select_ops {
   Series index_select(const Series& a, std::int64_t dim, const Series& index);

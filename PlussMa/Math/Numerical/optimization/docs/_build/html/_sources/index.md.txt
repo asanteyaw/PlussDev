@@ -12,6 +12,7 @@ Module boundary:
 :maxdepth: 2
 
 optima_algorithms
+optimizer_surfaces
 optima_sequential_qp
 optima_internal_protocol
 ```

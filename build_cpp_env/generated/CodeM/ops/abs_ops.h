@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::abs_ops {
   Series abs(const Series& a);

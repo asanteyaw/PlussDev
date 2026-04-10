@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::add_ops {
   Series add(const Series& a, const Series& b);

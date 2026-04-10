@@ -424,18 +424,26 @@ These are the Pluss-native equivalents of gradient correctness utilities and are
 
 ## Higher-order helper
 
-### `nth_derivative`
+### `nth_diff`
 
 #### Signature
 
 ```cpp
-Series nth_derivative(Fn&& fn, const Series& param, std::int64_t order, const HvpOptions& opt = {})
+Series nth_diff(Fn&& fn, const Series& param, std::int64_t order, const HvpOptions& opt = {}, const DerivativePolicy& policy = {})
+auto nth_diff(Fn&& fn, std::int64_t order, const HvpOptions& opt = {}, const DerivativePolicy& policy = {})
 ```
 
 #### Explanation
 
-Convenience helper for scalar single-input objectives.
-It supports exact orders `0`, `1`, and `2`. Orders above `2` are rejected.
+Convenience helper for higher-order derivatives.
+For Trace-callable (or Series-callable) objectives, it supports any order `n >= 0`.
+DualTrace-only objectives support orders `0`, `1`, and `2`.
+
+For non-scalar outputs, `nth_diff` applies egrad-style behavior at each order:
+differentiate the sum of outputs (VJP with all-ones cotangent).
+If the objective is disconnected and `strict_dependency=false`, disconnected lanes are
+materialized per `DerivativePolicy::disconnected_sensitivity`, and warnings are emitted
+by default (`DerivativePolicy::warn_on_disconnected=true`).
 
 #### Example
 
@@ -443,10 +451,20 @@ It supports exact orders `0`, `1`, and `2`. Orders above `2` are rejected.
 using namespace pluss::subsp::math::diff;
 
 auto x = pluss::make_series(0.4).to(pluss::ScalarType::Float64);
-auto second = nth_derivative(
+auto second = nth_diff(
     [](const auto& z) {
       return tanh(z);
     },
     x,
     2);
+
+auto d4 = nth_diff(
+    [](const auto& z) {
+      return exp(z) - z;
+    },
+    4);
+auto fourth = d4(x);
+
+auto xv = pluss::linspace(-7.0, 7.0, 700, pluss::ScalarType::Float64);
+auto d1v = nth_diff([](const auto& z) { return tanh(z); }, xv, 1);
 ```

@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Optima Internal Protocol" href="optima_internal_protocol.html" />
-    <link rel="prev" title="Optima Algorithms" href="optima_algorithms.html" />
+    <link rel="prev" title="Optimizer Surfaces: Functional vs OOP" href="optimizer_surfaces.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -341,7 +341,7 @@ y_k = \nabla \phi_{k+1} - \nabla \phi_k,\]</div>
 <section id="example-trace">
 <h2>Example Trace<a class="headerlink" href="#example-trace" title="Link to this heading">¶</a></h2>
 <p>A typical progress line from an instrumented SQP run looks like:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[sqp:iter] iter=12 evals=50 value=1.125000 viol=0.000000 stat=8.5e-08 step=1.000000 penalty=10.000000
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>iter=12 evals=50 objective=1.125000 viol=0.000000 stationarity=0.000000 backend=10.000000 step=1.000000 stall=none
 </pre></div>
 </div>
 <p>Interpretation:</p>
@@ -410,6 +410,7 @@ y_k = \nabla \phi_{k+1} - \nabla \phi_k,\]</div>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="optima_algorithms.html">Optima Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer_surfaces.html">Optimizer Surfaces: Functional vs OOP</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Optima Sequential QP</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mathematical-problem">Mathematical Problem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#solver-shape">Solver Shape</a></li>
@@ -433,7 +434,7 @@ y_k = \nabla \phi_{k+1} - \nabla \phi_k,\]</div>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="optima_algorithms.html" title="previous chapter">Optima Algorithms</a></li>
+      <li>Previous: <a href="optimizer_surfaces.html" title="previous chapter">Optimizer Surfaces: Functional vs OOP</a></li>
       <li>Next: <a href="optima_internal_protocol.html" title="next chapter">Optima Internal Protocol</a></li>
   </ul></li>
 </ul>

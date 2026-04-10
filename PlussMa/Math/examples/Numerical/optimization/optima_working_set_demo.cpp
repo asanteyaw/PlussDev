@@ -31,8 +31,8 @@ int main() {
   options.progress_hook = pluss::optim::reports::iter(std::cout);
 
   const auto result = pluss::optim::optima(
-      [target](const Series& x) -> Series {
-        return ((x - target) * (x - target)).sum();
+      [target](const pluss::optim::Trace& x) -> pluss::optim::Trace {
+        return pluss::optim::sum(pluss::optim::square(x - pluss::optim::trace(target, false)));
       },
       initial,
       options,

@@ -510,6 +510,9 @@
   // Typed wrappers for `crow_indices` (staged migration off variadic surface).
   Series crow_indices() const { return pluss::codem::_compat::invoke("crow_indices", *this); }
 
+  // Typed wrappers for `cube` (staged migration off variadic surface).
+  Series cube() const { return pluss::codem::_compat::invoke("cube", *this); }
+
   // Typed wrappers for `cummax` (staged migration off variadic surface).
   Series cummax() const { return pluss::codem::_compat::invoke("cummax", *this); }
 

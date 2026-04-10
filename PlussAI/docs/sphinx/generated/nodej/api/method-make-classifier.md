@@ -81,14 +81,14 @@ result.value() is available
 
 ```text
 NodeJ CV + tune demo
-linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.5625 0.645833 0.625 0.708333 0.575 0.416667 0.822132
-linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.108253 0.0908104 0.246503 0.29756 0.129904 0.0833333 0.139461
-kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.374066
-kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0388381
-sweep trial objectives: 0.5625 1
+linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 1.12262
+linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.169779
+kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.420312
+kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0248626
+sweep trial objectives: 0 1
 sweep best index: 1
 probe best index: 1
-regression quantile sweep objectives: 0.0356052 0.736518
+regression quantile sweep objectives: 0.0352983 0.743786
 regression quantile sweep best index: 0
 max |bounded score|: 0
 NodeJ CV + tune demo completed.
@@ -125,15 +125,15 @@ void run_regressor_family(const std::string& name, const ModelSpec& spec, const 
 ```text
 NodeJ model families demo
 Classification families:
-  linear (acc, logloss): 1 0.000580684
-  linear_hinge (acc, logloss): 1 0.208572
+  linear (acc, logloss): 1 4.47877e-06
+  linear_hinge (acc, logloss): 1 0.0886185
   tree (acc, logloss): 1 9.99978e-13
   ensemble (acc, logloss): 1 1.00003e-12
   neighbor (acc, logloss): 1 9.99978e-13
   kernel (acc, logloss): 1 0.318438
   bayes (acc, logloss): 1 9.99978e-13
 Regression families:
-  linear (mse, r2): 3.96212e-15 1
+  linear (mse, r2): 1.52381e-19 1
   tree (mse, r2): 0 1
 ...
 ```

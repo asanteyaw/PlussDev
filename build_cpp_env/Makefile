@@ -1831,6 +1831,19 @@ plussqit_codem_linear_alg_demo/fast:
 .PHONY : plussqit_codem_linear_alg_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_codem_traverse_demo
+
+# Build rule for target.
+plussqit_codem_traverse_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_traverse_demo
+.PHONY : plussqit_codem_traverse_demo
+
+# fast build rule for target.
+plussqit_codem_traverse_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build
+.PHONY : plussqit_codem_traverse_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_codem_stats_demo
 
 # Build rule for target.
@@ -7536,6 +7549,7 @@ help:
 	@echo "... plussqit_codem_stats_demo"
 	@echo "... plussqit_codem_suppose_demo"
 	@echo "... plussqit_codem_transmit_demo"
+	@echo "... plussqit_codem_traverse_demo"
 	@echo "... plussqit_coden"
 	@echo "... plussqit_coden_cpu_perf_bench"
 	@echo "... plussqit_coden_note_base_methods_demo"

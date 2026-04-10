@@ -50,11 +50,12 @@ inline std::int64_t symint_to_i64(const pluss::codem::SymInt& x) {
 
 struct Arg {
   using IntList = std::vector<std::int64_t>;
+  using SeriesList = pluss::msharp::RangeView::Of<Series>;
 
   using Storage = std::variant<
       std::monostate,
       const Series*,   // non-owning
-      const std::vector<Series>*,
+      SeriesList,
       Scalar,          // by value (Torch Scalar-like)
       double,
       std::int64_t,
@@ -69,7 +70,7 @@ struct Arg {
 
   // Series
   Arg(const Series& s) : v(&s) {}
-  Arg(const std::vector<Series>& xs) : v(&xs) {}
+  Arg(SeriesList xs) : v(xs) {}
 
   // Scalar-like
   Arg(const Scalar& s) : v(s) {}

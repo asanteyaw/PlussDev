@@ -2,7 +2,6 @@
 
 #include <pluss/nn_detail.h>
 
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -75,7 +74,7 @@ inline Series select_dim_(const Series& x, std::int64_t dim, std::int64_t index)
   return ::pluss::detail::nn::select_dim_(x, dim, index);
 }
 
-inline Series zeros_state_(std::span<const std::int64_t> sizes, const Series& like) {
+inline Series zeros_state_(pluss::msharp::RangeView::Int sizes, const Series& like) {
   return ::pluss::detail::nn::zeros_state_(sizes, like);
 }
 
@@ -97,7 +96,9 @@ inline Series maybe_time_major_to_batch_first(const Series& output, const NetCon
   return output;
 }
 
-inline void validate_param_count(const std::vector<NetWeight>& params, const NetConfig& cfg, const char* what) {
+inline void validate_param_count(pluss::msharp::RangeView::Of<NetWeight> params,
+                                 const NetConfig& cfg,
+                                 const char* what) {
   const std::int64_t expected = cfg.num_layers * (cfg.bidirectional ? 2 : 1);
   PLUSS_CHECK(static_cast<std::int64_t>(params.size()) == expected,
               std::string("pluss::") + what + ": expected " + std::to_string(expected) + " parameter blocks");

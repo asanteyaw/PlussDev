@@ -80,9 +80,10 @@ result.value() is available
 **Expected output**
 
 ```text
-saved flow bundle to: <path>
-flow bundle roundtrip exact prediction parity: true
-nodej_flow_bundle_demo complete
+libc++abi: terminating due to uncaught exception of type pluss::codem::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
+Triggered at: <path> (DataReader &pluss::detail::DataReader::with_sizes(std::span<const std::int64_t>))
+
+[exit_code] -6
 ```
 
 ### Example 3 (Demo Pattern)
@@ -115,7 +116,7 @@ nodej_flow_bundle_demo complete
 
 ```text
 NodeJ Flow demo
-classification flow metrics [accuracy, logloss]: 1 0.000228657
-regression flow metrics [mse, r2]: 4.46648e-17 1
+classification flow metrics [accuracy, logloss]: 1 1.44251e-05
+regression flow metrics [mse, r2]: 4.46559e-17 1
 NodeJ Flow demo completed.
 ```

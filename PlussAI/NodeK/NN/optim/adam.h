@@ -34,8 +34,8 @@ struct AdamGroup {
 
 class PLUSS_API Adam final : public Optimizer {
 public:
-  explicit Adam(std::vector<Series*> parameters, AdamOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit Adam(pluss::msharp::RangeView::Of<Series*> parameters, AdamOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -45,7 +45,7 @@ public:
     initialize_state_();
   }
 
-  explicit Adam(std::vector<AdamGroup> groups)
+  explicit Adam(pluss::msharp::RangeView::Of<AdamGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -132,7 +132,7 @@ private:
     Series beta2_power{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
 
     auto& params = mutable_parameters_();
@@ -192,7 +192,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<AdamGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<AdamGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::Adam: expected non-empty parameter groups");
     }
@@ -212,7 +212,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<AdamGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<AdamGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -268,8 +268,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -299,8 +299,8 @@ private:
   }
 
   void apply_group_loop_(GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const AdamOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -408,8 +408,8 @@ private:
   }
 
   void apply_group_batched_(GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const AdamOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -484,8 +484,8 @@ private:
   }
 
   void apply_group_fused_(GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const AdamOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));

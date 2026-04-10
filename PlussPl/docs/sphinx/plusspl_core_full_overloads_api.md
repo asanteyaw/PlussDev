@@ -1961,7 +1961,8 @@ Pie/wedge primitive with optional explode offsets.
 #### Signature
 
 ```cpp
-Trace& wedge(self: Pane, values: SeriesLike, labels: std::vector<std::string>);
+Trace& wedge(self: Pane, values: SeriesLike, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Trace& wedge(self: Pane, values: SeriesLike, labels: std::initializer_list<std::string_view>);
 ```
 
 #### Notes
@@ -1991,7 +1992,8 @@ Pie/wedge primitive with optional explode offsets.
 #### Signature
 
 ```cpp
-Trace& wedge(self: Pane, values: SeriesLike, explode: SeriesLike, labels: std::vector<std::string>);
+Trace& wedge(self: Pane, values: SeriesLike, explode: SeriesLike, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Trace& wedge(self: Pane, values: SeriesLike, explode: SeriesLike, labels: std::initializer_list<std::string_view>);
 ```
 
 #### Notes
@@ -10124,4 +10126,3 @@ Returns an in-memory PDF payload of the fully composed figure.
 ```
 
 `Source section`: `plusspl_object_model_api.md`
-

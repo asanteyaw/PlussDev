@@ -1,7 +1,7 @@
 # NodeJ Full API Reference: Method Index
 
-Total method pages: **102**
-Total data-type pages: **14**
+Total method pages: **127**
+Total data-type pages: **16**
 
 ## Data Types
 
@@ -14,10 +14,12 @@ api/type-flowbundle
 api/type-flowbundlemetadata
 api/type-foldassessresult
 api/type-indexsplit
+api/type-isolationtree
 api/type-labeledbatch
 api/type-modelspec
 api/type-randomstate
 api/type-splitplan
+api/type-stage
 api/type-status
 api/type-transformspec
 api/type-tunereport
@@ -42,6 +44,18 @@ api/method-featurebatch-feature-count
 api/method-featurebatch-sample-count
 api/method-featurebatch-validate-features
 api/method-featurebatch-validate-labeled
+api/method-featuretransformer-add-pipeline
+api/method-featuretransformer-add-stage
+api/method-featuretransformer-clear-stages
+api/method-featuretransformer-dump-state
+api/method-featuretransformer-featuretransformer
+api/method-featuretransformer-load-state
+api/method-featuretransformer-remainder-policy
+api/method-featuretransformer-set-remainder-policy
+api/method-featuretransformer-stage-count
+api/method-featuretransformer-trained
+api/method-flow-add-feature-transformer
+api/method-flow-add-function-transformer
 api/method-flow-append-transform
 api/method-flow-clear-model
 api/method-flow-clear-transforms
@@ -64,12 +78,18 @@ api/method-flow-transform-specs
 api/method-frequencyencoder-dump-state
 api/method-frequencyencoder-load-state
 api/method-frequencyencoder-trained
+api/method-functiontransformer-dump-state
+api/method-functiontransformer-load-state
+api/method-functiontransformer-trained
 api/method-iterativeimputer-dump-state
 api/method-iterativeimputer-load-state
 api/method-iterativeimputer-trained
 api/method-labeled-batch-from-dataframe
 api/method-labeledbatch-has-labels
 api/method-labeledbatch-has-weights
+api/method-labelencoder-dump-state
+api/method-labelencoder-load-state
+api/method-labelencoder-trained
 api/method-load
 api/method-load-and-restore
 api/method-make-classifier
@@ -93,6 +113,13 @@ api/method-onlinelinearclassifier-seen-samples
 api/method-onlinelinearclassifier-trained
 api/method-onlinelinearregressor-seen-samples
 api/method-onlinelinearregressor-trained
+api/method-ordinalencoder-dump-state
+api/method-ordinalencoder-load-state
+api/method-ordinalencoder-trained
+api/method-outlierisolator-decision-offset
+api/method-outlierisolator-learned
+api/method-outlierisolator-max-features-used
+api/method-outlierisolator-max-samples-used
 api/method-polynomiallift-dump-state
 api/method-polynomiallift-load-state
 api/method-polynomiallift-trained

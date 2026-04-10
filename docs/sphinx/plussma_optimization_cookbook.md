@@ -6,19 +6,20 @@ This cookbook is task-first and covers the full PlussMa optimization surface:
 - functional Adam/Minimax loops (`pluss::optim`)
 - derivative-free global/local/blackbox optimization (`pluss::subsp::math::optimization`)
 
-## Recipe 1: Minimal Unconstrained `optima` (Series Objective)
+## Recipe 1: Minimal Unconstrained `optima` (Autodiff Objective)
 
 ### API Signature
 
-- `optima(objective_series, initial: Series, options: OptimaOptions = {}, constraints: ObjectiveConstraints = {}) -> OptimaState`
+- `optima(objective_autodiff, initial: Series, options: OptimaOptions = {}, constraints: ObjectiveConstraints = {}) -> OptimaState`
 
 ### Notes
 
 Fastest way to solve smooth unconstrained problems with one vector parameter.
+- Use a `Trace` objective callback so derivatives come from autodiff.
 
 ### Inputs
 
-- scalar objective callback from `Series -> Series`
+- scalar objective callback from `Trace -> Trace`
 - initial point
 
 ### Output
@@ -46,7 +47,7 @@ int main() {
   options.sequential_qp.optimality_tolerance = 1e-8;
 
   const pmo::OptimaState out = pmo::optima(
-      [](const pluss::Series& x) { return x.sub(1.0).square().sum(); },
+      [](const pmo::Trace& x) -> pmo::Trace { return pmo::sum(pmo::square(x - 1.0)); },
       x0,
       options);
 
@@ -92,7 +93,9 @@ pmo::ObjectiveConstraints c = pmo::constraints()
     .build();
 
 const auto out = pmo::optima(
-    [](const pluss::Series& x) { return x.select(0, 0).sub(1.0).square().add(x.select(0, 1).sub(2.0).square()); },
+    [](const pmo::Trace& x) -> pmo::Trace {
+      return pmo::square(x.select(0, 0) - 1.0) + pmo::square(x.select(0, 1) - 2.0);
+    },
     pluss::make_series(std::vector<double>{0.3, 0.3}, {2}),
     pmo::presets::sequential_qp(),
     c);
@@ -151,7 +154,63 @@ const auto out = pmo::optima(pb.build(), pmo::pack_series(make_series(std::vecto
 
 - feasible constrained optimum with small stationarity and constraint violation.
 
-## Recipe 4: Working-Set First Strategy
+## Recipe 4: Migrate `objective_fn(...)` To AD-Only `objective(...)`
+
+### API Signature
+
+- `problem().objective((Trace|Series|ParameterPack<Trace>) -> (Trace|Series)).build()`
+
+### Notes
+
+`objective_fn(...)` is removed from the `optima` problem builder.  
+Use `objective(...)` and return `Trace` or `Series` (single-block `"x"` form).
+
+If your old objective mutates model internals (for example `set_params` with `set_data`), gradients can become disconnected.
+For AD-only behavior, write the objective as a pure function of traced params.
+
+### Example (NGARCH-style scalar recursion)
+
+```cpp
+using namespace pluss;
+namespace pmo = pluss::optim;
+
+const Series scaler = /* user scaler */;
+const Series returns = /* 1D returns */;
+
+auto pb = pmo::problem();
+pb.objective([&returns, &scaler](const pmo::Trace& x) -> pmo::Trace {
+  const Series p = x.value() * scaler; // traced params (scaled)
+  const Series omega  = p.pos(0);
+  const Series alpha  = p.pos(1);
+  const Series phi    = p.pos(2);
+  const Series lambda = p.pos(3);
+  const Series gamma  = p.pos(4);
+
+  const double kLog2Pi = std::log(2.0 * 3.14159265358979323846);
+  Series h_t = returns.var().clamp_min(1e-12);
+  Series z_t = (returns.pos(0) - lambda * h_t) / h_t.sqrt();
+  Series nll = 0.5 * (h_t.log() + z_t.square() + kLog2Pi);
+
+  for (int64_t t = 1; t < returns.size(0); ++t) {
+    h_t = omega + phi * (h_t - omega)
+          + alpha * (z_t.square() - 1.0 - 2.0 * gamma * h_t.sqrt() * z_t);
+    h_t = h_t.clamp_min(1e-12);
+    z_t = (returns.pos(t) - lambda * h_t) / h_t.sqrt();
+    nll = nll + 0.5 * (h_t.log() + z_t.square() + kLog2Pi);
+  }
+  return pmo::trace(nll);
+});
+
+// bounds + solve as usual
+const pmo::ConstrainedProblem problem = pb.build();
+```
+
+### Expected output
+
+- non-static objective iterations (assuming feasible scaling/bounds and valid data)
+- gradients connected to optimization parameters through AD
+
+## Recipe 5: Working-Set First Strategy
 
 ### API Signature
 
@@ -197,16 +256,16 @@ const auto out = pmo::optima(problem, init_params, options);
 
 - robust active-set evolution with better behavior on binding constraints.
 
-## Recipe 5: Penalty Method Baseline
+## Recipe 6: Merit-Method Baseline
 
 ### API Signature
 
-- `OptimaOptions.algorithm = OptimaAlgorithm::Penalty`
+- `OptimaOptions.algorithm = OptimaAlgorithm::MeritMethod`
 - `solve_penalty_method(problem, initial, options.penalty) -> PenaltyMethodState`
 
 ### Notes
 
-Penalty is a strong baseline for quick feasibility/objective tradeoff experiments.
+MeritMethod is a strong baseline for quick feasibility/objective tradeoff experiments.
 
 ### Inputs
 
@@ -229,7 +288,7 @@ Penalty is a strong baseline for quick feasibility/objective tradeoff experiment
 ```cpp
 // Assume `problem` and `init_params` were built as in Recipe 3.
 pmo::OptimaOptions options{};
-options.algorithm = pmo::OptimaAlgorithm::Penalty;
+options.algorithm = pmo::OptimaAlgorithm::MeritMethod;
 options.penalty.penalty = 20.0;
 options.penalty.max_iterations = 200;
 options.penalty.constraint_tolerance = 1e-7;
@@ -251,6 +310,7 @@ const auto out = pmo::optima(problem, init_params, options);
 ### Notes
 
 Attach tracing before tuning so failures are actionable immediately.
+This is the MATLAB `OutputFcn` analogue: the callback runs at solver start/iteration/done.
 
 ### Inputs
 
@@ -272,6 +332,19 @@ pmo::OptimaOptions options = pmo::presets::internal_protocol();
 options.internal_protocol.progress_hook = pmo::reports::iter(std::cout, 8);
 const auto out = pmo::optima(problem, init_params, options);
 pmo::reports::detailed_summary(std::cout, out) << "\n";
+```
+
+```cpp
+// OutputFcn-style intercept with early stop.
+pmo::OptimaOptions options = pmo::presets::robust_internal_protocol();
+options.progress_hook = [](const pmo::OptimaProgressSnapshot& s) {
+  if (s.stage == pmo::OptimaProgressStage::Iteration) {
+    // custom side effects: logging/checkpointing/safety guards
+    if (s.iteration >= 50 && s.stationarity < 1e-6) return true; // stop
+  }
+  return false;
+};
+const auto out = pmo::optima(problem, init_params, options);
 ```
 
 ### Expected output

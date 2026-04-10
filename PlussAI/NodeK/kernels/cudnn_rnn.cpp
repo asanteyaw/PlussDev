@@ -478,7 +478,7 @@ bool supports_kind_(
     const Series& input,
     const Series& hx,
     const Series* cx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward,
     std::string* reason) noexcept {
@@ -640,7 +640,7 @@ bool copy_gate_weights_and_biases_(
     cudnnFilterDescriptor_t w_desc,
     Series* weight_space,
     RnnKind kind,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool projection_enabled,
     ScalarType dtype,
@@ -822,7 +822,7 @@ bool cudnn_forward_kind_(
     const Series& input_raw,
     const Series& hx_raw,
     const Series* cx_raw,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     Series* output,
     Series* hy,
@@ -1160,7 +1160,7 @@ bool rnn_route_ready() noexcept {
 bool supports_rnn(
     const Series& input,
     const Series& hx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward,
     std::string* reason) noexcept {
@@ -1180,7 +1180,7 @@ bool supports_rnn(
 bool supports_gru(
     const Series& input,
     const Series& hx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward,
     std::string* reason) noexcept {
@@ -1201,7 +1201,7 @@ bool supports_lstm(
     const Series& input,
     const Series& hx,
     const Series& cx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward,
     std::string* reason) noexcept {
@@ -1222,7 +1222,7 @@ bool supports_lstm(
 std::optional<std::tuple<Series, Series>> try_rnn(
     const Series& input,
     const Series& hx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward) {
   if (!rnn_route_enabled()) return std::nullopt;
@@ -1257,7 +1257,7 @@ std::optional<std::tuple<Series, Series>> try_rnn(
 std::optional<std::tuple<Series, Series>> try_gru(
     const Series& input,
     const Series& hx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward) {
   if (!rnn_route_enabled()) return std::nullopt;
@@ -1293,7 +1293,7 @@ std::optional<std::tuple<Series, std::tuple<Series, Series>>> try_lstm(
     const Series& input,
     const Series& hx,
     const Series& cx,
-    const std::vector<::pluss::ai::rnn::NetWeight>& params,
+    pluss::msharp::RangeView::Of<::pluss::ai::rnn::NetWeight> params,
     const ::pluss::ai::rnn::NetConfig& cfg,
     bool require_backward) {
   if (!rnn_route_enabled()) return std::nullopt;

@@ -64,7 +64,7 @@
 
 
 \title{Optima User Documentation}
-\date{Mar 01, 2026}
+\date{Apr 09, 2026}
 \release{}
 \author{PlussMa Contributors}
 \newcommand{\sphinxlogo}{\vbox{}}
@@ -193,7 +193,7 @@ user\sphinxhyphen{}supplied analytic callbacks
 \end{itemize}
 
 \sphinxAtStartPar
-Finite differences are not the primary derivative path in \sphinxcode{\sphinxupquote{Optima}}.
+Autodiff/analytic are the derivative paths in \sphinxcode{\sphinxupquote{Optima}}.
 
 
 \section{Shared Runtime Contract}
@@ -236,11 +236,19 @@ dense and iterative linear\sphinxhyphen{}system policies
 \end{itemize}
 
 \sphinxAtStartPar
-The mature constrained backends currently exposed through \sphinxcode{\sphinxupquote{OptimaAlgorithm}} are:
+\sphinxcode{\sphinxupquote{OptimaAlgorithm}} currently exposes:
 \begin{itemize}
 \item {} 
 \sphinxAtStartPar
+\sphinxcode{\sphinxupquote{MeritMethod}} (baseline penalty\sphinxhyphen{}method backend)
+
+\item {} 
+\sphinxAtStartPar
 \sphinxcode{\sphinxupquote{SequentialQP}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{WorkingSet}}
 
 \item {} 
 \sphinxAtStartPar
@@ -249,7 +257,8 @@ The mature constrained backends currently exposed through \sphinxcode{\sphinxupq
 \end{itemize}
 
 \sphinxAtStartPar
-This document focuses on:
+The primary MATLAB\sphinxhyphen{}inspired constrained NLP backends are \sphinxcode{\sphinxupquote{SequentialQP}} and \sphinxcode{\sphinxupquote{InternalProtocol}}.
+This document focuses on those two:
 \begin{itemize}
 \item {} 
 \sphinxAtStartPar
@@ -418,7 +427,7 @@ Accepted line\sphinxhyphen{}search scaling
 \end{varwidth}%
 &\begin{varwidth}[t]{\sphinxcolwidth{1}{2}}
 \sphinxAtStartPar
-Penalty or barrier parameter
+Merit weight or barrier parameter
 \sphinxbeforeendvarwidth
 \end{varwidth}%
 \\
@@ -654,6 +663,68 @@ The snapshot includes:
 \sphinxAtStartPar
 Returning \sphinxcode{\sphinxupquote{true}} requests an orderly stop.
 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{reports::iter(std::ostream\&, precision)}} and \sphinxcode{\sphinxupquote{reports::iteration\_only\_trace(...)}}
+are convenience factories for per\sphinxhyphen{}iteration output.
+
+\sphinxAtStartPar
+For a MATLAB \sphinxcode{\sphinxupquote{OutputFcn}}\sphinxhyphen{}style intercept, use a custom hook and return \sphinxcode{\sphinxupquote{true}}
+when you want to stop before the next iteration.
+
+
+\section{Internal Protocol Presets}
+\label{\detokenize{optima_algorithms:internal-protocol-presets}}
+\sphinxAtStartPar
+Both presets below use \sphinxcode{\sphinxupquote{OptimaAlgorithm::InternalProtocol}}; the robust preset
+just allocates more recovery budget and explicit solver defaults:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{presets::internal\_protocol()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{presets::robust\_internal\_protocol()}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+Key robust deltas:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{max\_iterations}}: \sphinxcode{\sphinxupquote{160}} (vs \sphinxcode{\sphinxupquote{100}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{max\_restoration\_iterations}}: \sphinxcode{\sphinxupquote{10}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{max\_restoration\_line\_search\_iterations}}: \sphinxcode{\sphinxupquote{20}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{enable\_restoration}}: \sphinxcode{\sphinxupquote{true}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{enable\_feasibility\_phase}}: \sphinxcode{\sphinxupquote{false}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{hessian\_approximation}}: \sphinxcode{\sphinxupquote{Bfgs}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{linear\_system\_solver}}: \sphinxcode{\sphinxupquote{Auto}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{system\_structure}}: \sphinxcode{\sphinxupquote{Auto}}
+
+\end{itemize}
+
 
 \section{Stall Taxonomy}
 \label{\detokenize{optima_algorithms:stall-taxonomy}}
@@ -718,7 +789,7 @@ Current demos relevant to these backends:
 
 \item {} 
 \sphinxAtStartPar
-\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/optima\_interior\_point\_demo.cpp}}
+\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/optima\_internal\_protocol\_demo.cpp}}
 
 \item {} 
 \sphinxAtStartPar
@@ -726,7 +797,123 @@ Current demos relevant to these backends:
 
 \item {} 
 \sphinxAtStartPar
-\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/garch11\_interior\_point\_demo.cpp}}
+\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/garch11\_internal\_protocol\_demo.cpp}}
+
+\end{itemize}
+
+\sphinxstepscope
+
+
+\chapter{Optimizer Surfaces: Functional vs OOP}
+\label{\detokenize{optimizer_surfaces:optimizer-surfaces-functional-vs-oop}}\label{\detokenize{optimizer_surfaces::doc}}
+\sphinxAtStartPar
+There are two ADAM surfaces in the Pluss stack by design.
+
+
+\section{Functional Surface (\sphinxstyleliteralintitle{\sphinxupquote{PlussMa}})}
+\label{\detokenize{optimizer_surfaces:functional-surface-plussma}}
+\sphinxAtStartPar
+Namespace:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{pluss::optim::adam\_state\_like(...)}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{pluss::optim::adam\_step\_inplace(...)}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{pluss::optim::adam\_step(...)}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+Intent:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+low\sphinxhyphen{}level \sphinxcode{\sphinxupquote{Series}} update primitive
+
+\item {} 
+\sphinxAtStartPar
+explicit sensitivity/gradient updates
+
+\item {} 
+\sphinxAtStartPar
+useful for custom ML loops and research code
+
+\end{itemize}
+
+\sphinxAtStartPar
+Demo:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/adam\_functional\_demo.cpp}}
+
+\item {} 
+\sphinxAtStartPar
+Includes both explicit\sphinxhyphen{}gradient and autodiff\sphinxhyphen{}generated\sphinxhyphen{}gradient usage.
+
+\end{itemize}
+
+
+\section{OOP Surface (\sphinxstyleliteralintitle{\sphinxupquote{PlussAI}})}
+\label{\detokenize{optimizer_surfaces:oop-surface-plussai}}
+\sphinxAtStartPar
+Namespace:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{pluss::nn::optim::Adam}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+Intent:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+module/parameter\sphinxhyphen{}list optimizer object
+
+\item {} 
+\sphinxAtStartPar
+DL\sphinxhyphen{}style training loop ergonomics
+
+\item {} 
+\sphinxAtStartPar
+parameter groups and richer optimizer policy
+
+\end{itemize}
+
+\sphinxAtStartPar
+Demo:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{PlussAI/examples/adam\_oop\_demo.cpp}}
+
+\item {} 
+\sphinxAtStartPar
+Includes both explicit\sphinxhyphen{}gradient \sphinxcode{\sphinxupquote{step(grads)}} and autodiff \sphinxcode{\sphinxupquote{step()}} usage.
+
+\end{itemize}
+
+
+\section{Practical Rule}
+\label{\detokenize{optimizer_surfaces:practical-rule}}
+\sphinxAtStartPar
+Use the namespace to communicate intent clearly:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+choose \sphinxcode{\sphinxupquote{pluss::optim::*}} for functional/math\sphinxhyphen{}level optimization utilities
+
+\item {} 
+\sphinxAtStartPar
+choose \sphinxcode{\sphinxupquote{pluss::nn::optim::*}} for neural\sphinxhyphen{}module training optimizers
 
 \end{itemize}
 
@@ -1653,7 +1840,7 @@ The returned multiplier structure contains:
 A typical progress line from an instrumented SQP run looks like:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-[sqp:iter] iter=12 evals=50 value=1.125000 viol=0.000000 stat=8.5e\PYGZhy{}08 step=1.000000 penalty=10.000000
+iter=12 evals=50 objective=1.125000 viol=0.000000 stationarity=0.000000 backend=10.000000 step=1.000000 stall=none
 \end{sphinxVerbatim}
 
 \sphinxAtStartPar
@@ -1748,7 +1935,7 @@ The intent is straightforward:
 \begin{itemize}
 \item {} 
 \sphinxAtStartPar
-the algorithmic family is still interior\sphinxhyphen{}point
+the algorithmic family is still internal\sphinxhyphen{}protocol
 
 \item {} 
 \sphinxAtStartPar
@@ -2823,7 +3010,7 @@ The final multiplier structure is split into:
 A typical progress line from an instrumented run looks like:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-[ip:iter] iter=35 evals=189 value=16.329592 viol=0.000000 stat=0.244045 compl=0.000000 barrier=0.010000 step=0.062500 krylov=0 stall=none
+iter=35 evals=189 objective=16.329592 viol=0.000000 stationarity=0.244045 backend=0.010000 step=0.062500 stall=none
 \end{sphinxVerbatim}
 
 \sphinxAtStartPar
@@ -2867,7 +3054,7 @@ For an isolated walkthrough, use:
 \begin{itemize}
 \item {} 
 \sphinxAtStartPar
-\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/garch11\_interior\_point\_demo.cpp}}
+\sphinxcode{\sphinxupquote{PlussMa/examples/Numerical/optimization/garch11\_internal\_protocol\_demo.cpp}}
 
 \end{itemize}
 

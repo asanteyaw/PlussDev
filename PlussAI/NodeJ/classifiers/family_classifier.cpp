@@ -767,7 +767,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 5) return Status::invalid_argument("NeighborClassifier::load_state expects 5 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 7) return Status::invalid_argument("NeighborClassifier::load_state invalid metadata.");
@@ -1017,7 +1017,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("TreeClassifier::load_state expects 2 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 7) return Status::invalid_argument("TreeClassifier::load_state invalid metadata.");
@@ -1557,7 +1557,7 @@ public:
     return StatusOr<std::vector<Series>>(std::move(out));
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.empty()) return Status::invalid_argument("EnsembleClassifier::load_state expects metadata tensor.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 7) return Status::invalid_argument("EnsembleClassifier::load_state invalid metadata.");
@@ -1949,7 +1949,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 5) return Status::invalid_argument("BayesClassifier::load_state expects 5 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 8) return Status::invalid_argument("BayesClassifier::load_state invalid metadata.");
@@ -2152,7 +2152,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 3) return Status::invalid_argument("KernelClassifier::load_state expects 3 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 8) return Status::invalid_argument("KernelClassifier::load_state invalid metadata.");
@@ -2872,7 +2872,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("LinearClassifier::load_state expects 2 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 8) return Status::invalid_argument("LinearClassifier::load_state invalid metadata.");
@@ -2970,7 +2970,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.empty()) return Status::invalid_argument("FamilyClassifier::load_state expects metadata tensor.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 2) return Status::invalid_argument("FamilyClassifier::load_state invalid metadata.");
@@ -3197,7 +3197,7 @@ public:
     return StatusOr<std::vector<Series>>(std::move(out));
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("OvRClassifier::load_state expects metadata + classes tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 5) return Status::invalid_argument("OvRClassifier::load_state invalid metadata.");

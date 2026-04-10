@@ -57,6 +57,7 @@ def gen(inp: pathlib.Path, out_dir: pathlib.Path):
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::{name}_ops {{
   {sig};
@@ -77,6 +78,7 @@ namespace pluss::codem::ops {{
     "#include \"CodeM/core/Series.h\"",
     "#include \"CodeM/core/SeriesIterator.h\"",
     "#include \"CodeM/core/TypePromotion.h\"",
+    "#include \"MSharp/RangeView.h\"",
     "",
     "namespace pluss::codem::native::cpu {",
     "  // Elementwise kernels (out-parameter)",
@@ -125,10 +127,10 @@ namespace pluss::codem::ops {{
     "  Series nonzero(const Series& mask);",
     "  Series take(const Series& a, const Series& index);",
     "  Series put(const Series& a, const Series& index, const Series& src, bool accumulate);",
-    "  Series index(const Series& a, const std::vector<Series>& indices);",
-    "  Series index_put(const Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate);",
-    "  Series cat(const std::vector<Series>& tensors, std::int64_t dim);",
-    "  Series stack(const std::vector<Series>& tensors, std::int64_t dim);",
+    "  Series index(const Series& a, pluss::msharp::RangeView::Of<Series> indices);",
+    "  Series index_put(const Series& a, pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate);",
+    "  Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);",
+    "  Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);",
     "}",
     "",
     "namespace pluss::codem::ops_internal {",

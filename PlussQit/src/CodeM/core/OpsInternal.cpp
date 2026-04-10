@@ -737,6 +737,14 @@ static std::vector<std::int64_t> broadcast_out_shape_(std::span<const std::int64
 
 ScalarType promoted_binary_dtype_(native::cpu::BinaryOpId op, ScalarType a, ScalarType b) {
   ScalarType dt = promote_types(a, b);
+
+  // Match tensor-style "true division" semantics: integer/bool division
+  // promotes to floating output instead of truncating integer arithmetic.
+  if (op == native::cpu::BinaryOpId::Div &&
+      (dt == ScalarType::Bool || dtype_of(dt).is_integral())) {
+    return ScalarType::Float64;
+  }
+
   if (dt != ScalarType::Bool) {
     return dt;
   }
@@ -1111,7 +1119,23 @@ Series div(const Series& a, const Series& b) {
   return out;
 }
 Series pow(const Series& a, const Series& b) {
-  const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Pow, a.scalar_type(), b.scalar_type());
+  const bool base_is_int = dtype_of(a.scalar_type()).is_integral();
+  const bool exp_is_int = dtype_of(b.scalar_type()).is_integral();
+  const bool exp_is_signed_int =
+      b.scalar_type() == ScalarType::Int8 ||
+      b.scalar_type() == ScalarType::Int16 ||
+      b.scalar_type() == ScalarType::Int32 ||
+      b.scalar_type() == ScalarType::Int64;
+
+  const bool needs_fractional_promotion =
+      base_is_int &&
+      exp_is_int &&
+      exp_is_signed_int &&
+      lt(b, Series::full({1}, 0.0, b.scalar_type()).to(b.platform())).any().item<bool>();
+
+  ScalarType out_dt = needs_fractional_promotion
+                          ? ScalarType::Float64
+                          : promoted_binary_dtype_(native::cpu::BinaryOpId::Pow, a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
   auto out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);
@@ -1136,7 +1160,18 @@ Series add(const Series& a, double s) { return add(a, scalar_like_(a, s)); }
 Series sub(const Series& a, double s) { return sub(a, scalar_like_(a, s)); }
 Series mul(const Series& a, double s) { return mul(a, scalar_like_(a, s)); }
 Series div(const Series& a, double s) { return div(a, scalar_like_(a, s)); }
-Series pow(const Series& a, double s) { return pow(a, scalar_like_(a, s)); }
+Series pow(const Series& a, double s) {
+  const bool base_is_int = dtype_of(a.scalar_type()).is_integral();
+  const bool exponent_is_integer =
+      std::isfinite(s) &&
+      (std::trunc(s) == s) &&
+      (s >= static_cast<double>(std::numeric_limits<std::int64_t>::min())) &&
+      (s <= static_cast<double>(std::numeric_limits<std::int64_t>::max()));
+  if (base_is_int && exponent_is_integer && s >= 0.0) {
+    return pow(a, Series::full({1}, s, ScalarType::Int64).to(a.platform()));
+  }
+  return pow(a, Series::full({1}, s, ScalarType::Float64).to(a.platform()));
+}
 
 Series& add_(Series& a, double s) { a = add(a, s); return a; }
 Series& sub_(Series& a, double s) { a = sub(a, s); return a; }
@@ -1348,19 +1383,35 @@ Series gt(const Series& a, const Series& b) { return cmp_op_(native::cpu::Binary
 Series ge(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ge, a, b); }
 
 Series sqrt(const Series& a) {
+  auto needs_float_promotion_for_sqrt = [](ScalarType dt) noexcept {
+    if (dt == ScalarType::Bool) return true;
+    if (dtype_of(dt).is_integral()) return true;
+    switch (dt) {
+      case ScalarType::Float8E4M3FN:
+      case ScalarType::Float8E5M2:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const bool promote_input = needs_float_promotion_for_sqrt(a.scalar_type());
+  const ScalarType in_dt = promote_input ? promote_types(a.scalar_type(), ScalarType::Float32) : a.scalar_type();
+  const Series aa = promote_input ? a.to(in_dt) : a;
+
   Series out;
-  if (a.platform() == Platform::MPS) {
+  if (aa.platform() == Platform::MPS) {
     const bool supported =
-        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sqrt, a.scalar_type());
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sqrt, aa.scalar_type());
     require_mps_support_or_policy_(supported, "sqrt");
     if (supported) {
-      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-      native::mps::unary_math(native::mps::UnaryMathOp::Sqrt, a.contiguous(), out);
+      out = Series::empty(aa.sizes(), aa.scalar_type(), aa.platform());
+      native::mps::unary_math(native::mps::UnaryMathOp::Sqrt, aa.contiguous(), out);
     } else {
-      out = unary_cpu_with_platform_dispatch_policy_(a, "sqrt", native::cpu::sqrt);
+      out = unary_cpu_with_platform_dispatch_policy_(aa, "sqrt", native::cpu::sqrt);
     }
   } else {
-    out = unary_cpu_with_platform_dispatch_policy_(a, "sqrt", native::cpu::sqrt);
+    out = unary_cpu_with_platform_dispatch_policy_(aa, "sqrt", native::cpu::sqrt);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.mul(0.5).mul(rsqrt(a));
@@ -1898,21 +1949,31 @@ Series& masked_fill_(Series& a, const Series& mask, const Series& value) {
     return a;
   }
   auto cpu_apply = [&](Series& target) -> Series& {
-    PLUSS_CHECK(target.is_contiguous(), "masked_fill_: in-place requires a contiguous Series");
-    auto mm = mask.expand(shape, true).contiguous();
-    const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
-
-    // Value cast
+    const Series mm = mask.expand(shape, true);
     Series vv = value.to(target.scalar_type()).contiguous();
     const auto item = target.dtype().itemsize;
     const std::byte* vp = vv.raw_data();
-
     auto* ap = reinterpret_cast<std::byte*>(target.raw_mutable_data());
-    const auto n = target.numel();
-    for (std::int64_t i = 0; i < n; ++i) {
-      if (!mp[i]) continue;
-      std::memcpy(ap + i * item, vp, (std::size_t)item);
+
+    if (target.is_contiguous() && mm.is_contiguous()) {
+      const auto* mp = reinterpret_cast<const std::uint8_t*>(mm.raw_data());
+      const auto n = target.numel();
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (!mp[i]) continue;
+        std::memcpy(ap + i * item, vp, (std::size_t)item);
+      }
+      return target;
     }
+
+    const auto* mp = reinterpret_cast<const std::uint8_t*>(mm.raw_data());
+    SeriesIterator it = SeriesIterator::unary(mm, target);
+    it.for_each_index([&](std::int64_t, std::int64_t m_off, std::int64_t, std::int64_t out_off) {
+      if (!mp[m_off]) return;
+      std::memcpy(
+          ap + static_cast<std::ptrdiff_t>(out_off) * static_cast<std::ptrdiff_t>(item),
+          vp,
+          static_cast<std::size_t>(item));
+    });
     return target;
   };
 
@@ -5203,13 +5264,54 @@ Series Series::slice(
 
   const std::int64_t base_off_elems =
       storage_offset() / std::max<std::int64_t>(1, itemsize());
+  const std::int64_t view_off_elems = base_off_elems + s * base_stride;
 
-  return pluss::codem::_compat::invoke(
-      "as_strided",
+  Series out = Series::from_storage(
+      storage(),
+      view_off_elems,
+      out_sizes,
+      out_strides,
+      scalar_type());
+
+  maybe_link_unary_op_(
+      out,
       *this,
-      {pluss::msharp::RangeView::Int(out_sizes),
-       pluss::msharp::RangeView::Int(out_strides),
-       base_off_elems + s * base_stride});
+      "slice",
+      [input = *this,
+       view_off_elems,
+       out_sizes,
+       out_strides](const Series& out_sens) {
+        Series sens = out_sens;
+        if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
+        if (sens.platform() != input.platform()) sens = sens.to(input.platform());
+
+        Series grad = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
+        if (sens.numel() == 0) return grad;
+
+        auto scatter_view_copy = [&](Series& grad_target, const Series& sens_src) {
+          Series grad_view = Series::from_storage(
+              grad_target.storage(),
+              view_off_elems,
+              out_sizes,
+              out_strides,
+              input.scalar_type());
+          SeriesIterator it = SeriesIterator::unary(sens_src, grad_view);
+          it.copy_out_from_in(sens_src, grad_view);
+        };
+
+        if (input.platform() == Platform::CPU) {
+          scatter_view_copy(grad, sens);
+          return grad;
+        }
+
+        // from_storage currently materializes CPU views; bridge the scatter for
+        // non-CPU inputs and convert back.
+        Series grad_cpu = grad.to(Platform::CPU, input.scalar_type());
+        Series sens_cpu = sens.to(Platform::CPU, input.scalar_type());
+        scatter_view_copy(grad_cpu, sens_cpu);
+        return grad_cpu.to(input.platform(), input.scalar_type()).contiguous();
+      });
+  return out;
 }
 
 static void ensure_writable_(Series& self) {
@@ -5713,7 +5815,7 @@ Series& Series::sin_() { guard_direct_inplace_value_op_("sin_", *this); *this = 
 Series& Series::cos_() { guard_direct_inplace_value_op_("cos_", *this); *this = cos(); return finish_direct_inplace_value_op_(*this); }
 Series& Series::tanh_() { guard_direct_inplace_value_op_("tanh_", *this); *this = tanh(); return finish_direct_inplace_value_op_(*this); }
 
-Series Series::unite(const std::vector<Series>& others, std::int64_t dim, bool strict_dtype) const {
+Series Series::unite(pluss::msharp::RangeView::Of<Series> others, std::int64_t dim, bool strict_dtype) const {
   for (const auto& t : others) {
     require_same_platform(*this, t, "unite");
   }
@@ -5815,7 +5917,7 @@ Series Series::unite(const std::vector<Series>& others, std::int64_t dim, bool s
   return out;
 }
 
-Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
+Series Series::pile(pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) const {
   for (const auto& t : others) {
     require_same_platform(*this, t, "pile");
   }
@@ -5936,7 +6038,7 @@ Series Series::add(double rhs) const { return this->add(scalar_to_series_(rhs, s
 Series Series::sub(double rhs) const { return this->sub(scalar_to_series_(rhs, scalar_type(), platform())); }
 Series Series::mul(double rhs) const { return this->mul(scalar_to_series_(rhs, scalar_type(), platform())); }
 Series Series::div(double rhs) const { return this->div(scalar_to_series_(rhs, scalar_type(), platform())); }
-Series Series::pow(double rhs) const { return this->pow(scalar_to_series_(rhs, scalar_type(), platform())); }
+Series Series::pow(double rhs) const { return ops_internal::pow(*this, rhs); }
 Series Series::minimum(double rhs) const { return this->minimum(scalar_to_series_(rhs, scalar_type(), platform())); }
 Series Series::maximum(double rhs) const { return this->maximum(scalar_to_series_(rhs, scalar_type(), platform())); }
 
@@ -6064,58 +6166,145 @@ static void bind_single_integer_index_backward_(
 }
 
 Series Series::index(pluss::msharp::RangeView::Of<ExtractSpec> specs) const {
-  const bool all_advanced =
-      std::all_of(specs.begin(), specs.end(), [](const ExtractSpec& s) {
-        return s.kind == ExtractSpec::Kind::AdvancedIndex;
-      });
-  if (!all_advanced) {
+  const std::vector<ExtractSpec> requested(specs.begin(), specs.end());
+  const auto normalized = normalize_extract_specs_(requested, dim());
+
+  auto pack_advanced_indices = [](std::span<const ExtractSpec> in) {
+    std::vector<Series> packed;
+    packed.reserve(in.size());
+    for (const auto& spec : in) {
+      PLUSS_CHECK(
+          spec.kind == ExtractSpec::Kind::AdvancedIndex,
+          "Series::index: internal index packer expects advanced-index specs only");
+      PLUSS_CHECK(spec.advanced_impl, "Series::index: advanced index Series is undefined");
+      Series idx;
+      idx.impl() = spec.advanced_impl;
+      packed.push_back(std::move(idx));
+    }
+    return packed;
+  };
+
+  auto dispatch_advanced = [&](const std::vector<Series>& packed_indices) -> Series {
+    for (const auto& idx : packed_indices) {
+      require_same_platform(*this, idx, "index");
+    }
+
+    Series out;
+    if (platform() == Platform::MPS) {
+      PLUSS_CHECK(packed_indices.size() == 1, "index: MPS path currently supports exactly one index tensor");
+      out = take(packed_indices.front());
+    } else if (platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_indexing_enabled();
+      const bool native_strict = native::cuda::native_indexing_strict();
+      const bool route_supported = native::cuda::supports_index(*this, packed_indices);
+      out = cuda_indexing_route_or_bridge_(
+          "index",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return pluss::codem::native::cpu::index(*this, packed_indices); });
+    } else {
+      require_backend_dispatch_supported_(platform(), "index");
+      out = pluss::codem::native::cpu::index(*this, packed_indices);
+    }
+
+    if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
+      if (platform() == Platform::CPU) {
+        bind_cpu_index_backward_(out, *this, packed_indices);
+      } else if (platform() != Platform::MPS && supports_tracked_index_backward_(*this, packed_indices)) {
+        bind_single_integer_index_backward_(out, *this, packed_indices.front());
+      } else if (platform() != Platform::MPS) {
+        PLUSS_FAIL(
+            "index: reverse-mode sensitivity currently supports tracked paths only for one integer index tensor on dim0; "
+            "use gather/take/select for other differentiable indexing patterns");
+      }
+    }
+    return out;
+  };
+
+  const bool requested_all_advanced = std::all_of(
+      requested.begin(), requested.end(), [](const ExtractSpec& s) { return s.kind == ExtractSpec::Kind::AdvancedIndex; });
+
+  // Mixed advanced-index fast path (Torch-like intent):
+  // route when every non-advanced spec is an identity SliceAll() and there is
+  // at least one advanced index tensor. This avoids extract()->index_select
+  // Cartesian blow-ups for patterns like:
+  //   index({idx0, idx1, SliceAll()})
+  bool has_advanced = false;
+  bool mixed_adv_identity_only = true;
+  std::int64_t dim_cursor = 0;
+  std::vector<Series> full_indices(static_cast<std::size_t>(dim()), Series::undefined());
+  for (const auto& s : normalized) {
+    if (s.kind == ExtractSpec::Kind::NewAxis || s.kind == ExtractSpec::Kind::Ellipsis) {
+      mixed_adv_identity_only = false;
+      break;
+    }
+    PLUSS_CHECK(dim_cursor < dim(), "Series::index: internal dimension cursor overflow");
+    if (s.kind == ExtractSpec::Kind::AdvancedIndex) {
+      has_advanced = true;
+      PLUSS_CHECK(s.advanced_impl, "Series::index: advanced index Series is undefined");
+      Series idx;
+      idx.impl() = s.advanced_impl;
+      full_indices[static_cast<std::size_t>(dim_cursor)] = std::move(idx);
+      ++dim_cursor;
+      continue;
+    }
+    if (s.kind == ExtractSpec::Kind::Slice) {
+      const auto b = normalize_slice_bounds_(s.slice, size(dim_cursor));
+      if (!is_identity_slice_(b, size(dim_cursor))) {
+        mixed_adv_identity_only = false;
+        break;
+      }
+      ++dim_cursor;
+      continue;
+    }
+    mixed_adv_identity_only = false;
+    break;
+  }
+  if (mixed_adv_identity_only && has_advanced && dim_cursor == dim()) {
+    if (platform() == Platform::CPU) {
+      Series out = pluss::codem::native::cpu::index(*this, full_indices);
+      if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
+        bind_cpu_index_backward_(out, *this, full_indices);
+      }
+      return out;
+    }
+    if (platform() == Platform::CUDA) {
+      for (const auto& idx : full_indices) {
+        if (!idx.defined()) continue;
+        require_same_platform(*this, idx, "index");
+      }
+      const bool native_enabled = native::cuda::native_indexing_enabled();
+      const bool native_strict = native::cuda::native_indexing_strict();
+      const bool route_supported =
+          std::all_of(full_indices.begin(), full_indices.end(), [](const Series& i) { return i.defined(); }) &&
+          native::cuda::supports_index(*this, full_indices);
+      Series out = cuda_indexing_route_or_bridge_(
+          "index",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return pluss::codem::native::cpu::index(*this, full_indices); });
+      if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
+        if (supports_tracked_index_backward_(*this, full_indices)) {
+          bind_single_integer_index_backward_(out, *this, full_indices.front());
+        } else if (!full_indices.empty()) {
+          PLUSS_FAIL(
+              "index: reverse-mode sensitivity currently supports tracked paths only for one integer index tensor on dim0; "
+              "use gather/take/select for other differentiable indexing patterns");
+        }
+      }
+      return out;
+    }
+    // MPS keeps the existing conservative path for mixed-index forms.
+  }
+
+  if (!requested_all_advanced) {
     return extract(specs);
   }
 
-  std::vector<Series> packed_indices;
-  packed_indices.reserve(specs.size());
-  for (const auto& spec : specs) {
-    PLUSS_CHECK(spec.advanced_impl,
-                "Series::index: advanced index Series is undefined");
-    Series idx;
-    idx.impl() = spec.advanced_impl;
-    packed_indices.push_back(std::move(idx));
-  }
-
-  for (const auto& idx : packed_indices) {
-    require_same_platform(*this, idx, "index");
-  }
-  Series out;
-  if (platform() == Platform::MPS) {
-    PLUSS_CHECK(packed_indices.size() == 1, "index: MPS path currently supports exactly one index tensor");
-    out = take(packed_indices.front());
-  } else if (platform() == Platform::CUDA) {
-    const bool native_enabled = native::cuda::native_indexing_enabled();
-    const bool native_strict = native::cuda::native_indexing_strict();
-    const bool route_supported = native::cuda::supports_index(*this, packed_indices);
-    out = cuda_indexing_route_or_bridge_(
-        "index",
-        native_enabled,
-        native_strict,
-        route_supported,
-        [&]() { return pluss::codem::native::cpu::index(*this, packed_indices); });
-  } else {
-    require_backend_dispatch_supported_(platform(), "index");
-    out = pluss::codem::native::cpu::index(*this, packed_indices);
-  }
-
-  if (series_tape::recording_enabled() && series_tape::tracks_slope(*this)) {
-    if (platform() == Platform::CPU) {
-      bind_cpu_index_backward_(out, *this, packed_indices);
-    } else if (platform() != Platform::MPS && supports_tracked_index_backward_(*this, packed_indices)) {
-      bind_single_integer_index_backward_(out, *this, packed_indices.front());
-    } else if (platform() != Platform::MPS) {
-      PLUSS_FAIL(
-          "index: reverse-mode sensitivity currently supports tracked paths only for one integer index tensor on dim0; "
-          "use gather/take/select for other differentiable indexing patterns");
-    }
-  }
-  return out;
+  return dispatch_advanced(pack_advanced_indices(
+      std::span<const ExtractSpec>(requested.data(), requested.size())));
 }
 Series Series::take(const Series& index) const {
   require_same_platform(*this, index, "take");

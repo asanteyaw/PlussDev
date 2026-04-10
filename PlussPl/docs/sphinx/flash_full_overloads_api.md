@@ -71,7 +71,7 @@ Convenience autocorrelation wrapper with a compact options surface.
 #### Signature
 
 ```cpp
-Studio& andrews_curves(self: Studio, const std::vector<Series>& columns, const AndrewsCurvesOptions& options = {});
+Studio& andrews_curves(self: Studio, pluss::msharp::RangeView::Series columns, const AndrewsCurvesOptions& options = {});
 ```
 
 #### Notes
@@ -101,7 +101,7 @@ Maps each row to a smooth periodic curve for multivariate separation analysis.
 #### Signature
 
 ```cpp
-Studio& andrews_curves(self: Studio, const std::vector<Series>& columns, const Note& class_labels, const AndrewsCurvesOptions& options = {});
+Studio& andrews_curves(self: Studio, pluss::msharp::RangeView::Series columns, const Note& class_labels, const AndrewsCurvesOptions& options = {});
 ```
 
 #### Notes
@@ -191,7 +191,7 @@ Maps each row to a smooth periodic curve for multivariate separation analysis.
 #### Signature
 
 ```cpp
-Studio& andrews_curves(self: Studio, const Series& matrix, std::vector<std::string> feature_names, Axis feature_axis, const AndrewsCurvesOptions& options = {});
+Studio& andrews_curves(self: Studio, const Series& matrix, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, const AndrewsCurvesOptions& options = {});
 ```
 
 #### Notes
@@ -521,7 +521,7 @@ Quartile/whisker summary for distribution comparison.
 #### Signature
 
 ```cpp
-Studio& catgridplot(self: Studio, const std::vector<Note>& groups, const std::vector<Series>& values, const CatGridPlotOptions& options = {});
+Studio& catgridplot(self: Studio, pluss::msharp::RangeView::Note groups, pluss::msharp::RangeView::Series values, const CatGridPlotOptions& options = {});
 ```
 
 #### Notes
@@ -551,7 +551,7 @@ Facet grid for repeated categorical comparisons across slices.
 #### Signature
 
 ```cpp
-Studio& catgridplot(self: Studio, const std::vector<Note>& groups, const std::vector<Series>& values, const std::vector<Note>& hues, const CatGridPlotOptions& options = {});
+Studio& catgridplot(self: Studio, pluss::msharp::RangeView::Note groups, pluss::msharp::RangeView::Series values, pluss::msharp::RangeView::Note hues, const CatGridPlotOptions& options = {});
 ```
 
 #### Notes
@@ -1091,7 +1091,7 @@ Frequency chart for numeric bins or category counts.
 #### Signature
 
 ```cpp
-Studio& disgridplot(self: Studio, const std::vector<Series>& values, const DisGridPlotOptions& options = {});
+Studio& disgridplot(self: Studio, pluss::msharp::RangeView::Series values, const DisGridPlotOptions& options = {});
 ```
 
 #### Notes
@@ -1121,7 +1121,7 @@ Facet grid for distribution views (`hist`, `density`, `ecdf`, `rug`).
 #### Signature
 
 ```cpp
-Studio& disgridplot(self: Studio, const std::vector<Series>& values, std::string_view kind);
+Studio& disgridplot(self: Studio, pluss::msharp::RangeView::Series values, std::string_view kind);
 ```
 
 #### Notes
@@ -1691,7 +1691,7 @@ Joint + marginals composition for bivariate diagnostics.
 #### Signature
 
 ```cpp
-Studio& jointplot(self: Studio, const Series& matrix, std::string_view x_name, std::string_view y_name, std::vector<std::string> feature_names, Axis feature_axis, std::string_view kind = "scatter");
+Studio& jointplot(self: Studio, const Series& matrix, std::string_view x_name, std::string_view y_name, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, std::string_view kind = "scatter");
 ```
 
 #### Notes
@@ -1721,7 +1721,7 @@ Joint + marginals composition for bivariate diagnostics.
 #### Signature
 
 ```cpp
-Studio& jointplot(self: Studio, const Series& matrix, std::string_view x_name, std::string_view y_name, std::vector<std::string> feature_names, Axis feature_axis, const JointPlotOptions& options);
+Studio& jointplot(self: Studio, const Series& matrix, std::string_view x_name, std::string_view y_name, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, const JointPlotOptions& options);
 ```
 
 #### Notes
@@ -2231,7 +2231,7 @@ Partial autocorrelation for AR order identification.
 #### Signature
 
 ```cpp
-Studio& pairplot(self: Studio, const std::vector<Series>& columns, const PairPlotOptions& options = {});
+Studio& pairplot(self: Studio, pluss::msharp::RangeView::Series columns, const PairPlotOptions& options = {});
 ```
 
 #### Notes
@@ -2321,7 +2321,7 @@ Pairwise matrix of feature relationships.
 #### Signature
 
 ```cpp
-Studio& pairplot(self: Studio, const Series& matrix, std::vector<std::string> feature_names, Axis feature_axis, const PairPlotOptions& options = {});
+Studio& pairplot(self: Studio, const Series& matrix, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, const PairPlotOptions& options = {});
 ```
 
 #### Notes
@@ -2381,7 +2381,7 @@ Pairwise matrix of feature relationships.
 #### Signature
 
 ```cpp
-Studio& parallelplot(self: Studio, const std::vector<Series>& columns, const ParallelCoordinatesOptions& options = {});
+Studio& parallelplot(self: Studio, pluss::msharp::RangeView::Series columns, const ParallelCoordinatesOptions& options = {});
 ```
 
 #### Notes
@@ -2411,7 +2411,7 @@ Parallel coordinates for high-dimensional row comparisons.
 #### Signature
 
 ```cpp
-Studio& parallelplot(self: Studio, const std::vector<Series>& columns, const Note& class_labels, const ParallelCoordinatesOptions& options = {});
+Studio& parallelplot(self: Studio, pluss::msharp::RangeView::Series columns, const Note& class_labels, const ParallelCoordinatesOptions& options = {});
 ```
 
 #### Notes
@@ -2501,7 +2501,7 @@ Parallel coordinates for high-dimensional row comparisons.
 #### Signature
 
 ```cpp
-Studio& parallelplot(self: Studio, const Series& matrix, std::vector<std::string> feature_names, Axis feature_axis, const ParallelCoordinatesOptions& options = {});
+Studio& parallelplot(self: Studio, const Series& matrix, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, const ParallelCoordinatesOptions& options = {});
 ```
 
 #### Notes
@@ -2711,7 +2711,8 @@ Pie wedges from part-to-whole values.
 #### Signature
 
 ```cpp
-Trace& pieplot(self: Pane, SeriesLike values, std::vector<std::string> labels);
+Trace& pieplot(self: Pane, SeriesLike values, pluss::msharp::RangeView::Of<std::string_view> labels);
+Trace& pieplot(self: Pane, SeriesLike values, std::initializer_list<std::string_view> labels);
 ```
 
 #### Notes
@@ -2921,7 +2922,7 @@ Studio, values: SeriesLike, options: QqPlotOptions = {});
 #### Signature
 
 ```cpp
-Studio& radviz(self: Studio, const std::vector<Series>& columns, const RadvizOptions& options = {});
+Studio& radviz(self: Studio, pluss::msharp::RangeView::Series columns, const RadvizOptions& options = {});
 ```
 
 #### Notes
@@ -2951,7 +2952,7 @@ Projects features to anchors on a circle for class separation.
 #### Signature
 
 ```cpp
-Studio& radviz(self: Studio, const std::vector<Series>& columns, const Note& class_labels, const RadvizOptions& options = {});
+Studio& radviz(self: Studio, pluss::msharp::RangeView::Series columns, const Note& class_labels, const RadvizOptions& options = {});
 ```
 
 #### Notes
@@ -3041,7 +3042,7 @@ Projects features to anchors on a circle for class separation.
 #### Signature
 
 ```cpp
-Studio& radviz(self: Studio, const Series& matrix, std::vector<std::string> feature_names, Axis feature_axis, const RadvizOptions& options = {});
+Studio& radviz(self: Studio, const Series& matrix, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, const RadvizOptions& options = {});
 ```
 
 #### Notes
@@ -3131,7 +3132,7 @@ Scatter + fitted regression (optionally CI bands).
 #### Signature
 
 ```cpp
-Studio& relgridplot(self: Studio, const std::vector<Series>& xs, const std::vector<Series>& ys, const RelGridPlotOptions& options = {});
+Studio& relgridplot(self: Studio, pluss::msharp::RangeView::Series xs, pluss::msharp::RangeView::Series ys, const RelGridPlotOptions& options = {});
 ```
 
 #### Notes
@@ -3161,7 +3162,7 @@ Facet grid for relational plots (scatter/line/reg).
 #### Signature
 
 ```cpp
-Studio& relgridplot(self: Studio, const std::vector<Series>& xs, const std::vector<Series>& ys, std::string_view kind);
+Studio& relgridplot(self: Studio, pluss::msharp::RangeView::Series xs, pluss::msharp::RangeView::Series ys, std::string_view kind);
 ```
 
 #### Notes
@@ -4061,7 +4062,7 @@ Raw points per category with minimal aggregation.
 #### Signature
 
 ```cpp
-Studio& summaryplot(self: Studio, const std::vector<Series>& columns, const std::vector<std::string>& labels, const SummaryOptions& options = {});
+Studio& summaryplot(self: Studio, pluss::msharp::RangeView::Series columns, pluss::msharp::RangeView::Of<std::string_view> labels, const SummaryOptions& options = {});
 ```
 
 #### Notes
@@ -4121,7 +4122,7 @@ Alias of stripplot for dense categorical point clouds.
 #### Signature
 
 ```cpp
-Studio& triplot(self: Studio, const std::vector<Series>& columns, const TriplotOptions& options = {});
+Studio& triplot(self: Studio, pluss::msharp::RangeView::Series columns, const TriplotOptions& options = {});
 ```
 
 #### Notes
@@ -4211,7 +4212,7 @@ Enumerates 3-feature combinations into small-multiple 3D panels.
 #### Signature
 
 ```cpp
-Studio& triplot(self: Studio, const Series& matrix, std::vector<std::string> feature_names, Axis feature_axis, const TriplotOptions& options = {});
+Studio& triplot(self: Studio, const Series& matrix, pluss::msharp::RangeView::Of<std::string_view> feature_names, Axis feature_axis, const TriplotOptions& options = {});
 ```
 
 #### Notes

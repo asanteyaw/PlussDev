@@ -32,8 +32,8 @@ struct NAdamGroup {
 
 class PLUSS_API NAdam final : public Optimizer {
 public:
-  explicit NAdam(std::vector<Series*> parameters, NAdamOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit NAdam(pluss::msharp::RangeView::Of<Series*> parameters, NAdamOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -43,7 +43,7 @@ public:
     initialize_state_();
   }
 
-  explicit NAdam(std::vector<NAdamGroup> groups)
+  explicit NAdam(pluss::msharp::RangeView::Of<NAdamGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -143,7 +143,7 @@ private:
     Series decay_power{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
     auto& params = mutable_parameters_();
     reset_step_lane_telemetry_();
@@ -192,8 +192,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -248,8 +248,8 @@ private:
   }
 
   void apply_group_loop_(GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const NAdamOptions& options = group.options;
     const bool capturable = options.execution.capturable;
     CapturableTerms cap_terms{};
@@ -324,8 +324,8 @@ private:
   }
 
   void apply_group_batched_(GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const NAdamOptions& options = group.options;
     const bool capturable = options.execution.capturable;
     CapturableTerms cap_terms{};
@@ -422,8 +422,8 @@ private:
   }
 
   void apply_group_fused_(GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const NAdamOptions& options = group.options;
     const bool capturable = options.execution.capturable;
     CapturableTerms cap_terms{};
@@ -544,7 +544,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<NAdamGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<NAdamGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::NAdam: expected non-empty parameter groups");
     }
@@ -564,7 +564,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<NAdamGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<NAdamGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;

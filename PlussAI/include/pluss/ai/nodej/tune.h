@@ -31,7 +31,7 @@ struct TuneReport {
 
 using ProbeSpecSampler = std::function<StatusOr<ModelSpec>(std::int64_t trial_index, std::uint64_t seed)>;
 
-StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates,
+StatusOr<TuneReport> sweep(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                            const LabeledBatch& batch,
                            const SplitOptions& split = {},
                            const TrainOptions& train_options = {},

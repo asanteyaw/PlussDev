@@ -19,14 +19,14 @@ inline bool weight_tracks_slope_(const NetWeight& w) {
       (w.weight_hr.defined() && w.weight_hr.tracks_slope());
 }
 
-inline bool any_weight_tracks_slope_(const std::vector<NetWeight>& params) {
+inline bool any_weight_tracks_slope_(pluss::msharp::RangeView::Of<NetWeight> params) {
   for (const auto& p : params) {
     if (weight_tracks_slope_(p)) return true;
   }
   return false;
 }
 
-inline Series stack_dim0_(const std::vector<Series>& xs) {
+inline Series stack_dim0_(pluss::msharp::RangeView::Series xs) {
   PLUSS_CHECK(!xs.empty(), "pluss::rnn: stack_dim0 requires non-empty inputs");
   Series head = xs.front().unsqueeze(0);
   if (xs.size() == 1) return head;
@@ -137,7 +137,7 @@ namespace pluss::ai::rnn {
 
 inline std::tuple<Series, Series> rnn(const Series& input,
                                       const Series& hx,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   validate_config(cfg);
   detail::validate_param_count(params, cfg, "rnn");
@@ -184,14 +184,14 @@ inline std::tuple<Series, Series> rnn(const Series& input,
 }
 
 inline std::tuple<Series, Series> rnn(const Series& input,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   return rnn(input, Series(), params, std::move(cfg));
 }
 
 inline std::tuple<Series, Series> gru(const Series& input,
                                       const Series& hx,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   validate_config(cfg);
   detail::validate_param_count(params, cfg, "gru");
@@ -238,7 +238,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
 }
 
 inline std::tuple<Series, Series> gru(const Series& input,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   return gru(input, Series(), params, std::move(cfg));
 }
@@ -246,7 +246,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
 inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
                                                            const Series& hx,
                                                            const Series& cx,
-                                                           const std::vector<NetWeight>& params,
+                                                           pluss::msharp::RangeView::Of<NetWeight> params,
                                                            NetConfig cfg = {}) {
   validate_config(cfg);
   detail::validate_param_count(params, cfg, "lstm");
@@ -313,7 +313,7 @@ inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
 }
 
 inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
-                                                           const std::vector<NetWeight>& params,
+                                                           pluss::msharp::RangeView::Of<NetWeight> params,
                                                            NetConfig cfg = {}) {
   return lstm(input, Series(), Series(), params, std::move(cfg));
 }

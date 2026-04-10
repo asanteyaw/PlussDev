@@ -2,6 +2,7 @@
 
 #include "NodeK/NN/modules/Module.h"
 #include "CodeM/core/SeriesTape.h"
+#include "MSharp/RangeView.h"
 #include "pluss/codem/codem.h"
 #include "pluss/nn_detail.h"
 
@@ -77,9 +78,9 @@ struct StepLaneTelemetry {
 
 class PLUSS_API Optimizer {
 public:
-  explicit Optimizer(std::vector<Series*> parameters)
-      : parameters_(std::move(parameters)),
-        parameter_labels_(default_labels_(parameters_.size())) {
+  explicit Optimizer(pluss::msharp::RangeView::Of<Series*> parameters)
+      : parameters_(parameters.begin(), parameters.end()),
+        parameter_labels_(default_labels_(parameters.size())) {
     validate_parameters_();
   }
 
@@ -138,7 +139,7 @@ public:
     step(grads);
   }
 
-  void step(const std::vector<Series>& gradients) {
+  void step(pluss::msharp::RangeView::Series gradients) {
     if (gradients.size() != parameters_.size()) {
       ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer::step: gradients size must match parameter count");
@@ -278,9 +279,9 @@ protected:
   }
 
   static const Series* active_lane_anchor_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     for (const auto i : indices) {
       if (i >= params.size() || i >= gradients.size()) continue;
       const Series* p = params[i];
@@ -341,27 +342,27 @@ protected:
   }
 
   static bool supports_batched_lane_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     const Series* anchor = active_lane_anchor_(indices, params, gradients);
     if (anchor == nullptr) return false;
     return supports_batched_lane_platform_(anchor->platform(), anchor->scalar_type());
   }
 
   static bool supports_fused_lane_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     const Series* anchor = active_lane_anchor_(indices, params, gradients);
     if (anchor == nullptr) return false;
     return supports_fused_lane_platform_(anchor->platform(), anchor->scalar_type());
   }
 
   static bool supports_capturable_lane_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     const Series* anchor = active_lane_anchor_(indices, params, gradients);
     if (anchor == nullptr) return true;
     const Platform platform = anchor->platform();
@@ -372,9 +373,9 @@ protected:
   }
 
   static std::size_t active_lane_parameter_count_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     std::size_t count = 0;
     for (const auto i : indices) {
       if (i >= params.size() || i >= gradients.size()) continue;
@@ -394,7 +395,7 @@ protected:
     return shape;
   }
 
-  static Series pack_batched_(const std::vector<Series>& slices, const char* where) {
+  static Series pack_batched_(pluss::msharp::RangeView::Series slices, const char* where) {
     if (slices.empty()) {
       ::pluss::throw_error(std::string(where) + ": expected non-empty batched slices");
     }
@@ -418,9 +419,9 @@ protected:
       std::size_t group_index,
       UpdateLane requested,
       UpdateLane resolved,
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients,
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients,
       bool batch_shape_compatible,
       bool batched_supported,
       bool fused_supported,
@@ -441,7 +442,7 @@ protected:
     last_step_lane_telemetry_.push_back(std::move(item));
   }
 
-  void validate_state_vector_(const std::vector<Series>& state, const char* where) const {
+  void validate_state_vector_(pluss::msharp::RangeView::Series state, const char* where) const {
     if (state.size() != parameters_.size()) {
       ::pluss::throw_error(std::string(where) + ": state size must match parameter count");
     }
@@ -535,7 +536,7 @@ private:
     }
   }
 
-  void validate_gradients_(const std::vector<Series>& gradients) const {
+  void validate_gradients_(pluss::msharp::RangeView::Series gradients) const {
     for (std::size_t i = 0; i < gradients.size(); ++i) {
       const Series& g = gradients[i];
       const Series* p = parameters_[i];
@@ -588,7 +589,7 @@ private:
     }
   }
 
-  virtual void apply_step_(const std::vector<Series>& gradients) = 0;
+  virtual void apply_step_(pluss::msharp::RangeView::Series gradients) = 0;
   virtual bool requires_recording_during_step_() const { return false; }
 
   std::vector<Series*> parameters_{};

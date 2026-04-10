@@ -81,7 +81,7 @@ result.value() is available
 ```text
 NodeJ DataFrame bridge demo
 adapted batch: samples=6 features=4 weighted=yes
-linear metrics [mse, r2]: 9.43684e-08 1
+linear metrics [mse, r2]: 1.5165e-17 1
 NodeJ DataFrame bridge demo completed.
 ```
 
@@ -116,15 +116,15 @@ void run_regressor_family(const std::string& name, const ModelSpec& spec, const 
 ```text
 NodeJ model families demo
 Classification families:
-  linear (acc, logloss): 1 0.000580684
-  linear_hinge (acc, logloss): 1 0.208572
+  linear (acc, logloss): 1 4.47877e-06
+  linear_hinge (acc, logloss): 1 0.0886185
   tree (acc, logloss): 1 9.99978e-13
   ensemble (acc, logloss): 1 1.00003e-12
   neighbor (acc, logloss): 1 9.99978e-13
   kernel (acc, logloss): 1 0.318438
   bayes (acc, logloss): 1 9.99978e-13
 Regression families:
-  linear (mse, r2): 3.96212e-15 1
+  linear (mse, r2): 1.52381e-19 1
   tree (mse, r2): 0 1
 ...
 ```

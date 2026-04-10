@@ -1,8 +1,8 @@
 #pragma once
 #include "CodeM/core/SeriesSlim.h"
-#include <vector>
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::native::cpu {
-  Series cat(const std::vector<Series>& tensors, std::int64_t dim);
-  Series stack(const std::vector<Series>& tensors, std::int64_t dim);
+  Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);
+  Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);
 }

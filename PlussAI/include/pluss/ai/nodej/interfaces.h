@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/nodej/dataset.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::ai::nodej {
 
@@ -19,7 +20,7 @@ public:
   [[nodiscard]] virtual StatusOr<std::vector<Series>> dump_state() const {
     return StatusOr<std::vector<Series>>(Status::not_implemented("dump_state() is not implemented for this estimator."));
   }
-  virtual Status load_state(const std::vector<Series>& state) {
+  virtual Status load_state(pluss::msharp::RangeView::Series state) {
     (void)state;
     return Status::not_implemented("load_state() is not implemented for this estimator.");
   }
@@ -51,7 +52,7 @@ public:
   [[nodiscard]] virtual StatusOr<std::vector<Series>> dump_state() const {
     return StatusOr<std::vector<Series>>(Status::not_implemented("dump_state() is not implemented for this transformer."));
   }
-  virtual Status load_state(const std::vector<Series>& state) {
+  virtual Status load_state(pluss::msharp::RangeView::Series state) {
     (void)state;
     return Status::not_implemented("load_state() is not implemented for this transformer.");
   }

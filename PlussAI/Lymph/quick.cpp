@@ -265,7 +265,7 @@ StatusOr<nodej::CrossAssessReport> assess_cv(const nodej::ModelSpec& spec,
   return nodej::cross_assess(spec, batch, split, train_options, assess_options);
 }
 
-StatusOr<nodej::TuneReport> tune_sweep(const std::vector<nodej::ModelSpec>& candidates,
+StatusOr<nodej::TuneReport> tune_sweep(pluss::msharp::RangeView::Of<nodej::ModelSpec> candidates,
                                        const nodej::LabeledBatch& batch,
                                        const nodej::SplitOptions& split,
                                        const nodej::TrainOptions& train_options,

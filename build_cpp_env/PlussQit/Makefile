@@ -333,6 +333,20 @@ plussqit_codem_linear_alg_demo/fast:
 .PHONY : plussqit_codem_linear_alg_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_traverse_demo: PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/rule
+.PHONY : plussqit_codem_traverse_demo
+
+# fast build rule for target.
+plussqit_codem_traverse_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build
+.PHONY : plussqit_codem_traverse_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_stats_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_stats_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codem_stats_demo.dir/rule
@@ -1190,6 +1204,30 @@ examples/CodeM/transmit_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/examples/CodeM/transmit_demo.cpp.s
 .PHONY : examples/CodeM/transmit_demo.cpp.s
 
+examples/CodeM/traverse_demo.o: examples/CodeM/traverse_demo.cpp.o
+.PHONY : examples/CodeM/traverse_demo.o
+
+# target to build an object file
+examples/CodeM/traverse_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/examples/CodeM/traverse_demo.cpp.o
+.PHONY : examples/CodeM/traverse_demo.cpp.o
+
+examples/CodeM/traverse_demo.i: examples/CodeM/traverse_demo.cpp.i
+.PHONY : examples/CodeM/traverse_demo.i
+
+# target to preprocess a source file
+examples/CodeM/traverse_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/examples/CodeM/traverse_demo.cpp.i
+.PHONY : examples/CodeM/traverse_demo.cpp.i
+
+examples/CodeM/traverse_demo.s: examples/CodeM/traverse_demo.cpp.s
+.PHONY : examples/CodeM/traverse_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/traverse_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_traverse_demo.dir/examples/CodeM/traverse_demo.cpp.s
+.PHONY : examples/CodeM/traverse_demo.cpp.s
+
 examples/CodeN/coden_cpu_perf_bench.o: examples/CodeN/coden_cpu_perf_bench.cpp.o
 .PHONY : examples/CodeN/coden_cpu_perf_bench.o
 
@@ -1597,6 +1635,78 @@ src/CodeH/core/Timeline.s: src/CodeH/core/Timeline.cpp.s
 src/CodeH/core/Timeline.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Timeline.cpp.s
 .PHONY : src/CodeH/core/Timeline.cpp.s
+
+src/CodeM/Traverse/Traverse.o: src/CodeM/Traverse/Traverse.cpp.o
+.PHONY : src/CodeM/Traverse/Traverse.o
+
+# target to build an object file
+src/CodeM/Traverse/Traverse.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/Traverse.cpp.o
+.PHONY : src/CodeM/Traverse/Traverse.cpp.o
+
+src/CodeM/Traverse/Traverse.i: src/CodeM/Traverse/Traverse.cpp.i
+.PHONY : src/CodeM/Traverse/Traverse.i
+
+# target to preprocess a source file
+src/CodeM/Traverse/Traverse.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/Traverse.cpp.i
+.PHONY : src/CodeM/Traverse/Traverse.cpp.i
+
+src/CodeM/Traverse/Traverse.s: src/CodeM/Traverse/Traverse.cpp.s
+.PHONY : src/CodeM/Traverse/Traverse.s
+
+# target to generate assembly for a file
+src/CodeM/Traverse/Traverse.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/Traverse.cpp.s
+.PHONY : src/CodeM/Traverse/Traverse.cpp.s
+
+src/CodeM/Traverse/TraverseQuerySpec.o: src/CodeM/Traverse/TraverseQuerySpec.cpp.o
+.PHONY : src/CodeM/Traverse/TraverseQuerySpec.o
+
+# target to build an object file
+src/CodeM/Traverse/TraverseQuerySpec.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseQuerySpec.cpp.o
+.PHONY : src/CodeM/Traverse/TraverseQuerySpec.cpp.o
+
+src/CodeM/Traverse/TraverseQuerySpec.i: src/CodeM/Traverse/TraverseQuerySpec.cpp.i
+.PHONY : src/CodeM/Traverse/TraverseQuerySpec.i
+
+# target to preprocess a source file
+src/CodeM/Traverse/TraverseQuerySpec.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseQuerySpec.cpp.i
+.PHONY : src/CodeM/Traverse/TraverseQuerySpec.cpp.i
+
+src/CodeM/Traverse/TraverseQuerySpec.s: src/CodeM/Traverse/TraverseQuerySpec.cpp.s
+.PHONY : src/CodeM/Traverse/TraverseQuerySpec.s
+
+# target to generate assembly for a file
+src/CodeM/Traverse/TraverseQuerySpec.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseQuerySpec.cpp.s
+.PHONY : src/CodeM/Traverse/TraverseQuerySpec.cpp.s
+
+src/CodeM/Traverse/TraverseTypes.o: src/CodeM/Traverse/TraverseTypes.cpp.o
+.PHONY : src/CodeM/Traverse/TraverseTypes.o
+
+# target to build an object file
+src/CodeM/Traverse/TraverseTypes.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseTypes.cpp.o
+.PHONY : src/CodeM/Traverse/TraverseTypes.cpp.o
+
+src/CodeM/Traverse/TraverseTypes.i: src/CodeM/Traverse/TraverseTypes.cpp.i
+.PHONY : src/CodeM/Traverse/TraverseTypes.i
+
+# target to preprocess a source file
+src/CodeM/Traverse/TraverseTypes.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseTypes.cpp.i
+.PHONY : src/CodeM/Traverse/TraverseTypes.cpp.i
+
+src/CodeM/Traverse/TraverseTypes.s: src/CodeM/Traverse/TraverseTypes.cpp.s
+.PHONY : src/CodeM/Traverse/TraverseTypes.s
+
+# target to generate assembly for a file
+src/CodeM/Traverse/TraverseTypes.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseTypes.cpp.s
+.PHONY : src/CodeM/Traverse/TraverseTypes.cpp.s
 
 src/CodeM/compat/Invoke.o: src/CodeM/compat/Invoke.cpp.o
 .PHONY : src/CodeM/compat/Invoke.o
@@ -7847,6 +7957,7 @@ help:
 	@echo "... plussqit_codem_stats_demo"
 	@echo "... plussqit_codem_suppose_demo"
 	@echo "... plussqit_codem_transmit_demo"
+	@echo "... plussqit_codem_traverse_demo"
 	@echo "... plussqit_coden"
 	@echo "... plussqit_coden_cpu_perf_bench"
 	@echo "... plussqit_coden_note_base_methods_demo"
@@ -7919,6 +8030,9 @@ help:
 	@echo "... examples/CodeM/transmit_demo.o"
 	@echo "... examples/CodeM/transmit_demo.i"
 	@echo "... examples/CodeM/transmit_demo.s"
+	@echo "... examples/CodeM/traverse_demo.o"
+	@echo "... examples/CodeM/traverse_demo.i"
+	@echo "... examples/CodeM/traverse_demo.s"
 	@echo "... examples/CodeN/coden_cpu_perf_bench.o"
 	@echo "... examples/CodeN/coden_cpu_perf_bench.i"
 	@echo "... examples/CodeN/coden_cpu_perf_bench.s"
@@ -7970,6 +8084,15 @@ help:
 	@echo "... src/CodeH/core/Timeline.o"
 	@echo "... src/CodeH/core/Timeline.i"
 	@echo "... src/CodeH/core/Timeline.s"
+	@echo "... src/CodeM/Traverse/Traverse.o"
+	@echo "... src/CodeM/Traverse/Traverse.i"
+	@echo "... src/CodeM/Traverse/Traverse.s"
+	@echo "... src/CodeM/Traverse/TraverseQuerySpec.o"
+	@echo "... src/CodeM/Traverse/TraverseQuerySpec.i"
+	@echo "... src/CodeM/Traverse/TraverseQuerySpec.s"
+	@echo "... src/CodeM/Traverse/TraverseTypes.o"
+	@echo "... src/CodeM/Traverse/TraverseTypes.i"
+	@echo "... src/CodeM/Traverse/TraverseTypes.s"
 	@echo "... src/CodeM/compat/Invoke.o"
 	@echo "... src/CodeM/compat/Invoke.i"
 	@echo "... src/CodeM/compat/Invoke.s"

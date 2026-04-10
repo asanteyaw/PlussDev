@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `RobustScaler::load_state(state: const std::vector<Series>&) -> Status`
+- `RobustScaler::load_state(state: RangeView::Series) -> Status`
 
 ## Notes
 
@@ -10,7 +10,7 @@ Loads a previously persisted artifact and restores its inference-ready state.
 
 ## Inputs
 
-- `state` (`const std::vector<Series>&`)
+- `state` (`RangeView::Series`)
   Randomization control for reproducible behavior.
 
 ## Output

@@ -31,8 +31,8 @@ struct RMSpropGroup {
 
 class PLUSS_API RMSprop final : public Optimizer {
 public:
-  explicit RMSprop(std::vector<Series*> parameters, RMSpropOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit RMSprop(pluss::msharp::RangeView::Of<Series*> parameters, RMSpropOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -43,7 +43,7 @@ public:
     initialize_state_();
   }
 
-  explicit RMSprop(std::vector<RMSpropGroup> groups)
+  explicit RMSprop(pluss::msharp::RangeView::Of<RMSpropGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -138,7 +138,7 @@ private:
     Series weight_decay{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     auto& params = mutable_parameters_();
     reset_step_lane_telemetry_();
     for (std::size_t group_index = 0; group_index < groups_.size(); ++group_index) {
@@ -186,8 +186,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -237,8 +237,8 @@ private:
   }
 
   void apply_group_loop_(const GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const RMSpropOptions& options = group.options;
     for (std::size_t i : group.indices) {
       Series* param_ptr = params[i];
@@ -278,8 +278,8 @@ private:
   }
 
   void apply_group_batched_(const GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const RMSpropOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -345,8 +345,8 @@ private:
   }
 
   void apply_group_fused_(const GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const RMSpropOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -434,7 +434,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<RMSpropGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<RMSpropGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: expected non-empty parameter groups");
     }
@@ -454,7 +454,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<RMSpropGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<RMSpropGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;

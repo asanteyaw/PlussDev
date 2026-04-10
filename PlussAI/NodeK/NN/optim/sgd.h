@@ -30,8 +30,8 @@ struct SGDGroup {
 
 class PLUSS_API SGD final : public Optimizer {
 public:
-  explicit SGD(std::vector<Series*> parameters, SGDOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit SGD(pluss::msharp::RangeView::Of<Series*> parameters, SGDOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -42,7 +42,7 @@ public:
     validate_group_options_();
   }
 
-  explicit SGD(std::vector<SGDGroup> groups)
+  explicit SGD(pluss::msharp::RangeView::Of<SGDGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -125,7 +125,7 @@ private:
     Series weight_decay{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     auto& params = mutable_parameters_();
     reset_step_lane_telemetry_();
     for (std::size_t group_index = 0; group_index < groups_.size(); ++group_index) {
@@ -173,8 +173,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -219,8 +219,8 @@ private:
   }
 
   void apply_group_loop_(const GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const SGDOptions& options = group.options;
     for (std::size_t i : group.indices) {
       Series* param_ptr = params[i];
@@ -262,8 +262,8 @@ private:
   }
 
   void apply_group_batched_(const GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const SGDOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -320,8 +320,8 @@ private:
   }
 
   void apply_group_fused_(const GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const SGDOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -393,7 +393,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<SGDGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<SGDGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::SGD: expected non-empty parameter groups");
     }
@@ -413,7 +413,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<SGDGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<SGDGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;

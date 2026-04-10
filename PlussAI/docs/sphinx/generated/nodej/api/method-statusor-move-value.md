@@ -66,14 +66,14 @@ move_value returned T&&
 
 ```text
 NodeJ CV + tune demo
-linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.5625 0.645833 0.625 0.708333 0.575 0.416667 0.822132
-linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.108253 0.0908104 0.246503 0.29756 0.129904 0.0833333 0.139461
-kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.374066
-kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0388381
-sweep trial objectives: 0.5625 1
+linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 1.12262
+linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.169779
+kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.420312
+kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0248626
+sweep trial objectives: 0 1
 sweep best index: 1
 probe best index: 1
-regression quantile sweep objectives: 0.0356052 0.736518
+regression quantile sweep objectives: 0.0352983 0.743786
 regression quantile sweep best index: 0
 max |bounded score|: 0
 NodeJ CV + tune demo completed.
@@ -110,6 +110,6 @@ NodeJ CV + tune demo completed.
 ```text
 NodeJ DataFrame bridge demo
 adapted batch: samples=6 features=4 weighted=yes
-linear metrics [mse, r2]: 9.43684e-08 1
+linear metrics [mse, r2]: 1.5165e-17 1
 NodeJ DataFrame bridge demo completed.
 ```

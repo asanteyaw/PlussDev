@@ -756,8 +756,10 @@ Controls pane and axis chrome visibility independently.
 
 ```cpp
 Trace& wedge(self: Pane, values: SeriesLike);
-Trace& wedge(self: Pane, values: SeriesLike, labels: std::vector<std::string>);
-Trace& wedge(self: Pane, values: SeriesLike, explode: SeriesLike, labels: std::vector<std::string>);
+Trace& wedge(self: Pane, values: SeriesLike, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Trace& wedge(self: Pane, values: SeriesLike, labels: std::initializer_list<std::string_view>);
+Trace& wedge(self: Pane, values: SeriesLike, explode: SeriesLike, labels: pluss::msharp::RangeView::Of<std::string_view>);
+Trace& wedge(self: Pane, values: SeriesLike, explode: SeriesLike, labels: std::initializer_list<std::string_view>);
 ```
 
 #### Notes

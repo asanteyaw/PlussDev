@@ -433,21 +433,27 @@ std::cout << value.item<double>() << "\n";
 std::cout << hv << "\n";
 ```
 
-## `nth_derivative`
+## `nth_diff`
 
 ### Signature
 
 ```cpp
-Series nth_derivative(fn, param, std::int64_t order, HvpOptions opt = {});
+Series nth_diff(fn, param, std::int64_t order, HvpOptions opt = {}, DerivativePolicy policy = {});
+auto nth_diff(fn, std::int64_t order, HvpOptions opt = {}, DerivativePolicy policy = {});
 ```
 
 ### Explanation
 
-`nth_derivative` is the scalar single-input convenience helper.
-It currently supports exact orders `0`, `1`, and `2`.
-Orders above `2` are rejected.
+`nth_diff` is the higher-order convenience helper for any order `n >= 0`
+when the objective is Trace-callable (or Series-callable with traced input).
 
-Use it when you want a direct scalar derivative helper without calling `grad(...)` or `hvp(...)` yourself.
+For non-scalar outputs, `nth_diff` applies egrad-style behavior at each order:
+it differentiates the sum of outputs (VJP with an all-ones cotangent).
+When the Jacobian is diagonal (elementwise vectorized scalar functions), this
+matches elementwise derivatives exactly.
+
+You can call it directly with `(fn, param, n)` or build a callable derivative
+transform with `(fn, n)` and apply it repeatedly on scalar inputs.
 
 ### Example
 
@@ -456,14 +462,108 @@ using namespace pluss::subsp::math::diff;
 
 auto x = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
 
-auto second = nth_derivative(
+auto second = nth_diff(
     [](const auto& z) {
       return z * z - 4.0 * z + 1.0;
     },
     x,
     2);
 
+auto d3 = nth_diff(
+    [](const auto& z) {
+      return sin(z) + square(z);
+    },
+    3);
+
+auto third = d3(x);
+
 std::cout << second.item<double>() << "\n";
+std::cout << third.item<double>() << "\n";
+```
+
+### More `nth_diff` patterns
+
+```cpp
+using namespace pluss::subsp::math::diff;
+auto x = pluss::make_series(0.7).to(pluss::ScalarType::Float64);
+```
+
+Direct first derivative:
+
+```cpp
+auto d1 = nth_diff([](const auto& z) { return exp(z); }, x, 1);
+```
+
+Vectorized input (elementwise function over many values):
+
+```cpp
+auto xv = pluss::linspace(-7.0, 7.0, 700, pluss::ScalarType::Float64);
+auto d1v = nth_diff([](const auto& z) { return tanh(z); }, xv, 1);
+auto d2v = nth_diff([](const auto& z) { return tanh(z); }, xv, 2);
+```
+
+Direct fourth derivative:
+
+```cpp
+auto d4 = nth_diff([](const auto& z) { return z * z * z * z; }, x, 4);
+```
+
+Zero-order returns the value:
+
+```cpp
+auto value = nth_diff([](const auto& z) { return sin(z) + z; }, x, 0);
+```
+
+Callable transform (egrad-like):
+
+```cpp
+auto grad_fn = nth_diff([](const auto& z) { return square(z); }, 1);
+auto g = grad_fn(x);
+```
+
+Callable second-derivative transform:
+
+```cpp
+auto hess_diag_fn = nth_diff([](const auto& z) { return tanh(z); }, 2);
+auto h = hess_diag_fn(x);
+```
+
+Pass a normal `Series` function (not explicitly Trace-typed):
+
+```cpp
+auto f_series = [](const pluss::Series& z) { return sin(z) * z; };
+auto d2 = nth_diff(f_series, x, 2);
+```
+
+Use strict dependency behavior:
+
+```cpp
+DerivativePolicy pol{};
+pol.strict_dependency = true;
+auto d = nth_diff([](const auto& z) { return z * 0.0; }, x, 1, {}, pol); // throws
+```
+
+Use disconnected-as-undefined behavior:
+
+```cpp
+DerivativePolicy pol{};
+pol.disconnected_sensitivity = DisconnectedSensitivity::Undefined;
+auto d = nth_diff([](const auto& z) { return z * 0.0; }, x, 1, {}, pol); // undefined Series
+```
+
+Disable disconnected warnings (default is `true`):
+
+```cpp
+DerivativePolicy pol{};
+pol.warn_on_disconnected = false;
+auto d = nth_diff([](const auto& z) { return z * 0.0; }, x, 1, {}, pol); // zero/undefined per policy, no warning
+```
+
+From the optimization facade namespace:
+
+```cpp
+namespace pmo = pluss::optim;
+auto d3_opt = pmo::nth_diff([](const auto& z) { return z * z * z; }, x, 3);
 ```
 
 ## Retaining or clearing sensitivities

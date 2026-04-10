@@ -326,14 +326,14 @@ bool cuda_supports_compose_baseline(ScalarType dtype) noexcept {
 
 bool cuda_supports_unite_compose(
     const Series& self,
-    const std::vector<Series>& others,
+    pluss::msharp::RangeView::Of<Series> others,
     std::int64_t dim) noexcept {
   return native::cuda::supports_unite_compose(self, others, dim);
 }
 
 bool cuda_supports_pile_compose(
     const Series& self,
-    const std::vector<Series>& others,
+    pluss::msharp::RangeView::Of<Series> others,
     std::int64_t dim) noexcept {
   return native::cuda::supports_pile_compose(self, others, dim);
 }
@@ -682,7 +682,7 @@ bool cuda_supports_nonzero_indexing(const Series& self) noexcept {
   return native::cuda::supports_nonzero(self);
 }
 
-bool cuda_supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept {
+bool cuda_supports_index_indexing(const Series& self, pluss::msharp::RangeView::Of<Series> indices) noexcept {
   return native::cuda::supports_index(self, indices);
 }
 

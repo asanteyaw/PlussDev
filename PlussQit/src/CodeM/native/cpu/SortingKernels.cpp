@@ -3,6 +3,7 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/TypePromotion.h"
+#include "MSharp/Parallel.h"
 
 #include <algorithm>
 #include <numeric>
@@ -20,22 +21,31 @@ template <class T>
 static void sort_rows(const T* in, T* out, std::int64_t* idx_out,
                       std::int64_t rows, std::int64_t cols,
                       bool descending, bool stable) {
-  std::vector<std::int64_t> idx(cols);
-  for (std::int64_t r=0;r<rows;++r) {
-    const T* row = in + r*cols;
-    T* out_row = out + r*cols;
-    std::iota(idx.begin(), idx.end(), 0);
-    auto cmp = [&](std::int64_t i, std::int64_t j){
-      if (descending) return row[i] > row[j];
-      return row[i] < row[j];
-    };
-    if (stable) std::stable_sort(idx.begin(), idx.end(), cmp);
-    else std::sort(idx.begin(), idx.end(), cmp);
-    for (std::int64_t c=0;c<cols;++c) {
-      const auto ii = idx[(std::size_t)c];
-      out_row[c] = row[ii];
-      idx_out[r*cols + c] = ii;
+  auto worker = [&](std::int64_t r0, std::int64_t r1) {
+    std::vector<std::int64_t> idx((std::size_t)cols);
+    for (std::int64_t r = r0; r < r1; ++r) {
+      const T* row = in + r * cols;
+      T* out_row = out + r * cols;
+      std::iota(idx.begin(), idx.end(), 0);
+      auto cmp = [&](std::int64_t i, std::int64_t j) {
+        if (descending) return row[i] > row[j];
+        return row[i] < row[j];
+      };
+      if (stable) std::stable_sort(idx.begin(), idx.end(), cmp);
+      else std::sort(idx.begin(), idx.end(), cmp);
+      for (std::int64_t c = 0; c < cols; ++c) {
+        const auto ii = idx[(std::size_t)c];
+        out_row[c] = row[ii];
+        idx_out[r * cols + c] = ii;
+      }
     }
+  };
+  constexpr std::int64_t kParallelThresholdRows = 64;
+  if (rows >= kParallelThresholdRows) {
+    const std::int64_t grain = std::max<std::int64_t>(1, rows / 8);
+    pluss::msharp::parallel_for(0, rows, grain, worker);
+  } else {
+    worker(0, rows);
   }
 }
 
@@ -43,27 +53,64 @@ template <class T>
 static void topk_rows(const T* in, T* out, std::int64_t* idx_out,
                       std::int64_t rows, std::int64_t cols,
                       std::int64_t k, bool largest, bool sorted) {
-  std::vector<std::int64_t> idx(cols);
-  for (std::int64_t r=0;r<rows;++r) {
-    const T* row = in + r*cols;
-    std::iota(idx.begin(), idx.end(), 0);
-    auto better = [&](std::int64_t i, std::int64_t j){
-      if (largest) return row[i] > row[j];
-      return row[i] < row[j];
-    };
-    // nth_element to get top-k set
-    auto mid = idx.begin() + k;
-    std::nth_element(idx.begin(), mid, idx.end(), better);
-    idx.resize((std::size_t)k);
-    if (sorted) {
-      std::sort(idx.begin(), idx.end(), better);
+  auto worker = [&](std::int64_t r0, std::int64_t r1) {
+    std::vector<std::int64_t> idx((std::size_t)cols);
+    for (std::int64_t r = r0; r < r1; ++r) {
+      const T* row = in + r * cols;
+      std::iota(idx.begin(), idx.end(), 0);
+      auto better = [&](std::int64_t i, std::int64_t j) {
+        if (largest) return row[i] > row[j];
+        return row[i] < row[j];
+      };
+      if (k == cols) {
+        if (sorted) {
+          std::sort(idx.begin(), idx.end(), better);
+        }
+      } else if (sorted) {
+        std::partial_sort(idx.begin(), idx.begin() + k, idx.end(), better);
+      } else {
+        std::nth_element(idx.begin(), idx.begin() + k, idx.end(), better);
+      }
+      for (std::int64_t c = 0; c < k; ++c) {
+        const auto ii = idx[(std::size_t)c];
+        out[r * k + c] = row[ii];
+        idx_out[r * k + c] = ii;
+      }
     }
-    for (std::int64_t c=0;c<k;++c) {
-      const auto ii = idx[(std::size_t)c];
-      out[r*k + c] = row[ii];
-      idx_out[r*k + c] = ii;
+  };
+  constexpr std::int64_t kParallelThresholdRows = 64;
+  if (rows >= kParallelThresholdRows) {
+    const std::int64_t grain = std::max<std::int64_t>(1, rows / 8);
+    pluss::msharp::parallel_for(0, rows, grain, worker);
+  } else {
+    worker(0, rows);
+  }
+}
+
+template <class T>
+static void argsort_rows(const T* in, std::int64_t* idx_out,
+                         std::int64_t rows, std::int64_t cols,
+                         bool descending, bool stable) {
+  auto worker = [&](std::int64_t r0, std::int64_t r1) {
+    std::vector<std::int64_t> idx((std::size_t)cols);
+    for (std::int64_t r = r0; r < r1; ++r) {
+      const T* row = in + r * cols;
+      std::iota(idx.begin(), idx.end(), 0);
+      auto cmp = [&](std::int64_t i, std::int64_t j) {
+        if (descending) return row[i] > row[j];
+        return row[i] < row[j];
+      };
+      if (stable) std::stable_sort(idx.begin(), idx.end(), cmp);
+      else std::sort(idx.begin(), idx.end(), cmp);
+      std::copy(idx.begin(), idx.end(), idx_out + r * cols);
     }
-    idx.resize((std::size_t)cols);
+  };
+  constexpr std::int64_t kParallelThresholdRows = 64;
+  if (rows >= kParallelThresholdRows) {
+    const std::int64_t grain = std::max<std::int64_t>(1, rows / 8);
+    pluss::msharp::parallel_for(0, rows, grain, worker);
+  } else {
+    worker(0, rows);
   }
 }
 
@@ -162,9 +209,63 @@ std::pair<Series, Series> sort(const Series& a, std::int64_t dim, bool descendin
 }
 
 Series argsort(const Series& a, std::int64_t dim, bool descending, bool stable) {
-  auto [vals, idx] = sort(a, dim, descending, stable);
-  (void)vals;
-  return idx;
+  PLUSS_CHECK(a.defined(), "argsort: undefined");
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "argsort: complex dtype not supported");
+  dim = wrap_dim(dim, a.dim());
+
+  auto x = move_dim_to_last_contig(a, dim);
+  const auto cols = x.sizes().back();
+  std::int64_t rows = 1;
+  for (std::size_t i = 0; i + 1 < x.sizes().size(); ++i) rows *= x.sizes()[i];
+
+  Series idx = Series::empty(x.sizes(), ScalarType::Int64);
+  switch (x.scalar_type()) {
+    case ScalarType::Float64:
+      argsort_rows((const double*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::Float32:
+      argsort_rows((const float*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::Int64:
+      argsort_rows((const std::int64_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::Int32:
+      argsort_rows((const std::int32_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::Int16:
+      argsort_rows((const std::int16_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::Int8:
+      argsort_rows((const std::int8_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::UInt8:
+      argsort_rows((const std::uint8_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::UInt16:
+      argsort_rows((const std::uint16_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::UInt32:
+      argsort_rows((const std::uint32_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::UInt64:
+      argsort_rows((const std::uint64_t*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    case ScalarType::Bool:
+      argsort_rows((const bool*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
+      break;
+    default:
+      throw_error("argsort: dtype not implemented");
+  }
+
+  if (a.dim() == 1 || dim == a.dim() - 1) return idx;
+  std::vector<std::int64_t> perm;
+  perm.reserve((std::size_t)a.dim());
+  for (std::int64_t d = 0; d < a.dim(); ++d) if (d != dim) perm.push_back(d);
+  perm.push_back(dim);
+  std::vector<std::int64_t> inv((std::size_t)a.dim());
+  for (std::int64_t i = 0; i < a.dim(); ++i) inv[(std::size_t)perm[(std::size_t)i]] = i;
+  return idx.permute(inv);
 }
 
 std::pair<Series, Series> topk(const Series& a, std::int64_t k, std::int64_t dim, bool largest, bool sorted_) {

@@ -4,6 +4,7 @@
 #include "CodeM/core/Series.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/TypePromotion.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::native::cpu {
   // Elementwise kernels (out-parameter)
@@ -52,10 +53,10 @@ namespace pluss::codem::native::cpu {
   Series nonzero(const Series& mask);
   Series take(const Series& a, const Series& index);
   Series put(const Series& a, const Series& index, const Series& src, bool accumulate);
-  Series index(const Series& a, const std::vector<Series>& indices);
-  Series index_put(const Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate);
-  Series cat(const std::vector<Series>& tensors, std::int64_t dim);
-  Series stack(const std::vector<Series>& tensors, std::int64_t dim);
+  Series index(const Series& a, pluss::msharp::RangeView::Of<Series> indices);
+  Series index_put(const Series& a, pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate);
+  Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);
+  Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim);
 }
 
 namespace pluss::codem::ops_internal {
@@ -287,25 +288,25 @@ Series put(const Series& a, const Series& index, const Series& src, bool accumul
 } // namespace
 
 namespace index_ops {
-Series index(const Series& a, const std::vector<Series>& indices) {
+Series index(const Series& a, pluss::msharp::RangeView::Of<Series> indices) {
   return pluss::codem::native::cpu::index(a, indices);
 }
 } // namespace
 
 namespace index_put_ops {
-Series index_put(const Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate) {
+Series index_put(const Series& a, pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) {
   return pluss::codem::native::cpu::index_put(a, indices, values, accumulate);
 }
 } // namespace
 
 namespace cat_ops {
-Series cat(const std::vector<Series>& tensors, std::int64_t dim) {
+Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
   return pluss::codem::native::cpu::cat(tensors, dim);
 }
 } // namespace
 
 namespace stack_ops {
-Series stack(const std::vector<Series>& tensors, std::int64_t dim) {
+Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
   return pluss::codem::native::cpu::stack(tensors, dim);
 }
 } // namespace

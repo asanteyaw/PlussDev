@@ -68,6 +68,76 @@ static std::string shell_escape_(const std::string& s) {
   return out;
 }
 
+static bool parse_trailing_line_number_(std::string_view s, std::uint64_t& out_line) {
+  if (s.empty()) return false;
+  std::size_t i = s.size();
+  while (i > 0) {
+    while (i > 0 && !std::isdigit(static_cast<unsigned char>(s[i - 1]))) {
+      --i;
+    }
+    if (i == 0) return false;
+
+    std::size_t end = i;
+    while (i > 0 && std::isdigit(static_cast<unsigned char>(s[i - 1]))) {
+      --i;
+    }
+    if (i > 0 && s[i - 1] == ':') {
+      std::uint64_t v = 0;
+      for (std::size_t k = i; k < end; ++k) {
+        v = v * 10 + static_cast<std::uint64_t>(s[k] - '0');
+      }
+      out_line = v;
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool has_meaningful_source_line_(std::string_view s) {
+  std::uint64_t line = 0;
+  if (!parse_trailing_line_number_(s, line)) return false;
+  return line > 0;
+}
+
+static std::string add_in_tag_to_source_suffix_(const std::string& line) {
+  if (line.empty()) return line;
+  const auto open = line.rfind(" (");
+  if (open == std::string::npos || line.back() != ')') return line;
+
+  const std::string_view suffix(line.data() + open + 2, line.size() - (open + 3));
+  if (!has_meaningful_source_line_(suffix)) return line;
+  if (suffix.rfind("in ", 0) == 0) return line;
+
+  std::string out;
+  out.reserve(line.size() + 3);
+  out.append(line, 0, open + 2); // includes " ("
+  out += "in ";
+  out.append(line, open + 2, std::string::npos);
+  return out;
+}
+
+static std::string strip_image_tag_from_resolved_(const std::string& line) {
+  // macOS `atos` often returns:
+  //   function (in binary_name) (path/to/file.cpp:line)
+  // Keep function + source only:
+  //   function (path/to/file.cpp:line)
+  const auto in_pos = line.find(" (in ");
+  if (in_pos == std::string::npos) return line;
+
+  const auto in_close = line.find(')', in_pos + 5);
+  if (in_close == std::string::npos) return line;
+
+  std::string out = line;
+  out.erase(in_pos, in_close - in_pos + 1);
+  while (in_pos < out.size() && out[in_pos] == ' ') {
+    out.erase(in_pos, 1);
+  }
+  if (in_pos > 0 && in_pos < out.size() && out[in_pos - 1] == ' ' && out[in_pos] == ' ') {
+    out.erase(in_pos, 1);
+  }
+  return add_in_tag_to_source_suffix_(out);
+}
+
 static std::string run_command_capture_(const std::string& cmd) {
   std::array<char, 512> buf{};
   std::string out;
@@ -102,37 +172,6 @@ static std::string image_basename_(std::string_view p) {
   const auto pos = p.find_last_of("/\\");
   if (pos == std::string_view::npos) return std::string(p);
   return std::string(p.substr(pos + 1));
-}
-
-static bool parse_trailing_line_number_(std::string_view s, std::uint64_t& out_line) {
-  if (s.empty()) return false;
-  std::size_t i = s.size();
-  while (i > 0) {
-    while (i > 0 && !std::isdigit(static_cast<unsigned char>(s[i - 1]))) {
-      --i;
-    }
-    if (i == 0) return false;
-
-    std::size_t end = i;
-    while (i > 0 && std::isdigit(static_cast<unsigned char>(s[i - 1]))) {
-      --i;
-    }
-    if (i > 0 && s[i - 1] == ':') {
-      std::uint64_t v = 0;
-      for (std::size_t k = i; k < end; ++k) {
-        v = v * 10 + static_cast<std::uint64_t>(s[k] - '0');
-      }
-      out_line = v;
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool has_meaningful_source_line_(std::string_view s) {
-  std::uint64_t line = 0;
-  if (!parse_trailing_line_number_(s, line)) return false;
-  return line > 0;
 }
 
 static bool text_has_pluss_hint_(std::string_view text) {
@@ -198,6 +237,8 @@ static std::string resolve_source_line_(const NativeFrame& f) {
   cmd += " " + ptr_hex_(f.addr) + " 2>/dev/null";
   std::string out = run_command_capture_(cmd);
   if (out.empty() || out == "???" || out.find("0x") == 0) return {};
+  out = strip_image_tag_from_resolved_(out);
+  out = add_in_tag_to_source_suffix_(out);
   if (!has_meaningful_source_line_(out)) return {};
   return out;
 #elif defined(__unix__)
@@ -248,6 +289,8 @@ static std::vector<std::string> resolve_source_lines_batch_(const std::vector<Na
       std::string line;
       std::size_t j = 0;
       while (j < idxs.size() && std::getline(iss, line)) {
+        line = strip_image_tag_from_resolved_(line);
+        line = add_in_tag_to_source_suffix_(line);
         if (!line.empty() &&
             line != "???" &&
             line.rfind("0x", 0) != 0 &&

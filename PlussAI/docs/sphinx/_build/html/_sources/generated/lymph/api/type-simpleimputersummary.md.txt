@@ -20,6 +20,11 @@ Public user-facing type used directly in NodeJ/Lymph workflows.
 
 Public fields on this type:
 
+- `SimpleImputerStrategy strategy = SimpleImputerStrategy::Mean`
+- `bool learned = false`
+- `std::int64_t feature_count = 0`
+- `double constant_value = 0.0`
+- `double empty_feature_fallback = 0.0`
 - `std::vector<std::string> feature_names{}`
 - `Series statistics = Series::undefined()`
 
@@ -27,4 +32,5 @@ Public fields on this type:
 
 ```cpp
 SimpleImputerSummary cfg{};
+// cfg.strategy = ...;
 ```

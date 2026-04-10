@@ -144,7 +144,7 @@ SimplexState initialize_state(
   }
 
   state.iterations = 1;
-  state.last_step = "bootstrap_simplex";
+  state.last_step = "seed";
   return sort_state(std::move(state));
 }
 
@@ -208,16 +208,16 @@ SimplexState advance_state(
     if (expanded_scalar < reflected_scalar) {
       next.vertices[static_cast<std::size_t>(n)] = expanded;
       next.values[static_cast<std::size_t>(n)] = expanded_value;
-      next.last_step = "accept_expansion";
+      next.last_step = "expand";
     } else {
       next.vertices[static_cast<std::size_t>(n)] = reflected;
       next.values[static_cast<std::size_t>(n)] = reflected_value;
-      next.last_step = "accept_reflection";
+      next.last_step = "reflect";
     }
   } else if (reflected_scalar < second_worst_scalar) {
     next.vertices[static_cast<std::size_t>(n)] = reflected;
     next.values[static_cast<std::size_t>(n)] = reflected_value;
-    next.last_step = "accept_reflection";
+    next.last_step = "reflect";
   } else {
     bool apply_shrink = false;
 
@@ -232,7 +232,7 @@ SimplexState advance_state(
       if (outside_scalar <= reflected_scalar) {
         next.vertices[static_cast<std::size_t>(n)] = outside;
         next.values[static_cast<std::size_t>(n)] = outside_value;
-        next.last_step = "accept_outward_pull";
+        next.last_step = "adjust_outer";
       } else {
         apply_shrink = true;
       }
@@ -245,7 +245,7 @@ SimplexState advance_state(
       if (inside_scalar < worst_scalar) {
         next.vertices[static_cast<std::size_t>(n)] = inside;
         next.values[static_cast<std::size_t>(n)] = inside_value;
-        next.last_step = "accept_inward_pull";
+        next.last_step = "adjust_inner";
       } else {
         apply_shrink = true;
       }
@@ -260,7 +260,7 @@ SimplexState advance_state(
         next.values[static_cast<std::size_t>(j)] = evaluate(objective, shrunk, original_shape);
         ++next.evaluations;
       }
-      next.last_step = "simplex_reseed";
+      next.last_step = "recenter";
     }
   }
 

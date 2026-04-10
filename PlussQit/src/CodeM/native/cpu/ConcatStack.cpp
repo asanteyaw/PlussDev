@@ -1,13 +1,14 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
+#include "MSharp/RangeView.h"
 
 #include <vector>
 #include <cstring>
 
 namespace pluss::codem::native::cpu {
 
-static void check_same_shape_except(const std::vector<Series>& xs, std::int64_t dim) {
+static void check_same_shape_except(pluss::msharp::RangeView::Of<Series> xs, std::int64_t dim) {
   if (xs.empty()) throw_error("cat: empty list");
   const auto nd = xs[0].dim();
   for (const auto& t: xs) {
@@ -20,7 +21,7 @@ static void check_same_shape_except(const std::vector<Series>& xs, std::int64_t 
   }
 }
 
-Series cat(const std::vector<Series>& tensors, std::int64_t dim) {
+Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
   if (tensors.empty()) throw_error("cat: empty");
   const auto nd = tensors[0].dim();
   if (dim < 0) dim += nd;
@@ -73,7 +74,7 @@ Series cat(const std::vector<Series>& tensors, std::int64_t dim) {
   return out_c;
 }
 
-Series stack(const std::vector<Series>& tensors, std::int64_t dim) {
+Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim) {
   if (tensors.empty()) throw_error("stack: empty");
   const auto nd = tensors[0].dim();
   if (dim < 0) dim += (nd + 1);

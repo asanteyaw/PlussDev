@@ -31,8 +31,8 @@ struct AdamWGroup {
 
 class PLUSS_API AdamW final : public Optimizer {
 public:
-  explicit AdamW(std::vector<Series*> parameters, AdamWOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit AdamW(pluss::msharp::RangeView::Of<Series*> parameters, AdamWOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -42,7 +42,7 @@ public:
     initialize_state_();
   }
 
-  explicit AdamW(std::vector<AdamWGroup> groups)
+  explicit AdamW(pluss::msharp::RangeView::Of<AdamWGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -129,7 +129,7 @@ private:
     Series beta2_power{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
 
     auto& params = mutable_parameters_();
@@ -189,7 +189,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<AdamWGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<AdamWGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::AdamW: expected non-empty parameter groups");
     }
@@ -209,7 +209,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<AdamWGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<AdamWGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -265,8 +265,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -296,8 +296,8 @@ private:
   }
 
   void apply_group_loop_(GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const AdamWOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -355,8 +355,8 @@ private:
   }
 
   void apply_group_batched_(GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const AdamWOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -431,8 +431,8 @@ private:
   }
 
   void apply_group_fused_(GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const AdamWOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));

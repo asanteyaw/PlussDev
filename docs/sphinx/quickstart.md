@@ -18,6 +18,7 @@ cmake --build --preset core-dev
 ```bash
 ./build/PlussQit/plussqit_codem_series_usage_demo
 ./build/PlussQit/plussqit_codem_stats_demo
+./build/PlussQit/plussqit_codem_traverse_demo
 ./build/PlussQit/plussqit_codem_signal_demo
 ./build/PlussQit/plussqit_queue_demo
 ./build/PlussQit/plussqit_dispense_demo

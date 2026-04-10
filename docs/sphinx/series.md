@@ -14,6 +14,7 @@
 - Every snippet is written as real usage, not pseudo API listing.
 - Comments explain why/when to use a method.
 - The bottom section includes the full current CodeM method-call cookbook extracted from demo coverage.
+- For deeper, output-backed walkthroughs of `traverse`, `stat`, and `linearalg`, see `series_query_user_guide`.
 
 ## Setup Once, Reuse Everywhere
 

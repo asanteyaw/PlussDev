@@ -558,6 +558,20 @@ inline std::vector<double> to_f64_vector(std::initializer_list<T> values) {
   return buffer;
 }
 
+template <class Range>
+  requires std::ranges::input_range<Range> &&
+           std::convertible_to<std::ranges::range_reference_t<const Range>, std::string_view>
+inline std::vector<std::string> to_owned_labels(const Range& labels) {
+  std::vector<std::string> out;
+  if constexpr (std::ranges::sized_range<Range>) {
+    out.reserve(static_cast<std::size_t>(std::ranges::size(labels)));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
 } // namespace detail
 
 class Pane {
@@ -892,21 +906,33 @@ class Pane {
   }
 
   template <class Values>
-  Trace& wedge(Values&& values, std::vector<std::string> labels) {
+  Trace& wedge(Values&& values, pluss::msharp::RangeView::Of<std::string_view> labels) {
     ensure_planar_("wedge");
     return add_trace_(TraceKind::Wedge,
                       WedgeData{detail::to_series(std::forward<Values>(values)),
                                 std::nullopt,
-                                std::move(labels)});
+                                detail::to_owned_labels(labels)});
+  }
+
+  template <class Values>
+  Trace& wedge(Values&& values, std::initializer_list<std::string_view> labels) {
+    return wedge(std::forward<Values>(values), pluss::msharp::RangeView::Of<std::string_view>(labels));
   }
 
   template <class Values, class Explode>
-  Trace& wedge(Values&& values, Explode&& explode, std::vector<std::string> labels) {
+  Trace& wedge(Values&& values, Explode&& explode, pluss::msharp::RangeView::Of<std::string_view> labels) {
     ensure_planar_("wedge");
     return add_trace_(TraceKind::Wedge,
                       WedgeData{detail::to_series(std::forward<Values>(values)),
                                 detail::to_series(std::forward<Explode>(explode)),
-                                std::move(labels)});
+                                detail::to_owned_labels(labels)});
+  }
+
+  template <class Values, class Explode>
+  Trace& wedge(Values&& values, Explode&& explode, std::initializer_list<std::string_view> labels) {
+    return wedge(std::forward<Values>(values),
+                 std::forward<Explode>(explode),
+                 pluss::msharp::RangeView::Of<std::string_view>(labels));
   }
 
   template <class X, class Y>

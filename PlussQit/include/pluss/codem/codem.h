@@ -107,8 +107,8 @@ CODEM_API bool cuda_supports_bitwise_binary(const Series& a, const Series& b) no
 CODEM_API bool cuda_native_compose_enabled() noexcept;
 CODEM_API bool cuda_native_compose_strict() noexcept;
 CODEM_API bool cuda_supports_compose_baseline(ScalarType dtype) noexcept;
-CODEM_API bool cuda_supports_unite_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept;
-CODEM_API bool cuda_supports_pile_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_unite_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_pile_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept;
 CODEM_API bool cuda_native_counting_enabled() noexcept;
 CODEM_API bool cuda_native_counting_strict() noexcept;
 CODEM_API bool cuda_supports_unique_counting_baseline(ScalarType dtype, bool sorted) noexcept;
@@ -195,7 +195,7 @@ CODEM_API bool cuda_supports_index_indexing_baseline(ScalarType value_dtype, Sca
 CODEM_API bool cuda_supports_take_indexing(const Series& self, const Series& index) noexcept;
 CODEM_API bool cuda_supports_put_indexing(const Series& self, const Series& index, const Series& source, bool accumulate) noexcept;
 CODEM_API bool cuda_supports_nonzero_indexing(const Series& self) noexcept;
-CODEM_API bool cuda_supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept;
+CODEM_API bool cuda_supports_index_indexing(const Series& self, pluss::msharp::RangeView::Of<Series> indices) noexcept;
 CODEM_API bool cuda_native_matmul_enabled() noexcept;
 CODEM_API bool cuda_native_matmul_strict() noexcept;
 CODEM_API bool cuda_supports_matmul_native_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
@@ -391,8 +391,8 @@ namespace pluss {
   using codem::platform_available;
   using codem::operator<<;
 
-  inline Series index_put(const Series& self,
-                          const std::vector<Series>& indices,
+inline Series index_put(const Series& self,
+                          pluss::msharp::RangeView::Of<Series> indices,
                           const Series& values,
                           bool accumulate=false) {
     return self.index_put(indices, values, accumulate);
@@ -707,11 +707,11 @@ inline bool supports_compose_baseline(ScalarType dtype) noexcept {
   return codem::cuda_supports_compose_baseline(dtype);
 }
 
-inline bool supports_unite_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept {
+inline bool supports_unite_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept {
   return codem::cuda_supports_unite_compose(self, others, dim);
 }
 
-inline bool supports_pile_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept {
+inline bool supports_pile_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept {
   return codem::cuda_supports_pile_compose(self, others, dim);
 }
 
@@ -1059,7 +1059,7 @@ inline bool supports_nonzero_indexing(const Series& self) noexcept {
   return codem::cuda_supports_nonzero_indexing(self);
 }
 
-inline bool supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept {
+inline bool supports_index_indexing(const Series& self, pluss::msharp::RangeView::Of<Series> indices) noexcept {
   return codem::cuda_supports_index_indexing(self, indices);
 }
 

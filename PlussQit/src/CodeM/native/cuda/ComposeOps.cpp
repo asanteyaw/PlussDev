@@ -69,7 +69,7 @@ bool supports_dtype_(ScalarType dtype) noexcept {
 
 bool supports_common_(
     const Series& self,
-    const std::vector<Series>& others) noexcept {
+    pluss::msharp::RangeView::Of<Series> others) noexcept {
   if (!is_cuda_series_(self) || !supports_dtype_(self.scalar_type())) {
     return false;
   }
@@ -110,7 +110,7 @@ bool supports_compose_baseline(ScalarType dtype) noexcept {
 
 bool supports_unite_compose(
     const Series& self,
-    const std::vector<Series>& others,
+    pluss::msharp::RangeView::Of<Series> others,
     std::int64_t dim) noexcept {
   if (!baseline_ready_()) {
     return false;
@@ -120,7 +120,7 @@ bool supports_unite_compose(
 
 bool supports_pile_compose(
     const Series& self,
-    const std::vector<Series>& others,
+    pluss::msharp::RangeView::Of<Series> others,
     std::int64_t dim) noexcept {
   if (!baseline_ready_()) {
     return false;
@@ -129,4 +129,3 @@ bool supports_pile_compose(
 }
 
 } // namespace pluss::codem::native::cuda
-

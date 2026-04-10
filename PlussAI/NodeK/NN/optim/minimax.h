@@ -90,10 +90,10 @@ struct MinimaxGroup {
 
 class PLUSS_API Minimax final : public Optimizer {
 public:
-  explicit Minimax(std::vector<Series*> parameters,
+  explicit Minimax(pluss::msharp::RangeView::Of<Series*> parameters,
                    MinimaxOptions options = {},
                    MinimaxConstraints constraints = {})
-      : Optimizer(std::move(parameters)),
+      : Optimizer(parameters),
         constraints_(std::move(constraints)) {
     validate_options_(options);
     GroupState group{};
@@ -105,7 +105,7 @@ public:
     initialize_state_();
   }
 
-  explicit Minimax(std::vector<MinimaxGroup> groups, MinimaxConstraints constraints = {})
+  explicit Minimax(pluss::msharp::RangeView::Of<MinimaxGroup> groups, MinimaxConstraints constraints = {})
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         constraints_(std::move(constraints)) {
@@ -299,7 +299,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<MinimaxGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<MinimaxGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::Minimax: expected non-empty parameter groups");
     }
@@ -319,7 +319,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<MinimaxGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<MinimaxGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -373,8 +373,8 @@ private:
            !c.upper_bounds.empty();
   }
 
-  static void validate_constraint_state_(const std::vector<Series>& state,
-                                         const std::vector<Series>& ref,
+  static void validate_constraint_state_(pluss::msharp::RangeView::Series state,
+                                         pluss::msharp::RangeView::Series ref,
                                          const char* where) {
     if (state.size() != ref.size()) {
       ::pluss::throw_error(std::string(where) + ": state size mismatch");
@@ -395,7 +395,7 @@ private:
     }
   }
 
-  void validate_bounds_vector_(const std::vector<Series>& bounds, const char* name) const {
+  void validate_bounds_vector_(pluss::msharp::RangeView::Series bounds, const char* name) const {
     if (bounds.empty()) return;
     if (bounds.size() != size()) {
       ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " size mismatch");
@@ -781,7 +781,7 @@ private:
     return g.mul(scalar_on_(options.learning_rate, parameter_value));
   }
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
     auto& params = mutable_parameters_();
 
@@ -795,7 +795,7 @@ private:
     const auto [eq_penalty, ineq_penalty] = effective_penalties_(copt);
     const double dual_lr = effective_dual_lr_(copt);
 
-    std::vector<Series> total_grads = gradients;
+    std::vector<Series> total_grads(gradients.begin(), gradients.end());
     for (std::size_t i = 0; i < total_grads.size(); ++i) {
       if (!total_grads[i].defined()) continue;
       // Group-specific clipping/maximize is applied below.

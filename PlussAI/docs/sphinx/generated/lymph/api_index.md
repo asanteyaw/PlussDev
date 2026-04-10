@@ -1,7 +1,7 @@
 # Lymph Full API Reference: Method Index
 
-Total method pages: **59**
-Total data-type pages: **24**
+Total method pages: **82**
+Total data-type pages: **27**
 
 ## Data Types
 
@@ -10,7 +10,9 @@ Total data-type pages: **24**
 
 api/type-batchholdoutsplit
 api/type-bayes-factory
+api/type-branch
 api/type-candidate
+api/type-categoryindexersummary
 api/type-cluster-factory
 api/type-crossvalidationreport
 api/type-decompose-factory
@@ -23,6 +25,7 @@ api/type-linearparameters
 api/type-metricreport
 api/type-neighbor-factory
 api/type-online-factory
+api/type-outlierisolatorsummary
 api/type-seriescomparereport
 api/type-simpleimputersummary
 api/type-spectuneresult
@@ -41,8 +44,13 @@ api/type-tuneresult
 
 api/method-as-stratify-series
 api/method-candidate-candidate
+api/method-categoryindexer-features
+api/method-categoryindexer-learned
+api/method-categoryindexer-summary
 api/method-compare-series
+api/method-copy-feature-route
 api/method-make-cross-validation-split-options
+api/method-make-feature-transformer
 api/method-make-holdout-indices
 api/method-make-holdout-split-options
 api/method-max-abs-diff
@@ -54,21 +62,37 @@ api/method-onlinelinearregressor-core
 api/method-onlinelinearregressor-onlinelinearregressor
 api/method-onlinelinearregressor-seen-samples
 api/method-onlinelinearregressor-trained
+api/method-outlierisolator-features
+api/method-outlierisolator-learned
+api/method-outlierisolator-summary
+api/method-output-render
+api/method-prep-categoryindexer-learn
+api/method-prep-categoryindexer-learn-map
+api/method-prep-categoryindexer-map
+api/method-prep-outlierisolator-filter-inliers
+api/method-prep-outlierisolator-infer
+api/method-prep-outlierisolator-learn
+api/method-prep-outlierisolator-learn-infer
+api/method-prep-outlierisolator-score-samples
 api/method-prep-simpleimputer-learn
 api/method-prep-simpleimputer-learn-map
 api/method-prep-simpleimputer-map
 api/method-prep-standardscaler-learn
 api/method-prep-standardscaler-learn-map
 api/method-prep-standardscaler-map
+api/method-simple-imputer-strategy-name
 api/method-simpleimputer-features
 api/method-simpleimputer-learned
 api/method-simpleimputer-summary
 api/method-standardscaler-features
 api/method-standardscaler-learned
 api/method-standardscaler-summary
+api/method-temporal-features
 api/method-workflow-coeff
 api/method-workflow-dump-model-state
 api/method-workflow-dump-transform-states
+api/method-workflow-feature-transformer
+api/method-workflow-function-transformer
 api/method-workflow-has-model
 api/method-workflow-has-model-spec
 api/method-workflow-has-opaque-transforms
@@ -84,6 +108,8 @@ api/method-workflow-workflow-model
 api/method-workflowmodel-coefficients
 api/method-workflowmodel-dump-model-state
 api/method-workflowmodel-dump-transform-states
+api/method-workflowmodel-feature-transformer
+api/method-workflowmodel-function-transformer
 api/method-workflowmodel-has-model
 api/method-workflowmodel-has-model-spec
 api/method-workflowmodel-has-opaque-transforms

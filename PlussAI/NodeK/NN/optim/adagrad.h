@@ -30,8 +30,8 @@ struct AdagradGroup {
 
 class PLUSS_API Adagrad final : public Optimizer {
 public:
-  explicit Adagrad(std::vector<Series*> parameters, AdagradOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit Adagrad(pluss::msharp::RangeView::Of<Series*> parameters, AdagradOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -41,7 +41,7 @@ public:
     initialize_state_();
   }
 
-  explicit Adagrad(std::vector<AdagradGroup> groups)
+  explicit Adagrad(pluss::msharp::RangeView::Of<AdagradGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -127,8 +127,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -171,8 +171,8 @@ private:
   }
 
   void apply_group_loop_(GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const AdagradOptions& options = group.options;
     const double lr_value = current_learning_rate_(options);
     advance_capturable_step_(group);
@@ -202,8 +202,8 @@ private:
   }
 
   void apply_group_batched_(GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const AdagradOptions& options = group.options;
     const double lr_value = current_learning_rate_(options);
     advance_capturable_step_(group);
@@ -253,8 +253,8 @@ private:
   }
 
   void apply_group_fused_(GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const AdagradOptions& options = group.options;
     const double lr_value = current_learning_rate_(options);
     advance_capturable_step_(group);
@@ -306,7 +306,7 @@ private:
     }
   }
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
     auto& params = mutable_parameters_();
     reset_step_lane_telemetry_();
@@ -365,7 +365,7 @@ private:
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<AdagradGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<AdagradGroup> groups) {
     if (groups.empty()) {
       ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: expected non-empty parameter groups");
     }
@@ -385,7 +385,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<AdagradGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<AdagradGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;

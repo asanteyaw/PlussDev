@@ -313,6 +313,15 @@ void neg(const Series& a, Series& out) {
 
 void pow(const Series& a, const Series& b, const Series& out_) {
   auto& out = const_cast<Series&>(out_);
+  auto ipow_u64 = [](std::uint64_t base, std::uint64_t exp) -> std::uint64_t {
+    std::uint64_t acc = 1;
+    while (exp > 0) {
+      if ((exp & 1ULL) != 0ULL) acc *= base;
+      exp >>= 1ULL;
+      if (exp > 0) base *= base;
+    }
+    return acc;
+  };
   switch (a.scalar_type()) {
     case ScalarType::Float64: binary_apply<double>(a,b,out,[](double x,double y){ return std::pow(x,y); }); return;
     case ScalarType::Float32: binary_apply<float>(a,b,out,[](float x,float y){ return std::pow(x,y); }); return;
@@ -320,6 +329,82 @@ void pow(const Series& a, const Series& b, const Series& out_) {
     case ScalarType::BFloat16: binary_half_apply<BFloat16>(a,b,out,[](float x,float y){ return std::pow(x,y); }, bfloat16_from_float, bfloat16_to_float); return;
     case ScalarType::Complex64: binary_apply<Complex64>(a,b,out,[](Complex64 x, Complex64 y){ return std::pow(x,y); }); return;
     case ScalarType::Complex128: binary_apply<Complex128>(a,b,out,[](Complex128 x, Complex128 y){ return std::pow(x,y); }); return;
+    case ScalarType::UInt8:
+      binary_apply<std::uint8_t>(a, b, out, [&](std::uint8_t x, std::uint8_t y) {
+        return static_cast<std::uint8_t>(ipow_u64(static_cast<std::uint64_t>(x), static_cast<std::uint64_t>(y)));
+      });
+      return;
+    case ScalarType::UInt16:
+      binary_apply<std::uint16_t>(a, b, out, [&](std::uint16_t x, std::uint16_t y) {
+        return static_cast<std::uint16_t>(ipow_u64(static_cast<std::uint64_t>(x), static_cast<std::uint64_t>(y)));
+      });
+      return;
+    case ScalarType::UInt32:
+      binary_apply<std::uint32_t>(a, b, out, [&](std::uint32_t x, std::uint32_t y) {
+        return static_cast<std::uint32_t>(ipow_u64(static_cast<std::uint64_t>(x), static_cast<std::uint64_t>(y)));
+      });
+      return;
+    case ScalarType::UInt64:
+      binary_apply<std::uint64_t>(a, b, out, [&](std::uint64_t x, std::uint64_t y) {
+        return ipow_u64(x, y);
+      });
+      return;
+    case ScalarType::Int8:
+      binary_apply<std::int8_t>(a, b, out, [&](std::int8_t x, std::int8_t y) {
+        PLUSS_CHECK(y >= 0, "pow: Integers to negative integer powers are not allowed");
+        std::int8_t acc = 1;
+        std::int8_t base = x;
+        std::uint64_t exp = static_cast<std::uint64_t>(y);
+        while (exp > 0) {
+          if ((exp & 1ULL) != 0ULL) acc = static_cast<std::int8_t>(acc * base);
+          exp >>= 1ULL;
+          if (exp > 0) base = static_cast<std::int8_t>(base * base);
+        }
+        return acc;
+      });
+      return;
+    case ScalarType::Int16:
+      binary_apply<std::int16_t>(a, b, out, [&](std::int16_t x, std::int16_t y) {
+        PLUSS_CHECK(y >= 0, "pow: Integers to negative integer powers are not allowed");
+        std::int16_t acc = 1;
+        std::int16_t base = x;
+        std::uint64_t exp = static_cast<std::uint64_t>(y);
+        while (exp > 0) {
+          if ((exp & 1ULL) != 0ULL) acc = static_cast<std::int16_t>(acc * base);
+          exp >>= 1ULL;
+          if (exp > 0) base = static_cast<std::int16_t>(base * base);
+        }
+        return acc;
+      });
+      return;
+    case ScalarType::Int32:
+      binary_apply<std::int32_t>(a, b, out, [&](std::int32_t x, std::int32_t y) {
+        PLUSS_CHECK(y >= 0, "pow: Integers to negative integer powers are not allowed");
+        std::int32_t acc = 1;
+        std::int32_t base = x;
+        std::uint64_t exp = static_cast<std::uint64_t>(y);
+        while (exp > 0) {
+          if ((exp & 1ULL) != 0ULL) acc = static_cast<std::int32_t>(acc * base);
+          exp >>= 1ULL;
+          if (exp > 0) base = static_cast<std::int32_t>(base * base);
+        }
+        return acc;
+      });
+      return;
+    case ScalarType::Int64:
+      binary_apply<std::int64_t>(a, b, out, [&](std::int64_t x, std::int64_t y) {
+        PLUSS_CHECK(y >= 0, "pow: Integers to negative integer powers are not allowed");
+        std::int64_t acc = 1;
+        std::int64_t base = x;
+        std::uint64_t exp = static_cast<std::uint64_t>(y);
+        while (exp > 0) {
+          if ((exp & 1ULL) != 0ULL) acc = static_cast<std::int64_t>(acc * base);
+          exp >>= 1ULL;
+          if (exp > 0) base = static_cast<std::int64_t>(base * base);
+        }
+        return acc;
+      });
+      return;
     default: throw_error("pow: dtype not implemented");
   }
 }

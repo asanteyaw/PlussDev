@@ -87,6 +87,7 @@ void set_keep_sensitivity(const Series& s, bool keep);
 
 bool is_leaf(const Series& s);
 std::optional<SourceInfo> source_info(const Series& s);
+std::shared_ptr<SourceLink> source_link(const Series& s);
 
 void bind_source_link(
     const Series& s,

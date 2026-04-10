@@ -130,7 +130,7 @@ void maybe_update_best(const TuneTrialResult& trial,
 
 } // namespace
 
-StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates,
+StatusOr<TuneReport> sweep(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                            const LabeledBatch& batch,
                            const SplitOptions& split,
                            const TrainOptions& train_options,

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optimizer Surfaces: Functional vs OOP &#8212; Optima User Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Optima Sequential QP" href="optima_sequential_qp.html" />
+    <link rel="prev" title="Optima Algorithms" href="optima_algorithms.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="optimizer-surfaces-functional-vs-oop">
+<h1>Optimizer Surfaces: Functional vs OOP<a class="headerlink" href="#optimizer-surfaces-functional-vs-oop" title="Link to this heading">¶</a></h1>
+<p>There are two ADAM surfaces in the Pluss stack by design.</p>
+<section id="functional-surface-plussma">
+<h2>Functional Surface (<code class="docutils literal notranslate"><span class="pre">PlussMa</span></code>)<a class="headerlink" href="#functional-surface-plussma" title="Link to this heading">¶</a></h2>
+<p>Namespace:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::optim::adam_state_like(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::optim::adam_step_inplace(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::optim::adam_step(...)</span></code></p></li>
+</ul>
+<p>Intent:</p>
+<ul class="simple">
+<li><p>low-level <code class="docutils literal notranslate"><span class="pre">Series</span></code> update primitive</p></li>
+<li><p>explicit sensitivity/gradient updates</p></li>
+<li><p>useful for custom ML loops and research code</p></li>
+</ul>
+<p>Demo:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/adam_functional_demo.cpp</span></code></p></li>
+<li><p>Includes both explicit-gradient and autodiff-generated-gradient usage.</p></li>
+</ul>
+</section>
+<section id="oop-surface-plussai">
+<h2>OOP Surface (<code class="docutils literal notranslate"><span class="pre">PlussAI</span></code>)<a class="headerlink" href="#oop-surface-plussai" title="Link to this heading">¶</a></h2>
+<p>Namespace:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::nn::optim::Adam</span></code></p></li>
+</ul>
+<p>Intent:</p>
+<ul class="simple">
+<li><p>module/parameter-list optimizer object</p></li>
+<li><p>DL-style training loop ergonomics</p></li>
+<li><p>parameter groups and richer optimizer policy</p></li>
+</ul>
+<p>Demo:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussAI/examples/adam_oop_demo.cpp</span></code></p></li>
+<li><p>Includes both explicit-gradient <code class="docutils literal notranslate"><span class="pre">step(grads)</span></code> and autodiff <code class="docutils literal notranslate"><span class="pre">step()</span></code> usage.</p></li>
+</ul>
+</section>
+<section id="practical-rule">
+<h2>Practical Rule<a class="headerlink" href="#practical-rule" title="Link to this heading">¶</a></h2>
+<p>Use the namespace to communicate intent clearly:</p>
+<ul class="simple">
+<li><p>choose <code class="docutils literal notranslate"><span class="pre">pluss::optim::*</span></code> for functional/math-level optimization utilities</p></li>
+<li><p>choose <code class="docutils literal notranslate"><span class="pre">pluss::nn::optim::*</span></code> for neural-module training optimizers</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Optima User Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="optima_algorithms.html">Optima Algorithms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Optimizer Surfaces: Functional vs OOP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#functional-surface-plussma">Functional Surface (<code class="docutils literal notranslate"><span class="pre">PlussMa</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#oop-surface-plussai">OOP Surface (<code class="docutils literal notranslate"><span class="pre">PlussAI</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#practical-rule">Practical Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optima_sequential_qp.html">Optima Sequential QP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optima_internal_protocol.html">Optima Internal Protocol</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="optima_algorithms.html" title="previous chapter">Optima Algorithms</a></li>
+      <li>Next: <a href="optima_sequential_qp.html" title="next chapter">Optima Sequential QP</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/optimizer_surfaces.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

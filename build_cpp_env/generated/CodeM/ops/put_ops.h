@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::put_ops {
   Series put(const Series& a, const Series& index, const Series& src, bool accumulate);

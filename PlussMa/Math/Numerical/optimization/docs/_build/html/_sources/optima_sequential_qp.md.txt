@@ -225,7 +225,7 @@ The returned multiplier structure contains:
 A typical progress line from an instrumented SQP run looks like:
 
 ```text
-[sqp:iter] iter=12 evals=50 value=1.125000 viol=0.000000 stat=8.5e-08 step=1.000000 penalty=10.000000
+iter=12 evals=50 objective=1.125000 viol=0.000000 stationarity=0.000000 backend=10.000000 step=1.000000 stall=none
 ```
 
 Interpretation:

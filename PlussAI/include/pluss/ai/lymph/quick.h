@@ -126,7 +126,7 @@ StatusOr<nodej::CrossAssessReport> assess_cv(
     const nodej::AssessOptions& assess_options = {});
 
 StatusOr<nodej::TuneReport> tune_sweep(
-    const std::vector<nodej::ModelSpec>& candidates,
+    pluss::msharp::RangeView::Of<nodej::ModelSpec> candidates,
     const nodej::LabeledBatch& batch,
     const nodej::SplitOptions& split = {},
     const nodej::TrainOptions& train_options = {},

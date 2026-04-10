@@ -99,7 +99,7 @@ using pluss::subsp::math::diff::curvature_audit;
 using pluss::subsp::math::diff::gradient_audit_report;
 using pluss::subsp::math::diff::curvature_audit_report;
 using pluss::subsp::math::diff::linearize;
-using pluss::subsp::math::diff::nth_derivative;
+using pluss::subsp::math::diff::nth_diff;
 using pluss::subsp::math::diff::vjp;
 using pluss::subsp::math::diff::value_and_grad;
 
@@ -503,14 +503,12 @@ struct NonlinearConstraintEvaluation {
 };
 
 struct ObjectiveDefinition {
-  std::function<Series(const ParameterPack<Series>&)> series{};
   std::function<Trace(const ParameterPack<Trace>&)> autodiff{};
   std::function<DualTrace(const ParameterPack<DualTrace>&)> autodiff_dual{};
   std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Series>&)> analytic{};
 
   bool defined() const noexcept {
-    return static_cast<bool>(series) || static_cast<bool>(autodiff) ||
-           static_cast<bool>(autodiff_dual) || static_cast<bool>(analytic);
+    return static_cast<bool>(autodiff) || static_cast<bool>(autodiff_dual) || static_cast<bool>(analytic);
   }
 };
 
@@ -560,81 +558,52 @@ inline ParameterPack<Series> pack_series(const Series& values, std::string name 
   return pack_vector({{std::move(name), values}});
 }
 
-template <class Fn, class... Bound>
-auto bind_objective(Fn&& fn, Bound&&... bound) {
-  using FnStorage = std::decay_t<Fn>;
-  using BoundStorage = std::tuple<std::decay_t<Bound>...>;
-  return [f = FnStorage(std::forward<Fn>(fn)),
-          bound_args = BoundStorage(std::forward<Bound>(bound)...)](const Series& x) -> Series {
-    return std::apply(
-        [&](const auto&... args) -> Series {
-          return std::invoke(f, x, args...);
-        },
-        bound_args);
-  };
-}
-
-template <class... Bound>
-struct ObjectiveArgs {
-  std::tuple<Bound...> values{};
-};
-
-template <class... Bound>
-auto pack_args(Bound&&... bound) {
-  using Storage = ObjectiveArgs<std::decay_t<Bound>...>;
-  return Storage{std::tuple<std::decay_t<Bound>...>(std::forward<Bound>(bound)...)};
-}
-
-template <class Fn, class... Bound>
-auto bind_objective(Fn&& fn, const ObjectiveArgs<Bound...>& bound) {
-  using FnStorage = std::decay_t<Fn>;
-  return [f = FnStorage(std::forward<Fn>(fn)),
-          bound_args = bound.values](const Series& x) -> Series {
-    return std::apply(
-        [&](const auto&... args) -> Series {
-          return std::invoke(f, x, args...);
-        },
-        bound_args);
-  };
-}
-
 class ProblemBuilder {
 public:
   ProblemBuilder() = default;
 
   template <class Fn>
+  requires(std::invocable<Fn&, const ParameterPack<Trace>&> &&
+           std::convertible_to<std::invoke_result_t<Fn&, const ParameterPack<Trace>&>, Trace>)
   ProblemBuilder& objective(Fn&& fn) {
     problem_.objective.autodiff = std::forward<Fn>(fn);
     return *this;
   }
 
   template <class Fn>
-  ProblemBuilder& objective_series(Fn&& fn) {
-    problem_.objective.series = std::forward<Fn>(fn);
-    return *this;
-  }
-
-  template <class Fn>
-  ProblemBuilder& objective_fn(Fn&& fn) {
-    problem_.objective.series = [f = std::forward<Fn>(fn)](const ParameterPack<Series>& p) -> Series {
-      return f(p.at("x").reshape({p.at("x").numel()}));
+  requires(!std::invocable<Fn&, const ParameterPack<Trace>&> &&
+           std::invocable<Fn&, const Trace&> &&
+           std::convertible_to<std::invoke_result_t<Fn&, const Trace&>, Trace>)
+  ProblemBuilder& objective(Fn&& fn) {
+    problem_.objective.autodiff = [f = std::forward<Fn>(fn)](const ParameterPack<Trace>& p) -> Trace {
+      return f(p.at("x"));
     };
     return *this;
   }
 
-  template <class Fn, class... Bound>
-  requires(sizeof...(Bound) > 0 &&
-           std::invocable<Fn&, const Series&, Bound...> &&
-           std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
-  ProblemBuilder& objective_fn(Fn&& fn, Bound&&... bound) {
-    return objective_fn(bind_objective(std::forward<Fn>(fn), std::forward<Bound>(bound)...));
+  template <class Fn>
+  requires(!std::invocable<Fn&, const ParameterPack<Trace>&> &&
+           !std::invocable<Fn&, const Trace&> &&
+           std::invocable<Fn&, const Series&> &&
+           std::convertible_to<std::invoke_result_t<Fn&, const Series&>, Trace>)
+  ProblemBuilder& objective(Fn&& fn) {
+    problem_.objective.autodiff = [f = std::forward<Fn>(fn)](const ParameterPack<Trace>& p) -> Trace {
+      return f(p.at("x").value());
+    };
+    return *this;
   }
 
-  template <class Fn, class... Bound>
-  requires(std::invocable<Fn&, const Series&, Bound...> &&
-           std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
-  ProblemBuilder& objective_fn(Fn&& fn, const ObjectiveArgs<Bound...>& bound) {
-    return objective_fn(bind_objective(std::forward<Fn>(fn), bound));
+  template <class Fn>
+  requires(!std::invocable<Fn&, const ParameterPack<Trace>&> &&
+           !std::invocable<Fn&, const Trace&> &&
+           std::invocable<Fn&, const Series&> &&
+           std::convertible_to<std::invoke_result_t<Fn&, const Series&>, Series> &&
+           !std::convertible_to<std::invoke_result_t<Fn&, const Series&>, Trace>)
+  ProblemBuilder& objective(Fn&& fn) {
+    problem_.objective.autodiff = [f = std::forward<Fn>(fn)](const ParameterPack<Trace>& p) -> Trace {
+      return trace(f(p.at("x").value()));
+    };
+    return *this;
   }
 
   template <class Fn>
@@ -1138,7 +1107,7 @@ struct InternalProtocolState {
 };
 
 enum class OptimaAlgorithm : std::uint8_t {
-  Penalty = 0,
+  MeritMethod = 0,
   SequentialQP,
   WorkingSet,
   InternalProtocol,
@@ -1294,8 +1263,7 @@ inline std::function<bool(const OptimaProgressSnapshot&)> trace(std::ostream& os
       objective = snapshot.evaluation.value.item<double>();
     }
 
-    os << '[' << snapshot.algorithm << ':' << optima_progress_stage_name(snapshot.stage) << ']'
-       << " iter=" << snapshot.iteration
+    os << "iter=" << snapshot.iteration
        << " evals=" << snapshot.function_evaluations
        << " objective=" << objective
        << " viol=" << snapshot.evaluation.max_constraint_violation
@@ -1685,15 +1653,6 @@ AD dense_matvec_autodiff_(const Series& matrix, const AD& vector) {
   }
 }
 
-inline ParameterPack<Series> values_from_trace_pack_(const ParameterPack<Trace>& params) {
-  std::vector<typename ParameterPack<Series>::Block> out;
-  out.reserve(params.size());
-  for (const auto& block : params.blocks()) {
-    out.push_back({block.name, block.value.value()});
-  }
-  return ParameterPack<Series>(std::move(out));
-}
-
 inline std::pair<Series, ParameterPack<Series>> objective_autodiff_value_and_grad_(
     const ConstrainedProblem& problem,
     const ParameterPack<Series>& params) {
@@ -1702,27 +1661,19 @@ inline std::pair<Series, ParameterPack<Series>> objective_autodiff_value_and_gra
         [&](const ParameterPack<Trace>& p) -> Trace { return problem.objective.autodiff(p); },
         params);
   }
-  if (problem.objective.series) {
-    return value_and_grad(
-        [&](const ParameterPack<Trace>& p) -> Trace {
-          return Trace(problem.objective.series(values_from_trace_pack_(p)));
-        },
-        params);
-  }
   ::pluss::throw_error(
-      "subsp::math::optim::objective_autodiff_value_and_grad_: objective callback is not defined");
+      "subsp::math::optim::objective_autodiff_value_and_grad_: autodiff objective callback is not defined");
 }
 
 template <class AD>
 AD call_objective_autodiff_(const ConstrainedProblem& problem, const ParameterPack<AD>& params) {
   if constexpr (std::is_same_v<AD, Trace>) {
     if (problem.objective.autodiff) return problem.objective.autodiff(params);
-    if (problem.objective.series) return Trace(problem.objective.series(values_from_trace_pack_(params)));
   } else {
     if (problem.objective.autodiff_dual) return problem.objective.autodiff_dual(params);
   }
   ::pluss::throw_error(
-      "subsp::math::optim::call_objective_autodiff_: requested curvature mode requires autodiff callback support");
+      "subsp::math::optim::call_objective_autodiff_: autodiff objective callback is required");
 }
 
 template <class AD>
@@ -4072,8 +4023,8 @@ inline Series estimate_kkt_multipliers_(const Series& gradient,
 
 inline const char* algorithm_name_(OptimaAlgorithm algorithm) {
   switch (algorithm) {
-    case OptimaAlgorithm::Penalty:
-      return "penalty";
+    case OptimaAlgorithm::MeritMethod:
+      return "merit-method";
     case OptimaAlgorithm::SequentialQP:
       return "sqp";
     case OptimaAlgorithm::WorkingSet:
@@ -4753,7 +4704,7 @@ inline DerivativeAuditReport audit_optima_derivatives(
 
   DerivativeAuditReport report;
 
-  if (problem.objective.analytic && (problem.objective.autodiff || problem.objective.series)) {
+  if (problem.objective.analytic && (problem.objective.autodiff || problem.objective.autodiff_dual)) {
     auto [analytic_value, analytic_gradient] = problem.objective.analytic(params);
     auto [autodiff_value, autodiff_gradient] = detail::objective_autodiff_value_and_grad_(problem, params);
     const double value_abs_diff = detail::max_abs_diff_series_(analytic_value, autodiff_value);
@@ -4768,7 +4719,7 @@ inline DerivativeAuditReport audit_optima_derivatives(
         gradient_rel_diff,
         "objective analytic vs autodiff");
   } else {
-    report.objective.message = "requires analytic objective and either autodiff or series objective definition";
+    report.objective.message = "requires analytic objective and autodiff objective definition";
   }
 
   if (problem.nonlinear.analytic && problem.nonlinear.equality) {
@@ -5408,7 +5359,7 @@ inline PenaltyMethodState solve_penalty_method(const ConstrainedProblem& problem
   std::string progress_message;
   if (detail::run_progress_hook_(
           options.progress_hook,
-          detail::make_progress_snapshot_(OptimaAlgorithm::Penalty, OptimaProgressStage::Start, state),
+          detail::make_progress_snapshot_(OptimaAlgorithm::MeritMethod, OptimaProgressStage::Start, state),
           &progress_message)) {
     state.converged = true;
     state.message = progress_message.empty() ? "stopped by progress hook" : progress_message;
@@ -5422,7 +5373,7 @@ inline PenaltyMethodState solve_penalty_method(const ConstrainedProblem& problem
     progress_message.clear();
     if (detail::run_progress_hook_(
             options.progress_hook,
-            detail::make_progress_snapshot_(OptimaAlgorithm::Penalty, OptimaProgressStage::Iteration, state),
+            detail::make_progress_snapshot_(OptimaAlgorithm::MeritMethod, OptimaProgressStage::Iteration, state),
             &progress_message)) {
       state.converged = true;
       state.message = progress_message.empty() ? "stopped by progress hook" : progress_message;
@@ -5431,7 +5382,7 @@ inline PenaltyMethodState solve_penalty_method(const ConstrainedProblem& problem
   }
   detail::run_progress_hook_(
       options.progress_hook,
-      detail::make_progress_snapshot_(OptimaAlgorithm::Penalty, OptimaProgressStage::Done, state));
+      detail::make_progress_snapshot_(OptimaAlgorithm::MeritMethod, OptimaProgressStage::Done, state));
   return state;
 }
 
@@ -7176,7 +7127,7 @@ inline InternalProtocolState solve_internal_protocol(const ConstrainedProblem& p
 
 inline OptimaState to_optima_state(const ConstrainedProblem& problem, const PenaltyMethodState& state) {
   OptimaState out{
-      OptimaAlgorithm::Penalty,
+      OptimaAlgorithm::MeritMethod,
       state.params,
       state.evaluation,
       state.iteration,
@@ -7309,7 +7260,7 @@ inline OptimaState optima(const ConstrainedProblem& problem,
                           const ParameterPack<Series>& initial_params,
                           const OptimaOptions& options = {}) {
   switch (options.algorithm) {
-    case OptimaAlgorithm::Penalty: {
+    case OptimaAlgorithm::MeritMethod: {
       auto penalty_options = options.penalty;
       if (!penalty_options.progress_hook) penalty_options.progress_hook = options.progress_hook;
       return to_optima_state(problem, solve_penalty_method(problem, initial_params, penalty_options));
@@ -7340,78 +7291,6 @@ inline OptimaState optima(const ConstrainedProblem& problem,
                           const Series& initial_params,
                           const OptimaOptions& options = {}) {
   return optima(problem, pack_series(initial_params), options);
-}
-
-inline OptimaState optima(
-    std::function<Series(const ParameterPack<Series>&)> objective_series,
-    const ParameterPack<Series>& initial_params,
-    const OptimaOptions& options = {},
-    const ObjectiveConstraints& constraints = {}) {
-  ConstrainedProblem problem;
-  problem.objective.series = std::move(objective_series);
-  problem.nonlinear = constraints.nonlinear;
-  problem.linear = constraints.linear;
-  problem.bounds = constraints.bounds;
-  return optima(problem, initial_params, options);
-}
-
-inline OptimaState optima(
-    std::function<Series(const Series&)> objective_series,
-    const Series& initial_params,
-    const OptimaOptions& options = {},
-    const ObjectiveConstraints& constraints = {}) {
-  ConstrainedProblem problem;
-  problem.objective.series = [f = std::move(objective_series)](const ParameterPack<Series>& p) -> Series {
-    return f(p.at("x").reshape({p.at("x").numel()}));
-  };
-  problem.nonlinear = constraints.nonlinear;
-  problem.linear = constraints.linear;
-  problem.bounds = constraints.bounds;
-  return optima(problem, pack_series(initial_params), options);
-}
-
-template <class Fn, class... Bound>
-requires(sizeof...(Bound) > 0 &&
-         std::invocable<Fn&, const Series&, Bound...> &&
-         std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
-inline OptimaState optima(
-    Fn&& objective_series,
-    const Series& initial_params,
-    const OptimaOptions& options,
-    const ObjectiveConstraints& constraints,
-    Bound&&... bound) {
-  return optima(
-      bind_objective(std::forward<Fn>(objective_series), std::forward<Bound>(bound)...),
-      initial_params,
-      options,
-      constraints);
-}
-
-template <class Fn, class... Bound>
-requires(std::invocable<Fn&, const Series&, Bound...> &&
-         std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
-inline OptimaState optima(
-    Fn&& objective_series,
-    const Series& initial_params,
-    const OptimaOptions& options,
-    const ObjectiveConstraints& constraints,
-    const ObjectiveArgs<Bound...>& bound) {
-  return optima(
-      bind_objective(std::forward<Fn>(objective_series), bound),
-      initial_params,
-      options,
-      constraints);
-}
-
-template <class Fn, class... Bound>
-requires(std::invocable<Fn&, const Series&, Bound...> &&
-         std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
-inline OptimaState optima(
-    Fn&& objective_series,
-    const Series& initial_params,
-    const OptimaOptions& options,
-    const ObjectiveArgs<Bound...>& bound) {
-  return optima(std::forward<Fn>(objective_series), initial_params, options, ObjectiveConstraints{}, bound);
 }
 
 inline OptimaState optima(

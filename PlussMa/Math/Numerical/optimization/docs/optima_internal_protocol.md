@@ -265,7 +265,7 @@ The final multiplier structure is split into:
 A typical progress line from an instrumented run looks like:
 
 ```text
-[ip:iter] iter=35 evals=189 value=16.329592 viol=0.000000 stat=0.244045 compl=0.000000 barrier=0.010000 step=0.062500 krylov=0 stall=none
+iter=35 evals=189 objective=16.329592 viol=0.000000 stationarity=0.244045 backend=0.010000 step=0.062500 stall=none
 ```
 
 Interpretation:

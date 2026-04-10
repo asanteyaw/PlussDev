@@ -72,7 +72,8 @@ result.value() is available
 **Expected output**
 
 ```text
-saved flow bundle to: <path>
-flow bundle roundtrip exact prediction parity: true
-nodej_flow_bundle_demo complete
+libc++abi: terminating due to uncaught exception of type pluss::codem::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
+Triggered at: <path> (DataReader &pluss::detail::DataReader::with_sizes(std::span<const std::int64_t>))
+
+[exit_code] -6
 ```

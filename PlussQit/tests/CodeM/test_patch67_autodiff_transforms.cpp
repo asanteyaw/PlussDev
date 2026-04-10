@@ -7,6 +7,7 @@
 #include <pluss/subsp/math/diff.h>
 
 #include <cmath>
+#include <array>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
+using pluss::codem::ExtractSpec;
 using pluss::make_series;
 using pluss::subsp::math::diff::DualTrace;
 using pluss::subsp::math::diff::DisconnectedSensitivity;
@@ -38,7 +40,7 @@ using pluss::subsp::math::diff::jacrev;
 using pluss::subsp::math::diff::jvp;
 using pluss::subsp::math::diff::jvp_lanes;
 using pluss::subsp::math::diff::linearize;
-using pluss::subsp::math::diff::nth_derivative;
+using pluss::subsp::math::diff::nth_diff;
 using pluss::subsp::math::diff::slope_source;
 using pluss::subsp::math::diff::trace;
 using pluss::subsp::math::diff::trace_recording_enabled;
@@ -116,6 +118,108 @@ TEST_CASE("autodiff reverse propagates select sensitivities to parent", "[autodi
   REQUIRE(g[1] == Approx(0.0));
   REQUIRE(g[2] == Approx(1.0));
   REQUIRE(g[3] == Approx(1.0));
+}
+
+TEST_CASE("autodiff reverse propagates multi-index index_put sensitivities", "[autodiff][index_put]") {
+  const Series x0 = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {2, 2}).to(ScalarType::Float64);
+  const Series i0 = make_series(std::vector<std::int64_t>{0, 1}, {2}).to(ScalarType::Int64);
+  const Series i1 = make_series(std::vector<std::int64_t>{1, 0}, {2}).to(ScalarType::Int64);
+
+  {
+    Series x = x0.clone();
+    x.tracks_slope_(true);
+    Series src = make_series(std::vector<double>{10.0, 20.0}, {2}).to(ScalarType::Float64);
+    src.tracks_slope_(true);
+
+    const Series y = x.index_put({i0, i1}, src, /*accumulate=*/false);
+    const Series loss = y.sum();
+    loss.reverse();
+
+    REQUIRE(x.has_sensitivity());
+    REQUIRE(src.has_sensitivity());
+    const auto gx = x.sensitivity().to_vec<double>();
+    const auto gs = src.sensitivity().to_vec<double>();
+    REQUIRE(gx.size() == 4);
+    REQUIRE(gs.size() == 2);
+    REQUIRE(gx[0] == Approx(1.0));
+    REQUIRE(gx[1] == Approx(0.0));
+    REQUIRE(gx[2] == Approx(0.0));
+    REQUIRE(gx[3] == Approx(1.0));
+    REQUIRE(gs[0] == Approx(1.0));
+    REQUIRE(gs[1] == Approx(1.0));
+  }
+
+  {
+    Series x = x0.clone();
+    x.tracks_slope_(true);
+    Series src = make_series(std::vector<double>{10.0, 20.0}, {2}).to(ScalarType::Float64);
+    src.tracks_slope_(true);
+
+    const Series y = x.index_put({i0, i1}, src, /*accumulate=*/true);
+    const Series loss = y.sum();
+    loss.reverse();
+
+    REQUIRE(x.has_sensitivity());
+    REQUIRE(src.has_sensitivity());
+    const auto gx = x.sensitivity().to_vec<double>();
+    const auto gs = src.sensitivity().to_vec<double>();
+    REQUIRE(gx.size() == 4);
+    REQUIRE(gs.size() == 2);
+    for (double g : gx) REQUIRE(g == Approx(1.0));
+    REQUIRE(gs[0] == Approx(1.0));
+    REQUIRE(gs[1] == Approx(1.0));
+  }
+}
+
+TEST_CASE("autodiff reverse propagates copy_ on view slices", "[autodiff][copy_]") {
+  Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  Series src = make_series(std::vector<double>{10.0, 20.0}, {2}).to(ScalarType::Float64);
+  src.tracks_slope_(true);
+
+  Series v = x.slice(0, 1, 3, 1);
+  v.copy_(src);
+  const Series loss = x.sum();
+  loss.reverse();
+
+  REQUIRE(x.has_sensitivity());
+  REQUIRE(src.has_sensitivity());
+  const auto gx = x.sensitivity().to_vec<double>();
+  const auto gs = src.sensitivity().to_vec<double>();
+  REQUIRE(gx.size() == 4);
+  REQUIRE(gs.size() == 2);
+  REQUIRE(gx[0] == Approx(1.0));
+  REQUIRE(gx[1] == Approx(0.0));
+  REQUIRE(gx[2] == Approx(0.0));
+  REQUIRE(gx[3] == Approx(1.0));
+  REQUIRE(gs[0] == Approx(1.0));
+  REQUIRE(gs[1] == Approx(1.0));
+}
+
+TEST_CASE("autodiff reverse propagates traverse_put_ through copy_ path", "[autodiff][traverse]") {
+  Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  Series src = make_series(std::vector<double>{10.0, 20.0}, {2}).to(ScalarType::Float64);
+  src.tracks_slope_(true);
+
+  const std::array<ExtractSpec, 1> specs{{ExtractSpec{1, 3}}};
+  x.traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec>(specs), src);
+
+  const Series loss = x.sum();
+  loss.reverse();
+
+  REQUIRE(x.has_sensitivity());
+  REQUIRE(src.has_sensitivity());
+  const auto gx = x.sensitivity().to_vec<double>();
+  const auto gs = src.sensitivity().to_vec<double>();
+  REQUIRE(gx.size() == 4);
+  REQUIRE(gs.size() == 2);
+  REQUIRE(gx[0] == Approx(1.0));
+  REQUIRE(gx[1] == Approx(0.0));
+  REQUIRE(gx[2] == Approx(0.0));
+  REQUIRE(gx[3] == Approx(1.0));
+  REQUIRE(gs[0] == Approx(1.0));
+  REQUIRE(gs[1] == Approx(1.0));
 }
 
 TEST_CASE("autodiff reverse propagates take sensitivities with duplicate indices", "[autodiff][reverse]") {
@@ -1752,31 +1856,50 @@ TEST_CASE("hessian vectorized option preserves block semantics", "[autodiff][hes
   }
 }
 
-TEST_CASE("nth_derivative delegates to first and second-order transforms", "[autodiff][nth]") {
+TEST_CASE("nth_diff delegates to first and second-order transforms", "[autodiff][nth]") {
   const Series x = make_series(1.25).to(ScalarType::Float64);
   const auto poly = [](const auto& z) { return z * z * z - 2.0 * (z * z) + z; };
 
-  const Series value = nth_derivative(poly, x, 0);
-  const Series first = nth_derivative(poly, x, 1);
-  const Series second = nth_derivative(poly, x, 2);
+  const Series value = nth_diff(poly, x, 0);
+  const Series first = nth_diff(poly, x, 1);
+  const Series second = nth_diff(poly, x, 2);
 
   REQUIRE(value.item<double>() == Approx(0.078125));
   REQUIRE(first.item<double>() == Approx(0.6875));
   REQUIRE(second.item<double>() == Approx(3.5));
 }
 
-TEST_CASE("nth_derivative supports exact higher orders for scalar Trace objective", "[autodiff][nth]") {
+TEST_CASE("nth_diff supports exact higher orders for scalar Trace objective", "[autodiff][nth]") {
   const Series x = make_series(1.5).to(ScalarType::Float64);
   const auto quartic = [](const auto& z) { return z * z * z * z; };
 
-  const Series third = nth_derivative(quartic, x, 3);
+  const Series third = nth_diff(quartic, x, 3);
   REQUIRE(third.item<double>() == Approx(36.0).margin(1e-6));
 
-  const Series fourth = nth_derivative(quartic, x, 4);
+  const Series fourth = nth_diff(quartic, x, 4);
   REQUIRE(fourth.item<double>() == Approx(24.0).margin(1e-6));
 
-  const Series fifth = nth_derivative(quartic, x, 5);
+  const Series fifth = nth_diff(quartic, x, 5);
   REQUIRE(fifth.item<double>() == Approx(0.0).margin(1e-8));
+}
+
+TEST_CASE("nth_diff supports vector input via egrad-style reduction", "[autodiff][nth]") {
+  const Series x = make_series(std::vector<double>{-2.0, 0.5, 3.0}, {3}).to(ScalarType::Float64);
+  const auto cubic = [](const auto& z) { return z * z * z; };
+
+  const Series first = nth_diff(cubic, x, 1);
+  const Series second = nth_diff(cubic, x, 2);
+
+  const auto g1 = first.to_vec<double>();
+  const auto g2 = second.to_vec<double>();
+  REQUIRE(g1.size() == 3);
+  REQUIRE(g2.size() == 3);
+  REQUIRE(g1[0] == Approx(12.0).margin(1e-12));
+  REQUIRE(g1[1] == Approx(0.75).margin(1e-12));
+  REQUIRE(g1[2] == Approx(27.0).margin(1e-12));
+  REQUIRE(g2[0] == Approx(-12.0).margin(1e-12));
+  REQUIRE(g2[1] == Approx(3.0).margin(1e-12));
+  REQUIRE(g2[2] == Approx(18.0).margin(1e-12));
 }
 
 TEST_CASE("vector parameter gradients preserve order and shape", "[autodiff][params]") {

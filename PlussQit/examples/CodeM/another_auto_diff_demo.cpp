@@ -9,7 +9,7 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::math::diff::nth_derivative;
+using pluss::subsp::math::diff::nth_diff;
 using pluss::subsp::math::diff::trace;
 
 template <class Fn>
@@ -28,7 +28,7 @@ bool report_case(std::string_view name,
 
     const Series value = tracked_y.value();
     const Series first = tracked_x.sensitivity();
-    const Series second = nth_derivative(
+    const Series second = nth_diff(
         [&](const auto& z) { return fn(z); },
         x,
         2);

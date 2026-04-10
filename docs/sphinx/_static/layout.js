@@ -108,15 +108,41 @@
       const groupTitleNode = root.parentElement
         ? root.parentElement.querySelector(":scope > h1, :scope > h2")
         : null;
-      const groupTitle = cleanHeadingText(text(groupTitleNode)) || "Methods";
+      const fallbackGroup = cleanHeadingText(text(groupTitleNode)) || "Methods";
 
-      const methodSections = Array.from(root.children).filter((node) => {
-        return node.tagName === "SECTION" && node.querySelector(":scope > h3");
+      const container = root.parentElement || root;
+      const isAfterRoot = (node) => {
+        if (node === root) {
+          return false;
+        }
+        if (root.contains(node)) {
+          return true;
+        }
+        const rel = root.compareDocumentPosition(node);
+        return Boolean(rel & Node.DOCUMENT_POSITION_FOLLOWING);
+      };
+
+      const methodSections = Array.from(container.querySelectorAll("section")).filter((node) => {
+        return node.querySelector(":scope > h3") && isAfterRoot(node);
       });
+
+      const groupForSection = (section) => {
+        let current = section.parentElement;
+        while (current && current !== root) {
+          if (current.tagName === "SECTION") {
+            const h2 = current.querySelector(":scope > h2");
+            if (h2) {
+              return cleanHeadingText(text(h2)) || fallbackGroup;
+            }
+          }
+          current = current.parentElement;
+        }
+        return fallbackGroup;
+      };
 
       methodSections.forEach((section, index) => {
         if (!section.id) {
-          section.id = `method-${groupTitle.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
+          section.id = `method-${fallbackGroup.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
         }
         const h3 = section.querySelector(":scope > h3");
         const codeTitle = h3 ? h3.querySelector("code") : null;
@@ -128,7 +154,7 @@
           id: section.id,
           title: title || "method",
           overloadLabel,
-          group: groupTitle,
+          group: groupForSection(section),
         });
       });
     });
@@ -136,6 +162,20 @@
     if (!methodItems.length) {
       return null;
     }
+
+    methodItems.sort((a, b) => {
+      const ta = (a.title || "").toLowerCase();
+      const tb = (b.title || "").toLowerCase();
+      if (ta !== tb) {
+        return ta.localeCompare(tb);
+      }
+      const oa = (a.overloadLabel || "").toLowerCase();
+      const ob = (b.overloadLabel || "").toLowerCase();
+      if (oa !== ob) {
+        return oa.localeCompare(ob);
+      }
+      return (a.id || "").localeCompare(b.id || "");
+    });
 
     document.body.classList.add("has-method-sidebar");
 
@@ -159,7 +199,7 @@
       // Hide API section chrome before first method (title/intro text) so method appears first.
       let reachedMethod = false;
       Array.from(root.children).forEach((child) => {
-        if (child.tagName === "SECTION" && child.querySelector(":scope > h3")) {
+        if (child.tagName === "SECTION" && child.querySelector("h3")) {
           reachedMethod = true;
           return;
         }

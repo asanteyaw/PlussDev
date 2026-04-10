@@ -321,7 +321,9 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../api_index.html">Lymph Full API Reference: Method Index</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="type-batchholdoutsplit.html"><code class="docutils literal notranslate"><span class="pre">BatchHoldoutSplit</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-bayes-factory.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="type-branch.html"><code class="docutils literal notranslate"><span class="pre">Branch</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-candidate.html"><code class="docutils literal notranslate"><span class="pre">Candidate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="type-categoryindexersummary.html"><code class="docutils literal notranslate"><span class="pre">CategoryIndexerSummary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-cluster-factory.html"><code class="docutils literal notranslate"><span class="pre">cluster_factory</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-crossvalidationreport.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationReport</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-decompose-factory.html"><code class="docutils literal notranslate"><span class="pre">decompose_factory</span></code></a></li>
@@ -334,6 +336,7 @@
 <li class="toctree-l2"><a class="reference internal" href="type-metricreport.html"><code class="docutils literal notranslate"><span class="pre">MetricReport</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-neighbor-factory.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-online-factory.html"><code class="docutils literal notranslate"><span class="pre">online_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="type-outlierisolatorsummary.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolatorSummary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-seriescomparereport.html"><code class="docutils literal notranslate"><span class="pre">SeriesCompareReport</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-simpleimputersummary.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputerSummary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-spectuneresult.html"><code class="docutils literal notranslate"><span class="pre">SpecTuneResult</span></code></a></li>
@@ -345,8 +348,13 @@
 <li class="toctree-l2"><a class="reference internal" href="type-tuneresult.html"><code class="docutils literal notranslate"><span class="pre">TuneResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-as-stratify-series.html"><code class="docutils literal notranslate"><span class="pre">as_stratify_series</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-candidate-candidate.html"><code class="docutils literal notranslate"><span class="pre">Candidate::Candidate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-categoryindexer-features.html"><code class="docutils literal notranslate"><span class="pre">CategoryIndexer::features</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-categoryindexer-learned.html"><code class="docutils literal notranslate"><span class="pre">CategoryIndexer::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-categoryindexer-summary.html"><code class="docutils literal notranslate"><span class="pre">CategoryIndexer::summary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-compare-series.html"><code class="docutils literal notranslate"><span class="pre">compare_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-copy-feature-route.html"><code class="docutils literal notranslate"><span class="pre">copy_feature_route</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-make-cross-validation-split-options.html"><code class="docutils literal notranslate"><span class="pre">make_cross_validation_split_options</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-make-feature-transformer.html"><code class="docutils literal notranslate"><span class="pre">make_feature_transformer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-make-holdout-indices.html"><code class="docutils literal notranslate"><span class="pre">make_holdout_indices</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-make-holdout-split-options.html"><code class="docutils literal notranslate"><span class="pre">make_holdout_split_options</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-max-abs-diff.html"><code class="docutils literal notranslate"><span class="pre">max_abs_diff</span></code></a></li>
@@ -358,21 +366,37 @@
 <li class="toctree-l2"><a class="reference internal" href="method-onlinelinearregressor-onlinelinearregressor.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::OnlineLinearRegressor</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-onlinelinearregressor-seen-samples.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::seen_samples</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-onlinelinearregressor-trained.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-features.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::features</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-learned.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-summary.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::summary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-output-render.html"><code class="docutils literal notranslate"><span class="pre">output_render</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-categoryindexer-learn.html"><code class="docutils literal notranslate"><span class="pre">prep::CategoryIndexer::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-categoryindexer-learn-map.html"><code class="docutils literal notranslate"><span class="pre">prep::CategoryIndexer::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-categoryindexer-map.html"><code class="docutils literal notranslate"><span class="pre">prep::CategoryIndexer::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-outlierisolator-filter-inliers.html"><code class="docutils literal notranslate"><span class="pre">prep::OutlierIsolator::filter_inliers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-outlierisolator-infer.html"><code class="docutils literal notranslate"><span class="pre">prep::OutlierIsolator::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-outlierisolator-learn.html"><code class="docutils literal notranslate"><span class="pre">prep::OutlierIsolator::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-outlierisolator-learn-infer.html"><code class="docutils literal notranslate"><span class="pre">prep::OutlierIsolator::learn_infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-prep-outlierisolator-score-samples.html"><code class="docutils literal notranslate"><span class="pre">prep::OutlierIsolator::score_samples</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-prep-simpleimputer-learn.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::learn</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-prep-simpleimputer-learn-map.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::learn_map</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-prep-simpleimputer-map.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::map</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-prep-standardscaler-learn.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::learn</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-prep-standardscaler-learn-map.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::learn_map</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-prep-standardscaler-map.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-simple-imputer-strategy-name.html"><code class="docutils literal notranslate"><span class="pre">simple_imputer_strategy_name</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-simpleimputer-features.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::features</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-simpleimputer-learned.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learned</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-simpleimputer-summary.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::summary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-standardscaler-features.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::features</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-standardscaler-learned.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learned</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-standardscaler-summary.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::summary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-temporal-features.html"><code class="docutils literal notranslate"><span class="pre">temporal_features</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflow-coeff.html"><code class="docutils literal notranslate"><span class="pre">Workflow::coeff</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflow-dump-model-state.html"><code class="docutils literal notranslate"><span class="pre">Workflow::dump_model_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflow-dump-transform-states.html"><code class="docutils literal notranslate"><span class="pre">Workflow::dump_transform_states</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-workflow-feature-transformer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::feature_transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-workflow-function-transformer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::function_transformer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflow-has-model.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_model</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflow-has-model-spec.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_model_spec</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflow-has-opaque-transforms.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_opaque_transforms</span></code></a></li>
@@ -388,6 +412,8 @@
 <li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-coefficients.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::coefficients</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-dump-model-state.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::dump_model_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-dump-transform-states.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::dump_transform_states</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-feature-transformer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::feature_transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-function-transformer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::function_transformer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-has-model.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_model</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-has-model-spec.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_model_spec</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-workflowmodel-has-opaque-transforms.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_opaque_transforms</span></code></a></li>
@@ -511,31 +537,84 @@
 </section>
 <section id="example-2-demo-pattern">
 <h3>Example 2 (Demo Pattern)<a class="headerlink" href="#example-2-demo-pattern" title="Link to this heading">#</a></h3>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">linear_workflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">Workflow</span><span class="p">{</span>
-<span class="w">        </span><span class="p">.</span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">linear_factory</span><span class="o">::</span><span class="n">linear_regression</span><span class="p">(</span><span class="n">LinearFamilyOptions</span><span class="p">{</span>
-<span class="w">            </span><span class="p">.</span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearObjective</span><span class="o">::</span><span class="n">LeastSquares</span><span class="p">,</span>
-<span class="w">            </span><span class="p">.</span><span class="n">regularization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RegularizationKind</span><span class="o">::</span><span class="n">None</span><span class="p">,</span>
-<span class="w">            </span><span class="p">.</span><span class="n">regularization_strength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">            </span><span class="p">.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
-<span class="w">        </span><span class="p">}),</span>
-<span class="w">        </span><span class="p">.</span><span class="n">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">simple_imputer</span><span class="p">(</span>
-<span class="w">                </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerOptions</span><span class="p">{.</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerStrategy</span><span class="o">::</span><span class="n">Median</span><span class="p">}),</span>
-<span class="w">            </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">standard_scaler</span><span class="p">(),</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">    </span><span class="p">};</span>
-<span class="w">    </span><span class="n">linear_workflow</span><span class="p">.</span><span class="n">learn_</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span><span class="w"> </span><span class="n">train_y</span><span class="p">,</span><span class="w"> </span><span class="n">train_options</span><span class="p">);</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">linear_metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linear_workflow</span><span class="p">.</span><span class="n">assess</span><span class="p">(</span><span class="n">test_x</span><span class="p">,</span><span class="w"> </span><span class="n">test_y</span><span class="p">,</span><span class="w"> </span><span class="n">assess_options</span><span class="p">);</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;linear test metrics [rmse, r2, mae]: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">linear_metrics</span><span class="p">.</span><span class="n">rmse</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">linear_metrics</span><span class="p">.</span><span class="n">r2</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
-<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">linear_metrics</span><span class="p">.</span><span class="n">mae</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;linear params: intercept=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">linear_workflow</span><span class="p">.</span><span class="n">intercept</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; coeff=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">linear_workflow</span><span class="p">.</span><span class="n">coeff</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">linear_pred_series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linear_workflow</span><span class="p">.</span><span class="n">infer</span><span class="p">(</span><span class="n">test_x</span><span class="p">);</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">fs</span><span class="o">::</span><span class="n">path</span><span class="w"> </span><span class="n">linear_model_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model_dir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s">&quot;bike_sharing_linear.bin&quot;</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="k">auto</span><span class="w"> </span><span class="n">wf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">Workflow</span><span class="p">{</span>
+<span class="w">          </span><span class="p">.</span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">linear_factory</span><span class="o">::</span><span class="n">linear_regression</span><span class="p">(</span><span class="n">LinearFamilyOptions</span><span class="p">{</span><span class="w">          </span><span class="p">.</span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearObjective</span><span class="o">::</span><span class="n">LeastSquares</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">regularization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RegularizationKind</span><span class="o">::</span><span class="n">L2</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">regularization_strength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">fit_intercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">      </span><span class="p">}),</span>
+<span class="w">          </span><span class="p">.</span><span class="n">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">              </span><span class="n">nja</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">simple_imputer</span><span class="p">(</span><span class="n">nja</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerOptions</span><span class="p">{.</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerStrategy</span><span class="o">::</span><span class="n">Median</span><span class="p">}),</span>
+<span class="w">              </span><span class="n">nja</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">standard_scaler</span><span class="p">(),</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">      </span><span class="p">};</span>
+<span class="w">      </span><span class="n">candidates</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="s">&quot;linear_ridge&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">wf</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="k">auto</span><span class="w"> </span><span class="n">wf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">Workflow</span><span class="p">{</span>
+<span class="w">          </span><span class="p">.</span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nja</span><span class="o">::</span><span class="n">tree_factory</span><span class="o">::</span><span class="n">decision_tree_regressor</span><span class="p">(</span><span class="n">TreeFamilyOptions</span><span class="p">{</span><span class="w">          </span><span class="p">.</span><span class="n">criterion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TreeCriterion</span><span class="o">::</span><span class="n">Mse</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">max_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">min_samples_leaf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">          </span><span class="p">.</span><span class="n">min_samples_split</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
+<span class="w">      </span><span class="p">}),</span>
 </pre></div>
 </div>
 <p><strong>Expected output</strong></p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>workflow returned const Workflow&amp;
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CV objective metric: rmse
+candidate=linear_ridge objective=102.872 cv_rmse=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[102.87158] cv_r2=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.41650024] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[77.611594]
+candidate=decision_tree objective=44.9727 cv_rmse=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[44.972693] cv_r2=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.88843998] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[27.61723]
+candidate=random_forest objective=81.1235 cv_rmse=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[81.123538] cv_r2=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.63710967] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+...
+</pre></div>
+</div>
+</section>
+<section id="example-3-demo-pattern">
+<h3>Example 3 (Demo Pattern)<a class="headerlink" href="#example-3-demo-pattern" title="Link to this heading">#</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">feature_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;median_income&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ocean_proximity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;target&quot;</span><span class="p">};</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">label_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;target&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">note_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">DataNotePolicy</span><span class="o">::</span><span class="n">Hash</span><span class="p">;</span>
+<span class="w">  </span><span class="n">data_options</span><span class="p">.</span><span class="n">layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ai</span><span class="o">::</span><span class="n">nodej</span><span class="o">::</span><span class="n">ObservationLayout</span><span class="o">::</span><span class="n">Rows</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">preprocessing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">make_feature_transformer</span><span class="p">(</span>
+<span class="w">      </span><span class="n">housing</span><span class="p">,</span>
+<span class="w">      </span><span class="n">data_options</span><span class="p">,</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">feature</span><span class="o">::</span><span class="n">Branch</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">          </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">feature</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span>
+<span class="w">              </span><span class="p">{</span>
+<span class="w">                  </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">simple_imputer</span><span class="p">(</span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerOptions</span><span class="p">{</span>
+<span class="w">                      </span><span class="p">.</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">SimpleImputerStrategy</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span>
+<span class="w">                  </span><span class="p">}),</span>
+<span class="w">                  </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">stage</span><span class="o">::</span><span class="n">standard_scaler</span><span class="p">(),</span>
+<span class="w">              </span><span class="p">},</span>
+<span class="w">              </span><span class="p">{</span><span class="s">&quot;median_income&quot;</span><span class="p">}),</span>
+<span class="w">          </span><span class="n">lymph</span><span class="o">::</span><span class="n">workflow</span><span class="o">::</span><span class="n">feature</span><span class="o">::</span><span class="n">one_hot_encoder</span><span class="p">(</span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">OneHotEncoderOptions</span><span class="p">{},</span><span class="w"> </span><span class="n">categorical</span><span class="p">),</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="n">lymph</span><span class="o">::</span><span class="n">prep</span><span class="o">::</span><span class="n">FeatureRemainderPolicy</span><span class="o">::</span><span class="n">PassThrough</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Expected output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>numeric features: median_income target
+categorical features: ocean_proximity
+ordinal mapped names: ocean_proximity_ordinal
+label mapped names: ocean_proximity_label
+ordinal sample: ======================
+     | ocean_proximity
+----------------------
+0    | 2
+1    | 1
+2    | 2
+3    | 1
+4    | 2
+...
 </pre></div>
 </div>
 </section>
@@ -597,6 +676,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1-minimal-usage">Example 1 (Minimal Usage)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2-demo-pattern">Example 2 (Demo Pattern)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-3-demo-pattern">Example 3 (Demo Pattern)</a></li>
 </ul>
 </li>
 </ul>

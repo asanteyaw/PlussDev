@@ -37,6 +37,13 @@ namespace {
   return pluss::make_series(std::move(ids), {static_cast<std::int64_t>(ids.size())}, index_config_on(platform));
 }
 
+[[nodiscard]] std::vector<std::int64_t> route_vec(pluss::msharp::RangeView::Int feature_route) {
+  std::vector<std::int64_t> out;
+  out.reserve(feature_route.size());
+  out.insert(out.end(), feature_route.begin(), feature_route.end());
+  return out;
+}
+
 [[nodiscard]] StatusOr<std::vector<std::int64_t>> normalized_feature_route(const std::vector<std::int64_t>& route,
                                                                            std::int64_t feature_count,
                                                                            std::int64_t stage_index,
@@ -187,177 +194,177 @@ void Flow::clear_transforms() noexcept {
   trained_ = false;
 }
 
-Status Flow::add_standard_scaler(prep::StandardScalerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_standard_scaler(prep::StandardScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::StandardScaler>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::StandardScaler,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_minmax_scaler(prep::MinMaxScalerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_minmax_scaler(prep::MinMaxScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::MinMaxScaler>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::MinMaxScaler,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_robust_scaler(prep::RobustScalerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_robust_scaler(prep::RobustScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::RobustScaler>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::RobustScaler,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_simple_imputer(prep::SimpleImputerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_simple_imputer(prep::SimpleImputerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::SimpleImputer>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::SimpleImputer,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_neighbor_imputer(prep::NeighborImputerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_neighbor_imputer(prep::NeighborImputerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::NeighborImputer>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::NeighborImputer,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_iterative_imputer(prep::IterativeImputerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_iterative_imputer(prep::IterativeImputerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::IterativeImputer>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::IterativeImputer,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_one_hot_encoder(prep::OneHotEncoderOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_one_hot_encoder(prep::OneHotEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::OneHotEncoder>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::OneHotEncoder,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_frequency_encoder(prep::FrequencyEncoderOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_frequency_encoder(prep::FrequencyEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::FrequencyEncoder>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::FrequencyEncoder,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_vector_normalizer(prep::VectorNormalizerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_vector_normalizer(prep::VectorNormalizerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::VectorNormalizer>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::VectorNormalizer,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_maxabs_scaler(prep::MaxAbsScalerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_maxabs_scaler(prep::MaxAbsScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::MaxAbsScaler>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::MaxAbsScaler,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_quantile_map(prep::QuantileMapOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_quantile_map(prep::QuantileMapOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::QuantileMap>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::QuantileMap,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_power_map(prep::PowerMapOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_power_map(prep::PowerMapOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::PowerMap>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::PowerMap,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_threshold_binarizer(prep::ThresholdBinarizerOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_threshold_binarizer(prep::ThresholdBinarizerOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::ThresholdBinarizer>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::ThresholdBinarizer,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_polynomial_lift(prep::PolynomialLiftOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_polynomial_lift(prep::PolynomialLiftOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::PolynomialLift>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::PolynomialLift,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_ordinal_encoder(prep::OrdinalEncoderOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_ordinal_encoder(prep::OrdinalEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::OrdinalEncoder>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::OrdinalEncoder,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
 }
 
-Status Flow::add_label_encoder(prep::LabelEncoderOptions options, std::vector<std::int64_t> feature_route) {
+Status Flow::add_label_encoder(prep::LabelEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
   transforms_.push_back(std::make_unique<prep::LabelEncoder>(options));
   transform_specs_.push_back(TransformSpec{
       .kind = TransformKind::LabelEncoder,
       .options = options,
-      .feature_route = std::move(feature_route),
+      .feature_route = route_vec(feature_route),
   });
   trained_ = false;
   return Status::success();
@@ -428,9 +435,8 @@ StatusOr<FeatureBatch> Flow::apply_map(const FeatureBatch& batch, const InferOpt
     if (!transforms_[i]) {
       return StatusOr<FeatureBatch>(Status::internal("Flow contains a null transformer stage."));
     }
-    const std::vector<std::int64_t> stage_route =
-        i < transform_specs_.size() ? transform_specs_[i].feature_route : std::vector<std::int64_t>{};
-    if (stage_route.empty()) {
+    const std::vector<std::int64_t>* stage_route = (i < transform_specs_.size()) ? &transform_specs_[i].feature_route : nullptr;
+    if (stage_route == nullptr || stage_route->empty()) {
       StatusOr<Series> mapped_or = transforms_[i]->map(current, options);
       if (!mapped_or.ok()) return StatusOr<FeatureBatch>(mapped_or.status());
       StatusOr<FeatureBatch> next_or =
@@ -441,7 +447,7 @@ StatusOr<FeatureBatch> Flow::apply_map(const FeatureBatch& batch, const InferOpt
     }
 
     StatusOr<std::vector<std::int64_t>> route_or = normalized_feature_route(
-        stage_route, current.feature_count(), static_cast<std::int64_t>(i), "Flow::map");
+        *stage_route, current.feature_count(), static_cast<std::int64_t>(i), "Flow::map");
     if (!route_or.ok()) return StatusOr<FeatureBatch>(route_or.status());
     const std::vector<std::int64_t> route = route_or.move_value();
 
@@ -475,9 +481,8 @@ StatusOr<FeatureBatch> Flow::apply_learn_map(const FeatureBatch& batch,
     if (!transforms_[i]) {
       return StatusOr<FeatureBatch>(Status::internal("Flow contains a null transformer stage."));
     }
-    const std::vector<std::int64_t> stage_route =
-        i < transform_specs_.size() ? transform_specs_[i].feature_route : std::vector<std::int64_t>{};
-    if (stage_route.empty()) {
+    const std::vector<std::int64_t>* stage_route = (i < transform_specs_.size()) ? &transform_specs_[i].feature_route : nullptr;
+    if (stage_route == nullptr || stage_route->empty()) {
       StatusOr<Series> mapped_or = transforms_[i]->learn_map(current, learn_options, infer_options);
       if (!mapped_or.ok()) return StatusOr<FeatureBatch>(mapped_or.status());
       StatusOr<FeatureBatch> next_or = mapped_batch_checked(
@@ -488,7 +493,7 @@ StatusOr<FeatureBatch> Flow::apply_learn_map(const FeatureBatch& batch,
     }
 
     StatusOr<std::vector<std::int64_t>> route_or = normalized_feature_route(
-        stage_route, current.feature_count(), static_cast<std::int64_t>(i), "Flow::learn");
+        *stage_route, current.feature_count(), static_cast<std::int64_t>(i), "Flow::learn");
     if (!route_or.ok()) return StatusOr<FeatureBatch>(route_or.status());
     const std::vector<std::int64_t> route = route_or.move_value();
 
@@ -673,7 +678,7 @@ StatusOr<std::vector<Series>> Flow::dump_model_state() const {
   return regressor_->dump_state();
 }
 
-Status Flow::load_transform_states(const std::vector<std::vector<Series>>& states) {
+Status Flow::load_transform_states(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
   if (states.size() != transforms_.size()) {
     return Status::shape_mismatch("Flow::load_transform_states requires one state per transform stage.");
   }
@@ -688,7 +693,7 @@ Status Flow::load_transform_states(const std::vector<std::vector<Series>>& state
   return Status::success();
 }
 
-Status Flow::load_model_state(const std::vector<Series>& state) {
+Status Flow::load_model_state(pluss::msharp::RangeView::Series state) {
   if (!has_model()) {
     if (!state.empty()) {
       return Status::invalid_argument("Flow::load_model_state received model state for a transform-only flow.");

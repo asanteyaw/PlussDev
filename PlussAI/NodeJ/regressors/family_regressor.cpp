@@ -603,7 +603,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 5) return Status::invalid_argument("NeighborRegressor::load_state expects 5 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 4) return Status::invalid_argument("NeighborRegressor::load_state invalid metadata.");
@@ -788,7 +788,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("TreeRegressor::load_state expects 2 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 4) return Status::invalid_argument("TreeRegressor::load_state invalid metadata.");
@@ -1115,7 +1115,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("BayesRegressor::load_state expects 2 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 3) return Status::invalid_argument("BayesRegressor::load_state invalid metadata.");
@@ -1402,7 +1402,7 @@ public:
     return StatusOr<std::vector<Series>>(std::move(out));
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.empty()) return Status::invalid_argument("EnsembleRegressor::load_state expects metadata tensor.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 4) return Status::invalid_argument("EnsembleRegressor::load_state invalid metadata.");
@@ -1705,7 +1705,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 3) return Status::invalid_argument("KernelRegressor::load_state expects 3 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 5) return Status::invalid_argument("KernelRegressor::load_state invalid metadata.");
@@ -1839,7 +1839,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("LinearRegressor::load_state expects 2 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 3) return Status::invalid_argument("LinearRegressor::load_state invalid metadata.");
@@ -1913,7 +1913,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.empty()) return Status::invalid_argument("FamilyRegressor::load_state expects metadata tensor.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 2) return Status::invalid_argument("FamilyRegressor::load_state invalid metadata.");

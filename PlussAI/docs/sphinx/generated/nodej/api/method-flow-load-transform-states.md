@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `Flow::load_transform_states(states: const std::vector<std::vector<Series>>&) -> Status`
+- `Flow::load_transform_states(states: RangeView::Of<std::vector<Series>>) -> Status`
 
 ## Notes
 
@@ -10,7 +10,7 @@ Loads a previously persisted artifact and restores its inference-ready state.
 
 ## Inputs
 
-- `states` (`const std::vector<std::vector<Series>>&`)
+- `states` (`RangeView::Of<std::vector<Series>>`)
   Randomization control for reproducible behavior.
 
 ## Output

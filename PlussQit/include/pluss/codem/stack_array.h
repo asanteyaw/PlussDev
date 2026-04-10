@@ -17,7 +17,7 @@ namespace pluss {
 namespace detail::stack_array {
 
 struct StackSpan {
-  std::span<const Series> values;
+  pluss::msharp::RangeView::Of<Series> values;
 };
 
 struct StringSpan {
@@ -58,26 +58,24 @@ inline std::vector<std::string> collect_strings(Range&& values) {
   return out;
 }
 
-inline Series pile_span(std::span<const Series> values, std::int64_t dim = 0) {
+inline Series pile_span(pluss::msharp::RangeView::Of<Series> values, std::int64_t dim = 0) {
   if (values.empty()) {
     return {};
   }
   if (values.size() == 1) {
     return values.front().unsqueeze(dim);
   }
-  std::vector<Series> tail(values.begin() + 1, values.end());
-  return values.front().pile(tail, dim);
+  return values.front().pile(values.drop_front(), dim);
 }
 
-inline Series unite_span(std::span<const Series> values, std::int64_t dim = 0, bool strict_dtype = true) {
+inline Series unite_span(pluss::msharp::RangeView::Of<Series> values, std::int64_t dim = 0, bool strict_dtype = true) {
   if (values.empty()) {
     return {};
   }
   if (values.size() == 1) {
     return values.front();
   }
-  std::vector<Series> tail(values.begin() + 1, values.end());
-  return values.front().unite(tail, dim, strict_dtype);
+  return values.front().unite(values.drop_front(), dim, strict_dtype);
 }
 
 } // namespace detail::stack_array
@@ -97,7 +95,7 @@ public:
 
   StackArray(std::initializer_list<Series> values) : values_(values) {}
 
-  StackArray(std::span<const Series> values)
+  StackArray(pluss::msharp::RangeView::Of<Series> values)
       : values_(values.begin(), values.end()) {}
 
   StackArray(std::vector<Series> values) : values_(std::move(values)) {}
@@ -105,8 +103,7 @@ public:
   template <detail::stack_array::SeriesRange Range>
     requires(!std::same_as<std::remove_cvref_t<Range>, StackArray<Series>> &&
              !std::same_as<std::remove_cvref_t<Range>, std::vector<Series>> &&
-             !std::same_as<std::remove_cvref_t<Range>, std::span<const Series>> &&
-             !std::same_as<std::remove_cvref_t<Range>, std::span<Series>>)
+             !std::same_as<std::remove_cvref_t<Range>, pluss::msharp::RangeView::Of<Series>>)
   StackArray(Range&& values)
       : values_(detail::stack_array::collect_series(std::forward<Range>(values))) {}
 
@@ -120,7 +117,7 @@ public:
   [[nodiscard]] Series& operator[](std::size_t i) { return values_.at(i); }
 
   [[nodiscard]] detail::stack_array::StackSpan data() const noexcept {
-    return detail::stack_array::StackSpan{std::span<const Series>(values_.data(), values_.size())};
+    return detail::stack_array::StackSpan{pluss::msharp::RangeView::Of<Series>(values_)};
   }
 
   [[nodiscard]] iterator begin() noexcept { return values_.begin(); }

@@ -39,7 +39,7 @@ The public parameter surface is always `ParameterPack<Series>`. Derivatives come
 - autodiff callbacks over `ParameterPack<Trace>`
 - user-supplied analytic callbacks
 
-Finite differences are not the primary derivative path in `Optima`.
+Autodiff/analytic are the derivative paths in `Optima`.
 
 ## Shared Runtime Contract
 
@@ -54,12 +54,15 @@ All current backends reuse the same evaluation layer and diagnostics:
 - scaling and normalization
 - dense and iterative linear-system policies
 
-The mature constrained backends currently exposed through `OptimaAlgorithm` are:
+`OptimaAlgorithm` currently exposes:
 
+- `MeritMethod` (baseline penalty-method backend)
 - `SequentialQP`
+- `WorkingSet`
 - `InternalProtocol`
 
-This document focuses on:
+The primary MATLAB-inspired constrained NLP backends are `SequentialQP` and `InternalProtocol`.
+This document focuses on those two:
 
 - [Sequential QP](optima_sequential_qp.md)
 - [Internal Protocol](optima_internal_protocol.md)
@@ -91,7 +94,7 @@ The `OptimaOutput` payload is the main reporting surface:
 | `first_order_optimality` | First-order stationarity metric |
 | `step_size` | Final accepted step fraction |
 | `line_search_fraction` | Accepted line-search scaling |
-| `backend_parameter` | Penalty or barrier parameter |
+| `backend_parameter` | Merit weight or barrier parameter |
 | `complementarity` | Complementarity residual where applicable |
 | `krylov_iterations` | Iterative linear-solver work |
 | `best_feasible_available` | Whether a feasible checkpoint was found |
@@ -136,6 +139,31 @@ The snapshot includes:
 - `best_feasible`
 
 Returning `true` requests an orderly stop.
+
+`reports::iter(std::ostream&, precision)` and `reports::iteration_only_trace(...)`
+are convenience factories for per-iteration output.
+
+For a MATLAB `OutputFcn`-style intercept, use a custom hook and return `true`
+when you want to stop before the next iteration.
+
+## Internal Protocol Presets
+
+Both presets below use `OptimaAlgorithm::InternalProtocol`; the robust preset
+just allocates more recovery budget and explicit solver defaults:
+
+- `presets::internal_protocol()`
+- `presets::robust_internal_protocol()`
+
+Key robust deltas:
+
+- `max_iterations`: `160` (vs `100`)
+- `max_restoration_iterations`: `10`
+- `max_restoration_line_search_iterations`: `20`
+- `enable_restoration`: `true`
+- `enable_feasibility_phase`: `false`
+- `hessian_approximation`: `Bfgs`
+- `linear_system_solver`: `Auto`
+- `system_structure`: `Auto`
 
 ## Stall Taxonomy
 

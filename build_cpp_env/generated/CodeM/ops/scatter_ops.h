@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::scatter_ops {
   Series scatter(const Series& input, std::int64_t dim, const Series& index, const Series& src);

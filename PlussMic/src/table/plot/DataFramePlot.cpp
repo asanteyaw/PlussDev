@@ -1752,9 +1752,17 @@ pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature
   auto& pane = fig.pane2();
   setup_pane(pane, true, &options_);
   pane.grid(pluss::pl::GridStyle::None).x_label("").y_label("");
-  auto& trace = render_label ? flash::pieplot(pane, filtered_values, rendered_labels)
-                             : flash::pieplot(pane, filtered_values);
-  trace.label(std::string(value_feature));
+  pluss::pl::Trace* trace = nullptr;
+  if (render_label) {
+    const auto rendered_label_views = label_views(rendered_labels);
+    trace = &flash::pieplot(pane,
+                            filtered_values,
+                            pluss::msharp::RangeView::Of<std::string_view>(rendered_label_views));
+  } else {
+    trace = &flash::pieplot(pane, filtered_values);
+  }
+  PLUSS_CHECK(trace != nullptr, "DataFrame::plot().pie: internal trace construction failed");
+  trace->label(std::string(value_feature));
   return fig;
 }
 
@@ -2144,7 +2152,12 @@ pluss::pl::Studio& DataFramePlotAccessor::brief(
     const BriefPlotOptions& options) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().brief");
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().brief");
-  flash::summaryplot(figure, columns, names, to_flash_options(options));
+  const auto name_views = label_views(names);
+  flash::summaryplot(
+      figure,
+      columns,
+      pluss::msharp::RangeView::Of<std::string_view>(name_views),
+      to_flash_options(options));
   return figure;
 }
 
@@ -2154,7 +2167,12 @@ pluss::pl::Studio DataFramePlotAccessor::impl_brief(
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().brief");
   auto columns = numeric_series_columns(frame_, names, "DataFrame::plot().brief");
   auto fig = make_studio();
-  flash::summaryplot(fig, columns, names, to_flash_options(options));
+  const auto name_views = label_views(names);
+  flash::summaryplot(
+      fig,
+      columns,
+      pluss::msharp::RangeView::Of<std::string_view>(name_views),
+      to_flash_options(options));
   apply_figure_options(fig);
   return fig;
 }

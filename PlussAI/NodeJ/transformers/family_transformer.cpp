@@ -248,7 +248,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 2) return Status::invalid_argument("KMeansTransformer::load_state expects 2 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 3) return Status::invalid_argument("KMeansTransformer::load_state invalid metadata.");
@@ -404,7 +404,7 @@ public:
     });
   }
 
-  Status load_state(const std::vector<Series>& state) override {
+  Status load_state(pluss::msharp::RangeView::Series state) override {
     if (state.size() < 4) return Status::invalid_argument("PcaTransformer::load_state expects 4 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 4) return Status::invalid_argument("PcaTransformer::load_state invalid metadata.");

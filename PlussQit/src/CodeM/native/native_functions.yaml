@@ -58,13 +58,13 @@ ops:
   - name: put
     signature: "Series put(const Series& a, const Series& index, const Series& src, bool accumulate)"
   - name: index
-    signature: "Series index(const Series& a, const std::vector<Series>& indices)"
+    signature: "Series index(const Series& a, pluss::msharp::RangeView::Of<Series> indices)"
   - name: index_put
-    signature: "Series index_put(const Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate)"
+    signature: "Series index_put(const Series& a, pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate)"
   - name: cat
-    signature: "Series cat(const std::vector<Series>& tensors, std::int64_t dim)"
+    signature: "Series cat(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim)"
   - name: stack
-    signature: "Series stack(const std::vector<Series>& tensors, std::int64_t dim)"
+    signature: "Series stack(pluss::msharp::RangeView::Of<Series> tensors, std::int64_t dim)"
   - name: eq
     signature: "Series eq(const Series& a, const Series& b)"
   - name: ne
@@ -93,4 +93,3 @@ ops:
     signature: "Series all_all(const Series& a)"
   - name: any_all
     signature: "Series any_all(const Series& a)"
-

@@ -39,10 +39,6 @@ coeff returned Series
 ### Example 2 (Demo Pattern)
 
 ```cpp
-            .fit_intercept = true,
-        }),
-        .stages = {
-            lymph::workflow::stage::simple_imputer(
                 lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
             lymph::workflow::stage::standard_scaler(),
         },
@@ -59,6 +55,10 @@ coeff returned Series
     const auto linear_restored = lymph::Workflow::load(linear_model_path.string());
     const Series linear_pred_restored_series = linear_restored.infer(test_x);
     const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
+
+    const Series linear_pred = linear_pred_series.to(pluss::pCPU, ScalarType::Float64).reshape({linear_pred_series.numel()});
+    const double linear_max_abs_diff = lymph::max_abs_diff(linear_pred_series, linear_pred_restored_series);
+    std::cout << "linear restored prediction max_abs_diff: " << linear_max_abs_diff << "\n";
 ```
 
 **Expected output**

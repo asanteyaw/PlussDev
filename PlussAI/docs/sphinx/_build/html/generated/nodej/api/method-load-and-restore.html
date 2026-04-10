@@ -325,10 +325,12 @@
 <li class="toctree-l2"><a class="reference internal" href="type-flowbundlemetadata.html"><code class="docutils literal notranslate"><span class="pre">FlowBundleMetadata</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-foldassessresult.html"><code class="docutils literal notranslate"><span class="pre">FoldAssessResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-indexsplit.html"><code class="docutils literal notranslate"><span class="pre">IndexSplit</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="type-isolationtree.html"><code class="docutils literal notranslate"><span class="pre">IsolationTree</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-labeledbatch.html"><code class="docutils literal notranslate"><span class="pre">LabeledBatch</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-modelspec.html"><code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-randomstate.html"><code class="docutils literal notranslate"><span class="pre">RandomState</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-splitplan.html"><code class="docutils literal notranslate"><span class="pre">SplitPlan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="type-stage.html"><code class="docutils literal notranslate"><span class="pre">Stage</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-status.html"><code class="docutils literal notranslate"><span class="pre">Status</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-transformspec.html"><code class="docutils literal notranslate"><span class="pre">TransformSpec</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="type-tunereport.html"><code class="docutils literal notranslate"><span class="pre">TuneReport</span></code></a></li>
@@ -346,6 +348,18 @@
 <li class="toctree-l2"><a class="reference internal" href="method-featurebatch-sample-count.html"><code class="docutils literal notranslate"><span class="pre">FeatureBatch::sample_count</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-featurebatch-validate-features.html"><code class="docutils literal notranslate"><span class="pre">FeatureBatch::validate_features</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-featurebatch-validate-labeled.html"><code class="docutils literal notranslate"><span class="pre">FeatureBatch::validate_labeled</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-add-pipeline.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::add_pipeline</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-add-stage.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::add_stage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-clear-stages.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::clear_stages</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-dump-state.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::dump_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-featuretransformer.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::FeatureTransformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-load-state.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::load_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-remainder-policy.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::remainder_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-set-remainder-policy.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::set_remainder_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-stage-count.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::stage_count</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-featuretransformer-trained.html"><code class="docutils literal notranslate"><span class="pre">FeatureTransformer::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-flow-add-feature-transformer.html"><code class="docutils literal notranslate"><span class="pre">Flow::add_feature_transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-flow-add-function-transformer.html"><code class="docutils literal notranslate"><span class="pre">Flow::add_function_transformer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-flow-append-transform.html"><code class="docutils literal notranslate"><span class="pre">Flow::append_transform</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-flow-clear-model.html"><code class="docutils literal notranslate"><span class="pre">Flow::clear_model</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-flow-clear-transforms.html"><code class="docutils literal notranslate"><span class="pre">Flow::clear_transforms</span></code></a></li>
@@ -368,12 +382,18 @@
 <li class="toctree-l2"><a class="reference internal" href="method-frequencyencoder-dump-state.html"><code class="docutils literal notranslate"><span class="pre">FrequencyEncoder::dump_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-frequencyencoder-load-state.html"><code class="docutils literal notranslate"><span class="pre">FrequencyEncoder::load_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-frequencyencoder-trained.html"><code class="docutils literal notranslate"><span class="pre">FrequencyEncoder::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-functiontransformer-dump-state.html"><code class="docutils literal notranslate"><span class="pre">FunctionTransformer::dump_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-functiontransformer-load-state.html"><code class="docutils literal notranslate"><span class="pre">FunctionTransformer::load_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-functiontransformer-trained.html"><code class="docutils literal notranslate"><span class="pre">FunctionTransformer::trained</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-iterativeimputer-dump-state.html"><code class="docutils literal notranslate"><span class="pre">IterativeImputer::dump_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-iterativeimputer-load-state.html"><code class="docutils literal notranslate"><span class="pre">IterativeImputer::load_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-iterativeimputer-trained.html"><code class="docutils literal notranslate"><span class="pre">IterativeImputer::trained</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-labeled-batch-from-dataframe.html"><code class="docutils literal notranslate"><span class="pre">labeled_batch_from_dataframe</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-labeledbatch-has-labels.html"><code class="docutils literal notranslate"><span class="pre">LabeledBatch::has_labels</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-labeledbatch-has-weights.html"><code class="docutils literal notranslate"><span class="pre">LabeledBatch::has_weights</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-labelencoder-dump-state.html"><code class="docutils literal notranslate"><span class="pre">LabelEncoder::dump_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-labelencoder-load-state.html"><code class="docutils literal notranslate"><span class="pre">LabelEncoder::load_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-labelencoder-trained.html"><code class="docutils literal notranslate"><span class="pre">LabelEncoder::trained</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-load.html"><code class="docutils literal notranslate"><span class="pre">load</span></code></a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">load_and_restore</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-make-classifier.html"><code class="docutils literal notranslate"><span class="pre">make_classifier</span></code></a></li>
@@ -397,6 +417,13 @@
 <li class="toctree-l2"><a class="reference internal" href="method-onlinelinearclassifier-trained.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::trained</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-onlinelinearregressor-seen-samples.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::seen_samples</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-onlinelinearregressor-trained.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-ordinalencoder-dump-state.html"><code class="docutils literal notranslate"><span class="pre">OrdinalEncoder::dump_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-ordinalencoder-load-state.html"><code class="docutils literal notranslate"><span class="pre">OrdinalEncoder::load_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-ordinalencoder-trained.html"><code class="docutils literal notranslate"><span class="pre">OrdinalEncoder::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-decision-offset.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::decision_offset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-learned.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-max-features-used.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::max_features_used</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="method-outlierisolator-max-samples-used.html"><code class="docutils literal notranslate"><span class="pre">OutlierIsolator::max_samples_used</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-polynomiallift-dump-state.html"><code class="docutils literal notranslate"><span class="pre">PolynomialLift::dump_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-polynomiallift-load-state.html"><code class="docutils literal notranslate"><span class="pre">PolynomialLift::load_state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="method-polynomiallift-trained.html"><code class="docutils literal notranslate"><span class="pre">PolynomialLift::trained</span></code></a></li>
@@ -575,9 +602,10 @@ result.value() is available
 </pre></div>
 </div>
 <p><strong>Expected output</strong></p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>saved flow bundle to: &lt;path&gt;
-flow bundle roundtrip exact prediction parity: true
-nodej_flow_bundle_demo complete
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>libc++abi: terminating due to uncaught exception of type pluss::codem::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
+Triggered at: &lt;path&gt; (DataReader &amp;pluss::detail::DataReader::with_sizes(std::span&lt;const std::int64_t&gt;))
+
+[exit_code] -6
 </pre></div>
 </div>
 </section>

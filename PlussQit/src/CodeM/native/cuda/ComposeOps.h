@@ -2,9 +2,9 @@
 
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesSlim.h"
+#include "MSharp/RangeView.h"
 
 #include <cstdint>
-#include <vector>
 
 namespace pluss::codem::native::cuda {
 
@@ -15,13 +15,12 @@ bool supports_compose_baseline(ScalarType dtype) noexcept;
 
 bool supports_unite_compose(
     const Series& self,
-    const std::vector<Series>& others,
+    pluss::msharp::RangeView::Of<Series> others,
     std::int64_t dim) noexcept;
 
 bool supports_pile_compose(
     const Series& self,
-    const std::vector<Series>& others,
+    pluss::msharp::RangeView::Of<Series> others,
     std::int64_t dim) noexcept;
 
 } // namespace pluss::codem::native::cuda
-

@@ -102,7 +102,7 @@ Use this split:
 
 ### Inputs
 
-- objective callback (`objective`, `objective_series`, `objective_fn`, `objective_dual`, `objective_analytic`)
+- objective callback (`objective`, `objective_dual`, `objective_analytic`)
 - optional nonlinear/linear/bounds constraints
 
 ### Output
@@ -112,8 +112,8 @@ Use this split:
 ### Options
 
 - objective callback modes:
-  - series callback
   - autodiff callback (`Trace`)
+  - autodiff callback (`Series`) for single-block `"x"` problems
   - dual callback (`DualTrace`)
   - analytic callback (value + gradient)
 
@@ -125,12 +125,11 @@ namespace pmo = pluss::optim;
 
 const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 const Series x0 = make_series(std::vector<double>{0.2, 0.2}, {2}, cfg);
+const Series target = make_series(std::vector<double>{1.0, 2.0}, {2}, cfg);
 
 auto pb = pmo::problem();
-pb.objective_fn([](const Series& x) {
-  const Series x1 = x.select(0, 0);
-  const Series x2 = x.select(0, 1);
-  return x1.sub(1.0).square().add(x2.sub(2.0).square());
+pb.objective([target](const pmo::Trace& x) -> pmo::Trace {
+  return pmo::sum(pmo::square(x - pmo::trace(target, false)));
 });
 
 auto cb = pmo::constraints();
@@ -143,6 +142,15 @@ pmo::ConstrainedProblem problem = pb.build();
 pmo::ObjectiveConstraints objective_constraints = cb.build();
 ```
 
+Single-block `Series` objective form (equivalent AD path):
+
+```cpp
+auto pb2 = pmo::problem();
+pb2.objective([target](const Series& x) -> Series {
+  return (x - target).square().sum();
+});
+```
+
 ### Expected output
 
 - fully defined constrained problem ready for `optima(...)`.
@@ -152,13 +160,13 @@ pmo::ObjectiveConstraints objective_constraints = cb.build();
 ### API Signature
 
 - `optima(problem: ConstrainedProblem, initial: ParameterPack<Series>|Series, options: OptimaOptions = {}) -> OptimaState`
-- `optima(objective_series: function, initial: Series, options: OptimaOptions = {}, constraints: ObjectiveConstraints = {}) -> OptimaState`
 - `optima(objective_autodiff: function, initial: Series|ParameterPack<Series>, options: OptimaOptions = {}, constraints: ObjectiveConstraints = {}) -> OptimaState`
 - `optima(objective_analytic: function, initial: Series|ParameterPack<Series>, options: OptimaOptions = {}, constraints: ObjectiveConstraints = {}) -> OptimaState`
 
 ### Notes
 
 `optima(...)` overloads are designed to avoid boilerplate while preserving full control.
+- `objective_autodiff`/`objective_analytic` provide direct derivative paths and are preferred for performance.
 
 ### Inputs
 
@@ -177,10 +185,13 @@ pmo::ObjectiveConstraints objective_constraints = cb.build();
 ### Options
 
 - `OptimaOptions.algorithm`:
-  - `Penalty`
+  - `MeritMethod`
   - `SequentialQP`
   - `WorkingSet`
   - `InternalProtocol`
+
+`MeritMethod` is a real backend in `optima` (baseline penalty-method backend).  
+For MATLAB-style constrained NLP behavior, prefer `SequentialQP` or `InternalProtocol`.
 
 ### Examples
 
@@ -190,6 +201,7 @@ namespace pmo = pluss::optim;
 
 const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 const Series x0 = make_series(std::vector<double>{1.2, 0.9}, {2}, cfg);
+const Series target = make_series(std::vector<double>{1.0, 1.0}, {2}, cfg);
 
 pmo::OptimaOptions opts = pmo::presets::sequential_qp();
 opts.sequential_qp.max_iterations = 120;
@@ -197,10 +209,8 @@ opts.sequential_qp.constraint_tolerance = 1e-8;
 opts.sequential_qp.optimality_tolerance = 1e-8;
 
 const pmo::OptimaState out = pmo::optima(
-    [](const Series& x) {
-      const Series x1 = x.select(0, 0);
-      const Series x2 = x.select(0, 1);
-      return x2.sub(x1.square()).square().mul(100.0).add(x1.sub(1.0).square());
+    [target](const pmo::Trace& x) -> pmo::Trace {
+      return pmo::sum(pmo::square(x - pmo::trace(target, false)));
     },
     x0,
     opts);
@@ -246,6 +256,26 @@ pmo::OptimaOptions robust_ipm = pmo::presets::robust_internal_protocol();
 
 - solver-ready option sets with deterministic defaults.
 
+### Internal vs Robust Internal Protocol
+
+Both presets select `OptimaAlgorithm::InternalProtocol`; `robust_internal_protocol()` is a higher-budget, safer default for hard constrained problems.
+
+| Field | `internal_protocol()` | `robust_internal_protocol()` |
+| --- | --- | --- |
+| `max_iterations` | `100` | `160` |
+| `max_restoration_iterations` | default | `10` |
+| `max_restoration_line_search_iterations` | default | `20` |
+| `enable_restoration` | default | `true` |
+| `enable_feasibility_phase` | default | `false` |
+| `hessian_approximation` | default | `Bfgs` |
+| `linear_system_solver` | default | `Auto` (explicit) |
+| `system_structure` | default | `Auto` (explicit) |
+
+Rule of thumb:
+
+- start with `internal_protocol()` when the model is clean and well-scaled
+- use `robust_internal_protocol()` when you expect feasibility/recovery difficulty
+
 ## Progress, Summaries, And Diagnostics
 
 ### API Signature
@@ -260,6 +290,7 @@ pmo::OptimaOptions robust_ipm = pmo::presets::robust_internal_protocol();
 ### Notes
 
 Use progress hooks for transparent optimization traces and fail-loud diagnosis.
+This is the MATLAB `OutputFcn` equivalent.
 
 ### Inputs
 
@@ -288,6 +319,22 @@ pmo::OptimaOptions opts = pmo::presets::sequential_qp();
 opts.sequential_qp.progress_hook = pmo::reports::iter(std::cout, 8);
 const auto out = pmo::optima(objective, x0, opts);
 pmo::reports::detailed_summary(std::cout, out) << '\n';
+```
+
+```cpp
+// Backend-agnostic hook (recommended): propagated to the selected solver
+// when that solver-specific hook is not explicitly set.
+pmo::OptimaOptions opts = pmo::presets::robust_internal_protocol();
+opts.progress_hook = [](const pmo::OptimaProgressSnapshot& s) {
+  if (s.stage == pmo::OptimaProgressStage::Iteration) {
+    // inspect params, objective, violations, and decide what to do next
+    if (s.evaluation.max_constraint_violation < 1e-8 && s.stationarity < 1e-6) {
+      return true; // early-stop request (OutputFcn-style stop flag)
+    }
+  }
+  return false;
+};
+const auto out = pmo::optima(problem, init_params, opts);
 ```
 
 ### Expected output
@@ -588,4 +635,3 @@ const auto out = dfo::nelder_mead_minimizer(
 ### Expected output
 
 - faster solver convergence and more stable tuning workflow.
-

@@ -8,6 +8,10 @@
 
 This section follows a professional reference layout: signatures, parameters, returns, notes, examples, and overload links.
 
+For task-first, output-backed usage patterns of `stat`, `linearalg`, and `traverse`, see `series_query_user_guide`.
+
+Type note for signatures below: `ExtractSpec` refers to `pluss::codem::ExtractSpec`.
+
 ## Indexing and Slicing Additions
 
 ### `pos`
@@ -67,19 +71,12 @@ std::int64_t d2 = x.size(-1);  // 3
 auto shape = x.sizes();        // [1,2,3]
 ```
 
-### `extract`, `extract_put_`, `extract_put`
+### `extract`
 
-#### Signatures
+#### Signature
 
 ```cpp
-Series extract(pluss::Slicing::Slice d0 = pluss::Slicing::SliceAll(), ... d6) const
-template <class... Specs> Series extract(Specs&&... specs) const
-
-Series& extract_put_(const Series& values, std::span<const Series::ExtractSpec> specs)
-Series& extract_put_(const Series& values, std::initializer_list<Series::ExtractSpec> specs = {})
-
-Series extract_put(const Series& values, std::span<const Series::ExtractSpec> specs) const
-Series extract_put(const Series& values, std::initializer_list<Series::ExtractSpec> specs = {}) const
+Series extract(pluss::msharp::RangeView::Of<ExtractSpec> specs) const
 ```
 
 #### Notes
@@ -88,27 +85,82 @@ Series extract_put(const Series& values, std::initializer_list<Series::ExtractSp
   - `pluss::Slicing::SliceAll()`
   - `pluss::Slicing::SliceFrom(...)`
   - `pluss::Slicing::SliceTo(...)`
-  - `pluss::Slicing::SliceRange(...)`
-  - `pluss::Slicing::Ellipsis()`
-  - `pluss::Slicing::NewAxis()`
+- `pluss::Slicing::SliceRange(...)`
+- `pluss::Slicing::Ellipsis()`
+- `pluss::Slicing::NewAxis()`
 - Supports mixed scalar/range specs, ellipsis expansion, new-axis insertion, and bool/int advanced indexing specs.
-- `extract_put_` writes selected elements in place.
-- `extract_put` returns an updated copy (non-mutating).
 
-#### Examples
+#### Example
 
 ```cpp
 auto x = pluss::make_series({1.0,2.0,3.0,4.0,5.0,6.0}, {2,3});
+using pluss::codem::ExtractSpec;
 
 // torch-like intent: x.slice(1, 1, x.size(1))
-auto right = x.extract(pluss::Slicing::SliceAll(), {1, x.size(1)});
+std::vector<ExtractSpec> right_specs{
+  pluss::Slicing::SliceAll(),
+  pluss::Slicing::SliceRange(1, x.size(1), 1)
+};
+auto right = x.extract(pluss::msharp::RangeView::Of<ExtractSpec>(right_specs));
 
 // ellipsis + scalar index
-auto y = x.extract(pluss::Slicing::Ellipsis(), 1);
+std::vector<ExtractSpec> one_col_specs{
+  pluss::Slicing::Ellipsis(),
+  std::int64_t{1}
+};
+auto y = x.extract(pluss::msharp::RangeView::Of<ExtractSpec>(one_col_specs));
+```
 
-// writable extract
+### `extract_put_`
+
+#### Signature
+
+```cpp
+Series& extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values)
+```
+
+#### Notes
+
+- In-place update on selection defined by `specs`.
+- This mutates `self` and returns `Series&`.
+
+#### Example
+
+```cpp
+using pluss::codem::ExtractSpec;
 auto w = pluss::zeros({2,3});
-w.extract_put_(pluss::make_series({9.0,8.0}, {2}), {1, {1,3}});
+std::vector<ExtractSpec> write_specs{
+  std::int64_t{1},
+  pluss::Slicing::SliceRange(1, 3, 1)
+};
+w.extract_put_(pluss::msharp::RangeView::Of<ExtractSpec>(write_specs),
+               pluss::make_series({9.0,8.0}, {2}));
+```
+
+### `extract_put`
+
+#### Signature
+
+```cpp
+Series extract_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const
+```
+
+#### Notes
+
+- Non-mutating form of `extract_put_`.
+- Returns a copied/updated result.
+
+#### Example
+
+```cpp
+using pluss::codem::ExtractSpec;
+auto w = pluss::zeros({2,3});
+std::vector<ExtractSpec> write_specs{
+  std::int64_t{1},
+  pluss::Slicing::SliceRange(1, 3, 1)
+};
+auto out = w.extract_put(pluss::msharp::RangeView::Of<ExtractSpec>(write_specs),
+                         pluss::make_series({9.0,8.0}, {2}));
 ```
 
 ### `block`
@@ -139,6 +191,193 @@ auto mm = pluss::make_series({
 
 auto b1 = mm.block(1, 2, 1, 3);    // [[6,7,8],[10,11,12]]
 auto b2 = mm.block(-2, 1, -3, 2);  // [[6,7]]
+```
+
+### `index`
+
+#### Signature
+
+```cpp
+Series index(pluss::msharp::RangeView::Of<ExtractSpec> specs) const
+```
+
+#### Notes
+
+- Canonical dynamic indexing entrypoint for `Series`.
+- Accepts mixed scalar/slice/ellipsis/new-axis/advanced-index specs through `ExtractSpec`.
+- Public policy is `RangeView::*` for array-like inputs (not `std::vector` overloads on the API surface).
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({
+  {10.0, 11.0, 12.0, 13.0},
+  {20.0, 21.0, 22.0, 23.0}
+});
+
+std::vector<pluss::codem::ExtractSpec> specs{
+  pluss::Slicing::SliceAll(),
+  pluss::Slicing::SliceRange(1, 4, 2)
+};
+
+auto out = x.index(pluss::msharp::RangeView::Of<pluss::codem::ExtractSpec>(specs));
+// [[11,13],[21,23]]
+```
+
+### `slice`
+
+#### Signatures
+
+```cpp
+Series slice(std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step = 1) const
+Series slice(std::int64_t dim, std::int64_t start, std::int64_t end) const
+Series slice(std::int64_t dim, std::int64_t start) const
+Series slice(std::int64_t dim) const
+```
+
+#### Notes
+
+- View-oriented slicing helper (Torch-like semantics).
+- Use positive `step` for cheap view traversal paths.
+- Convenience overloads delegate to the full `(dim, start, end, step)` form.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({
+  {10.0, 11.0, 12.0, 13.0},
+  {20.0, 21.0, 22.0, 23.0}
+});
+
+auto out = x.slice(1, 1, 4, 2); // [[11,13],[21,23]]
+```
+
+### `traverse_slice`
+
+#### Signature
+
+```cpp
+Series traverse_slice(pluss::msharp::RangeView::Of<ExtractSpec> specs) const
+```
+
+#### Notes
+
+- `traverse_slice` is strictly view-only selector traversal.
+- Non-view-representable selectors fail fast (for example advanced index specs or non-positive slice step).
+- Use `extract`/`extract_put_` when materialization-capable indexing is required.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({
+  {10.0, 11.0, 12.0, 13.0},
+  {20.0, 21.0, 22.0, 23.0}
+});
+
+std::vector<pluss::codem::ExtractSpec> specs{
+  pluss::Slicing::SliceAll(),
+  pluss::Slicing::SliceRange(1, 3, 1)
+};
+
+auto view = x.traverse_slice(pluss::msharp::RangeView::Of<pluss::codem::ExtractSpec>(specs));
+```
+
+### `traverse_put_`
+
+#### Signature
+
+```cpp
+Series& traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values)
+```
+
+#### Notes
+
+- In-place write on a `traverse_slice(...)`-compatible selector.
+- Follows the same view-only selector constraints as `traverse_slice`.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({
+  {10.0, 11.0, 12.0, 13.0},
+  {20.0, 21.0, 22.0, 23.0}
+});
+
+std::vector<pluss::codem::ExtractSpec> specs{
+  pluss::Slicing::SliceAll(),
+  pluss::Slicing::SliceRange(1, 3, 1)
+};
+
+auto y = x.clone();
+y.traverse_put_(pluss::msharp::RangeView::Of<pluss::codem::ExtractSpec>(specs),
+                pluss::full({2,2}, -1.0));
+```
+
+### `traverse_put`
+
+#### Signature
+
+```cpp
+Series traverse_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const
+```
+
+#### Notes
+
+- Non-mutating form of `traverse_put_`.
+- Returns copied/updated result.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({
+  {10.0, 11.0, 12.0, 13.0},
+  {20.0, 21.0, 22.0, 23.0}
+});
+std::vector<pluss::codem::ExtractSpec> specs{
+  pluss::Slicing::SliceAll(),
+  pluss::Slicing::SliceRange(1, 3, 1)
+};
+auto out = x.traverse_put(pluss::msharp::RangeView::Of<pluss::codem::ExtractSpec>(specs),
+                          pluss::full({2,2}, -1.0));
+```
+
+### `cube`
+
+#### Signature
+
+```cpp
+Series cube(self)
+```
+
+#### Notes
+
+- Convenience power helper equivalent to `pow(3)`.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({-2.0, -1.0, 0.0, 1.0, 2.0});
+
+auto out = x.cube(); // [-8,-1,0,1,8]
+```
+
+### `abs`
+
+#### Signature
+
+```cpp
+Series abs(self)
+```
+
+#### Notes
+
+- Elementwise absolute value.
+
+#### Example
+
+```cpp
+auto x = pluss::make_series({-3,-2,-1,0,1,2,3});
+auto out = x.abs();
 ```
 
 ### `abs2`

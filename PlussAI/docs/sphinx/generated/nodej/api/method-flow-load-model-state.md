@@ -2,7 +2,7 @@
 
 ## API Signature
 
-- `Flow::load_model_state(state: const std::vector<Series>&) -> Status`
+- `Flow::load_model_state(state: RangeView::Series) -> Status`
 
 ## Notes
 
@@ -10,7 +10,7 @@ Loads a previously persisted artifact and restores its inference-ready state.
 
 ## Inputs
 
-- `state` (`const std::vector<Series>&`)
+- `state` (`RangeView::Series`)
   Randomization control for reproducible behavior.
 
 ## Output

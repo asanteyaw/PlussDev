@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include "CodeM/core/Series.h"
+#include "MSharp/RangeView.h"
 
 namespace pluss::codem::amax_ops {
   Series amax(const Series& a, std::int64_t dim, bool keepdim);

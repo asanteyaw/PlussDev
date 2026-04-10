@@ -14,7 +14,7 @@
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Optima Sequential QP" href="optima_sequential_qp.html" />
+    <link rel="next" title="Optimizer Surfaces: Functional vs OOP" href="optimizer_surfaces.html" />
     <link rel="prev" title="Optima Documentation" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -72,7 +72,7 @@
 <li><p>autodiff callbacks over <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Trace&gt;</span></code></p></li>
 <li><p>user-supplied analytic callbacks</p></li>
 </ul>
-<p>Finite differences are not the primary derivative path in <code class="docutils literal notranslate"><span class="pre">Optima</span></code>.</p>
+<p>Autodiff/analytic are the derivative paths in <code class="docutils literal notranslate"><span class="pre">Optima</span></code>.</p>
 </section>
 <section id="shared-runtime-contract">
 <h2>Shared Runtime Contract<a class="headerlink" href="#shared-runtime-contract" title="Link to this heading">¶</a></h2>
@@ -87,12 +87,15 @@
 <li><p>scaling and normalization</p></li>
 <li><p>dense and iterative linear-system policies</p></li>
 </ul>
-<p>The mature constrained backends currently exposed through <code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm</span></code> are:</p>
+<p><code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm</span></code> currently exposes:</p>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MeritMethod</span></code> (baseline penalty-method backend)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WorkingSet</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">InternalProtocol</span></code></p></li>
 </ul>
-<p>This document focuses on:</p>
+<p>The primary MATLAB-inspired constrained NLP backends are <code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code> and <code class="docutils literal notranslate"><span class="pre">InternalProtocol</span></code>.
+This document focuses on those two:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="optima_sequential_qp.html"><span class="std std-doc">Sequential QP</span></a></p></li>
 <li><p><a class="reference internal" href="optima_internal_protocol.html"><span class="std std-doc">Internal Protocol</span></a></p></li>
@@ -144,7 +147,7 @@
 <td><p>Accepted line-search scaling</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">backend_parameter</span></code></p></td>
-<td><p>Penalty or barrier parameter</p></td>
+<td><p>Merit weight or barrier parameter</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></td>
 <td><p>Complementarity residual where applicable</p></td>
@@ -216,6 +219,30 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">best_feasible</span></code></p></li>
 </ul>
 <p>Returning <code class="docutils literal notranslate"><span class="pre">true</span></code> requests an orderly stop.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reports::iter(std::ostream&amp;,</span> <span class="pre">precision)</span></code> and <code class="docutils literal notranslate"><span class="pre">reports::iteration_only_trace(...)</span></code>
+are convenience factories for per-iteration output.</p>
+<p>For a MATLAB <code class="docutils literal notranslate"><span class="pre">OutputFcn</span></code>-style intercept, use a custom hook and return <code class="docutils literal notranslate"><span class="pre">true</span></code>
+when you want to stop before the next iteration.</p>
+</section>
+<section id="internal-protocol-presets">
+<h2>Internal Protocol Presets<a class="headerlink" href="#internal-protocol-presets" title="Link to this heading">¶</a></h2>
+<p>Both presets below use <code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm::InternalProtocol</span></code>; the robust preset
+just allocates more recovery budget and explicit solver defaults:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">presets::internal_protocol()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">presets::robust_internal_protocol()</span></code></p></li>
+</ul>
+<p>Key robust deltas:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>: <code class="docutils literal notranslate"><span class="pre">160</span></code> (vs <code class="docutils literal notranslate"><span class="pre">100</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_restoration_iterations</span></code>: <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_restoration_line_search_iterations</span></code>: <code class="docutils literal notranslate"><span class="pre">20</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_restoration</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_feasibility_phase</span></code>: <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hessian_approximation</span></code>: <code class="docutils literal notranslate"><span class="pre">Bfgs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linear_system_solver</span></code>: <code class="docutils literal notranslate"><span class="pre">Auto</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_structure</span></code>: <code class="docutils literal notranslate"><span class="pre">Auto</span></code></p></li>
+</ul>
 </section>
 <section id="stall-taxonomy">
 <h2>Stall Taxonomy<a class="headerlink" href="#stall-taxonomy" title="Link to this heading">¶</a></h2>
@@ -279,10 +306,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#shared-runtime-contract">Shared Runtime Contract</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-outputs">Common Outputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#progress-hooks">Progress Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#internal-protocol-presets">Internal Protocol Presets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#stall-taxonomy">Stall Taxonomy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-demos">Example Demos</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer_surfaces.html">Optimizer Surfaces: Functional vs OOP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optima_sequential_qp.html">Optima Sequential QP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optima_internal_protocol.html">Optima Internal Protocol</a></li>
 </ul>
@@ -292,7 +321,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Optima Documentation</a></li>
-      <li>Next: <a href="optima_sequential_qp.html" title="next chapter">Optima Sequential QP</a></li>
+      <li>Next: <a href="optimizer_surfaces.html" title="next chapter">Optimizer Surfaces: Functional vs OOP</a></li>
   </ul></li>
 </ul>
 </div>
