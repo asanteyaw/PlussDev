@@ -25,8 +25,6 @@ Default behavior (new build directories):
 ## Build A Torch-Enabled SDK
 
 If you want `pluss` <-> LibTorch interop (`PLUSS_ENABLE_TORCH=ON`), configure a separate build tree for Torch:
-pb. // no x.value() here
-});
 
 
 ```bash

@@ -1047,8 +1047,12 @@ struct InternalProtocolOptions {
   std::int64_t max_line_search_iterations{25};
   std::int64_t max_restoration_iterations{8};
   std::int64_t max_restoration_line_search_iterations{25};
+  std::int64_t max_stalled_iterations{8};
+  std::int64_t min_iter_to_feasibility_mode{3};
+  std::int64_t min_switch_violations{2};
   double initial_step_size{1.0};
   double backtracking{0.5};
+  double nonfinite_backtracking{0.25};
   double armijo{1e-4};
   double initial_barrier_parameter{1e-2};
   double minimum_barrier_parameter{1e-8};
@@ -1057,12 +1061,32 @@ struct InternalProtocolOptions {
   double centrality_fraction{0.1};
   double dual_recentering_fraction{0.99};
   double feasibility_activation_factor{10.0};
+  double insufficient_infeas_decrease{0.01};
+  double sufficient_infeas_decrease{0.9};
+  double complementarity_reject_factor{2.0};
   double constraint_tolerance{1e-6};
   double optimality_tolerance{1e-6};
+  double step_tolerance{1e-10};
+  double value_progress_tolerance{1e-10};
   double fraction_to_boundary{0.99};
   double pivot_threshold{1e-12};
   double initialization_margin{1e-4};
   double bfgs_curvature_tolerance{1e-8};
+  double hessian_regularization{1e-8};
+  double hessian_regularization_max{1e-2};
+  double trust_region_initial_radius{1.0};
+  double trust_region_min_radius{1e-8};
+  double trust_region_max_radius{10.0};
+  double trust_region_shrink{0.5};
+  double trust_region_expand{2.0};
+  double trust_region_accept_ratio{1e-4};
+  double trust_region_expand_ratio{0.75};
+  double trust_region_shrink_ratio{0.1};
+  std::int64_t nonmonotone_window{5};
+  bool enable_watchdog{true};
+  double watchdog_relaxation{1e-12};
+  bool enable_soc_correction{true};
+  std::int64_t soc_correction_attempts{1};
   std::int64_t lbfgs_memory{10};
   std::int64_t max_krylov_iterations{0};
   std::int64_t iterative_dimension_threshold{16};
@@ -1073,6 +1097,7 @@ struct InternalProtocolOptions {
   bool project_bounds{true};
   bool enable_restoration{true};
   bool enable_feasibility_phase{false};
+  bool enable_nonfinite_recovery{true};
   OptimaLinearSystemStructure system_structure{OptimaLinearSystemStructure::Auto};
   OptimaLinearSystemSolver linear_system_solver{OptimaLinearSystemSolver::Auto};
   OptimaHessianApproximation hessian_approximation{OptimaHessianApproximation::Bfgs};
@@ -1104,6 +1129,11 @@ struct InternalProtocolState {
   double complementarity_residual{0.0};
   bool in_feasibility_phase{false};
   double feasibility_metric{0.0};
+  std::int64_t stalled_iterations{0};
+  std::int64_t feasibility_switch_violations{0};
+  std::int64_t nonfinite_evaluations{0};
+  double trust_region_radius{1.0};
+  std::vector<double> barrier_history{};
 };
 
 enum class OptimaAlgorithm : std::uint8_t {
@@ -1198,6 +1228,15 @@ inline OptimaOptions internal_protocol() {
   options.internal_protocol.constraint_tolerance = 1e-8;
   options.internal_protocol.optimality_tolerance = 1e-6;
   options.internal_protocol.max_line_search_iterations = 16;
+  options.internal_protocol.enable_feasibility_phase = true;
+  options.internal_protocol.enable_nonfinite_recovery = true;
+  options.internal_protocol.enable_watchdog = true;
+  options.internal_protocol.nonmonotone_window = 5;
+  options.internal_protocol.enable_soc_correction = true;
+  options.internal_protocol.soc_correction_attempts = 1;
+  options.internal_protocol.trust_region_initial_radius = 1.0;
+  options.internal_protocol.trust_region_min_radius = 1e-8;
+  options.internal_protocol.trust_region_max_radius = 10.0;
   options.internal_protocol.problem_scaling = OptimaProblemScaling::InitialPoint;
   return options;
 }
@@ -1208,7 +1247,17 @@ inline OptimaOptions robust_internal_protocol() {
   options.internal_protocol.max_restoration_iterations = 10;
   options.internal_protocol.max_restoration_line_search_iterations = 20;
   options.internal_protocol.enable_restoration = true;
-  options.internal_protocol.enable_feasibility_phase = false;
+  options.internal_protocol.enable_feasibility_phase = true;
+  options.internal_protocol.enable_nonfinite_recovery = true;
+  options.internal_protocol.enable_watchdog = true;
+  options.internal_protocol.nonmonotone_window = 7;
+  options.internal_protocol.enable_soc_correction = true;
+  options.internal_protocol.soc_correction_attempts = 2;
+  options.internal_protocol.trust_region_initial_radius = 1.0;
+  options.internal_protocol.trust_region_min_radius = 1e-8;
+  options.internal_protocol.trust_region_max_radius = 25.0;
+  options.internal_protocol.trust_region_expand = 2.0;
+  options.internal_protocol.trust_region_shrink = 0.5;
   options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Bfgs;
   options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::Auto;
   options.internal_protocol.system_structure = OptimaLinearSystemStructure::Auto;
@@ -3580,6 +3629,41 @@ inline ParameterPack<Series> make_strictly_interior_(const ConstrainedProblem& p
   return params;
 }
 
+inline bool is_nonfinite_eval_status_(EvalStatus status) {
+  return status == EvalStatus::NonFiniteObjective || status == EvalStatus::NonFiniteGradient ||
+         status == EvalStatus::NonFiniteConstraint || status == EvalStatus::NonFiniteJacobian;
+}
+
+inline bool recover_nonfinite_initial_point_(const ConstrainedProblem& problem,
+                                             const ParameterPack<Series>& seed_params,
+                                             const InternalProtocolOptions& options,
+                                             std::int64_t& eval_count,
+                                             ParameterPack<Series>& recovered_params,
+                                             ProblemEvaluation& recovered_eval) {
+  if (seed_params.empty()) return false;
+  const auto layout = seed_params.layout();
+  ParameterPack<Series> seed = options.project_bounds ? project_bounds_(seed_params, problem.bounds) : seed_params;
+  const Series seed_flat = flatten_values(seed).to(ScalarType::Float64);
+  const Series zero_flat = pluss::zeros_like(seed_flat);
+  const std::array<double, 14> scales = {
+      1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625,
+      0.0078125, 0.00390625, 0.001953125, 1e-3, 1e-4, 1e-5, 1e-6};
+
+  for (double scale : scales) {
+    const Series trial_flat = seed_flat.mul(scale).add(zero_flat.mul(1.0 - scale));
+    auto trial = unflatten_values(layout, trial_flat);
+    if (options.project_bounds) trial = project_bounds_(trial, problem.bounds);
+    auto trial_eval = evaluate_problem(problem, trial);
+    ++eval_count;
+    if (trial_eval.status == EvalStatus::Ok) {
+      recovered_params = std::move(trial);
+      recovered_eval = std::move(trial_eval);
+      return true;
+    }
+  }
+  return false;
+}
+
 inline void maybe_update_best_feasible_(InternalProtocolState& state,
                                         double constraint_tolerance = 0.0) {
   if (!feasible_with_tolerance_(state.evaluation, constraint_tolerance) ||
@@ -5134,12 +5218,23 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
   const bool nonworse_objective =
       std::isfinite(result.objective_value) && result.objective_value <= start_value + stationary_tolerance;
   const bool improved_objective = nonworse_objective && result.objective_value + stationary_tolerance < start_value;
+  const Series start_flat = flatten_values(start_params).to(ScalarType::Float64);
+  const Series end_flat = flatten_values(result.params).to(ScalarType::Float64);
+  const double start_scale = std::max(1.0, series_inf_norm_(start_flat));
+  const double step_magnitude = series_inf_norm_(end_flat.sub(start_flat));
+  const bool meaningful_step = step_magnitude > std::max(1e-14, 1e-10 * start_scale);
+  const bool improved_violation =
+      result.evaluation.max_constraint_violation + 1e-12 < start_evaluation.max_constraint_violation;
   const bool stationary_feasible = result.evaluation.status == EvalStatus::Ok &&
                                    result.evaluation.max_constraint_violation <= options.constraint_tolerance;
-  result.success = nonworse_objective &&
-                   (result.iterations > 0 || (stationary_feasible && !improved_objective));
+  // Recovery must make actual progress. Treating a zero-step feasible point as
+  // "success" causes repeated no-op major iterations with step=0.
+  result.success = nonworse_objective && result.iterations > 0 &&
+                   (improved_objective || meaningful_step || improved_violation);
   if (result.success) {
     result.message = "barrier recovery reduced the barrier objective";
+  } else if (stationary_feasible && !improved_objective) {
+    result.message = "barrier recovery made no progress at a feasible point";
   }
   return result;
 }
@@ -5180,6 +5275,51 @@ inline bool should_reduce_barrier_(const InternalProtocolState& state,
              std::max(options.constraint_tolerance, 10.0 * state.barrier_parameter) &&
          state.complementarity_residual <=
              std::max(options.optimality_tolerance, 10.0 * state.barrier_parameter);
+}
+
+inline void push_barrier_history_(std::vector<double>& history,
+                                  double barrier_value,
+                                  std::size_t max_keep = 32) {
+  if (!std::isfinite(barrier_value)) return;
+  history.push_back(barrier_value);
+  if (history.size() > max_keep) {
+    const std::size_t drop = history.size() - max_keep;
+    history.erase(history.begin(), history.begin() + static_cast<long>(drop));
+  }
+}
+
+inline double nonmonotone_reference_(const std::vector<double>& history,
+                                     std::int64_t window,
+                                     double fallback) {
+  double reference = fallback;
+  if (history.empty()) return reference;
+  const std::size_t w = static_cast<std::size_t>(std::max<std::int64_t>(1, window));
+  const std::size_t start = history.size() > w ? (history.size() - w) : 0;
+  for (std::size_t i = start; i < history.size(); ++i) {
+    if (std::isfinite(history[i])) reference = std::max(reference, history[i]);
+  }
+  return reference;
+}
+
+inline double update_trust_radius_(double current_radius,
+                                   double step_size,
+                                   double ratio,
+                                   const InternalProtocolOptions& options) {
+  double radius = std::clamp(
+      current_radius,
+      std::max(1e-12, options.trust_region_min_radius),
+      std::max(options.trust_region_min_radius, options.trust_region_max_radius));
+  if (std::isfinite(ratio) && ratio >= options.trust_region_expand_ratio &&
+      step_size >= 0.8 * radius) {
+    radius = std::min(
+        std::max(options.trust_region_min_radius, options.trust_region_max_radius),
+        radius * std::max(1.0, options.trust_region_expand));
+  } else if (!std::isfinite(ratio) || ratio < options.trust_region_shrink_ratio) {
+    radius = std::max(
+        std::max(1e-12, options.trust_region_min_radius),
+        radius * std::clamp(options.trust_region_shrink, 1e-3, 1.0));
+  }
+  return radius;
 }
 
 inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& problem,
@@ -6456,6 +6596,7 @@ inline InternalProtocolState init_internal_protocol_state(const ConstrainedProbl
   }
   std::int64_t eval_count = 0;
   bool init_ok = true;
+  bool recovered_nonfinite_init = false;
   state.params = detail::make_strictly_interior_(
       problem,
       initial_params,
@@ -6466,6 +6607,34 @@ inline InternalProtocolState init_internal_protocol_state(const ConstrainedProbl
   state.function_evaluations = eval_count;
   state.evaluation = evaluate_problem(problem, state.params);
   state.function_evaluations += 1;
+  if (state.evaluation.status != EvalStatus::Ok &&
+      options.enable_nonfinite_recovery &&
+      detail::is_nonfinite_eval_status_(state.evaluation.status)) {
+    ParameterPack<Series> recovered_params = state.params;
+    ProblemEvaluation recovered_eval = state.evaluation;
+    if (detail::recover_nonfinite_initial_point_(
+            problem,
+            state.params,
+            options,
+            state.function_evaluations,
+            recovered_params,
+            recovered_eval)) {
+      bool reinited_ok = true;
+      state.params = detail::make_strictly_interior_(
+          problem,
+          recovered_params,
+          options.initialization_margin,
+          options.project_bounds,
+          state.function_evaluations,
+          reinited_ok);
+      state.evaluation = evaluate_problem(problem, state.params);
+      state.function_evaluations += 1;
+      init_ok = init_ok && reinited_ok;
+      if (state.evaluation.status == EvalStatus::Ok) {
+        recovered_nonfinite_init = true;
+      }
+    }
+  }
   state.barrier_parameter = std::max(options.initial_barrier_parameter, options.minimum_barrier_parameter);
   if (state.evaluation.status == EvalStatus::Ok) {
     const auto system = detail::assemble_constraint_system_(problem, state.params, state.evaluation);
@@ -6496,13 +6665,21 @@ inline InternalProtocolState init_internal_protocol_state(const ConstrainedProbl
     state.complementarity_residual = std::numeric_limits<double>::infinity();
   }
   state.converged = !init_ok || state.evaluation.status != EvalStatus::Ok || !std::isfinite(state.barrier_value);
-  state.message = state.converged ? "failed to initialize a strict internal protocol" : "initialized";
+  state.message = state.converged ? "failed to initialize a strict internal protocol"
+                                  : (recovered_nonfinite_init ? "initialized after non-finite recovery"
+                                                              : "initialized");
   if (state.evaluation.status != EvalStatus::Ok) state.message = state.evaluation.message;
   state.hessian = detail::identity_matrix_(
       state.params.total_numel(),
       state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
   state.variable_scale = detail::compute_variable_scale_(state.params, problem.bounds, options.problem_scaling);
   state.krylov_iterations = 0;
+  state.trust_region_radius = std::clamp(
+      std::max(options.trust_region_initial_radius, options.initial_step_size),
+      std::max(1e-12, options.trust_region_min_radius),
+      std::max(options.trust_region_min_radius, options.trust_region_max_radius));
+  state.barrier_history.clear();
+  detail::push_barrier_history_(state.barrier_history, state.barrier_value);
   state.lbfgs_s_history.clear();
   state.lbfgs_y_history.clear();
   state.in_feasibility_phase = detail::should_enter_feasibility_phase_(state, options);
@@ -6554,7 +6731,22 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       if (detail::should_reduce_barrier_(next, options)) {
         detail::reduce_barrier_state_(next, next_system, options);
       }
+      next.trust_region_radius = detail::update_trust_radius_(
+          state.trust_region_radius,
+          std::max(phase.last_step_size, 0.0),
+          1.0,
+          options);
+      detail::push_barrier_history_(next.barrier_history, next.barrier_value);
+      next.stalled_iterations = 0;
+      next.feasibility_switch_violations = 0;
       next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
+      if (!next.in_feasibility_phase &&
+          next.evaluation.max_constraint_violation > options.constraint_tolerance &&
+          next.feasibility_metric >
+              std::max(options.constraint_tolerance, state.feasibility_metric) *
+                  (1.0 - std::clamp(options.sufficient_infeas_decrease, 0.0, 1.0))) {
+        next.in_feasibility_phase = true;
+      }
       detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
       if (next.iteration >= options.max_iterations && !next.converged) {
         next.converged = true;
@@ -6673,6 +6865,13 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
   } else {
     scaled_rhs = detail::scale_gradient_(primal_dual_gradient.mul(-1.0), variable_scale);
   }
+  const double adaptive_regularization = std::clamp(
+      std::max(
+          {std::max(1e-12, options.hessian_regularization),
+           1e-3 * std::max(state.barrier_parameter, options.minimum_barrier_parameter),
+           1e-4 * std::max(1.0, barrier_grad_norm)}),
+      1e-12,
+      std::max(options.hessian_regularization, options.hessian_regularization_max));
   Series step_direction;
   if (options.hessian_approximation == OptimaHessianApproximation::Lbfgs) {
     step_direction = detail::unscale_step_(
@@ -6755,7 +6954,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
     step_direction = detail::solve_spd_system_cg_series_(
         scaled_hessian,
         scaled_rhs,
-        1e-8,
+        adaptive_regularization,
         options.max_krylov_iterations,
         options.krylov_tolerance,
         options.krylov_absolute_tolerance,
@@ -6765,7 +6964,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
     step_direction = detail::solve_dense_system_series_(
         scaled_hessian,
         scaled_rhs,
-        1e-8,
+        adaptive_regularization,
         options.linear_system_solver,
         options.pivot_threshold,
         solve_ok);
@@ -6782,7 +6981,11 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
                                            variable_scale);
   }
 
-  double max_step = options.initial_step_size;
+  const double trust_radius = std::clamp(
+      state.trust_region_radius,
+      std::max(1e-12, options.trust_region_min_radius),
+      std::max(options.trust_region_min_radius, options.trust_region_max_radius));
+  double max_step = std::min(options.initial_step_size, trust_radius);
   Series slack_step = pluss::empty({0}, ScalarType::Float64).to(step_direction.platform());
   Series dual_step = pluss::empty({0}, ScalarType::Float64).to(step_direction.platform());
   const Series inequality_residual = detail::inequality_residual_series_(system, state.hessian.platform());
@@ -6827,6 +7030,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       }
     }
   }
+  max_step = std::min(max_step, trust_radius);
   if (!(max_step > 0.0) || !std::isfinite(max_step)) {
     next.converged = true;
     next.message = "internal-protocol step hit the boundary";
@@ -6835,10 +7039,18 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
 
   double step_size = max_step;
   const double base_value = state.barrier_value;
+  const double watchdog_reference =
+      options.enable_watchdog
+          ? detail::nonmonotone_reference_(state.barrier_history, options.nonmonotone_window, base_value)
+          : base_value;
   double directional_derivative = detail::series_dot_(primal_dual_gradient, step_direction);
   if (!(directional_derivative < 0.0)) {
     directional_derivative = -std::max(1.0, detail::series_dot_(step_direction, step_direction));
   }
+  bool saw_nonfinite_trial = false;
+  std::int64_t complementarity_rejections = 0;
+  const double complementarity_baseline =
+      std::max(std::max(state.complementarity_residual, state.barrier_parameter), 1e-12);
 
   for (std::int64_t ls_iter = 0; ls_iter < options.max_line_search_iterations; ++ls_iter) {
     auto trial = unflatten_values(
@@ -6856,8 +7068,46 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           state.barrier_parameter,
           options.equality_penalty,
           state.normalization);
-      if (std::isfinite(trial_barrier) &&
-          trial_barrier <= base_value + options.armijo * step_size * directional_derivative) {
+      const Series trial_slack = detail::inequality_slack_(
+          trial_system,
+          trial.empty() ? pluss::codem::Platform::CPU : trial[0].value.platform());
+      const Series trial_dual = detail::blend_dual_toward_centrality_(
+          detail::update_dual_step_(dual, dual_step, step_size),
+          trial_slack,
+          state.barrier_parameter,
+          options.dual_recentering_fraction);
+      const double trial_complementarity =
+          detail::complementarity_residual_(trial_slack, trial_dual, state.barrier_parameter);
+      const bool current_feasible =
+          state.evaluation.max_constraint_violation <= options.constraint_tolerance;
+      const bool trial_feasible =
+          trial_eval.max_constraint_violation <= options.constraint_tolerance;
+      const bool complementarity_spike =
+          std::isfinite(trial_complementarity) &&
+          trial_complementarity >
+              std::max(complementarity_baseline, 1e-12) *
+                  std::max(options.complementarity_reject_factor, 1.0);
+      // Avoid over-rejecting productive steps near a feasible point. When both
+      // endpoints are feasible and barrier merit still improves, keep moving.
+      const bool allow_feasible_progress =
+          current_feasible && trial_feasible &&
+          std::isfinite(trial_barrier) && trial_barrier < base_value;
+      if (complementarity_spike && !allow_feasible_progress) {
+        ++complementarity_rejections;
+        step_size *= options.backtracking;
+        continue;
+      }
+      const double predicted_decrease = std::max(1e-14, -step_size * directional_derivative);
+      const double actual_decrease = std::isfinite(trial_barrier) ? (base_value - trial_barrier) : -std::numeric_limits<double>::infinity();
+      const double trust_ratio = actual_decrease / predicted_decrease;
+      const double armijo_rhs =
+          watchdog_reference + options.armijo * step_size * directional_derivative + options.watchdog_relaxation;
+      const bool armijo_ok = std::isfinite(trial_barrier) && trial_barrier <= armijo_rhs;
+      const bool trust_ok =
+          std::isfinite(trust_ratio) &&
+          (trust_ratio >= options.trust_region_accept_ratio ||
+           (allow_feasible_progress && actual_decrease >= -options.watchdog_relaxation));
+      if (armijo_ok && trust_ok) {
         next.params = std::move(trial);
         next.evaluation = std::move(trial_eval);
         next.iteration += 1;
@@ -6869,6 +7119,14 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
         const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
         const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
         const Series s = x_next.sub(x_prev);
+        const double x_scale = std::max(1.0, detail::series_inf_norm_(x_prev));
+        const double step_magnitude = detail::series_inf_norm_(s);
+        const double step_tolerance = std::max(1e-14, 1e-10 * x_scale);
+        const double barrier_decrease = base_value - trial_barrier;
+        const double barrier_decrease_tolerance =
+            std::max(1e-12, 1e-10 * std::max(1.0, std::abs(base_value)));
+        const bool no_measurable_progress =
+            step_magnitude <= step_tolerance && barrier_decrease <= barrier_decrease_tolerance;
         const auto next_system = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
         next.inequality_slack = detail::inequality_slack_(
             next_system,
@@ -6925,6 +7183,12 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
                 options.iterative_dimension_threshold)) {
           next.krylov_iterations = state.krylov_iterations;
         }
+        next.trust_region_radius = detail::update_trust_radius_(
+            state.trust_region_radius,
+            step_size,
+            trust_ratio,
+            options);
+        detail::push_barrier_history_(next.barrier_history, next.barrier_value);
         next.variable_scale = state.variable_scale;
         next.normalization = state.normalization;
         detail::update_primal_dual_metrics_(
@@ -6934,6 +7198,19 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
             options.equality_penalty,
             state.normalization);
         next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
+        const double prev_feas = std::max(state.feasibility_metric, state.evaluation.max_constraint_violation);
+        const double next_feas = std::max(next.feasibility_metric, next.evaluation.max_constraint_violation);
+        const double feas_drop_ratio =
+            (prev_feas - next_feas) / std::max(prev_feas, 1e-12);
+        const bool weak_feas_progress =
+            next_feas > options.constraint_tolerance &&
+            feas_drop_ratio < std::max(0.0, options.insufficient_infeas_decrease);
+        next.feasibility_switch_violations =
+            (options.enable_feasibility_phase &&
+             next.iteration >= options.min_iter_to_feasibility_mode &&
+             weak_feas_progress)
+                ? (state.feasibility_switch_violations + 1)
+                : 0;
 
         if (detail::should_reduce_barrier_(next, options)) {
           detail::reduce_barrier_state_(next, next_system, options);
@@ -6958,10 +7235,146 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           next.converged = true;
           next.message = "objective limit reached at a feasible point";
         }
+        const bool weak_barrier_progress =
+            std::abs(barrier_decrease) <= std::max(options.value_progress_tolerance, barrier_decrease_tolerance);
+        const double stationarity_drop = state.barrier_gradient_norm - next.barrier_gradient_norm;
+        const bool weak_stationarity_progress =
+            stationarity_drop <= std::max(options.value_progress_tolerance, 1e-12);
+        const bool weak_step_progress =
+            step_magnitude <= std::max(options.step_tolerance, step_tolerance);
+        const bool stalled_major = no_measurable_progress ||
+                                   (weak_step_progress && weak_barrier_progress && weak_stationarity_progress);
+        next.stalled_iterations = stalled_major ? (state.stalled_iterations + 1) : 0;
+        if (!next.converged &&
+            options.enable_feasibility_phase &&
+            next.feasibility_switch_violations >= options.min_switch_violations) {
+          next.in_feasibility_phase = true;
+          next.stalled_iterations = 0;
+          next.message = "switching to feasibility phase after insufficient infeasibility decrease";
+        }
+        if (!next.converged &&
+            next.stalled_iterations >= options.max_stalled_iterations) {
+          if (options.enable_feasibility_phase &&
+              next.evaluation.max_constraint_violation > options.constraint_tolerance) {
+            next.in_feasibility_phase = true;
+            next.stalled_iterations = 0;
+            next.message = "switching to feasibility phase after stalled internal-protocol progress";
+          } else if (next.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+                     next.barrier_gradient_norm <=
+                         std::max(10.0 * options.optimality_tolerance, 1e-12)) {
+            next.converged = true;
+            next.message = "step tolerance reached at a feasible point";
+          } else {
+            next.converged = true;
+            next.message = "internal-protocol no progress across major iterations";
+          }
+        }
+        if (!next.converged && no_measurable_progress) {
+          if (next.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+              next.barrier_gradient_norm <=
+                  std::max(10.0 * options.optimality_tolerance, 1e-12)) {
+            next.converged = true;
+            next.message = "step tolerance reached at a feasible point";
+          } else if (options.enable_feasibility_phase &&
+                     next.evaluation.max_constraint_violation > options.constraint_tolerance) {
+            next.in_feasibility_phase = true;
+            next.stalled_iterations = 0;
+            next.message = "switching to feasibility phase after no measurable progress";
+          } else if (next.stalled_iterations >= options.max_stalled_iterations) {
+            next.converged = true;
+            next.message = "internal-protocol no progress across major iterations";
+          } else {
+            next.message = "accepted step had no measurable progress; continuing with safeguards";
+          }
+        }
         return next;
       }
+    } else if (options.enable_nonfinite_recovery &&
+               detail::is_nonfinite_eval_status_(trial_eval.status)) {
+      saw_nonfinite_trial = true;
+      next.nonfinite_evaluations = state.nonfinite_evaluations + 1;
+      step_size *= std::min(options.backtracking, options.nonfinite_backtracking);
+      continue;
     }
     step_size *= options.backtracking;
+  }
+
+  if (options.enable_soc_correction &&
+      options.soc_correction_attempts > 0 &&
+      state.evaluation.status == EvalStatus::Ok) {
+    ParameterPack<Series> soc_params = state.params;
+    ProblemEvaluation soc_eval = state.evaluation;
+    for (std::int64_t attempt = 0; attempt < options.soc_correction_attempts; ++attempt) {
+      const auto soc = detail::advance_feasibility_phase_(
+          problem,
+          soc_params,
+          soc_eval,
+          state.normalization,
+          options);
+      next.function_evaluations += soc.function_evaluations;
+      if (!soc.success || soc.evaluation.status != EvalStatus::Ok) {
+        break;
+      }
+      const auto soc_system = detail::assemble_constraint_system_(problem, soc.params, soc.evaluation);
+      const double soc_barrier = detail::barrier_value_(
+          soc.evaluation,
+          soc_system,
+          state.barrier_parameter,
+          options.equality_penalty,
+          state.normalization);
+      const bool improved_feasibility =
+          soc.evaluation.max_constraint_violation + 1e-12 < soc_eval.max_constraint_violation;
+      const bool improved_barrier =
+          std::isfinite(soc_barrier) && soc_barrier + options.watchdog_relaxation < base_value;
+      if (improved_feasibility || improved_barrier) {
+        next.params = soc.params;
+        next.evaluation = soc.evaluation;
+        next.iteration += 1;
+        next.last_step_size = soc.last_step_size;
+        next.barrier_parameter = state.barrier_parameter;
+        next.barrier_value = soc_barrier;
+        next.message = "second-order correction accepted";
+        next.hessian = detail::identity_matrix_(
+            next.params.total_numel(),
+            next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
+        next.variable_scale = state.variable_scale;
+        next.normalization = state.normalization;
+        next.krylov_iterations = state.krylov_iterations;
+        next.lbfgs_s_history.clear();
+        next.lbfgs_y_history.clear();
+        detail::update_primal_dual_metrics_(
+            next,
+            soc_system,
+            next.barrier_parameter,
+            options.equality_penalty,
+            state.normalization);
+        if (detail::should_reduce_barrier_(next, options)) {
+          detail::reduce_barrier_state_(next, soc_system, options);
+        }
+        next.trust_region_radius = std::max(
+            std::max(1e-12, options.trust_region_min_radius),
+            std::clamp(
+                state.trust_region_radius * std::clamp(options.trust_region_shrink, 1e-3, 1.0),
+                options.trust_region_min_radius,
+                std::max(options.trust_region_min_radius, options.trust_region_max_radius)));
+        detail::push_barrier_history_(next.barrier_history, next.barrier_value);
+        next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
+        detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
+        if (next.iteration >= options.max_iterations && !next.converged) {
+          next.converged = true;
+          next.message = "maximum iterations reached";
+        }
+        if (next.barrier_gradient_norm <= options.optimality_tolerance &&
+            next.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+            next.barrier_parameter <= options.minimum_barrier_parameter) {
+          next.converged = true;
+          next.message = "barrier optimality and feasibility tolerances satisfied";
+        }
+        return next;
+      }
+      soc_params = soc.params;
+      soc_eval = soc.evaluation;
+    }
   }
 
   if (options.enable_restoration) {
@@ -7013,6 +7426,20 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           next.barrier_parameter,
           options.equality_penalty,
           state.normalization);
+      next.trust_region_radius = detail::update_trust_radius_(
+          state.trust_region_radius,
+          std::max(recovery.last_step_size, 0.0),
+          0.5,
+          options);
+      detail::push_barrier_history_(next.barrier_history, next.barrier_value);
+      const double recovery_step_magnitude = detail::series_inf_norm_(
+          flatten_values(next.params).to(ScalarType::Float64).sub(
+              flatten_values(state.params).to(ScalarType::Float64)));
+      const double recovery_scale = std::max(1.0, detail::series_inf_norm_(flatten_values(state.params).to(ScalarType::Float64)));
+      const double recovery_tol = std::max(options.step_tolerance, 1e-10 * recovery_scale);
+      next.stalled_iterations =
+          (recovery_step_magnitude <= recovery_tol) ? (state.stalled_iterations + 1) : 0;
+      next.feasibility_switch_violations = 0;
       if (detail::should_reduce_barrier_(next, options)) {
         detail::reduce_barrier_state_(next, next_system, options);
         // Keep recovery-provenance messaging even if we also reduce mu.
@@ -7034,29 +7461,173 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
         next.converged = true;
         next.message = "objective limit reached at a feasible point";
       }
+      if (!next.converged && next.stalled_iterations >= options.max_stalled_iterations) {
+        next.converged = true;
+        next.message = "internal-protocol no progress after repeated recovery steps";
+      }
       return next;
     }
+    // Feasible-stall rescue: if barrier restoration cannot progress at an
+    // already-feasible point, attempt a conservative objective-descent step.
+    if (state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+        state.evaluation.status == EvalStatus::Ok) {
+      const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
+      const Series obj_grad = flatten_values(state.evaluation.gradient).to(ScalarType::Float64);
+      const double grad_norm = detail::series_inf_norm_(obj_grad);
+      if (std::isfinite(grad_norm) && grad_norm > 1e-12) {
+        Series direction = obj_grad.mul(-1.0);
+        const double directional = detail::series_dot_(obj_grad, direction);
+        double fallback_step = std::min(std::max(max_step, 0.0), std::max(options.initial_step_size, 1e-6));
+        bool fallback_accepted = false;
+        for (std::int64_t ls = 0; ls < options.max_restoration_line_search_iterations; ++ls) {
+          auto trial = unflatten_values(
+              state.params.layout(),
+              x_prev.add(direction.mul(fallback_step)));
+          if (options.project_bounds) trial = detail::project_bounds_(trial, problem.bounds);
+
+          auto trial_eval = evaluate_problem(problem, trial);
+          next.function_evaluations += 1;
+          if (trial_eval.status == EvalStatus::Ok) {
+            const double base_obj = state.evaluation.value.item<double>();
+            const double trial_obj = trial_eval.value.item<double>();
+            const auto trial_system = detail::assemble_constraint_system_(problem, trial, trial_eval);
+            const double trial_barrier = detail::barrier_value_(
+                trial_eval,
+                trial_system,
+                state.barrier_parameter,
+                options.equality_penalty,
+                state.normalization);
+            if (std::isfinite(trial_obj) &&
+                std::isfinite(trial_barrier) &&
+                trial_obj <= base_obj + options.armijo * fallback_step * directional) {
+              next.params = std::move(trial);
+              next.evaluation = std::move(trial_eval);
+              next.iteration += 1;
+              next.last_step_size = fallback_step;
+              next.barrier_parameter = state.barrier_parameter;
+              next.barrier_value = trial_barrier;
+              next.message = "fallback objective-descent step accepted";
+              next.hessian = detail::identity_matrix_(
+                  next.params.total_numel(),
+                  next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
+              next.variable_scale = state.variable_scale;
+              next.normalization = state.normalization;
+              next.krylov_iterations = state.krylov_iterations;
+              next.lbfgs_s_history.clear();
+              next.lbfgs_y_history.clear();
+              next.feasibility_switch_violations = 0;
+              const auto next_system = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
+              detail::update_primal_dual_metrics_(
+                  next,
+                  next_system,
+                  next.barrier_parameter,
+                  options.equality_penalty,
+                  state.normalization);
+              next.trust_region_radius = detail::update_trust_radius_(
+                  state.trust_region_radius,
+                  std::max(fallback_step, 0.0),
+                  0.5,
+                  options);
+              detail::push_barrier_history_(next.barrier_history, next.barrier_value);
+              if (detail::should_reduce_barrier_(next, options)) {
+                detail::reduce_barrier_state_(next, next_system, options);
+                next.message = "fallback objective-descent step accepted";
+              }
+              next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
+              detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
+              if (next.iteration >= options.max_iterations && !next.converged) {
+                next.converged = true;
+                next.message = "maximum iterations reached";
+              }
+              if (next.barrier_gradient_norm <= options.optimality_tolerance &&
+                  next.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+                  next.barrier_parameter <= options.minimum_barrier_parameter) {
+                next.converged = true;
+                next.message = "barrier optimality and feasibility tolerances satisfied";
+              }
+              fallback_accepted = true;
+              break;
+            }
+          }
+          if (trial_eval.status != EvalStatus::Ok &&
+              options.enable_nonfinite_recovery &&
+              detail::is_nonfinite_eval_status_(trial_eval.status)) {
+            saw_nonfinite_trial = true;
+            next.nonfinite_evaluations = state.nonfinite_evaluations + 1;
+            fallback_step *= std::min(options.backtracking, options.nonfinite_backtracking);
+          } else {
+            fallback_step *= options.backtracking;
+          }
+        }
+        if (fallback_accepted) {
+          return next;
+        }
+      }
+    }
     if (options.enable_feasibility_phase) {
-      next.in_feasibility_phase = true;
-      next.message = recovery.message.empty() ? "barrier recovery failed; switching to feasibility phase"
-                                              : recovery.message + "; switching to feasibility phase";
+      if (next.evaluation.max_constraint_violation > options.constraint_tolerance) {
+        next.in_feasibility_phase = true;
+        next.message = recovery.message.empty()
+                           ? "barrier recovery failed; switching to feasibility phase"
+                           : recovery.message + "; switching to feasibility phase";
+        if (saw_nonfinite_trial) {
+          next.message += " after non-finite trial evaluations";
+        }
+        return next;
+      }
+    }
+    const bool feasible_recovery_stall =
+        state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+        (recovery.message.find("made no progress at a feasible point") != std::string::npos ||
+         recovery.message.find("failed to reduce the barrier objective") != std::string::npos);
+    if (feasible_recovery_stall && state.barrier_parameter > options.minimum_barrier_parameter) {
+      next.iteration += 1;
+      next.barrier_parameter = std::max(
+          options.minimum_barrier_parameter,
+          state.barrier_parameter * std::clamp(options.barrier_decay, 0.0, 1.0));
+      next.trust_region_radius = std::max(
+          std::max(1e-12, options.trust_region_min_radius),
+          std::clamp(
+              state.trust_region_radius * std::clamp(options.trust_region_shrink, 1e-3, 1.0),
+              options.trust_region_min_radius,
+              std::max(options.trust_region_min_radius, options.trust_region_max_radius)));
+      next.stalled_iterations = state.stalled_iterations + 1;
+      next.message = "recovery stalled at feasible point; reduced barrier and retrying";
+      if (next.stalled_iterations >= options.max_stalled_iterations ||
+          next.iteration >= options.max_iterations) {
+        next.converged = true;
+        next.message = "step tolerance reached at a feasible point";
+      }
       return next;
     }
     next.message = recovery.message.empty()
                        ? "line search failed to produce an acceptable internal-protocol step after recovery"
                        : recovery.message;
+    if (saw_nonfinite_trial) {
+      next.message += "; non-finite trial evaluations encountered";
+    }
     next.converged = true;
     return next;
   }
 
   if (options.enable_feasibility_phase) {
-    next.in_feasibility_phase = true;
-    next.message = "switching to feasibility phase";
-    return next;
+    if (next.evaluation.max_constraint_violation > options.constraint_tolerance) {
+      next.in_feasibility_phase = true;
+      next.message = complementarity_rejections > 0
+                         ? "switching to feasibility phase after complementarity guard rejections"
+                         : "switching to feasibility phase";
+      if (saw_nonfinite_trial) {
+        next.message += " and non-finite trial evaluations";
+      }
+      return next;
+    }
   }
 
   next.converged = true;
   next.message = "line search failed to produce an acceptable internal-protocol step";
+  if (saw_nonfinite_trial) {
+    next.message += "; non-finite trial evaluations encountered";
+  }
   return next;
 }
 

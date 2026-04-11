@@ -1585,7 +1585,42 @@ Thread Thread::cast(
       }
       if (kind() == ThreadKind::Series) {
         PLUSS_CHECK(is_numeric_series_type(as_series()),
-                    "Thread::cast(Timeline): Series source must be numeric epoch-nanos");
+                    "Thread::cast(Timeline): Series source must be numeric epoch-nanos or YYYYMMDD");
+        const auto raw_f64 = as_series().to(pluss::codem::ScalarType::Float64);
+        const auto platform = raw_f64.platform();
+
+        pluss::Series active_mask =
+            has_validity_mask()
+                ? validity_mask()->to(platform)
+                : pluss::Series::ones({size()}, pluss::codem::ScalarType::Bool).to(platform);
+
+        const auto trunc = raw_f64.floor();
+        const auto is_integral = raw_f64.eq(trunc);
+        const auto in_yyyymmdd_range =
+            raw_f64.ge(10000101.0).logical_and(raw_f64.le(99991231.0));
+        const auto looks_like_yyyymmdd =
+            is_integral.logical_and(in_yyyymmdd_range);
+        const auto non_date_valid_rows =
+            active_mask.logical_and(looks_like_yyyymmdd.logical_not());
+
+        if (!non_date_valid_rows.any().item<bool>()) {
+          const auto year = trunc.div(10000.0).floor().to(pluss::codem::ScalarType::Int64);
+          const auto yyyymm = trunc.div(100.0).floor();
+          const auto month =
+              yyyymm.sub(year.to(pluss::codem::ScalarType::Float64).mul(100.0))
+                  .to(pluss::codem::ScalarType::Int64);
+          const auto day =
+              trunc.sub(yyyymm.mul(100.0)).to(pluss::codem::ScalarType::Int64);
+
+          auto out = pluss::Timeline::from_ymd(year, month, day);
+          const auto invalid_calendar_rows =
+              active_mask.logical_and(out.isvalid().logical_not());
+          PLUSS_CHECK(
+              !invalid_calendar_rows.any().item<bool>(),
+              "Thread::cast(Timeline): invalid YYYYMMDD value(s)");
+          return Thread(std::move(out), validity_mask());
+        }
+
         std::vector<std::int64_t> ticks(static_cast<std::size_t>(size()), 0);
         for (std::int64_t i = 0; i < size(); ++i) {
           double v = 0.0;

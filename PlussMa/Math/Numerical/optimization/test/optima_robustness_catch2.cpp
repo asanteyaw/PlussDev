@@ -188,3 +188,35 @@ TEST_CASE("Internal protocol remains numerically stable on ill-conditioned scale
   REQUIRE(std::abs(x0) <= 1e-2);
   REQUIRE(x1 == Approx(1.0).margin(1e-2));
 }
+
+TEST_CASE("Internal protocol does not enter feasibility mode when already feasible", "[optima][internal_protocol][regression]") {
+  ConstrainedProblem problem;
+  problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
+    const Trace x = p.at("x");
+    return sum(square(x));
+  };
+  problem.bounds.lower = pluss::optim::pack_series(pluss::make_series(std::vector<double>{-1.0, -1.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.upper = pluss::optim::pack_series(pluss::make_series(std::vector<double>{1.0, 1.0}, {2}).to(ScalarType::Float64));
+
+  const Series initial = pluss::make_series(std::vector<double>{0.2, -0.3}, {2}).to(ScalarType::Float64);
+  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  options.internal_protocol.max_iterations = 20;
+  options.internal_protocol.max_line_search_iterations = 0; // force no accepted LS step
+  options.internal_protocol.enable_restoration = false;     // force direct fallback path
+  options.internal_protocol.enable_feasibility_phase = true;
+  options.internal_protocol.constraint_tolerance = 1e-8;
+
+  const auto result = optima(problem, initial, options);
+  const bool mentions_feasibility =
+      result.message.find("feasibility phase") != std::string::npos ||
+      result.output.detail_message.find("feasibility phase") != std::string::npos;
+
+  INFO("exit=" << static_cast<int>(result.exit_flag)
+               << " violation=" << result.evaluation.max_constraint_violation
+               << " message=" << result.message
+               << " detail=" << result.output.detail_message);
+
+  REQUIRE(result.evaluation.status == EvalStatus::Ok);
+  REQUIRE(result.evaluation.max_constraint_violation <= options.internal_protocol.constraint_tolerance);
+  REQUIRE_FALSE(mentions_feasibility);
+}

@@ -17,6 +17,7 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
 using pluss::table::Thread;
+using pluss::table::ThreadKind;
 using pluss::table::TsAlignMode;
 using pluss::table::TsReindexFill;
 
@@ -96,12 +97,33 @@ void test_dataframe_ts_resample_reindex_blocks() {
   expect(cal.has_feature("date_weekday"), "calendar should emit date_weekday");
 }
 
+void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
+  DataFrame df({
+      {"Date", Thread(pluss::make_series(std::vector<std::int64_t>{19900102, 19900103, 20000229}))},
+  });
+
+  const auto out = df.cast_timeline({"Date"});
+  const auto date_thread = out.features("Date");
+  expect(date_thread.kind() == ThreadKind::Timeline, "cast_timeline should materialize Timeline for YYYYMMDD integers");
+
+  const auto tl = date_thread.as_timeline();
+  const auto years = Thread(tl.year()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto months = Thread(tl.month()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto days = Thread(tl.day()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+
+  expect(years.size() == 3, "timeline year vector size mismatch");
+  expect(years[0] == 1990 && months[0] == 1 && days[0] == 2, "first YYYYMMDD conversion mismatch");
+  expect(years[1] == 1990 && months[1] == 1 && days[1] == 3, "second YYYYMMDD conversion mismatch");
+  expect(years[2] == 2000 && months[2] == 2 && days[2] == 29, "leap-day YYYYMMDD conversion mismatch");
+}
+
 } // namespace
 
 int main() {
   try {
     test_dataframe_ts_one_feature_and_set();
     test_dataframe_ts_resample_reindex_blocks();
+    test_dataframe_cast_timeline_from_yyyymmdd_ints();
     std::cout << "table_ts_accessor_tests passed\n";
     return 0;
   } catch (const std::exception& e) {

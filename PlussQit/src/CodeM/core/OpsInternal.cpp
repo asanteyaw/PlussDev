@@ -5198,27 +5198,18 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
       out,
       *this,
       "select",
-      [input = *this, dim, index](const Series& out_sens) {
+      [input = *this, selected = out, dim, index](const Series& out_sens) {
         Series sens = out_sens;
+        if (!same_shape_(sens, selected)) {
+          sens = reduce_broadcasted_sensitivity_to_like_(sens, selected, "select");
+        }
         if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
         if (sens.platform() != input.platform()) sens = sens.to(input.platform());
-        const Series expanded = sens.unsqueeze(dim);
-        if (input.platform() == Platform::MPS) {
-          Series base_cpu = Series::zeros(input.sizes(), input.scalar_type()).to(Platform::CPU);
-          Series idx_cpu = Series::full(expanded.sizes(), static_cast<double>(index), ScalarType::Int64)
-                               .to(Platform::CPU)
-                               .contiguous();
-          Series expanded_cpu = expanded;
-          if (expanded_cpu.platform() != Platform::CPU) {
-            expanded_cpu = expanded_cpu.to(Platform::CPU, input.scalar_type());
-          }
-          expanded_cpu = expanded_cpu.contiguous();
-          const Series grad_cpu = ops_internal::scatter_add(base_cpu, dim, idx_cpu, expanded_cpu);
-          return grad_cpu.to(input.platform(), input.scalar_type()).contiguous();
-        }
-        const Series idx = Series::full(expanded.sizes(), static_cast<double>(index), ScalarType::Int64).to(input.platform());
-        const Series base = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
-        return ops_internal::scatter_add(base, dim, idx, expanded);
+        Series grad = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
+        Series grad_sel = grad.select(dim, index);
+        SeriesIterator it = SeriesIterator::unary(sens, grad_sel);
+        it.copy_out_from_in(sens, grad_sel);
+        return grad;
       });
   return out;
 }

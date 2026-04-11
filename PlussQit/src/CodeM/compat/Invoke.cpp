@@ -5285,7 +5285,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     validate_series_arg_platforms(op, self, args);
     check_inplace_autograd_write_(op, self);
     const bool guard_version_bump =
-        inplace_op_mutates_value_(op) && op != "copy_";
+        inplace_op_mutates_value_(op) &&
+        op != "copy_" &&
+        op != "put_" &&
+        op != "index_put_";
     InplaceVersionGuard version_guard(self, guard_version_bump);
 
   if (args.empty()) {
