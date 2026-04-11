@@ -19,6 +19,7 @@
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -297,11 +298,15 @@ private:
 
 template <class Fn>
 std::pair<Series, ParameterPack<Series>> value_and_grad(Fn&& fn, const ParameterPack<Series>& params) {
+  pluss::subsp::math::diff::DerivativePolicy policy{};
+  policy.warn_on_disconnected = false;
+  policy.keep_graph = false;
   auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
       [&](const std::vector<Trace>& xs) -> Trace {
         return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
       },
-      params.values());
+      params.values(),
+      policy);
   return {value, params.template rebind<Series>(std::move(grads))};
 }
 
@@ -318,8 +323,8 @@ inline ParameterPack<Series> unflatten_values(const ParameterLayout& layout, con
 
   std::int64_t offset = 0;
   for (const auto& block : layout.blocks()) {
-    const Series idx = pluss::arange(offset, offset + block.numel, 1, ScalarType::Int64).to(flat.platform());
-    Series piece = flat.index({idx}).contiguous();
+    Series piece = flat.slice(0, offset, offset + block.numel, 1);
+    if (!piece.is_contiguous()) piece = piece.contiguous();
     if (block.sizes.empty()) {
       piece = piece.reshape({});
     } else {
@@ -392,11 +397,15 @@ ParameterPack<Series> grad(Fn&& fn, const ParameterPack<Series>& params) {
 
 template <class Fn>
 std::pair<Series, ParameterPack<Series>> jacrev(Fn&& fn, const ParameterPack<Series>& params) {
+  pluss::subsp::math::diff::DerivativePolicy policy{};
+  policy.warn_on_disconnected = false;
+  policy.keep_graph = false;
   auto [value, jacobians] = pluss::subsp::math::diff::jacrev(
       [&](const std::vector<Trace>& xs) -> Trace {
         return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
       },
-      params.values());
+      params.values(),
+      policy);
   return {value, params.template rebind<Series>(std::move(jacobians))};
 }
 
@@ -1085,6 +1094,8 @@ struct InternalProtocolOptions {
   std::int64_t nonmonotone_window{5};
   bool enable_watchdog{true};
   double watchdog_relaxation{1e-12};
+  double flat_objective_tolerance{1e-8};
+  std::int64_t max_flat_objective_iterations{3};
   bool enable_soc_correction{true};
   std::int64_t soc_correction_attempts{1};
   std::int64_t lbfgs_memory{10};
@@ -1132,6 +1143,7 @@ struct InternalProtocolState {
   std::int64_t stalled_iterations{0};
   std::int64_t feasibility_switch_violations{0};
   std::int64_t nonfinite_evaluations{0};
+  std::int64_t flat_objective_iterations{0};
   double trust_region_radius{1.0};
   std::vector<double> barrier_history{};
 };
@@ -1227,7 +1239,10 @@ inline OptimaOptions internal_protocol() {
   options.internal_protocol.barrier_decay = 0.2;
   options.internal_protocol.constraint_tolerance = 1e-8;
   options.internal_protocol.optimality_tolerance = 1e-6;
-  options.internal_protocol.max_line_search_iterations = 16;
+  options.internal_protocol.max_line_search_iterations = 12;
+  options.internal_protocol.max_restoration_iterations = 4;
+  options.internal_protocol.max_restoration_line_search_iterations = 10;
+  options.internal_protocol.max_stalled_iterations = 4;
   options.internal_protocol.enable_feasibility_phase = true;
   options.internal_protocol.enable_nonfinite_recovery = true;
   options.internal_protocol.enable_watchdog = true;
@@ -1244,8 +1259,10 @@ inline OptimaOptions internal_protocol() {
 inline OptimaOptions robust_internal_protocol() {
   OptimaOptions options = internal_protocol();
   options.internal_protocol.max_iterations = 160;
-  options.internal_protocol.max_restoration_iterations = 10;
-  options.internal_protocol.max_restoration_line_search_iterations = 20;
+  options.internal_protocol.max_line_search_iterations = 16;
+  options.internal_protocol.max_restoration_iterations = 6;
+  options.internal_protocol.max_restoration_line_search_iterations = 12;
+  options.internal_protocol.max_stalled_iterations = 5;
   options.internal_protocol.enable_restoration = true;
   options.internal_protocol.enable_feasibility_phase = true;
   options.internal_protocol.enable_nonfinite_recovery = true;
@@ -1396,6 +1413,26 @@ struct FlatConstraintRow {
   bool equality{false};
   ConstraintSource source{ConstraintSource::LinearEquality};
   std::int64_t index{0};
+};
+
+struct ConstraintScaleKey {
+  bool equality{false};
+  ConstraintSource source{ConstraintSource::LinearEquality};
+  std::int64_t index{0};
+
+  bool operator==(const ConstraintScaleKey& other) const noexcept {
+    return equality == other.equality && source == other.source && index == other.index;
+  }
+};
+
+struct ConstraintScaleKeyHash {
+  std::size_t operator()(const ConstraintScaleKey& key) const noexcept {
+    std::size_t h = std::hash<std::int64_t>{}(key.index);
+    h ^= (static_cast<std::size_t>(key.equality) + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2));
+    h ^= (static_cast<std::size_t>(static_cast<std::uint8_t>(key.source)) +
+          0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2));
+    return h;
+  }
 };
 
 struct FlatConstraintSystem {
@@ -2021,9 +2058,16 @@ inline double constraint_violation_value_(const ProblemEvaluation& evaluation,
 inline Series inequality_residual_series_(const FlatConstraintSystem& system,
                                           pluss::codem::Platform platform);
 
+inline Series equality_residual_series_(const FlatConstraintSystem& system,
+                                        pluss::codem::Platform platform);
+
 inline Series stack_inequality_jacobian_(const FlatConstraintSystem& system,
                                          std::int64_t ncols,
                                          pluss::codem::Platform platform);
+
+inline Series stack_equality_jacobian_(const FlatConstraintSystem& system,
+                                       std::int64_t ncols,
+                                       pluss::codem::Platform platform);
 
 inline Series solve_spd_system_cg_series_(const Series& matrix,
                                           const Series& rhs,
@@ -2081,7 +2125,7 @@ inline Series slice_series_(const Series& x, std::int64_t offset, std::int64_t l
   if (!x.defined() || x.numel() == 0 || length <= 0) {
     return pluss::empty({0}, ScalarType::Float64).to(x.defined() ? x.platform() : pluss::codem::Platform::CPU);
   }
-  return x.index({pluss::arange(offset, offset + length, 1, ScalarType::Int64).to(x.platform())}).reshape({length});
+  return x.reshape({x.numel()}).slice(0, offset, offset + length, 1).reshape({length});
 }
 
 inline Series row_scale_series_(const std::vector<FlatConstraintRow>& rows,
@@ -2159,21 +2203,28 @@ inline Series active_constraint_row_scales_(const FlatConstraintSystem& system,
   const Series ineq = normalization.inequality_row_scale.defined()
       ? normalization.inequality_row_scale.to(ScalarType::Float64).reshape({normalization.inequality_row_scale.numel()})
       : Series();
+  std::unordered_map<ConstraintScaleKey, double, ConstraintScaleKeyHash> row_scale_lookup;
+  row_scale_lookup.reserve(system.equalities.size() + system.inequalities.size());
+  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+    double w = 1.0;
+    if (eq.defined() && static_cast<std::int64_t>(i) < eq.numel()) {
+      w = eq.select(0, static_cast<std::int64_t>(i)).item<double>();
+    }
+    row_scale_lookup[ConstraintScaleKey{true, system.equalities[i].source, system.equalities[i].index}] = w;
+  }
+  for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
+    double w = 1.0;
+    if (ineq.defined() && static_cast<std::int64_t>(i) < ineq.numel()) {
+      w = ineq.select(0, static_cast<std::int64_t>(i)).item<double>();
+    }
+    row_scale_lookup[ConstraintScaleKey{false, system.inequalities[i].source, system.inequalities[i].index}] = w;
+  }
+
   std::vector<double> weights;
   weights.reserve(active_constraints.size());
   for (const auto& row : active_constraints) {
-    const auto& source_rows = row.equality ? system.equalities : system.inequalities;
-    const Series scale_rows = row.equality ? eq : ineq;
-    double w = 1.0;
-    for (std::size_t i = 0; i < source_rows.size(); ++i) {
-      if (source_rows[i].source == row.source && source_rows[i].index == row.index) {
-        if (scale_rows.defined() && static_cast<std::int64_t>(i) < scale_rows.numel()) {
-          w = scale_rows.select(0, static_cast<std::int64_t>(i)).item<double>();
-        }
-        break;
-      }
-    }
-    weights.push_back(w);
+    const auto it = row_scale_lookup.find(ConstraintScaleKey{row.equality, row.source, row.index});
+    weights.push_back(it == row_scale_lookup.end() ? 1.0 : it->second);
   }
   return pluss::make_series(std::move(weights), {static_cast<std::int64_t>(active_constraints.size())})
       .to(ScalarType::Float64)
@@ -2609,9 +2660,9 @@ inline FlatConstraintSystem assemble_constraint_system_(const ConstrainedProblem
   FlatConstraintSystem out;
   const std::int64_t n = params.total_numel();
   const auto platform = params.empty() ? pluss::codem::Platform::CPU : params[0].value.platform();
-
-  const Series linear_eq = evaluate_linear_eq_(problem.linear, flatten_values(params));
-  const Series linear_ineq = evaluate_linear_ineq_(problem.linear, flatten_values(params));
+  const Series flat_params = flatten_values(params);
+  const Series linear_eq = evaluate_linear_eq_(problem.linear, flat_params);
+  const Series linear_ineq = evaluate_linear_ineq_(problem.linear, flat_params);
 
   if (problem.linear.Aeq.has_value()) {
     const Series residuals = linear_eq.to(ScalarType::Float64).reshape({linear_eq.numel()});
@@ -3218,19 +3269,15 @@ inline void maybe_update_best_feasible_(SequentialQPState& state,
 }
 
 inline double inequality_margin_(const FlatConstraintSystem& system) {
-  double margin = std::numeric_limits<double>::infinity();
-  for (const auto& row : system.inequalities) {
-    margin = std::min(margin, -row.residual);
-  }
-  return std::isfinite(margin) ? margin : std::numeric_limits<double>::infinity();
+  if (system.inequalities.empty()) return std::numeric_limits<double>::infinity();
+  const Series residuals = inequality_residual_series_(system, pluss::codem::Platform::CPU);
+  return residuals.mul(-1.0).amin(0, false).item<double>();
 }
 
 inline double equality_residual_norm_(const FlatConstraintSystem& system) {
-  double sumsq = 0.0;
-  for (const auto& row : system.equalities) {
-    sumsq += row.residual * row.residual;
-  }
-  return std::sqrt(std::max(0.0, sumsq));
+  if (system.equalities.empty()) return 0.0;
+  const Series residuals = equality_residual_series_(system, pluss::codem::Platform::CPU);
+  return residuals.square().sum().sqrt().item<double>();
 }
 
 inline double barrier_value_(const ProblemEvaluation& evaluation,
@@ -3302,6 +3349,18 @@ inline Series inequality_residual_series_(const FlatConstraintSystem& system,
       .to(platform);
 }
 
+inline Series equality_residual_series_(const FlatConstraintSystem& system,
+                                        pluss::codem::Platform platform) {
+  if (system.equalities.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  std::vector<double> residuals(system.equalities.size(), 0.0);
+  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+    residuals[i] = system.equalities[i].residual;
+  }
+  return pluss::make_series(std::move(residuals), {static_cast<std::int64_t>(system.equalities.size())})
+      .to(ScalarType::Float64)
+      .to(platform);
+}
+
 inline Series inequality_dual_(const Series& slack,
                                double barrier_parameter) {
   if (!slack.defined() || slack.numel() == 0) return slack;
@@ -3359,6 +3418,39 @@ inline Series stack_inequality_jacobian_(const FlatConstraintSystem& system,
   rows.reserve(system.inequalities.size());
   for (const auto& row : system.inequalities) rows.push_back(row.jacobian.to(platform));
   return stack_rows_series_(rows, ncols, platform);
+}
+
+inline Series stack_equality_jacobian_(const FlatConstraintSystem& system,
+                                       std::int64_t ncols,
+                                       pluss::codem::Platform platform) {
+  std::vector<Series> rows;
+  rows.reserve(system.equalities.size());
+  for (const auto& row : system.equalities) rows.push_back(row.jacobian.to(platform));
+  return stack_rows_series_(rows, ncols, platform);
+}
+
+inline Series add_weighted_row_jacobians_(const Series& base,
+                                          const std::vector<FlatConstraintRow>& rows,
+                                          const Series& weights,
+                                          std::int64_t row_limit = -1) {
+  Series out = base.to(ScalarType::Float64).reshape({base.numel()});
+  if (rows.empty() || !weights.defined() || weights.numel() == 0) return out;
+  const auto platform = out.platform();
+  const Series w = weights.to(ScalarType::Float64).to(platform).reshape({weights.numel()});
+  const std::int64_t max_rows = row_limit > 0 ? row_limit : static_cast<std::int64_t>(rows.size());
+  const std::int64_t m = std::min<std::int64_t>(std::min<std::int64_t>(static_cast<std::int64_t>(rows.size()), w.numel()),
+                                                max_rows);
+  if (m <= 0) return out;
+
+  std::vector<Series> jac_rows;
+  jac_rows.reserve(static_cast<std::size_t>(m));
+  for (std::int64_t i = 0; i < m; ++i) {
+    jac_rows.push_back(rows[static_cast<std::size_t>(i)].jacobian.to(ScalarType::Float64).to(platform).reshape({out.numel()}));
+  }
+  const Series J = stack_rows_series_(jac_rows, out.numel(), platform);
+  const Series w_used = (m == w.numel()) ? w : w.slice(0, 0, m, 1).reshape({m});
+  const Series contribution = J.transpose(0, 1).matmul(w_used.reshape({m, 1})).reshape({out.numel()});
+  return out.add(contribution);
 }
 
 inline Series quadratic_rows_matvec_(const std::vector<FlatConstraintRow>& rows,
@@ -3429,19 +3521,18 @@ inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation
                                              const FlatConstraintSystem& system,
                                              const Series& inequality_dual,
                                              double equality_penalty) {
-  Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64);
-  for (const auto& row : system.equalities) {
-    grad = grad.add(row.jacobian.mul(equality_penalty * row.residual));
+  const Series flat_grad = flatten_values(evaluation.gradient).to(ScalarType::Float64);
+  Series grad = flat_grad.reshape({flat_grad.numel()});
+  const auto platform = grad.platform();
+  if (!system.equalities.empty() && equality_penalty != 0.0) {
+    const Series eq_weights = equality_residual_series_(system, platform).mul(equality_penalty);
+    grad = add_weighted_row_jacobians_(grad, system.equalities, eq_weights);
   }
-  const Series lambda = inequality_dual.defined() ? inequality_dual.to(ScalarType::Float64).reshape({inequality_dual.numel()}) : Series();
-  for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
-    const double li =
-        (lambda.defined() && static_cast<std::int64_t>(i) < lambda.numel())
-            ? lambda.select(0, static_cast<std::int64_t>(i)).item<double>()
-            : 0.0;
-    grad = grad.add(system.inequalities[i].jacobian.mul(li));
+  if (!system.inequalities.empty() && inequality_dual.defined() && inequality_dual.numel() > 0) {
+    const Series lambda = inequality_dual.to(ScalarType::Float64).to(platform).reshape({inequality_dual.numel()});
+    grad = add_weighted_row_jacobians_(grad, system.inequalities, lambda);
   }
-  return grad;
+  return grad.reshape({grad.numel()});
 }
 
 inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation,
@@ -3450,25 +3541,32 @@ inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation
                                              double equality_penalty,
                                              const OptimaNormalizationStats& normalization) {
   Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64).mul(normalization.objective_scale);
+  const auto platform = grad.platform();
   const Series eq_scales = normalization.equality_row_scale.defined()
-      ? normalization.equality_row_scale.to(ScalarType::Float64).reshape({normalization.equality_row_scale.numel()})
+      ? normalization.equality_row_scale.to(ScalarType::Float64).to(platform).reshape({normalization.equality_row_scale.numel()})
       : Series();
-  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
-    const double scale =
-        (eq_scales.defined() && static_cast<std::int64_t>(i) < eq_scales.numel())
-            ? eq_scales.select(0, static_cast<std::int64_t>(i)).item<double>()
-            : 1.0;
-    grad = grad.add(system.equalities[i].jacobian.mul(equality_penalty * scale * scale * system.equalities[i].residual));
+  if (!system.equalities.empty() && equality_penalty != 0.0) {
+    const Series eq_residual = equality_residual_series_(system, platform);
+    std::vector<double> eq_weight_host(system.equalities.size(), 0.0);
+    for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+      const double scale =
+          (eq_scales.defined() && static_cast<std::int64_t>(i) < eq_scales.numel())
+              ? eq_scales.select(0, static_cast<std::int64_t>(i)).item<double>()
+              : 1.0;
+      eq_weight_host[i] = equality_penalty * scale * scale *
+                          eq_residual.select(0, static_cast<std::int64_t>(i)).item<double>();
+    }
+    const Series eq_weights =
+        pluss::make_series(std::move(eq_weight_host), {static_cast<std::int64_t>(system.equalities.size())})
+            .to(ScalarType::Float64)
+            .to(platform);
+    grad = add_weighted_row_jacobians_(grad, system.equalities, eq_weights);
   }
-  const Series lambda = inequality_dual.defined() ? inequality_dual.to(ScalarType::Float64).reshape({inequality_dual.numel()}) : Series();
-  for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
-    const double li =
-        (lambda.defined() && static_cast<std::int64_t>(i) < lambda.numel())
-            ? lambda.select(0, static_cast<std::int64_t>(i)).item<double>()
-            : 0.0;
-    grad = grad.add(system.inequalities[i].jacobian.mul(li));
+  if (!system.inequalities.empty() && inequality_dual.defined() && inequality_dual.numel() > 0) {
+    const Series lambda = inequality_dual.to(ScalarType::Float64).to(platform).reshape({inequality_dual.numel()});
+    grad = add_weighted_row_jacobians_(grad, system.inequalities, lambda);
   }
-  return grad;
+  return grad.reshape({grad.numel()});
 }
 
 inline void update_primal_dual_metrics_(InternalProtocolState& state,
@@ -3516,17 +3614,21 @@ inline Series barrier_gradient_flat_(const ProblemEvaluation& evaluation,
                                      const FlatConstraintSystem& system,
                                      double barrier_parameter,
                                      double equality_penalty) {
-  Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64);
-  for (const auto& row : system.equalities) {
-    grad = grad.add(row.jacobian.mul(equality_penalty * row.residual));
+  const Series flat_grad = flatten_values(evaluation.gradient).to(ScalarType::Float64);
+  Series grad = flat_grad.reshape({flat_grad.numel()});
+  const auto platform = grad.platform();
+  if (!system.equalities.empty() && equality_penalty != 0.0) {
+    const Series eq_weights = equality_residual_series_(system, platform).mul(equality_penalty);
+    grad = add_weighted_row_jacobians_(grad, system.equalities, eq_weights);
   }
-  for (const auto& row : system.inequalities) {
-    if (!(row.residual < 0.0)) {
+  if (!system.inequalities.empty()) {
+    const Series ineq_residual = inequality_residual_series_(system, platform);
+    if (ineq_residual.ge(0.0).any().item<bool>()) {
       return pluss::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
-          .to(grad.platform());
+          .to(platform);
     }
-    const double coeff = -barrier_parameter / row.residual;
-    grad = grad.add(row.jacobian.mul(coeff));
+    const Series ineq_weights = ineq_residual.reciprocal().mul(-barrier_parameter);
+    grad = add_weighted_row_jacobians_(grad, system.inequalities, ineq_weights);
   }
   return grad.reshape({grad.numel()});
 }
@@ -3537,22 +3639,35 @@ inline Series barrier_gradient_flat_(const ProblemEvaluation& evaluation,
                                      double equality_penalty,
                                      const OptimaNormalizationStats& normalization) {
   Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64).mul(normalization.objective_scale);
+  const auto platform = grad.platform();
   const Series eq_scales = normalization.equality_row_scale.defined()
-      ? normalization.equality_row_scale.to(ScalarType::Float64).reshape({normalization.equality_row_scale.numel()})
+      ? normalization.equality_row_scale.to(ScalarType::Float64).to(platform).reshape({normalization.equality_row_scale.numel()})
       : Series();
-  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
-    const double scale =
-        (eq_scales.defined() && static_cast<std::int64_t>(i) < eq_scales.numel())
-            ? eq_scales.select(0, static_cast<std::int64_t>(i)).item<double>()
-            : 1.0;
-    grad = grad.add(system.equalities[i].jacobian.mul(equality_penalty * scale * scale * system.equalities[i].residual));
-  }
-  for (const auto& row : system.inequalities) {
-    if (!(row.residual < 0.0)) {
-      return pluss::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
-          .to(grad.platform());
+  if (!system.equalities.empty() && equality_penalty != 0.0) {
+    const Series eq_residual = equality_residual_series_(system, platform);
+    std::vector<double> eq_weight_host(system.equalities.size(), 0.0);
+    for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+      const double scale =
+          (eq_scales.defined() && static_cast<std::int64_t>(i) < eq_scales.numel())
+              ? eq_scales.select(0, static_cast<std::int64_t>(i)).item<double>()
+              : 1.0;
+      eq_weight_host[i] = equality_penalty * scale * scale *
+                          eq_residual.select(0, static_cast<std::int64_t>(i)).item<double>();
     }
-    grad = grad.add(row.jacobian.mul(-barrier_parameter / row.residual));
+    const Series eq_weights =
+        pluss::make_series(std::move(eq_weight_host), {static_cast<std::int64_t>(system.equalities.size())})
+            .to(ScalarType::Float64)
+            .to(platform);
+    grad = add_weighted_row_jacobians_(grad, system.equalities, eq_weights);
+  }
+  if (!system.inequalities.empty()) {
+    const Series ineq_residual = inequality_residual_series_(system, platform);
+    if (ineq_residual.ge(0.0).any().item<bool>()) {
+      return pluss::full({grad.numel()}, std::numeric_limits<double>::quiet_NaN(), ScalarType::Float64)
+          .to(platform);
+    }
+    const Series ineq_weights = ineq_residual.reciprocal().mul(-barrier_parameter);
+    grad = add_weighted_row_jacobians_(grad, system.inequalities, ineq_weights);
   }
   return grad.reshape({grad.numel()});
 }
@@ -3912,14 +4027,26 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
 inline double kkt_residual_(const Series& gradient,
                             const std::vector<FlatConstraintRow>& active_constraints,
                             const Series& multipliers) {
-  Series lag_grad = gradient.to(ScalarType::Float64);
+  Series lag_grad = gradient.to(ScalarType::Float64).reshape({gradient.numel()});
   double multiplier_violation = 0.0;
   const Series lambda = multipliers.defined() ? multipliers.to(ScalarType::Float64).reshape({multipliers.numel()}) : Series();
-  for (std::size_t i = 0; i < active_constraints.size(); ++i) {
-    const double li = series_scalar_at_or_(lambda, i, 0.0);
-    lag_grad = lag_grad.add(active_constraints[i].jacobian.mul(li));
-    if (!active_constraints[i].equality) {
-      multiplier_violation = std::max(multiplier_violation, std::max(0.0, -li));
+  if (!active_constraints.empty() && lambda.defined() && lambda.numel() > 0) {
+    const std::int64_t m = std::min<std::int64_t>(static_cast<std::int64_t>(active_constraints.size()), lambda.numel());
+    if (m > 0) {
+      const Series lambda_used = lambda.slice(0, 0, m, 1).reshape({m});
+      lag_grad = add_weighted_row_jacobians_(lag_grad, active_constraints, lambda_used, m);
+
+      std::vector<bool> ineq_mask_host(static_cast<std::size_t>(m), false);
+      for (std::int64_t i = 0; i < m; ++i) {
+        ineq_mask_host[static_cast<std::size_t>(i)] =
+            !active_constraints[static_cast<std::size_t>(i)].equality;
+      }
+      const Series ineq_mask = pluss::make_series(std::move(ineq_mask_host), {m})
+                                   .to(ScalarType::Bool)
+                                   .to(lambda_used.platform());
+      const Series zeros = pluss::zeros_like(lambda_used, ScalarType::Float64).to(lambda_used.platform());
+      const Series ineq_lambdas = ineq_mask.where(lambda_used, zeros);
+      multiplier_violation = std::max(0.0, -ineq_lambdas.amin(0, false).item<double>());
     }
   }
   return std::max(series_inf_norm_(lag_grad), multiplier_violation);
@@ -5058,6 +5185,8 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
   auto current_params = start_params;
   auto current_evaluation = start_evaluation;
   double current_value = result.objective_value;
+  const auto current_layout = current_params.layout();
+  Series current_flat = flatten_values(current_params).to(ScalarType::Float64);
   const double start_violation = start_evaluation.max_constraint_violation;
 
   for (std::int64_t iter = 0; iter < options.max_restoration_iterations; ++iter) {
@@ -5074,9 +5203,8 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
     double step_size = options.initial_step_size;
     bool accepted = false;
     for (std::int64_t ls = 0; ls < options.max_restoration_line_search_iterations; ++ls) {
-      auto trial = unflatten_values(
-          current_params.layout(),
-          flatten_values(current_params).to(ScalarType::Float64).add(direction.mul(step_size)));
+      if (step_size <= std::max(1e-12, options.step_tolerance)) break;
+      auto trial = unflatten_values(current_layout, current_flat.add(direction.mul(step_size)));
       if (options.project_bounds) trial = project_bounds_(trial, problem.bounds);
 
       auto trial_evaluation = evaluate_problem(problem, trial);
@@ -5088,6 +5216,7 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
           current_params = std::move(trial);
           current_evaluation = std::move(trial_evaluation);
           current_value = trial_value;
+          current_flat = flatten_values(current_params).to(ScalarType::Float64);
           result.last_step_size = step_size;
           ++result.iterations;
           accepted = true;
@@ -5131,6 +5260,8 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
 
   auto current_params = start_params;
   auto current_evaluation = start_evaluation;
+  const auto current_layout = current_params.layout();
+  Series current_flat = flatten_values(current_params).to(ScalarType::Float64);
   auto current_system = assemble_constraint_system_(problem, current_params, current_evaluation);
   if (inequality_margin_(current_system) <= options.initialization_margin) {
     result.message = "barrier recovery requires a strict interior starting point";
@@ -5170,9 +5301,8 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
     double step_size = max_step;
     bool accepted = false;
     for (std::int64_t ls = 0; ls < options.max_restoration_line_search_iterations; ++ls) {
-      auto trial = unflatten_values(
-          current_params.layout(),
-          flatten_values(current_params).to(ScalarType::Float64).add(direction.mul(step_size)));
+      if (step_size <= std::max(1e-12, options.step_tolerance)) break;
+      auto trial = unflatten_values(current_layout, current_flat.add(direction.mul(step_size)));
       if (options.project_bounds) trial = project_bounds_(trial, problem.bounds);
 
       auto trial_evaluation = evaluate_problem(problem, trial);
@@ -5192,6 +5322,7 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
             current_evaluation = std::move(trial_evaluation);
             current_system = std::move(trial_system);
             current_value = trial_value;
+            current_flat = flatten_values(current_params).to(ScalarType::Float64);
             result.last_step_size = step_size;
             ++result.iterations;
             accepted = true;
@@ -5342,6 +5473,8 @@ inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& probl
   auto current_params = start_params;
   auto current_evaluation = start_evaluation;
   double current_value = result.objective_value;
+  const auto current_layout = current_params.layout();
+  Series current_flat = flatten_values(current_params).to(ScalarType::Float64);
 
   for (std::int64_t iter = 0; iter < options.max_restoration_iterations; ++iter) {
     const auto grad_pack = constraint_violation_gradient_(problem, current_params, current_evaluation, normalization);
@@ -5360,9 +5493,8 @@ inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& probl
     double step_size = options.initial_step_size;
     bool accepted = false;
     for (std::int64_t ls = 0; ls < options.max_restoration_line_search_iterations; ++ls) {
-      auto trial = unflatten_values(
-          current_params.layout(),
-          flatten_values(current_params).to(ScalarType::Float64).add(direction.mul(step_size)));
+      if (step_size <= std::max(1e-12, options.step_tolerance)) break;
+      auto trial = unflatten_values(current_layout, current_flat.add(direction.mul(step_size)));
       if (options.project_bounds) trial = project_bounds_(trial, problem.bounds);
 
       auto trial_evaluation = evaluate_problem(problem, trial);
@@ -5374,6 +5506,7 @@ inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& probl
           current_params = std::move(trial);
           current_evaluation = std::move(trial_evaluation);
           current_value = trial_value;
+          current_flat = flatten_values(current_params).to(ScalarType::Float64);
           result.last_step_size = step_size;
           ++result.iterations;
           accepted = true;
@@ -5736,11 +5869,13 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
       return next;
     }
   }
+  const auto state_layout = state.params.layout();
+  const Series state_flat64 = flatten_values(state.params).to(ScalarType::Float64);
 
   for (std::int64_t ls_iter = 0; ls_iter < options.max_line_search_iterations; ++ls_iter) {
-    const Series trial_flat =
-        flatten_values(state.params).to(ScalarType::Float64).add(step_direction.mul(step_size));
-    auto trial = unflatten_values(state.params.layout(), trial_flat);
+    if (step_size <= std::max(1e-12, options.step_tolerance)) break;
+    const Series trial_flat = state_flat64.add(step_direction.mul(step_size));
+    auto trial = unflatten_values(state_layout, trial_flat);
     if (options.project_bounds) trial = detail::project_bounds_(trial, problem.bounds);
 
     auto trial_eval = evaluate_problem(problem, trial);
@@ -5770,7 +5905,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
         next.multipliers = std::move(multipliers);
         next.message = "step accepted";
 
-        const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
+        const Series x_prev = state_flat64;
         const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
         const Series s = x_next.sub(x_prev);
         if (state.current_penalty == next.current_penalty) {
@@ -5860,8 +5995,8 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
                                     options.fraction_to_boundary)));
           if (!(corrected_step > 0.0) || !std::isfinite(corrected_step)) break;
           auto corrected_trial = unflatten_values(
-              state.params.layout(),
-              flatten_values(state.params).to(ScalarType::Float64).add(corrected_direction.mul(corrected_step)));
+              state_layout,
+              state_flat64.add(corrected_direction.mul(corrected_step)));
           if (options.project_bounds) corrected_trial = detail::project_bounds_(corrected_trial, problem.bounds);
 
           auto corrected_eval = evaluate_problem(problem, corrected_trial);
@@ -5894,7 +6029,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
           next.multipliers = std::move(multipliers);
           next.message = "second-order correction accepted";
 
-          const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
+          const Series x_prev = state_flat64;
           const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
           const Series s = x_next.sub(x_prev);
           if (state.current_penalty == next.current_penalty) {
@@ -6160,11 +6295,13 @@ inline WorkingSetState working_set_step(const ConstrainedProblem& problem,
       return next;
     }
   }
+  const auto state_layout = state.params.layout();
+  const Series state_flat64 = flatten_values(state.params).to(ScalarType::Float64);
 
   for (std::int64_t ls_iter = 0; ls_iter < options.max_line_search_iterations; ++ls_iter) {
-    const Series trial_flat =
-        flatten_values(state.params).to(ScalarType::Float64).add(step_direction.mul(step_size));
-    auto trial = unflatten_values(state.params.layout(), trial_flat);
+    if (step_size <= std::max(1e-12, options.step_tolerance)) break;
+    const Series trial_flat = state_flat64.add(step_direction.mul(step_size));
+    auto trial = unflatten_values(state_layout, trial_flat);
     if (options.project_bounds) trial = detail::project_bounds_(trial, problem.bounds);
 
     auto trial_eval = evaluate_problem(problem, trial);
@@ -6197,7 +6334,7 @@ inline WorkingSetState working_set_step(const ConstrainedProblem& problem,
         detail::cleanup_working_set_multipliers_(active_constraints, options.drop_multiplier_tolerance, &next.multipliers);
         next.message = "working-set step accepted";
 
-        const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
+        const Series x_prev = state_flat64;
         const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
         const Series s = x_next.sub(x_prev);
         if (state.current_penalty == next.current_penalty) {
@@ -7051,17 +7188,20 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
   std::int64_t complementarity_rejections = 0;
   const double complementarity_baseline =
       std::max(std::max(state.complementarity_residual, state.barrier_parameter), 1e-12);
+  const auto state_layout = state.params.layout();
+  const Series state_flat64 = flatten_values(state.params).to(ScalarType::Float64);
 
   for (std::int64_t ls_iter = 0; ls_iter < options.max_line_search_iterations; ++ls_iter) {
+    if (step_size <= std::max(1e-12, options.step_tolerance)) break;
     auto trial = unflatten_values(
-        state.params.layout(),
-        flatten_values(state.params).to(ScalarType::Float64).add(step_direction.mul(step_size)));
+        state_layout,
+        state_flat64.add(step_direction.mul(step_size)));
     if (options.project_bounds) trial = detail::project_bounds_(trial, problem.bounds);
 
     auto trial_eval = evaluate_problem(problem, trial);
     next.function_evaluations += 1;
     if (trial_eval.status == EvalStatus::Ok) {
-      const auto trial_system = detail::assemble_constraint_system_(problem, trial, trial_eval);
+      auto trial_system = detail::assemble_constraint_system_(problem, trial, trial_eval);
       const double trial_barrier = detail::barrier_value_(
           trial_eval,
           trial_system,
@@ -7116,7 +7256,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
         next.barrier_value = trial_barrier;
         next.message = "step accepted";
 
-        const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
+        const Series x_prev = state_flat64;
         const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
         const Series s = x_next.sub(x_prev);
         const double x_scale = std::max(1.0, detail::series_inf_norm_(x_prev));
@@ -7127,7 +7267,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
             std::max(1e-12, 1e-10 * std::max(1.0, std::abs(base_value)));
         const bool no_measurable_progress =
             step_magnitude <= step_tolerance && barrier_decrease <= barrier_decrease_tolerance;
-        const auto next_system = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
+        auto next_system = std::move(trial_system);
         next.inequality_slack = detail::inequality_slack_(
             next_system,
             next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
@@ -7211,6 +7351,17 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
              weak_feas_progress)
                 ? (state.feasibility_switch_violations + 1)
                 : 0;
+        const double obj_curr = state.evaluation.value.item<double>();
+        const double obj_next = next.evaluation.value.item<double>();
+        const double obj_scale =
+            std::max({1.0, std::abs(obj_curr), std::abs(obj_next)});
+        const double flat_tol =
+            std::max(options.flat_objective_tolerance, options.value_progress_tolerance * obj_scale);
+        const bool flat_objective =
+            std::abs(obj_next - obj_curr) <= flat_tol &&
+            next.evaluation.max_constraint_violation <= options.constraint_tolerance;
+        next.flat_objective_iterations =
+            flat_objective ? (state.flat_objective_iterations + 1) : 0;
 
         if (detail::should_reduce_barrier_(next, options)) {
           detail::reduce_barrier_state_(next, next_system, options);
@@ -7234,6 +7385,13 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
         if (detail::feasible_objective_target_met_(next.evaluation, options.objective_limit)) {
           next.converged = true;
           next.message = "objective limit reached at a feasible point";
+        }
+        if (!next.converged &&
+            next.flat_objective_iterations >= options.max_flat_objective_iterations &&
+            next.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+            next.barrier_parameter <= std::max(1e-3, 100.0 * options.minimum_barrier_parameter)) {
+          next.converged = true;
+          next.message = "step tolerance reached at a feasible point";
         }
         const bool weak_barrier_progress =
             std::abs(barrier_decrease) <= std::max(options.value_progress_tolerance, barrier_decrease_tolerance);
@@ -7348,6 +7506,18 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
             next.barrier_parameter,
             options.equality_penalty,
             state.normalization);
+        {
+          const double obj_curr = state.evaluation.value.item<double>();
+          const double obj_next = next.evaluation.value.item<double>();
+          const double obj_scale = std::max({1.0, std::abs(obj_curr), std::abs(obj_next)});
+          const double flat_tol =
+              std::max(options.flat_objective_tolerance, options.value_progress_tolerance * obj_scale);
+          const bool flat_objective =
+              std::abs(obj_next - obj_curr) <= flat_tol &&
+              next.evaluation.max_constraint_violation <= options.constraint_tolerance;
+          next.flat_objective_iterations =
+              flat_objective ? (state.flat_objective_iterations + 1) : 0;
+        }
         if (detail::should_reduce_barrier_(next, options)) {
           detail::reduce_barrier_state_(next, soc_system, options);
         }
@@ -7426,6 +7596,18 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           next.barrier_parameter,
           options.equality_penalty,
           state.normalization);
+      {
+        const double obj_curr = state.evaluation.value.item<double>();
+        const double obj_next = next.evaluation.value.item<double>();
+        const double obj_scale = std::max({1.0, std::abs(obj_curr), std::abs(obj_next)});
+        const double flat_tol =
+            std::max(options.flat_objective_tolerance, options.value_progress_tolerance * obj_scale);
+        const bool flat_objective =
+            std::abs(obj_next - obj_curr) <= flat_tol &&
+            next.evaluation.max_constraint_violation <= options.constraint_tolerance;
+        next.flat_objective_iterations =
+            flat_objective ? (state.flat_objective_iterations + 1) : 0;
+      }
       next.trust_region_radius = detail::update_trust_radius_(
           state.trust_region_radius,
           std::max(recovery.last_step_size, 0.0),
@@ -7480,6 +7662,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
         double fallback_step = std::min(std::max(max_step, 0.0), std::max(options.initial_step_size, 1e-6));
         bool fallback_accepted = false;
         for (std::int64_t ls = 0; ls < options.max_restoration_line_search_iterations; ++ls) {
+          if (fallback_step <= std::max(1e-12, options.step_tolerance)) break;
           auto trial = unflatten_values(
               state.params.layout(),
               x_prev.add(direction.mul(fallback_step)));
@@ -7523,6 +7706,18 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
                   next.barrier_parameter,
                   options.equality_penalty,
                   state.normalization);
+              {
+                const double obj_curr = state.evaluation.value.item<double>();
+                const double obj_next = next.evaluation.value.item<double>();
+                const double obj_scale = std::max({1.0, std::abs(obj_curr), std::abs(obj_next)});
+                const double flat_tol =
+                    std::max(options.flat_objective_tolerance, options.value_progress_tolerance * obj_scale);
+                const bool flat_objective =
+                    std::abs(obj_next - obj_curr) <= flat_tol &&
+                    next.evaluation.max_constraint_violation <= options.constraint_tolerance;
+                next.flat_objective_iterations =
+                    flat_objective ? (state.flat_objective_iterations + 1) : 0;
+              }
               next.trust_region_radius = detail::update_trust_radius_(
                   state.trust_region_radius,
                   std::max(fallback_step, 0.0),
@@ -7592,8 +7787,10 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
               options.trust_region_min_radius,
               std::max(options.trust_region_min_radius, options.trust_region_max_radius)));
       next.stalled_iterations = state.stalled_iterations + 1;
+      next.flat_objective_iterations = state.flat_objective_iterations + 1;
       next.message = "recovery stalled at feasible point; reduced barrier and retrying";
       if (next.stalled_iterations >= options.max_stalled_iterations ||
+          next.flat_objective_iterations >= options.max_flat_objective_iterations ||
           next.iteration >= options.max_iterations) {
         next.converged = true;
         next.message = "step tolerance reached at a feasible point";
