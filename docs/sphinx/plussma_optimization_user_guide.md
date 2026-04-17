@@ -431,58 +431,183 @@ pmo::adam_step_inplace(params, grads, state, opt);
 
 ### API Signature
 
-- `minimax_state_like(params: vector<Series>, constraints: MinimaxConstraints = {}) -> MinimaxState`
-- `minimax_step_inplace(params: vector<Series>&, sensitivities: vector<Series>, state: MinimaxState&, options: MinimaxOptions = {}, constraints: MinimaxConstraints = {}) -> void`
-- `minimax_step_inplace(params: vector<Series>&, state: MinimaxState&, options: MinimaxOptions = {}, constraints: MinimaxConstraints = {}) -> void`
-- `minimax_step(params: vector<Series>, sensitivities: vector<Series>, state: MinimaxState&, options: MinimaxOptions = {}, constraints: MinimaxConstraints = {}) -> vector<Series>`
-- `minimax_step(params: vector<Series>, state: MinimaxState&, options: MinimaxOptions = {}, constraints: MinimaxConstraints = {}) -> vector<Series>`
+- `minimax(function<Trace(const vector<Trace>&)>, vector<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `minimax(function<Trace(const ParameterPack<Trace>&)>, ParameterPack<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `minimax(function<Series(const vector<Series>&)>, vector<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `minimax(function<Series(const ParameterPack<Series>&)>, ParameterPack<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `minimax(function<Trace(const Trace&)>, Series, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `minimax(function<Series(const Series&)>, Series, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `minimax(function<Trace(const Series&)>, Series, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
 
 ### Notes
 
-Minimax supports constraint-aware updates with primal and dual components.
+Minimax is now exposed as a one-shot solver (optima-style API) with internal primal-dual updates.
 
 ### Inputs
 
-- params
-- sensitivities (or `.sensitivity()` with autodiff-traced params)
+- autodiff objective callback
+- initial parameters
 - optional equality/inequality/bounds constraints
 
 ### Output
 
-- updated primal params and dual multipliers in state
+- solved parameters, diagnostics, and final dual state in `MinimaxResult`
 
 ### Options
 
-`MinimaxOptions`:
+`MinimaxSolveOptions`:
 
-- `adam`
-- `dual_learning_rate`
-- `equality_penalty`
-- `inequality_penalty`
-- `project_bounds`
-- `enable_constraint_autodiff`
-- `nan_recovery_attempts`
-- `nan_recovery_shrink`
+- `max_iterations`, `max_no_progress_iterations`
+- `objective_tolerance`, `gradient_tolerance`, `step_tolerance`, `constraint_tolerance`
+- `step` (`MinimaxOptions`: Adam config + primal-dual controls)
+- `stop_on_nonfinite_objective`
+- optional `progress_hook`
 
 ### Examples
 
+Single-block objective with inline lambda (`Trace` callback):
+
 ```cpp
-pmo::MinimaxOptions opt{};
-opt.adam.learning_rate = 0.04;
-opt.dual_learning_rate = 0.08;
-opt.enable_constraint_autodiff = true;
+pmo::MinimaxSolveOptions opt{};
+opt.max_iterations = 120;
+opt.step.adam.learning_rate = 0.04;
+opt.step.dual_learning_rate = 0.08;
+opt.step.enable_constraint_autodiff = true;
 
 pmo::MinimaxConstraints c{};
 c.equalities = [](const std::vector<Series>& p) { return std::vector<Series>{p[0].sum() - 3.0}; };
 c.inequalities = [](const std::vector<Series>& p) { return std::vector<Series>{p[0].square().sum() - 10.0}; };
 
-auto state = pmo::minimax_state_like(params, c);
-pmo::minimax_step_inplace(params, grads, state, opt, c);
+const auto out = pmo::minimax(
+  [&](const pmo::Trace& x) -> pmo::Trace {
+    return pmo::sum(pmo::square(x - target)) * 0.5;
+  },
+  x0,
+  opt,
+  c);
 ```
+
+Pre-defined function (no lambda):
+
+```cpp
+pmo::Trace my_objective(const pmo::Trace& x) {
+  return pmo::sum(pmo::square(x)) * 0.5;
+}
+
+const auto out = pmo::minimax(my_objective, x0, opt, c);
+```
+
+Series-returning objective:
+
+```cpp
+pluss::Series my_series_objective(const pluss::Series& x) {
+  return x.square().sum() * 0.5;
+}
+
+const auto out = pmo::minimax(my_series_objective, x0, opt, c);
+```
+
+Trace-from-Series objective:
+
+```cpp
+pluss::optim::Trace my_trace_from_series(const pluss::Series& x) {
+  return pluss::optim::trace(x.square().sum() * 0.5);
+}
+
+const auto out = pmo::minimax(my_trace_from_series, x0, opt, c);
+```
+
+Multi-block objective with `std::vector<Series>`:
+
+```cpp
+std::vector<pluss::Series> x0_blocks{
+  pluss::make_series(std::vector<double>{0.2, -0.3}, {2}),
+  pluss::make_series(std::vector<double>{0.1}, {1})
+};
+
+auto out = pmo::minimax(
+  [](const std::vector<pluss::Series>& p) -> pluss::Series {
+    return p[0].square().sum() + p[1].square().sum();
+  },
+  x0_blocks,
+  opt,
+  c);
+```
+
+Named multi-block objective with `ParameterPack`:
+
+```cpp
+const auto init = pmo::pack_vector({
+  {"weights", pluss::make_series(std::vector<double>{0.2, -0.3}, {2})},
+  {"bias",    pluss::make_series(std::vector<double>{0.1}, {1})}
+});
+
+const auto out = pmo::minimax(
+  [](const pmo::ParameterPack<pmo::Trace>& p) -> pmo::Trace {
+    const auto w = p.at("weights");
+    const auto b = p.at("bias");
+    return pmo::sum(pmo::square(w)) + pmo::sum(pmo::square(b));
+  },
+  init,
+  opt,
+  c);
+```
+
+User-defined functor:
+
+```cpp
+struct MyObjective {
+  pluss::Series target;
+  pmo::Trace operator()(const pmo::Trace& x) const {
+    return pmo::sum(pmo::square(x - target));
+  }
+};
+
+MyObjective obj{target};
+const auto out = pmo::minimax(obj, x0, opt, c);
+```
+
+Progress hook (print per iteration and optionally stop):
+
+```cpp
+pmo::MinimaxSolveOptions hook_opt = opt;
+hook_opt.progress_hook = [](const pmo::MinimaxProgressSnapshot& s) {
+  std::cout << "iter=" << s.iteration
+            << " f=" << s.objective
+            << " ginf=" << s.gradient_inf_norm
+            << " cinf=" << s.constraint_violation << "\n";
+  return true; // return false to stop early
+};
+```
+
+Constraints with autodiff residual callbacks:
+
+```cpp
+pmo::MinimaxConstraints c{};
+c.equalities = [](const std::vector<pluss::Series>& p) {
+  return std::vector<pluss::Series>{p[0].sum() - 1.0};
+};
+c.equalities_trace = [](const std::vector<pmo::Trace>& p) {
+  return std::vector<pmo::Trace>{pmo::sum(p[0]) - 1.0};
+};
+```
+
+Result extraction:
+
+```cpp
+const auto fit = pmo::minimax(my_series_objective, x0, opt, c);
+pluss::Series theta_hat = fit.params[0];
+```
+
+### PlussMa vs PlussAI Minimax
+
+- `pluss::optim::minimax(...)` (PlussMa): one-shot solve API; returns `MinimaxResult`; best for numerical optimization workflows similar to `optima(...)`.
+- `pluss::nn::optim::Nexima` (PlussAI): optimizer object for training loops; you construct optimizer on parameter pointers and call `step()` repeatedly (or `step(closure)`).
+- PlussMa minimax owns the outer iteration loop internally; PlussAI minimax integrates into your explicit loop and module/optimizer state flow.
 
 ### Expected output
 
-- primal parameters update while multipliers track equality/inequality residuals.
+- objective decreases while constraints are enforced and solver returns a final result object.
 
 ## Derivative-Free Optimization (Unified)
 

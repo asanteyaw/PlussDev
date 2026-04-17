@@ -2670,7 +2670,7 @@ public:
     const bool use_parameter_bounds = options.parameter_lower_bounds.defined() || options.parameter_upper_bounds.defined();
     optim::MinimaxConstraints minimax_constraints{};
     optim::MinimaxOptions minimax_options{};
-    optim::MinimaxState minimax_state{};
+    optim::MinimaxSolveOptions minimax_solve_options{};
 
     if (use_parameter_bounds) {
       StatusOr<Series> lb_or =
@@ -2691,7 +2691,13 @@ public:
       minimax_options.adam = adam_opt;
       minimax_options.project_bounds = true;
       minimax_options.enable_constraint_autodiff = false;
-      minimax_state = optim::minimax_state_like(std::vector<Series>{weights}, minimax_constraints);
+      minimax_solve_options.step = minimax_options;
+      minimax_solve_options.max_iterations = 1;
+      minimax_solve_options.max_no_progress_iterations = 0;
+      minimax_solve_options.objective_tolerance = 0.0;
+      minimax_solve_options.gradient_tolerance = 0.0;
+      minimax_solve_options.step_tolerance = 0.0;
+      minimax_solve_options.constraint_tolerance = 0.0;
     }
 
     if (options_.objective == LinearObjective::Logistic && !use_parameter_bounds) {
@@ -2719,17 +2725,24 @@ public:
           return Status::numerical_failure("LinearClassifier::learn encountered non-finite gradient.");
         }
 
-        std::vector<Series> params{weights};
         try {
           if (use_parameter_bounds) {
-            optim::minimax_step_inplace(params, std::vector<Series>{grad}, minimax_state, minimax_options, minimax_constraints);
+            const auto fit = optim::minimax(
+                [&](const optim::Trace& w) -> optim::Trace {
+                  return optim::sum(w * optim::fixed(grad));
+                },
+                weights,
+                minimax_solve_options,
+                minimax_constraints);
+            weights = fit.params.front();
           } else {
+            std::vector<Series> params{weights};
             optim::adam_step_inplace(params, std::vector<Series>{grad}, adam, adam_opt);
+            weights = params[0];
           }
         } catch (const std::exception& ex) {
           return Status::numerical_failure(std::string("LinearClassifier::learn optimizer failure: ") + ex.what());
         }
-        weights = params[0];
 
         const double loss = options_.objective == LinearObjective::Logistic
                                 ? logistic_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda)

@@ -7,4 +7,4 @@
 #include "adamw.h"
 #include "nadam.h"
 #include "rmsprop.h"
-#include "minimax.h"
+#include "nexima.h"

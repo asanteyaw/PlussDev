@@ -35,16 +35,18 @@ Config f64_cfg_(Config cfg) {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
 }
 
-Config i64_cfg_(Config cfg) {
-  return Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-}
-
 Config cfg_like_(const Series& x) {
   return Config{}.with_dtype(x.scalar_type()).with_platform(x.platform());
 }
 
-Series row_index_(std::int64_t i, Config cfg) {
-  return pluss::make_series(std::vector<std::int64_t>{i}, {1}, i64_cfg_(cfg));
+Series append_antithetic_(const Series& draws, std::int64_t cols) {
+  const std::int64_t base_cols = draws.size(1);
+  if (base_cols >= cols) {
+    return draws;
+  }
+  const std::int64_t need = cols - base_cols;
+  const Series mirror = draws.mul(-1.0).slice(1, 0, need);
+  return draws.unite({mirror}, 1);
 }
 
 std::uint64_t effective_seed_(const SimOptions& options, std::uint64_t compat_seed, std::uint64_t bump = 0U) {
@@ -89,14 +91,7 @@ Series draw_normals_(std::int64_t rows,
   if (options.method == RandMethod::Pseudo) {
     Series z = pluss::randn({rows, base_cols}, out_cfg, effective_seed_(options, compat_seed, bump));
     if (options.antithetic) {
-      const Series mirror = z.mul(-1.0);
-      const std::int64_t need = cols - base_cols;
-      if (need > 0) {
-        const Series idx = Series::arange(0, need, 1, ScalarType::Int64).to(i64_cfg_(out_cfg).platform, i64_cfg_(out_cfg).dtype);
-        z = z.unite({mirror.index_select(1, idx)}, 1);
-      } else {
-        z = z.unite({mirror}, 1);
-      }
+      z = append_antithetic_(z, cols);
     }
     return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
   }
@@ -116,14 +111,7 @@ Series draw_normals_(std::int64_t rows,
       o.seed_set = true;
       Series z = pluss::subsp::stats::rng::sobol({rows, base_cols}, o, out_cfg);
       if (options.antithetic) {
-        const Series mirror = z.mul(-1.0);
-        const std::int64_t need = cols - base_cols;
-        if (need > 0) {
-          const Series idx = Series::arange(0, need, 1, ScalarType::Int64).to(i64_cfg_(out_cfg).platform, i64_cfg_(out_cfg).dtype);
-          z = z.unite({mirror.index_select(1, idx)}, 1);
-        } else {
-          z = z.unite({mirror}, 1);
-        }
+        z = append_antithetic_(z, cols);
       }
       return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
     }
@@ -137,14 +125,7 @@ Series draw_normals_(std::int64_t rows,
       o.seed_set = true;
       Series z = pluss::subsp::stats::rng::halton({rows, base_cols}, o, out_cfg);
       if (options.antithetic) {
-        const Series mirror = z.mul(-1.0);
-        const std::int64_t need = cols - base_cols;
-        if (need > 0) {
-          const Series idx = Series::arange(0, need, 1, ScalarType::Int64).to(i64_cfg_(out_cfg).platform, i64_cfg_(out_cfg).dtype);
-          z = z.unite({mirror.index_select(1, idx)}, 1);
-        } else {
-          z = z.unite({mirror}, 1);
-        }
+        z = append_antithetic_(z, cols);
       }
       return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
     }
@@ -158,14 +139,7 @@ Series draw_normals_(std::int64_t rows,
       o.seed_set = true;
       Series z = pluss::subsp::stats::rng::torus({rows, base_cols}, o, out_cfg);
       if (options.antithetic) {
-        const Series mirror = z.mul(-1.0);
-        const std::int64_t need = cols - base_cols;
-        if (need > 0) {
-          const Series idx = Series::arange(0, need, 1, ScalarType::Int64).to(i64_cfg_(out_cfg).platform, i64_cfg_(out_cfg).dtype);
-          z = z.unite({mirror.index_select(1, idx)}, 1);
-        } else {
-          z = z.unite({mirror}, 1);
-        }
+        z = append_antithetic_(z, cols);
       }
       return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
     }
@@ -176,14 +150,7 @@ Series draw_normals_(std::int64_t rows,
   Series z = pluss::subsp::stats::rng::standard_normal(
       {rows, base_cols}, to_rng_method_(options.method), out_cfg, off);
   if (options.antithetic) {
-    const Series mirror = z.mul(-1.0);
-    const std::int64_t need = cols - base_cols;
-    if (need > 0) {
-      const Series idx = Series::arange(0, need, 1, ScalarType::Int64).to(i64_cfg_(out_cfg).platform, i64_cfg_(out_cfg).dtype);
-      z = z.unite({mirror.index_select(1, idx)}, 1);
-    } else {
-      z = z.unite({mirror}, 1);
-    }
+    z = append_antithetic_(z, cols);
   }
   return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
 }
@@ -593,6 +560,11 @@ Series heston_transition_step_(const Series& vt,
   return pluss::make_series(out, {1, paths}, cpu_cfg).to(cfg.platform, cfg.dtype);
 }
 
+Series stack_rows_(const std::vector<Series>& rows, const char* op) {
+  PLUSS_CHECK(!rows.empty(), std::string("subsp::math::finance::volatility::") + op + ": row history is empty");
+  return pluss::pile(pluss::sign_list(rows), 0);
+}
+
 } // namespace
 
 StochVolPaths gbm_paths(std::int64_t steps,
@@ -649,9 +621,6 @@ StochVolPaths heston_paths(std::int64_t steps,
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
 
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series variance = pluss::full({n, paths}, std::max(params.v0, params.variance_floor), out_cfg);
-
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x1021ULL);
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x2303ULL);
   const bool use_qe = (options.scheme == SimScheme::QuadExp);
@@ -662,19 +631,23 @@ StochVolPaths heston_paths(std::int64_t steps,
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
-  for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(vt.reshape({paths}));
 
-    const Series vt = variance.index_select(0, idx_cur).reshape({1, paths});
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_s = z_spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_v = z_var.index_select(0, idx_cur).reshape({1, paths});
+  for (std::int64_t t = 0; t < steps; ++t) {
+    const Series eps_s = z_spot.select(0, t).reshape({1, paths});
+    const Series eps_v = z_var.select(0, t).reshape({1, paths});
     const Series v_next = (options.scheme == SimScheme::Transition)
                               ? heston_transition_step_(vt, eps_v, dt, params, transition_seed, t)
                               : heston_variance_step_(vt,
                                                      eps_v,
-                                                     u_qe.index_select(0, idx_cur).reshape({1, paths}),
+                                                     u_qe.select(0, t).reshape({1, paths}),
                                                      dt,
                                                      params,
                                                      options.scheme);
@@ -685,10 +658,14 @@ StochVolPaths heston_paths(std::int64_t steps,
                                .add(v_bar.mul(dt).sqrt().mul(eps_s));
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
 
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, v_next.reshape({paths}), false);
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
+    vt = v_next;
+    st = s_next;
+    variance_rows.push_back(vt.reshape({paths}));
+    spot_rows.push_back(st.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "heston_paths");
+  const Series variance = stack_rows_(variance_rows, "heston_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::heston_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,
@@ -725,9 +702,6 @@ StochVolPaths bates_paths(std::int64_t steps,
   const std::int64_t n = steps + 1;
   const HestonParams h_params = to_heston_(params);
 
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series variance = pluss::full({n, paths}, std::max(params.v0, params.variance_floor), out_cfg);
-
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xA129ULL);
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xB273ULL);
   const bool use_qe = (options.scheme == SimScheme::QuadExp);
@@ -741,22 +715,26 @@ StochVolPaths bates_paths(std::int64_t steps,
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
   const double p_jump = 1.0 - std::exp(-params.jump_intensity * dt);
 
-  for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(vt.reshape({paths}));
 
-    const Series vt = variance.index_select(0, idx_cur).reshape({1, paths});
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_s = z_spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_v = z_var.index_select(0, idx_cur).reshape({1, paths});
-    const Series zj = z_jump.index_select(0, idx_cur).reshape({1, paths});
-    const Series uj = u_jump.index_select(0, idx_cur).reshape({1, paths});
+  for (std::int64_t t = 0; t < steps; ++t) {
+    const Series eps_s = z_spot.select(0, t).reshape({1, paths});
+    const Series eps_v = z_var.select(0, t).reshape({1, paths});
+    const Series zj = z_jump.select(0, t).reshape({1, paths});
+    const Series uj = u_jump.select(0, t).reshape({1, paths});
 
     const Series v_next = (options.scheme == SimScheme::Transition)
                               ? heston_transition_step_(vt, eps_v, dt, h_params, transition_seed, t)
                               : heston_variance_step_(vt,
                                                      eps_v,
-                                                     u_qe.index_select(0, idx_cur).reshape({1, paths}),
+                                                     u_qe.select(0, t).reshape({1, paths}),
                                                      dt,
                                                      h_params,
                                                      options.scheme);
@@ -771,10 +749,14 @@ StochVolPaths bates_paths(std::int64_t steps,
                                .add(jump_term);
     const Series s_next = st.mul(log_inc.exp());
 
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, v_next.reshape({paths}), false);
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
+    vt = v_next;
+    st = s_next;
+    variance_rows.push_back(vt.reshape({paths}));
+    spot_rows.push_back(st.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "bates_paths");
+  const Series variance = stack_rows_(variance_rows, "bates_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::bates_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,
@@ -810,24 +792,25 @@ StochVolPaths sv_paths(std::int64_t steps,
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
 
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series logvar = pluss::full({n, paths}, params.logvar0, out_cfg);
-  Series variance = pluss::full({n, paths}, std::exp(params.logvar0), out_cfg).clamp_min(params.variance_floor);
-
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x7811ULL);
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x9119ULL);
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
-  for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series h_t = pluss::full({1, paths}, params.logvar0, out_cfg);
+  Series vt = pluss::full({1, paths}, std::exp(params.logvar0), out_cfg).clamp_min(params.variance_floor);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(vt.reshape({paths}));
 
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series h_t = logvar.index_select(0, idx_cur).reshape({1, paths});
+  for (std::int64_t t = 0; t < steps; ++t) {
     const Series v_t = h_t.exp().clamp_min(params.variance_floor);
-    const Series eps_s = z_spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_h = z_var.index_select(0, idx_cur).reshape({1, paths});
+    const Series eps_s = z_spot.select(0, t).reshape({1, paths});
+    const Series eps_h = z_var.select(0, t).reshape({1, paths});
 
     const Series h_next = h_t.mul(params.phi)
                               .add(params.logvar_mean * (1.0 - params.phi))
@@ -837,11 +820,15 @@ StochVolPaths sv_paths(std::int64_t steps,
     const Series log_inc = v_t.mul(-0.5 * dt).add(params.mu * dt).add(v_t.mul(dt).sqrt().mul(eps_s));
     const Series s_next = st.mul(log_inc.exp());
 
-    logvar = pluss::index_put(logvar, std::vector<Series>{idx_next}, h_next.reshape({paths}), false);
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, v_next.reshape({paths}), false);
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
+    h_t = h_next;
+    vt = v_next;
+    st = s_next;
+    variance_rows.push_back(vt.reshape({paths}));
+    spot_rows.push_back(st.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "sv_paths");
+  const Series variance = stack_rows_(variance_rows, "sv_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::sv_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,
@@ -878,21 +865,24 @@ StochVolPaths heston_nandi_paths(std::int64_t steps,
   const std::int64_t n = steps + 1;
   const double h0 = heston_nandi_initial_variance_(params, "heston_nandi_paths");
 
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series variance = pluss::full({n, paths}, h0, out_cfg);
   const Series z_raw = draw_normals_(steps, paths, options, out_cfg, seed, 0xF311ULL);
   const Series z_spot = z_raw.isfinite()
                             .where(z_raw, pluss::zeros({steps, paths}, out_cfg))
                             .clamp_min(-10.0)
                             .clamp_max(10.0);
 
-  for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series ht = pluss::full({1, paths}, h0, out_cfg);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(ht.reshape({paths}));
 
-    const Series ht = variance.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series zt = z_spot.index_select(0, idx_cur).reshape({1, paths});
+  for (std::int64_t t = 0; t < steps; ++t) {
+    ht = ht.clamp_min(params.variance_floor);
+    const Series zt = z_spot.select(0, t).reshape({1, paths});
 
     const Series sig_t = ht.sqrt();
     const Series log_inc = ht.mul(params.lambda).add(params.r * dt).add(sig_t.mul(zt)).clamp_min(-30.0).clamp_max(30.0);
@@ -908,10 +898,14 @@ StochVolPaths heston_nandi_paths(std::int64_t steps,
                               .clamp_min(params.variance_floor)
                               .clamp_max(1.0e6);
 
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, h_safe.reshape({paths}), false);
+    st = s_next;
+    ht = h_safe;
+    spot_rows.push_back(st.reshape({paths}));
+    variance_rows.push_back(ht.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "heston_nandi_paths");
+  const Series variance = stack_rows_(variance_rows, "heston_nandi_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::heston_nandi_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,
@@ -946,9 +940,6 @@ StochVolPaths sabr_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-
-  Series forward = pluss::full({n, paths}, forward0, out_cfg);
-  Series alpha = pluss::full({n, paths}, std::max(params.alpha0, params.alpha_floor), out_cfg);
   const Series z1 = draw_normals_(steps, paths, options, out_cfg, seed, 0xAA11ULL);
   const Series z2 = draw_normals_(steps, paths, options, out_cfg, seed, 0xBB31ULL);
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
@@ -956,14 +947,21 @@ StochVolPaths sabr_paths(std::int64_t steps,
   const double sqdt = std::sqrt(dt);
   const bool positive_forward = params.beta > 0.0;
 
+  Series ft_state = pluss::full({1, paths}, forward0, out_cfg);
+  Series at_state = pluss::full({1, paths}, std::max(params.alpha0, params.alpha_floor), out_cfg);
+  std::vector<Series> forward_rows;
+  std::vector<Series> alpha_rows;
+  forward_rows.reserve(static_cast<std::size_t>(n));
+  alpha_rows.reserve(static_cast<std::size_t>(n));
+  forward_rows.push_back(ft_state.reshape({paths}));
+  alpha_rows.push_back(at_state.reshape({paths}));
+
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series ft_raw = forward.index_select(0, idx_cur).reshape({1, paths});
+    const Series ft_raw = ft_state;
     const Series ft = positive_forward ? ft_raw.clamp_min(params.alpha_floor) : ft_raw;
-    const Series at = alpha.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.alpha_floor);
-    const Series eps_f = z1.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_a = z_alpha.index_select(0, idx_cur).reshape({1, paths});
+    const Series at = at_state.clamp_min(params.alpha_floor);
+    const Series eps_f = z1.select(0, t).reshape({1, paths});
+    const Series eps_a = z_alpha.select(0, t).reshape({1, paths});
 
     // Exact lognormal step for d alpha_t = nu * alpha_t * dW_t.
     const Series alpha_log_inc = eps_a.mul(params.nu * sqdt).add(-0.5 * params.nu * params.nu * dt).clamp_min(-30.0).clamp_max(30.0);
@@ -989,10 +987,14 @@ StochVolPaths sabr_paths(std::int64_t steps,
                                  ? f_safe.clamp_min(params.alpha_floor).clamp_max(1.0e12)
                                  : f_safe.clamp_min(-1.0e12).clamp_max(1.0e12);
 
-    alpha = pluss::index_put(alpha, std::vector<Series>{idx_next}, a_next.reshape({paths}), false);
-    forward = pluss::index_put(forward, std::vector<Series>{idx_next}, f_bounded.reshape({paths}), false);
+    at_state = a_next;
+    ft_state = f_bounded;
+    alpha_rows.push_back(at_state.reshape({paths}));
+    forward_rows.push_back(ft_state.reshape({paths}));
   }
 
+  const Series forward = stack_rows_(forward_rows, "sabr_paths");
+  const Series alpha = stack_rows_(alpha_rows, "sabr_paths");
   PLUSS_CHECK(forward.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::sabr_paths: forward path produced non-finite values");
   PLUSS_CHECK(alpha.isfinite().all().item<double>() == 1.0,
@@ -1027,21 +1029,25 @@ StochVolPaths slv_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series variance = pluss::full({n, paths}, std::max(params.v0, params.variance_floor), out_cfg);
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xCC17ULL);
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xDD29ULL);
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(vt.reshape({paths}));
+
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series vt = variance.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series eps_s = z_spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_v = z_var.index_select(0, idx_cur).reshape({1, paths});
+    st = st.clamp_min(params.variance_floor);
+    vt = vt.clamp_min(params.variance_floor);
+    const Series eps_s = z_spot.select(0, t).reshape({1, paths});
+    const Series eps_v = z_var.select(0, t).reshape({1, paths});
 
     const Series v_next = vt.add(vt.mul(-params.kappa * dt))
                               .add(params.kappa * params.theta * dt)
@@ -1052,10 +1058,14 @@ StochVolPaths slv_paths(std::int64_t steps,
     const Series log_inc = inst_vol.square().mul(-0.5 * dt).add(params.mu * dt).add(inst_vol.mul(std::sqrt(dt)).mul(eps_s));
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor);
 
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, v_next.reshape({paths}), false);
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
+    vt = v_next;
+    st = s_next;
+    variance_rows.push_back(vt.reshape({paths}));
+    spot_rows.push_back(st.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "slv_paths");
+  const Series variance = stack_rows_(variance_rows, "slv_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::slv_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,
@@ -1093,8 +1103,6 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
   const double H = params.alpha + 0.5;
   const double sqdt = std::sqrt(dt);
 
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series variance = pluss::full({n, paths}, std::max(params.v0, params.variance_floor), out_cfg);
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xAB11ULL);
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xCD29ULL);
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
@@ -1106,24 +1114,31 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
     const double b = (k == 0) ? 0.0 : std::pow(static_cast<double>(k), H);
     kernel[static_cast<std::size_t>(k)] = a - b;
   }
-  std::vector<Series> drives(static_cast<std::size_t>(steps), pluss::zeros({1, paths}, out_cfg));
+  const Series kernel_series = pluss::make_series(kernel, {steps}, out_cfg);
+  Series drives_hist = pluss::zeros({paths, steps}, out_cfg);
+
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(vt.reshape({paths}));
 
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series vt = variance.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series eps_s = z_spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_v = z_var.index_select(0, idx_cur).reshape({1, paths});
+    st = st.clamp_min(params.variance_floor);
+    vt = vt.clamp_min(params.variance_floor);
+    const Series eps_s = z_spot.select(0, t).reshape({1, paths});
+    const Series eps_v = z_var.select(0, t).reshape({1, paths});
 
     const Series drift = pluss::full({1, paths}, params.kappa * params.theta * dt, out_cfg).sub(vt.mul(params.kappa * dt));
     const Series diff = vt.sqrt().mul(params.sigma * sqdt).mul(eps_v);
-    drives[static_cast<std::size_t>(t)] = drift.add(diff);
-
-    Series frac_acc = pluss::zeros({1, paths}, out_cfg);
-    for (std::int64_t k = 0; k <= t; ++k) {
-      frac_acc = frac_acc.add(drives[static_cast<std::size_t>(k)].mul(kernel[static_cast<std::size_t>(t - k)]));
-    }
+    const Series drive_t = drift.add(diff).reshape({paths});
+    drives_hist.index_put_({pluss::Slicing::SliceAll(), t}, drive_t);
+    const Series drives_prefix = drives_hist.slice(1, 0, t + 1);
+    const Series k_rev = kernel_series.slice(0, 0, t + 1).flip(0).reshape({1, t + 1});
+    const Series frac_acc = drives_prefix.mul(k_rev).sum(1, false).reshape({1, paths});
 
     const Series v_next =
         pluss::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg).add(frac_acc).clamp_min(params.variance_floor);
@@ -1131,10 +1146,14 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
     const Series log_inc = v_bar.mul(-0.5 * dt).add(params.mu * dt).add(v_bar.mul(dt).sqrt().mul(eps_s));
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
 
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, v_next.reshape({paths}), false);
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
+    vt = v_next;
+    st = s_next;
+    variance_rows.push_back(vt.reshape({paths}));
+    spot_rows.push_back(st.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "rough_heston_paths");
+  const Series variance = stack_rows_(variance_rows, "rough_heston_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::rough_heston_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,
@@ -1172,8 +1191,6 @@ StochVolPaths rough_bergomi_paths(std::int64_t steps,
   const double sqdt = std::sqrt(dt);
   const double rough_scale = std::sqrt(std::max(1e-12, 2.0 * H));
 
-  Series spot = pluss::full({n, paths}, spot0, out_cfg);
-  Series variance = pluss::full({n, paths}, std::max(params.xi, params.variance_floor), out_cfg);
   const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xD519ULL);
   const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xF731ULL);
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
@@ -1185,24 +1202,31 @@ StochVolPaths rough_bergomi_paths(std::int64_t steps,
     const double b = (k == 0) ? 0.0 : std::pow(static_cast<double>(k), H);
     kernel[static_cast<std::size_t>(k)] = a - b;
   }
-  std::vector<Series> dWv(static_cast<std::size_t>(steps), pluss::zeros({1, paths}, out_cfg));
+  const Series kernel_series = pluss::make_series(kernel, {steps}, out_cfg);
+  Series dWv_hist = pluss::zeros({paths, steps}, out_cfg);
+
+  Series st = pluss::full({1, paths}, spot0, out_cfg);
+  Series vt = pluss::full({1, paths}, std::max(params.xi, params.variance_floor), out_cfg);
+  std::vector<Series> spot_rows;
+  std::vector<Series> variance_rows;
+  spot_rows.reserve(static_cast<std::size_t>(n));
+  variance_rows.reserve(static_cast<std::size_t>(n));
+  spot_rows.push_back(st.reshape({paths}));
+  variance_rows.push_back(vt.reshape({paths}));
 
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series st = spot.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series vt = variance.index_select(0, idx_cur).reshape({1, paths}).clamp_min(params.variance_floor);
-    const Series eps_s = z_spot.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps_v = z_var.index_select(0, idx_cur).reshape({1, paths});
-    dWv[static_cast<std::size_t>(t)] = eps_v.mul(sqdt);
+    st = st.clamp_min(params.variance_floor);
+    vt = vt.clamp_min(params.variance_floor);
+    const Series eps_s = z_spot.select(0, t).reshape({1, paths});
+    const Series eps_v = z_var.select(0, t).reshape({1, paths});
+    dWv_hist.index_put_({pluss::Slicing::SliceAll(), t}, eps_v.mul(sqdt).reshape({paths}));
 
     const Series log_inc = vt.mul(-0.5 * dt).add(params.mu * dt).add(vt.mul(dt).sqrt().mul(eps_s));
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
 
-    Series y_next = pluss::zeros({1, paths}, out_cfg);
-    for (std::int64_t k = 0; k <= t; ++k) {
-      y_next = y_next.add(dWv[static_cast<std::size_t>(k)].mul(kernel[static_cast<std::size_t>(t - k)]));
-    }
+    const Series dW_prefix = dWv_hist.slice(1, 0, t + 1);
+    const Series k_rev = kernel_series.slice(0, 0, t + 1).flip(0).reshape({1, t + 1});
+    Series y_next = dW_prefix.mul(k_rev).sum(1, false).reshape({1, paths});
     y_next = y_next.mul(rough_scale);
 
     const double t_next = static_cast<double>(t + 1) * dt;
@@ -1214,10 +1238,14 @@ StochVolPaths rough_bergomi_paths(std::int64_t steps,
                               .clamp_min(params.variance_floor)
                               .clamp_max(1.0e6);
 
-    spot = pluss::index_put(spot, std::vector<Series>{idx_next}, s_next.reshape({paths}), false);
-    variance = pluss::index_put(variance, std::vector<Series>{idx_next}, v_next.reshape({paths}), false);
+    st = s_next;
+    vt = v_next;
+    spot_rows.push_back(st.reshape({paths}));
+    variance_rows.push_back(vt.reshape({paths}));
   }
 
+  const Series spot = stack_rows_(spot_rows, "rough_bergomi_paths");
+  const Series variance = stack_rows_(variance_rows, "rough_bergomi_paths");
   PLUSS_CHECK(spot.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::volatility::rough_bergomi_paths: spot path produced non-finite values");
   PLUSS_CHECK(variance.isfinite().all().item<double>() == 1.0,

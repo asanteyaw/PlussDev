@@ -433,54 +433,132 @@ for (int i = 0; i < 60; ++i) {
 
 ### API Signature
 
-- `minimax_state_like(...)`
-- `minimax_step_inplace(...)`
+- `minimax(...) -> MinimaxResult` (one-shot solver API in `pluss::optim`)
 
 ### Notes
 
-Use for constrained updates with explicit dual multipliers.
+Use one-shot constrained minimization with internal primal-dual updates.
 
 ### Inputs
 
-- primal params
-- sensitivities
+- objective callback
+- initial params
 - `MinimaxConstraints`
 
 ### Output
 
-- updated params and dual variables
+- solved params and final state/diagnostics
 
 ### Options
 
-- `dual_learning_rate`
-- `equality_penalty`
-- `inequality_penalty`
-- `nan_recovery_*`
+- `MinimaxSolveOptions` convergence knobs
+- `MinimaxSolveOptions.step` primal-dual knobs
 
 ### Examples
 
+Single-block Trace objective:
+
 ```cpp
-pmo::MinimaxOptions opt{};
-opt.adam.learning_rate = 0.04;
-opt.dual_learning_rate = 0.08;
-opt.enable_constraint_autodiff = true;
+pmo::MinimaxSolveOptions opt{};
+opt.max_iterations = 100;
+opt.step.adam.learning_rate = 0.04;
+opt.step.dual_learning_rate = 0.08;
+opt.step.enable_constraint_autodiff = true;
 
 pmo::MinimaxConstraints c{};
 c.equalities = [](const std::vector<pluss::Series>& p) { return std::vector<pluss::Series>{p[0].sum() - 3.0}; };
 c.inequalities = [](const std::vector<pluss::Series>& p) { return std::vector<pluss::Series>{p[0].square().sum() - 10.0}; };
 
-std::vector<pluss::Series> params{pluss::make_series(std::vector<double>{0.5, -0.5}, {2})};
-auto st = pmo::minimax_state_like(params, c);
+const pluss::Series target = pluss::make_series(std::vector<double>{2.0, 1.0}, {2});
+const pluss::Series x0 = pluss::make_series(std::vector<double>{0.5, -0.5}, {2});
 
-for (int i = 0; i < 100; ++i) {
-  std::vector<pluss::Series> grad{params[0] - pluss::make_series(std::vector<double>{2.0, 1.0}, {2})};
-  pmo::minimax_step_inplace(params, grad, st, opt, c);
+const auto out = pmo::minimax(
+  [&](const pmo::Trace& x) -> pmo::Trace {
+    return pmo::sum(pmo::square(x - target)) * 0.5;
+  },
+  x0,
+  opt,
+  c);
+```
+
+Pre-defined function (no lambda):
+
+```cpp
+pmo::Trace obj_trace(const pmo::Trace& x) {
+  return pmo::sum(pmo::square(x)) * 0.5;
 }
+
+const auto out = pmo::minimax(obj_trace, x0, opt, c);
+```
+
+Series objective:
+
+```cpp
+pluss::Series obj_series(const pluss::Series& x) {
+  return x.square().sum() * 0.5;
+}
+
+const auto out = pmo::minimax(obj_series, x0, opt, c);
+```
+
+Multi-block vector objective:
+
+```cpp
+std::vector<pluss::Series> x0_blocks{
+  pluss::make_series(std::vector<double>{0.2, -0.3}, {2}),
+  pluss::make_series(std::vector<double>{0.1}, {1})
+};
+
+const auto out = pmo::minimax(
+  [](const std::vector<pluss::Series>& p) -> pluss::Series {
+    return p[0].square().sum() + p[1].square().sum();
+  },
+  x0_blocks,
+  opt,
+  c);
+```
+
+Named multi-block `ParameterPack` objective:
+
+```cpp
+const auto init = pmo::pack_vector({
+  {"weights", pluss::make_series(std::vector<double>{0.2, -0.3}, {2})},
+  {"bias",    pluss::make_series(std::vector<double>{0.1}, {1})}
+});
+
+const auto out = pmo::minimax(
+  [](const pmo::ParameterPack<pmo::Trace>& p) -> pmo::Trace {
+    const auto w = p.at("weights");
+    const auto b = p.at("bias");
+    return pmo::sum(pmo::square(w)) + pmo::sum(pmo::square(b));
+  },
+  init,
+  opt,
+  c);
+```
+
+Progress hook:
+
+```cpp
+pmo::MinimaxSolveOptions opt_hook = opt;
+opt_hook.progress_hook = [](const pmo::MinimaxProgressSnapshot& s) {
+  std::cout << "iter=" << s.iteration
+            << " f=" << s.objective
+            << " ginf=" << s.gradient_inf_norm
+            << " cinf=" << s.constraint_violation << "\n";
+  return true;
+};
 ```
 
 ### Expected output
 
 - objective decreases while equality/inequality residuals reduce.
+
+### PlussMa vs PlussAI Minimax
+
+- Use `pluss::optim::minimax(...)` when you want one-shot solve semantics and a `MinimaxResult` output.
+- Use `pluss::nn::optim::Nexima` when you are in a model training loop and want `optimizer.step()` control per iteration.
+- They share primal-dual ideas, but their integration model is different: solver call (PlussMa) vs optimizer object (PlussAI).
 
 ## Recipe 10: Unified DFO Auto Selection
 

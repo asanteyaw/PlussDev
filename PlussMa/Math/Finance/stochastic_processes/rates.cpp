@@ -29,14 +29,6 @@ Config f64_cfg_(Config cfg) {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
 }
 
-Config i64_cfg_(Config cfg) {
-  return Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-}
-
-Series row_index_(std::int64_t i, Config cfg) {
-  return pluss::make_series(std::vector<std::int64_t>{i}, {1}, i64_cfg_(cfg));
-}
-
 std::uint64_t effective_seed_(const SimOptions& options, std::uint64_t compat_seed, std::uint64_t bump = 0U) {
   const std::uint64_t base = (compat_seed != 0U) ? compat_seed : options.seed;
   if (base == 0U) {
@@ -292,6 +284,11 @@ HjmPaths finalize_hjm_paths_(const Series& rate,
   };
 }
 
+Series stack_rows_(const std::vector<Series>& rows, const char* op) {
+  PLUSS_CHECK(!rows.empty(), std::string("subsp::math::finance::rates::") + op + ": row history is empty");
+  return pluss::pile(pluss::sign_list(rows), 0);
+}
+
 } // namespace
 
 RatePaths vasicek_paths(std::int64_t steps,
@@ -307,8 +304,6 @@ RatePaths vasicek_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-
-  Series rate = pluss::full({n, paths}, params.r0, out_cfg);
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x1619ULL);
 
   const double exp_kdt = std::exp(-params.kappa * dt);
@@ -316,11 +311,13 @@ RatePaths vasicek_paths(std::int64_t steps,
   const double var_scale = (params.sigma * params.sigma) * (1.0 - std::exp(-2.0 * params.kappa * dt)) /
                            std::max(2.0 * params.kappa, kEps);
 
+  Series rt = pluss::full({1, paths}, params.r0, out_cfg);
+  std::vector<Series> rate_rows;
+  rate_rows.reserve(static_cast<std::size_t>(n));
+  rate_rows.push_back(rt.reshape({paths}));
+
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series rt = rate.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps = z.index_select(0, idx_cur).reshape({1, paths});
+    const Series eps = z.select(0, t).reshape({1, paths});
 
     Series r_next;
     if (options.scheme == Scheme::Transition) {
@@ -333,9 +330,11 @@ RatePaths vasicek_paths(std::int64_t steps,
                    .add(eps.mul(params.sigma * std::sqrt(dt)));
     }
 
-    rate = pluss::index_put(rate, std::vector<Series>{idx_next}, r_next.reshape({paths}), false);
+    rt = r_next;
+    rate_rows.push_back(rt.reshape({paths}));
   }
 
+  const Series rate = stack_rows_(rate_rows, "vasicek_paths");
   PLUSS_CHECK(rate.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::rates::vasicek_paths: rate path produced non-finite values");
 
@@ -366,16 +365,16 @@ RatePaths cir_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-
-  Series rate = pluss::full({n, paths}, std::max(params.r0, params.rate_floor), out_cfg);
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x2713ULL);
   const std::uint64_t transition_seed = effective_seed_(options, seed, 0x3521ULL);
 
+  Series rt = pluss::full({1, paths}, std::max(params.r0, params.rate_floor), out_cfg);
+  std::vector<Series> rate_rows;
+  rate_rows.reserve(static_cast<std::size_t>(n));
+  rate_rows.push_back(rt.reshape({paths}));
+
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series rt = rate.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps = z.index_select(0, idx_cur).reshape({1, paths});
+    const Series eps = z.select(0, t).reshape({1, paths});
 
     Series r_next;
     if (options.scheme == Scheme::Transition) {
@@ -396,9 +395,11 @@ RatePaths cir_paths(std::int64_t steps,
                    .clamp_min(params.rate_floor);
     }
 
-    rate = pluss::index_put(rate, std::vector<Series>{idx_next}, r_next.reshape({paths}), false);
+    rt = r_next;
+    rate_rows.push_back(rt.reshape({paths}));
   }
 
+  const Series rate = stack_rows_(rate_rows, "cir_paths");
   PLUSS_CHECK(rate.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::rates::cir_paths: rate path produced non-finite values");
 
@@ -429,18 +430,19 @@ RatePaths hull_white_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-  Series rate = pluss::full({n, paths}, params.r0, out_cfg);
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x4131ULL);
 
   const double exp_kdt = std::exp(-params.kappa * dt);
   const double var_scale = (params.sigma * params.sigma) * (1.0 - std::exp(-2.0 * params.kappa * dt)) /
                            std::max(2.0 * params.kappa, kEps);
 
+  Series rt = pluss::full({1, paths}, params.r0, out_cfg);
+  std::vector<Series> rate_rows;
+  rate_rows.reserve(static_cast<std::size_t>(n));
+  rate_rows.push_back(rt.reshape({paths}));
+
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series rt = rate.index_select(0, idx_cur).reshape({1, paths});
-    const Series eps = z.index_select(0, idx_cur).reshape({1, paths});
+    const Series eps = z.select(0, t).reshape({1, paths});
     const double time_t = static_cast<double>(t) * dt;
     const double theta_t = params.theta0 + params.theta_slope * time_t;
 
@@ -454,9 +456,11 @@ RatePaths hull_white_paths(std::int64_t steps,
                    .add(theta_t * dt)
                    .add(eps.mul(params.sigma * std::sqrt(dt)));
     }
-    rate = pluss::index_put(rate, std::vector<Series>{idx_next}, r_next.reshape({paths}), false);
+    rt = r_next;
+    rate_rows.push_back(rt.reshape({paths}));
   }
 
+  const Series rate = stack_rows_(rate_rows, "hull_white_paths");
   PLUSS_CHECK(rate.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::rates::hull_white_paths: rate path produced non-finite values");
   return finalize_rate_paths_(rate, z, options, out_cfg);
@@ -489,24 +493,29 @@ HjmPaths hjm_paths(std::int64_t steps,
   const std::int64_t k = static_cast<std::int64_t>(params.tenors.size());
   const std::vector<double> alpha = hjm_alpha_(params.tenors, params.vol);
 
-  Series rate = pluss::full({n, paths}, params.r0, out_cfg);
-  Series forward = pluss::full({n, paths, k}, params.r0, out_cfg);
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x5719ULL);
 
   Series f_state = pluss::full({paths, k}, params.r0, out_cfg);
   const Series alpha_row = pluss::make_series(alpha, {1, k}, out_cfg).mul(dt);
   const Series vol_row = pluss::make_series(params.vol, {1, k}, out_cfg).mul(std::sqrt(dt));
 
+  std::vector<Series> forward_rows;
+  std::vector<Series> rate_rows;
+  forward_rows.reserve(static_cast<std::size_t>(n));
+  rate_rows.reserve(static_cast<std::size_t>(n));
+  forward_rows.push_back(f_state);
+  rate_rows.push_back(f_state.select(1, 0).reshape({paths}));
+
   for (std::int64_t t = 0; t < steps; ++t) {
-    const Series idx_cur = row_index_(t, out_cfg);
-    const Series idx_next = row_index_(t + 1, out_cfg);
-    const Series eps = z.index_select(0, idx_cur).reshape({paths, 1});
+    const Series eps = z.select(0, t).reshape({paths, 1});
     f_state = f_state.add(alpha_row).add(eps.mul(vol_row));
 
-    forward = pluss::index_put(forward, std::vector<Series>{idx_next}, f_state, false);
-    rate = pluss::index_put(rate, std::vector<Series>{idx_next}, f_state.select(1, 0).reshape({paths}), false);
+    forward_rows.push_back(f_state);
+    rate_rows.push_back(f_state.select(1, 0).reshape({paths}));
   }
 
+  const Series forward = stack_rows_(forward_rows, "hjm_paths");
+  const Series rate = stack_rows_(rate_rows, "hjm_paths");
   PLUSS_CHECK(rate.isfinite().all().item<double>() == 1.0,
               "subsp::math::finance::rates::hjm_paths: rate path produced non-finite values");
   PLUSS_CHECK(forward.isfinite().all().item<double>() == 1.0,

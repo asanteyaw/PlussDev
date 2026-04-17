@@ -1089,15 +1089,15 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     }
   }
 
-  stage = "minimax explicit";
+  stage = "nexima explicit";
   Series minimax_param = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
   const Series minimax_target = pluss::make_series(std::vector<float>{3.0, 3.0}, {2}, cfg);
-  pluss::nn::optim::MinimaxOptions minimax_opt{};
+  pluss::nn::optim::NeximaOptions minimax_opt{};
   minimax_opt.learning_rate = 0.05;
   minimax_opt.dual_learning_rate = 0.1;
   minimax_opt.inequality_penalty = 10.0;
 
-  pluss::nn::optim::MinimaxConstraints minimax_constraints{};
+  pluss::nn::optim::NeximaConstraints minimax_constraints{};
   minimax_constraints.lower_bounds = {pluss::make_series(std::vector<float>{0.0, 0.0}, {2}, cfg)};
   minimax_constraints.inequalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum().sub(4.0)};
@@ -1106,124 +1106,124 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(p[0]) - 4.0};
   };
 
-  pluss::nn::optim::Minimax minimax(std::vector<Series*>{&minimax_param}, minimax_opt, minimax_constraints);
+  pluss::nn::optim::Nexima nexima({&minimax_param}, minimax_opt, minimax_constraints);
   for (int i = 0; i < 120; ++i) {
-    minimax.step(std::vector<Series>{minimax_param.sub(minimax_target)});
+    nexima.step(std::vector<Series>{minimax_param.sub(minimax_target)});
   }
   const auto minimax_v = vec_f64(minimax_param);
   if (!(minimax_v[0] >= -1e-5 && minimax_v[1] >= -1e-5 && minimax_v[0] + minimax_v[1] <= 4.05)) {
-    if (err) *err << "Minimax explicit-gradient constrained step mismatch\n";
+    if (err) *err << "Nexima explicit-gradient constrained step mismatch\n";
     return false;
   }
 
-  stage = "minimax tape";
+  stage = "nexima tape";
   Series minimax_tape_param = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
-  pluss::nn::optim::Minimax minimax_tape(std::vector<Series*>{&minimax_tape_param}, minimax_opt, minimax_constraints);
+  pluss::nn::optim::Nexima nexima_tape({&minimax_tape_param}, minimax_opt, minimax_constraints);
   for (int i = 0; i < 120; ++i) {
     auto tx = pluss::subsp::math::diff::trace(minimax_tape_param, true);
     const Series loss = tx.value().sub(minimax_target).square().sum().mul(0.5);
     tx.clear_sensitivity();
     loss.reverse();
-    minimax_tape.step();
+    nexima_tape.step();
   }
   const auto minimax_tape_v = vec_f64(minimax_tape_param);
   if (!(minimax_tape_v[0] >= -1e-5 && minimax_tape_v[1] >= -1e-5 &&
         minimax_tape_v[0] + minimax_tape_v[1] <= 4.05)) {
-    if (err) *err << "Minimax tape-gradient constrained step mismatch\n";
+    if (err) *err << "Nexima tape-gradient constrained step mismatch\n";
     return false;
   }
 
-  stage = "minimax methods";
-  for (const auto method : {pluss::nn::optim::MinimaxPrimalMethod::Adam,
-                            pluss::nn::optim::MinimaxPrimalMethod::AdamW,
-                            pluss::nn::optim::MinimaxPrimalMethod::SGD,
-                            pluss::nn::optim::MinimaxPrimalMethod::RMSprop}) {
+  stage = "nexima methods";
+  for (const auto method : {pluss::nn::optim::NeximaPrimalMethod::Adam,
+                            pluss::nn::optim::NeximaPrimalMethod::AdamW,
+                            pluss::nn::optim::NeximaPrimalMethod::SGD,
+                            pluss::nn::optim::NeximaPrimalMethod::RMSprop}) {
     Series method_param = pluss::make_series(std::vector<float>{0.5, -0.5}, {2}, cfg);
-    pluss::nn::optim::MinimaxOptions method_opt = minimax_opt;
+    pluss::nn::optim::NeximaOptions method_opt = minimax_opt;
     method_opt.primal_method = method;
     method_opt.learning_rate = 0.03;
     method_opt.momentum = 0.8;
-    pluss::nn::optim::Minimax method_optim(std::vector<Series*>{&method_param}, method_opt, minimax_constraints);
+    pluss::nn::optim::Nexima method_optim({&method_param}, method_opt, minimax_constraints);
     for (int i = 0; i < 60; ++i) {
       method_optim.step(std::vector<Series>{method_param.sub(minimax_target)});
     }
     const auto pv = vec_f64(method_param);
     if (!(std::isfinite(pv[0]) && std::isfinite(pv[1]) && pv[0] >= -1e-5 && pv[1] >= -1e-5)) {
-      if (err) *err << "Minimax primal-method switch produced non-finite or infeasible values\n";
+      if (err) *err << "Nexima primal-method switch produced non-finite or infeasible values\n";
       return false;
     }
   }
 
-  stage = "minimax groups";
+  stage = "nexima groups";
   Series group_a = pluss::make_series(1.0, cfg);
   Series group_b = pluss::make_series(1.0, cfg);
-  pluss::nn::optim::MinimaxOptions gopt_fast = minimax_opt;
-  pluss::nn::optim::MinimaxOptions gopt_slow = minimax_opt;
+  pluss::nn::optim::NeximaOptions gopt_fast = minimax_opt;
+  pluss::nn::optim::NeximaOptions gopt_slow = minimax_opt;
   gopt_fast.learning_rate = 0.10;
   gopt_slow.learning_rate = 0.01;
-  gopt_fast.primal_method = pluss::nn::optim::MinimaxPrimalMethod::Adam;
-  gopt_slow.primal_method = pluss::nn::optim::MinimaxPrimalMethod::Adam;
-  pluss::nn::optim::Minimax group_minimax(
-      std::vector<pluss::nn::optim::MinimaxGroup>{
-          pluss::nn::optim::MinimaxGroup{std::vector<Series*>{&group_a}, gopt_fast},
-          pluss::nn::optim::MinimaxGroup{std::vector<Series*>{&group_b}, gopt_slow},
+  gopt_fast.primal_method = pluss::nn::optim::NeximaPrimalMethod::Adam;
+  gopt_slow.primal_method = pluss::nn::optim::NeximaPrimalMethod::Adam;
+  pluss::nn::optim::Nexima group_nexima(
+      {
+          pluss::nn::optim::NeximaGroup{{&group_a}, gopt_fast},
+          pluss::nn::optim::NeximaGroup{{&group_b}, gopt_slow},
       },
       {});
-  group_minimax.step(std::vector<Series>{pluss::make_series(1.0, cfg), pluss::make_series(1.0, cfg)});
+  group_nexima.step(std::vector<Series>{pluss::make_series(1.0, cfg), pluss::make_series(1.0, cfg)});
   if (!(std::abs(scalar_f64(group_a) - 1.0) > std::abs(scalar_f64(group_b) - 1.0))) {
-    if (err) *err << "Minimax parameter-group learning-rate behavior mismatch\n";
+    if (err) *err << "Nexima parameter-group learning-rate behavior mismatch\n";
     return false;
   }
 
-  stage = "minimax schedule";
+  stage = "nexima schedule";
   Series scheduled_param = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
-  pluss::nn::optim::MinimaxOptions scheduled_opt = minimax_opt;
-  scheduled_opt.primal_method = pluss::nn::optim::MinimaxPrimalMethod::AdamW;
-  scheduled_opt.dual_schedule = pluss::nn::optim::MinimaxSchedule::ViolationAdaptive;
-  scheduled_opt.penalty_schedule = pluss::nn::optim::MinimaxSchedule::Exponential;
+  pluss::nn::optim::NeximaOptions scheduled_opt = minimax_opt;
+  scheduled_opt.primal_method = pluss::nn::optim::NeximaPrimalMethod::AdamW;
+  scheduled_opt.dual_schedule = pluss::nn::optim::NeximaSchedule::ViolationAdaptive;
+  scheduled_opt.penalty_schedule = pluss::nn::optim::NeximaSchedule::Exponential;
   scheduled_opt.penalty_exponential_growth = 1.002;
-  pluss::nn::optim::Minimax scheduled_minimax(
-      std::vector<Series*>{&scheduled_param},
+  pluss::nn::optim::Nexima scheduled_nexima(
+      {&scheduled_param},
       scheduled_opt,
       minimax_constraints);
   for (int i = 0; i < 80; ++i) {
-    scheduled_minimax.step(std::vector<Series>{scheduled_param.sub(minimax_target)});
+    scheduled_nexima.step(std::vector<Series>{scheduled_param.sub(minimax_target)});
   }
   const auto sv = vec_f64(scheduled_param);
   if (!(std::isfinite(sv[0]) && std::isfinite(sv[1]))) {
-    if (err) *err << "Minimax adaptive schedule path produced non-finite values\n";
+    if (err) *err << "Nexima adaptive schedule path produced non-finite values\n";
     return false;
   }
 
   {
-    stage = "minimax capture restore";
+    stage = "nexima capture restore";
     Series ref = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
     Series resumed = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
-    pluss::nn::optim::MinimaxOptions opt = minimax_opt;
-    opt.primal_method = pluss::nn::optim::MinimaxPrimalMethod::AdamW;
-    opt.dual_schedule = pluss::nn::optim::MinimaxSchedule::ViolationAdaptive;
-    opt.penalty_schedule = pluss::nn::optim::MinimaxSchedule::Exponential;
+    pluss::nn::optim::NeximaOptions opt = minimax_opt;
+    opt.primal_method = pluss::nn::optim::NeximaPrimalMethod::AdamW;
+    opt.dual_schedule = pluss::nn::optim::NeximaSchedule::ViolationAdaptive;
+    opt.penalty_schedule = pluss::nn::optim::NeximaSchedule::Exponential;
     opt.penalty_exponential_growth = 1.001;
 
-    pluss::nn::optim::Minimax ref_optim(std::vector<Series*>{&ref}, opt, minimax_constraints);
+    pluss::nn::optim::Nexima ref_optim({&ref}, opt, minimax_constraints);
     for (int i = 0; i < 60; ++i) {
       ref_optim.step(std::vector<Series>{ref.sub(minimax_target)});
     }
 
-    pluss::nn::optim::Minimax pre_optim(std::vector<Series*>{&resumed}, opt, minimax_constraints);
+    pluss::nn::optim::Nexima pre_optim({&resumed}, opt, minimax_constraints);
     for (int i = 0; i < 20; ++i) {
       pre_optim.step(std::vector<Series>{resumed.sub(minimax_target)});
     }
     const auto checkpoint = pre_optim.capture_state();
 
-    pluss::nn::optim::Minimax post_optim(std::vector<Series*>{&resumed}, opt, minimax_constraints);
+    pluss::nn::optim::Nexima post_optim({&resumed}, opt, minimax_constraints);
     post_optim.restore_state(checkpoint);
     for (int i = 0; i < 40; ++i) {
       post_optim.step(std::vector<Series>{resumed.sub(minimax_target)});
     }
 
     if (!approx_vec(vec_f64(ref), vec_f64(resumed), 1e-6)) {
-      if (err) *err << "Minimax capture/restore parity mismatch\n";
+      if (err) *err << "Nexima capture/restore parity mismatch\n";
       return false;
     }
   }

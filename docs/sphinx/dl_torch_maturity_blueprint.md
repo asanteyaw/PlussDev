@@ -62,7 +62,7 @@ Weighted maturity score:
 Notes:
 
 - Transform APIs (`grad`, `value_and_grad`, `vjp`, `jvp`, `jacrev`, `jacfwd`, `hvp`) remain materially ahead of toy AD.
-- DL optimizer core now includes param-grouped `SGD`, `Adam`, `AdamW`, `RMSprop`, `NAdam`, and `Minimax` with restart parity checks.
+- DL optimizer core now includes param-grouped `SGD`, `Adam`, `AdamW`, `RMSprop`, `NAdam`, and `Nexima` with restart parity checks.
 - Adam/AdamW now include batched update lanes, capturable bias-correction mode, and strict fail-loud lane policy for unsupported fused requests.
 - SGD/RMSprop/NAdam now include batched update lanes and strict fail-loud lane policy for unsupported fused requests.
 - Diff transform layer now covers additional unary families (`asin`, `acos`, `atan`, `sinh`, `cosh`, `log1p`, `expm1`, `erf`) and explicit HVP mode policy.
@@ -117,7 +117,7 @@ Tasks:
   - [x] AdamW
   - [x] RMSprop
   - [x] NAdam
-  - [x] Minimax (constrained primal-dual family for DL-facing constrained training use-cases)
+  - [x] Nexima (constrained primal-dual family for DL-facing constrained training use-cases)
 - [x] support closure-based step where needed
 - [x] define optimizer state serialization contract
 
