@@ -16,14 +16,14 @@ int main() {
   Series params_tape = pluss::make_series(std::vector<float>{2.0f, -1.0f}, {2}, cfg);
   const Series target = pluss::make_series(std::vector<float>{3.0f, 3.0f}, {2}, cfg);
 
-  pluss::nn::optim::NeximaOptions options{};
-  // Switchable primal optimizer inside Nexima: Adam / AdamW / SGD / RMSprop.
-  options.primal_method = pluss::nn::optim::NeximaPrimalMethod::AdamW;
+  pluss::nn::optim::MinimaxOptions options{};
+  // Switchable primal optimizer inside Minimax: Adam / AdamW / SGD / RMSprop.
+  options.primal_method = pluss::nn::optim::MinimaxPrimalMethod::AdamW;
   options.learning_rate = 0.05;
   options.dual_learning_rate = 0.1;
   options.inequality_penalty = 10.0;
 
-  pluss::nn::optim::NeximaConstraints constraints{};
+  pluss::nn::optim::MinimaxConstraints constraints{};
   constraints.lower_bounds = {pluss::make_series(std::vector<float>{0.0f, 0.0f}, {2}, cfg)};
   constraints.inequalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum().sub(4.0)};
@@ -32,12 +32,12 @@ int main() {
     return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(p[0]) - 4.0};
   };
 
-  pluss::nn::optim::Nexima nexima({&params}, options, constraints);
-  pluss::nn::optim::Nexima nexima_tape({&params_tape}, options, constraints);
+  pluss::nn::optim::Minimax minimax({&params}, options, constraints);
+  pluss::nn::optim::Minimax minimax_tape({&params_tape}, options, constraints);
 
-  std::cout << "[nexima] explicit gradients\n";
+  std::cout << "[minimax] explicit gradients\n";
   for (int iter = 1; iter <= 120; ++iter) {
-    nexima.step(std::vector<Series>{params.sub(target)});
+    minimax.step(std::vector<Series>{params.sub(target)});
     if (iter % 30 == 0) {
       const double loss = params.sub(target).square().sum().mul(0.5).item<double>();
       const double ineq = params.sum().sub(4.0).item<double>();
@@ -48,13 +48,13 @@ int main() {
             << params.select(0, 0).item<double>() << ", "
             << params.select(0, 1).item<double>() << "]\n";
 
-  std::cout << "[nexima] tape gradients via optimizer.step()\n";
+  std::cout << "[minimax] tape gradients via optimizer.step()\n";
   for (int iter = 1; iter <= 120; ++iter) {
     auto tx = pluss::subsp::math::diff::trace(params_tape, true);
     const Series loss = tx.value().sub(target).square().sum().mul(0.5);
     tx.clear_sensitivity();
     loss.reverse();
-    nexima_tape.step();
+    minimax_tape.step();
     if (iter % 30 == 0) {
       const double ineq = params_tape.sum().sub(4.0).item<double>();
       std::cout << "iter=" << iter << " loss=" << loss.item<double>() << " ineq(sum(x)-4)=" << ineq << '\n';

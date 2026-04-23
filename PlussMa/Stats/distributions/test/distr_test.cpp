@@ -879,6 +879,12 @@ int main() {
     for (std::size_t i = 0; i < got.size(); ++i) {
       expect(approx(obj[i], got[i], 1e-12), "Poisson object Series params parity", &failures);
     }
+
+    const auto k2 = pluss::distr::Poisson{pl}.cumulant(2).to_vec<double>();
+    const auto lam = pl.to_vec<double>();
+    for (std::size_t i = 0; i < k2.size(); ++i) {
+      expect(approx(k2[i], lam[i], 1e-12), "Poisson cumulant Series params parity", &failures);
+    }
   }
 
   {
@@ -905,6 +911,18 @@ int main() {
     for (std::size_t i = 0; i < fn.size(); ++i) {
       const bool same = (std::isnan(obj[i]) && std::isnan(fn[i])) || approx(obj[i], fn[i], 1e-12);
       expect(same, "Lognormal object Series params parity", &failures);
+    }
+
+    const auto k1 = pluss::distr::Lognormal{m_vec, s_vec}.cumulant(1).to_vec<double>();
+    const auto k2 = pluss::distr::Lognormal{m_vec, s_vec}.cumulant(2).to_vec<double>();
+    const auto m = m_vec.to_vec<double>();
+    const auto s = s_vec.to_vec<double>();
+    for (std::size_t i = 0; i < m.size(); ++i) {
+      const double expected_k1 = std::exp(m[i] + 0.5 * s[i] * s[i]);
+      const double expected_k2 =
+          (std::exp(s[i] * s[i]) - 1.0) * std::exp(2.0 * m[i] + s[i] * s[i]);
+      expect(approx(k1[i], expected_k1, 1e-10), "Lognormal cumulant(1) Series params", &failures);
+      expect(approx(k2[i], expected_k2, 1e-10), "Lognormal cumulant(2) Series params", &failures);
     }
   }
 
@@ -1004,6 +1022,16 @@ int main() {
     for (std::size_t i = 0; i < fn.size(); ++i) {
       expect(approx(obj[i], fn[i], 1e-12), "Gamma object Series params parity", &failures);
     }
+
+    const auto k1 = pluss::distr::Gamma{gshape, gscale, gloc}.cumulant(1).to_vec<double>();
+    const auto k2 = pluss::distr::Gamma{gshape, gscale, gloc}.cumulant(2).to_vec<double>();
+    const auto sh = gshape.to_vec<double>();
+    const auto sc = gscale.to_vec<double>();
+    const auto lc = gloc.to_vec<double>();
+    for (std::size_t i = 0; i < sh.size(); ++i) {
+      expect(approx(k1[i], lc[i] + sh[i] * sc[i], 1e-12), "Gamma cumulant(1) Series params", &failures);
+      expect(approx(k2[i], sh[i] * sc[i] * sc[i], 1e-12), "Gamma cumulant(2) Series params", &failures);
+    }
   }
 
   {
@@ -1059,6 +1087,14 @@ int main() {
     for (std::size_t i = 0; i < got.size(); ++i) {
       expect(approx(obj[i], got[i], 1e-12), "Geometric object Series params parity", &failures);
     }
+
+    const auto gk1 = pluss::distr::Geometric{gp}.cumulant(1).to_vec<double>();
+    const auto gk2 = pluss::distr::Geometric{gp}.cumulant(2).to_vec<double>();
+    const auto pv = gp.to_vec<double>();
+    for (std::size_t i = 0; i < pv.size(); ++i) {
+      expect(approx(gk1[i], 1.0 / pv[i], 1e-12), "Geometric cumulant(1) Series params", &failures);
+      expect(approx(gk2[i], (1.0 - pv[i]) / (pv[i] * pv[i]), 1e-12), "Geometric cumulant(2) Series params", &failures);
+    }
   }
 
   {
@@ -1083,6 +1119,19 @@ int main() {
     const auto obj = pluss::distr::NegativeBinomial{nr, np}.logpdf(nx).to_vec<double>();
     for (std::size_t i = 0; i < fn.size(); ++i) {
       expect(approx(obj[i], fn[i], 1e-12), "NegativeBinomial object Series params parity", &failures);
+    }
+
+    const auto nk1 = pluss::distr::NegativeBinomial{nr, np}.cumulant(1).to_vec<double>();
+    const auto nk2 = pluss::distr::NegativeBinomial{nr, np}.cumulant(2).to_vec<double>();
+    const auto rv = nr.to_vec<double>();
+    const auto pv = np.to_vec<double>();
+    for (std::size_t i = 0; i < rv.size(); ++i) {
+      expect(approx(nk1[i], rv[i] * (1.0 - pv[i]) / pv[i], 1e-12),
+             "NegativeBinomial cumulant(1) Series params",
+             &failures);
+      expect(approx(nk2[i], rv[i] * (1.0 - pv[i]) / (pv[i] * pv[i]), 1e-12),
+             "NegativeBinomial cumulant(2) Series params",
+             &failures);
     }
   }
 

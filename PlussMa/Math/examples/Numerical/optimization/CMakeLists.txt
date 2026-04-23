@@ -143,27 +143,27 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_adam_functional_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_adam_functional_demo PRIVATE pluss plussqit_codem)
 
-  add_executable(plussma_minimax_functional_demo
-    minimax_functional_demo.cpp
+  add_executable(plussma_septima_functional_demo
+    septima_functional_demo.cpp
   )
-  target_compile_features(plussma_minimax_functional_demo PRIVATE cxx_std_20)
-  target_link_libraries(plussma_minimax_functional_demo PRIVATE pluss plussqit_codem)
+  target_compile_features(plussma_septima_functional_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_septima_functional_demo PRIVATE pluss plussqit_codem)
 
-  add_executable(plussma_minimax_functional_multiblock_demo
-    minimax_functional_multiblock_demo.cpp
+  add_executable(plussma_septima_functional_multiblock_demo
+    septima_functional_multiblock_demo.cpp
   )
-  target_compile_features(plussma_minimax_functional_multiblock_demo PRIVATE cxx_std_20)
-  target_link_libraries(plussma_minimax_functional_multiblock_demo PRIVATE pluss plussqit_codem)
+  target_compile_features(plussma_septima_functional_multiblock_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_septima_functional_multiblock_demo PRIVATE pluss plussqit_codem)
 
-  add_executable(plussma_simple_minimax_functional_demo
-    simple_minimax_functional_demo.cpp
+  add_executable(plussma_simple_septima_functional_demo
+    simple_septima_functional_demo.cpp
   )
-  target_compile_features(plussma_simple_minimax_functional_demo PRIVATE cxx_std_20)
-  target_link_libraries(plussma_simple_minimax_functional_demo PRIVATE pluss plussqit_codem)
+  target_compile_features(plussma_simple_septima_functional_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_simple_septima_functional_demo PRIVATE pluss plussqit_codem)
 
-  add_executable(plussma_simple_minimax_functional_multiblock_demo
-    simple_minimax_functional_multiblock_demo.cpp
+  add_executable(plussma_simple_septima_functional_multiblock_demo
+    simple_septima_functional_multiblock_demo.cpp
   )
-  target_compile_features(plussma_simple_minimax_functional_multiblock_demo PRIVATE cxx_std_20)
-  target_link_libraries(plussma_simple_minimax_functional_multiblock_demo PRIVATE pluss plussqit_codem)
+  target_compile_features(plussma_simple_septima_functional_multiblock_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_simple_septima_functional_multiblock_demo PRIVATE pluss plussqit_codem)
 endif()

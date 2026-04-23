@@ -150,9 +150,10 @@ Series confint_from_params_se_2_(const Series& params,
 
 Series stable_log_expm1_over_x(const Series& x) {
   const Series small = x.abs().lt(1e-5);
-  const Series general = x.expm1().div(x).log();
+  const Series x_safe = small.where(x.mul(0.0).add(1.0), x);
+  const Series general = x_safe.expm1().div(x_safe).log();
   const Series series = x.mul(0.5).add(x.mul(x).div(24.0));
-  return small.logical_not().where(general, series);
+  return small.where(series, general);
 }
 
 Series stable_log_x_over_sin_x(const Series& x) {
@@ -258,6 +259,26 @@ double inverse_gaussian_cumulant_scalar(double theta, double chi, std::int64_t o
 double lognormal_raw_moment(double mean_log, double stddev_log, std::int64_t order) {
   const double n = static_cast<double>(order);
   return std::exp(n * mean_log + 0.5 * n * n * stddev_log * stddev_log);
+}
+
+Series cumulant_from_raw_moments_series_(const std::vector<Series>& raw,
+                                         std::int64_t order,
+                                         std::string_view op) {
+  detail::require_positive_order(order, op);
+  PLUSS_CHECK(!raw.empty(), std::string(op) + ": raw moments must be non-empty");
+  PLUSS_CHECK(static_cast<std::size_t>(order) < raw.size(),
+              std::string(op) + ": raw moments must include moment of requested order");
+  std::vector<Series> cumulants(static_cast<std::size_t>(order) + 1, Series::undefined());
+  cumulants[0] = raw[0].mul(0.0);
+  for (std::int64_t n = 1; n <= order; ++n) {
+    Series value = raw[static_cast<std::size_t>(n)];
+    for (std::int64_t m = 1; m < n; ++m) {
+      const double coeff = detail::binomial_coeff(n - 1, m - 1);
+      value = value.sub(cumulants[static_cast<std::size_t>(m)].mul(raw[static_cast<std::size_t>(n - m)]).mul(coeff));
+    }
+    cumulants[static_cast<std::size_t>(n)] = value;
+  }
+  return cumulants[static_cast<std::size_t>(order)].to(raw[0].platform(), ScalarType::Float64);
 }
 
 double student_t_standard_raw_moment(double degrees_of_freedom, std::int64_t order) {
@@ -616,9 +637,27 @@ Series Gamma::cgf(const Series& t) const {
 }
 
 Series Gamma::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!(shape_series.defined() || scale_series.defined() || location_series.defined()),
-              "Gamma::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Gamma::cumulant");
+  if (shape_series.defined() || scale_series.defined() || location_series.defined()) {
+    const Series like = shape_series.defined() ? shape_series : (scale_series.defined() ? scale_series : location_series);
+    const Series shape_param = shape_series.defined()
+                                   ? shape_series.to(ScalarType::Float64).contiguous()
+                                   : like.to(ScalarType::Float64).mul(0.0).add(shape);
+    const Series scale_param = scale_series.defined()
+                                   ? scale_series.to(ScalarType::Float64).contiguous()
+                                   : like.to(ScalarType::Float64).mul(0.0).add(scale);
+    const Series location_param = location_series.defined()
+                                      ? location_series.to(ScalarType::Float64).contiguous()
+                                      : like.to(ScalarType::Float64).mul(0.0).add(location);
+    detail::require_all_true(shape_param.gt(0.0), "Gamma::cumulant: shape_series must be > 0");
+    detail::require_all_true(scale_param.gt(0.0), "Gamma::cumulant: scale_series must be > 0");
+    if (order == 1) {
+      return location_param.add(shape_param.mul(scale_param));
+    }
+    return shape_param.mul(scale_param.pow(static_cast<double>(order)))
+        .mul(detail::factorial(order - 1))
+        .to(shape_param.platform(), ScalarType::Float64);
+  }
   if (order == 1) {
     return detail::scalar_f64(location + shape * scale);
   }
@@ -829,9 +868,26 @@ Series Lognormal::cgf(const Series& t) const {
 }
 
 Series Lognormal::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!(mean_log_series.defined() || stddev_log_series.defined()),
-              "Lognormal::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Lognormal::cumulant");
+  if (mean_log_series.defined() || stddev_log_series.defined()) {
+    const Series like = mean_log_series.defined() ? mean_log_series : stddev_log_series;
+    const Series mean_param = mean_log_series.defined()
+                                  ? mean_log_series.to(ScalarType::Float64).contiguous()
+                                  : like.to(ScalarType::Float64).mul(0.0).add(mean_log);
+    const Series std_param = stddev_log_series.defined()
+                                 ? stddev_log_series.to(ScalarType::Float64).contiguous()
+                                 : like.to(ScalarType::Float64).mul(0.0).add(stddev_log);
+    detail::require_all_true(std_param.ge(0.0), "Lognormal::cumulant: stddev_log_series must be >= 0");
+    const Series one = mean_param.mul(0.0).add(1.0);
+    const Series sigma2 = std_param.square();
+    std::vector<Series> raw(static_cast<std::size_t>(order) + 1, Series::undefined());
+    raw[0] = one;
+    for (std::int64_t n = 1; n <= order; ++n) {
+      const double nd = static_cast<double>(n);
+      raw[static_cast<std::size_t>(n)] = mean_param.mul(nd).add(sigma2.mul(0.5 * nd * nd)).exp();
+    }
+    return cumulant_from_raw_moments_series_(raw, order, "Lognormal::cumulant");
+  }
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
   for (std::int64_t n = 1; n <= order; ++n) {

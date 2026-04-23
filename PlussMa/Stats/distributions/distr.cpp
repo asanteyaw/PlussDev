@@ -1028,7 +1028,7 @@ Series rayleigh_logpdf_(const Series& x, double sigma) {
   const double sigma2 = sigma * sigma;
   const Series safe = xx.clamp_min(kEps);
   const Series core = safe.log().sub(std::log(sigma2)).sub(safe.square().div(2.0 * sigma2));
-  return xx.ge(0.0).where(core, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+  return core.masked_fill(xx.lt(0.0), -std::numeric_limits<double>::infinity());
 }
 
 Series rayleigh_cdf_(const Series& x, double sigma) {
@@ -4385,10 +4385,9 @@ Series mixture_normal_component_pdf_(const Series& x,
   Series out = z.square().mul(-0.5).exp().div(safe_std.mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
   const Series degenerate = stddevs.eq(0.0);
   if (degenerate.any().item<bool>()) {
-    const Series point_mass = x.eq(means).where(
-        full_like_f64_(x, std::numeric_limits<double>::infinity()),
-        zero);
-    out = degenerate.where(point_mass, out);
+    const Series degenerate_mask = degenerate.logical_and(x.eq(means));
+    out = out.masked_fill(degenerate, 0.0);
+    out = out.masked_fill(degenerate_mask, std::numeric_limits<double>::infinity());
   }
   return out;
 }
@@ -4417,10 +4416,8 @@ Series mixture_normal_component_logcdf_(const Series& x,
   Series out = norm_logcdf_(x.sub(means).div(safe_std));
   const Series degenerate = stddevs.eq(0.0);
   if (degenerate.any().item<bool>()) {
-    const Series step_log = x.ge(means).where(
-        full_like_f64_(x, 0.0),
-        full_like_f64_(x, -std::numeric_limits<double>::infinity()));
-    out = degenerate.where(step_log, out);
+    const Series step_log = zero.masked_fill(x.lt(means), -std::numeric_limits<double>::infinity());
+    out = out.masked_fill(degenerate, 0.0).add(step_log.masked_fill(degenerate.logical_not(), 0.0));
   }
   return out;
 }
@@ -4554,9 +4551,9 @@ Series mixture_normal_logpdf(const Series& x,
                              const Series& means,
                              const Series& stddevs) {
   const Series probs = mixture_normal_pdf(x, weights, means, stddevs);
-  return probs.gt(0.0).where(
-      probs.log(),
-      full_like_f64_(probs, -std::numeric_limits<double>::infinity()));
+  return probs.clamp_min(std::numeric_limits<double>::min())
+      .log()
+      .masked_fill(probs.le(0.0), -std::numeric_limits<double>::infinity());
 }
 
 Series mixture_normal_cdf(const Series& x,
@@ -4595,9 +4592,9 @@ Series mixture_normal_logcdf(const Series& x,
   const Series weights_2d = params.weights.reshape({1, k});
   const Series zero = flat_x.mul(0.0).add(means_2d.mul(0.0));
   const Series one = zero.add(1.0);
-  const Series log_weights = weights_2d.gt(0.0).where(
-      weights_2d.log(),
-      full_like_f64_(weights_2d, -std::numeric_limits<double>::infinity()));
+  const Series log_weights = weights_2d.clamp_min(std::numeric_limits<double>::min())
+                                 .log()
+                                 .masked_fill(weights_2d.le(0.0), -std::numeric_limits<double>::infinity());
   return mixture_normal_component_logcdf_(flat_x, means_2d, stddevs_2d, zero, one)
       .add(log_weights)
       .logsumexp(1, false)

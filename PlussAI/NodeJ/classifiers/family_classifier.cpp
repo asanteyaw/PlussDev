@@ -2668,9 +2668,9 @@ public:
     adam_opt.weight_decay = 0.0;
 
     const bool use_parameter_bounds = options.parameter_lower_bounds.defined() || options.parameter_upper_bounds.defined();
-    optim::MinimaxConstraints minimax_constraints{};
-    optim::MinimaxOptions minimax_options{};
-    optim::MinimaxSolveOptions minimax_solve_options{};
+    optim::SeptimaConstraints septima_constraints{};
+    optim::SeptimaOptions septima_options{};
+    optim::SeptimaSolveOptions septima_solve_options{};
 
     if (use_parameter_bounds) {
       StatusOr<Series> lb_or =
@@ -2686,18 +2686,18 @@ public:
         return Status::invalid_argument("LinearClassifier::learn lower bounds must be <= upper bounds.");
       }
 
-      if (lower.defined()) minimax_constraints.lbs = {lower};
-      if (upper.defined()) minimax_constraints.ubs = {upper};
-      minimax_options.adam = adam_opt;
-      minimax_options.project_bounds = true;
-      minimax_options.enable_constraint_autodiff = false;
-      minimax_solve_options.step = minimax_options;
-      minimax_solve_options.max_iterations = 1;
-      minimax_solve_options.max_no_progress_iterations = 0;
-      minimax_solve_options.objective_tolerance = 0.0;
-      minimax_solve_options.gradient_tolerance = 0.0;
-      minimax_solve_options.step_tolerance = 0.0;
-      minimax_solve_options.constraint_tolerance = 0.0;
+      if (lower.defined()) septima_constraints.lbs = {lower};
+      if (upper.defined()) septima_constraints.ubs = {upper};
+      septima_options.adam = adam_opt;
+      septima_options.project_bounds = true;
+      septima_options.enable_constraint_autodiff = false;
+      septima_solve_options.step = septima_options;
+      septima_solve_options.max_iterations = 1;
+      septima_solve_options.max_no_progress_iterations = 0;
+      septima_solve_options.objective_tolerance = 0.0;
+      septima_solve_options.gradient_tolerance = 0.0;
+      septima_solve_options.step_tolerance = 0.0;
+      septima_solve_options.constraint_tolerance = 0.0;
     }
 
     if (options_.objective == LinearObjective::Logistic && !use_parameter_bounds) {
@@ -2727,13 +2727,13 @@ public:
 
         try {
           if (use_parameter_bounds) {
-            const auto fit = optim::minimax(
+            const auto fit = optim::septima(
                 [&](const optim::Trace& w) -> optim::Trace {
                   return optim::sum(w * optim::fixed(grad));
                 },
                 weights,
-                minimax_solve_options,
-                minimax_constraints);
+                septima_solve_options,
+                septima_constraints);
             weights = fit.params.front();
           } else {
             std::vector<Series> params{weights};

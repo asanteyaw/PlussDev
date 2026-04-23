@@ -3,7 +3,7 @@
 This cookbook is task-first and covers the full PlussMa optimization surface:
 
 - constrained smooth optimization (`pluss::optim`)
-- functional Adam/Minimax loops (`pluss::optim`)
+- functional Adam/Septima loops (`pluss::optim`)
 - derivative-free global/local/blackbox optimization (`pluss::subsp::math::optimization`)
 
 ## Recipe 1: Minimal Unconstrained `optima` (Autodiff Objective)
@@ -429,11 +429,11 @@ for (int i = 0; i < 60; ++i) {
 
 - parameters approach target vector.
 
-## Recipe 9: Functional Minimax (Primal-Dual Constrained Update)
+## Recipe 9: Functional Septima (Primal-Dual Constrained Update)
 
 ### API Signature
 
-- `minimax(...) -> MinimaxResult` (one-shot solver API in `pluss::optim`)
+- `septima(...) -> SeptimaResult` (one-shot solver API in `pluss::optim`)
 
 ### Notes
 
@@ -443,7 +443,7 @@ Use one-shot constrained minimization with internal primal-dual updates.
 
 - objective callback
 - initial params
-- `MinimaxConstraints`
+- `SeptimaConstraints`
 
 ### Output
 
@@ -451,28 +451,28 @@ Use one-shot constrained minimization with internal primal-dual updates.
 
 ### Options
 
-- `MinimaxSolveOptions` convergence knobs
-- `MinimaxSolveOptions.step` primal-dual knobs
+- `SeptimaSolveOptions` convergence knobs
+- `SeptimaSolveOptions.step` primal-dual knobs
 
 ### Examples
 
 Single-block Trace objective:
 
 ```cpp
-pmo::MinimaxSolveOptions opt{};
+pmo::SeptimaSolveOptions opt{};
 opt.max_iterations = 100;
 opt.step.adam.learning_rate = 0.04;
 opt.step.dual_learning_rate = 0.08;
 opt.step.enable_constraint_autodiff = true;
 
-pmo::MinimaxConstraints c{};
+pmo::SeptimaConstraints c{};
 c.equalities = [](const std::vector<pluss::Series>& p) { return std::vector<pluss::Series>{p[0].sum() - 3.0}; };
 c.inequalities = [](const std::vector<pluss::Series>& p) { return std::vector<pluss::Series>{p[0].square().sum() - 10.0}; };
 
 const pluss::Series target = pluss::make_series(std::vector<double>{2.0, 1.0}, {2});
 const pluss::Series x0 = pluss::make_series(std::vector<double>{0.5, -0.5}, {2});
 
-const auto out = pmo::minimax(
+const auto out = pmo::septima(
   [&](const pmo::Trace& x) -> pmo::Trace {
     return pmo::sum(pmo::square(x - target)) * 0.5;
   },
@@ -488,7 +488,7 @@ pmo::Trace obj_trace(const pmo::Trace& x) {
   return pmo::sum(pmo::square(x)) * 0.5;
 }
 
-const auto out = pmo::minimax(obj_trace, x0, opt, c);
+const auto out = pmo::septima(obj_trace, x0, opt, c);
 ```
 
 Series objective:
@@ -498,7 +498,7 @@ pluss::Series obj_series(const pluss::Series& x) {
   return x.square().sum() * 0.5;
 }
 
-const auto out = pmo::minimax(obj_series, x0, opt, c);
+const auto out = pmo::septima(obj_series, x0, opt, c);
 ```
 
 Multi-block vector objective:
@@ -509,7 +509,7 @@ std::vector<pluss::Series> x0_blocks{
   pluss::make_series(std::vector<double>{0.1}, {1})
 };
 
-const auto out = pmo::minimax(
+const auto out = pmo::septima(
   [](const std::vector<pluss::Series>& p) -> pluss::Series {
     return p[0].square().sum() + p[1].square().sum();
   },
@@ -526,7 +526,7 @@ const auto init = pmo::pack_vector({
   {"bias",    pluss::make_series(std::vector<double>{0.1}, {1})}
 });
 
-const auto out = pmo::minimax(
+const auto out = pmo::septima(
   [](const pmo::ParameterPack<pmo::Trace>& p) -> pmo::Trace {
     const auto w = p.at("weights");
     const auto b = p.at("bias");
@@ -540,8 +540,8 @@ const auto out = pmo::minimax(
 Progress hook:
 
 ```cpp
-pmo::MinimaxSolveOptions opt_hook = opt;
-opt_hook.progress_hook = [](const pmo::MinimaxProgressSnapshot& s) {
+pmo::SeptimaSolveOptions opt_hook = opt;
+opt_hook.progress_hook = [](const pmo::SeptimaProgressSnapshot& s) {
   std::cout << "iter=" << s.iteration
             << " f=" << s.objective
             << " ginf=" << s.gradient_inf_norm
@@ -554,10 +554,10 @@ opt_hook.progress_hook = [](const pmo::MinimaxProgressSnapshot& s) {
 
 - objective decreases while equality/inequality residuals reduce.
 
-### PlussMa vs PlussAI Minimax
+### PlussMa Septima vs PlussAI Minimax
 
-- Use `pluss::optim::minimax(...)` when you want one-shot solve semantics and a `MinimaxResult` output.
-- Use `pluss::nn::optim::Nexima` when you are in a model training loop and want `optimizer.step()` control per iteration.
+- Use `pluss::optim::septima(...)` when you want one-shot solve semantics and a `SeptimaResult` output.
+- Use `pluss::nn::optim::Minimax` when you are in a model training loop and want `optimizer.step()` control per iteration.
 - They share primal-dual ideas, but their integration model is different: solver call (PlussMa) vs optimizer object (PlussAI).
 
 ## Recipe 10: Unified DFO Auto Selection

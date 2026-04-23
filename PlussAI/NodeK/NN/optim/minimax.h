@@ -18,22 +18,22 @@
 
 namespace pluss::ai::nn::optim {
 
-enum class NeximaPrimalMethod {
+enum class MinimaxPrimalMethod {
   Adam,
   AdamW,
   SGD,
   RMSprop,
 };
 
-enum class NeximaSchedule {
+enum class MinimaxSchedule {
   Constant,
   Exponential,
   ViolationAdaptive,
 };
 
-struct NeximaOptions {
+struct MinimaxOptions {
   // Primal optimizer control.
-  NeximaPrimalMethod primal_method{NeximaPrimalMethod::Adam};
+  MinimaxPrimalMethod primal_method{MinimaxPrimalMethod::Adam};
   double learning_rate{1e-3};
   double beta1{0.9};
   double beta2{0.999};
@@ -58,8 +58,8 @@ struct NeximaOptions {
   double nan_recovery_shrink{0.5};
 
   // Adaptive schedules.
-  NeximaSchedule dual_schedule{NeximaSchedule::Constant};
-  NeximaSchedule penalty_schedule{NeximaSchedule::Constant};
+  MinimaxSchedule dual_schedule{MinimaxSchedule::Constant};
+  MinimaxSchedule penalty_schedule{MinimaxSchedule::Constant};
   double dual_exponential_decay{1.0};
   double penalty_exponential_growth{1.0};
   double violation_target{1e-3};
@@ -67,7 +67,7 @@ struct NeximaOptions {
   double schedule_max_scale{4.0};
 };
 
-struct NeximaConstraints {
+struct MinimaxConstraints {
   using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
   using TraceResidualFn =
       std::function<std::vector<pluss::subsp::math::diff::Trace>(const std::vector<pluss::subsp::math::diff::Trace>&)>;
@@ -84,26 +84,26 @@ struct NeximaConstraints {
   std::vector<Series> upper_bounds{};
 };
 
-struct NeximaGroup {
+struct MinimaxGroup {
   std::vector<Series*> parameters{};
-  NeximaOptions options{};
+  MinimaxOptions options{};
 
-  NeximaGroup() = default;
+  MinimaxGroup() = default;
 
-  NeximaGroup(pluss::msharp::RangeView::Of<Series*> params, NeximaOptions opts = {})
+  MinimaxGroup(pluss::msharp::RangeView::Of<Series*> params, MinimaxOptions opts = {})
       : parameters(params.begin(), params.end()),
         options(std::move(opts)) {}
 
-  NeximaGroup(std::initializer_list<Series*> params, NeximaOptions opts = {})
+  MinimaxGroup(std::initializer_list<Series*> params, MinimaxOptions opts = {})
       : parameters(params),
         options(std::move(opts)) {}
 };
 
-class PLUSS_API Nexima final : public Optimizer {
+class PLUSS_API Minimax final : public Optimizer {
 public:
-  explicit Nexima(pluss::msharp::RangeView::Of<Series*> parameters,
-                  NeximaOptions options = {},
-                  NeximaConstraints constraints = {})
+  explicit Minimax(pluss::msharp::RangeView::Of<Series*> parameters,
+                  MinimaxOptions options = {},
+                  MinimaxConstraints constraints = {})
       : Optimizer(parameters),
         constraints_(std::move(constraints)) {
     validate_options_(options);
@@ -116,12 +116,12 @@ public:
     initialize_state_();
   }
 
-  explicit Nexima(std::initializer_list<Series*> parameters,
-                  NeximaOptions options = {},
-                  NeximaConstraints constraints = {})
-      : Nexima(pluss::msharp::RangeView::Of<Series*>{parameters}, std::move(options), std::move(constraints)) {}
+  explicit Minimax(std::initializer_list<Series*> parameters,
+                  MinimaxOptions options = {},
+                  MinimaxConstraints constraints = {})
+      : Minimax(pluss::msharp::RangeView::Of<Series*>{parameters}, std::move(options), std::move(constraints)) {}
 
-  explicit Nexima(pluss::msharp::RangeView::Of<NeximaGroup> groups, NeximaConstraints constraints = {})
+  explicit Minimax(pluss::msharp::RangeView::Of<MinimaxGroup> groups, MinimaxConstraints constraints = {})
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         constraints_(std::move(constraints)) {
@@ -130,36 +130,36 @@ public:
     initialize_state_();
   }
 
-  explicit Nexima(std::initializer_list<NeximaGroup> groups, NeximaConstraints constraints = {})
-      : Nexima(pluss::msharp::RangeView::Of<NeximaGroup>{groups}, std::move(constraints)) {}
+  explicit Minimax(std::initializer_list<MinimaxGroup> groups, MinimaxConstraints constraints = {})
+      : Minimax(pluss::msharp::RangeView::Of<MinimaxGroup>{groups}, std::move(constraints)) {}
 
-  explicit Nexima(Module& module,
-                  NeximaOptions options = {},
-                  NeximaConstraints constraints = {})
-      : Nexima(module.parameters(), std::move(options), std::move(constraints)) {}
+  explicit Minimax(Module& module,
+                  MinimaxOptions options = {},
+                  MinimaxConstraints constraints = {})
+      : Minimax(module.parameters(), std::move(options), std::move(constraints)) {}
 
   std::size_t group_count() const noexcept { return groups_.size(); }
-  const NeximaConstraints& constraints() const noexcept { return constraints_; }
+  const MinimaxConstraints& constraints() const noexcept { return constraints_; }
 
-  const NeximaOptions& options() const noexcept { return groups_.front().options; }
+  const MinimaxOptions& options() const noexcept { return groups_.front().options; }
 
-  void set_options(const NeximaOptions& options) {
+  void set_options(const MinimaxOptions& options) {
     validate_options_(options);
     for (auto& group : groups_) {
       group.options = options;
     }
   }
 
-  void set_group_options(std::size_t group_index, const NeximaOptions& options) {
+  void set_group_options(std::size_t group_index, const MinimaxOptions& options) {
     if (group_index >= groups_.size()) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
     validate_group_options_();
   }
 
-  void set_constraints(const NeximaConstraints& constraints) {
+  void set_constraints(const MinimaxConstraints& constraints) {
     constraints_ = constraints;
     validate_constraints_();
     initialize_constraint_state_();
@@ -168,7 +168,7 @@ public:
   struct State {
     std::int64_t step{0};
     double moving_violation{0.0};
-    std::vector<NeximaOptions> group_options{};
+    std::vector<MinimaxOptions> group_options{};
     std::vector<Series> first_moment{};
     std::vector<Series> second_moment{};
     std::vector<Series> max_second_hat{};
@@ -202,13 +202,13 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::restore_state: group count mismatch");
     }
     if (state.step < 0) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima::restore_state: step must be non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::restore_state: step must be non-negative");
     }
     if (!std::isfinite(state.moving_violation) || state.moving_violation < 0.0) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima::restore_state: moving_violation must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax::restore_state: moving_violation must be finite and >= 0");
     }
     for (const auto& options : state.group_options) {
       validate_options_(options);
@@ -218,19 +218,19 @@ public:
     }
     validate_group_options_();
 
-    validate_state_vector_(state.first_moment, "pluss::ai::nn::optim::Nexima::restore_state[first_moment]");
-    validate_state_vector_(state.second_moment, "pluss::ai::nn::optim::Nexima::restore_state[second_moment]");
-    validate_state_vector_(state.max_second_hat, "pluss::ai::nn::optim::Nexima::restore_state[max_second_hat]");
-    validate_state_vector_(state.momentum_buffer, "pluss::ai::nn::optim::Nexima::restore_state[momentum_buffer]");
-    validate_state_vector_(state.rmsprop_avg, "pluss::ai::nn::optim::Nexima::restore_state[rmsprop_avg]");
+    validate_state_vector_(state.first_moment, "pluss::ai::nn::optim::Minimax::restore_state[first_moment]");
+    validate_state_vector_(state.second_moment, "pluss::ai::nn::optim::Minimax::restore_state[second_moment]");
+    validate_state_vector_(state.max_second_hat, "pluss::ai::nn::optim::Minimax::restore_state[max_second_hat]");
+    validate_state_vector_(state.momentum_buffer, "pluss::ai::nn::optim::Minimax::restore_state[momentum_buffer]");
+    validate_state_vector_(state.rmsprop_avg, "pluss::ai::nn::optim::Minimax::restore_state[rmsprop_avg]");
     validate_constraint_state_(state.eq_multipliers, eq_multipliers_,
-                               "pluss::ai::nn::optim::Nexima::restore_state[eq_multipliers]");
+                               "pluss::ai::nn::optim::Minimax::restore_state[eq_multipliers]");
     validate_constraint_state_(state.ineq_multipliers, ineq_multipliers_,
-                               "pluss::ai::nn::optim::Nexima::restore_state[ineq_multipliers]");
+                               "pluss::ai::nn::optim::Minimax::restore_state[ineq_multipliers]");
     validate_constraint_state_(state.lower_multipliers, lower_multipliers_,
-                               "pluss::ai::nn::optim::Nexima::restore_state[lower_multipliers]");
+                               "pluss::ai::nn::optim::Minimax::restore_state[lower_multipliers]");
     validate_constraint_state_(state.upper_multipliers, upper_multipliers_,
-                               "pluss::ai::nn::optim::Nexima::restore_state[upper_multipliers]");
+                               "pluss::ai::nn::optim::Minimax::restore_state[upper_multipliers]");
 
     first_moment_ = state.first_moment;
     second_moment_ = state.second_moment;
@@ -248,7 +248,7 @@ public:
 private:
   struct GroupState {
     std::vector<std::size_t> indices{};
-    NeximaOptions options{};
+    MinimaxOptions options{};
   };
 
   static bool same_shape_(const Series& a, const Series& b) {
@@ -265,72 +265,72 @@ private:
     return x.isfinite().all().item<bool>();
   }
 
-  static void validate_options_(const NeximaOptions& options) {
+  static void validate_options_(const MinimaxOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: learning_rate must be positive and finite");
     }
     if (!(options.beta1 >= 0.0 && options.beta1 < 1.0) || !std::isfinite(options.beta1)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: beta1 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: beta1 must be in [0, 1)");
     }
     if (!(options.beta2 >= 0.0 && options.beta2 < 1.0) || !std::isfinite(options.beta2)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: beta2 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: beta2 must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: epsilon must be positive and finite");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: weight_decay must be finite and non-negative");
     }
     if (!(options.momentum >= 0.0) || !std::isfinite(options.momentum)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: momentum must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: momentum must be finite and >= 0");
     }
     if (!(options.rmsprop_alpha >= 0.0 && options.rmsprop_alpha < 1.0) || !std::isfinite(options.rmsprop_alpha)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: rmsprop_alpha must be in [0,1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: rmsprop_alpha must be in [0,1)");
     }
     if (!(options.dual_learning_rate >= 0.0) || !std::isfinite(options.dual_learning_rate)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: dual_learning_rate must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: dual_learning_rate must be finite and >= 0");
     }
     if (!(options.equality_penalty >= 0.0) || !std::isfinite(options.equality_penalty)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: equality_penalty must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: equality_penalty must be finite and >= 0");
     }
     if (!(options.inequality_penalty >= 0.0) || !std::isfinite(options.inequality_penalty)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: inequality_penalty must be finite and >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: inequality_penalty must be finite and >= 0");
     }
     if (options.nan_recovery_attempts < 0) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: nan_recovery_attempts must be >= 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: nan_recovery_attempts must be >= 0");
     }
     if (!(options.nan_recovery_shrink > 0.0 && options.nan_recovery_shrink < 1.0) ||
         !std::isfinite(options.nan_recovery_shrink)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: nan_recovery_shrink must be in (0,1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: nan_recovery_shrink must be in (0,1)");
     }
     if (!(options.dual_exponential_decay > 0.0) || !std::isfinite(options.dual_exponential_decay)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: dual_exponential_decay must be finite and > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: dual_exponential_decay must be finite and > 0");
     }
     if (!(options.penalty_exponential_growth > 0.0) || !std::isfinite(options.penalty_exponential_growth)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: penalty_exponential_growth must be finite and > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: penalty_exponential_growth must be finite and > 0");
     }
     if (!(options.violation_target > 0.0) || !std::isfinite(options.violation_target)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: violation_target must be finite and > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: violation_target must be finite and > 0");
     }
     if (!(options.schedule_min_scale > 0.0 && options.schedule_min_scale <= options.schedule_max_scale) ||
         !std::isfinite(options.schedule_min_scale) || !std::isfinite(options.schedule_max_scale)) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: invalid schedule scale bounds");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: invalid schedule scale bounds");
     }
   }
 
-  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<NeximaGroup> groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<MinimaxGroup> groups) {
     if (groups.empty()) {
-      ::pluss::throw_error("pluss::ai::nn::optim::Nexima: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::Minimax: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        ::pluss::throw_error("pluss::ai::nn::optim::Nexima: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          ::pluss::throw_error("pluss::ai::nn::optim::Nexima: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::Minimax: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -338,7 +338,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<NeximaGroup> groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<MinimaxGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -354,7 +354,7 @@ private:
     return out;
   }
 
-  static bool same_constraint_controls_(const NeximaOptions& a, const NeximaOptions& b) {
+  static bool same_constraint_controls_(const MinimaxOptions& a, const MinimaxOptions& b) {
     return a.dual_learning_rate == b.dual_learning_rate &&
            a.equality_penalty == b.equality_penalty &&
            a.inequality_penalty == b.inequality_penalty &&
@@ -369,7 +369,7 @@ private:
            a.schedule_max_scale == b.schedule_max_scale;
   }
 
-  const NeximaOptions& constraint_options_() const noexcept {
+  const MinimaxOptions& constraint_options_() const noexcept {
     return groups_.front().options;
   }
 
@@ -380,12 +380,12 @@ private:
     for (std::size_t i = 1; i < groups_.size(); ++i) {
       if (!same_constraint_controls_(groups_[0].options, groups_[i].options)) {
         ::pluss::throw_error(
-            "pluss::ai::nn::optim::Nexima: all groups must share identical constraint control options");
+            "pluss::ai::nn::optim::Minimax: all groups must share identical constraint control options");
       }
     }
   }
 
-  static bool has_constraints_(const NeximaConstraints& c) {
+  static bool has_constraints_(const MinimaxConstraints& c) {
     return static_cast<bool>(c.equalities) ||
            static_cast<bool>(c.inequalities) ||
            !c.lower_bounds.empty() ||
@@ -417,16 +417,16 @@ private:
   void validate_bounds_vector_(pluss::msharp::RangeView::Series bounds, const char* name) const {
     if (bounds.empty()) return;
     if (bounds.size() != size()) {
-      ::pluss::throw_error(std::string("pluss::ai::nn::optim::Nexima: ") + name + " size mismatch");
+      ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " size mismatch");
     }
     const auto& params = parameters();
     for (std::size_t i = 0; i < bounds.size(); ++i) {
       if (!bounds[i].defined()) continue;
       if (bounds[i].platform() != params[i]->platform()) {
-        ::pluss::throw_error(std::string("pluss::ai::nn::optim::Nexima: ") + name + " platform mismatch");
+        ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " platform mismatch");
       }
       if (!same_shape_(bounds[i], *params[i]) && bounds[i].numel() != 1) {
-        ::pluss::throw_error(std::string("pluss::ai::nn::optim::Nexima: ") + name + " shape mismatch");
+        ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " shape mismatch");
       }
     }
   }
@@ -437,21 +437,21 @@ private:
 
     if (!constraints_.equalities && constraints_.equalities_trace) {
       ::pluss::throw_error(
-          "pluss::ai::nn::optim::Nexima: equalities_trace requires equalities callback");
+          "pluss::ai::nn::optim::Minimax: equalities_trace requires equalities callback");
     }
     if (!constraints_.inequalities && constraints_.inequalities_trace) {
       ::pluss::throw_error(
-          "pluss::ai::nn::optim::Nexima: inequalities_trace requires inequalities callback");
+          "pluss::ai::nn::optim::Minimax: inequalities_trace requires inequalities callback");
     }
 
     if (!constraint_options_().enable_constraint_autodiff) return;
     if (constraints_.equalities && !constraints_.equalities_trace) {
       ::pluss::throw_error(
-          "pluss::ai::nn::optim::Nexima: equalities callback requires equalities_trace for autodiff constraints");
+          "pluss::ai::nn::optim::Minimax: equalities callback requires equalities_trace for autodiff constraints");
     }
     if (constraints_.inequalities && !constraints_.inequalities_trace) {
       ::pluss::throw_error(
-          "pluss::ai::nn::optim::Nexima: inequalities callback requires inequalities_trace for autodiff constraints");
+          "pluss::ai::nn::optim::Minimax: inequalities callback requires inequalities_trace for autodiff constraints");
     }
   }
 
@@ -601,7 +601,7 @@ private:
   Series nan_recover_step_(const Series& parameter_value,
                            const Series& delta,
                            std::size_t index,
-                           const NeximaOptions& options) const {
+                           const MinimaxOptions& options) const {
     Series candidate = parameter_value.sub(delta);
     apply_bounds_(candidate, index);
     if (finite_series_(candidate)) {
@@ -628,13 +628,13 @@ private:
     return x.relu().max().item<double>();
   }
 
-  double schedule_scale_(NeximaSchedule schedule, const NeximaOptions& options) const {
+  double schedule_scale_(MinimaxSchedule schedule, const MinimaxOptions& options) const {
     switch (schedule) {
-      case NeximaSchedule::Constant:
+      case MinimaxSchedule::Constant:
         return 1.0;
-      case NeximaSchedule::Exponential:
+      case MinimaxSchedule::Exponential:
         return 1.0; // handled by dedicated exponential fields below
-      case NeximaSchedule::ViolationAdaptive: {
+      case MinimaxSchedule::ViolationAdaptive: {
         const double ratio = moving_violation_ / std::max(options.violation_target, 1e-15);
         return std::clamp(ratio, options.schedule_min_scale, options.schedule_max_scale);
       }
@@ -642,25 +642,25 @@ private:
     return 1.0;
   }
 
-  double effective_dual_lr_(const NeximaOptions& options) const {
+  double effective_dual_lr_(const MinimaxOptions& options) const {
     double lr = options.dual_learning_rate;
-    if (options.dual_schedule == NeximaSchedule::Exponential) {
+    if (options.dual_schedule == MinimaxSchedule::Exponential) {
       lr *= std::pow(options.dual_exponential_decay, static_cast<double>(std::max<std::int64_t>(0, step_ - 1)));
-    } else if (options.dual_schedule == NeximaSchedule::ViolationAdaptive) {
+    } else if (options.dual_schedule == MinimaxSchedule::ViolationAdaptive) {
       lr *= schedule_scale_(options.dual_schedule, options);
     }
     return lr;
   }
 
-  std::pair<double, double> effective_penalties_(const NeximaOptions& options) const {
+  std::pair<double, double> effective_penalties_(const MinimaxOptions& options) const {
     double eq = options.equality_penalty;
     double ineq = options.inequality_penalty;
-    if (options.penalty_schedule == NeximaSchedule::Exponential) {
+    if (options.penalty_schedule == MinimaxSchedule::Exponential) {
       const double scale =
           std::pow(options.penalty_exponential_growth, static_cast<double>(std::max<std::int64_t>(0, step_ - 1)));
       eq *= scale;
       ineq *= scale;
-    } else if (options.penalty_schedule == NeximaSchedule::ViolationAdaptive) {
+    } else if (options.penalty_schedule == MinimaxSchedule::ViolationAdaptive) {
       const double scale = schedule_scale_(options.penalty_schedule, options);
       eq *= scale;
       ineq *= scale;
@@ -677,11 +677,11 @@ private:
     if (constraints_.equalities) {
       const auto residuals = constraints_.equalities(params_value);
       if (residuals.size() != eq_multipliers_.size()) {
-        ::pluss::throw_error("pluss::ai::nn::optim::Nexima: equalities residual size changed at runtime");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: equalities residual size changed at runtime");
       }
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         if (!same_shape_(residuals[i], eq_multipliers_[i])) {
-          ::pluss::throw_error("pluss::ai::nn::optim::Nexima: equality residual shape changed at runtime");
+          ::pluss::throw_error("pluss::ai::nn::optim::Minimax: equality residual shape changed at runtime");
         }
         eq_multipliers_[i] = eq_multipliers_[i].add(residuals[i].mul(dual_lr));
         max_violation = std::max(max_violation, reduction_max_abs_(residuals[i]));
@@ -691,11 +691,11 @@ private:
     if (constraints_.inequalities) {
       const auto residuals = constraints_.inequalities(params_value);
       if (residuals.size() != ineq_multipliers_.size()) {
-        ::pluss::throw_error("pluss::ai::nn::optim::Nexima: inequalities residual size changed at runtime");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: inequalities residual size changed at runtime");
       }
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         if (!same_shape_(residuals[i], ineq_multipliers_[i])) {
-          ::pluss::throw_error("pluss::ai::nn::optim::Nexima: inequality residual shape changed at runtime");
+          ::pluss::throw_error("pluss::ai::nn::optim::Minimax: inequality residual shape changed at runtime");
         }
         const Series violation = residuals[i].relu();
         ineq_multipliers_[i] = ineq_multipliers_[i]
@@ -728,14 +728,14 @@ private:
   Series primal_delta_(std::size_t i,
                        const Series& sensitivity,
                        const Series& parameter_value,
-                       const NeximaOptions& options,
+                       const MinimaxOptions& options,
                        double b1_correction,
                        double b2_correction) {
     Series g = sensitivity;
 
     switch (options.primal_method) {
-      case NeximaPrimalMethod::Adam:
-      case NeximaPrimalMethod::AdamW: {
+      case MinimaxPrimalMethod::Adam:
+      case MinimaxPrimalMethod::AdamW: {
         const Series one = scalar_on_(1.0, parameter_value);
         const Series beta1 = scalar_on_(options.beta1, parameter_value);
         const Series beta2 = scalar_on_(options.beta2, parameter_value);
@@ -743,7 +743,7 @@ private:
         const Series one_minus_beta2 = one.sub(beta2);
         const Series lr = scalar_on_(options.learning_rate, parameter_value);
         const Series eps = scalar_on_(options.epsilon, parameter_value);
-        if (options.primal_method == NeximaPrimalMethod::Adam && options.weight_decay != 0.0) {
+        if (options.primal_method == MinimaxPrimalMethod::Adam && options.weight_decay != 0.0) {
           g = g.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
         }
 
@@ -758,13 +758,13 @@ private:
 
         const Series first_hat = first_moment_[i].div(scalar_on_(b1_correction, parameter_value));
         Series delta = first_hat.div(second_hat.sqrt().add(eps)).mul(lr);
-        if (options.primal_method == NeximaPrimalMethod::AdamW && options.weight_decay != 0.0) {
+        if (options.primal_method == MinimaxPrimalMethod::AdamW && options.weight_decay != 0.0) {
           delta = delta.add(parameter_value.mul(scalar_on_(options.learning_rate * options.weight_decay, parameter_value)));
         }
         return delta;
       }
 
-      case NeximaPrimalMethod::SGD: {
+      case MinimaxPrimalMethod::SGD: {
         const Series momentum = scalar_on_(options.momentum, parameter_value);
         const Series lr = scalar_on_(options.learning_rate, parameter_value);
         if (options.weight_decay != 0.0) {
@@ -777,7 +777,7 @@ private:
         return g.mul(lr);
       }
 
-      case NeximaPrimalMethod::RMSprop: {
+      case MinimaxPrimalMethod::RMSprop: {
         const Series one = scalar_on_(1.0, parameter_value);
         const Series alpha = scalar_on_(options.rmsprop_alpha, parameter_value);
         const Series one_minus_alpha = one.sub(alpha);
@@ -810,7 +810,7 @@ private:
       params_value.push_back(*p);
     }
 
-    const NeximaOptions& copt = constraint_options_();
+    const MinimaxOptions& copt = constraint_options_();
     const auto [eq_penalty, ineq_penalty] = effective_penalties_(copt);
     const double dual_lr = effective_dual_lr_(copt);
 
@@ -828,7 +828,7 @@ private:
           params_value);
       (void)penalty_value;
       if (constraint_grads.size() != total_grads.size()) {
-        ::pluss::throw_error("pluss::ai::nn::optim::Nexima: constraint gradient size mismatch");
+        ::pluss::throw_error("pluss::ai::nn::optim::Minimax: constraint gradient size mismatch");
       }
       for (std::size_t i = 0; i < total_grads.size(); ++i) {
         if (!constraint_grads[i].defined()) continue;
@@ -841,7 +841,7 @@ private:
     }
 
     for (const auto& group : groups_) {
-      const NeximaOptions& options = group.options;
+      const MinimaxOptions& options = group.options;
       const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
       const double b2_correction = 1.0 - std::pow(options.beta2, static_cast<double>(step_));
 
@@ -872,7 +872,7 @@ private:
   }
 
   std::vector<GroupState> groups_{};
-  NeximaConstraints constraints_{};
+  MinimaxConstraints constraints_{};
 
   std::vector<Series> first_moment_{};
   std::vector<Series> second_moment_{};

@@ -20,7 +20,7 @@ int main() {
   const Series wt = pluss::make_series(std::vector<double>{2.0, 1.0}, {2}, cfg);
   const Series bt = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
 
-  pluss::optim::MinimaxSolveOptions opts{};
+  pluss::optim::SeptimaSolveOptions opts{};
   opts.max_iterations = 200;
   opts.gradient_tolerance = 1e-8;
   opts.constraint_tolerance = 1e-8;
@@ -30,7 +30,7 @@ int main() {
   opts.step.equality_penalty = 8.0;
   opts.step.inequality_penalty = 8.0;
 
-  pluss::optim::MinimaxConstraints c{};
+  pluss::optim::SeptimaConstraints c{};
   c.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].sum() + x[1] - 2.0}; };
   c.equalities_trace = [](const std::vector<Trace>& x) {
     return std::vector<Trace>{pluss::subsp::math::diff::sum(x[0]) + x[1] - 2.0};
@@ -41,7 +41,7 @@ int main() {
   };
   c.lbs = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg), Series::undefined()};
 
-  const auto fit = pluss::optim::minimax(
+  const auto fit = pluss::optim::septima(
       [&](const std::vector<Trace>& x) -> Trace {
         return (pluss::subsp::math::diff::sum(
                     pluss::subsp::math::diff::square(x[0] - pluss::subsp::math::diff::fixed(wt))) +

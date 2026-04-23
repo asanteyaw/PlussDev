@@ -19,7 +19,7 @@ int main() {
   const Series w_target = pluss::make_series(std::vector<double>{2.0, 1.0}, {2}, cfg);
   const Series b_target = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
 
-  pluss::optim::MinimaxSolveOptions options{};
+  pluss::optim::SeptimaSolveOptions options{};
   options.max_iterations = 200;
   options.gradient_tolerance = 1e-8;
   options.constraint_tolerance = 1e-8;
@@ -31,7 +31,7 @@ int main() {
   options.step.project_bounds = true;
   options.step.enable_constraint_autodiff = true;
 
-  pluss::optim::MinimaxConstraints constraints{};
+  pluss::optim::SeptimaConstraints constraints{};
   constraints.equalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum() + p[1] - 2.0};
   };
@@ -49,7 +49,7 @@ int main() {
       Series::undefined(),
   };
 
-  options.progress_hook = [&](const pluss::optim::MinimaxProgressSnapshot& s) {
+  options.progress_hook = [&](const pluss::optim::SeptimaProgressSnapshot& s) {
     if (s.iteration % 50 == 0 || s.iteration == 1) {
       std::cout << "iter=" << s.iteration
                 << " obj=" << s.objective
@@ -60,7 +60,7 @@ int main() {
     return true;
   };
 
-  const auto fit = pluss::optim::minimax(
+  const auto fit = pluss::optim::septima(
       [&](const std::vector<Trace>& p) -> Trace {
         return (pluss::subsp::math::diff::sum(
                     pluss::subsp::math::diff::square(p[0] - pluss::subsp::math::diff::fixed(w_target))) +

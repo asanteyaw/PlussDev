@@ -1,2 +1,4 @@
 add_subdirectory(core)
-
+add_subdirectory(life_contingencies)
+add_subdirectory(loss_models)
+add_subdirectory(actuarial_models)

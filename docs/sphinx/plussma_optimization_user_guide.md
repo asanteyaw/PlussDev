@@ -3,7 +3,7 @@
 This guide covers the full public optimization surface in PlussMa:
 
 - constrained gradient-based optimization (`pluss::optim`)
-- functional Adam and Minimax (`pluss::optim`)
+- functional Adam and Septima (`pluss::optim`)
 - derivative-free optimization (`pluss::subsp::math::optimization`)
 
 ## Include And Namespace
@@ -427,21 +427,21 @@ pmo::adam_step_inplace(params, grads, state, opt);
 
 - parameter vector moves toward lower objective in one update step.
 
-## Functional Minimax
+## Functional Septima
 
 ### API Signature
 
-- `minimax(function<Trace(const vector<Trace>&)>, vector<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
-- `minimax(function<Trace(const ParameterPack<Trace>&)>, ParameterPack<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
-- `minimax(function<Series(const vector<Series>&)>, vector<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
-- `minimax(function<Series(const ParameterPack<Series>&)>, ParameterPack<Series>, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
-- `minimax(function<Trace(const Trace&)>, Series, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
-- `minimax(function<Series(const Series&)>, Series, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
-- `minimax(function<Trace(const Series&)>, Series, MinimaxSolveOptions = {}, MinimaxConstraints = {}) -> MinimaxResult`
+- `septima(function<Trace(const vector<Trace>&)>, vector<Series>, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
+- `septima(function<Trace(const ParameterPack<Trace>&)>, ParameterPack<Series>, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
+- `septima(function<Series(const vector<Series>&)>, vector<Series>, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
+- `septima(function<Series(const ParameterPack<Series>&)>, ParameterPack<Series>, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
+- `septima(function<Trace(const Trace&)>, Series, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
+- `septima(function<Series(const Series&)>, Series, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
+- `septima(function<Trace(const Series&)>, Series, SeptimaSolveOptions = {}, SeptimaConstraints = {}) -> SeptimaResult`
 
 ### Notes
 
-Minimax is now exposed as a one-shot solver (optima-style API) with internal primal-dual updates.
+Septima is now exposed as a one-shot solver (optima-style API) with internal primal-dual updates.
 
 ### Inputs
 
@@ -451,15 +451,15 @@ Minimax is now exposed as a one-shot solver (optima-style API) with internal pri
 
 ### Output
 
-- solved parameters, diagnostics, and final dual state in `MinimaxResult`
+- solved parameters, diagnostics, and final dual state in `SeptimaResult`
 
 ### Options
 
-`MinimaxSolveOptions`:
+`SeptimaSolveOptions`:
 
 - `max_iterations`, `max_no_progress_iterations`
 - `objective_tolerance`, `gradient_tolerance`, `step_tolerance`, `constraint_tolerance`
-- `step` (`MinimaxOptions`: Adam config + primal-dual controls)
+- `step` (`SeptimaOptions`: Adam config + primal-dual controls)
 - `stop_on_nonfinite_objective`
 - optional `progress_hook`
 
@@ -468,17 +468,17 @@ Minimax is now exposed as a one-shot solver (optima-style API) with internal pri
 Single-block objective with inline lambda (`Trace` callback):
 
 ```cpp
-pmo::MinimaxSolveOptions opt{};
+pmo::SeptimaSolveOptions opt{};
 opt.max_iterations = 120;
 opt.step.adam.learning_rate = 0.04;
 opt.step.dual_learning_rate = 0.08;
 opt.step.enable_constraint_autodiff = true;
 
-pmo::MinimaxConstraints c{};
+pmo::SeptimaConstraints c{};
 c.equalities = [](const std::vector<Series>& p) { return std::vector<Series>{p[0].sum() - 3.0}; };
 c.inequalities = [](const std::vector<Series>& p) { return std::vector<Series>{p[0].square().sum() - 10.0}; };
 
-const auto out = pmo::minimax(
+const auto out = pmo::septima(
   [&](const pmo::Trace& x) -> pmo::Trace {
     return pmo::sum(pmo::square(x - target)) * 0.5;
   },
@@ -494,7 +494,7 @@ pmo::Trace my_objective(const pmo::Trace& x) {
   return pmo::sum(pmo::square(x)) * 0.5;
 }
 
-const auto out = pmo::minimax(my_objective, x0, opt, c);
+const auto out = pmo::septima(my_objective, x0, opt, c);
 ```
 
 Series-returning objective:
@@ -504,7 +504,7 @@ pluss::Series my_series_objective(const pluss::Series& x) {
   return x.square().sum() * 0.5;
 }
 
-const auto out = pmo::minimax(my_series_objective, x0, opt, c);
+const auto out = pmo::septima(my_series_objective, x0, opt, c);
 ```
 
 Trace-from-Series objective:
@@ -514,7 +514,7 @@ pluss::optim::Trace my_trace_from_series(const pluss::Series& x) {
   return pluss::optim::trace(x.square().sum() * 0.5);
 }
 
-const auto out = pmo::minimax(my_trace_from_series, x0, opt, c);
+const auto out = pmo::septima(my_trace_from_series, x0, opt, c);
 ```
 
 Multi-block objective with `std::vector<Series>`:
@@ -525,7 +525,7 @@ std::vector<pluss::Series> x0_blocks{
   pluss::make_series(std::vector<double>{0.1}, {1})
 };
 
-auto out = pmo::minimax(
+auto out = pmo::septima(
   [](const std::vector<pluss::Series>& p) -> pluss::Series {
     return p[0].square().sum() + p[1].square().sum();
   },
@@ -542,7 +542,7 @@ const auto init = pmo::pack_vector({
   {"bias",    pluss::make_series(std::vector<double>{0.1}, {1})}
 });
 
-const auto out = pmo::minimax(
+const auto out = pmo::septima(
   [](const pmo::ParameterPack<pmo::Trace>& p) -> pmo::Trace {
     const auto w = p.at("weights");
     const auto b = p.at("bias");
@@ -564,14 +564,14 @@ struct MyObjective {
 };
 
 MyObjective obj{target};
-const auto out = pmo::minimax(obj, x0, opt, c);
+const auto out = pmo::septima(obj, x0, opt, c);
 ```
 
 Progress hook (print per iteration and optionally stop):
 
 ```cpp
-pmo::MinimaxSolveOptions hook_opt = opt;
-hook_opt.progress_hook = [](const pmo::MinimaxProgressSnapshot& s) {
+pmo::SeptimaSolveOptions hook_opt = opt;
+hook_opt.progress_hook = [](const pmo::SeptimaProgressSnapshot& s) {
   std::cout << "iter=" << s.iteration
             << " f=" << s.objective
             << " ginf=" << s.gradient_inf_norm
@@ -583,7 +583,7 @@ hook_opt.progress_hook = [](const pmo::MinimaxProgressSnapshot& s) {
 Constraints with autodiff residual callbacks:
 
 ```cpp
-pmo::MinimaxConstraints c{};
+pmo::SeptimaConstraints c{};
 c.equalities = [](const std::vector<pluss::Series>& p) {
   return std::vector<pluss::Series>{p[0].sum() - 1.0};
 };
@@ -595,15 +595,15 @@ c.equalities_trace = [](const std::vector<pmo::Trace>& p) {
 Result extraction:
 
 ```cpp
-const auto fit = pmo::minimax(my_series_objective, x0, opt, c);
+const auto fit = pmo::septima(my_series_objective, x0, opt, c);
 pluss::Series theta_hat = fit.params[0];
 ```
 
-### PlussMa vs PlussAI Minimax
+### PlussMa Septima vs PlussAI Minimax
 
-- `pluss::optim::minimax(...)` (PlussMa): one-shot solve API; returns `MinimaxResult`; best for numerical optimization workflows similar to `optima(...)`.
-- `pluss::nn::optim::Nexima` (PlussAI): optimizer object for training loops; you construct optimizer on parameter pointers and call `step()` repeatedly (or `step(closure)`).
-- PlussMa minimax owns the outer iteration loop internally; PlussAI minimax integrates into your explicit loop and module/optimizer state flow.
+- `pluss::optim::septima(...)` (PlussMa): one-shot solve API; returns `SeptimaResult`; best for numerical optimization workflows similar to `optima(...)`.
+- `pluss::nn::optim::Minimax` (PlussAI): optimizer object for training loops; you construct optimizer on parameter pointers and call `step()` repeatedly (or `step(closure)`).
+- PlussMa septima owns the outer iteration loop internally; PlussAI minimax integrates into your explicit loop and module/optimizer state flow.
 
 ### Expected output
 

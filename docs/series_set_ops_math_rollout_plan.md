@@ -67,11 +67,93 @@
   - `PlussMa/Actuarial/...`
 - Keep numerical analysis under `PlussMa/Math/...`.
 
-Planned actuarial tranche (first pass):
-- `PlussMa/Actuarial/LifeContingencies`: survival functions, discounting helpers, expected present value primitives.
-- `PlussMa/Actuarial/LossModels`: severity/frequency building blocks and aggregate loss approximations.
-- `PlussMa/Actuarial/Risk`: risk measures (VaR/CVaR) on top of existing Series math.
-- Catch2 coverage per module in `PlussMa/Actuarial/test` with accuracy contracts, edge-case guards, and regression tests.
+Actuarial subspace blueprint (active):
+- `PlussMa/Actuarial/core`: shared first-principles life-contingency EPV + commutation primitives.
+- `PlussMa/Actuarial/life_contingencies`: mortality/survival transforms and life-contingency utilities.
+- `PlussMa/Actuarial/loss_models`: severity/frequency and aggregate-loss building blocks.
+- `PlussMa/Actuarial/actuarial_models`: ratemaking/reserving workflow primitives.
+- Per-subfolder tests under each module `test/` directory with edge-case and regression contracts.
+
+### C1 Status (Current)
+- Completed: base scaffold and build wiring for `core`, `life_contingencies`, `loss_models`, `actuarial_models`.
+- Completed: baseline APIs + tests in all three new actuarial subfolders.
+- Completed: `life_contingencies` L1 foundation consolidation (`future_lifetime_pmf`, `curtate_expectation_curve`, core-survival reuse).
+- Completed: `loss_models` deep tranche L1-L4 foundation pass (distribution-backed moments, retention/layer kernels, parametric LEV/layer approximations).
+- Completed: `actuarial_models` deep tranche foundation pass (credibility/rate-indication workflows, BF reserving, chain-ladder scaffolds).
+
+### C1A. Actuarial Doctrine Guardrails (Must Hold)
+- Reuse existing Math/Stats/Actuarial code before adding new helpers.
+- Keep all heavy paths Series-native/vectorized; avoid host/scalar loops except when unavoidable.
+- Preserve platform fidelity (no forced CPU materialization in runtime kernels).
+- Keep centralized error handling (`PLUSS_CHECK`/`PLUSS_FAIL`/`pluss::throw_error`).
+- Prefer additive API growth and avoid duplicate semantics across subfolders.
+
+### C1B. Life Contingencies Blueprint (L1 Complete; L2-L4 Queued)
+L1. Foundation consolidation:
+- Reuse `core` validation/survival primitives where equivalent behavior already exists.
+- Keep `life_contingencies` as transform/derived utility layer, not a duplicate EPV engine.
+- Current primitives:
+  - `px_from_qx`, `qx_from_px`
+  - `force_of_mortality_from_qx`, `cumulative_hazard_from_qx`
+  - `survival_from_force`
+  - `future_lifetime_pmf`
+  - `curtate_expectation_of_life`, `curtate_expectation_curve`
+
+L2. Table + law layer (next in this subfolder):
+- Mortality law surfaces (Gompertz/Makeham-style hazard parameterizations).
+- Deterministic life-table transforms (`q_x`, `p_x`, `l_x`, `d_x`) with explicit shape/range contracts.
+- Select/ultimate table composition interfaces.
+
+L3. Product kernels in this subfolder (after L2):
+- Temporary/whole-life term families as reusable blocks that map onto `core` EPV primitives.
+- Deferred and increasing/decreasing benefit variants composed from base Series transforms.
+- Moment-level outputs where analytically available (mean/second moment/variance for selected products).
+
+L4. Test/perf gates for this subfolder:
+- Accuracy contracts vs closed forms and hand-worked toy tables.
+- Edge contracts: empty horizon, boundary probabilities, near-degenerate tails.
+- Determinism + platform-parity checks (CPU vs available accelerator backends).
+- Performance pass: enforce vectorized Series compositions and remove avoidable recomputation.
+
+### C1C. Sequencing After Life Contingencies
+- `loss_models` deep tranche:
+  - frequency/severity families, aggregate approximations, stop-loss and retention contracts.
+- `actuarial_models` deep tranche:
+  - pure-premium/loss-ratio ratemaking workflows, indicated-rate decomposition, reserving scaffolds.
+
+### C1D. Loss Models Blueprint (Completed Foundation Pass)
+L1. Frequency + severity families:
+- Reuse `pluss::subsp::stats::distr` objects/cumulants for Poisson, NegativeBinomial, Lognormal, and Gamma moment primitives.
+- Keep runtime kernels Series-native and platform-preserving; avoid bespoke scalar recurrences when distribution APIs already exist.
+
+L2. Aggregate-loss moments:
+- Keep `aggregate_moments(...)` as the canonical independent compound-moment combiner.
+- Add compound wrappers (`compound_poisson_*`, `compound_negative_binomial_*`) that compose frequency moments with scalar severity moments.
+
+L3. Retention/stop-loss contracts:
+- Retain `stop_loss_premium(...)` as empirical mean-excess contract.
+- Add reusable payout transforms (`excess_loss`, `limited_excess_loss`) and layer EPV helper (`layer_premium`) to avoid duplicated deductible/limit math.
+
+L4. Next in this subfolder:
+- Add severity-tail and stop-loss approximations from parametric severity CDFs where numerically stable.
+- Add aggregate approximation surfaces (normal/translated-gamma style) with explicit error/contract tests.
+
+### C1E. Actuarial Models Blueprint (Completed Foundation Pass)
+L1. Ratemaking core:
+- `expected_claim_cost`, `pure_premium`, `loss_ratio`.
+- Zero-safe curve variants: `pure_premium_curve`, `loss_ratio_curve`.
+
+L2. Credibility + indication:
+- `credibility_weight`, `credibility_blended_pure_premium`.
+- `indicated_premium`, `indicated_rate_change`.
+- Workflow primitive: `indicated_rate_change_from_experience`.
+
+L3. Reserving scaffolds:
+- Bornhuetter-Ferguson: `bornhuetter_ferguson_ultimate`, `bornhuetter_ferguson_reserve`.
+- Chain ladder: `chain_ladder_age_to_age`, `chain_ladder_cdf`, `chain_ladder_ultimate`, `chain_ladder_reserve`.
+
+L4. Validation gates:
+- Added focused regression tests for workflow parity, chain-ladder factor/cdf/ultimate/reserve outputs, and invalid CDF contracts.
 
 ### C2. Integration strategy
 - Multi-method integrator router:
@@ -92,4 +174,4 @@ Planned actuarial tranche (first pass):
 ## Immediate Next Steps (Now)
 1. Extend set-op tests for empty/degenerate and mixed dtype-path failures.
 2. Add ND axis-aware set variants (`*_along(dim)`) after contracts are finalized.
-3. Start PlussMa scaffold split: `Math/*` numerical analysis vs `Actuarial/*` domain models.
+3. Begin `life_contingencies` L2 (mortality-law surfaces and deterministic table transforms).

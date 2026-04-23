@@ -12,10 +12,10 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::pCPU;
-using pluss::optim::MinimaxConstraints;
-using pluss::optim::MinimaxLbfgsLineSearch;
-using pluss::optim::MinimaxOptimizer;
-using pluss::optim::MinimaxSolveOptions;
+using pluss::optim::SeptimaConstraints;
+using pluss::optim::SeptimaLbfgsLineSearch;
+using pluss::optim::SeptimaOptimizer;
+using pluss::optim::SeptimaSolveOptions;
 using pluss::optim::Trace;
 using pluss::optim::square;
 using pluss::optim::sum;
@@ -35,8 +35,8 @@ double as_f64_scalar(const Series& x) {
   return x.to(pCPU, ScalarType::Float64).item<double>();
 }
 
-MinimaxSolveOptions make_default_options() {
-  MinimaxSolveOptions options{};
+SeptimaSolveOptions make_default_options() {
+  SeptimaSolveOptions options{};
   options.max_iterations = 80;
   options.gradient_tolerance = 1e-10;
   options.step_tolerance = 1e-12;
@@ -72,7 +72,7 @@ void expect_vec_near(const std::vector<double>& lhs,
 } // namespace
 
 int main() {
-  static_assert(pluss::optim::MinimaxOptions{}.optimizer == MinimaxOptimizer::Adam);
+  static_assert(pluss::optim::SeptimaOptions{}.optimizer == SeptimaOptimizer::Adam);
 
   int failures = 0;
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
@@ -82,22 +82,22 @@ int main() {
   const double initial_objective = as_f64_scalar((init - target).square().sum() * 0.5);
 
   // --- Scenario 1: ADAM default path remains default and convergent ---
-  MinimaxSolveOptions adam_options = make_default_options();
+  SeptimaSolveOptions adam_options = make_default_options();
 
-  const auto adam_fit = pluss::optim::minimax(objective, init, adam_options);
+  const auto adam_fit = pluss::optim::septima(objective, init, adam_options);
   expect(adam_fit.state.step > 0, "ADAM run should execute at least one step", &failures);
   expect(adam_fit.state.adam.step > 0, "ADAM run should update adam state", &failures);
   expect(adam_fit.objective_value < initial_objective, "ADAM run should reduce objective", &failures);
 
   // --- Scenario 2: Explicit LBFGS path converges and updates LBFGS state ---
-  MinimaxSolveOptions lbfgs_options = adam_options;
+  SeptimaSolveOptions lbfgs_options = adam_options;
   lbfgs_options.max_iterations = 60;
-  lbfgs_options.step.optimizer = MinimaxOptimizer::Lbfgs;
+  lbfgs_options.step.optimizer = SeptimaOptimizer::Lbfgs;
   lbfgs_options.step.lbfgs.learning_rate = 0.25;
   lbfgs_options.step.lbfgs.history_size = 12;
   lbfgs_options.step.lbfgs.curvature_tolerance = 1e-12;
 
-  const auto lbfgs_fit = pluss::optim::minimax(objective, init, lbfgs_options);
+  const auto lbfgs_fit = pluss::optim::septima(objective, init, lbfgs_options);
   expect(lbfgs_fit.state.step > 0, "LBFGS run should execute at least one step", &failures);
   expect(lbfgs_fit.state.adam.step == 0, "LBFGS run should not mutate adam state", &failures);
   expect(lbfgs_fit.state.lbfgs_prev_grad_flat.defined(), "LBFGS run should track previous gradient", &failures);
@@ -112,12 +112,12 @@ int main() {
   expect(lbfgs_fit.objective_value < initial_objective, "LBFGS run should reduce objective", &failures);
 
   // --- Scenario 3: Determinism / baseline-style behavior (PyTorch-style exactness intent) ---
-  MinimaxSolveOptions deterministic = lbfgs_options;
+  SeptimaSolveOptions deterministic = lbfgs_options;
   deterministic.max_iterations = 14;
   deterministic.step.lbfgs.learning_rate = 0.2;
   deterministic.step.lbfgs.history_size = 8;
-  const auto lbfgs_fit_a = pluss::optim::minimax(objective, init, deterministic);
-  const auto lbfgs_fit_b = pluss::optim::minimax(objective, init, deterministic);
+  const auto lbfgs_fit_a = pluss::optim::septima(objective, init, deterministic);
+  const auto lbfgs_fit_b = pluss::optim::septima(objective, init, deterministic);
   expect_vec_near(
       to_vec_f64(lbfgs_fit_a.params[0]),
       to_vec_f64(lbfgs_fit_b.params[0]),
@@ -129,11 +129,11 @@ int main() {
          &failures);
 
   // --- Scenario 4: Limited-memory behavior / history cap ---
-  MinimaxSolveOptions short_history = lbfgs_options;
+  SeptimaSolveOptions short_history = lbfgs_options;
   short_history.max_iterations = 35;
   short_history.step.lbfgs.learning_rate = 0.2;
   short_history.step.lbfgs.history_size = 2;
-  const auto short_history_fit = pluss::optim::minimax(objective, init, short_history);
+  const auto short_history_fit = pluss::optim::septima(objective, init, short_history);
   expect(short_history_fit.state.lbfgs_s_history.size() <= 2,
          "LBFGS s-history should respect history_size cap",
          &failures);
@@ -142,11 +142,11 @@ int main() {
          &failures);
 
   // --- Scenario 5: Curvature gating behavior ---
-  MinimaxSolveOptions strict_curvature = lbfgs_options;
+  SeptimaSolveOptions strict_curvature = lbfgs_options;
   strict_curvature.max_iterations = 20;
   strict_curvature.step.lbfgs.learning_rate = 0.25;
   strict_curvature.step.lbfgs.curvature_tolerance = 1e8;
-  const auto strict_fit = pluss::optim::minimax(objective, init, strict_curvature);
+  const auto strict_fit = pluss::optim::septima(objective, init, strict_curvature);
   expect(strict_fit.state.lbfgs_s_history.empty(),
          "LBFGS should reject all curvature pairs with very strict curvature_tolerance",
          &failures);
@@ -155,12 +155,12 @@ int main() {
          &failures);
 
   // --- Scenario 6: Strong-Wolfe line search path ---
-  MinimaxSolveOptions strong_wolfe = lbfgs_options;
+  SeptimaSolveOptions strong_wolfe = lbfgs_options;
   strong_wolfe.max_iterations = 60;
   strong_wolfe.step.lbfgs.learning_rate = 1.0;
   strong_wolfe.step.lbfgs.max_line_search_iterations = 12;
-  strong_wolfe.step.lbfgs.line_search = MinimaxLbfgsLineSearch::StrongWolfe;
-  const auto strong_wolfe_fit = pluss::optim::minimax(objective, init, strong_wolfe);
+  strong_wolfe.step.lbfgs.line_search = SeptimaLbfgsLineSearch::StrongWolfe;
+  const auto strong_wolfe_fit = pluss::optim::septima(objective, init, strong_wolfe);
   expect(strong_wolfe_fit.objective_value < initial_objective, "LBFGS strong-wolfe should reduce objective", &failures);
   expect(strong_wolfe_fit.function_evaluations > strong_wolfe_fit.iteration,
          "LBFGS strong-wolfe should perform extra objective evaluations",
@@ -171,7 +171,7 @@ int main() {
   const Series b0 = pluss::make_series(std::vector<double>{5.0}, {1}, cfg).reshape({1});
   const Series wt = pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, cfg).reshape({2});
   const Series bt = pluss::make_series(std::vector<double>{-1.0}, {1}, cfg).reshape({1});
-  MinimaxConstraints constraints{};
+  SeptimaConstraints constraints{};
   constraints.lbs = {
       pluss::make_series(std::vector<double>{-10.0, -10.0}, {2}, cfg).reshape({2}),
       pluss::make_series(std::vector<double>{-10.0}, {1}, cfg).reshape({1}),
@@ -180,12 +180,12 @@ int main() {
       pluss::make_series(std::vector<double>{10.0, 10.0}, {2}, cfg).reshape({2}),
       pluss::make_series(std::vector<double>{10.0}, {1}, cfg).reshape({1}),
   };
-  MinimaxSolveOptions multiblock_options = lbfgs_options;
+  SeptimaSolveOptions multiblock_options = lbfgs_options;
   multiblock_options.max_iterations = 50;
   multiblock_options.step.lbfgs.learning_rate = 0.2;
   const double multiblock_initial =
       as_f64_scalar(((w0 - wt).square().sum() + (b0 - bt).square().sum()) * 0.5);
-  const auto multiblock_fit = pluss::optim::minimax(
+  const auto multiblock_fit = pluss::optim::septima(
       [wt, bt](const std::vector<Trace>& p) -> Trace {
         return (sum(square(p[0] - trace(wt, false))) + sum(square(p[1] - trace(bt, false)))) * 0.5;
       },
@@ -201,10 +201,10 @@ int main() {
   {
     bool threw = false;
     try {
-      MinimaxSolveOptions bad = make_default_options();
-      bad.step.optimizer = MinimaxOptimizer::Lbfgs;
+      SeptimaSolveOptions bad = make_default_options();
+      bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.learning_rate = 0.0;
-      (void)pluss::optim::minimax(objective, init, bad);
+      (void)pluss::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -213,10 +213,10 @@ int main() {
   {
     bool threw = false;
     try {
-      MinimaxSolveOptions bad = make_default_options();
-      bad.step.optimizer = MinimaxOptimizer::Lbfgs;
+      SeptimaSolveOptions bad = make_default_options();
+      bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.history_size = -1;
-      (void)pluss::optim::minimax(objective, init, bad);
+      (void)pluss::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -225,10 +225,10 @@ int main() {
   {
     bool threw = false;
     try {
-      MinimaxSolveOptions bad = make_default_options();
-      bad.step.optimizer = MinimaxOptimizer::Lbfgs;
+      SeptimaSolveOptions bad = make_default_options();
+      bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.wolfe_c1 = 1.2;
-      (void)pluss::optim::minimax(objective, init, bad);
+      (void)pluss::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -237,10 +237,10 @@ int main() {
   {
     bool threw = false;
     try {
-      MinimaxSolveOptions bad = make_default_options();
-      bad.step.optimizer = MinimaxOptimizer::Lbfgs;
+      SeptimaSolveOptions bad = make_default_options();
+      bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.wolfe_c2 = 0.0;
-      (void)pluss::optim::minimax(objective, init, bad);
+      (void)pluss::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -248,10 +248,10 @@ int main() {
   }
 
   if (failures != 0) {
-    std::cerr << "minimax_optimizer_selection_test failed with " << failures << " failure(s)\n";
+    std::cerr << "septima_optimizer_selection_test failed with " << failures << " failure(s)\n";
     return 1;
   }
 
-  std::cout << "minimax_optimizer_selection_test passed\n";
+  std::cout << "septima_optimizer_selection_test passed\n";
   return 0;
 }

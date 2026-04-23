@@ -43,6 +43,26 @@ Series bernoulli_log_mgf_kernel(const Series& t, double p) {
   return t.expm1().mul(p).log1p();
 }
 
+Series cumulant_from_raw_moments_series_(const std::vector<Series>& raw,
+                                         std::int64_t order,
+                                         std::string_view op) {
+  detail::require_positive_order(order, op);
+  PLUSS_CHECK(!raw.empty(), std::string(op) + ": raw moments must be non-empty");
+  PLUSS_CHECK(static_cast<std::size_t>(order) < raw.size(),
+              std::string(op) + ": raw moments must include moment of requested order");
+  std::vector<Series> cumulants(static_cast<std::size_t>(order) + 1, Series::undefined());
+  cumulants[0] = raw[0].mul(0.0);
+  for (std::int64_t n = 1; n <= order; ++n) {
+    Series value = raw[static_cast<std::size_t>(n)];
+    for (std::int64_t m = 1; m < n; ++m) {
+      const double coeff = detail::binomial_coeff(n - 1, m - 1);
+      value = value.sub(cumulants[static_cast<std::size_t>(m)].mul(raw[static_cast<std::size_t>(n - m)]).mul(coeff));
+    }
+    cumulants[static_cast<std::size_t>(n)] = value;
+  }
+  return cumulants[static_cast<std::size_t>(order)].to(raw[0].platform(), ScalarType::Float64);
+}
+
 double stirling_second_kind(std::int64_t n, std::int64_t k) {
   if (n < 0 || k < 0 || k > n) return 0.0;
   std::vector<long double> row(static_cast<std::size_t>(k) + 1, 0.0L);
@@ -89,6 +109,39 @@ double negbinom_cumulant_scalar(double r, double p, std::int64_t order) {
     throw std::domain_error("NegativeBinomial::cumulant requires r > 0 and 0 < p < 1");
   }
   return r * polylog_negative_integer_sum(1.0 - p, order - 1);
+}
+
+Series negbinom_cumulant_series_(const Series& r,
+                                 const Series& p,
+                                 std::int64_t order,
+                                 bool allow_p_one,
+                                 std::string_view op) {
+  detail::require_positive_order(order, op);
+  const Series r64 = r.to(ScalarType::Float64).contiguous();
+  const Series p64 = p.to(r64.platform(), ScalarType::Float64).contiguous();
+  detail::require_all_true(r64.gt(0.0), std::string(op) + ": r must be > 0");
+  if (allow_p_one) {
+    detail::require_all_true(p64.gt(0.0).logical_and(p64.le(1.0)),
+                             std::string(op) + ": p must lie in (0, 1]");
+  } else {
+    detail::require_all_true(p64.gt(0.0).logical_and(p64.lt(1.0)),
+                             std::string(op) + ": p must lie in (0, 1)");
+  }
+  const Series q = p64.mul(-1.0).add(1.0);
+  if (order == 1) {
+    return r64.mul(q).div(p64);
+  }
+  Series total = p64.mul(0.0);
+  for (std::int64_t k = 1; k <= order - 1; ++k) {
+    const double coeff = stirling_second_kind(order - 1, k) * factorial_int(k);
+    if (coeff == 0.0) {
+      continue;
+    }
+    total = total.add(q.pow(static_cast<double>(k))
+                          .div(p64.pow(static_cast<double>(k + 1)))
+                          .mul(coeff));
+  }
+  return r64.mul(total);
 }
 
 std::vector<double> fit_data_f64_(const Series& x, const char* op) {
@@ -240,9 +293,18 @@ Series Bernoulli::cgf(const Series& t) const {
 }
 
 Series Bernoulli::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!p_series.defined(),
-              "Bernoulli::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Bernoulli::cumulant");
+  if (p_series.defined()) {
+    const Series ps = p_series.to(ScalarType::Float64).contiguous();
+    detail::require_all_true(ps.ge(0.0).logical_and(ps.le(1.0)),
+                             "Bernoulli::cumulant: p_series must lie in [0, 1]");
+    std::vector<Series> raw(static_cast<std::size_t>(order) + 1, Series::undefined());
+    raw[0] = ps.mul(0.0).add(1.0);
+    for (std::int64_t n = 1; n <= order; ++n) {
+      raw[static_cast<std::size_t>(n)] = ps;
+    }
+    return cumulant_from_raw_moments_series_(raw, order, "Bernoulli::cumulant");
+  }
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
   for (std::int64_t n = 1; n <= order; ++n) {
@@ -387,9 +449,20 @@ Series Binomial::cgf(const Series& t) const {
 }
 
 Series Binomial::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!(count_series.defined() || p_series.defined()),
-              "Binomial::cumulant: Series parameters are unsupported here; use scalar-object parameters");
   detail::require_positive_order(order, "Binomial::cumulant");
+  if (count_series.defined() || p_series.defined()) {
+    const Series like = p_series.defined() ? p_series : count_series;
+    const Series n_series = count_series.defined()
+                                ? count_series.to(ScalarType::Float64).contiguous()
+                                : like.to(ScalarType::Float64).mul(0.0).add(static_cast<double>(count));
+    const Series p_param = p_series.defined()
+                               ? p_series.to(ScalarType::Float64).contiguous()
+                               : like.to(ScalarType::Float64).mul(0.0).add(p);
+    detail::require_all_true(n_series.ge(0.0), "Binomial::cumulant: count_series must be >= 0");
+    detail::require_all_true(p_param.ge(0.0).logical_and(p_param.le(1.0)),
+                             "Binomial::cumulant: p_series must lie in [0, 1]");
+    return Bernoulli{p_param}.cumulant(order).mul(n_series).to(n_series.platform(), ScalarType::Float64);
+  }
   return Bernoulli{p}.cumulant(order).mul(static_cast<double>(count));
 }
 
@@ -521,9 +594,13 @@ Series Poisson::cgf(const Series& t) const {
 }
 
 Series Poisson::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!lambda_series.defined(),
-              "Poisson::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Poisson::cumulant");
+  if (lambda_series.defined()) {
+    const Series lambda_param = lambda_series.to(ScalarType::Float64).contiguous();
+    detail::require_all_true(lambda_param.ge(0.0),
+                             "Poisson::cumulant: lambda_series must be >= 0");
+    return lambda_param;
+  }
   return detail::scalar_f64(lambda);
 }
 
@@ -649,9 +726,17 @@ Series Geometric::cgf(const Series& t) const {
 }
 
 Series Geometric::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!p_series.defined(),
-              "Geometric::cumulant: Series parameter is unsupported here; use scalar-object parameter");
   detail::require_positive_order(order, "Geometric::cumulant");
+  if (p_series.defined()) {
+    const Series p_param = p_series.to(ScalarType::Float64).contiguous();
+    detail::require_all_true(p_param.gt(0.0).logical_and(p_param.le(1.0)),
+                             "Geometric::cumulant: p_series must lie in (0, 1]");
+    if (order == 1) {
+      return p_param.reciprocal();
+    }
+    const Series one = p_param.mul(0.0).add(1.0);
+    return negbinom_cumulant_series_(one, p_param, order, /*allow_p_one=*/true, "Geometric::cumulant");
+  }
   if (!(p > 0.0 && p <= 1.0)) {
     throw std::domain_error("Geometric::cumulant requires 0 < p <= 1");
   }
@@ -796,8 +881,17 @@ Series NegativeBinomial::cgf(const Series& t) const {
 }
 
 Series NegativeBinomial::cumulant(std::int64_t order) const {
-  PLUSS_CHECK(!(r_series.defined() || p_series.defined()),
-              "NegativeBinomial::cumulant: Series parameters are unsupported here; use scalar-object parameters");
+  detail::require_positive_order(order, "NegativeBinomial::cumulant");
+  if (r_series.defined() || p_series.defined()) {
+    const Series like = r_series.defined() ? r_series : p_series;
+    const Series r_param = r_series.defined()
+                               ? r_series.to(ScalarType::Float64).contiguous()
+                               : like.to(ScalarType::Float64).mul(0.0).add(r);
+    const Series p_param = p_series.defined()
+                               ? p_series.to(ScalarType::Float64).contiguous()
+                               : like.to(ScalarType::Float64).mul(0.0).add(p);
+    return negbinom_cumulant_series_(r_param, p_param, order, /*allow_p_one=*/false, "NegativeBinomial::cumulant");
+  }
   return detail::scalar_f64(negbinom_cumulant_scalar(r, p, order));
 }
 

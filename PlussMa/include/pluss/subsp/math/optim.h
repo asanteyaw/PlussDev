@@ -8219,10 +8219,10 @@ inline std::vector<Series> adam_step(std::vector<Series> params,
   return params;
 }
 
-using MinimaxObjectiveTraceFn = std::function<Trace(const std::vector<Trace>&)>;
-using MinimaxObjectiveSeriesFn = std::function<Series(const std::vector<Series>&)>;
+using SeptimaObjectiveTraceFn = std::function<Trace(const std::vector<Trace>&)>;
+using SeptimaObjectiveSeriesFn = std::function<Series(const std::vector<Series>&)>;
 
-struct MinimaxOptions {
+struct SeptimaOptions {
   enum class Optimizer : std::uint8_t {
     Adam = 0,
     Lbfgs = 1,
@@ -8256,11 +8256,11 @@ struct MinimaxOptions {
   double nan_recovery_shrink{0.5};
 };
 
-using MinimaxOptimizer = MinimaxOptions::Optimizer;
-using MinimaxLbfgsLineSearch = MinimaxOptions::LbfgsLineSearch;
-using MinimaxLbfgsOptions = MinimaxOptions::LbfgsOptions;
+using SeptimaOptimizer = SeptimaOptions::Optimizer;
+using SeptimaLbfgsLineSearch = SeptimaOptions::LbfgsLineSearch;
+using SeptimaLbfgsOptions = SeptimaOptions::LbfgsOptions;
 
-struct MinimaxConstraints {
+struct SeptimaConstraints {
   using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
   using TraceResidualFn = std::function<std::vector<Trace>(const std::vector<Trace>&)>;
 
@@ -8276,7 +8276,7 @@ struct MinimaxConstraints {
   }
 };
 
-struct MinimaxState {
+struct SeptimaState {
   AdamState adam{};
   std::vector<Series> lbfgs_s_history{};
   std::vector<Series> lbfgs_y_history{};
@@ -8288,7 +8288,7 @@ struct MinimaxState {
   std::int64_t step{0};
 };
 
-enum class MinimaxExitFlag : std::int32_t {
+enum class SeptimaExitFlag : std::int32_t {
   Converged = 1,
   MaxIterations = 0,
   Stopped = -1,
@@ -8297,7 +8297,7 @@ enum class MinimaxExitFlag : std::int32_t {
   InvalidProblem = -4,
 };
 
-struct MinimaxProgressSnapshot {
+struct SeptimaProgressSnapshot {
   std::int64_t iteration{0};
   std::int64_t function_evaluations{0};
   double objective{std::numeric_limits<double>::infinity()};
@@ -8307,8 +8307,8 @@ struct MinimaxProgressSnapshot {
   std::string message{};
 };
 
-struct MinimaxSolveOptions {
-  MinimaxOptions step{};
+struct SeptimaSolveOptions {
+  SeptimaOptions step{};
   std::int64_t max_iterations{200};
   std::int64_t max_no_progress_iterations{25};
   double objective_tolerance{1e-12};
@@ -8316,12 +8316,12 @@ struct MinimaxSolveOptions {
   double step_tolerance{1e-10};
   double constraint_tolerance{1e-6};
   bool stop_on_nonfinite_objective{true};
-  std::function<bool(const MinimaxProgressSnapshot&)> progress_hook{};
+  std::function<bool(const SeptimaProgressSnapshot&)> progress_hook{};
 };
 
-struct MinimaxResult {
+struct SeptimaResult {
   std::vector<Series> params{};
-  MinimaxState state{};
+  SeptimaState state{};
   Series objective{};
   std::int64_t iteration{0};
   std::int64_t function_evaluations{0};
@@ -8330,158 +8330,158 @@ struct MinimaxResult {
   double step_inf_norm{0.0};
   double constraint_violation{std::numeric_limits<double>::infinity()};
   bool converged{false};
-  MinimaxExitFlag exit_flag{MinimaxExitFlag::MaxIterations};
+  SeptimaExitFlag exit_flag{SeptimaExitFlag::MaxIterations};
   std::string message{};
 };
 
 namespace detail {
 
-inline bool minimax_finite_(const Series& x) {
+inline bool septima_finite_(const Series& x) {
   return x.isfinite().all().item<bool>();
 }
 
-inline bool minimax_finite_(const std::vector<Series>& xs) {
-  return std::all_of(xs.begin(), xs.end(), [](const Series& x) { return minimax_finite_(x); });
+inline bool septima_finite_(const std::vector<Series>& xs) {
+  return std::all_of(xs.begin(), xs.end(), [](const Series& x) { return septima_finite_(x); });
 }
 
-inline double minimax_max_abs_(const Series& x) {
+inline double septima_max_abs_(const Series& x) {
   if (!x.defined() || x.numel() == 0) return 0.0;
   return x.abs().max().item<double>();
 }
 
-inline void minimax_validate_options_(const MinimaxOptions& options) {
-  if (options.optimizer == MinimaxOptions::Optimizer::Adam) {
+inline void septima_validate_options_(const SeptimaOptions& options) {
+  if (options.optimizer == SeptimaOptions::Optimizer::Adam) {
     if (!(options.adam.learning_rate > 0.0) || !std::isfinite(options.adam.learning_rate)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.learning_rate must be positive and finite");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: adam.learning_rate must be positive and finite");
     }
     if (!(options.adam.beta1 >= 0.0 && options.adam.beta1 < 1.0) || !std::isfinite(options.adam.beta1)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.beta1 must be in [0,1)");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: adam.beta1 must be in [0,1)");
     }
     if (!(options.adam.beta2 >= 0.0 && options.adam.beta2 < 1.0) || !std::isfinite(options.adam.beta2)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.beta2 must be in [0,1)");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: adam.beta2 must be in [0,1)");
     }
     if (!(options.adam.eps > 0.0) || !std::isfinite(options.adam.eps)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.eps must be positive and finite");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: adam.eps must be positive and finite");
     }
     if (options.adam.weight_decay < 0.0 || !std::isfinite(options.adam.weight_decay)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.weight_decay must be finite and >= 0");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: adam.weight_decay must be finite and >= 0");
     }
-  } else if (options.optimizer == MinimaxOptions::Optimizer::Lbfgs) {
+  } else if (options.optimizer == SeptimaOptions::Optimizer::Lbfgs) {
     if (!(options.lbfgs.learning_rate > 0.0) || !std::isfinite(options.lbfgs.learning_rate)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.learning_rate must be positive and finite");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbfgs.learning_rate must be positive and finite");
     }
     if (options.lbfgs.history_size < 0) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.history_size must be >= 0");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbfgs.history_size must be >= 0");
     }
     if (!(options.lbfgs.curvature_tolerance >= 0.0) || !std::isfinite(options.lbfgs.curvature_tolerance)) {
       ::pluss::throw_error(
-          "subsp::math::optim::minimax_step_inplace: lbfgs.curvature_tolerance must be finite and >= 0");
+          "subsp::math::optim::septima_step_inplace: lbfgs.curvature_tolerance must be finite and >= 0");
     }
     if (options.lbfgs.max_line_search_iterations < 0) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.max_line_search_iterations must be >= 0");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbfgs.max_line_search_iterations must be >= 0");
     }
     if (!(options.lbfgs.tolerance_change >= 0.0) || !std::isfinite(options.lbfgs.tolerance_change)) {
       ::pluss::throw_error(
-          "subsp::math::optim::minimax_step_inplace: lbfgs.tolerance_change must be finite and >= 0");
+          "subsp::math::optim::septima_step_inplace: lbfgs.tolerance_change must be finite and >= 0");
     }
     if (!(options.lbfgs.wolfe_c1 > 0.0 && options.lbfgs.wolfe_c1 < 1.0) || !std::isfinite(options.lbfgs.wolfe_c1)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.wolfe_c1 must be in (0,1)");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbfgs.wolfe_c1 must be in (0,1)");
     }
     if (!(options.lbfgs.wolfe_c2 > options.lbfgs.wolfe_c1 && options.lbfgs.wolfe_c2 < 1.0) ||
         !std::isfinite(options.lbfgs.wolfe_c2)) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.wolfe_c2 must be in (wolfe_c1,1)");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbfgs.wolfe_c2 must be in (wolfe_c1,1)");
     }
   } else {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: unsupported minimax optimizer");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: unsupported septima optimizer");
   }
   if (options.dual_learning_rate < 0.0 || !std::isfinite(options.dual_learning_rate)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: dual_learning_rate must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: dual_learning_rate must be finite and >= 0");
   }
   if (options.equality_penalty < 0.0 || !std::isfinite(options.equality_penalty)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: equality_penalty must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: equality_penalty must be finite and >= 0");
   }
   if (options.inequality_penalty < 0.0 || !std::isfinite(options.inequality_penalty)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: inequality_penalty must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: inequality_penalty must be finite and >= 0");
   }
   if (options.nan_recovery_attempts < 0) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: nan_recovery_attempts must be >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: nan_recovery_attempts must be >= 0");
   }
   if (!(options.nan_recovery_shrink > 0.0 && options.nan_recovery_shrink < 1.0) ||
       !std::isfinite(options.nan_recovery_shrink)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: nan_recovery_shrink must be in (0,1)");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: nan_recovery_shrink must be in (0,1)");
   }
 }
 
-inline void minimax_validate_solve_options_(const MinimaxSolveOptions& options) {
+inline void septima_validate_solve_options_(const SeptimaSolveOptions& options) {
   if (options.max_iterations <= 0) {
-    ::pluss::throw_error("subsp::math::optim::minimax: max_iterations must be > 0");
+    ::pluss::throw_error("subsp::math::optim::septima: max_iterations must be > 0");
   }
   if (options.max_no_progress_iterations < 0) {
-    ::pluss::throw_error("subsp::math::optim::minimax: max_no_progress_iterations must be >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima: max_no_progress_iterations must be >= 0");
   }
   if (!(options.objective_tolerance >= 0.0) || !std::isfinite(options.objective_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective_tolerance must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima: objective_tolerance must be finite and >= 0");
   }
   if (!(options.gradient_tolerance >= 0.0) || !std::isfinite(options.gradient_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::minimax: gradient_tolerance must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima: gradient_tolerance must be finite and >= 0");
   }
   if (!(options.step_tolerance >= 0.0) || !std::isfinite(options.step_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::minimax: step_tolerance must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima: step_tolerance must be finite and >= 0");
   }
   if (!(options.constraint_tolerance >= 0.0) || !std::isfinite(options.constraint_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::minimax: constraint_tolerance must be finite and >= 0");
+    ::pluss::throw_error("subsp::math::optim::septima: constraint_tolerance must be finite and >= 0");
   }
 }
 
-inline void minimax_validate_params_(const std::vector<Series>& params) {
+inline void septima_validate_params_(const std::vector<Series>& params) {
   if (params.empty()) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: expected non-empty params");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: expected non-empty params");
   }
   for (const auto& p : params) {
-    require_defined_(p, "minimax_step_inplace");
-    require_float_dtype_(p, "minimax_step_inplace");
+    require_defined_(p, "septima_step_inplace");
+    require_float_dtype_(p, "septima_step_inplace");
   }
 }
 
-inline void minimax_validate_constraints_(const std::vector<Series>& params,
-                                          const MinimaxConstraints& constraints,
+inline void septima_validate_constraints_(const std::vector<Series>& params,
+                                          const SeptimaConstraints& constraints,
                                           bool require_trace_callbacks) {
   if (!constraints.lbs.empty() && constraints.lbs.size() != params.size()) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbs size mismatch");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbs size mismatch");
   }
   if (!constraints.ubs.empty() && constraints.ubs.size() != params.size()) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: ubs size mismatch");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: ubs size mismatch");
   }
 
   for (std::size_t i = 1; i < params.size(); ++i) {
     if (params[i].platform() != params[0].platform()) {
       ::pluss::throw_error(
-          "subsp::math::optim::minimax_step_inplace: constrained updates require params on one platform");
+          "subsp::math::optim::septima_step_inplace: constrained updates require params on one platform");
     }
   }
 
   if (!constraints.equalities && constraints.equalities_trace) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: equalities_trace requires equalities");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: equalities_trace requires equalities");
   }
   if (!constraints.inequalities && constraints.inequalities_trace) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: inequalities_trace requires inequalities");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: inequalities_trace requires inequalities");
   }
   if (require_trace_callbacks && constraints.equalities && !constraints.equalities_trace) {
     ::pluss::throw_error(
-        "subsp::math::optim::minimax_step_inplace: equalities callback requires equalities_trace");
+        "subsp::math::optim::septima_step_inplace: equalities callback requires equalities_trace");
   }
   if (require_trace_callbacks && constraints.inequalities && !constraints.inequalities_trace) {
     ::pluss::throw_error(
-        "subsp::math::optim::minimax_step_inplace: inequalities callback requires inequalities_trace");
+        "subsp::math::optim::septima_step_inplace: inequalities callback requires inequalities_trace");
   }
 
   auto check_bound = [&](const std::vector<Series>& bounds, const char* name) {
     for (std::size_t i = 0; i < bounds.size(); ++i) {
       if (!bounds[i].defined()) continue;
-      require_same_platform_(params[i], bounds[i], "minimax_step_inplace");
+      require_same_platform_(params[i], bounds[i], "septima_step_inplace");
       if (!same_shape_(params[i], bounds[i])) {
         if (!(params[i].numel() == 1 && bounds[i].numel() == 1)) {
-          ::pluss::throw_error(std::string("subsp::math::optim::minimax_step_inplace: ") + name +
+          ::pluss::throw_error(std::string("subsp::math::optim::septima_step_inplace: ") + name +
                                    " shape mismatch");
         }
       }
@@ -8491,25 +8491,25 @@ inline void minimax_validate_constraints_(const std::vector<Series>& params,
   check_bound(constraints.ubs, "ubs");
 }
 
-inline std::vector<Series> minimax_evaluate_residuals_(
+inline std::vector<Series> septima_evaluate_residuals_(
     const std::vector<Series>& params,
-    const MinimaxConstraints::ResidualFn& fn,
+    const SeptimaConstraints::ResidualFn& fn,
     const char* name) {
   if (!fn) return {};
   const auto out = fn(params);
   for (const auto& r : out) {
-    require_defined_(r, "minimax_step_inplace");
-    require_same_platform_(params.front(), r, "minimax_step_inplace");
-    require_float_dtype_(r, "minimax_step_inplace");
+    require_defined_(r, "septima_step_inplace");
+    require_same_platform_(params.front(), r, "septima_step_inplace");
+    require_float_dtype_(r, "septima_step_inplace");
   }
   if (out.empty()) {
-    ::pluss::throw_error(std::string("subsp::math::optim::minimax_step_inplace: empty ") + name +
+    ::pluss::throw_error(std::string("subsp::math::optim::septima_step_inplace: empty ") + name +
                              " residual vector");
   }
   return out;
 }
 
-inline std::vector<Series> minimax_zero_like_(const std::vector<Series>& residuals) {
+inline std::vector<Series> septima_zero_like_(const std::vector<Series>& residuals) {
   std::vector<Series> lambda;
   lambda.reserve(residuals.size());
   for (const auto& r : residuals) {
@@ -8518,9 +8518,9 @@ inline std::vector<Series> minimax_zero_like_(const std::vector<Series>& residua
   return lambda;
 }
 
-inline void minimax_align_multipliers_(std::vector<Series>& lambda, const std::vector<Series>& residuals) {
+inline void septima_align_multipliers_(std::vector<Series>& lambda, const std::vector<Series>& residuals) {
   if (lambda.size() != residuals.size()) {
-    lambda = minimax_zero_like_(residuals);
+    lambda = septima_zero_like_(residuals);
     return;
   }
   for (std::size_t i = 0; i < residuals.size(); ++i) {
@@ -8532,20 +8532,20 @@ inline void minimax_align_multipliers_(std::vector<Series>& lambda, const std::v
   }
 }
 
-struct MinimaxVectorBlockLayout {
+struct SeptimaVectorBlockLayout {
   std::vector<std::int64_t> sizes{};
   std::int64_t numel{0};
   ScalarType scalar_type{ScalarType::Float32};
   pluss::codem::Platform platform{pluss::codem::Platform::CPU};
 };
 
-inline std::vector<MinimaxVectorBlockLayout> minimax_make_layout_(const std::vector<Series>& values) {
-  std::vector<MinimaxVectorBlockLayout> layout;
+inline std::vector<SeptimaVectorBlockLayout> septima_make_layout_(const std::vector<Series>& values) {
+  std::vector<SeptimaVectorBlockLayout> layout;
   layout.reserve(values.size());
   for (const auto& value : values) {
-    detail::require_defined_(value, "minimax_make_layout_");
+    detail::require_defined_(value, "septima_make_layout_");
     const auto sizes = value.sizes();
-    layout.push_back(MinimaxVectorBlockLayout{
+    layout.push_back(SeptimaVectorBlockLayout{
         std::vector<std::int64_t>(sizes.begin(), sizes.end()),
         value.numel(),
         value.scalar_type(),
@@ -8554,28 +8554,28 @@ inline std::vector<MinimaxVectorBlockLayout> minimax_make_layout_(const std::vec
   return layout;
 }
 
-inline Series minimax_flatten_values_(const std::vector<Series>& values) {
+inline Series septima_flatten_values_(const std::vector<Series>& values) {
   if (values.empty()) {
-    ::pluss::throw_error("subsp::math::optim::minimax_flatten_values_: expected non-empty values");
+    ::pluss::throw_error("subsp::math::optim::septima_flatten_values_: expected non-empty values");
   }
   std::vector<Series> flat;
   flat.reserve(values.size());
   for (const auto& value : values) {
-    detail::require_defined_(value, "minimax_flatten_values_");
+    detail::require_defined_(value, "septima_flatten_values_");
     flat.push_back(value.reshape({value.numel()}));
   }
   if (flat.size() == 1) return flat.front().to(ScalarType::Float64);
   return flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0).to(ScalarType::Float64);
 }
 
-inline std::vector<Series> minimax_unflatten_values_(const Series& flat_values,
-                                                     const std::vector<MinimaxVectorBlockLayout>& layout) {
-  detail::require_defined_(flat_values, "minimax_unflatten_values_");
+inline std::vector<Series> septima_unflatten_values_(const Series& flat_values,
+                                                     const std::vector<SeptimaVectorBlockLayout>& layout) {
+  detail::require_defined_(flat_values, "septima_unflatten_values_");
   Series flat = flat_values.reshape({flat_values.numel()});
   std::int64_t total_numel = 0;
   for (const auto& block : layout) total_numel += block.numel;
   if (flat.numel() != total_numel) {
-    ::pluss::throw_error("subsp::math::optim::minimax_unflatten_values_: flat size mismatch");
+    ::pluss::throw_error("subsp::math::optim::septima_unflatten_values_: flat size mismatch");
   }
 
   std::vector<Series> out;
@@ -8593,7 +8593,7 @@ inline std::vector<Series> minimax_unflatten_values_(const Series& flat_values,
   return out;
 }
 
-inline void minimax_project_bounds_(std::vector<Series>& params, const MinimaxConstraints& constraints) {
+inline void septima_project_bounds_(std::vector<Series>& params, const SeptimaConstraints& constraints) {
   for (std::size_t i = 0; i < params.size(); ++i) {
     if (!constraints.lbs.empty() && constraints.lbs[i].defined()) {
       params[i] = params[i].maximum(constraints.lbs[i]);
@@ -8604,44 +8604,44 @@ inline void minimax_project_bounds_(std::vector<Series>& params, const MinimaxCo
   }
 }
 
-inline double minimax_constraint_violation_(const std::vector<Series>& params,
-                                            const MinimaxConstraints& constraints) {
+inline double septima_constraint_violation_(const std::vector<Series>& params,
+                                            const SeptimaConstraints& constraints) {
   double violation = 0.0;
   if (constraints.equalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
-    for (const auto& r : residuals) violation = std::max(violation, minimax_max_abs_(r));
+    const auto residuals = septima_evaluate_residuals_(params, constraints.equalities, "equalities");
+    for (const auto& r : residuals) violation = std::max(violation, septima_max_abs_(r));
   }
   if (constraints.inequalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    const auto residuals = septima_evaluate_residuals_(params, constraints.inequalities, "inequalities");
     for (const auto& r : residuals) {
-      violation = std::max(violation, minimax_max_abs_(r.maximum(0.0)));
+      violation = std::max(violation, septima_max_abs_(r.maximum(0.0)));
     }
   }
   if (!constraints.lbs.empty()) {
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints.lbs[i].defined()) continue;
-      violation = std::max(violation, minimax_max_abs_((constraints.lbs[i] - params[i]).maximum(0.0)));
+      violation = std::max(violation, septima_max_abs_((constraints.lbs[i] - params[i]).maximum(0.0)));
     }
   }
   if (!constraints.ubs.empty()) {
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints.ubs[i].defined()) continue;
-      violation = std::max(violation, minimax_max_abs_((params[i] - constraints.ubs[i]).maximum(0.0)));
+      violation = std::max(violation, septima_max_abs_((params[i] - constraints.ubs[i]).maximum(0.0)));
     }
   }
   return violation;
 }
 
-inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
-                                                 const MinimaxState& state,
-                                                 const MinimaxConstraints& constraints,
-                                                 const MinimaxOptions& options) {
+inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
+                                                 const SeptimaState& state,
+                                                 const SeptimaConstraints& constraints,
+                                                 const SeptimaOptions& options) {
   Trace objective = sum(vars.front() * 0.0);
 
   if (constraints.equalities_trace) {
     const auto residuals = constraints.equalities_trace(vars);
     if (residuals.size() != state.lambda_equalities.size()) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: equality multiplier size mismatch");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: equality multiplier size mismatch");
     }
     for (std::size_t i = 0; i < residuals.size(); ++i) {
       objective = objective +
@@ -8653,7 +8653,7 @@ inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
   if (constraints.inequalities_trace) {
     const auto residuals = constraints.inequalities_trace(vars);
     if (residuals.size() != state.lambda_inequalities.size()) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: inequality multiplier size mismatch");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: inequality multiplier size mismatch");
     }
     for (std::size_t i = 0; i < residuals.size(); ++i) {
       const Trace violation = relu(residuals[i]);
@@ -8666,101 +8666,101 @@ inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
   return objective;
 }
 
-inline std::pair<Series, std::vector<Series>> minimax_augmented_value_grad_(
-    const MinimaxObjectiveTraceFn& objective_trace,
+inline std::pair<Series, std::vector<Series>> septima_augmented_value_grad_(
+    const SeptimaObjectiveTraceFn& objective_trace,
     const std::vector<Series>& params,
-    const MinimaxState& state,
-    const MinimaxOptions& options,
-    const MinimaxConstraints& constraints) {
+    const SeptimaState& state,
+    const SeptimaOptions& options,
+    const SeptimaConstraints& constraints) {
   if (!objective_trace) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: objective callback is required for line search");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: objective callback is required for line search");
   }
 
   if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
     return value_and_grad(
         [&](const std::vector<Trace>& vars) -> Trace {
-          return objective_trace(vars) + minimax_constraint_objective_trace_(vars, state, constraints, options);
+          return objective_trace(vars) + septima_constraint_objective_trace_(vars, state, constraints, options);
         },
         params);
   }
   return value_and_grad(objective_trace, params);
 }
 
-inline MinimaxState minimax_state_like_(const std::vector<Series>& params,
-                                        const MinimaxConstraints& constraints = {}) {
-  minimax_validate_params_(params);
-  minimax_validate_constraints_(params, constraints, false);
+inline SeptimaState septima_state_like_(const std::vector<Series>& params,
+                                        const SeptimaConstraints& constraints = {}) {
+  septima_validate_params_(params);
+  septima_validate_constraints_(params, constraints, false);
 
-  MinimaxState state;
+  SeptimaState state;
   state.adam = adam_state_like(params);
 
   if (constraints.equalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
-    state.lambda_equalities = minimax_zero_like_(residuals);
+    const auto residuals = septima_evaluate_residuals_(params, constraints.equalities, "equalities");
+    state.lambda_equalities = septima_zero_like_(residuals);
   }
   if (constraints.inequalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
-    state.lambda_inequalities = minimax_zero_like_(residuals);
+    const auto residuals = septima_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    state.lambda_inequalities = septima_zero_like_(residuals);
   }
-  state.constraint_violation = minimax_constraint_violation_(params, constraints);
+  state.constraint_violation = septima_constraint_violation_(params, constraints);
   return state;
 }
 
-inline double minimax_step_inplace_(std::vector<Series>& params,
+inline double septima_step_inplace_(std::vector<Series>& params,
                                     const std::vector<Series>& sensitivities,
-                                    MinimaxState& state,
-                                    const MinimaxOptions& options = {},
-                                    const MinimaxConstraints& constraints = {},
-                                    const MinimaxObjectiveTraceFn* objective_trace = nullptr,
+                                    SeptimaState& state,
+                                    const SeptimaOptions& options = {},
+                                    const SeptimaConstraints& constraints = {},
+                                    const SeptimaObjectiveTraceFn* objective_trace = nullptr,
                                     std::int64_t* function_evaluations = nullptr) {
-  minimax_validate_options_(options);
-  minimax_validate_params_(params);
-  minimax_validate_constraints_(params, constraints, options.enable_constraint_autodiff);
+  septima_validate_options_(options);
+  septima_validate_params_(params);
+  septima_validate_constraints_(params, constraints, options.enable_constraint_autodiff);
 
   if (sensitivities.size() != params.size()) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: params/sensitivities size mismatch");
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: params/sensitivities size mismatch");
   }
   if (state.adam.m.size() != params.size() || state.adam.v.size() != params.size()) {
-    state = minimax_state_like_(params, constraints);
+    state = septima_state_like_(params, constraints);
   }
 
   std::vector<Series> grads;
   grads.reserve(params.size());
   for (std::size_t i = 0; i < params.size(); ++i) {
-    require_defined_(sensitivities[i], "minimax_step_inplace");
-    require_same_platform_(params[i], sensitivities[i], "minimax_step_inplace");
-    require_float_dtype_(sensitivities[i], "minimax_step_inplace");
+    require_defined_(sensitivities[i], "septima_step_inplace");
+    require_same_platform_(params[i], sensitivities[i], "septima_step_inplace");
+    require_float_dtype_(sensitivities[i], "septima_step_inplace");
 
     Series g = sensitivities[i];
     if (!same_shape_(params[i], g)) {
       if (params[i].numel() == 1 && g.numel() == 1) {
         g = g.sum();
       } else {
-        ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: sensitivity shape mismatch");
+        ::pluss::throw_error("subsp::math::optim::septima_step_inplace: sensitivity shape mismatch");
       }
     }
     grads.push_back(std::move(g));
   }
 
   if (constraints.equalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
-    minimax_align_multipliers_(state.lambda_equalities, residuals);
+    const auto residuals = septima_evaluate_residuals_(params, constraints.equalities, "equalities");
+    septima_align_multipliers_(state.lambda_equalities, residuals);
   }
   if (constraints.inequalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
-    minimax_align_multipliers_(state.lambda_inequalities, residuals);
+    const auto residuals = septima_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    septima_align_multipliers_(state.lambda_inequalities, residuals);
   }
 
   if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
     const auto [constraint_loss, constraint_grads] = value_and_grad(
         [&](const std::vector<Trace>& vars) -> Trace {
-          return minimax_constraint_objective_trace_(vars, state, constraints, options);
+          return septima_constraint_objective_trace_(vars, state, constraints, options);
         },
         params);
     (void)constraint_loss;
 
     if (constraint_grads.size() != grads.size()) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: constraint gradient size mismatch");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: constraint gradient size mismatch");
     }
     for (std::size_t i = 0; i < grads.size(); ++i) {
       grads[i] = grads[i].add(constraint_grads[i]);
@@ -8770,7 +8770,7 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
   bool accepted = false;
   double step_inf_norm = 0.0;
 
-  if (options.optimizer == MinimaxOptions::Optimizer::Adam) {
+  if (options.optimizer == SeptimaOptions::Optimizer::Adam) {
     const auto params_backup = params;
     const AdamState adam_backup = state.adam;
     for (std::int64_t attempt = 0; attempt <= options.nan_recovery_attempts; ++attempt) {
@@ -8784,13 +8784,13 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
 
       adam_step_inplace(params, grads, state.adam, step_options);
       if (options.project_bounds) {
-        minimax_project_bounds_(params, constraints);
+        septima_project_bounds_(params, constraints);
       }
 
-      if (minimax_finite_(params) &&
-          minimax_finite_(state.adam.m) &&
-          minimax_finite_(state.adam.v) &&
-          minimax_finite_(state.adam.max_v)) {
+      if (septima_finite_(params) &&
+          septima_finite_(state.adam.m) &&
+          septima_finite_(state.adam.v) &&
+          septima_finite_(state.adam.max_v)) {
         accepted = true;
         break;
       }
@@ -8798,17 +8798,17 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
     if (!accepted) {
       params = params_backup;
       state.adam = adam_backup;
-      state.constraint_violation = minimax_constraint_violation_(params, constraints);
+      state.constraint_violation = septima_constraint_violation_(params, constraints);
       return 0.0;
     }
 
     for (std::size_t i = 0; i < params.size(); ++i) {
-      step_inf_norm = std::max(step_inf_norm, minimax_max_abs_(params[i] - params_backup[i]));
+      step_inf_norm = std::max(step_inf_norm, septima_max_abs_(params[i] - params_backup[i]));
     }
   } else {
-    const auto params_layout = minimax_make_layout_(params);
-    const Series flat_params = minimax_flatten_values_(params);
-    const Series flat_grad = minimax_flatten_values_(grads).to(flat_params.platform());
+    const auto params_layout = septima_make_layout_(params);
+    const Series flat_params = septima_flatten_values_(params);
+    const Series flat_grad = septima_flatten_values_(grads).to(flat_params.platform());
 
     std::vector<Series> next_s_history = state.lbfgs_s_history;
     std::vector<Series> next_y_history = state.lbfgs_y_history;
@@ -8827,23 +8827,23 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
           options.lbfgs.curvature_tolerance);
     }
     Series direction = lbfgs_direction_(flat_grad, next_s_history, next_y_history);
-    if (!minimax_finite_(direction) || !(series_dot_(flat_grad, direction) < 0.0)) {
+    if (!septima_finite_(direction) || !(series_dot_(flat_grad, direction) < 0.0)) {
       direction = flat_grad.mul(-1.0);
     }
 
     const double gtd = series_dot_(flat_grad, direction);
     if (!(gtd < -options.lbfgs.tolerance_change)) {
-      state.constraint_violation = minimax_constraint_violation_(params, constraints);
+      state.constraint_violation = septima_constraint_violation_(params, constraints);
       return 0.0;
     }
 
-    if (options.lbfgs.line_search == MinimaxOptions::LbfgsLineSearch::StrongWolfe) {
+    if (options.lbfgs.line_search == SeptimaOptions::LbfgsLineSearch::StrongWolfe) {
       if (!objective_trace) {
         ::pluss::throw_error(
-            "subsp::math::optim::minimax_step_inplace: LBFGS strong-wolfe line search requires objective callback");
+            "subsp::math::optim::septima_step_inplace: LBFGS strong-wolfe line search requires objective callback");
       }
 
-      const auto [base_value, base_grad] = minimax_augmented_value_grad_(
+      const auto [base_value, base_grad] = septima_augmented_value_grad_(
           *objective_trace,
           params,
           state,
@@ -8858,29 +8858,29 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
 
       for (std::int64_t ls = 0; ls < ls_iters; ++ls) {
         const Series trial_flat = flat_params.add(direction.mul(step_size));
-        auto trial_params = minimax_unflatten_values_(trial_flat, params_layout);
+        auto trial_params = septima_unflatten_values_(trial_flat, params_layout);
         if (options.project_bounds) {
-          minimax_project_bounds_(trial_params, constraints);
+          septima_project_bounds_(trial_params, constraints);
         }
-        if (!minimax_finite_(trial_params)) {
+        if (!septima_finite_(trial_params)) {
           step_size *= options.nan_recovery_shrink;
           continue;
         }
 
-        const auto [trial_value, trial_grads] = minimax_augmented_value_grad_(
+        const auto [trial_value, trial_grads] = septima_augmented_value_grad_(
             *objective_trace,
             trial_params,
             state,
             options,
             constraints);
         if (function_evaluations) ++(*function_evaluations);
-        if (!minimax_finite_(trial_value) || !minimax_finite_(trial_grads)) {
+        if (!septima_finite_(trial_value) || !septima_finite_(trial_grads)) {
           step_size *= options.nan_recovery_shrink;
           continue;
         }
 
         const double trial_objective = trial_value.item<double>();
-        const Series trial_grad_flat = minimax_flatten_values_(trial_grads).to(flat_params.platform());
+        const Series trial_grad_flat = septima_flatten_values_(trial_grads).to(flat_params.platform());
         const double gtd_new = series_dot_(trial_grad_flat, direction);
 
         const bool armijo_ok =
@@ -8892,9 +8892,9 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
           state.lbfgs_s_history = next_s_history;
           state.lbfgs_y_history = next_y_history;
           state.lbfgs_prev_grad_flat = flat_grad;
-          const Series next_flat = minimax_flatten_values_(params).to(flat_params.platform());
+          const Series next_flat = septima_flatten_values_(params).to(flat_params.platform());
           state.lbfgs_prev_step_flat = next_flat.sub(flat_params);
-          step_inf_norm = minimax_max_abs_(state.lbfgs_prev_step_flat);
+          step_inf_norm = septima_max_abs_(state.lbfgs_prev_step_flat);
           accepted = true;
           break;
         }
@@ -8909,25 +8909,25 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
           step_size *= std::pow(options.nan_recovery_shrink, static_cast<double>(attempt));
         }
         const Series trial_flat = flat_params.add(direction.mul(step_size));
-        auto trial_params = minimax_unflatten_values_(trial_flat, params_layout);
+        auto trial_params = septima_unflatten_values_(trial_flat, params_layout);
         if (options.project_bounds) {
-          minimax_project_bounds_(trial_params, constraints);
+          septima_project_bounds_(trial_params, constraints);
         }
-        if (!minimax_finite_(trial_params)) continue;
+        if (!septima_finite_(trial_params)) continue;
 
         params = std::move(trial_params);
         state.lbfgs_s_history = next_s_history;
         state.lbfgs_y_history = next_y_history;
         state.lbfgs_prev_grad_flat = flat_grad;
-        const Series next_flat = minimax_flatten_values_(params).to(flat_params.platform());
+        const Series next_flat = septima_flatten_values_(params).to(flat_params.platform());
         state.lbfgs_prev_step_flat = next_flat.sub(flat_params);
-        step_inf_norm = minimax_max_abs_(state.lbfgs_prev_step_flat);
+        step_inf_norm = septima_max_abs_(state.lbfgs_prev_step_flat);
         accepted = true;
         break;
       }
     }
     if (!accepted) {
-      state.constraint_violation = minimax_constraint_violation_(params, constraints);
+      state.constraint_violation = septima_constraint_violation_(params, constraints);
       return 0.0;
     }
   }
@@ -8935,20 +8935,20 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
   double violation = 0.0;
 
   if (constraints.equalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
-    minimax_align_multipliers_(state.lambda_equalities, residuals);
+    const auto residuals = septima_evaluate_residuals_(params, constraints.equalities, "equalities");
+    septima_align_multipliers_(state.lambda_equalities, residuals);
     for (std::size_t i = 0; i < residuals.size(); ++i) {
-      violation = std::max(violation, minimax_max_abs_(residuals[i]));
+      violation = std::max(violation, septima_max_abs_(residuals[i]));
       state.lambda_equalities[i] = state.lambda_equalities[i].add(residuals[i].mul(options.dual_learning_rate));
     }
   }
 
   if (constraints.inequalities) {
-    const auto residuals = minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
-    minimax_align_multipliers_(state.lambda_inequalities, residuals);
+    const auto residuals = septima_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    septima_align_multipliers_(state.lambda_inequalities, residuals);
     for (std::size_t i = 0; i < residuals.size(); ++i) {
       const Series ineq_violation = residuals[i].maximum(0.0);
-      violation = std::max(violation, minimax_max_abs_(ineq_violation));
+      violation = std::max(violation, septima_max_abs_(ineq_violation));
       state.lambda_inequalities[i] =
           state.lambda_inequalities[i].add(ineq_violation.mul(options.dual_learning_rate)).maximum(0.0);
     }
@@ -8957,13 +8957,13 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
   if (!constraints.lbs.empty()) {
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints.lbs[i].defined()) continue;
-      violation = std::max(violation, minimax_max_abs_((constraints.lbs[i] - params[i]).maximum(0.0)));
+      violation = std::max(violation, septima_max_abs_((constraints.lbs[i] - params[i]).maximum(0.0)));
     }
   }
   if (!constraints.ubs.empty()) {
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints.ubs[i].defined()) continue;
-      violation = std::max(violation, minimax_max_abs_((params[i] - constraints.ubs[i]).maximum(0.0)));
+      violation = std::max(violation, septima_max_abs_((params[i] - constraints.ubs[i]).maximum(0.0)));
     }
   }
   state.constraint_violation = violation;
@@ -8972,41 +8972,41 @@ inline double minimax_step_inplace_(std::vector<Series>& params,
   return step_inf_norm;
 }
 
-inline void minimax_step_inplace_from_tape_(std::vector<Series>& params,
-                                            MinimaxState& state,
-                                            const MinimaxOptions& options = {},
-                                            const MinimaxConstraints& constraints = {}) {
+inline void septima_step_inplace_from_tape_(std::vector<Series>& params,
+                                            SeptimaState& state,
+                                            const SeptimaOptions& options = {},
+                                            const SeptimaConstraints& constraints = {}) {
   std::vector<Series> sensitivities;
   sensitivities.reserve(params.size());
   for (const auto& p : params) {
     const Series g = p.sensitivity();
     if (!g.defined()) {
-      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: undefined sensitivity in params");
+      ::pluss::throw_error("subsp::math::optim::septima_step_inplace: undefined sensitivity in params");
     }
     sensitivities.push_back(g);
   }
-  (void)minimax_step_inplace_(params, sensitivities, state, options, constraints);
+  (void)septima_step_inplace_(params, sensitivities, state, options, constraints);
 }
 
 } // namespace detail
 
-inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
+inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
                              std::vector<Series> initial_params,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_trace) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
-  detail::minimax_validate_solve_options_(solve_options);
-  detail::minimax_validate_options_(solve_options.step);
-  detail::minimax_validate_params_(initial_params);
-  detail::minimax_validate_constraints_(
+  detail::septima_validate_solve_options_(solve_options);
+  detail::septima_validate_options_(solve_options.step);
+  detail::septima_validate_params_(initial_params);
+  detail::septima_validate_constraints_(
       initial_params, constraints, solve_options.step.enable_constraint_autodiff);
 
-  MinimaxResult out;
+  SeptimaResult out;
   out.params = std::move(initial_params);
-  out.state = detail::minimax_state_like_(out.params, constraints);
-  out.exit_flag = MinimaxExitFlag::MaxIterations;
+  out.state = detail::septima_state_like_(out.params, constraints);
+  out.exit_flag = SeptimaExitFlag::MaxIterations;
 
   double prev_value = std::numeric_limits<double>::infinity();
   std::int64_t no_progress_count = 0;
@@ -9017,13 +9017,13 @@ inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
     out.objective = value;
 
     if (!value.defined() || value.numel() != 1) {
-      ::pluss::throw_error("subsp::math::optim::minimax: objective must return a scalar Trace");
+      ::pluss::throw_error("subsp::math::optim::septima: objective must return a scalar Trace");
     }
     out.objective_value = value.item<double>();
     if (!std::isfinite(out.objective_value)) {
       out.iteration = iter;
       out.message = "objective became non-finite";
-      out.exit_flag = MinimaxExitFlag::NonFiniteEvaluation;
+      out.exit_flag = SeptimaExitFlag::NonFiniteEvaluation;
       if (solve_options.stop_on_nonfinite_objective) {
         break;
       }
@@ -9031,10 +9031,10 @@ inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
 
     out.gradient_inf_norm = 0.0;
     for (const auto& g : grads) {
-      out.gradient_inf_norm = std::max(out.gradient_inf_norm, detail::minimax_max_abs_(g));
+      out.gradient_inf_norm = std::max(out.gradient_inf_norm, detail::septima_max_abs_(g));
     }
 
-    out.step_inf_norm = detail::minimax_step_inplace_(
+    out.step_inf_norm = detail::septima_step_inplace_(
         out.params,
         grads,
         out.state,
@@ -9051,7 +9051,7 @@ inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
         out.constraint_violation <= solve_options.constraint_tolerance;
     if (converged) {
       out.converged = true;
-      out.exit_flag = MinimaxExitFlag::Converged;
+      out.exit_flag = SeptimaExitFlag::Converged;
       out.message = "converged";
     } else {
       const bool objective_stalled =
@@ -9065,12 +9065,12 @@ inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
       }
       if (solve_options.max_no_progress_iterations > 0 &&
           no_progress_count >= solve_options.max_no_progress_iterations) {
-        out.exit_flag = MinimaxExitFlag::NoProgress;
+        out.exit_flag = SeptimaExitFlag::NoProgress;
         out.message = "no progress";
       }
     }
 
-    MinimaxProgressSnapshot snapshot{};
+    SeptimaProgressSnapshot snapshot{};
     snapshot.iteration = out.iteration;
     snapshot.function_evaluations = out.function_evaluations;
     snapshot.objective = out.objective_value;
@@ -9079,26 +9079,26 @@ inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
     snapshot.constraint_violation = out.constraint_violation;
     snapshot.message = out.message;
     if (solve_options.progress_hook && !solve_options.progress_hook(snapshot)) {
-      out.exit_flag = MinimaxExitFlag::Stopped;
+      out.exit_flag = SeptimaExitFlag::Stopped;
       out.message = "stopped by progress hook";
     }
 
     prev_value = out.objective_value;
-    if (out.exit_flag != MinimaxExitFlag::MaxIterations) break;
+    if (out.exit_flag != SeptimaExitFlag::MaxIterations) break;
   }
 
-  if (out.exit_flag == MinimaxExitFlag::MaxIterations) {
+  if (out.exit_flag == SeptimaExitFlag::MaxIterations) {
     out.message = "max iterations reached";
   }
   return out;
 }
 
-inline MinimaxResult minimax(const std::function<Trace(const ParameterPack<Trace>&)>& objective_autodiff,
+inline SeptimaResult septima(const std::function<Trace(const ParameterPack<Trace>&)>& objective_autodiff,
                              const ParameterPack<Series>& initial_params,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_autodiff) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
   std::vector<Series> init_values;
   std::vector<std::string> names;
@@ -9109,10 +9109,10 @@ inline MinimaxResult minimax(const std::function<Trace(const ParameterPack<Trace
     init_values.push_back(b.value);
   }
 
-  auto out = minimax(
+  auto out = septima(
       [f = objective_autodiff, names = std::move(names)](const std::vector<Trace>& vars) -> Trace {
         if (vars.size() != names.size()) {
-          ::pluss::throw_error("subsp::math::optim::minimax: objective parameter block count mismatch");
+          ::pluss::throw_error("subsp::math::optim::septima: objective parameter block count mismatch");
         }
         std::vector<typename ParameterPack<Trace>::Block> blocks;
         blocks.reserve(vars.size());
@@ -9127,14 +9127,14 @@ inline MinimaxResult minimax(const std::function<Trace(const ParameterPack<Trace
   return out;
 }
 
-inline MinimaxResult minimax(const MinimaxObjectiveSeriesFn& objective_series,
+inline SeptimaResult septima(const SeptimaObjectiveSeriesFn& objective_series,
                              std::vector<Series> initial_params,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_series) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
-  return minimax(
+  return septima(
       [f = objective_series](const std::vector<Trace>& vars) -> Trace {
         std::vector<Series> values;
         values.reserve(vars.size());
@@ -9146,12 +9146,12 @@ inline MinimaxResult minimax(const MinimaxObjectiveSeriesFn& objective_series,
       constraints);
 }
 
-inline MinimaxResult minimax(const std::function<Series(const ParameterPack<Series>&)>& objective_series,
+inline SeptimaResult septima(const std::function<Series(const ParameterPack<Series>&)>& objective_series,
                              const ParameterPack<Series>& initial_params,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_series) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
   std::vector<Series> init_values;
   std::vector<std::string> names;
@@ -9162,10 +9162,10 @@ inline MinimaxResult minimax(const std::function<Series(const ParameterPack<Seri
     init_values.push_back(b.value);
   }
 
-  return minimax(
+  return septima(
       [f = objective_series, names = std::move(names)](const std::vector<Trace>& vars) -> Trace {
         if (vars.size() != names.size()) {
-          ::pluss::throw_error("subsp::math::optim::minimax: objective parameter block count mismatch");
+          ::pluss::throw_error("subsp::math::optim::septima: objective parameter block count mismatch");
         }
         std::vector<typename ParameterPack<Series>::Block> blocks;
         blocks.reserve(vars.size());
@@ -9179,25 +9179,25 @@ inline MinimaxResult minimax(const std::function<Series(const ParameterPack<Seri
       constraints);
 }
 
-inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
+inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
                              const Series& initial_param,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
-  MinimaxResult out = minimax(objective_trace, std::vector<Series>{initial_param}, solve_options, constraints);
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
+  SeptimaResult out = septima(objective_trace, std::vector<Series>{initial_param}, solve_options, constraints);
   return out;
 }
 
-inline MinimaxResult minimax(const std::function<Trace(const Trace&)>& objective_trace,
+inline SeptimaResult septima(const std::function<Trace(const Trace&)>& objective_trace,
                              const Series& initial_param,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_trace) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
-  return minimax(
+  return septima(
       [&](const std::vector<Trace>& vars) -> Trace {
         if (vars.size() != 1) {
-          ::pluss::throw_error("subsp::math::optim::minimax: expected one parameter block");
+          ::pluss::throw_error("subsp::math::optim::septima: expected one parameter block");
         }
         return objective_trace(vars[0]);
       },
@@ -9206,17 +9206,17 @@ inline MinimaxResult minimax(const std::function<Trace(const Trace&)>& objective
       constraints);
 }
 
-inline MinimaxResult minimax(const std::function<Series(const Series&)>& objective_series,
+inline SeptimaResult septima(const std::function<Series(const Series&)>& objective_series,
                              const Series& initial_param,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_series) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
-  return minimax(
+  return septima(
       [&](const std::vector<Trace>& vars) -> Trace {
         if (vars.size() != 1) {
-          ::pluss::throw_error("subsp::math::optim::minimax: expected one parameter block");
+          ::pluss::throw_error("subsp::math::optim::septima: expected one parameter block");
         }
         return Trace(objective_series(vars[0].value()));
       },
@@ -9225,17 +9225,17 @@ inline MinimaxResult minimax(const std::function<Series(const Series&)>& objecti
       constraints);
 }
 
-inline MinimaxResult minimax(const std::function<Trace(const Series&)>& objective_autodiff_series,
+inline SeptimaResult septima(const std::function<Trace(const Series&)>& objective_autodiff_series,
                              const Series& initial_param,
-                             const MinimaxSolveOptions& solve_options = {},
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options = {},
+                             const SeptimaConstraints& constraints = {}) {
   if (!objective_autodiff_series) {
-    ::pluss::throw_error("subsp::math::optim::minimax: objective callback is required");
+    ::pluss::throw_error("subsp::math::optim::septima: objective callback is required");
   }
-  return minimax(
+  return septima(
       [&](const std::vector<Trace>& vars) -> Trace {
         if (vars.size() != 1) {
-          ::pluss::throw_error("subsp::math::optim::minimax: expected one parameter block");
+          ::pluss::throw_error("subsp::math::optim::septima: expected one parameter block");
         }
         return objective_autodiff_series(vars[0].value());
       },
@@ -9244,37 +9244,37 @@ inline MinimaxResult minimax(const std::function<Trace(const Series&)>& objectiv
       constraints);
 }
 
-inline MinimaxResult minimax(const std::function<Trace(const Trace&)>& objective_trace,
+inline SeptimaResult septima(const std::function<Trace(const Trace&)>& objective_trace,
                              const ParameterPack<Series>& initial_params,
-                             const MinimaxSolveOptions& solve_options,
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options,
+                             const SeptimaConstraints& constraints = {}) {
   if (initial_params.size() != 1) {
-    ::pluss::throw_error("subsp::math::optim::minimax: single-trace objective requires one parameter block");
+    ::pluss::throw_error("subsp::math::optim::septima: single-trace objective requires one parameter block");
   }
   const auto& first = initial_params.blocks().front();
-  return minimax(objective_trace, initial_params.at(first.name), solve_options, constraints);
+  return septima(objective_trace, initial_params.at(first.name), solve_options, constraints);
 }
 
-inline MinimaxResult minimax(const std::function<Series(const Series&)>& objective_series,
+inline SeptimaResult septima(const std::function<Series(const Series&)>& objective_series,
                              const ParameterPack<Series>& initial_params,
-                             const MinimaxSolveOptions& solve_options,
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options,
+                             const SeptimaConstraints& constraints = {}) {
   if (initial_params.size() != 1) {
-    ::pluss::throw_error("subsp::math::optim::minimax: single-series objective requires one parameter block");
+    ::pluss::throw_error("subsp::math::optim::septima: single-series objective requires one parameter block");
   }
   const auto& first = initial_params.blocks().front();
-  return minimax(objective_series, initial_params.at(first.name), solve_options, constraints);
+  return septima(objective_series, initial_params.at(first.name), solve_options, constraints);
 }
 
-inline MinimaxResult minimax(const std::function<Trace(const Series&)>& objective_autodiff_series,
+inline SeptimaResult septima(const std::function<Trace(const Series&)>& objective_autodiff_series,
                              const ParameterPack<Series>& initial_params,
-                             const MinimaxSolveOptions& solve_options,
-                             const MinimaxConstraints& constraints = {}) {
+                             const SeptimaSolveOptions& solve_options,
+                             const SeptimaConstraints& constraints = {}) {
   if (initial_params.size() != 1) {
-    ::pluss::throw_error("subsp::math::optim::minimax: single-series objective requires one parameter block");
+    ::pluss::throw_error("subsp::math::optim::septima: single-series objective requires one parameter block");
   }
   const auto& first = initial_params.blocks().front();
-  return minimax(objective_autodiff_series, initial_params.at(first.name), solve_options, constraints);
+  return septima(objective_autodiff_series, initial_params.at(first.name), solve_options, constraints);
 }
 
 } // namespace pluss::subsp::math::optim

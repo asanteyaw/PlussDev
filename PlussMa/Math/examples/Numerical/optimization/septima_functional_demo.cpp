@@ -16,7 +16,7 @@ int main() {
   Series x = pluss::make_series(std::vector<double>{0.5, -0.5}, {2}, cfg);
   const Series target = pluss::make_series(std::vector<double>{2.0, 1.0}, {2}, cfg);
 
-  pluss::optim::MinimaxSolveOptions options{};
+  pluss::optim::SeptimaSolveOptions options{};
   options.max_iterations = 120;
   options.gradient_tolerance = 1e-8;
   options.constraint_tolerance = 1e-8;
@@ -27,7 +27,7 @@ int main() {
   options.step.project_bounds = true;
   options.step.enable_constraint_autodiff = true;
 
-  pluss::optim::MinimaxConstraints constraints{};
+  pluss::optim::SeptimaConstraints constraints{};
   constraints.equalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum() - 3.0};
   };
@@ -42,7 +42,7 @@ int main() {
   };
   constraints.lbs = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg)};
 
-  options.progress_hook = [&](const pluss::optim::MinimaxProgressSnapshot& s) {
+  options.progress_hook = [&](const pluss::optim::SeptimaProgressSnapshot& s) {
     if (s.iteration % 30 == 0 || s.iteration == 1) {
       std::cout << "iter=" << s.iteration
                 << " obj=" << s.objective
@@ -53,7 +53,7 @@ int main() {
     return true;
   };
 
-  const auto fit = pluss::optim::minimax(
+  const auto fit = pluss::optim::septima(
       [&](const Trace& v) -> Trace {
         return pluss::subsp::math::diff::sum(
                    pluss::subsp::math::diff::square(v - pluss::subsp::math::diff::fixed(target))) *

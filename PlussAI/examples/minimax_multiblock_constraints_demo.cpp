@@ -21,23 +21,23 @@ int main() {
   const Series w_target = pluss::make_series(std::vector<float>{2.0f, 1.0f}, {2}, cfg);
   const Series b_target = pluss::make_series(std::vector<float>{0.5f}, {1}, cfg);
 
-  pluss::nn::optim::NeximaOptions w_opt{};
-  w_opt.primal_method = pluss::nn::optim::NeximaPrimalMethod::AdamW;
+  pluss::nn::optim::MinimaxOptions w_opt{};
+  w_opt.primal_method = pluss::nn::optim::MinimaxPrimalMethod::AdamW;
   w_opt.learning_rate = 0.03;
   w_opt.weight_decay = 1e-3;
-  w_opt.dual_schedule = pluss::nn::optim::NeximaSchedule::ViolationAdaptive;
-  w_opt.penalty_schedule = pluss::nn::optim::NeximaSchedule::Exponential;
+  w_opt.dual_schedule = pluss::nn::optim::MinimaxSchedule::ViolationAdaptive;
+  w_opt.penalty_schedule = pluss::nn::optim::MinimaxSchedule::Exponential;
   w_opt.penalty_exponential_growth = 1.002;
   w_opt.dual_learning_rate = 0.08;
   w_opt.equality_penalty = 8.0;
   w_opt.inequality_penalty = 8.0;
 
-  pluss::nn::optim::NeximaOptions b_opt = w_opt;
-  b_opt.primal_method = pluss::nn::optim::NeximaPrimalMethod::SGD;
+  pluss::nn::optim::MinimaxOptions b_opt = w_opt;
+  b_opt.primal_method = pluss::nn::optim::MinimaxPrimalMethod::SGD;
   b_opt.learning_rate = 0.01;
   b_opt.momentum = 0.9;
 
-  pluss::nn::optim::NeximaConstraints constraints{};
+  pluss::nn::optim::MinimaxConstraints constraints{};
   constraints.lower_bounds = {
       pluss::make_series(std::vector<float>{0.0f, 0.0f}, {2}, cfg),
       Series::undefined(),
@@ -57,25 +57,25 @@ int main() {
     return std::vector<Trace>{pluss::subsp::math::diff::sum(p[0]) + p[1] - 2.0};
   };
 
-  pluss::nn::optim::Nexima nexima(
+  pluss::nn::optim::Minimax minimax(
       {
-          pluss::nn::optim::NeximaGroup{{&w}, w_opt},
-          pluss::nn::optim::NeximaGroup{{&b}, b_opt},
+          pluss::nn::optim::MinimaxGroup{{&w}, w_opt},
+          pluss::nn::optim::MinimaxGroup{{&b}, b_opt},
       },
       constraints);
 
-  pluss::nn::optim::Nexima nexima_tape(
+  pluss::nn::optim::Minimax minimax_tape(
       {
-          pluss::nn::optim::NeximaGroup{{&w_tape}, w_opt},
-          pluss::nn::optim::NeximaGroup{{&b_tape}, b_opt},
+          pluss::nn::optim::MinimaxGroup{{&w_tape}, w_opt},
+          pluss::nn::optim::MinimaxGroup{{&b_tape}, b_opt},
       },
       constraints);
 
-  std::cout << "[nexima-multiblock] explicit gradients\n";
+  std::cout << "[minimax-multiblock] explicit gradients\n";
   for (int iter = 1; iter <= 200; ++iter) {
     const Series gw = w.sub(w_target);
     const Series gb = b.sub(b_target);
-    nexima.step(std::vector<Series>{gw, gb});
+    minimax.step(std::vector<Series>{gw, gb});
     if (iter % 50 == 0) {
       const double eq = w.sum().add(b).sub(2.0).item<double>();
       const double ineq = w.square().sum().sub(5.0).item<double>();
@@ -89,7 +89,7 @@ int main() {
   std::cout << "final explicit w=[" << w.select(0, 0).item<double>() << ", " << w.select(0, 1).item<double>()
             << "] b=" << b.item<double>() << '\n';
 
-  std::cout << "[nexima-multiblock] tape gradients via optimizer.step()\n";
+  std::cout << "[minimax-multiblock] tape gradients via optimizer.step()\n";
   for (int iter = 1; iter <= 200; ++iter) {
     auto tw = pluss::subsp::math::diff::trace(w_tape, true);
     auto tb = pluss::subsp::math::diff::trace(b_tape, true);
@@ -97,7 +97,7 @@ int main() {
     tw.clear_sensitivity();
     tb.clear_sensitivity();
     loss.reverse();
-    nexima_tape.step();
+    minimax_tape.step();
     if (iter % 50 == 0) {
       const double eq = w_tape.sum().add(b_tape).sub(2.0).item<double>();
       const double ineq = w_tape.square().sum().sub(5.0).item<double>();
