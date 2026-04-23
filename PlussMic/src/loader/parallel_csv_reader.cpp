@@ -248,4 +248,3 @@ std::vector<std::vector<std::string>> ParallelCsvReader::read_file(const ReadCsv
 }
 
 } // namespace pluss::loader
-

@@ -1,8 +1,8 @@
-nodej_neighbor_test 41 0.000283981
-nodej_phase0_contract_test 36 0.00724123
-nodej_prep_test 46 0.00112212
-nodej_split_test 42 0.000220157
-nodej_tree_test 42 0.000193697
+nodej_neighbor_test 42 0.00428509
+nodej_phase0_contract_test 37 0.0112921
+nodej_prep_test 47 0.00485679
+nodej_split_test 43 0.00426653
+nodej_tree_test 43 0.00406658
 autodiff 0 0
 jacrev 0 0
 nth_derivative 0 0
@@ -13,17 +13,17 @@ jvp 0 0
 hvp 0 0
 nn_optim_test 32 0.00363236
 conv_test 12 0.000572177
-rnn_fusion_test 15 0.000975469
-lymph_quick_test 36 0.00160067
-nodej_bayes_kernel_test 34 0.000365286
-nodej_ensemble_bayes_regression_test 24 0.000588335
-nodej_rigorous_suite_test 27 0.0217661
-nodej_cv_tune_test 20 0.00111772
-nodej_dataframe_bridge_test 15 0.00270591
-nodej_flow_test 24 0.00140614
-nodej_multiclass_test 13 0.00334666
-nodej_online_test 12 0.00587278
-nodej_reliability_io_unsupervised_test 13 0.00713832
+rnn_fusion_test 16 0.0165332
+lymph_quick_test 38 0.00177949
+nodej_bayes_kernel_test 35 0.00524423
+nodej_ensemble_bayes_regression_test 25 0.00671735
+nodej_rigorous_suite_test 28 0.0282492
+nodej_cv_tune_test 21 0.00901966
+nodej_dataframe_bridge_test 16 0.0152262
+nodej_flow_test 26 0.00140664
+nodej_multiclass_test 15 0.00262465
+nodej_online_test 13 0.0210132
+nodej_reliability_io_unsupervised_test 14 0.0171987
 nn_loss_test 12 0.000768163
 heston_sv_pricing_test 13 0.895446
 stochastic_vol_paths_test 8 0.133857
@@ -46,15 +46,15 @@ pattern_search_minimizer_test 7 0.147052
 dfo_solver_test 4 0.19956
 optima_robustness_catch2 0 0
 pattern_search_closure_catch2 1 0.0517494
-nn_training_parity_test 8 0.0656307
+nn_training_parity_test 8 0
 autodiff_audit_bridge_test 5 0.00246123
 nn_optim_foreach_lane_test 7 0.0029704
 cudnn_attention_route_test 6 0.00284943
 cudnn_transformer_rigorous_test 6 0.0504301
 cudnn_conv_rigorous_test 5 0.119661
 cudnn_conv_route_test 5 0.00198457
-cudnn_rnn_rigorous_test 5 0.0551344
-cudnn_rnn_route_test 5 0.00293446
+cudnn_rnn_rigorous_test 6 0.151088
+cudnn_rnn_route_test 6 0.0452421
 ssm_test 2 0.00513744
 ts_ssm_catch2 4 0.00318576
 distr_objects_catch2 0 0
@@ -76,8 +76,14 @@ ols_regression_test 8 0.0335488
 glm_regression_test 4 0.0803258
 quantile_regression_test 4 0.0678699
 poly_regression_test 3 0.0877934
-scalar overloads for add/sub/mul/div/pow and comparisons 1 0.312377
-index_put overwrite and accumulate 1 0.0110671
-index_put_ writes into original storage 1 0.00862817
-index_put_ mixed bool/int uses torch-like path 1 0.00762867
+scalar 0 0
+index_put 0 0
+index_put_ 0 0
+index_put_ 0 0
+nn_mps_matmul_sum_sensitivity_test 2 0.0197874
+minimax_optimizer_selection_test 7 1.36781
+adam_functional_torch_rigor_test 5 0.450822
+minimax_rigor_suite_test 5 1.16238
+cudnn_rnn_strict_route_test 1 0.269726
+actuarial_core_test 2 2.00831
 ---

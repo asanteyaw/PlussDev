@@ -45,6 +45,25 @@ kernel void strict_matmul_f32(
   }
   out[row * meta.n + col] = acc;
 }
+
+kernel void strict_matmul_i32(
+    const device int* a [[buffer(0)]],
+    const device int* b [[buffer(1)]],
+    device int* out [[buffer(2)]],
+    constant MatmulMeta& meta [[buffer(3)]],
+    uint2 gid [[thread_position_in_grid]]) {
+  const uint col = gid.x;
+  const uint row = gid.y;
+  if (row >= meta.m || col >= meta.n) {
+    return;
+  }
+
+  int acc = 0;
+  for (uint t = 0; t < meta.k; ++t) {
+    acc += a[row * meta.k + t] * b[t * meta.n + col];
+  }
+  out[row * meta.n + col] = acc;
+}
 )metal";
 
 enum class MatmulAlgo : std::uint8_t {
@@ -63,6 +82,7 @@ struct StrictContext {
   bool ready{false};
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> strict_f32{nil};
+  id<MTLComputePipelineState> strict_i32{nil};
   std::string error{};
 };
 
@@ -161,10 +181,30 @@ StrictContext& strict_ctx_(id<MTLDevice> device) {
         }
         return;
       }
+
+      NSError* p_err_i32 = nil;
+      id<MTLFunction> fn_i32 = [ctx.library newFunctionWithName:@"strict_matmul_i32"];
+      if (fn_i32 == nil) {
+        ctx.error = "strict matmul init failed: missing kernel strict_matmul_i32";
+        return;
+      }
+      ctx.strict_i32 = [device newComputePipelineStateWithFunction:fn_i32 error:&p_err_i32];
+      if (ctx.strict_i32 == nil) {
+        ctx.error = "strict matmul init failed: pipeline creation error";
+        if (p_err_i32 != nil && p_err_i32.localizedDescription != nil) {
+          ctx.error += ": ";
+          ctx.error += std::string([p_err_i32.localizedDescription UTF8String]);
+        }
+        return;
+      }
       ctx.ready = true;
     }
   });
   return ctx;
+}
+
+bool matmul_dtype_supported_(ScalarType dt) noexcept {
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32;
 }
 
 [[noreturn]] void fail_(const std::string& msg) {
@@ -175,7 +215,9 @@ void check_series_(const Series& s, const char* op) {
   if (!s.defined()) fail_(std::string(op) + ": undefined Series");
   if (s.platform() != Platform::MPS) fail_(std::string(op) + ": expected MPS Series");
   if (!s.is_contiguous()) fail_(std::string(op) + ": currently requires contiguous Series");
-  if (s.scalar_type() != ScalarType::Float32) fail_(std::string(op) + ": currently supports float32 only");
+  if (!matmul_dtype_supported_(s.scalar_type())) {
+    fail_(std::string(op) + ": currently supports float32/int32 only");
+  }
 }
 
 } // namespace
@@ -185,7 +227,8 @@ bool supports_matmul(const Series& a, const Series& b) noexcept {
   if (!a.defined() || !b.defined()) return false;
   if (a.platform() != Platform::MPS || b.platform() != Platform::MPS) return false;
   if (!a.is_contiguous() || !b.is_contiguous()) return false;
-  if (a.scalar_type() != ScalarType::Float32 || b.scalar_type() != ScalarType::Float32) return false;
+  if (!matmul_dtype_supported_(a.scalar_type()) || !matmul_dtype_supported_(b.scalar_type())) return false;
+  if (a.scalar_type() != b.scalar_type()) return false;
   if (a.dim() != 2 || b.dim() != 2) return false;
   return a.sizes()[1] == b.sizes()[0];
 }
@@ -200,6 +243,9 @@ Series matmul(const Series& a, const Series& b) {
   if (a.dim() != 2 || b.dim() != 2) {
     fail_("mps::matmul: currently supports 2D only");
   }
+  if (a.scalar_type() != b.scalar_type()) {
+    fail_("mps::matmul: dtype mismatch");
+  }
 
   const auto m64 = a.sizes()[0];
   const auto k64 = a.sizes()[1];
@@ -211,18 +257,20 @@ Series matmul(const Series& a, const Series& b) {
   if (m64 < 0 || n64 < 0 || k64 < 0) {
     fail_("mps::matmul: invalid sizes");
   }
+  const ScalarType dt = a.scalar_type();
   if (m64 == 0 || n64 == 0 || k64 == 0) {
-    return Series::empty({m64, n64}, ScalarType::Float32, Platform::MPS);
+    return Series::empty({m64, n64}, dt, Platform::MPS);
   }
   const NSUInteger m = static_cast<NSUInteger>(m64);
   const NSUInteger n = static_cast<NSUInteger>(n64);
   const NSUInteger k = static_cast<NSUInteger>(k64);
 
-  Series out = Series::empty({m64, n64}, ScalarType::Float32, Platform::MPS);
+  Series out = Series::empty({m64, n64}, dt, Platform::MPS);
   @autoreleasepool {
-    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
-    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const std::size_t elem_bytes = (dt == ScalarType::Int32) ? sizeof(std::int32_t) : sizeof(float);
+    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
+    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * elem_bytes;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
 
     id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(a, c.device, a_bytes);
     id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(b, c.device, b_bytes);
@@ -231,7 +279,7 @@ Series matmul(const Series& a, const Series& b) {
       fail_("mps::matmul: failed to allocate Metal buffers");
     }
 
-    if (matmul_algo_() == MatmulAlgo::Fast) {
+    if (matmul_algo_() == MatmulAlgo::Fast && dt == ScalarType::Float32) {
       MPSMatrixDescriptor* a_desc =
           [MPSMatrixDescriptor matrixDescriptorWithRows:m
                                                 columns:k
@@ -273,7 +321,7 @@ Series matmul(const Series& a, const Series& b) {
     }
 
     auto& sctx = strict_ctx_(c.device);
-    if (!sctx.ready || sctx.strict_f32 == nil) {
+    if (!sctx.ready || sctx.strict_f32 == nil || sctx.strict_i32 == nil) {
       fail_("mps::matmul(strict): backend unavailable (" + sctx.error + ")");
     }
 
@@ -285,7 +333,8 @@ Series matmul(const Series& a, const Series& b) {
     if (enc == nil) {
       fail_("mps::matmul(strict): failed to create compute encoder");
     }
-    [enc setComputePipelineState:sctx.strict_f32];
+    id<MTLComputePipelineState> pso = (dt == ScalarType::Int32) ? sctx.strict_i32 : sctx.strict_f32;
+    [enc setComputePipelineState:pso];
     [enc setBuffer:a_buf offset:0 atIndex:0];
     [enc setBuffer:b_buf offset:0 atIndex:1];
     [enc setBuffer:out_buf offset:0 atIndex:2];
@@ -302,10 +351,10 @@ Series matmul(const Series& a, const Series& b) {
 
     const NSUInteger grid_x = static_cast<NSUInteger>(n);
     const NSUInteger grid_y = static_cast<NSUInteger>(m);
-    const NSUInteger max_tg = sctx.strict_f32.maxTotalThreadsPerThreadgroup > 0
-                                  ? sctx.strict_f32.maxTotalThreadsPerThreadgroup
+    const NSUInteger max_tg = pso.maxTotalThreadsPerThreadgroup > 0
+                                  ? pso.maxTotalThreadsPerThreadgroup
                                   : 256;
-    NSUInteger tx = sctx.strict_f32.threadExecutionWidth > 0 ? sctx.strict_f32.threadExecutionWidth : 16;
+    NSUInteger tx = pso.threadExecutionWidth > 0 ? pso.threadExecutionWidth : 16;
     tx = std::min<NSUInteger>(tx, 16);
     if (tx == 0) tx = 8;
     NSUInteger ty = std::max<NSUInteger>(1, std::min<NSUInteger>(16, max_tg / tx));

@@ -363,6 +363,18 @@ Series cholesky_factor(const Series& a, bool upper) {
   if (read_status_code_(status) != 0) {
     fail_(std::string(op) + ": matrix is not positive-definite");
   }
+  // MPS writes only one triangle; normalize the opposite half to explicit zeros
+  // for deterministic parity with CPU paths.
+  sync_host_if_needed(out);
+  auto* outp = reinterpret_cast<float*>(out.raw_mutable_data());
+  for (std::int64_t i = 0; i < n64; ++i) {
+    for (std::int64_t j = 0; j < n64; ++j) {
+      if ((!upper && j > i) || (upper && i > j)) {
+        outp[i * n64 + j] = 0.0f;
+      }
+    }
+  }
+  mark_host_data_dirty(out);
   return out;
 }
 

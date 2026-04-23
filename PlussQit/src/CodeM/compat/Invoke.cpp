@@ -156,7 +156,7 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     const Series aa = a.is_contiguous() ? a : a.contiguous();
     const Series bb = b.is_contiguous() ? b : b.contiguous();
     if (!native::mps::supports_matmul(aa, bb)) {
-      throw_error("matmul: MPS path currently supports contiguous 2D float32 only");
+      throw_error("matmul: MPS path currently supports contiguous 2D float32/int32 only");
     }
     return native::mps::matmul(aa, bb);
   }
@@ -189,18 +189,14 @@ static Series matmul_backprop_dispatch_(
     Platform out_platform,
     ScalarType out_dtype) {
   ops_internal::require_same_platform(lhs, rhs, "matmul(backprop)");
-  if (lhs.platform() == Platform::MPS) {
-    // MPS backward correctness guard:
-    // route gradient matmul through CPU reference then return to MPS.
-    const Series lhs_cpu = lhs.to(Platform::CPU, ScalarType::Float32).contiguous();
-    const Series rhs_cpu = rhs.to(Platform::CPU, ScalarType::Float32).contiguous();
-    Series out_cpu = native::cpu::matmul(lhs_cpu, rhs_cpu);
-    if (out_dtype != ScalarType::Float32) {
-      out_cpu = out_cpu.to(out_dtype);
-    }
-    return out_cpu.to(out_platform);
+  Series out = matmul_dispatch_(lhs, rhs);
+  if (out.scalar_type() != out_dtype) {
+    out = out.to(out_dtype);
   }
-  return matmul_dispatch_(lhs, rhs);
+  if (out.platform() != out_platform) {
+    out = out.to(out_platform);
+  }
+  return out;
 }
 
 static Series reduce_broadcasted_like_(const Series& grad, const Series& like, std::string_view op_name) {
@@ -4107,9 +4103,14 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "abs") return ops_internal::abs(self);
     if (op == "abs2") return abs2_impl(self);
     if (op == "sign" || op == "sgn") {
-      Series pos = ops_internal::gt(self, scalar_like(self, 0.0)).to(ScalarType::Float64);
-      Series neg = ops_internal::lt(self, scalar_like(self, 0.0)).to(ScalarType::Float64);
-      return ops_internal::sub(pos, neg).to(self.scalar_type());
+      ScalarType work_dt = ScalarType::Float64;
+      if (self.platform() == Platform::MPS) {
+        work_dt = ScalarType::Float32;
+      }
+      Series pos = ops_internal::gt(self, scalar_like(self, 0.0)).to(work_dt);
+      Series neg = ops_internal::lt(self, scalar_like(self, 0.0)).to(work_dt);
+      Series out = ops_internal::sub(pos, neg);
+      return (out.scalar_type() == self.scalar_type()) ? out : out.to(self.scalar_type());
     }
 
     if (op == "sum") return ops_internal::sum(self);
@@ -4312,10 +4313,17 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
 
     if (op == "unique") {
-      // Torch has more variants; we support unique(sorted=true/false)
-      bool sorted = true;
-      if (!args.empty()) sorted = as_bool(args[0]);
-      return ops_internal::unique(self, sorted);
+      if (args.empty()) return ops_internal::unique(self, true);
+      if (args.size() == 1) {
+        if (std::holds_alternative<bool>(args[0].v)) {
+          return ops_internal::unique(self, as_bool(args[0]));
+        }
+        return ops_internal::unique(self, as_i64(args[0]), /*sorted=*/true);
+      }
+      if (args.size() == 2) {
+        return ops_internal::unique(self, as_i64(args[0]), as_bool(args[1]));
+      }
+      PLUSS_CHECK(false, "unique: expected 0, 1, or 2 args");
     }
 
     // bitwise unary
@@ -4442,6 +4450,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "movmin") return mov_impl(self, (std::int64_t)s, -1, MovKind::Min);
       if (op == "movstd") return mov_impl(self, (std::int64_t)s, -1, MovKind::Std);
       if (op == "movvar") return mov_impl(self, (std::int64_t)s, -1, MovKind::Var);
+      if (op == "unique") return ops_internal::unique(self, (std::int64_t)s, /*sorted=*/true);
       if (op == "histcounts") return self.histc((std::int64_t)s, 0.0, 0.0);
       if (op == "center") return centered_impl(self, (std::int64_t)s);
       if (op == "standardize") return standardize_impl(self, (std::int64_t)s);
@@ -4756,6 +4765,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "any") return ops_internal::any(self, dim, keepdim);
       if (op == "argmax") return ops_internal::argmax(self, dim, keepdim);
       if (op == "argmin") return ops_internal::argmin(self, dim, keepdim);
+      if (op == "unique") return ops_internal::unique(self, dim, keepdim);
       if (op == "argsort") return argsort_values_only(self, dim, keepdim, /*stable=*/false);
       if (op == "sort") return sort_values_only(self, dim, keepdim, /*stable=*/false);
       if (op == "cumsum") return self.cumsum(dim, keepdim);

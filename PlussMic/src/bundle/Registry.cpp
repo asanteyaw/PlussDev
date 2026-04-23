@@ -15,6 +15,7 @@
 #include "CodeM/core/Errors.h"
 #include "kindle/catalog.h"
 #include "loader/Loader.h"
+#include "table/io/CsvSchemaConvert.h"
 #include <fmt/format.h>
 
 namespace pluss::bundle {
@@ -105,7 +106,7 @@ Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
                                             std::string_view raw_token,
                                             const pluss::loader::ReadCsvOptions& options) {
   std::vector<std::string> one{std::string(raw_token)};
-  const auto inferred = pluss::loader::infer_thread_from_raw_csv_column(
+  const auto inferred = pluss::table::detail::infer_thread_from_raw_csv_column(
       col_name,
       source_col_index,
       one,
@@ -140,13 +141,24 @@ Registry registry_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
 
   for (const auto& col : raw.features) {
     std::vector<Slot::Value> values;
-    values.reserve(col.values.size());
-    for (const auto& token : col.values) {
-      values.push_back(infer_slot_value_from_raw_token(
-          col.name,
-          col.source_index,
-          token,
-          infer_options));
+    if (col.note_values.has_value()) {
+      values.reserve(static_cast<std::size_t>(col.note_values->numel()));
+      for (std::int64_t i = 0; i < col.note_values->numel(); ++i) {
+        values.push_back(infer_slot_value_from_raw_token(
+            col.name,
+            col.source_index,
+            col.note_values->at(i),
+            infer_options));
+      }
+    } else {
+      values.reserve(col.values.size());
+      for (const auto& token : col.values) {
+        values.push_back(infer_slot_value_from_raw_token(
+            col.name,
+            col.source_index,
+            token,
+            infer_options));
+      }
     }
     keys_seen.insert(col.name);
     out.emplace_back(col.name, Slot(std::move(values)));
@@ -155,13 +167,24 @@ Registry registry_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
   if (raw.cases.has_value()) {
     const auto case_name = unique_key_name(raw.cases->name, keys_seen);
     std::vector<Slot::Value> values;
-    values.reserve(raw.cases->values.size());
-    for (const auto& token : raw.cases->values) {
-      values.push_back(infer_slot_value_from_raw_token(
-          case_name,
-          raw.cases->source_index,
-          token,
-          infer_options));
+    if (raw.cases->note_values.has_value()) {
+      values.reserve(static_cast<std::size_t>(raw.cases->note_values->numel()));
+      for (std::int64_t i = 0; i < raw.cases->note_values->numel(); ++i) {
+        values.push_back(infer_slot_value_from_raw_token(
+            case_name,
+            raw.cases->source_index,
+            raw.cases->note_values->at(i),
+            infer_options));
+      }
+    } else {
+      values.reserve(raw.cases->values.size());
+      for (const auto& token : raw.cases->values) {
+        values.push_back(infer_slot_value_from_raw_token(
+            case_name,
+            raw.cases->source_index,
+            token,
+            infer_options));
+      }
     }
     out.emplace_back(case_name, Slot(std::move(values)));
   }

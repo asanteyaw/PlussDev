@@ -8125,11 +8125,15 @@ struct AdamOptions {
   double beta2{0.999};
   double eps{1e-8};
   double weight_decay{0.0};
+  bool amsgrad{false};
+  bool maximize{false};
+  bool decoupled_weight_decay{false};
 };
 
 struct AdamState {
   std::vector<Series> m{};
   std::vector<Series> v{};
+  std::vector<Series> max_v{};
   std::int64_t step{0};
 };
 
@@ -8137,9 +8141,11 @@ inline AdamState adam_state_like(const std::vector<Series>& params) {
   AdamState st;
   st.m.reserve(params.size());
   st.v.reserve(params.size());
+  st.max_v.reserve(params.size());
   for (const auto& p : params) {
     st.m.push_back(pluss::zeros_like(p, p.scalar_type()));
     st.v.push_back(pluss::zeros_like(p, p.scalar_type()));
+    st.max_v.push_back(pluss::zeros_like(p, p.scalar_type()));
   }
   return st;
 }
@@ -8151,7 +8157,7 @@ inline void adam_step_inplace(std::vector<Series>& params,
   if (params.size() != sensitivities.size()) {
     ::pluss::throw_error("subsp::math::optim::adam_step_inplace: params/sensitivities size mismatch");
   }
-  if (state.m.size() != params.size() || state.v.size() != params.size()) {
+  if (state.m.size() != params.size() || state.v.size() != params.size() || state.max_v.size() != params.size()) {
     state = adam_state_like(params);
   }
 
@@ -8165,6 +8171,7 @@ inline void adam_step_inplace(std::vector<Series>& params,
     detail::require_same_platform_(params[i], sensitivities[i], "adam_step_inplace");
     detail::require_same_platform_(params[i], state.m[i], "adam_step_inplace");
     detail::require_same_platform_(params[i], state.v[i], "adam_step_inplace");
+    detail::require_same_platform_(params[i], state.max_v[i], "adam_step_inplace");
     detail::require_float_dtype_(params[i], "adam_step_inplace");
 
     // Keep optimizer updates outside autodiff recording.
@@ -8178,15 +8185,27 @@ inline void adam_step_inplace(std::vector<Series>& params,
       }
     }
 
+    if (opt.maximize) {
+      g = g.mul(-1.0);
+    }
+
     if (opt.weight_decay != 0.0) {
-      g = g.add(p.mul(opt.weight_decay));
+      if (opt.decoupled_weight_decay) {
+        p = p.mul(1.0 - opt.learning_rate * opt.weight_decay);
+      } else {
+        g = g.add(p.mul(opt.weight_decay));
+      }
     }
 
     state.m[i] = state.m[i].mul(opt.beta1).add(g.mul(1.0 - opt.beta1));
     state.v[i] = state.v[i].mul(opt.beta2).add(g.mul(g).mul(1.0 - opt.beta2));
 
     const Series mhat = state.m[i].div(b1_correction);
-    const Series vhat = state.v[i].div(b2_correction);
+    Series vhat = state.v[i].div(b2_correction);
+    if (opt.amsgrad) {
+      state.max_v[i] = state.max_v[i].maximum(state.v[i]);
+      vhat = state.max_v[i].div(b2_correction);
+    }
     const Series update = mhat.div(vhat.sqrt().add(opt.eps)).mul(opt.learning_rate);
     params[i] = p.sub(update);
   }
@@ -8200,8 +8219,34 @@ inline std::vector<Series> adam_step(std::vector<Series> params,
   return params;
 }
 
+using MinimaxObjectiveTraceFn = std::function<Trace(const std::vector<Trace>&)>;
+using MinimaxObjectiveSeriesFn = std::function<Series(const std::vector<Series>&)>;
+
 struct MinimaxOptions {
+  enum class Optimizer : std::uint8_t {
+    Adam = 0,
+    Lbfgs = 1,
+  };
+
+  enum class LbfgsLineSearch : std::uint8_t {
+    None = 0,
+    StrongWolfe = 1,
+  };
+
+  struct LbfgsOptions {
+    double learning_rate{1.0};
+    std::int64_t history_size{20};
+    double curvature_tolerance{1e-10};
+    std::int64_t max_line_search_iterations{25};
+    double tolerance_change{1e-9};
+    double wolfe_c1{1e-4};
+    double wolfe_c2{0.9};
+    LbfgsLineSearch line_search{LbfgsLineSearch::None};
+  };
+
+  Optimizer optimizer{Optimizer::Adam};
   AdamOptions adam{};
+  LbfgsOptions lbfgs{};
   double dual_learning_rate{1e-2};
   double equality_penalty{10.0};
   double inequality_penalty{10.0};
@@ -8210,6 +8255,10 @@ struct MinimaxOptions {
   std::int64_t nan_recovery_attempts{2};
   double nan_recovery_shrink{0.5};
 };
+
+using MinimaxOptimizer = MinimaxOptions::Optimizer;
+using MinimaxLbfgsLineSearch = MinimaxOptions::LbfgsLineSearch;
+using MinimaxLbfgsOptions = MinimaxOptions::LbfgsOptions;
 
 struct MinimaxConstraints {
   using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
@@ -8229,8 +8278,13 @@ struct MinimaxConstraints {
 
 struct MinimaxState {
   AdamState adam{};
+  std::vector<Series> lbfgs_s_history{};
+  std::vector<Series> lbfgs_y_history{};
+  Series lbfgs_prev_grad_flat{};
+  Series lbfgs_prev_step_flat{};
   std::vector<Series> lambda_equalities{};
   std::vector<Series> lambda_inequalities{};
+  double constraint_violation{0.0};
   std::int64_t step{0};
 };
 
@@ -8296,20 +8350,49 @@ inline double minimax_max_abs_(const Series& x) {
 }
 
 inline void minimax_validate_options_(const MinimaxOptions& options) {
-  if (!(options.adam.learning_rate > 0.0) || !std::isfinite(options.adam.learning_rate)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: learning_rate must be positive and finite");
-  }
-  if (!(options.adam.beta1 >= 0.0 && options.adam.beta1 < 1.0) || !std::isfinite(options.adam.beta1)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: beta1 must be in [0,1)");
-  }
-  if (!(options.adam.beta2 >= 0.0 && options.adam.beta2 < 1.0) || !std::isfinite(options.adam.beta2)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: beta2 must be in [0,1)");
-  }
-  if (!(options.adam.eps > 0.0) || !std::isfinite(options.adam.eps)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: eps must be positive and finite");
-  }
-  if (options.adam.weight_decay < 0.0 || !std::isfinite(options.adam.weight_decay)) {
-    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: weight_decay must be finite and >= 0");
+  if (options.optimizer == MinimaxOptions::Optimizer::Adam) {
+    if (!(options.adam.learning_rate > 0.0) || !std::isfinite(options.adam.learning_rate)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.learning_rate must be positive and finite");
+    }
+    if (!(options.adam.beta1 >= 0.0 && options.adam.beta1 < 1.0) || !std::isfinite(options.adam.beta1)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.beta1 must be in [0,1)");
+    }
+    if (!(options.adam.beta2 >= 0.0 && options.adam.beta2 < 1.0) || !std::isfinite(options.adam.beta2)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.beta2 must be in [0,1)");
+    }
+    if (!(options.adam.eps > 0.0) || !std::isfinite(options.adam.eps)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.eps must be positive and finite");
+    }
+    if (options.adam.weight_decay < 0.0 || !std::isfinite(options.adam.weight_decay)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: adam.weight_decay must be finite and >= 0");
+    }
+  } else if (options.optimizer == MinimaxOptions::Optimizer::Lbfgs) {
+    if (!(options.lbfgs.learning_rate > 0.0) || !std::isfinite(options.lbfgs.learning_rate)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.learning_rate must be positive and finite");
+    }
+    if (options.lbfgs.history_size < 0) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.history_size must be >= 0");
+    }
+    if (!(options.lbfgs.curvature_tolerance >= 0.0) || !std::isfinite(options.lbfgs.curvature_tolerance)) {
+      ::pluss::throw_error(
+          "subsp::math::optim::minimax_step_inplace: lbfgs.curvature_tolerance must be finite and >= 0");
+    }
+    if (options.lbfgs.max_line_search_iterations < 0) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.max_line_search_iterations must be >= 0");
+    }
+    if (!(options.lbfgs.tolerance_change >= 0.0) || !std::isfinite(options.lbfgs.tolerance_change)) {
+      ::pluss::throw_error(
+          "subsp::math::optim::minimax_step_inplace: lbfgs.tolerance_change must be finite and >= 0");
+    }
+    if (!(options.lbfgs.wolfe_c1 > 0.0 && options.lbfgs.wolfe_c1 < 1.0) || !std::isfinite(options.lbfgs.wolfe_c1)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.wolfe_c1 must be in (0,1)");
+    }
+    if (!(options.lbfgs.wolfe_c2 > options.lbfgs.wolfe_c1 && options.lbfgs.wolfe_c2 < 1.0) ||
+        !std::isfinite(options.lbfgs.wolfe_c2)) {
+      ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: lbfgs.wolfe_c2 must be in (wolfe_c1,1)");
+    }
+  } else {
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: unsupported minimax optimizer");
   }
   if (options.dual_learning_rate < 0.0 || !std::isfinite(options.dual_learning_rate)) {
     ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: dual_learning_rate must be finite and >= 0");
@@ -8449,6 +8532,67 @@ inline void minimax_align_multipliers_(std::vector<Series>& lambda, const std::v
   }
 }
 
+struct MinimaxVectorBlockLayout {
+  std::vector<std::int64_t> sizes{};
+  std::int64_t numel{0};
+  ScalarType scalar_type{ScalarType::Float32};
+  pluss::codem::Platform platform{pluss::codem::Platform::CPU};
+};
+
+inline std::vector<MinimaxVectorBlockLayout> minimax_make_layout_(const std::vector<Series>& values) {
+  std::vector<MinimaxVectorBlockLayout> layout;
+  layout.reserve(values.size());
+  for (const auto& value : values) {
+    detail::require_defined_(value, "minimax_make_layout_");
+    const auto sizes = value.sizes();
+    layout.push_back(MinimaxVectorBlockLayout{
+        std::vector<std::int64_t>(sizes.begin(), sizes.end()),
+        value.numel(),
+        value.scalar_type(),
+        value.platform()});
+  }
+  return layout;
+}
+
+inline Series minimax_flatten_values_(const std::vector<Series>& values) {
+  if (values.empty()) {
+    ::pluss::throw_error("subsp::math::optim::minimax_flatten_values_: expected non-empty values");
+  }
+  std::vector<Series> flat;
+  flat.reserve(values.size());
+  for (const auto& value : values) {
+    detail::require_defined_(value, "minimax_flatten_values_");
+    flat.push_back(value.reshape({value.numel()}));
+  }
+  if (flat.size() == 1) return flat.front().to(ScalarType::Float64);
+  return flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0).to(ScalarType::Float64);
+}
+
+inline std::vector<Series> minimax_unflatten_values_(const Series& flat_values,
+                                                     const std::vector<MinimaxVectorBlockLayout>& layout) {
+  detail::require_defined_(flat_values, "minimax_unflatten_values_");
+  Series flat = flat_values.reshape({flat_values.numel()});
+  std::int64_t total_numel = 0;
+  for (const auto& block : layout) total_numel += block.numel;
+  if (flat.numel() != total_numel) {
+    ::pluss::throw_error("subsp::math::optim::minimax_unflatten_values_: flat size mismatch");
+  }
+
+  std::vector<Series> out;
+  out.reserve(layout.size());
+  std::int64_t offset = 0;
+  for (const auto& block : layout) {
+    Series piece = flat.slice(0, offset, offset + block.numel, 1);
+    if (!piece.is_contiguous()) piece = piece.contiguous();
+    piece = block.sizes.empty() ? piece.reshape({}) : piece.reshape(block.sizes);
+    if (piece.scalar_type() != block.scalar_type) piece = piece.to(block.scalar_type);
+    if (piece.platform() != block.platform) piece = piece.to(block.platform);
+    out.push_back(std::move(piece));
+    offset += block.numel;
+  }
+  return out;
+}
+
 inline void minimax_project_bounds_(std::vector<Series>& params, const MinimaxConstraints& constraints) {
   for (std::size_t i = 0; i < params.size(); ++i) {
     if (!constraints.lbs.empty() && constraints.lbs[i].defined()) {
@@ -8522,6 +8666,26 @@ inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
   return objective;
 }
 
+inline std::pair<Series, std::vector<Series>> minimax_augmented_value_grad_(
+    const MinimaxObjectiveTraceFn& objective_trace,
+    const std::vector<Series>& params,
+    const MinimaxState& state,
+    const MinimaxOptions& options,
+    const MinimaxConstraints& constraints) {
+  if (!objective_trace) {
+    ::pluss::throw_error("subsp::math::optim::minimax_step_inplace: objective callback is required for line search");
+  }
+
+  if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
+    return value_and_grad(
+        [&](const std::vector<Trace>& vars) -> Trace {
+          return objective_trace(vars) + minimax_constraint_objective_trace_(vars, state, constraints, options);
+        },
+        params);
+  }
+  return value_and_grad(objective_trace, params);
+}
+
 inline MinimaxState minimax_state_like_(const std::vector<Series>& params,
                                         const MinimaxConstraints& constraints = {}) {
   minimax_validate_params_(params);
@@ -8538,14 +8702,17 @@ inline MinimaxState minimax_state_like_(const std::vector<Series>& params,
     const auto residuals = minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
     state.lambda_inequalities = minimax_zero_like_(residuals);
   }
+  state.constraint_violation = minimax_constraint_violation_(params, constraints);
   return state;
 }
 
-inline void minimax_step_inplace_(std::vector<Series>& params,
-                                  const std::vector<Series>& sensitivities,
-                                  MinimaxState& state,
-                                  const MinimaxOptions& options = {},
-                                  const MinimaxConstraints& constraints = {}) {
+inline double minimax_step_inplace_(std::vector<Series>& params,
+                                    const std::vector<Series>& sensitivities,
+                                    MinimaxState& state,
+                                    const MinimaxOptions& options = {},
+                                    const MinimaxConstraints& constraints = {},
+                                    const MinimaxObjectiveTraceFn* objective_trace = nullptr,
+                                    std::int64_t* function_evaluations = nullptr) {
   minimax_validate_options_(options);
   minimax_validate_params_(params);
   minimax_validate_constraints_(params, constraints, options.enable_constraint_autodiff);
@@ -8600,42 +8767,178 @@ inline void minimax_step_inplace_(std::vector<Series>& params,
     }
   }
 
-  const auto params_backup = params;
-  const AdamState adam_backup = state.adam;
   bool accepted = false;
+  double step_inf_norm = 0.0;
 
-  for (std::int64_t attempt = 0; attempt <= options.nan_recovery_attempts; ++attempt) {
-    params = params_backup;
-    state.adam = adam_backup;
+  if (options.optimizer == MinimaxOptions::Optimizer::Adam) {
+    const auto params_backup = params;
+    const AdamState adam_backup = state.adam;
+    for (std::int64_t attempt = 0; attempt <= options.nan_recovery_attempts; ++attempt) {
+      params = params_backup;
+      state.adam = adam_backup;
 
-    AdamOptions step_options = options.adam;
-    if (attempt > 0) {
-      step_options.learning_rate *= std::pow(options.nan_recovery_shrink, static_cast<double>(attempt));
+      AdamOptions step_options = options.adam;
+      if (attempt > 0) {
+        step_options.learning_rate *= std::pow(options.nan_recovery_shrink, static_cast<double>(attempt));
+      }
+
+      adam_step_inplace(params, grads, state.adam, step_options);
+      if (options.project_bounds) {
+        minimax_project_bounds_(params, constraints);
+      }
+
+      if (minimax_finite_(params) &&
+          minimax_finite_(state.adam.m) &&
+          minimax_finite_(state.adam.v) &&
+          minimax_finite_(state.adam.max_v)) {
+        accepted = true;
+        break;
+      }
+    }
+    if (!accepted) {
+      params = params_backup;
+      state.adam = adam_backup;
+      state.constraint_violation = minimax_constraint_violation_(params, constraints);
+      return 0.0;
     }
 
-    adam_step_inplace(params, grads, state.adam, step_options);
-    if (options.project_bounds) {
-      minimax_project_bounds_(params, constraints);
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      step_inf_norm = std::max(step_inf_norm, minimax_max_abs_(params[i] - params_backup[i]));
+    }
+  } else {
+    const auto params_layout = minimax_make_layout_(params);
+    const Series flat_params = minimax_flatten_values_(params);
+    const Series flat_grad = minimax_flatten_values_(grads).to(flat_params.platform());
+
+    std::vector<Series> next_s_history = state.lbfgs_s_history;
+    std::vector<Series> next_y_history = state.lbfgs_y_history;
+    if (state.lbfgs_prev_grad_flat.defined() &&
+        state.lbfgs_prev_step_flat.defined() &&
+        state.lbfgs_prev_grad_flat.numel() == flat_grad.numel() &&
+        state.lbfgs_prev_step_flat.numel() == flat_grad.numel()) {
+      const Series s = state.lbfgs_prev_step_flat.to(flat_grad.platform()).to(ScalarType::Float64);
+      const Series y = flat_grad.sub(state.lbfgs_prev_grad_flat.to(flat_grad.platform()).to(ScalarType::Float64));
+      update_lbfgs_history_(
+          next_s_history,
+          next_y_history,
+          s,
+          y,
+          options.lbfgs.history_size,
+          options.lbfgs.curvature_tolerance);
+    }
+    Series direction = lbfgs_direction_(flat_grad, next_s_history, next_y_history);
+    if (!minimax_finite_(direction) || !(series_dot_(flat_grad, direction) < 0.0)) {
+      direction = flat_grad.mul(-1.0);
     }
 
-    if (minimax_finite_(params) &&
-        minimax_finite_(state.adam.m) &&
-        minimax_finite_(state.adam.v)) {
-      accepted = true;
-      break;
+    const double gtd = series_dot_(flat_grad, direction);
+    if (!(gtd < -options.lbfgs.tolerance_change)) {
+      state.constraint_violation = minimax_constraint_violation_(params, constraints);
+      return 0.0;
+    }
+
+    if (options.lbfgs.line_search == MinimaxOptions::LbfgsLineSearch::StrongWolfe) {
+      if (!objective_trace) {
+        ::pluss::throw_error(
+            "subsp::math::optim::minimax_step_inplace: LBFGS strong-wolfe line search requires objective callback");
+      }
+
+      const auto [base_value, base_grad] = minimax_augmented_value_grad_(
+          *objective_trace,
+          params,
+          state,
+          options,
+          constraints);
+      if (function_evaluations) ++(*function_evaluations);
+      (void)base_grad;
+
+      const double base_objective = base_value.item<double>();
+      double step_size = options.lbfgs.learning_rate;
+      const std::int64_t ls_iters = std::max<std::int64_t>(1, options.lbfgs.max_line_search_iterations);
+
+      for (std::int64_t ls = 0; ls < ls_iters; ++ls) {
+        const Series trial_flat = flat_params.add(direction.mul(step_size));
+        auto trial_params = minimax_unflatten_values_(trial_flat, params_layout);
+        if (options.project_bounds) {
+          minimax_project_bounds_(trial_params, constraints);
+        }
+        if (!minimax_finite_(trial_params)) {
+          step_size *= options.nan_recovery_shrink;
+          continue;
+        }
+
+        const auto [trial_value, trial_grads] = minimax_augmented_value_grad_(
+            *objective_trace,
+            trial_params,
+            state,
+            options,
+            constraints);
+        if (function_evaluations) ++(*function_evaluations);
+        if (!minimax_finite_(trial_value) || !minimax_finite_(trial_grads)) {
+          step_size *= options.nan_recovery_shrink;
+          continue;
+        }
+
+        const double trial_objective = trial_value.item<double>();
+        const Series trial_grad_flat = minimax_flatten_values_(trial_grads).to(flat_params.platform());
+        const double gtd_new = series_dot_(trial_grad_flat, direction);
+
+        const bool armijo_ok =
+            trial_objective <= base_objective + options.lbfgs.wolfe_c1 * step_size * gtd;
+        const bool curvature_ok = std::abs(gtd_new) <= -options.lbfgs.wolfe_c2 * gtd;
+
+        if (armijo_ok && curvature_ok) {
+          params = std::move(trial_params);
+          state.lbfgs_s_history = next_s_history;
+          state.lbfgs_y_history = next_y_history;
+          state.lbfgs_prev_grad_flat = flat_grad;
+          const Series next_flat = minimax_flatten_values_(params).to(flat_params.platform());
+          state.lbfgs_prev_step_flat = next_flat.sub(flat_params);
+          step_inf_norm = minimax_max_abs_(state.lbfgs_prev_step_flat);
+          accepted = true;
+          break;
+        }
+
+        step_size *= options.nan_recovery_shrink;
+        if (step_size <= options.lbfgs.tolerance_change) break;
+      }
+    } else {
+      for (std::int64_t attempt = 0; attempt <= options.nan_recovery_attempts; ++attempt) {
+        double step_size = options.lbfgs.learning_rate;
+        if (attempt > 0) {
+          step_size *= std::pow(options.nan_recovery_shrink, static_cast<double>(attempt));
+        }
+        const Series trial_flat = flat_params.add(direction.mul(step_size));
+        auto trial_params = minimax_unflatten_values_(trial_flat, params_layout);
+        if (options.project_bounds) {
+          minimax_project_bounds_(trial_params, constraints);
+        }
+        if (!minimax_finite_(trial_params)) continue;
+
+        params = std::move(trial_params);
+        state.lbfgs_s_history = next_s_history;
+        state.lbfgs_y_history = next_y_history;
+        state.lbfgs_prev_grad_flat = flat_grad;
+        const Series next_flat = minimax_flatten_values_(params).to(flat_params.platform());
+        state.lbfgs_prev_step_flat = next_flat.sub(flat_params);
+        step_inf_norm = minimax_max_abs_(state.lbfgs_prev_step_flat);
+        accepted = true;
+        break;
+      }
+    }
+    if (!accepted) {
+      state.constraint_violation = minimax_constraint_violation_(params, constraints);
+      return 0.0;
     }
   }
 
-  if (!accepted) {
-    params = params_backup;
-    state.adam = adam_backup;
-    return;
-  }
+  double violation = 0.0;
 
   if (constraints.equalities) {
     const auto residuals = minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
     minimax_align_multipliers_(state.lambda_equalities, residuals);
     for (std::size_t i = 0; i < residuals.size(); ++i) {
+      violation = std::max(violation, minimax_max_abs_(residuals[i]));
       state.lambda_equalities[i] = state.lambda_equalities[i].add(residuals[i].mul(options.dual_learning_rate));
     }
   }
@@ -8644,13 +8947,29 @@ inline void minimax_step_inplace_(std::vector<Series>& params,
     const auto residuals = minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
     minimax_align_multipliers_(state.lambda_inequalities, residuals);
     for (std::size_t i = 0; i < residuals.size(); ++i) {
-      const Series violation = residuals[i].maximum(0.0);
+      const Series ineq_violation = residuals[i].maximum(0.0);
+      violation = std::max(violation, minimax_max_abs_(ineq_violation));
       state.lambda_inequalities[i] =
-          state.lambda_inequalities[i].add(violation.mul(options.dual_learning_rate)).maximum(0.0);
+          state.lambda_inequalities[i].add(ineq_violation.mul(options.dual_learning_rate)).maximum(0.0);
     }
   }
 
+  if (!constraints.lbs.empty()) {
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      if (!constraints.lbs[i].defined()) continue;
+      violation = std::max(violation, minimax_max_abs_((constraints.lbs[i] - params[i]).maximum(0.0)));
+    }
+  }
+  if (!constraints.ubs.empty()) {
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      if (!constraints.ubs[i].defined()) continue;
+      violation = std::max(violation, minimax_max_abs_((params[i] - constraints.ubs[i]).maximum(0.0)));
+    }
+  }
+  state.constraint_violation = violation;
+
   ++state.step;
+  return step_inf_norm;
 }
 
 inline void minimax_step_inplace_from_tape_(std::vector<Series>& params,
@@ -8666,13 +8985,10 @@ inline void minimax_step_inplace_from_tape_(std::vector<Series>& params,
     }
     sensitivities.push_back(g);
   }
-  minimax_step_inplace_(params, sensitivities, state, options, constraints);
+  (void)minimax_step_inplace_(params, sensitivities, state, options, constraints);
 }
 
 } // namespace detail
-
-using MinimaxObjectiveTraceFn = std::function<Trace(const std::vector<Trace>&)>;
-using MinimaxObjectiveSeriesFn = std::function<Series(const std::vector<Series>&)>;
 
 inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
                              std::vector<Series> initial_params,
@@ -8718,15 +9034,15 @@ inline MinimaxResult minimax(const MinimaxObjectiveTraceFn& objective_trace,
       out.gradient_inf_norm = std::max(out.gradient_inf_norm, detail::minimax_max_abs_(g));
     }
 
-    const auto before = out.params;
-    detail::minimax_step_inplace_(out.params, grads, out.state, solve_options.step, constraints);
-
-    out.step_inf_norm = 0.0;
-    for (std::size_t i = 0; i < out.params.size(); ++i) {
-      out.step_inf_norm = std::max(out.step_inf_norm, detail::minimax_max_abs_(out.params[i] - before[i]));
-    }
-
-    out.constraint_violation = detail::minimax_constraint_violation_(out.params, constraints);
+    out.step_inf_norm = detail::minimax_step_inplace_(
+        out.params,
+        grads,
+        out.state,
+        solve_options.step,
+        constraints,
+        &objective_trace,
+        &out.function_evaluations);
+    out.constraint_violation = out.state.constraint_violation;
     out.iteration = iter;
 
     const bool converged =

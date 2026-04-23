@@ -33,6 +33,19 @@ static void naive_matmul_f32(const float* A, const float* B, float* C,
   }
 }
 
+static void naive_matmul_i32(const std::int32_t* A, const std::int32_t* B, std::int32_t* C,
+                             std::int64_t M, std::int64_t N, std::int64_t K) {
+  for (std::int64_t i = 0; i < M; ++i) {
+    for (std::int64_t j = 0; j < N; ++j) {
+      std::int64_t acc = 0;
+      for (std::int64_t k = 0; k < K; ++k) {
+        acc += static_cast<std::int64_t>(A[i * K + k]) * static_cast<std::int64_t>(B[k * N + j]);
+      }
+      C[i * N + j] = static_cast<std::int32_t>(acc);
+    }
+  }
+}
+
 std::int64_t product_(std::span<const std::int64_t> sizes) {
   return std::accumulate(sizes.begin(), sizes.end(), std::int64_t{1}, std::multiplies<std::int64_t>{});
 }
@@ -77,7 +90,15 @@ Series matmul_2d_core_(const Series& a, const Series& b) {
     return out;
   }
 
-  throw_error("matmul: dtype not implemented (only float16/bfloat16/float32/float64)");
+  if (a.scalar_type() == ScalarType::Int32) {
+    const auto* A = reinterpret_cast<const std::int32_t*>(a.raw_data());
+    const auto* B = reinterpret_cast<const std::int32_t*>(b.raw_data());
+    auto* C = reinterpret_cast<std::int32_t*>(out.raw_data());
+    naive_matmul_i32(A, B, C, M, N, K);
+    return out;
+  }
+
+  throw_error("matmul: dtype not implemented (only float16/bfloat16/float32/float64/int32)");
 }
 
 std::vector<std::int64_t> prefix_batch_shape_(const Series& x) {

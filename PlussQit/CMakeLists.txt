@@ -263,6 +263,7 @@ if(APPLE)
     src/CodeM/native/mps/Gather.mm
     src/CodeM/native/mps/Linalg.mm
     src/CodeM/native/mps/Matmul.mm
+    src/CodeM/native/mps/Nonzero.mm
     src/CodeM/native/mps/Reductions.mm
     src/CodeM/native/mps/Scatter.mm
     src/CodeM/native/mps/Sorting.mm
@@ -279,6 +280,7 @@ else()
     src/CodeM/native/mps/GatherStub.cpp
     src/CodeM/native/mps/LinalgStub.cpp
     src/CodeM/native/mps/MatmulStub.cpp
+    src/CodeM/native/mps/NonzeroStub.cpp
     src/CodeM/native/mps/ReductionsStub.cpp
     src/CodeM/native/mps/ScatterStub.cpp
     src/CodeM/native/mps/SortingStub.cpp
@@ -745,6 +747,10 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch149_mps_torch_family_parity.cpp
       tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp
       tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp
+      tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp
+      tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp
+      tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp
+      tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp
     )
     set(CODEM_CUDA_GATE_TEST_SOURCES
       tests/CodeM/test_patch97_linalg_backend_info.cpp
@@ -814,6 +820,9 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch90_optima_stall_diagnostics.cpp
       tests/CodeM/test_patch91_optima_pathology_suite.cpp
       tests/CodeM/test_patch92_optima_working_set.cpp
+      tests/CodeM/test_patch171_unique_dim_contract.cpp
+      tests/CodeM/test_patch172_series_set_ops.cpp
+      tests/CodeM/test_patch173_series_set_number_ops.cpp
     )
     target_link_libraries(plussqit_codem_optim_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_optim_tests PRIVATE cxx_std_20)

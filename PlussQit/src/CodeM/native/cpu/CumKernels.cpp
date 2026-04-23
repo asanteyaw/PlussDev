@@ -52,6 +52,9 @@ void cumsum_dim(const Series& a, std::int64_t dim, Series& out) {
     case ScalarType::Int64:
       cum_impl<std::int64_t>(a, dim, out, [](std::int64_t acc, std::int64_t x, std::int64_t r){ return (r==0)? x : (acc+x); }, 0);
       return;
+    case ScalarType::Int32:
+      cum_impl<std::int32_t>(a, dim, out, [](std::int32_t acc, std::int32_t x, std::int64_t r){ return (r==0)? x : static_cast<std::int32_t>(acc+x); }, 0);
+      return;
     default: break;
   }
   throw_error("cumsum: dtype not implemented");
@@ -68,6 +71,9 @@ void cumprod_dim(const Series& a, std::int64_t dim, Series& out) {
       return;
     case ScalarType::Int64:
       cum_impl<std::int64_t>(a, dim, out, [](std::int64_t acc, std::int64_t x, std::int64_t r){ return (r==0)? x : (acc*x); }, 1);
+      return;
+    case ScalarType::Int32:
+      cum_impl<std::int32_t>(a, dim, out, [](std::int32_t acc, std::int32_t x, std::int64_t r){ return (r==0)? x : static_cast<std::int32_t>(acc*x); }, 1);
       return;
     default: break;
   }

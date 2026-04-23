@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pluss/ai/nn_functional.h"
+
 #include "NodeK/NN/modules/Module.h"
 #include "NodeK/NN/modules/activation/Activation.h"
 #include "NodeK/NN/modules/container/Schedule.h"

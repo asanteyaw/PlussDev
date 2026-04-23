@@ -104,6 +104,38 @@ inline void validate_param_count(pluss::msharp::RangeView::Of<NetWeight> params,
               std::string("pluss::") + what + ": expected " + std::to_string(expected) + " parameter blocks");
 }
 
+inline void validate_bias_layout(pluss::msharp::RangeView::Of<NetWeight> params,
+                                 const NetConfig& cfg,
+                                 const char* what) {
+  for (std::size_t i = 0; i < params.size(); ++i) {
+    const auto& p = params[i];
+    const bool has_bih = p.bias_ih.defined();
+    const bool has_bhh = p.bias_hh.defined();
+
+    if (!cfg.use_bias) {
+      PLUSS_CHECK(!has_bih && !has_bhh,
+                  std::string("pluss::") + what +
+                      ": use_bias=false but a bias tensor is defined in parameter block " + std::to_string(i));
+      continue;
+    }
+
+    if (cfg.split_bias) {
+      PLUSS_CHECK(has_bih == has_bhh,
+                  std::string("pluss::") + what +
+                      ": split_bias=true requires bias_ih and bias_hh to be both defined or both undefined in block " +
+                      std::to_string(i));
+      continue;
+    }
+
+    if (has_bih && has_bhh && p.bias_ih.tracks_slope() && p.bias_hh.tracks_slope()) {
+      PLUSS_CHECK(false,
+                  std::string("pluss::") + what +
+                      ": split_bias=false with both bias_ih and bias_hh trainable is redundant; "
+                      "provide one unified bias (define only one) or set split_bias=true");
+    }
+  }
+}
+
 } // namespace detail
 
 } // namespace pluss::ai::rnn

@@ -27,6 +27,7 @@
 #include "pluss/coden/note_factory.h"
 #include "kindle/display/Display.h"
 #include "table/DataFrame.h"
+#include "table/io/CsvSchemaConvert.h"
 
 namespace pluss::kindle {
 
@@ -320,11 +321,7 @@ Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
                                const KindelizePolicy& policy = {}) {
   std::optional<pluss::table::Thread> case_axis = std::nullopt;
   if (raw.cases.has_value()) {
-    case_axis = pluss::loader::infer_thread_from_raw_csv_column(
-        raw.cases->name,
-        raw.cases->source_index,
-        raw.cases->values,
-        infer_options);
+    case_axis = pluss::table::detail::infer_thread_from_raw_csv_column(*raw.cases, infer_options);
   }
 
   std::vector<std::pair<std::string, Stream>> out;
@@ -333,11 +330,7 @@ Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
   names.reserve(raw.features.size() * 2);
 
   for (const auto& col : raw.features) {
-    auto feature = pluss::loader::infer_thread_from_raw_csv_column(
-        col.name,
-        col.source_index,
-        col.values,
-        infer_options);
+    auto feature = pluss::table::detail::infer_thread_from_raw_csv_column(col, infer_options);
 
     std::optional<pluss::table::Thread> stream_cases = std::nullopt;
     if (policy.attach_cases_to_streams && case_axis.has_value() && case_axis->size() == feature.size()) {

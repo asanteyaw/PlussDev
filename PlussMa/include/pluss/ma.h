@@ -5,3 +5,4 @@
 #include "pluss/ma/stats.h"
 #include "pluss/ma/eng.h"
 #include "pluss/ma/natsci.h"
+#include "pluss/ma/actuarial.h"

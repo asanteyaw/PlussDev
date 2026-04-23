@@ -9,6 +9,7 @@
 #include "pluss/detail/factory_core.h"
 #include "pluss/detail/factory_containers.h"
 #include "pluss/detail/series_finalize.h"
+#include "MSharp/RangeView.h"
 #include "CodeM/core/Config.h"
 #include "pluss/detail/data_reader.h"
 
@@ -34,32 +35,32 @@ namespace pluss {
   // Factories (create NEW Series). Ops on existing Series live as methods.
   // --------------------------------------------------------------------------
 
-  inline Series empty(std::span<const std::int64_t> sizes, ScalarType dt) { return Series::empty(sizes, dt); }
+  inline Series empty(pluss::msharp::RangeView::Int sizes, ScalarType dt) { return Series::empty(sizes, dt); }
   inline Series empty(std::initializer_list<std::int64_t> sizes, ScalarType dt) {
-    return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
+    return empty(pluss::msharp::RangeView::Int(sizes), dt);
   }
-  inline Series empty(std::span<const std::int64_t> sizes, Config cfg) { return Series::empty(sizes, cfg.dtype, cfg.platform); }
+  inline Series empty(pluss::msharp::RangeView::Int sizes, Config cfg) { return Series::empty(sizes, cfg.dtype, cfg.platform); }
   inline Series empty(std::initializer_list<std::int64_t> sizes, Config cfg) {
-    return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
+    return empty(pluss::msharp::RangeView::Int(sizes), cfg);
   }
   template <class... Opts>
-  inline Series empty(std::span<const std::int64_t> sizes, Opts... opts) {
+  inline Series empty(pluss::msharp::RangeView::Int sizes, Opts... opts) {
     return empty(sizes, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series empty(std::initializer_list<std::int64_t> sizes, Opts... opts) {
-    return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...));
+    return empty(pluss::msharp::RangeView::Int(sizes), FactoryCore::make_config(opts...));
   }
   template <class T>
-  inline Series empty(std::span<const std::int64_t> sizes, std::initializer_list<std::pair<const char*, T>> kv) {
+  inline Series empty(pluss::msharp::RangeView::Int sizes, std::initializer_list<std::pair<const char*, T>> kv) {
     return empty(sizes, pluss::config(kv));
   }
 
-  inline Series zeros(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32) { return Series::zeros(sizes, dt); }
+  inline Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32) { return Series::zeros(sizes, dt); }
   inline Series zeros(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32) {
-    return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
+    return zeros(pluss::msharp::RangeView::Int(sizes), dt);
   }
-  inline Series zeros(std::span<const std::int64_t> sizes, Config cfg) {
+  inline Series zeros(pluss::msharp::RangeView::Int sizes, Config cfg) {
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::zeros(sizes, cfg.dtype),
         cfg,
@@ -67,26 +68,26 @@ namespace pluss {
         pluss::cuda::supports_zeros_factory_baseline(cfg.dtype));
   }
   inline Series zeros(std::initializer_list<std::int64_t> sizes, Config cfg) {
-    return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
+    return zeros(pluss::msharp::RangeView::Int(sizes), cfg);
   }
   template <class... Opts>
-  inline Series zeros(std::span<const std::int64_t> sizes, Opts... opts) {
+  inline Series zeros(pluss::msharp::RangeView::Int sizes, Opts... opts) {
     return zeros(sizes, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series zeros(std::initializer_list<std::int64_t> sizes, Opts... opts) {
-    return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...));
+    return zeros(pluss::msharp::RangeView::Int(sizes), FactoryCore::make_config(opts...));
   }
   template <class T>
-  inline Series zeros(std::span<const std::int64_t> sizes, std::initializer_list<std::pair<const char*, T>> kv) {
+  inline Series zeros(pluss::msharp::RangeView::Int sizes, std::initializer_list<std::pair<const char*, T>> kv) {
     return zeros(sizes, pluss::config(kv));
   }
 
-  inline Series ones(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32) { return Series::ones(sizes, dt); }
+  inline Series ones(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32) { return Series::ones(sizes, dt); }
   inline Series ones(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32) {
-    return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
+    return ones(pluss::msharp::RangeView::Int(sizes), dt);
   }
-  inline Series ones(std::span<const std::int64_t> sizes, Config cfg) {
+  inline Series ones(pluss::msharp::RangeView::Int sizes, Config cfg) {
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::ones(sizes, cfg.dtype),
         cfg,
@@ -94,26 +95,26 @@ namespace pluss {
         pluss::cuda::supports_ones_factory_baseline(cfg.dtype));
   }
   inline Series ones(std::initializer_list<std::int64_t> sizes, Config cfg) {
-    return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
+    return ones(pluss::msharp::RangeView::Int(sizes), cfg);
   }
   template <class... Opts>
-  inline Series ones(std::span<const std::int64_t> sizes, Opts... opts) {
+  inline Series ones(pluss::msharp::RangeView::Int sizes, Opts... opts) {
     return ones(sizes, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series ones(std::initializer_list<std::int64_t> sizes, Opts... opts) {
-    return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...));
+    return ones(pluss::msharp::RangeView::Int(sizes), FactoryCore::make_config(opts...));
   }
   template <class T>
-  inline Series ones(std::span<const std::int64_t> sizes, std::initializer_list<std::pair<const char*, T>> kv) {
+  inline Series ones(pluss::msharp::RangeView::Int sizes, std::initializer_list<std::pair<const char*, T>> kv) {
     return ones(sizes, pluss::config(kv));
   }
 
-  inline Series full(std::span<const std::int64_t> sizes, double fill_value, ScalarType dt = ScalarType::Float32) { return Series::full(sizes, fill_value, dt); }
+  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, ScalarType dt = ScalarType::Float32) { return Series::full(sizes, fill_value, dt); }
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, ScalarType dt = ScalarType::Float32) {
-    return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, dt);
+    return full(pluss::msharp::RangeView::Int(sizes), fill_value, dt);
   }
-  inline Series full(std::span<const std::int64_t> sizes, double fill_value, Config cfg) {
+  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, Config cfg) {
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::full(sizes, fill_value, cfg.dtype),
         cfg,
@@ -121,18 +122,18 @@ namespace pluss {
         pluss::cuda::supports_full_factory_baseline(cfg.dtype));
   }
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, Config cfg) {
-    return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, cfg);
+    return full(pluss::msharp::RangeView::Int(sizes), fill_value, cfg);
   }
   template <class... Opts>
-  inline Series full(std::span<const std::int64_t> sizes, double fill_value, Opts... opts) {
+  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, Opts... opts) {
     return full(sizes, fill_value, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, Opts... opts) {
-    return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, FactoryCore::make_config(opts...));
+    return full(pluss::msharp::RangeView::Int(sizes), fill_value, FactoryCore::make_config(opts...));
   }
   template <class T>
-  inline Series full(std::span<const std::int64_t> sizes, double fill_value, std::initializer_list<std::pair<const char*, T>> kv) {
+  inline Series full(pluss::msharp::RangeView::Int sizes, double fill_value, std::initializer_list<std::pair<const char*, T>> kv) {
     return full(sizes, fill_value, pluss::config(kv));
   }
 
@@ -186,9 +187,9 @@ namespace pluss {
         pluss::cuda::supports_eye_factory_baseline(cfg.dtype));
   }
 
-  inline Series rand(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
-  inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return Series::rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);}
-  inline Series rand(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
+  inline Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
+  inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return rand(pluss::msharp::RangeView::Int(sizes), dt, seed);}
+  inline Series rand(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::rand(sizes, cfg.dtype, seed),
         cfg,
@@ -196,24 +197,41 @@ namespace pluss {
         pluss::cuda::supports_rand_factory_baseline(cfg.dtype));
   }
   inline Series rand(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+    return rand(pluss::msharp::RangeView::Int(sizes), cfg, seed);
   }
 
   template <class... Opts>
-  inline Series rand(std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
+  inline Series rand(pluss::msharp::RangeView::Int sizes, std::uint64_t seed, Opts... opts) {
     return rand(sizes, FactoryCore::make_config(opts...), seed);
   }
   template <class... Opts>
   inline Series rand(std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
     const Config cfg = FactoryCore::make_config(opts...);
-    return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+    return rand(pluss::msharp::RangeView::Int(sizes), cfg, seed);
   }
 
-  inline Series randn(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::randn(sizes, dt, seed); }
-  inline Series randn(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {
-    return Series::randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
+  inline Series rand_btw(f64_t lo,
+                         f64_t hi,
+                         pluss::msharp::RangeView::Int sizes,
+                         std::uint64_t seed = 0) {
+    PLUSS_CHECK(hi >= lo, "rand_btw: expected hi >= lo");
+    return lo + (hi - lo) * pluss::rand(sizes, ScalarType::Float64, seed);
   }
-  inline Series randn(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
+  inline Series rand_btw(f64_t lo,
+                         f64_t hi,
+                         std::initializer_list<std::int64_t> sizes,
+                         std::uint64_t seed = 0) {
+    return rand_btw(lo, hi, pluss::msharp::RangeView::Int(sizes), seed);
+  }
+  inline Series rand_btw(f64_t lo, f64_t hi, i64_t size, std::uint64_t seed = 0) {
+    return rand_btw(lo, hi, pluss::msharp::RangeView::Int(&size, 1), seed);
+  }
+
+  inline Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::randn(sizes, dt, seed); }
+  inline Series randn(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {
+    return randn(pluss::msharp::RangeView::Int(sizes), dt, seed);
+  }
+  inline Series randn(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::randn(sizes, cfg.dtype, seed),
         cfg,
@@ -221,19 +239,19 @@ namespace pluss {
         pluss::cuda::supports_randn_factory_baseline(cfg.dtype));
   }
   inline Series randn(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+    return randn(pluss::msharp::RangeView::Int(sizes), cfg, seed);
   }
   template <class... Opts>
-  inline Series randn(std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
+  inline Series randn(pluss::msharp::RangeView::Int sizes, std::uint64_t seed, Opts... opts) {
     return randn(sizes, FactoryCore::make_config(opts...), seed);
   }
   template <class... Opts>
   inline Series randn(std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
     const Config cfg = FactoryCore::make_config(opts...);
-    return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+    return randn(pluss::msharp::RangeView::Int(sizes), cfg, seed);
   }
 
-  inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Int64, std::uint64_t seed = 0) {
+  inline Series randint(std::int64_t lo, std::int64_t hi, pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Int64, std::uint64_t seed = 0) {
     if (hi <= lo) pluss::codem::throw_error("randint: expected hi > lo");
     const double span = static_cast<double>(hi - lo);
     Series out = Series::rand(sizes, ScalarType::Float64, seed);
@@ -241,9 +259,9 @@ namespace pluss {
     return out.to(dt);
   }
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Int64, std::uint64_t seed = 0) {
-    return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
+    return randint(lo, hi, pluss::msharp::RangeView::Int(sizes), dt, seed);
   }
-  inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
+  inline Series randint(std::int64_t lo, std::int64_t hi, pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
@@ -253,15 +271,15 @@ namespace pluss {
         pluss::cuda::supports_rand_factory_baseline(ScalarType::Float64));
   }
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+    return randint(lo, hi, pluss::msharp::RangeView::Int(sizes), cfg, seed);
   }
   template <class... Opts>
-  inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
+  inline Series randint(std::int64_t lo, std::int64_t hi, pluss::msharp::RangeView::Int sizes, std::uint64_t seed, Opts... opts) {
     return randint(lo, hi, sizes, FactoryCore::make_config(opts...), seed);
   }
   template <class... Opts>
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...), seed);
+    return randint(lo, hi, pluss::msharp::RangeView::Int(sizes), FactoryCore::make_config(opts...), seed);
   }
 
   inline Series logspace(double start,
@@ -303,7 +321,7 @@ namespace pluss {
 
   inline Series normal(double mean,
                        double std,
-                       std::span<const std::int64_t> sizes,
+                       pluss::msharp::RangeView::Int sizes,
                        ScalarType dt = ScalarType::Float32,
                        std::uint64_t seed = 0) {
     PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
@@ -311,7 +329,7 @@ namespace pluss {
   }
   inline Series normal(double mean,
                        double std,
-                       std::span<const std::int64_t> sizes,
+                       pluss::msharp::RangeView::Int sizes,
                        Config cfg,
                        std::uint64_t seed = 0) {
     PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
@@ -326,17 +344,17 @@ namespace pluss {
                        std::initializer_list<std::int64_t> sizes,
                        ScalarType dt = ScalarType::Float32,
                        std::uint64_t seed = 0) {
-    return normal(mean, std, std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
+    return normal(mean, std, pluss::msharp::RangeView::Int(sizes), dt, seed);
   }
   inline Series normal(double mean,
                        double std,
                        std::initializer_list<std::int64_t> sizes,
                        Config cfg,
                        std::uint64_t seed = 0) {
-    return normal(mean, std, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+    return normal(mean, std, pluss::msharp::RangeView::Int(sizes), cfg, seed);
   }
 
-  inline Series bernoulli(std::span<const std::int64_t> sizes,
+  inline Series bernoulli(pluss::msharp::RangeView::Int sizes,
                           double p = 0.5,
                           ScalarType dt = ScalarType::Bool,
                           std::uint64_t seed = 0) {
@@ -355,7 +373,7 @@ namespace pluss {
     Series out = codem::make_series<std::uint8_t>(bits, sizes, Config{}.with_dtype(ScalarType::Bool));
     return (dt == ScalarType::Bool) ? out : out.to(dt);
   }
-  inline Series bernoulli(std::span<const std::int64_t> sizes,
+  inline Series bernoulli(pluss::msharp::RangeView::Int sizes,
                           double p,
                           Config cfg,
                           std::uint64_t seed = 0) {
@@ -371,16 +389,16 @@ namespace pluss {
                           double p = 0.5,
                           ScalarType dt = ScalarType::Bool,
                           std::uint64_t seed = 0) {
-    return bernoulli(std::span<const std::int64_t>(sizes.begin(), sizes.size()), p, dt, seed);
+    return bernoulli(pluss::msharp::RangeView::Int(sizes), p, dt, seed);
   }
   inline Series bernoulli(std::initializer_list<std::int64_t> sizes,
                           double p,
                           Config cfg,
                           std::uint64_t seed = 0) {
-    return bernoulli(std::span<const std::int64_t>(sizes.begin(), sizes.size()), p, cfg, seed);
+    return bernoulli(pluss::msharp::RangeView::Int(sizes), p, cfg, seed);
   }
 
-  inline Series poisson(std::span<const std::int64_t>, double, ScalarType = ScalarType::Int64, std::uint64_t = 0) {
+  inline Series poisson(pluss::msharp::RangeView::Int, double, ScalarType = ScalarType::Int64, std::uint64_t = 0) {
     pluss::codem::throw_error("poisson factory: not implemented yet for CPU");
     return Series::undefined();
   }
@@ -388,7 +406,7 @@ namespace pluss {
                         double lambda,
                         ScalarType dt = ScalarType::Int64,
                         std::uint64_t seed = 0) {
-    return poisson(std::span<const std::int64_t>(sizes.begin(), sizes.size()), lambda, dt, seed);
+    return poisson(pluss::msharp::RangeView::Int(sizes), lambda, dt, seed);
   }
 
   inline Series multinomial(std::span<const double> probs,
@@ -704,7 +722,7 @@ namespace pluss {
   }
 
   inline Series from_buffer(void* data,
-                             std::span<const std::int64_t> sizes,
+                             pluss::msharp::RangeView::Int sizes,
                              std::span<const std::int64_t> strides,
                              BlobDeleter deleter,
                              ScalarType dtype = ScalarType::Float32) {

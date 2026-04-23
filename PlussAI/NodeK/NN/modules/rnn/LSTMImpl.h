@@ -87,9 +87,7 @@ public:
 
   std::tuple<Series, std::tuple<Series, Series>> forward(const Series& input,
                                                          const std::tuple<Series, Series>& state = {}) const {
-    const Series hx = std::get<0>(state);
-    const Series cx = std::get<1>(state);
-    return pluss::ai::rnn::lstm(input, hx, cx, this->params_, detail::as_run_config_(this->options_));
+    return pluss::ai::rnn::lstm(input, state, this->params_, detail::as_run_config_(this->options_));
   }
 
   std::tuple<PackedSequence, std::tuple<Series, Series>> forward(

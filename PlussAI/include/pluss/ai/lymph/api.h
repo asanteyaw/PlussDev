@@ -47,6 +47,14 @@ inline void resolve(Status status, std::string_view where = {}) {
   return out;
 }
 
+template <class T>
+[[nodiscard]] inline std::vector<T> copy_range_values(pluss::msharp::RangeView::Of<T> values) {
+  std::vector<T> out{};
+  out.reserve(values.size());
+  out.insert(out.end(), values.begin(), values.end());
+  return out;
+}
+
 class WorkflowModel;
 
 namespace prep {
@@ -806,7 +814,7 @@ struct CrossValidationReport {
 
 [[nodiscard]] inline MetricReport metric_report_from_series_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
   MetricReport report{};
-  report.requested = requested;
+  report.requested = copy_range_values(requested);
   report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
   const std::vector<double> values = report.values.to_vec<double>();
 
@@ -850,7 +858,7 @@ struct CrossValidationReport {
 
 [[nodiscard]] inline DataFrameBatchOptions cross_validate_default_data_options_(pluss::msharp::RangeView::Of<std::string> names) {
   DataFrameBatchOptions options{};
-  options.feature_names = names;
+  options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
   options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
@@ -1387,7 +1395,7 @@ public:
 private:
   [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
-    options.feature_names = feature_names;
+    options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
     options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
@@ -1524,7 +1532,7 @@ private:
 
   [[nodiscard]] static MetricReport as_metric_report_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
     MetricReport report{};
-    report.requested = requested;
+    report.requested = copy_range_values(requested);
     report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
     const std::vector<double> values = report.values.to_vec<double>();
 
@@ -2401,7 +2409,7 @@ private:
 
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   DataFrameBatchOptions options{};
-  options.feature_names = names;
+  options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
   options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
@@ -3679,7 +3687,7 @@ public:
 private:
   [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
-    options.feature_names = feature_names;
+    options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
     options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
@@ -3821,7 +3829,7 @@ public:
 private:
   [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
-    options.feature_names = feature_names;
+    options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
     options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;

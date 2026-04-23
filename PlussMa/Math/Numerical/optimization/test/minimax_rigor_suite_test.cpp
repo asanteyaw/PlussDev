@@ -1,0 +1,311 @@
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <cstdint>
+#include <iostream>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+namespace {
+
+using pluss::Config;
+using pluss::ScalarType;
+using pluss::Series;
+using pluss::pCPU;
+using pluss::optim::MinimaxConstraints;
+using pluss::optim::MinimaxExitFlag;
+using pluss::optim::MinimaxLbfgsLineSearch;
+using pluss::optim::MinimaxOptimizer;
+using pluss::optim::MinimaxResult;
+using pluss::optim::MinimaxSolveOptions;
+using pluss::optim::ParameterPack;
+using pluss::optim::Trace;
+using pluss::optim::log;
+using pluss::optim::square;
+using pluss::optim::sum;
+using pluss::optim::trace;
+
+void expect(bool cond, const std::string& msg, int* failures) {
+  if (!cond) {
+    ++(*failures);
+    std::cerr << "[FAIL] " << msg << '\n';
+  }
+}
+
+Series make_vec(const std::vector<double>& values, const Config& cfg) {
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, cfg);
+}
+
+double as_f64_scalar(const Series& x) {
+  if (!x.defined() || x.numel() != 1) throw std::runtime_error("expected scalar Series");
+  return x.to(pCPU, ScalarType::Float64).item<double>();
+}
+
+std::vector<double> to_vec_f64(const Series& x) {
+  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+}
+
+void expect_vec_near(const std::vector<double>& lhs,
+                     const std::vector<double>& rhs,
+                     double atol,
+                     const std::string& msg,
+                     int* failures) {
+  if (lhs.size() != rhs.size()) {
+    ++(*failures);
+    std::cerr << "[FAIL] " << msg << " (size mismatch)\n";
+    return;
+  }
+  for (std::size_t i = 0; i < lhs.size(); ++i) {
+    if (std::abs(lhs[i] - rhs[i]) > atol) {
+      ++(*failures);
+      std::cerr << "[FAIL] " << msg << " idx=" << i << " lhs=" << lhs[i] << " rhs=" << rhs[i] << '\n';
+      return;
+    }
+  }
+}
+
+MinimaxSolveOptions make_base_options() {
+  MinimaxSolveOptions opts{};
+  opts.max_iterations = 200;
+  opts.max_no_progress_iterations = 20;
+  opts.objective_tolerance = 1e-14;
+  opts.gradient_tolerance = 1e-9;
+  opts.step_tolerance = 1e-12;
+  opts.constraint_tolerance = 1e-8;
+  opts.step.adam.learning_rate = 0.08;
+  opts.step.adam.weight_decay = 1e-4;
+  opts.step.dual_learning_rate = 0.1;
+  opts.step.equality_penalty = 10.0;
+  opts.step.inequality_penalty = 10.0;
+  opts.step.project_bounds = true;
+  opts.step.enable_constraint_autodiff = true;
+  return opts;
+}
+
+MinimaxConstraints make_simple_constraints(const Config& cfg) {
+  MinimaxConstraints c{};
+  c.equalities = [](const std::vector<Series>& p) {
+    return std::vector<Series>{p[0].sum() - 1.0};
+  };
+  c.equalities_trace = [](const std::vector<Trace>& p) {
+    return std::vector<Trace>{sum(p[0]) - 1.0};
+  };
+  c.inequalities = [](const std::vector<Series>& p) {
+    return std::vector<Series>{p[0].square().sum() - 1.0};
+  };
+  c.inequalities_trace = [](const std::vector<Trace>& p) {
+    return std::vector<Trace>{sum(square(p[0])) - 1.0};
+  };
+  c.lbs = {make_vec({0.0, 0.0}, cfg)};
+  c.ubs = {make_vec({1.0, 1.0}, cfg)};
+  return c;
+}
+
+} // namespace
+
+int main() {
+  int failures = 0;
+  const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+
+  // 1) Overload parity: vector objective vs ParameterPack objective.
+  {
+    const Series w0 = make_vec({2.0, -1.0}, cfg);
+    const Series b0 = make_vec({3.0}, cfg);
+    const Series wt = make_vec({1.0, 2.0}, cfg);
+    const Series bt = make_vec({-0.5}, cfg);
+    MinimaxSolveOptions opts = make_base_options();
+    opts.max_iterations = 120;
+
+    ParameterPack<Series> initial({{"w", w0}, {"b", b0}});
+    const auto via_pack = pluss::optim::minimax(
+        [wt, bt](const ParameterPack<Trace>& p) -> Trace {
+          return (sum(square(p.at("w") - trace(wt, false))) + sum(square(p.at("b") - trace(bt, false)))) * 0.5;
+        },
+        initial,
+        opts);
+
+    const auto via_vector = pluss::optim::minimax(
+        [wt, bt](const std::vector<Trace>& p) -> Trace {
+          return (sum(square(p[0] - trace(wt, false))) + sum(square(p[1] - trace(bt, false)))) * 0.5;
+        },
+        std::vector<Series>{w0, b0},
+        opts);
+
+    expect_vec_near(
+        to_vec_f64(via_pack.params[0]),
+        to_vec_f64(via_vector.params[0]),
+        1e-9,
+        "minimax overload parity (w)",
+        &failures);
+    expect_vec_near(
+        to_vec_f64(via_pack.params[1]),
+        to_vec_f64(via_vector.params[1]),
+        1e-9,
+        "minimax overload parity (b)",
+        &failures);
+  }
+
+  // 2) Constrained convergence for ADAM and LBFGS.
+  {
+    const Series init = make_vec({0.95, 0.05}, cfg);
+    const Series target = make_vec({0.3, 0.7}, cfg);
+    const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
+    const MinimaxConstraints constraints = make_simple_constraints(cfg);
+
+    MinimaxSolveOptions adam = make_base_options();
+    adam.max_iterations = 220;
+    adam.step.optimizer = MinimaxOptimizer::Adam;
+    const MinimaxResult adam_fit = pluss::optim::minimax(objective, init, adam, constraints);
+    expect(adam_fit.constraint_violation <= 5e-4, "ADAM constrained run should satisfy constraints", &failures);
+    expect(std::isfinite(adam_fit.objective_value), "ADAM constrained objective should be finite", &failures);
+
+    MinimaxSolveOptions lbfgs = make_base_options();
+    lbfgs.max_iterations = 180;
+    lbfgs.step.optimizer = MinimaxOptimizer::Lbfgs;
+    lbfgs.step.lbfgs.learning_rate = 0.25;
+    lbfgs.step.lbfgs.history_size = 10;
+    const MinimaxResult lbfgs_fit = pluss::optim::minimax(objective, init, lbfgs, constraints);
+    expect(lbfgs_fit.constraint_violation <= 5e-4, "LBFGS constrained run should satisfy constraints", &failures);
+    expect(std::isfinite(lbfgs_fit.objective_value), "LBFGS constrained objective should be finite", &failures);
+  }
+
+  // 3) Progress hook stop semantics.
+  {
+    const Series init = make_vec({4.0, -4.0}, cfg);
+    const Series target = make_vec({1.0, -2.0}, cfg);
+    MinimaxSolveOptions opts = make_base_options();
+    opts.max_iterations = 80;
+    opts.progress_hook = [](const pluss::optim::MinimaxProgressSnapshot& s) { return s.iteration < 7; };
+
+    const auto fit = pluss::optim::minimax(
+        [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+        init,
+        opts);
+    expect(fit.exit_flag == MinimaxExitFlag::Stopped, "progress hook should stop minimax", &failures);
+    expect(fit.iteration == 7, "progress hook stop should occur at configured iteration", &failures);
+  }
+
+  // 4) Non-finite objective handling.
+  {
+    const Series init = make_vec({0.0}, cfg);
+    MinimaxSolveOptions opts = make_base_options();
+    opts.max_iterations = 10;
+    opts.stop_on_nonfinite_objective = true;
+
+    const auto fit = pluss::optim::minimax(
+        [](const Trace& x) -> Trace {
+          return sum(log(x - 2.0));
+        },
+        init,
+        opts);
+    expect(fit.exit_flag == MinimaxExitFlag::NonFiniteEvaluation,
+           "non-finite objective should map to NonFiniteEvaluation",
+           &failures);
+  }
+
+  // 5) No-progress classification.
+  {
+    const Series init = make_vec({1.0}, cfg);
+    MinimaxSolveOptions opts = make_base_options();
+    opts.max_iterations = 30;
+    opts.max_no_progress_iterations = 3;
+    opts.gradient_tolerance = 0.0;
+    opts.step_tolerance = 1e-12;
+    opts.objective_tolerance = 1e-6;
+    opts.step.adam.learning_rate = 1e-18;
+    opts.step.optimizer = MinimaxOptimizer::Adam;
+
+    const auto fit = pluss::optim::minimax(
+        [](const Trace& x) -> Trace {
+          return sum(square(x));
+        },
+        init,
+        opts);
+    expect(fit.exit_flag == MinimaxExitFlag::NoProgress, "tiny-step regime should trigger NoProgress", &failures);
+  }
+
+  // 6) Determinism across repeated runs.
+  {
+    const Series init = make_vec({2.5, -1.5}, cfg);
+    const Series target = make_vec({0.25, 0.75}, cfg);
+    MinimaxSolveOptions opts = make_base_options();
+    opts.max_iterations = 60;
+    opts.step.optimizer = MinimaxOptimizer::Lbfgs;
+    opts.step.lbfgs.learning_rate = 0.2;
+    opts.step.lbfgs.history_size = 8;
+
+    const auto run_once = [&]() {
+      return pluss::optim::minimax(
+          [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+          init,
+          opts);
+    };
+    const auto a = run_once();
+    const auto b = run_once();
+
+    expect_vec_near(to_vec_f64(a.params[0]), to_vec_f64(b.params[0]), 1e-12, "minimax deterministic params", &failures);
+    expect(std::abs(a.objective_value - b.objective_value) <= 1e-12,
+           "minimax deterministic objective",
+           &failures);
+  }
+
+  // 7) LBFGS strong-wolfe line-search should increase function eval count.
+  {
+    const Series init = make_vec({2.5, -1.5}, cfg);
+    const Series target = make_vec({0.25, 0.75}, cfg);
+    MinimaxSolveOptions opts = make_base_options();
+    opts.max_iterations = 30;
+    opts.step.optimizer = MinimaxOptimizer::Lbfgs;
+    opts.step.lbfgs.learning_rate = 1.0;
+    opts.step.lbfgs.history_size = 8;
+    opts.step.lbfgs.max_line_search_iterations = 12;
+    opts.step.lbfgs.line_search = MinimaxLbfgsLineSearch::StrongWolfe;
+
+    const auto fit = pluss::optim::minimax(
+        [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+        init,
+        opts);
+    expect(fit.function_evaluations > fit.iteration,
+           "strong-wolfe LBFGS should perform additional function evaluations",
+           &failures);
+  }
+
+  // 8) Option validation failures.
+  {
+    bool threw_dual = false;
+    try {
+      MinimaxSolveOptions bad = make_base_options();
+      bad.step.dual_learning_rate = -1.0;
+      (void)pluss::optim::minimax(
+          [](const Trace& x) -> Trace { return sum(square(x)); },
+          make_vec({1.0}, cfg),
+          bad);
+    } catch (const std::exception&) {
+      threw_dual = true;
+    }
+    expect(threw_dual, "minimax should throw on invalid dual_learning_rate", &failures);
+
+    bool threw_iters = false;
+    try {
+      MinimaxSolveOptions bad = make_base_options();
+      bad.max_iterations = 0;
+      (void)pluss::optim::minimax(
+          [](const Trace& x) -> Trace { return sum(square(x)); },
+          make_vec({1.0}, cfg),
+          bad);
+    } catch (const std::exception&) {
+      threw_iters = true;
+    }
+    expect(threw_iters, "minimax should throw on invalid max_iterations", &failures);
+  }
+
+  if (failures != 0) {
+    std::cerr << "minimax_rigor_suite_test failed with " << failures << " failure(s)\n";
+    return 1;
+  }
+
+  std::cout << "minimax_rigor_suite_test passed\n";
+  return 0;
+}

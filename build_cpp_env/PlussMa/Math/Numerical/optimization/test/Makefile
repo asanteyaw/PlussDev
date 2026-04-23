@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/rule
+
+# Convenience name for target.
+adam_functional_torch_rigor_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/rule
+.PHONY : adam_functional_torch_rigor_test
+
+# fast build rule for target.
+adam_functional_torch_rigor_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build
+.PHONY : adam_functional_torch_rigor_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule
 .PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule
@@ -291,6 +305,34 @@ mads_nomad_parity_test/fast:
 .PHONY : mads_nomad_parity_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/rule
+
+# Convenience name for target.
+minimax_optimizer_selection_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/rule
+.PHONY : minimax_optimizer_selection_test
+
+# fast build rule for target.
+minimax_optimizer_selection_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build
+.PHONY : minimax_optimizer_selection_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/rule
+
+# Convenience name for target.
+minimax_rigor_suite_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/rule
+.PHONY : minimax_rigor_suite_test
+
+# fast build rule for target.
+minimax_rigor_suite_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build
+.PHONY : minimax_rigor_suite_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule
 .PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule
@@ -331,6 +373,30 @@ pattern_search_closure_catch2: PlussMa/Math/Numerical/optimization/test/CMakeFil
 pattern_search_closure_catch2/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build
 .PHONY : pattern_search_closure_catch2/fast
+
+adam_functional_torch_rigor_test.o: adam_functional_torch_rigor_test.cpp.o
+.PHONY : adam_functional_torch_rigor_test.o
+
+# target to build an object file
+adam_functional_torch_rigor_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/adam_functional_torch_rigor_test.cpp.o
+.PHONY : adam_functional_torch_rigor_test.cpp.o
+
+adam_functional_torch_rigor_test.i: adam_functional_torch_rigor_test.cpp.i
+.PHONY : adam_functional_torch_rigor_test.i
+
+# target to preprocess a source file
+adam_functional_torch_rigor_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/adam_functional_torch_rigor_test.cpp.i
+.PHONY : adam_functional_torch_rigor_test.cpp.i
+
+adam_functional_torch_rigor_test.s: adam_functional_torch_rigor_test.cpp.s
+.PHONY : adam_functional_torch_rigor_test.s
+
+# target to generate assembly for a file
+adam_functional_torch_rigor_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/adam_functional_torch_rigor_test.cpp.s
+.PHONY : adam_functional_torch_rigor_test.cpp.s
 
 autodiff_audit_bridge_test.o: autodiff_audit_bridge_test.cpp.o
 .PHONY : autodiff_audit_bridge_test.o
@@ -500,6 +566,54 @@ mads_nomad_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/mads_nomad_parity_test.cpp.s
 .PHONY : mads_nomad_parity_test.cpp.s
 
+minimax_optimizer_selection_test.o: minimax_optimizer_selection_test.cpp.o
+.PHONY : minimax_optimizer_selection_test.o
+
+# target to build an object file
+minimax_optimizer_selection_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/minimax_optimizer_selection_test.cpp.o
+.PHONY : minimax_optimizer_selection_test.cpp.o
+
+minimax_optimizer_selection_test.i: minimax_optimizer_selection_test.cpp.i
+.PHONY : minimax_optimizer_selection_test.i
+
+# target to preprocess a source file
+minimax_optimizer_selection_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/minimax_optimizer_selection_test.cpp.i
+.PHONY : minimax_optimizer_selection_test.cpp.i
+
+minimax_optimizer_selection_test.s: minimax_optimizer_selection_test.cpp.s
+.PHONY : minimax_optimizer_selection_test.s
+
+# target to generate assembly for a file
+minimax_optimizer_selection_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/minimax_optimizer_selection_test.cpp.s
+.PHONY : minimax_optimizer_selection_test.cpp.s
+
+minimax_rigor_suite_test.o: minimax_rigor_suite_test.cpp.o
+.PHONY : minimax_rigor_suite_test.o
+
+# target to build an object file
+minimax_rigor_suite_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/minimax_rigor_suite_test.cpp.o
+.PHONY : minimax_rigor_suite_test.cpp.o
+
+minimax_rigor_suite_test.i: minimax_rigor_suite_test.cpp.i
+.PHONY : minimax_rigor_suite_test.i
+
+# target to preprocess a source file
+minimax_rigor_suite_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/minimax_rigor_suite_test.cpp.i
+.PHONY : minimax_rigor_suite_test.cpp.i
+
+minimax_rigor_suite_test.s: minimax_rigor_suite_test.cpp.s
+.PHONY : minimax_rigor_suite_test.s
+
+# target to generate assembly for a file
+minimax_rigor_suite_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/minimax_rigor_suite_test.cpp.s
+.PHONY : minimax_rigor_suite_test.cpp.s
+
 optima_robustness_catch2.o: optima_robustness_catch2.cpp.o
 .PHONY : optima_robustness_catch2.o
 
@@ -587,6 +701,7 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... adam_functional_torch_rigor_test"
 	@echo "... autodiff_audit_bridge_test"
 	@echo "... dfo_minimizers_test"
 	@echo "... dfo_solver_test"
@@ -594,9 +709,14 @@ help:
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
+	@echo "... minimax_optimizer_selection_test"
+	@echo "... minimax_rigor_suite_test"
 	@echo "... optima_robustness_catch2"
 	@echo "... pattern_search_closure_catch2"
 	@echo "... pattern_search_minimizer_test"
+	@echo "... adam_functional_torch_rigor_test.o"
+	@echo "... adam_functional_torch_rigor_test.i"
+	@echo "... adam_functional_torch_rigor_test.s"
 	@echo "... autodiff_audit_bridge_test.o"
 	@echo "... autodiff_audit_bridge_test.i"
 	@echo "... autodiff_audit_bridge_test.s"
@@ -618,6 +738,12 @@ help:
 	@echo "... mads_nomad_parity_test.o"
 	@echo "... mads_nomad_parity_test.i"
 	@echo "... mads_nomad_parity_test.s"
+	@echo "... minimax_optimizer_selection_test.o"
+	@echo "... minimax_optimizer_selection_test.i"
+	@echo "... minimax_optimizer_selection_test.s"
+	@echo "... minimax_rigor_suite_test.o"
+	@echo "... minimax_rigor_suite_test.i"
+	@echo "... minimax_rigor_suite_test.s"
 	@echo "... optima_robustness_catch2.o"
 	@echo "... optima_robustness_catch2.i"
 	@echo "... optima_robustness_catch2.s"

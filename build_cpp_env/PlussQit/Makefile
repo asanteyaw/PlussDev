@@ -3300,6 +3300,14 @@ src/CodeM/native/mps/Matmul.mm.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Matmul.mm.o
 .PHONY : src/CodeM/native/mps/Matmul.mm.o
 
+src/CodeM/native/mps/Nonzero.o: src/CodeM/native/mps/Nonzero.mm.o
+.PHONY : src/CodeM/native/mps/Nonzero.o
+
+# target to build an object file
+src/CodeM/native/mps/Nonzero.mm.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Nonzero.mm.o
+.PHONY : src/CodeM/native/mps/Nonzero.mm.o
+
 src/CodeM/native/mps/Reductions.o: src/CodeM/native/mps/Reductions.mm.o
 .PHONY : src/CodeM/native/mps/Reductions.o
 
@@ -5319,6 +5327,33 @@ tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
 .PHONY : tests/CodeM/test_patch167_io_save_load_roundtrip.cpp.s
 
+tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.o: tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.o
+.PHONY : tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.o
+
+# target to build an object file
+tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.o
+.PHONY : tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.o
+
+tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.i: tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.i
+.PHONY : tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.i
+.PHONY : tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.i
+
+tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.s: tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.s
+.PHONY : tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.s
+.PHONY : tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.cpp.s
+
 tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.o: tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.cpp.o
 .PHONY : tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.o
 
@@ -5366,6 +5401,168 @@ tests/CodeM/test_patch169_block_2d_selection.s: tests/CodeM/test_patch169_block_
 tests/CodeM/test_patch169_block_2d_selection.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_block_2d_selection.cpp.s
 .PHONY : tests/CodeM/test_patch169_block_2d_selection.cpp.s
+
+tests/CodeM/test_patch169_mps_masking_counting_int32_strict.o: tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.o
+.PHONY : tests/CodeM/test_patch169_mps_masking_counting_int32_strict.o
+
+# target to build an object file
+tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.o
+.PHONY : tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.o
+
+tests/CodeM/test_patch169_mps_masking_counting_int32_strict.i: tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.i
+.PHONY : tests/CodeM/test_patch169_mps_masking_counting_int32_strict.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.i
+.PHONY : tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.i
+
+tests/CodeM/test_patch169_mps_masking_counting_int32_strict.s: tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.s
+.PHONY : tests/CodeM/test_patch169_mps_masking_counting_int32_strict.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.s
+.PHONY : tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp.s
+
+tests/CodeM/test_patch170_mps_torchwide_series_strict.o: tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.o
+.PHONY : tests/CodeM/test_patch170_mps_torchwide_series_strict.o
+
+# target to build an object file
+tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.o
+.PHONY : tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.o
+
+tests/CodeM/test_patch170_mps_torchwide_series_strict.i: tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.i
+.PHONY : tests/CodeM/test_patch170_mps_torchwide_series_strict.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.i
+.PHONY : tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.i
+
+tests/CodeM/test_patch170_mps_torchwide_series_strict.s: tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.s
+.PHONY : tests/CodeM/test_patch170_mps_torchwide_series_strict.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.s
+.PHONY : tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp.s
+
+tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.o: tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.o
+.PHONY : tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.o
+
+# target to build an object file
+tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.o
+.PHONY : tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.o
+
+tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.i: tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.i
+.PHONY : tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.i
+.PHONY : tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.i
+
+tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.s: tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.s
+.PHONY : tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.s
+.PHONY : tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp.s
+
+tests/CodeM/test_patch171_unique_dim_contract.o: tests/CodeM/test_patch171_unique_dim_contract.cpp.o
+.PHONY : tests/CodeM/test_patch171_unique_dim_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch171_unique_dim_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch171_unique_dim_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch171_unique_dim_contract.cpp.o
+.PHONY : tests/CodeM/test_patch171_unique_dim_contract.cpp.o
+
+tests/CodeM/test_patch171_unique_dim_contract.i: tests/CodeM/test_patch171_unique_dim_contract.cpp.i
+.PHONY : tests/CodeM/test_patch171_unique_dim_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch171_unique_dim_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch171_unique_dim_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch171_unique_dim_contract.cpp.i
+.PHONY : tests/CodeM/test_patch171_unique_dim_contract.cpp.i
+
+tests/CodeM/test_patch171_unique_dim_contract.s: tests/CodeM/test_patch171_unique_dim_contract.cpp.s
+.PHONY : tests/CodeM/test_patch171_unique_dim_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch171_unique_dim_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch171_unique_dim_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch171_unique_dim_contract.cpp.s
+.PHONY : tests/CodeM/test_patch171_unique_dim_contract.cpp.s
+
+tests/CodeM/test_patch172_series_set_ops.o: tests/CodeM/test_patch172_series_set_ops.cpp.o
+.PHONY : tests/CodeM/test_patch172_series_set_ops.o
+
+# target to build an object file
+tests/CodeM/test_patch172_series_set_ops.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch172_series_set_ops.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch172_series_set_ops.cpp.o
+.PHONY : tests/CodeM/test_patch172_series_set_ops.cpp.o
+
+tests/CodeM/test_patch172_series_set_ops.i: tests/CodeM/test_patch172_series_set_ops.cpp.i
+.PHONY : tests/CodeM/test_patch172_series_set_ops.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch172_series_set_ops.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch172_series_set_ops.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch172_series_set_ops.cpp.i
+.PHONY : tests/CodeM/test_patch172_series_set_ops.cpp.i
+
+tests/CodeM/test_patch172_series_set_ops.s: tests/CodeM/test_patch172_series_set_ops.cpp.s
+.PHONY : tests/CodeM/test_patch172_series_set_ops.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch172_series_set_ops.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch172_series_set_ops.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch172_series_set_ops.cpp.s
+.PHONY : tests/CodeM/test_patch172_series_set_ops.cpp.s
+
+tests/CodeM/test_patch173_series_set_number_ops.o: tests/CodeM/test_patch173_series_set_number_ops.cpp.o
+.PHONY : tests/CodeM/test_patch173_series_set_number_ops.o
+
+# target to build an object file
+tests/CodeM/test_patch173_series_set_number_ops.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.o
+.PHONY : tests/CodeM/test_patch173_series_set_number_ops.cpp.o
+
+tests/CodeM/test_patch173_series_set_number_ops.i: tests/CodeM/test_patch173_series_set_number_ops.cpp.i
+.PHONY : tests/CodeM/test_patch173_series_set_number_ops.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch173_series_set_number_ops.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.i
+.PHONY : tests/CodeM/test_patch173_series_set_number_ops.cpp.i
+
+tests/CodeM/test_patch173_series_set_number_ops.s: tests/CodeM/test_patch173_series_set_number_ops.cpp.s
+.PHONY : tests/CodeM/test_patch173_series_set_number_ops.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch173_series_set_number_ops.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.s
+.PHONY : tests/CodeM/test_patch173_series_set_number_ops.cpp.s
 
 tests/CodeM/test_patch17_unary_cat_scatter.o: tests/CodeM/test_patch17_unary_cat_scatter.cpp.o
 .PHONY : tests/CodeM/test_patch17_unary_cat_scatter.o
@@ -8292,6 +8489,7 @@ help:
 	@echo "... src/CodeM/native/mps/MPSGraphCache.o"
 	@echo "... src/CodeM/native/mps/MPSRuntime.o"
 	@echo "... src/CodeM/native/mps/Matmul.o"
+	@echo "... src/CodeM/native/mps/Nonzero.o"
 	@echo "... src/CodeM/native/mps/Reductions.o"
 	@echo "... src/CodeM/native/mps/Scatter.o"
 	@echo "... src/CodeM/native/mps/Sorting.o"
@@ -8526,12 +8724,33 @@ help:
 	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.o"
 	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.i"
 	@echo "... tests/CodeM/test_patch167_io_save_load_roundtrip.s"
+	@echo "... tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.o"
+	@echo "... tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.i"
+	@echo "... tests/CodeM/test_patch167_mps_nonzero_int32_native_tranche.s"
 	@echo "... tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.o"
 	@echo "... tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.i"
 	@echo "... tests/CodeM/test_patch168_bool_mask_payoff_arithmetic.s"
 	@echo "... tests/CodeM/test_patch169_block_2d_selection.o"
 	@echo "... tests/CodeM/test_patch169_block_2d_selection.i"
 	@echo "... tests/CodeM/test_patch169_block_2d_selection.s"
+	@echo "... tests/CodeM/test_patch169_mps_masking_counting_int32_strict.o"
+	@echo "... tests/CodeM/test_patch169_mps_masking_counting_int32_strict.i"
+	@echo "... tests/CodeM/test_patch169_mps_masking_counting_int32_strict.s"
+	@echo "... tests/CodeM/test_patch170_mps_torchwide_series_strict.o"
+	@echo "... tests/CodeM/test_patch170_mps_torchwide_series_strict.i"
+	@echo "... tests/CodeM/test_patch170_mps_torchwide_series_strict.s"
+	@echo "... tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.o"
+	@echo "... tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.i"
+	@echo "... tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.s"
+	@echo "... tests/CodeM/test_patch171_unique_dim_contract.o"
+	@echo "... tests/CodeM/test_patch171_unique_dim_contract.i"
+	@echo "... tests/CodeM/test_patch171_unique_dim_contract.s"
+	@echo "... tests/CodeM/test_patch172_series_set_ops.o"
+	@echo "... tests/CodeM/test_patch172_series_set_ops.i"
+	@echo "... tests/CodeM/test_patch172_series_set_ops.s"
+	@echo "... tests/CodeM/test_patch173_series_set_number_ops.o"
+	@echo "... tests/CodeM/test_patch173_series_set_number_ops.i"
+	@echo "... tests/CodeM/test_patch173_series_set_number_ops.s"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.o"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.i"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.s"

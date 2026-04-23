@@ -1423,15 +1423,27 @@ Series det(const Series& a) {
     if (has_zero_extent_(batch)) {
       return Series::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "det");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "det");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> det_parts;
     det_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      det_parts.push_back(det(mat));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = det(mat);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      det_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(det_parts, "det"), batch, {});
+    Series out = restore_flat_batch_shape_(stack_dim0_(det_parts, "det"), batch, {});
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::det(a);
@@ -1481,15 +1493,27 @@ Series inverse(const Series& a) {
           .to(a.platform())
           .contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "inverse");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "inverse");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> inv_parts;
     inv_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      inv_parts.push_back(inverse(mat));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = inverse(mat);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      inv_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(inv_parts, "inverse"), batch, tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(inv_parts, "inverse"), batch, tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::inverse(a);
@@ -1538,15 +1562,27 @@ Series cholesky(const Series& a, bool upper) {
           .to(a.platform())
           .contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "cholesky");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "cholesky");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> chol_parts;
     chol_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      chol_parts.push_back(cholesky(mat, upper));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = cholesky(mat, upper);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      chol_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(chol_parts, "cholesky"), batch, tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(chol_parts, "cholesky"), batch, tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::cholesky(a, upper);
@@ -1583,15 +1619,27 @@ Series logdet(const Series& a) {
     if (has_zero_extent_(batch)) {
       return Series::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "logdet");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "logdet");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> logdet_parts;
     logdet_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      logdet_parts.push_back(logdet(mat));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = logdet(mat);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      logdet_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(logdet_parts, "logdet"), batch, {});
+    Series out = restore_flat_batch_shape_(stack_dim0_(logdet_parts, "logdet"), batch, {});
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::logdet(a);
@@ -1633,15 +1681,27 @@ Series slogdet(const Series& a) {
       shape.push_back(2);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "slogdet");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "slogdet");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> slogdet_parts;
     slogdet_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      slogdet_parts.push_back(slogdet(mat));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = slogdet(mat);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      slogdet_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(slogdet_parts, "slogdet"), batch, {2});
+    Series out = restore_flat_batch_shape_(stack_dim0_(slogdet_parts, "slogdet"), batch, {2});
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::slogdet(a);
@@ -1684,15 +1744,27 @@ Series matrix_power(const Series& a, std::int64_t n) {
           .to(a.platform())
           .contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "matrix_power");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "matrix_power");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> parts;
     parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      parts.push_back(matrix_power(mat, n));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = matrix_power(mat, n);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(parts, "matrix_power"), batch, tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(parts, "matrix_power"), batch, tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::matrix_power(a, n);
@@ -1727,15 +1799,27 @@ Series matrix_exp(const Series& a) {
           .to(a.platform())
           .contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "matrix_exp");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "matrix_exp");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> parts;
     parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      parts.push_back(matrix_exp(mat));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = matrix_exp(mat);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(parts, "matrix_exp"), batch, tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(parts, "matrix_exp"), batch, tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::matrix_exp(a);
@@ -1767,15 +1851,27 @@ Series pinverse(const Series& a, double rcond) {
       const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "pinverse");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "pinverse");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> pinv_parts;
     pinv_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      pinv_parts.push_back(pinverse(mat, rcond));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = pinverse(mat, rcond);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      pinv_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(pinv_parts, "pinverse"), batch, out_tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(pinv_parts, "pinverse"), batch, out_tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::pinverse(a, rcond);
@@ -1817,15 +1913,27 @@ Series qr_q(const Series& a, bool reduced) {
       const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "qr_q");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "qr_q");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> q_parts;
     q_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      q_parts.push_back(qr_q(mat, reduced));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = qr_q(mat, reduced);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      q_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(q_parts, "qr_q"), batch, out_tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(q_parts, "qr_q"), batch, out_tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::qr(a, reduced).Q;
@@ -1864,15 +1972,27 @@ Series qr_r(const Series& a, bool reduced) {
       const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "qr_r");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "qr_r");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> r_parts;
     r_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      r_parts.push_back(qr_r(mat, reduced));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = qr_r(mat, reduced);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      r_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(r_parts, "qr_r"), batch, out_tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(r_parts, "qr_r"), batch, out_tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::qr(a, reduced).R;
@@ -1911,15 +2031,27 @@ Series svd_u(const Series& a, bool full_matrices) {
       const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "svd_u");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd_u");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> u_parts;
     u_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      u_parts.push_back(svd_u(mat, full_matrices));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = svd_u(mat, full_matrices);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      u_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(u_parts, "svd_u"), batch, out_tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(u_parts, "svd_u"), batch, out_tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).U;
@@ -1958,15 +2090,27 @@ Series svd_s(const Series& a, bool full_matrices) {
       const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "svd_s");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd_s");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> s_parts;
     s_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      s_parts.push_back(svd_s(mat, full_matrices));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = svd_s(mat, full_matrices);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      s_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(s_parts, "svd_s"), batch, out_tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(s_parts, "svd_s"), batch, out_tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).S;
@@ -2005,15 +2149,27 @@ Series svd_vh(const Series& a, bool full_matrices) {
       const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "svd_vh");
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd_vh");
     const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> vh_parts;
     vh_parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      vh_parts.push_back(svd_vh(mat, full_matrices));
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      Series part = svd_vh(mat, full_matrices);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      vh_parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(vh_parts, "svd_vh"), batch, out_tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(vh_parts, "svd_vh"), batch, out_tail);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).Vh;
@@ -2083,6 +2239,15 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series ai = a_batch_src.select(0, i).contiguous();
       Series bi = b_batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS && !mps_experimental_native_enabled_()) {
+        Series part_cpu = triangular_solve(ai, bi, upper, unitriangular);
+        if (part_cpu.scalar_type() != ScalarType::Float32) {
+          part_cpu = part_cpu.to(ScalarType::Float32).contiguous();
+        }
+        bump_mps_bridge_counter_(MpsBridgeOp::TriangularSolve);
+        parts.push_back(std::move(part_cpu));
+        continue;
+      }
       if (a.platform() == Platform::MPS) ai = ai.to(Platform::MPS);
       if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
       Series part = triangular_solve(ai, bi, upper, unitriangular);
@@ -2175,6 +2340,15 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series fi = f_batch_src.select(0, i).contiguous();
       Series bi = b_batch_src.select(0, i).contiguous();
+      if (factor.platform() == Platform::MPS && !mps_experimental_native_enabled_()) {
+        Series part_cpu = cholesky_solve(fi, bi, upper);
+        if (part_cpu.scalar_type() != ScalarType::Float32) {
+          part_cpu = part_cpu.to(ScalarType::Float32).contiguous();
+        }
+        bump_mps_bridge_counter_(MpsBridgeOp::CholeskySolve);
+        parts.push_back(std::move(part_cpu));
+        continue;
+      }
       if (factor.platform() == Platform::MPS) fi = fi.to(Platform::MPS);
       if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
       Series part = cholesky_solve(fi, bi, upper);
@@ -2255,12 +2429,27 @@ Series cholesky_inverse(const Series& factor, bool upper) {
     parts.reserve(static_cast<std::size_t>(flat_batch));
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series fi = f_batch_src.select(0, i).contiguous();
-      if (factor.platform() == Platform::MPS) {
-        fi = fi.to(Platform::MPS);
+      if (factor.platform() == Platform::MPS && !mps_experimental_native_enabled_()) {
+        Series part_cpu = cholesky_inverse(fi, upper);
+        if (part_cpu.scalar_type() != ScalarType::Float32) {
+          part_cpu = part_cpu.to(ScalarType::Float32).contiguous();
+        }
+        bump_mps_bridge_counter_(MpsBridgeOp::CholeskyInverse);
+        parts.push_back(std::move(part_cpu));
+        continue;
       }
-      parts.push_back(cholesky_inverse(fi, upper));
+      if (factor.platform() == Platform::MPS) fi = fi.to(Platform::MPS);
+      Series part = cholesky_inverse(fi, upper);
+      if (factor.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      parts.push_back(std::move(part));
     }
-    return restore_flat_batch_shape_(stack_dim0_(parts, "cholesky_inverse"), batch, tail);
+    Series out = restore_flat_batch_shape_(stack_dim0_(parts, "cholesky_inverse"), batch, tail);
+    if (factor.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
   }
 
   if (factor.platform() == Platform::CPU) {
@@ -2349,6 +2538,15 @@ Series lu_solve(const Series& lu, const Series& b) {
     for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series lui = lu_batch_src.select(0, i).contiguous();
       Series bi = b_batch_src.select(0, i).contiguous();
+      if (lu.platform() == Platform::MPS && !mps_experimental_native_enabled_()) {
+        Series part_cpu = lu_solve(lui, bi);
+        if (part_cpu.scalar_type() != ScalarType::Float32) {
+          part_cpu = part_cpu.to(ScalarType::Float32).contiguous();
+        }
+        bump_mps_bridge_counter_(MpsBridgeOp::LuSolve);
+        parts.push_back(std::move(part_cpu));
+        continue;
+      }
       if (lu.platform() == Platform::MPS) lui = lui.to(Platform::MPS);
       if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
       Series part = lu_solve(lui, bi);

@@ -416,6 +416,20 @@ plussmic_time_series_accessor_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build
 .PHONY : plussmic_time_series_accessor_demo/fast
 
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule
+
+# Convenience name for target.
+plussmic_csv_engine_bench: PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule
+.PHONY : plussmic_csv_engine_bench
+
+# fast build rule for target.
+plussmic_csv_engine_bench/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build
+.PHONY : plussmic_csv_engine_bench/fast
+
 atlas_plot_demo.o: atlas_plot_demo.cpp.o
 .PHONY : atlas_plot_demo.o
 
@@ -463,6 +477,30 @@ bike_sharing_eda_dfplot.s: bike_sharing_eda_dfplot.cpp.s
 bike_sharing_eda_dfplot.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_bike_sharing_eda_dfplot_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_bike_sharing_eda_dfplot_demo.dir/bike_sharing_eda_dfplot.cpp.s
 .PHONY : bike_sharing_eda_dfplot.cpp.s
+
+csv_engine_bench.o: csv_engine_bench.cpp.o
+.PHONY : csv_engine_bench.o
+
+# target to build an object file
+csv_engine_bench.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/csv_engine_bench.cpp.o
+.PHONY : csv_engine_bench.cpp.o
+
+csv_engine_bench.i: csv_engine_bench.cpp.i
+.PHONY : csv_engine_bench.i
+
+# target to preprocess a source file
+csv_engine_bench.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/csv_engine_bench.cpp.i
+.PHONY : csv_engine_bench.cpp.i
+
+csv_engine_bench.s: csv_engine_bench.cpp.s
+.PHONY : csv_engine_bench.s
+
+# target to generate assembly for a file
+csv_engine_bench.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/csv_engine_bench.cpp.s
+.PHONY : csv_engine_bench.cpp.s
 
 dataframe_describe_demo.o: dataframe_describe_demo.cpp.o
 .PHONY : dataframe_describe_demo.o
@@ -817,6 +855,7 @@ help:
 	@echo "... test"
 	@echo "... plussmic_atlas_plot_demo"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
+	@echo "... plussmic_csv_engine_bench"
 	@echo "... plussmic_dataframe_describe_demo"
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
@@ -837,6 +876,9 @@ help:
 	@echo "... bike_sharing_eda_dfplot.o"
 	@echo "... bike_sharing_eda_dfplot.i"
 	@echo "... bike_sharing_eda_dfplot.s"
+	@echo "... csv_engine_bench.o"
+	@echo "... csv_engine_bench.i"
+	@echo "... csv_engine_bench.s"
 	@echo "... dataframe_describe_demo.o"
 	@echo "... dataframe_describe_demo.i"
 	@echo "... dataframe_describe_demo.s"

@@ -42,6 +42,14 @@ using ::pluss::ai::AttentionOptions;
 using ::pluss::ai::MultiheadOptions;
 using ::pluss::ai::MultiheadWeights;
 
+// Type shim for concise functional RNN configuration:
+//   pluss::rnn::NetWeight, pluss::rnn::NetConfig
+// while keeping callable pluss::rnn(...) in the same surface.
+struct rnn {
+  using NetWeight = ::pluss::ai::rnn::NetWeight;
+  using NetConfig = ::pluss::ai::rnn::NetConfig;
+};
+
 inline Series fusion(const Series& input, const Series& weight, const Series& bias = Series()) {
   return ::pluss::ai::ff(input, weight, bias);
 }

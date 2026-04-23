@@ -837,34 +837,85 @@ void test_squeeze_unsqueeze_bridge() {
   expect_throw([&]() { (void)atlas2.squeeze(); }, "squeeze should throw when depth != 1");
 }
 
-void test_parallel_engine_matches_serial() {
-  ReadCsvOptions serial;
-  serial.sep = ';';
-  serial.engine = pluss::loader::CsvEngine::Serial;
-  serial.ncases = 120;
-
-  ReadCsvOptions parallel = serial;
+void test_parallel_engine_matches_serial_engine() {
+  ReadCsvOptions parallel;
+  parallel.sep = ';';
   parallel.engine = pluss::loader::CsvEngine::Parallel;
+  parallel.ncases = 220;
+  parallel.usefeats = {"age", "job", "balance", "y"};
   parallel.parallel_threads = 4;
   parallel.parallel_min_bytes = 1;
 
-  const auto path = fixture_path("bank-full.csv").string();
-  const auto df_serial = DataFrame::load_csv(path, serial);
-  const auto df_parallel = DataFrame::load_csv(path, parallel);
+  ReadCsvOptions serial = parallel;
+  serial.engine = pluss::loader::CsvEngine::Serial;
 
-  expect(df_serial.ncases() == df_parallel.ncases(), "parallel engine: nrows mismatch vs serial");
-  expect(df_serial.nfeats() == df_parallel.nfeats(), "parallel engine: ncols mismatch vs serial");
-  expect(df_serial.feature_names() == df_parallel.feature_names(), "parallel engine: column names mismatch");
+  const auto path = fixture_path("bank-full.csv").string();
+  const auto df_parallel = DataFrame::load_csv(path, parallel);
+  const auto df_serial = DataFrame::load_csv(path, serial);
+
+  expect(df_serial.ncases() == df_parallel.ncases(), "serial engine: nrows mismatch vs parallel");
+  expect(df_serial.nfeats() == df_parallel.nfeats(), "serial engine: ncols mismatch vs parallel");
+  expect(df_serial.feature_names() == df_parallel.feature_names(),
+         "serial engine: column names mismatch vs parallel");
+
+  const auto p_age = df_parallel.features("age").as_series().to_vec<std::int64_t>();
+  const auto s_age = df_serial.features("age").as_series().to_vec<std::int64_t>();
+  expect(s_age == p_age, "serial engine: age mismatch vs parallel");
+
+  const auto p_balance = df_parallel.features("balance").as_series().to_vec<std::int64_t>();
+  const auto s_balance = df_serial.features("balance").as_series().to_vec<std::int64_t>();
+  expect(s_balance == p_balance, "serial engine: balance mismatch vs parallel");
+
+  const auto p_job = df_parallel.features("job").as_note();
+  const auto s_job = df_serial.features("job").as_note();
+  expect(s_job.at(0) == p_job.at(0), "serial engine: first job mismatch vs parallel");
+  const auto last = df_serial.ncases() - 1;
+  expect(s_job.at(last) == p_job.at(last), "serial engine: last job mismatch vs parallel");
+}
+
+void test_auto_engine_policy_switches_between_parallel_and_serial() {
+  const auto path = fixture_path("bank-full.csv").string();
+
+  ReadCsvOptions parallel;
+  parallel.sep = ';';
+  parallel.engine = pluss::loader::CsvEngine::Parallel;
+  parallel.ncases = 180;
+  parallel.usefeats = {"age", "job", "balance"};
+  parallel.parallel_min_bytes = 1;
+
+  ReadCsvOptions serial = parallel;
+  serial.engine = pluss::loader::CsvEngine::Serial;
+
+  ReadCsvOptions auto_parallel = parallel;
+  auto_parallel.engine = pluss::loader::CsvEngine::Auto;
+  auto_parallel.auto_serial_min_bytes = std::numeric_limits<std::size_t>::max();
+
+  ReadCsvOptions auto_serial = parallel;
+  auto_serial.engine = pluss::loader::CsvEngine::Auto;
+  auto_serial.auto_serial_min_bytes = 1;
+
+  const auto df_parallel = DataFrame::load_csv(path, parallel);
+  const auto df_serial = DataFrame::load_csv(path, serial);
+  const auto df_auto_parallel = DataFrame::load_csv(path, auto_parallel);
+  const auto df_auto_serial = DataFrame::load_csv(path, auto_serial);
+
+  expect(df_auto_parallel.ncases() == df_parallel.ncases(), "auto(parallel policy): nrows mismatch");
+  expect(df_auto_parallel.nfeats() == df_parallel.nfeats(), "auto(parallel policy): ncols mismatch");
+  expect(df_auto_parallel.feature_names() == df_parallel.feature_names(),
+         "auto(parallel policy): column names mismatch");
+
+  expect(df_auto_serial.ncases() == df_serial.ncases(), "auto(serial policy): nrows mismatch");
+  expect(df_auto_serial.nfeats() == df_serial.nfeats(), "auto(serial policy): ncols mismatch");
+  expect(df_auto_serial.feature_names() == df_serial.feature_names(),
+         "auto(serial policy): column names mismatch");
+
+  const auto p_age = df_parallel.features("age").as_series().to_vec<std::int64_t>();
+  const auto ap_age = df_auto_parallel.features("age").as_series().to_vec<std::int64_t>();
+  expect(ap_age == p_age, "auto(parallel policy): age mismatch");
 
   const auto s_age = df_serial.features("age").as_series().to_vec<std::int64_t>();
-  const auto p_age = df_parallel.features("age").as_series().to_vec<std::int64_t>();
-  expect(s_age == p_age, "parallel engine: age column mismatch vs serial");
-
-  const auto s_job = df_serial.features("job").as_note();
-  const auto p_job = df_parallel.features("job").as_note();
-  expect(s_job.at(0) == p_job.at(0), "parallel engine: first job value mismatch");
-  const auto last = df_serial.ncases() - 1;
-  expect(s_job.at(last) == p_job.at(last), "parallel engine: last job value mismatch");
+  const auto as_age = df_auto_serial.features("age").as_series().to_vec<std::int64_t>();
+  expect(as_age == s_age, "auto(serial policy): age mismatch");
 }
 
 void test_dataframe_sql_accessor() {
@@ -2363,7 +2414,8 @@ int main() {
       {"feature_value_cases_values_and_save_defaults", test_feature_value_cases_values_and_save_defaults},
       {"transpose_shape_and_axes", test_transpose_shape_and_axes},
       {"squeeze_unsqueeze_bridge", test_squeeze_unsqueeze_bridge},
-      {"parallel_engine_matches_serial", test_parallel_engine_matches_serial},
+      {"parallel_engine_matches_serial_engine", test_parallel_engine_matches_serial_engine},
+      {"auto_engine_policy_switches_between_parallel_and_serial", test_auto_engine_policy_switches_between_parallel_and_serial},
       {"dataframe_sql_accessor", test_dataframe_sql_accessor},
       {"versatile_dataframe_families", test_versatile_dataframe_families},
       {"thread_bucketize_correctness", test_thread_bucketize_correctness},

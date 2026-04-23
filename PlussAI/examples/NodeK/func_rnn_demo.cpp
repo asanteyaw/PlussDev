@@ -1,8 +1,9 @@
 #include <pluss/pluss.h>
-#include <pluss/ai.h>
+#include <pluss/ai/nn_functional.h>
 
 #include <cmath>
 #include <iostream>
+#include <tuple>
 #include <vector>
 
 namespace {
@@ -20,11 +21,11 @@ pluss::Series make_batch(const pluss::Config& cfg) {
   return pluss::make_series(values, {4, 8, 2}, cfg);
 }
 
-pluss::ai::rnn::NetWeight make_rnn_weight(std::int64_t gates,
-                                          std::int64_t input_size,
-                                          std::int64_t hidden_size,
-                                          const pluss::Config& cfg,
-                                          double scale) {
+pluss::rnn::NetWeight make_rnn_weight(std::int64_t gates,
+                                      std::int64_t input_size,
+                                      std::int64_t hidden_size,
+                                      const pluss::Config& cfg,
+                                      double scale) {
   std::vector<double> ih(static_cast<std::size_t>(gates * hidden_size * input_size));
   std::vector<double> hh(static_cast<std::size_t>(gates * hidden_size * hidden_size));
   std::vector<double> bi(static_cast<std::size_t>(gates * hidden_size));
@@ -33,7 +34,7 @@ pluss::ai::rnn::NetWeight make_rnn_weight(std::int64_t gates,
   for (std::size_t i = 0; i < hh.size(); ++i) hh[i] = scale * std::cos(0.11 * static_cast<double>(i + 1));
   for (std::size_t i = 0; i < bi.size(); ++i) bi[i] = scale * 0.1 * std::sin(0.17 * static_cast<double>(i + 1));
   for (std::size_t i = 0; i < bh.size(); ++i) bh[i] = scale * 0.1 * std::cos(0.19 * static_cast<double>(i + 1));
-  return pluss::ai::rnn::NetWeight{
+  return pluss::rnn::NetWeight{
       .weight_ih = pluss::make_series(ih, {gates * hidden_size, input_size}, cfg),
       .weight_hh = pluss::make_series(hh, {gates * hidden_size, hidden_size}, cfg),
       .bias_ih = pluss::make_series(bi, {gates * hidden_size}, cfg),
@@ -51,7 +52,7 @@ int main() {
   const Series hx = zeros({1, 4, 3}, f64);
   const Series cx = zeros({1, 4, 3}, f64);
 
-  ai::rnn::NetConfig cfg;
+  rnn::NetConfig cfg;
   cfg.batch_first = true;
   cfg.num_layers = 1;
   cfg.split_bias = true;
@@ -59,14 +60,14 @@ int main() {
 
   const auto rnn_params = make_rnn_weight(1, 2, 3, f64, 0.35);
   cfg.nonlinearity = "relu";
-  const auto [rnn_out, rnn_hn] = rnn(batch, hx, std::vector<ai::rnn::NetWeight>{rnn_params}, cfg);
+  const auto [rnn_out, rnn_hn] = rnn(batch, hx, {rnn_params}, cfg);
 
   const auto gru_params = make_rnn_weight(3, 2, 3, f64, 0.25);
   cfg.nonlinearity = "tanh";
-  const auto [gru_out, gru_hn] = gru(batch, hx, std::vector<ai::rnn::NetWeight>{gru_params}, cfg);
+  const auto [gru_out, gru_hn] = gru(batch, hx, {gru_params}, cfg);
 
   const auto lstm_params = make_rnn_weight(4, 2, 3, f64, 0.2);
-  const auto [lstm_out, lstm_state] = lstm(batch, hx, cx, std::vector<ai::rnn::NetWeight>{lstm_params}, cfg);
+  const auto [lstm_out, lstm_state] = lstm(batch, std::make_tuple(hx, cx), {lstm_params}, cfg);
 
   const Series ff_weight = make_series(std::vector<double>{
                                            0.5, -0.2, 0.3,
@@ -77,7 +78,7 @@ int main() {
   const Series head = pluss::fusion(rnn_out, ff_weight, ff_bias);
 
   std::cout << "func_rnn_demo\n";
-  std::cout << "surface: pluss::fusion/pluss::rnn/pluss::gru/pluss::lstm via #include <pluss/pluss.h> + <pluss/ai.h>\n";
+  std::cout << "surface: pluss::fusion/pluss::rnn/pluss::gru/pluss::lstm via #include <pluss/pluss.h> + <pluss/ai/nn_functional.h>\n";
   std::cout << "rnn output: " << rnn_out << "\n";
   std::cout << "rnn h_n: " << rnn_hn << "\n";
   std::cout << "gru output: " << gru_out << "\n";

@@ -3419,6 +3419,30 @@ Note note_from_utf8(::std::span<const ::std::string_view> utf8_flat,
   return NoteFactoryAccess::wrap(::std::move(impl));
 }
 
+Note note_from_utf8_packed(::std::vector<char>&& utf8_arena,
+                           ::std::vector<::std::pair<::std::size_t, ::std::size_t>>&& spans,
+                           ::std::span<const ::std::int64_t> sizes) {
+  PLUSS_CHECK(sizes.size() >= 0 && sizes.size() <= 3, "Note supports up to 3D");
+  ::std::array<::std::int64_t, 3> sz{1,1,1};
+  for (::std::size_t i = 0; i < sizes.size(); ++i) sz[i] = sizes[i];
+
+  ::std::int64_t dim = static_cast<::std::int64_t>(sizes.size());
+  ::std::int64_t n = 1;
+  for (int i = 0; i < dim; ++i) n *= sz[i];
+  PLUSS_CHECK(static_cast<::std::int64_t>(spans.size()) == n,
+              "note_from_utf8_packed expects span count == numel");
+
+  auto arena = ::pluss::flame::make_intrusive<TextArena>(::std::move(utf8_arena));
+  ::std::vector<NoteImpl::OffLen> note_spans = ::std::move(spans);
+  auto impl = ::pluss::flame::make_intrusive<NoteImpl>(
+      arena,
+      ::std::move(note_spans),
+      sz,
+      dim,
+      NoteImpl::Encoding::Utf8Text);
+  return NoteFactoryAccess::wrap(::std::move(impl));
+}
+
 Note note_from_bytes(::std::span<const ::std::string_view> bytes_flat,
                      ::std::span<const ::std::int64_t> sizes) {
   PLUSS_CHECK(sizes.size() >= 0 && sizes.size() <= 3, "Note supports up to 3D");

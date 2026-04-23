@@ -12,6 +12,9 @@
 #include <limits>
 #include <span>
 #include <string_view>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/TypePromotion.h"
 #include "CodeM/native/cpu/ReduceKernels.h"
@@ -54,9 +57,11 @@
 #include "CodeM/native/mps/Cum.h"
 #include "CodeM/native/mps/Reductions.h"
 #include "CodeM/native/mps/Scatter.h"
+#include "CodeM/native/mps/Nonzero.h"
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
 #include "pluss/codem/stack_array.h"
+#include "pluss/codem/series_factory.h"
 #include "pluss/tils/aux/rng_seed.h"
 
 #ifdef PLUSS_ENABLE_TORCH
@@ -1170,7 +1175,8 @@ Series pow(const Series& a, double s) {
   if (base_is_int && exponent_is_integer && s >= 0.0) {
     return pow(a, Series::full({1}, s, ScalarType::Int64).to(a.platform()));
   }
-  return pow(a, Series::full({1}, s, ScalarType::Float64).to(a.platform()));
+  const ScalarType scalar_dt = (a.platform() == Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
+  return pow(a, Series::full({1}, s, scalar_dt).to(a.platform()));
 }
 
 Series& add_(Series& a, double s) { a = add(a, s); return a; }
@@ -1849,7 +1855,7 @@ Series logical_xor(const Series& a, const Series& b) {
 Series masked_select(const Series& a, const Series& mask) {
   PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_select: mask must be bool");
   require_same_platform(a, mask, "masked_select");
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+  if (a.platform() == Platform::MPS) {
     const auto bshape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
     {
       auto asz = a.sizes();
@@ -1865,7 +1871,7 @@ Series masked_select(const Series& a, const Series& mask) {
     if (nz2d.numel() == 0) {
       return Series::empty({0}, a.scalar_type(), a.platform());
     }
-    const Series idx = nz2d.squeeze(-1).contiguous();
+    const Series idx = nz2d.to(Platform::CPU).squeeze(-1).contiguous().to(Platform::MPS);
     return gather(aa_flat, 0, idx);
   }
   auto cpu_route = [&]() -> Series {
@@ -1942,10 +1948,37 @@ Series& masked_fill_(Series& a, const Series& mask, const Series& value) {
     PLUSS_CHECK(asz.size() == shape.size(), "masked_fill_: shape mismatch (in-place requires mask broadcast to match a)");
     PLUSS_CHECK(std::equal(asz.begin(), asz.end(), shape.begin()), "masked_fill_: shape mismatch (in-place requires mask broadcast to match a)");
   }
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const Series mm = mask.expand(shape, true).contiguous();
-    const Series vv = value.to(a.scalar_type()).expand(shape, true).contiguous();
-    a = where(mm, vv, a);
+  if (a.platform() == Platform::MPS) {
+    const std::array<std::int64_t, 1> flat_shape{{a.numel()}};
+    const Series mm_flat =
+        mask.expand(shape, true)
+            .contiguous()
+            .reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
+    const Series nz2d = nonzero(mm_flat);
+    const std::int64_t count = nz2d.numel();
+    if (count == 0) {
+      return a;
+    }
+    const Series idx = nz2d.to(Platform::CPU).squeeze(-1).contiguous().to(Platform::MPS);
+    const std::array<std::int64_t, 1> src_shape{{count}};
+    const std::array<std::int64_t, 1> one_shape{{1}};
+    const Series scalar_v =
+        value.to(a.scalar_type())
+            .contiguous()
+            .reshape(std::span<const std::int64_t>(one_shape.data(), one_shape.size()));
+    const Series ss = scalar_v
+                          .expand(std::span<const std::int64_t>(src_shape.data(), src_shape.size()), true)
+                          .contiguous();
+    Series out = a.contiguous();
+    Series out_flat = out.reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
+    out_flat = scatter(out_flat, 0, idx, ss);
+    (void)static_cast<const Series&>(out_flat).raw_data();
+    out = out_flat.reshape(shape);
+    if (a.is_contiguous()) {
+      a = out;
+    } else {
+      a.copy_(out);
+    }
     return a;
   }
   auto cpu_apply = [&](Series& target) -> Series& {
@@ -2001,9 +2034,8 @@ Series& masked_fill_(Series& a, const Series& mask, const Series& value) {
 
 Series& masked_fill_(Series& a, const Series& mask, double value) {
   const std::array<std::int64_t, 1> one{1};
-  auto v = Series::full(std::span<const std::int64_t>(one.data(), one.size()), value, ScalarType::Float64)
-               .to(a.platform())
-               .to(a.scalar_type());
+  auto v = Series::full(std::span<const std::int64_t>(one.data(), one.size()), value, a.scalar_type())
+               .to(a.platform());
   return masked_fill_(a, mask, v);
 }
 
@@ -2040,7 +2072,7 @@ Series sum(const Series& a) {
     aa = aa.to(ScalarType::Int64);
   }
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
+    if (aa.platform() == Platform::MPS) {
       Series cur = aa;
       for (std::int64_t d = static_cast<std::int64_t>(cur.dim()) - 1; d >= 0; --d) {
         cur = sum(cur, d, false);
@@ -2103,8 +2135,38 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, /*keepdim=*/false);
   Series out = Series::empty(out_sizes, aa.scalar_type(), aa.platform());
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
-      native::mps::sum_dim(aa, dim, out);
+    if (aa.platform() == Platform::MPS) {
+      if (native::mps::supports_sum_dim(aa.scalar_type())) {
+        native::mps::sum_dim(aa, dim, out);
+        auto reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+          const auto norm_dim = dim;
+          auto link = std::make_shared<series_tape::SourceLink>();
+          link->op_name = "sum(dim)";
+          link->parents = {a};
+          link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
+            Series shaped = out_sens;
+            if (!keepdim) {
+              shaped = shaped.unsqueeze(norm_dim);
+            }
+            shaped = shaped.expand(a.sizes(), true);
+            const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(shaped);
+            series_tape::accumulate_sensitivity(a, ga);
+          };
+          series_tape::bind_source_link(reduced, std::move(link));
+        }
+        return reduced;
+      }
+      const bool supports_f32 = native::mps::supports_sum_dim(ScalarType::Float32);
+      require_mps_support_or_policy_(supports_f32, "sum(dim)");
+      if (supports_f32) {
+        const Series aa_f = aa.to(ScalarType::Float32).contiguous();
+        Series out_f = Series::empty(out_sizes, ScalarType::Float32, aa.platform());
+        native::mps::sum_dim(aa_f, dim, out_f);
+        out = out_f.to(aa.scalar_type());
+      } else {
+        native::cpu::sum_dim(aa, dim, out);
+      }
       auto reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
       if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
         const auto norm_dim = dim;
@@ -2168,7 +2230,7 @@ Series prod(const Series& a) {
   }
   Series cur = a.contiguous();
   if (cur.platform() != Platform::CPU) {
-    if (cur.platform() == Platform::MPS && native::mps::supports_prod_dim(cur.scalar_type())) {
+    if (cur.platform() == Platform::MPS) {
       for (std::int64_t d = static_cast<std::int64_t>(cur.dim()) - 1; d >= 0; --d) {
         cur = prod(cur, d, false);
       }
@@ -2206,8 +2268,21 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type(), aa.platform());
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_prod_dim(aa.scalar_type())) {
-      native::mps::prod_dim(aa, dim, out);
+    if (aa.platform() == Platform::MPS) {
+      if (native::mps::supports_prod_dim(aa.scalar_type())) {
+        native::mps::prod_dim(aa, dim, out);
+        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      }
+      const bool supports_f32 = native::mps::supports_prod_dim(ScalarType::Float32);
+      require_mps_support_or_policy_(supports_f32, "prod(dim)");
+      if (supports_f32) {
+        const Series aa_f = aa.to(ScalarType::Float32).contiguous();
+        Series out_f = Series::empty(out_sizes, ScalarType::Float32, aa.platform());
+        native::mps::prod_dim(aa_f, dim, out_f);
+        out = out_f.to(aa.scalar_type());
+      } else {
+        native::cpu::prod_dim(aa, dim, out);
+      }
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
     if (aa.platform() == Platform::CUDA) {
@@ -2237,8 +2312,12 @@ Series mean(const Series& a) {
   }
   auto aa = a.contiguous();
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
+    if (aa.platform() == Platform::MPS) {
       Series s = sum(aa);
+      const auto st = aa.scalar_type();
+      if (st == ScalarType::Bool || dtype_of(st).is_integral()) {
+        s = s.to(ScalarType::Float32);
+      }
       return div(s, scalar_like_(s, static_cast<double>(aa.numel())));
     }
     if (aa.platform() == Platform::CUDA) {
@@ -2290,8 +2369,12 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
   if (dim < 0) dim += nd;
   const auto reduce_n = aa.sizes()[(std::size_t)dim];
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
+    if (aa.platform() == Platform::MPS) {
       Series s = sum(aa, dim, keepdim);
+      const auto st = aa.scalar_type();
+      if (st == ScalarType::Bool || dtype_of(st).is_integral()) {
+        s = s.to(ScalarType::Float32);
+      }
       return div(s, scalar_like_(s, static_cast<double>(reduce_n)));
     }
     if (aa.platform() == Platform::CUDA) {
@@ -2359,7 +2442,7 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
 Series amax(const Series& a) {
   PLUSS_CHECK(a.defined(), "amax: undefined");
   if (a.platform() != Platform::CPU) {
-    if (a.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(a.scalar_type())) {
+    if (a.platform() == Platform::MPS) {
       // handled by per-dim path below
     } else if (a.platform() == Platform::CUDA) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
@@ -2393,8 +2476,21 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type(), aa.platform());
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(aa.scalar_type())) {
-      native::mps::amax_dim(aa, dim, out);
+    if (aa.platform() == Platform::MPS) {
+      if (native::mps::supports_amax_amin_dim(aa.scalar_type())) {
+        native::mps::amax_dim(aa, dim, out);
+        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      }
+      const bool supports_f32 = native::mps::supports_amax_amin_dim(ScalarType::Float32);
+      require_mps_support_or_policy_(supports_f32, "amax(dim)");
+      if (supports_f32) {
+        const Series aa_f = aa.to(ScalarType::Float32).contiguous();
+        Series out_f = Series::empty(out_sizes, ScalarType::Float32, aa.platform());
+        native::mps::amax_dim(aa_f, dim, out_f);
+        out = out_f.to(aa.scalar_type());
+      } else {
+        native::cpu::amax_dim(aa, dim, out);
+      }
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
     if (aa.platform() == Platform::CUDA) {
@@ -2418,7 +2514,7 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
 Series amin(const Series& a) {
   PLUSS_CHECK(a.defined(), "amin: undefined");
   if (a.platform() != Platform::CPU) {
-    if (a.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(a.scalar_type())) {
+    if (a.platform() == Platform::MPS) {
       // handled by per-dim path below
     } else if (a.platform() == Platform::CUDA) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
@@ -2451,8 +2547,21 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type(), aa.platform());
   if (aa.platform() != Platform::CPU) {
-    if (aa.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(aa.scalar_type())) {
-      native::mps::amin_dim(aa, dim, out);
+    if (aa.platform() == Platform::MPS) {
+      if (native::mps::supports_amax_amin_dim(aa.scalar_type())) {
+        native::mps::amin_dim(aa, dim, out);
+        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      }
+      const bool supports_f32 = native::mps::supports_amax_amin_dim(ScalarType::Float32);
+      require_mps_support_or_policy_(supports_f32, "amin(dim)");
+      if (supports_f32) {
+        const Series aa_f = aa.to(ScalarType::Float32).contiguous();
+        Series out_f = Series::empty(out_sizes, ScalarType::Float32, aa.platform());
+        native::mps::amin_dim(aa_f, dim, out_f);
+        out = out_f.to(aa.scalar_type());
+      } else {
+        native::cpu::amin_dim(aa, dim, out);
+      }
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
     if (aa.platform() == Platform::CUDA) {
@@ -2551,7 +2660,7 @@ Series any(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "argmax: undefined");
-  if (a.platform() == Platform::MPS && native::mps::supports_argmax_argmin_dim(a.scalar_type())) {
+  if (a.platform() == Platform::MPS) {
     if (a.dim() == 0) {
       return Series::full({}, 0.0, ScalarType::Int64).to(a.platform());
     }
@@ -2560,8 +2669,17 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
     if (dim < 0) dim += nd;
     auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
     Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
-    native::mps::argmax_dim(aa, dim, out);
-    return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    if (native::mps::supports_argmax_argmin_dim(aa.scalar_type())) {
+      native::mps::argmax_dim(aa, dim, out);
+      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    }
+    const bool supports_f32 = native::mps::supports_argmax_argmin_dim(ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "argmax");
+    if (supports_f32) {
+      native::mps::argmax_dim(aa.to(ScalarType::Float32).contiguous(), dim, out);
+      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    }
+    return native::cpu::argmax(a, dim, keepdim);
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_reduction_enabled();
@@ -2580,7 +2698,7 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
 }
 Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "argmin: undefined");
-  if (a.platform() == Platform::MPS && native::mps::supports_argmax_argmin_dim(a.scalar_type())) {
+  if (a.platform() == Platform::MPS) {
     if (a.dim() == 0) {
       return Series::full({}, 0.0, ScalarType::Int64).to(a.platform());
     }
@@ -2589,8 +2707,17 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
     if (dim < 0) dim += nd;
     auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
     Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
-    native::mps::argmin_dim(aa, dim, out);
-    return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    if (native::mps::supports_argmax_argmin_dim(aa.scalar_type())) {
+      native::mps::argmin_dim(aa, dim, out);
+      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    }
+    const bool supports_f32 = native::mps::supports_argmax_argmin_dim(ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "argmin");
+    if (supports_f32) {
+      native::mps::argmin_dim(aa.to(ScalarType::Float32).contiguous(), dim, out);
+      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    }
+    return native::cpu::argmin(a, dim, keepdim);
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_reduction_enabled();
@@ -2890,16 +3017,24 @@ Series scatter(const Series& a, std::int64_t dim, const Series& index, const Ser
   Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
   if (a.platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
-    if (strict_native &&
-        (index.scalar_type() != ScalarType::Int64 ||
-         !mps_exact_f32_roundtrip_lane_dtype_(a.scalar_type()) ||
-         !mps_exact_f32_roundtrip_lane_dtype_(src.scalar_type()))) {
+    const ScalarType out_dt = a.scalar_type();
+    const bool supports_direct =
+        native::mps::supports_scatter(out_dt, idx.scalar_type(), out_dt) &&
+        (src.scalar_type() == out_dt || native::mps::supports_cast(src.scalar_type(), out_dt));
+    const bool supports_f32 =
+        native::mps::supports_scatter(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    const bool supports_f32_lane =
+        supports_f32 &&
+        mps_exact_f32_roundtrip_lane_dtype_(out_dt) &&
+        (src.scalar_type() == ScalarType::Float32 ||
+         mps_exact_f32_roundtrip_lane_dtype_(src.scalar_type()) ||
+         native::mps::supports_cast(src.scalar_type(), ScalarType::Float32));
+    if (strict_native && (idx.scalar_type() != ScalarType::Int64 || (!supports_direct && !supports_f32_lane))) {
       require_mps_native_dispatch_supported_("scatter");
     }
-    if (a.scalar_type() == ScalarType::Float32 && src.scalar_type() == ScalarType::Float32 &&
-        native::mps::supports_scatter(a.scalar_type(), idx.scalar_type(), src.scalar_type())) {
-      out = a.contiguous();
-      const Series ss = src.expand(idx.sizes(), true).contiguous();
+    if (supports_direct) {
+      out = a.contiguous().clone();
+      const Series ss = src.expand(idx.sizes(), true).to(out_dt).contiguous();
       if (mps_scatter_has_duplicate_targets_(out, dim, idx)) {
         const Series cpu_out =
             native::cpu::scatter(out.to(Platform::CPU), dim, idx.to(Platform::CPU), ss.to(Platform::CPU));
@@ -2908,11 +3043,9 @@ Series scatter(const Series& a, std::int64_t dim, const Series& index, const Ser
         native::mps::scatter_set_(out, dim, idx, ss);
       }
     } else {
-      const bool supports_f32 =
-          native::mps::supports_scatter(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
-      require_mps_support_or_policy_(supports_f32, "scatter");
-      if (supports_f32) {
-        Series out_f = a.to(ScalarType::Float32).contiguous();
+      require_mps_support_or_policy_(supports_f32_lane, "scatter");
+      if (supports_f32_lane) {
+        Series out_f = a.to(ScalarType::Float32).contiguous().clone();
         Series src_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
         if (mps_scatter_has_duplicate_targets_(out_f, dim, idx)) {
           const Series cpu_out =
@@ -3004,6 +3137,21 @@ static double scatter_reduce_identity_(const std::string& reduce) {
   if (reduce == "amax") return -std::numeric_limits<double>::infinity();
   if (reduce == "amin") return +std::numeric_limits<double>::infinity();
   PLUSS_FAIL("scatter_reduce: unsupported reduce (expected sum|mean|amax|amin)");
+}
+
+static double scatter_reduce_identity_for_dtype_(const std::string& reduce, ScalarType dt) {
+  if (reduce == "sum" || reduce == "mean") {
+    return 0.0;
+  }
+  if (dt == ScalarType::Int32) {
+    if (reduce == "amax") return static_cast<double>(std::numeric_limits<std::int32_t>::lowest());
+    if (reduce == "amin") return static_cast<double>(std::numeric_limits<std::int32_t>::max());
+  }
+  if (dt == ScalarType::Int64) {
+    if (reduce == "amax") return static_cast<double>(std::numeric_limits<std::int64_t>::lowest());
+    if (reduce == "amin") return static_cast<double>(std::numeric_limits<std::int64_t>::max());
+  }
+  return scatter_reduce_identity_(reduce);
 }
 
 static void maybe_link_scatter_reduce_(
@@ -3113,17 +3261,25 @@ Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const
   Series out;
   if (a.platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
-    if (strict_native &&
-        (index.scalar_type() != ScalarType::Int64 ||
-         !mps_exact_f32_roundtrip_lane_dtype_(out_dt))) {
-      require_mps_native_dispatch_supported_("scatter_add");
-    }
     const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
+    const bool supports_direct = native::mps::supports_scatter_reduce(
+        out_dt, idx.scalar_type(), out_dt);
     const bool supports_f32 = native::mps::supports_scatter_reduce(
         ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
-    require_mps_support_or_policy_(supports_f32, "scatter_add");
-    if (supports_f32) {
-      Series out_f = a.to(ScalarType::Float32).contiguous();
+    const bool supports_f32_lane =
+        supports_f32 &&
+        mps_exact_f32_roundtrip_lane_dtype_(out_dt);
+    if (strict_native && (idx.scalar_type() != ScalarType::Int64 || (!supports_direct && !supports_f32_lane))) {
+      require_mps_native_dispatch_supported_("scatter_add");
+    }
+    require_mps_support_or_policy_(supports_direct || supports_f32_lane, "scatter_add");
+    if (supports_direct) {
+      Series out_native = a.to(out_dt).contiguous().clone();
+      const Series ss_native = src.expand(idx.sizes(), true).to(out_dt).contiguous();
+      native::mps::scatter_reduce_(out_native, dim, idx, ss_native, native::mps::ScatterReduceOp::Sum);
+      out = out_native;
+    } else if (supports_f32_lane) {
+      Series out_f = a.to(ScalarType::Float32).contiguous().clone();
       const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
       native::mps::scatter_reduce_(out_f, dim, idx, ss_f, native::mps::ScatterReduceOp::Sum);
       out = (out_dt == ScalarType::Float32) ? out_f : out_f.to(out_dt);
@@ -3207,7 +3363,7 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
   Series out;
   if (a.platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
-    if (reduce == "mean" || !include_self) {
+    if (reduce == "mean") {
       if (strict_native) {
         require_mps_native_dispatch_supported_("scatter_reduce");
       }
@@ -3219,25 +3375,28 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       maybe_link_scatter_reduce_(out, a, dim, index, src, reduce, include_self);
       return out;
     }
-    if (strict_native &&
-        (index.scalar_type() != ScalarType::Int64 ||
-         !mps_exact_f32_roundtrip_lane_dtype_(out_dt))) {
-      require_mps_native_dispatch_supported_("scatter_reduce");
-    }
     const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
     const auto rop = mps_scatter_reduce_op_(reduce);
-    if (out_dt == ScalarType::Float32 &&
-        native::mps::supports_scatter_reduce(out_dt, idx.scalar_type(), out_dt)) {
+    const bool supports_direct = native::mps::supports_scatter_reduce(out_dt, idx.scalar_type(), out_dt);
+    const bool supports_f32 = native::mps::supports_scatter_reduce(
+        ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    const bool supports_f32_lane =
+        supports_f32 &&
+        mps_exact_f32_roundtrip_lane_dtype_(out_dt);
+    if (strict_native && (idx.scalar_type() != ScalarType::Int64 || (!supports_direct && !supports_f32_lane))) {
+      require_mps_native_dispatch_supported_("scatter_reduce");
+    }
+    if (supports_direct) {
       out = include_self
                      ? a.to(out_dt).clone().contiguous()
-                     : Series::full(a.sizes(), scatter_reduce_identity_(reduce), out_dt).to(a.platform()).contiguous();
+                     : Series::full(a.sizes(), scatter_reduce_identity_for_dtype_(reduce, out_dt), out_dt)
+                           .to(a.platform())
+                           .contiguous();
       const Series ss = src.expand(idx.sizes(), true).to(out_dt).contiguous();
       native::mps::scatter_reduce_(out, dim, idx, ss, rop);
     } else {
-      const bool supports_f32 = native::mps::supports_scatter_reduce(
-          ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
-      require_mps_support_or_policy_(supports_f32, "scatter_reduce");
-      if (supports_f32) {
+      require_mps_support_or_policy_(supports_f32_lane, "scatter_reduce");
+      if (supports_f32_lane) {
         Series out_f = include_self
                          ? a.to(ScalarType::Float32).clone().contiguous()
                          : Series::full(a.sizes(), scatter_reduce_identity_(reduce), ScalarType::Float32)
@@ -3272,7 +3431,7 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
   Series out;
   if (a.platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
-    if (reduce == "mean" || !include_self) {
+    if (reduce == "mean") {
       if (strict_native) {
         require_mps_native_dispatch_supported_("scatter_reduce");
       }
@@ -3284,20 +3443,25 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       maybe_link_scatter_reduce_(out, a, dim, index, src, reduce, include_self);
       return out;
     }
-    if (strict_native &&
-        (index.scalar_type() != ScalarType::Int64 ||
-         !mps_exact_f32_roundtrip_lane_dtype_(out_dt))) {
-      require_mps_native_dispatch_supported_("scatter_reduce");
-    }
     const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
     const auto rop = mps_scatter_reduce_op_(reduce);
-    if (out_dt == ScalarType::Float32 &&
-        native::mps::supports_scatter_reduce(out_dt, idx.scalar_type(), out_dt)) {
+    const bool supports_direct = native::mps::supports_scatter_reduce(out_dt, idx.scalar_type(), out_dt);
+    const bool supports_f32 = native::mps::supports_scatter_reduce(
+        ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    const bool supports_f32_lane =
+        supports_f32 &&
+        mps_exact_f32_roundtrip_lane_dtype_(out_dt);
+    if (strict_native && (idx.scalar_type() != ScalarType::Int64 || (!supports_direct && !supports_f32_lane))) {
+      require_mps_native_dispatch_supported_("scatter_reduce");
+    }
+    if (supports_direct) {
       out = has_initial
                      ? Series::full(a.sizes(), initial, out_dt).to(a.platform()).contiguous()
                      : (include_self
                           ? a.to(out_dt).clone().contiguous()
-                          : Series::full(a.sizes(), scatter_reduce_identity_(reduce), out_dt).to(a.platform()).contiguous());
+                          : Series::full(a.sizes(), scatter_reduce_identity_for_dtype_(reduce, out_dt), out_dt)
+                                .to(a.platform())
+                                .contiguous());
       if (has_initial && include_self) {
         const Series aa = a.to(out_dt);
         if (reduce == "sum") out = add(out, aa);
@@ -3308,10 +3472,8 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       const Series ss = src.expand(idx.sizes(), true).to(out_dt).contiguous();
       native::mps::scatter_reduce_(out, dim, idx, ss, rop);
     } else {
-      const bool supports_f32 = native::mps::supports_scatter_reduce(
-          ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
-      require_mps_support_or_policy_(supports_f32, "scatter_reduce");
-      if (supports_f32) {
+      require_mps_support_or_policy_(supports_f32_lane, "scatter_reduce");
+      if (supports_f32_lane) {
         Series out_f = has_initial
                          ? Series::full(a.sizes(), initial, ScalarType::Float32).to(a.platform()).contiguous()
                          : (include_self
@@ -3409,9 +3571,7 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
         native::mps::supports_cast(index.scalar_type(), ScalarType::Int64);
     const bool input_native_lane =
         native::mps::supports_gather(input.scalar_type(), ScalarType::Int64) ||
-        (mps_exact_f32_roundtrip_lane_dtype_(input.scalar_type()) &&
-         native::mps::supports_cast(input.scalar_type(), ScalarType::Float32) &&
-         native::mps::supports_cast(ScalarType::Float32, input.scalar_type()));
+        mps_exact_f32_roundtrip_lane_dtype_(input.scalar_type());
     if (strict_native && (!index_native_lane || !input_native_lane)) {
       require_mps_native_dispatch_supported_("gather");
     }
@@ -3436,8 +3596,9 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
       if (supports_f32) {
         if (in.scalar_type() != ScalarType::Float32) {
           const bool cast_supported =
-              native::mps::supports_cast(in.scalar_type(), ScalarType::Float32) &&
-              native::mps::supports_cast(ScalarType::Float32, input.scalar_type());
+              mps_exact_f32_roundtrip_lane_dtype_(in.scalar_type()) ||
+              (native::mps::supports_cast(in.scalar_type(), ScalarType::Float32) &&
+               native::mps::supports_cast(ScalarType::Float32, input.scalar_type()));
           require_mps_support_or_policy_(cast_supported, "gather");
         }
         Series in_f = in.to(ScalarType::Float32);
@@ -3470,18 +3631,7 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
       [input, idx, dim](const Series& out_sens) {
         Series sens = out_sens;
         if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
-        if (input.platform() == Platform::MPS) {
-          // MPS scatter_add backward accumulation can produce non-finite sensitivities
-          // for recurrent gather-heavy graphs; accumulate on CPU for stable gradients.
-          Series base_cpu = Series::zeros(input.sizes(), input.scalar_type()).to(Platform::CPU);
-          Series idx_cpu = idx;
-          if (idx_cpu.platform() != Platform::CPU) idx_cpu = idx_cpu.to(Platform::CPU);
-          if (idx_cpu.scalar_type() != ScalarType::Int64) idx_cpu = idx_cpu.to(ScalarType::Int64);
-          Series sens_cpu = sens;
-          if (sens_cpu.platform() != Platform::CPU) sens_cpu = sens_cpu.to(Platform::CPU, input.scalar_type());
-          Series acc_cpu = scatter_add(base_cpu, dim, idx_cpu, sens_cpu);
-          return acc_cpu.to(input.platform(), input.scalar_type());
-        }
+        if (sens.platform() != input.platform()) sens = sens.to(input.platform());
         Series base = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
         return scatter_add(base, dim, idx, sens);
       });
@@ -3816,9 +3966,26 @@ Series square(const Series& a) {
       native::cpu::square(aa, out);
     }
   }
-  maybe_link_unary_op_(out, a, [a](const Series& g) {
-    return g.mul(2.0).mul(a);
-  });
+  if (series_tape::recording_enabled() &&
+      series_tape::tracks_slope(a) &&
+      a.platform() == Platform::MPS) {
+    // Snapshot tracked MPS inputs used in backward formulas so gradient
+    // replay does not depend on transient alias lifetimes.
+    const Series a_snapshot = a.clone();
+    maybe_link_unary_op_(out, a, [a_snapshot](const Series& g) {
+      Series grad = g.mul(2.0).mul(a_snapshot);
+      if (a_snapshot.platform() == Platform::MPS) {
+        // Force materialization before parent accumulation to avoid transient
+        // MPS alias/cache hazards across adjacent backward nodes.
+        (void)static_cast<const Series&>(grad).raw_data();
+      }
+      return grad;
+    });
+  } else {
+    maybe_link_unary_op_(out, a, [a](const Series& g) {
+      return g.mul(2.0).mul(a);
+    });
+  }
   return out;
 }
 
@@ -3878,8 +4045,18 @@ Series& nan_to_num_(Series& a, double nan, double posinf, double neginf) {
 }
 
 Series clamp_min(const Series& a, double lo) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    return maximum(a, scalar_like_(a, lo));
+  if (a.platform() == Platform::MPS) {
+    if (a.scalar_type() == ScalarType::Float32) {
+      return maximum(a, scalar_like_(a, lo));
+    }
+    const bool supports_f32_lane =
+        mps_exact_f32_roundtrip_lane_dtype_(a.scalar_type()) ||
+        a.scalar_type() == ScalarType::Int32;
+    require_mps_support_or_policy_(supports_f32_lane, "clamp_min");
+    if (supports_f32_lane) {
+      const Series aa_f = a.to(ScalarType::Float32).contiguous();
+      return maximum(aa_f, scalar_like_(aa_f, lo)).to(a.scalar_type());
+    }
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
@@ -3904,7 +4081,7 @@ Series clamp_min(const Series& a, double lo) {
   return out;
 }
 Series& clamp_min_(Series& a, double lo) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+  if (a.platform() == Platform::MPS) {
     a = clamp_min(a, lo);
     return a;
   }
@@ -3922,8 +4099,18 @@ Series& clamp_min_(Series& a, double lo) {
 }
 
 Series clamp_max(const Series& a, double hi) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    return minimum(a, scalar_like_(a, hi));
+  if (a.platform() == Platform::MPS) {
+    if (a.scalar_type() == ScalarType::Float32) {
+      return minimum(a, scalar_like_(a, hi));
+    }
+    const bool supports_f32_lane =
+        mps_exact_f32_roundtrip_lane_dtype_(a.scalar_type()) ||
+        a.scalar_type() == ScalarType::Int32;
+    require_mps_support_or_policy_(supports_f32_lane, "clamp_max");
+    if (supports_f32_lane) {
+      const Series aa_f = a.to(ScalarType::Float32).contiguous();
+      return minimum(aa_f, scalar_like_(aa_f, hi)).to(a.scalar_type());
+    }
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
@@ -3948,7 +4135,7 @@ Series clamp_max(const Series& a, double hi) {
   return out;
 }
 Series& clamp_max_(Series& a, double hi) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+  if (a.platform() == Platform::MPS) {
     a = clamp_max(a, hi);
     return a;
   }
@@ -3978,10 +4165,12 @@ Series& masked_scatter_(Series& a, const Series& mask, const Series& src) {
   PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_scatter_: mask must be bool");
   require_same_platform(a, mask, "masked_scatter_");
   require_same_platform(a, src, "masked_scatter_");
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+  if (a.platform() == Platform::MPS) {
     PLUSS_CHECK(a.is_contiguous(), "masked_scatter_: requires contiguous Series on MPS");
     auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
-    PLUSS_CHECK(std::equal(a.sizes().begin(), a.sizes().end(), shape.begin(), shape.end()),
+    PLUSS_CHECK(a.sizes().size() == shape.size(),
+                "masked_scatter_: shape mismatch (require a already broadcasted)");
+    PLUSS_CHECK(std::equal(a.sizes().begin(), a.sizes().end(), shape.begin()),
                 "masked_scatter_: shape mismatch (require a already broadcasted)");
     const std::array<std::int64_t, 1> flat_shape{{a.numel()}};
     const Series mm_flat = mask.expand(shape, true).contiguous().reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
@@ -3991,11 +4180,12 @@ Series& masked_scatter_(Series& a, const Series& mask, const Series& src) {
     if (count == 0) {
       return a;
     }
-    const Series idx = nz2d.squeeze(-1).contiguous();
+    const Series idx = nz2d.to(Platform::CPU).squeeze(-1).contiguous().to(Platform::MPS);
     const std::array<std::int64_t, 1> src_shape{{count}};
     const Series ss = src.contiguous().to(a.scalar_type()).reshape(std::span<const std::int64_t>(src_shape.data(), src_shape.size()));
     Series a_flat = a.reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
     a_flat = scatter(a_flat, 0, idx, ss);
+    (void)static_cast<const Series&>(a_flat).raw_data();
     a = a_flat.reshape(shape);
     return a;
   }
@@ -4079,11 +4269,14 @@ Series unique(const Series& a, bool sorted) {
   }
 
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(a.dim() == 1 || a.numel() == 0, "unique: MPS path currently supports 1D tensors only");
     PLUSS_CHECK(sorted, "unique: MPS path currently requires sorted=true");
-    auto x = a.contiguous();
-    PLUSS_CHECK(x.scalar_type() == ScalarType::Int64,
-                "unique: MPS path currently supports int64 tensors only");
+    auto x = (a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous();
+    PLUSS_CHECK(
+        x.scalar_type() == ScalarType::Int64 || x.scalar_type() == ScalarType::Int32,
+        "unique: MPS path currently supports int32/int64 tensors only");
+    if (x.scalar_type() == ScalarType::Int32) {
+      x = x.to(ScalarType::Int64);
+    }
     auto counts = bincount(x, 0);
     if (counts.numel() == 0) {
       return Series::empty({0}, ScalarType::Int64, Platform::MPS);
@@ -4093,51 +4286,92 @@ Series unique(const Series& a, bool sorted) {
     if (nz.numel() == 0) {
       return Series::empty({0}, ScalarType::Int64, Platform::MPS);
     }
-    return nz.squeeze(-1).to(ScalarType::Int64);
+    return nz.to(Platform::CPU).squeeze(-1).to(ScalarType::Int64).to(Platform::MPS);
   }
 
-  PLUSS_CHECK(a.dim() == 1 || a.numel() == 0, "unique: only 1D supported in this CPU reference implementation");
-  auto x = a.contiguous();
+  auto x = (a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous();
   // For float NaN: treat NaNs as equal for uniqueness, similar to Torch's default behavior in CPU path.
   // We'll normalize by mapping NaNs to a single sentinel during comparison but keep original values.
   if (x.scalar_type() == ScalarType::Float32) {
     const auto* p = reinterpret_cast<const float*>(x.raw_data());
     std::vector<float> v(p, p + x.numel());
-    if (sorted) std::sort(v.begin(), v.end(), [](float u,float w){
-      const bool un = std::isnan(u), wn = std::isnan(w);
-      if (un && wn) return false;
-      if (un) return false;
-      if (wn) return true;
-      return u < w;
-    });
-    v.erase(std::unique(v.begin(), v.end(), [](float u,float w){
-      const bool un = std::isnan(u), wn = std::isnan(w);
-      if (un && wn) return true;
-      return u == w;
-    }), v.end());
-    const std::array<std::int64_t, 1> os{{(std::int64_t)v.size()}};
+    std::vector<float> out_vec;
+    if (sorted) {
+      std::sort(v.begin(), v.end(), [](float u,float w){
+        const bool un = std::isnan(u), wn = std::isnan(w);
+        if (un && wn) return false;
+        if (un) return false;
+        if (wn) return true;
+        return u < w;
+      });
+      v.erase(std::unique(v.begin(), v.end(), [](float u,float w){
+        const bool un = std::isnan(u), wn = std::isnan(w);
+        if (un && wn) return true;
+        return u == w;
+      }), v.end());
+      out_vec = std::move(v);
+    } else {
+      out_vec.reserve(v.size());
+      std::unordered_set<std::uint32_t> seen;
+      seen.reserve(v.size() * 2 + 1);
+      for (float val : v) {
+        std::uint32_t bits = 0;
+        if (std::isnan(val)) {
+          bits = 0x7fc00000U;
+        } else if (val == 0.0f) {
+          bits = 0U;
+        } else {
+          std::memcpy(&bits, &val, sizeof(bits));
+        }
+        if (seen.insert(bits).second) {
+          out_vec.push_back(val);
+        }
+      }
+    }
+    const std::array<std::int64_t, 1> os{{(std::int64_t)out_vec.size()}};
     Series out = Series::empty(std::span<const std::int64_t>(os.data(), os.size()), ScalarType::Float32, x.platform());
-    std::memcpy(out.raw_mutable_data(), v.data(), v.size()*sizeof(float));
+    std::memcpy(out.raw_mutable_data(), out_vec.data(), out_vec.size()*sizeof(float));
     return out;
   }
   if (x.scalar_type() == ScalarType::Float64) {
     const auto* p = reinterpret_cast<const double*>(x.raw_data());
     std::vector<double> v(p, p + x.numel());
-    if (sorted) std::sort(v.begin(), v.end(), [](double u,double w){
-      const bool un = std::isnan(u), wn = std::isnan(w);
-      if (un && wn) return false;
-      if (un) return false;
-      if (wn) return true;
-      return u < w;
-    });
-    v.erase(std::unique(v.begin(), v.end(), [](double u,double w){
-      const bool un = std::isnan(u), wn = std::isnan(w);
-      if (un && wn) return true;
-      return u == w;
-    }), v.end());
-    const std::array<std::int64_t, 1> os{{(std::int64_t)v.size()}};
+    std::vector<double> out_vec;
+    if (sorted) {
+      std::sort(v.begin(), v.end(), [](double u,double w){
+        const bool un = std::isnan(u), wn = std::isnan(w);
+        if (un && wn) return false;
+        if (un) return false;
+        if (wn) return true;
+        return u < w;
+      });
+      v.erase(std::unique(v.begin(), v.end(), [](double u,double w){
+        const bool un = std::isnan(u), wn = std::isnan(w);
+        if (un && wn) return true;
+        return u == w;
+      }), v.end());
+      out_vec = std::move(v);
+    } else {
+      out_vec.reserve(v.size());
+      std::unordered_set<std::uint64_t> seen;
+      seen.reserve(v.size() * 2 + 1);
+      for (double val : v) {
+        std::uint64_t bits = 0;
+        if (std::isnan(val)) {
+          bits = 0x7ff8000000000000ULL;
+        } else if (val == 0.0) {
+          bits = 0ULL;
+        } else {
+          std::memcpy(&bits, &val, sizeof(bits));
+        }
+        if (seen.insert(bits).second) {
+          out_vec.push_back(val);
+        }
+      }
+    }
+    const std::array<std::int64_t, 1> os{{(std::int64_t)out_vec.size()}};
     Series out = Series::empty(std::span<const std::int64_t>(os.data(), os.size()), ScalarType::Float64, x.platform());
-    std::memcpy(out.raw_mutable_data(), v.data(), v.size()*sizeof(double));
+    std::memcpy(out.raw_mutable_data(), out_vec.data(), out_vec.size()*sizeof(double));
     return out;
   }
   // Integer/bool path
@@ -4146,13 +4380,942 @@ Series unique(const Series& a, bool sorted) {
   std::vector<std::int64_t> vv;
   vv.reserve((std::size_t)x.numel());
   for (std::int64_t i=0;i<x.numel();++i) vv.push_back(read_i64_element(x, i));
-  if (sorted) std::sort(vv.begin(), vv.end());
-  vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
-  const std::array<std::int64_t, 1> os{{(std::int64_t)vv.size()}};
+  std::vector<std::int64_t> out_v;
+  if (sorted) {
+    std::sort(vv.begin(), vv.end());
+    vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
+    out_v = std::move(vv);
+  } else {
+    out_v.reserve(vv.size());
+    std::unordered_set<std::int64_t> seen;
+    seen.reserve(vv.size() * 2 + 1);
+    for (std::int64_t val : vv) {
+      if (seen.insert(val).second) {
+        out_v.push_back(val);
+      }
+    }
+  }
+  const std::array<std::int64_t, 1> os{{(std::int64_t)out_v.size()}};
   Series out = Series::empty(std::span<const std::int64_t>(os.data(), os.size()), ScalarType::Int64, x.platform());
   auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
-  for (std::size_t i=0;i<vv.size();++i) op[i]=vv[i];
+  for (std::size_t i=0;i<out_v.size();++i) op[i]=out_v[i];
   return out;
+}
+
+namespace {
+
+inline std::uint64_t unique_mix64_(std::uint64_t x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+inline std::uint64_t canonical_f32_bits_(float v) {
+  if (std::isnan(v)) return 0x7fc00000ULL;
+  std::uint32_t bits = 0;
+  std::memcpy(&bits, &v, sizeof(bits));
+  return static_cast<std::uint64_t>(bits);
+}
+
+inline std::uint64_t canonical_f64_bits_(double v) {
+  if (std::isnan(v)) return 0x7ff8000000000000ULL;
+  std::uint64_t bits = 0;
+  std::memcpy(&bits, &v, sizeof(bits));
+  return bits;
+}
+
+struct UniqueDimResult_ {
+  Series values{};
+  Series inverse{};
+  Series counts{};
+};
+
+inline std::uint64_t hash_row_bytes_fast_(const std::uint8_t* p, std::size_t n) {
+  std::uint64_t h = 0xcbf29ce484222325ULL;
+  std::size_t k = 0;
+  for (; k + sizeof(std::uint64_t) <= n; k += sizeof(std::uint64_t)) {
+    std::uint64_t word = 0;
+    std::memcpy(&word, p + k, sizeof(word));
+    h ^= unique_mix64_(word);
+    h *= 0x100000001b3ULL;
+  }
+  for (; k < n; ++k) {
+    h ^= static_cast<std::uint64_t>(p[k]);
+    h *= 0x100000001b3ULL;
+  }
+  return h;
+}
+
+UniqueDimResult_ unique_dim_impl_(const Series& a,
+                                  std::int64_t dim,
+                                  bool sorted,
+                                  bool need_inverse,
+                                  bool need_counts) {
+  if (a.platform() == Platform::CUDA) {
+    UniqueDimResult_ cpu = unique_dim_impl_(a.to(Platform::CPU), dim, sorted, need_inverse, need_counts);
+    UniqueDimResult_ out{};
+    out.values = cpu.values.to(Platform::CUDA);
+    if (need_inverse) out.inverse = cpu.inverse.to(Platform::CUDA);
+    if (need_counts) out.counts = cpu.counts.to(Platform::CUDA);
+    return out;
+  }
+
+  if (a.platform() == Platform::MPS) {
+    UniqueDimResult_ cpu = unique_dim_impl_(a.to(Platform::CPU), dim, sorted, need_inverse, need_counts);
+    UniqueDimResult_ out{};
+    out.values = cpu.values.to(Platform::MPS);
+    if (need_inverse) out.inverse = cpu.inverse.to(Platform::MPS);
+    if (need_counts) out.counts = cpu.counts.to(Platform::MPS);
+    return out;
+  }
+
+  const std::int64_t nd = a.dim();
+  PLUSS_CHECK(nd > 0, "unique(dim): expected rank >= 1");
+  if (dim < 0) dim += nd;
+  PLUSS_CHECK(dim >= 0 && dim < nd, "unique(dim): dim out of range");
+
+  Series x = a.contiguous();
+  if (dim != 0) x = x.transpose(0, dim).contiguous();
+
+  const std::int64_t rows = x.size(0);
+  if (rows == 0) {
+    UniqueDimResult_ out{};
+    out.values = (dim == 0) ? x : x.transpose(0, dim);
+    if (need_inverse) out.inverse = Series::empty({0}, ScalarType::Int64, Platform::CPU);
+    if (need_counts) out.counts = Series::empty({0}, ScalarType::Int64, Platform::CPU);
+    return out;
+  }
+
+  const std::int64_t row_elems = x.numel() / rows;
+  const std::size_t row_bytes = static_cast<std::size_t>(row_elems) * x.itemsize();
+  const auto* raw = reinterpret_cast<const std::uint8_t*>(x.raw_data());
+  const auto row_ptr = [&](std::int64_t i) -> const std::uint8_t* {
+    return raw + static_cast<std::size_t>(i) * row_bytes;
+  };
+  const auto hash_row_bytes = [&](std::int64_t i) -> std::uint64_t {
+    return hash_row_bytes_fast_(row_ptr(i), row_bytes);
+  };
+  const auto eq_row_bytes = [&](std::int64_t i, std::int64_t j) -> bool {
+    return std::memcmp(row_ptr(i), row_ptr(j), row_bytes) == 0;
+  };
+  const auto less_row_bytes = [&](std::int64_t i, std::int64_t j) -> bool {
+    return std::memcmp(row_ptr(i), row_ptr(j), row_bytes) < 0;
+  };
+
+  std::vector<std::int64_t> keep{};
+  keep.reserve(static_cast<std::size_t>(rows));
+  std::vector<std::int64_t> inverse{};
+  if (need_inverse) inverse.resize(static_cast<std::size_t>(rows), 0);
+  std::vector<std::int64_t> counts{};
+  if (need_counts) counts.reserve(static_cast<std::size_t>(rows));
+
+  auto dedup_with = [&](auto&& hash_row, auto&& eq_row) {
+    std::unordered_map<std::uint64_t, std::vector<std::pair<std::int64_t, std::int64_t>>> buckets;
+    buckets.reserve(static_cast<std::size_t>(rows * 2));
+
+    for (std::int64_t i = 0; i < rows; ++i) {
+      const std::uint64_t h = hash_row(i);
+      auto& chain = buckets[h];
+      std::int64_t out_idx = -1;
+      for (const auto& rep : chain) {
+        if (eq_row(i, rep.first)) {
+          out_idx = rep.second;
+          break;
+        }
+      }
+      if (out_idx < 0) {
+        out_idx = static_cast<std::int64_t>(keep.size());
+        chain.push_back({i, out_idx});
+        keep.push_back(i);
+        if (need_counts) counts.push_back(0);
+      }
+      if (need_inverse) inverse[static_cast<std::size_t>(i)] = out_idx;
+      if (need_counts) counts[static_cast<std::size_t>(out_idx)] += 1;
+    }
+  };
+
+  auto sort_and_remap = [&](auto&& less_row) {
+    if (!sorted) return;
+    std::vector<std::int64_t> perm(keep.size());
+    for (std::size_t i = 0; i < perm.size(); ++i) perm[i] = static_cast<std::int64_t>(i);
+    std::sort(perm.begin(), perm.end(), [&](std::int64_t aidx, std::int64_t bidx) {
+      return less_row(keep[static_cast<std::size_t>(aidx)], keep[static_cast<std::size_t>(bidx)]);
+    });
+
+    std::vector<std::int64_t> keep_sorted(keep.size());
+    std::vector<std::int64_t> old_to_new(keep.size());
+    for (std::size_t ni = 0; ni < perm.size(); ++ni) {
+      const auto oi = static_cast<std::size_t>(perm[ni]);
+      keep_sorted[ni] = keep[oi];
+      old_to_new[oi] = static_cast<std::int64_t>(ni);
+    }
+    keep.swap(keep_sorted);
+
+    if (need_counts) {
+      std::vector<std::int64_t> counts_sorted(counts.size());
+      for (std::size_t ni = 0; ni < perm.size(); ++ni) {
+        counts_sorted[ni] = counts[static_cast<std::size_t>(perm[ni])];
+      }
+      counts.swap(counts_sorted);
+    }
+    if (need_inverse) {
+      for (auto& v : inverse) v = old_to_new[static_cast<std::size_t>(v)];
+    }
+  };
+
+  if (x.scalar_type() == ScalarType::Float32) {
+    const auto* p = reinterpret_cast<const float*>(x.raw_data());
+    const auto rowf = [&](std::int64_t i) -> const float* { return p + i * row_elems; };
+    const auto hash_row = [&](std::int64_t i) -> std::uint64_t {
+      const float* r = rowf(i);
+      std::uint64_t h = 0xcbf29ce484222325ULL;
+      for (std::int64_t k = 0; k < row_elems; ++k) {
+        h ^= unique_mix64_(canonical_f32_bits_(r[k]));
+        h *= 0x100000001b3ULL;
+      }
+      return h;
+    };
+    const auto eq_row = [&](std::int64_t i, std::int64_t j) -> bool {
+      const float* ri = rowf(i);
+      const float* rj = rowf(j);
+      for (std::int64_t k = 0; k < row_elems; ++k) {
+        const float u = ri[k];
+        const float v = rj[k];
+        if (std::isnan(u) && std::isnan(v)) continue;
+        if (u != v) return false;
+      }
+      return true;
+    };
+    const auto less_row = [&](std::int64_t i, std::int64_t j) -> bool {
+      const float* ri = rowf(i);
+      const float* rj = rowf(j);
+      for (std::int64_t k = 0; k < row_elems; ++k) {
+        const float u = ri[k];
+        const float v = rj[k];
+        const bool un = std::isnan(u);
+        const bool vn = std::isnan(v);
+        if (un && vn) continue;
+        if (un) return false;
+        if (vn) return true;
+        if (u < v) return true;
+        if (u > v) return false;
+      }
+      return false;
+    };
+    dedup_with(hash_row, eq_row);
+    sort_and_remap(less_row);
+  } else if (x.scalar_type() == ScalarType::Float64) {
+    const auto* p = reinterpret_cast<const double*>(x.raw_data());
+    const auto rowf = [&](std::int64_t i) -> const double* { return p + i * row_elems; };
+    const auto hash_row = [&](std::int64_t i) -> std::uint64_t {
+      const double* r = rowf(i);
+      std::uint64_t h = 0xcbf29ce484222325ULL;
+      for (std::int64_t k = 0; k < row_elems; ++k) {
+        h ^= unique_mix64_(canonical_f64_bits_(r[k]));
+        h *= 0x100000001b3ULL;
+      }
+      return h;
+    };
+    const auto eq_row = [&](std::int64_t i, std::int64_t j) -> bool {
+      const double* ri = rowf(i);
+      const double* rj = rowf(j);
+      for (std::int64_t k = 0; k < row_elems; ++k) {
+        const double u = ri[k];
+        const double v = rj[k];
+        if (std::isnan(u) && std::isnan(v)) continue;
+        if (u != v) return false;
+      }
+      return true;
+    };
+    const auto less_row = [&](std::int64_t i, std::int64_t j) -> bool {
+      const double* ri = rowf(i);
+      const double* rj = rowf(j);
+      for (std::int64_t k = 0; k < row_elems; ++k) {
+        const double u = ri[k];
+        const double v = rj[k];
+        const bool un = std::isnan(u);
+        const bool vn = std::isnan(v);
+        if (un && vn) continue;
+        if (un) return false;
+        if (vn) return true;
+        if (u < v) return true;
+        if (u > v) return false;
+      }
+      return false;
+    };
+    dedup_with(hash_row, eq_row);
+    sort_and_remap(less_row);
+  } else {
+    dedup_with(hash_row_bytes, eq_row_bytes);
+    sort_and_remap(less_row_bytes);
+  }
+
+  const std::array<std::int64_t, 1> is{{static_cast<std::int64_t>(keep.size())}};
+  Series idx = Series::empty(std::span<const std::int64_t>(is.data(), is.size()), ScalarType::Int64, Platform::CPU);
+  auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_mutable_data());
+  for (std::size_t i = 0; i < keep.size(); ++i) ip[i] = keep[i];
+
+  UniqueDimResult_ out{};
+  out.values = x.index_select(0, idx);
+  if (dim != 0) out.values = out.values.transpose(0, dim);
+
+  if (need_inverse) {
+    const std::array<std::int64_t, 1> inv_shape{{rows}};
+    out.inverse = Series::empty(std::span<const std::int64_t>(inv_shape.data(), inv_shape.size()), ScalarType::Int64, Platform::CPU);
+    auto* op = reinterpret_cast<std::int64_t*>(out.inverse.raw_mutable_data());
+    for (std::size_t i = 0; i < inverse.size(); ++i) op[i] = inverse[i];
+  }
+  if (need_counts) {
+    const std::array<std::int64_t, 1> cnt_shape{{static_cast<std::int64_t>(counts.size())}};
+    out.counts = Series::empty(std::span<const std::int64_t>(cnt_shape.data(), cnt_shape.size()), ScalarType::Int64, Platform::CPU);
+    auto* op = reinterpret_cast<std::int64_t*>(out.counts.raw_mutable_data());
+    for (std::size_t i = 0; i < counts.size(); ++i) op[i] = counts[i];
+  }
+  return out;
+}
+
+} // namespace
+
+Series unique(const Series& a, std::int64_t dim, bool sorted) {
+  return unique_dim_impl_(a, dim, sorted, false, false).values;
+}
+
+std::vector<Series> unique(const Series& a,
+                           std::int64_t dim,
+                           bool sorted,
+                           bool return_inverse,
+                           bool return_counts) {
+  UniqueDimResult_ r = unique_dim_impl_(a, dim, sorted, return_inverse, return_counts);
+  if (return_inverse && return_counts) return {r.values, r.inverse, r.counts};
+  if (return_inverse) return {r.values, r.inverse};
+  if (return_counts) return {r.values, r.counts};
+  return {r.values};
+}
+
+namespace {
+
+Series set_flatten_1d_(const Series& x) {
+  return (x.dim() == 1) ? x.contiguous() : x.reshape({x.numel()}).contiguous();
+}
+
+template <class T>
+Series membership_mask_1d_cpu_hash_(const Series& lhs, const Series& rhs) {
+  Series out = Series::empty(lhs.sizes(), ScalarType::Bool, Platform::CPU);
+  const T* lp = reinterpret_cast<const T*>(lhs.raw_data());
+  const T* rp = reinterpret_cast<const T*>(rhs.raw_data());
+  bool* op = reinterpret_cast<bool*>(out.raw_mutable_data());
+
+  std::unordered_set<T> lookup;
+  const std::int64_t rhs_n = rhs.numel();
+  if (rhs_n > 0) {
+    lookup.reserve(static_cast<std::size_t>(rhs_n * 2 + 1));
+  }
+  for (std::int64_t i = 0; i < rhs_n; ++i) {
+    const T v = rp[i];
+    if constexpr (std::is_floating_point_v<T>) {
+      if (std::isnan(v)) continue;
+    }
+    lookup.insert(v);
+  }
+
+  const std::int64_t lhs_n = lhs.numel();
+  for (std::int64_t i = 0; i < lhs_n; ++i) {
+    const T v = lp[i];
+    if constexpr (std::is_floating_point_v<T>) {
+      if (std::isnan(v)) {
+        op[i] = false;
+        continue;
+      }
+    }
+    op[i] = lookup.find(v) != lookup.end();
+  }
+  return out;
+}
+
+Series membership_mask_1d_(const Series& lhs, const Series& rhs) {
+  if (lhs.numel() == 0 || rhs.numel() == 0) {
+    return Series::zeros(lhs.sizes(), ScalarType::Bool).to(lhs.platform());
+  }
+  if (lhs.platform() == Platform::CPU &&
+      rhs.platform() == Platform::CPU &&
+      lhs.scalar_type() == rhs.scalar_type()) {
+    const Series lc = lhs.contiguous();
+    const Series rc = rhs.contiguous();
+    switch (lc.scalar_type()) {
+      case ScalarType::Bool: return membership_mask_1d_cpu_hash_<bool>(lc, rc);
+      case ScalarType::Int8: return membership_mask_1d_cpu_hash_<std::int8_t>(lc, rc);
+      case ScalarType::UInt8: return membership_mask_1d_cpu_hash_<std::uint8_t>(lc, rc);
+      case ScalarType::Int16: return membership_mask_1d_cpu_hash_<std::int16_t>(lc, rc);
+      case ScalarType::UInt16: return membership_mask_1d_cpu_hash_<std::uint16_t>(lc, rc);
+      case ScalarType::Int32: return membership_mask_1d_cpu_hash_<std::int32_t>(lc, rc);
+      case ScalarType::UInt32: return membership_mask_1d_cpu_hash_<std::uint32_t>(lc, rc);
+      case ScalarType::Int64: return membership_mask_1d_cpu_hash_<std::int64_t>(lc, rc);
+      case ScalarType::Float32: return membership_mask_1d_cpu_hash_<float>(lc, rc);
+      case ScalarType::Float64: return membership_mask_1d_cpu_hash_<double>(lc, rc);
+      default: break;
+    }
+  }
+  return lhs.unsqueeze(1).eq(rhs.unsqueeze(0)).any(/*dim=*/1, /*keepdim=*/false);
+}
+
+Series unique_for_set_1d_(const Series& x, bool assume_unique) {
+  if (assume_unique) return set_flatten_1d_(x);
+  return unique(set_flatten_1d_(x), /*sorted=*/false);
+}
+
+std::int64_t normalize_set_dim_(const Series& x, std::int64_t dim, std::string_view op) {
+  const std::int64_t nd = x.dim();
+  PLUSS_CHECK(nd > 0, std::string(op) + ": expected rank >= 1");
+  if (dim < 0) dim += nd;
+  PLUSS_CHECK(dim >= 0 && dim < nd, std::string(op) + ": dim out of range");
+  return dim;
+}
+
+std::int64_t require_set_along_compatible_(
+    const Series& a,
+    const Series& b,
+    std::int64_t dim,
+    std::string_view op) {
+  require_same_platform(a, b, op);
+  PLUSS_CHECK(a.scalar_type() == b.scalar_type(), std::string(op) + ": input dtypes must match");
+  PLUSS_CHECK(a.dim() == b.dim(), std::string(op) + ": ranks must match");
+  const std::int64_t dim_norm = normalize_set_dim_(a, dim, op);
+  for (std::int64_t d = 0; d < a.dim(); ++d) {
+    if (d == dim_norm) continue;
+    PLUSS_CHECK(
+        a.size(d) == b.size(d),
+        std::string(op) + ": non-target dimensions must match");
+  }
+  return dim_norm;
+}
+
+Series transpose_dim_front_(const Series& x, std::int64_t dim) {
+  return (dim == 0) ? x.contiguous() : x.transpose(0, dim).contiguous();
+}
+
+Series flatten_front_slices_(const Series& x_front) {
+  const std::int64_t rows = x_front.size(0);
+  const std::int64_t cols = (rows == 0) ? 0 : (x_front.numel() / rows);
+  return x_front.reshape({rows, cols}).contiguous();
+}
+
+Series empty_front_like_with_rows_(const Series& ref_front, std::int64_t rows) {
+  std::vector<std::int64_t> out_sizes(ref_front.sizes().begin(), ref_front.sizes().end());
+  out_sizes[0] = rows;
+  return Series::empty(out_sizes, ref_front.scalar_type(), ref_front.platform());
+}
+
+Series restore_front_layout_(const Series& x_front, std::int64_t dim) {
+  return (dim == 0) ? x_front : x_front.transpose(0, dim).contiguous();
+}
+
+bool number_theory_dtype_supported_(ScalarType dt) {
+  switch (dt) {
+    case ScalarType::Bool:
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+    case ScalarType::UInt8:
+    case ScalarType::UInt16:
+    case ScalarType::UInt32:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool is_prime_i64_(std::int64_t n) {
+  if (n <= 1) return false;
+  if (n <= 3) return true;
+  if ((n % 2) == 0 || (n % 3) == 0) return false;
+  for (std::int64_t d = 5; d <= (n / d); d += 6) {
+    if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
+  }
+  return true;
+}
+
+std::vector<std::uint8_t> prime_sieve_upto_(std::int64_t max_n) {
+  PLUSS_CHECK(max_n >= 0, "internal: sieve max_n must be >= 0");
+  std::vector<std::uint8_t> sieve(static_cast<std::size_t>(max_n + 1), static_cast<std::uint8_t>(1));
+  if (max_n >= 0) sieve[0] = 0;
+  if (max_n >= 1) sieve[1] = 0;
+  for (std::int64_t p = 2; p <= (max_n / p); ++p) {
+    if (!sieve[static_cast<std::size_t>(p)]) continue;
+    for (std::int64_t m = p * p; m <= max_n; m += p) {
+      sieve[static_cast<std::size_t>(m)] = 0;
+    }
+  }
+  return sieve;
+}
+
+const std::vector<std::int64_t>& nth_prime_table_upto_(std::int64_t n_max) {
+  static thread_local std::vector<std::int64_t> cache;
+  if (static_cast<std::int64_t>(cache.size()) >= n_max) {
+    return cache;
+  }
+
+  auto upper_bound_nth_prime = [](std::int64_t n) -> std::int64_t {
+    if (n < 6) return 15;
+    const double nd = static_cast<double>(n);
+    const double ub = nd * (std::log(nd) + std::log(std::log(nd)));
+    return static_cast<std::int64_t>(std::ceil(ub + 16.0));
+  };
+
+  std::int64_t upper = upper_bound_nth_prime(n_max);
+  while (true) {
+    const auto sieve = prime_sieve_upto_(upper);
+    std::vector<std::int64_t> primes;
+    primes.reserve(static_cast<std::size_t>(n_max));
+    for (std::int64_t v = 2; v <= upper; ++v) {
+      if (!sieve[static_cast<std::size_t>(v)]) continue;
+      primes.push_back(v);
+      if (static_cast<std::int64_t>(primes.size()) == n_max) break;
+    }
+    if (static_cast<std::int64_t>(primes.size()) >= n_max) {
+      cache = std::move(primes);
+      return cache;
+    }
+    upper = upper + (upper / 2) + 64;
+  }
+}
+
+std::int64_t least_prime_factor_i64_(std::int64_t n) {
+  if (n == 0) return 0;
+  if (n == 1 || n == -1) return 1;
+  PLUSS_CHECK(n != std::numeric_limits<std::int64_t>::min(), "factor: value too small to factor safely");
+  std::int64_t x = n < 0 ? -n : n;
+  if ((x % 2) == 0) return 2;
+  if ((x % 3) == 0) return 3;
+  for (std::int64_t d = 5; d <= (x / d); d += 6) {
+    if ((x % d) == 0) return d;
+    const std::int64_t d2 = d + 2;
+    if ((x % d2) == 0) return d2;
+  }
+  return x;
+}
+
+Series as_i64_cpu_for_number_theory_(const Series& input, std::string_view op) {
+  PLUSS_CHECK(number_theory_dtype_supported_(input.scalar_type()),
+              std::string(op) + ": expects integral/bool dtype (UInt64 currently unsupported)");
+  Series src = input.contiguous();
+  if (src.scalar_type() != ScalarType::Int64) {
+    src = src.to(ScalarType::Int64);
+  }
+  if (src.platform() != Platform::CPU) {
+    src = src.to(Platform::CPU);
+  }
+  return src;
+}
+
+Series is_prime_series_fast_(const Series& input) {
+  const Series src = as_i64_cpu_for_number_theory_(input, "is_prime");
+  Series out = Series::empty(src.sizes(), ScalarType::Bool, Platform::CPU);
+
+  const std::int64_t* ip = reinterpret_cast<const std::int64_t*>(src.raw_data());
+  bool* optr = reinterpret_cast<bool*>(out.raw_mutable_data());
+  const std::int64_t n = src.numel();
+  std::int64_t max_pos = 1;
+  for (std::int64_t i = 0; i < n; ++i) {
+    if (ip[i] > max_pos) max_pos = ip[i];
+  }
+
+  constexpr std::int64_t kSieveLimit = 5000000;
+  const bool use_sieve = (max_pos >= 2 && max_pos <= kSieveLimit);
+  std::vector<std::uint8_t> sieve;
+  if (use_sieve) {
+    sieve = prime_sieve_upto_(max_pos);
+  }
+  std::unordered_map<std::int64_t, bool> cache;
+  cache.reserve(static_cast<std::size_t>(std::min<std::int64_t>(n, 1024)));
+
+  for (std::int64_t i = 0; i < n; ++i) {
+    const std::int64_t v = ip[i];
+    if (v < 2) {
+      optr[i] = false;
+      continue;
+    }
+    if (use_sieve && v <= max_pos) {
+      optr[i] = sieve[static_cast<std::size_t>(v)] != 0;
+      continue;
+    }
+    const auto it = cache.find(v);
+    if (it != cache.end()) {
+      optr[i] = it->second;
+      continue;
+    }
+    const bool is_p = is_prime_i64_(v);
+    cache.emplace(v, is_p);
+    optr[i] = is_p;
+  }
+
+  if (input.platform() != Platform::CPU) {
+    out = out.to(input.platform());
+  }
+  return out;
+}
+
+Series nth_prime_series_fast_(const Series& input) {
+  const Series src = as_i64_cpu_for_number_theory_(input, "prime");
+  const std::int64_t* ip = reinterpret_cast<const std::int64_t*>(src.raw_data());
+  const std::int64_t n = src.numel();
+
+  std::int64_t max_n = 1;
+  for (std::int64_t i = 0; i < n; ++i) {
+    const std::int64_t v = ip[i];
+    PLUSS_CHECK(v >= 1, "prime: expects n >= 1");
+    PLUSS_CHECK(v <= 200000, "prime: n too large for direct nth-prime routine");
+    if (v > max_n) max_n = v;
+  }
+  const auto& table = nth_prime_table_upto_(max_n);
+
+  Series out = Series::empty(src.sizes(), ScalarType::Int64, Platform::CPU);
+  std::int64_t* optr = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+  for (std::int64_t i = 0; i < n; ++i) {
+    optr[i] = table[static_cast<std::size_t>(ip[i] - 1)];
+  }
+  if (input.platform() != Platform::CPU) {
+    out = out.to(input.platform());
+  }
+  return out;
+}
+
+Series least_prime_factor_series_fast_(const Series& input) {
+  const Series src = as_i64_cpu_for_number_theory_(input, "factor");
+  const std::int64_t* ip = reinterpret_cast<const std::int64_t*>(src.raw_data());
+  const std::int64_t n = src.numel();
+
+  std::int64_t max_abs = 0;
+  for (std::int64_t i = 0; i < n; ++i) {
+    const std::int64_t v = ip[i];
+    PLUSS_CHECK(v != std::numeric_limits<std::int64_t>::min(), "factor: value too small to factor safely");
+    const std::int64_t av = (v < 0) ? -v : v;
+    if (av > max_abs) max_abs = av;
+  }
+
+  Series out = Series::empty(src.sizes(), ScalarType::Int64, Platform::CPU);
+  std::int64_t* optr = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+
+  constexpr std::int64_t kSpfLimit = 5000000;
+  if (max_abs <= kSpfLimit) {
+    std::vector<std::int32_t> spf(static_cast<std::size_t>(max_abs + 1), 0);
+    for (std::int64_t i = 2; i <= max_abs; ++i) {
+      if (spf[static_cast<std::size_t>(i)] != 0) continue;
+      spf[static_cast<std::size_t>(i)] = static_cast<std::int32_t>(i);
+      if (i > (max_abs / i)) continue;
+      for (std::int64_t j = i * i; j <= max_abs; j += i) {
+        if (spf[static_cast<std::size_t>(j)] == 0) {
+          spf[static_cast<std::size_t>(j)] = static_cast<std::int32_t>(i);
+        }
+      }
+    }
+    for (std::int64_t i = 0; i < n; ++i) {
+      const std::int64_t v = ip[i];
+      if (v == 0) {
+        optr[i] = 0;
+        continue;
+      }
+      if (v == 1 || v == -1) {
+        optr[i] = 1;
+        continue;
+      }
+      const std::int64_t x = (v < 0) ? -v : v;
+      const std::int32_t f = spf[static_cast<std::size_t>(x)];
+      optr[i] = (f == 0) ? x : static_cast<std::int64_t>(f);
+    }
+  } else {
+    std::unordered_map<std::int64_t, std::int64_t> cache;
+    cache.reserve(static_cast<std::size_t>(std::min<std::int64_t>(n, 1024)));
+    for (std::int64_t i = 0; i < n; ++i) {
+      const std::int64_t v = ip[i];
+      const auto it = cache.find(v);
+      if (it != cache.end()) {
+        optr[i] = it->second;
+        continue;
+      }
+      const std::int64_t f = least_prime_factor_i64_(v);
+      cache.emplace(v, f);
+      optr[i] = f;
+    }
+  }
+
+  if (input.platform() != Platform::CPU) {
+    out = out.to(input.platform());
+  }
+  return out;
+}
+
+Series cartprod_pair_1d_(const Series& lhs_raw, const Series& rhs_raw) {
+  require_same_platform(lhs_raw, rhs_raw, "cartprod");
+  PLUSS_CHECK(lhs_raw.scalar_type() == rhs_raw.scalar_type(), "cartprod: input dtypes must match");
+  const Series lhs = set_flatten_1d_(lhs_raw);
+  const Series rhs = set_flatten_1d_(rhs_raw);
+  const std::int64_t n = lhs.numel();
+  const std::int64_t m = rhs.numel();
+  if (n == 0 || m == 0) {
+    return Series::empty(std::vector<std::int64_t>{0, 2}, lhs.scalar_type(), lhs.platform());
+  }
+  const Series left = lhs.repeat_interleave(m, /*dim=*/0).reshape({n * m, 1});
+  const Series right = rhs.repeat(std::vector<std::int64_t>{n}).reshape({n * m, 1});
+  return pluss::unite({left, right}, /*dim=*/1, /*strict_dtype=*/true);
+}
+
+} // namespace
+
+Series isin(const Series& elements, const Series& test_elements) {
+  return isin(elements, test_elements, /*assume_unique=*/false, /*invert=*/false);
+}
+
+Series isin(const Series& elements, const Series& test_elements, bool assume_unique) {
+  return isin(elements, test_elements, assume_unique, /*invert=*/false);
+}
+
+Series isin(const Series& elements,
+            const Series& test_elements,
+            bool assume_unique,
+            bool invert) {
+  require_same_platform(elements, test_elements, "isin");
+  PLUSS_CHECK(
+      elements.scalar_type() == test_elements.scalar_type(),
+      "isin: elements and test_elements must have the same dtype");
+
+  const Series elems = set_flatten_1d_(elements);
+  Series tests = set_flatten_1d_(test_elements);
+  if (!assume_unique) {
+    tests = unique(tests, /*sorted=*/false);
+  }
+
+  Series mask = membership_mask_1d_(elems, tests);
+  if (invert) {
+    mask = mask.logical_not();
+  }
+  if (elements.dim() == 1) {
+    return mask;
+  }
+  return mask.reshape(elements.sizes());
+}
+
+Series union1d(const Series& a, const Series& b) {
+  return union1d(a, b, /*sorted=*/true);
+}
+
+Series union1d(const Series& a, const Series& b, bool sorted) {
+  require_same_platform(a, b, "union1d");
+  PLUSS_CHECK(a.scalar_type() == b.scalar_type(), "union1d: input dtypes must match");
+
+  const Series joined = pluss::unite(
+      {set_flatten_1d_(a), set_flatten_1d_(b)},
+      /*dim=*/0,
+      /*strict_dtype=*/true);
+  return unique(joined, sorted);
+}
+
+Series intersect1d(const Series& a, const Series& b) {
+  return intersect1d(a, b, /*sorted=*/true, /*assume_unique=*/false);
+}
+
+Series intersect1d(const Series& a, const Series& b, bool sorted) {
+  return intersect1d(a, b, sorted, /*assume_unique=*/false);
+}
+
+Series intersect1d(const Series& a,
+                   const Series& b,
+                   bool sorted,
+                   bool assume_unique) {
+  require_same_platform(a, b, "intersect1d");
+  PLUSS_CHECK(a.scalar_type() == b.scalar_type(), "intersect1d: input dtypes must match");
+
+  const Series ua = unique_for_set_1d_(a, assume_unique);
+  const Series ub = unique_for_set_1d_(b, assume_unique);
+  const Series mask = membership_mask_1d_(ua, ub);
+  Series out = ua.masked_select(mask);
+  if (sorted) {
+    return unique(out, /*sorted=*/true);
+  }
+  return out;
+}
+
+Series setdiff1d(const Series& a, const Series& b) {
+  return setdiff1d(a, b, /*sorted=*/true, /*assume_unique=*/false);
+}
+
+Series setdiff1d(const Series& a, const Series& b, bool sorted) {
+  return setdiff1d(a, b, sorted, /*assume_unique=*/false);
+}
+
+Series setdiff1d(const Series& a,
+                 const Series& b,
+                 bool sorted,
+                 bool assume_unique) {
+  require_same_platform(a, b, "setdiff1d");
+  PLUSS_CHECK(a.scalar_type() == b.scalar_type(), "setdiff1d: input dtypes must match");
+
+  const Series ua = unique_for_set_1d_(a, assume_unique);
+  const Series ub = unique_for_set_1d_(b, assume_unique);
+  const Series mask = membership_mask_1d_(ua, ub).logical_not();
+  Series out = ua.masked_select(mask);
+  if (sorted) {
+    return unique(out, /*sorted=*/true);
+  }
+  return out;
+}
+
+Series setxor1d(const Series& a, const Series& b) {
+  return setxor1d(a, b, /*sorted=*/true, /*assume_unique=*/false);
+}
+
+Series setxor1d(const Series& a, const Series& b, bool sorted) {
+  return setxor1d(a, b, sorted, /*assume_unique=*/false);
+}
+
+Series setxor1d(const Series& a,
+                const Series& b,
+                bool sorted,
+                bool assume_unique) {
+  require_same_platform(a, b, "setxor1d");
+  PLUSS_CHECK(a.scalar_type() == b.scalar_type(), "setxor1d: input dtypes must match");
+
+  const Series ua = unique_for_set_1d_(a, assume_unique);
+  const Series ub = unique_for_set_1d_(b, assume_unique);
+  const Series only_a = setdiff1d(ua, ub, /*sorted=*/false, /*assume_unique=*/true);
+  const Series only_b = setdiff1d(ub, ua, /*sorted=*/false, /*assume_unique=*/true);
+  Series out = pluss::unite({only_a, only_b}, /*dim=*/0, /*strict_dtype=*/true);
+  if (sorted) {
+    return unique(out, /*sorted=*/true);
+  }
+  return out;
+}
+
+Series set_unionize(const Series& a,
+                    pluss::msharp::RangeView::Of<Series> others,
+                    bool sorted) {
+  if (others.empty()) {
+    return unique(set_flatten_1d_(a), sorted);
+  }
+  if (others.size() == 1) {
+    return union1d(a, *others.begin(), sorted);
+  }
+
+  Series out = set_flatten_1d_(a);
+  for (const Series& other : others) {
+    out = union1d(out, other, /*sorted=*/false);
+  }
+  if (sorted) {
+    return unique(out, /*sorted=*/true);
+  }
+  return out;
+}
+
+Series set_intersection(const Series& a,
+                        pluss::msharp::RangeView::Of<Series> others,
+                        bool sorted,
+                        bool assume_unique) {
+  if (others.empty()) {
+    return unique(unique_for_set_1d_(a, assume_unique), sorted);
+  }
+  if (others.size() == 1) {
+    return intersect1d(a, *others.begin(), sorted, assume_unique);
+  }
+
+  Series out = unique_for_set_1d_(a, assume_unique);
+  for (const Series& other : others) {
+    const Series rhs = unique_for_set_1d_(other, assume_unique);
+    out = intersect1d(out, rhs, /*sorted=*/false, /*assume_unique=*/true);
+    if (out.numel() == 0) {
+      break;
+    }
+  }
+  if (sorted) {
+    return unique(out, /*sorted=*/true);
+  }
+  return out;
+}
+
+Series unionize_along(const Series& a,
+                      const Series& b,
+                      std::int64_t dim,
+                      bool sorted) {
+  const std::int64_t dim_norm = require_set_along_compatible_(a, b, dim, "unionize_along");
+  const Series joined = pluss::unite({a, b}, dim_norm, /*strict_dtype=*/true);
+  return unique(joined, dim_norm, sorted);
+}
+
+Series intersection_along(const Series& a,
+                          const Series& b,
+                          std::int64_t dim,
+                          bool sorted,
+                          bool assume_unique) {
+  const std::int64_t dim_norm = require_set_along_compatible_(a, b, dim, "intersection_along");
+  const Series a_front = transpose_dim_front_(a, dim_norm);
+  const Series b_front = transpose_dim_front_(b, dim_norm);
+  const Series ua = assume_unique ? a_front : unique(a_front, /*dim=*/0, /*sorted=*/false);
+  const Series ub = assume_unique ? b_front : unique(b_front, /*dim=*/0, /*sorted=*/false);
+
+  Series out_front = empty_front_like_with_rows_(ua, 0);
+  if (ua.size(0) != 0 && ub.size(0) != 0) {
+    const Series ua_rows = flatten_front_slices_(ua);
+    const Series ub_rows = flatten_front_slices_(ub);
+    const Series mask = ua_rows.unsqueeze(1).eq(ub_rows.unsqueeze(0)).all(/*dim=*/2, /*keepdim=*/false).any(/*dim=*/1, /*keepdim=*/false);
+    const Series idx2d = nonzero(mask);
+    if (idx2d.numel() > 0) {
+      const Series idx = idx2d.squeeze(-1);
+      out_front = ua.index_select(0, idx);
+    }
+  }
+
+  if (sorted) {
+    out_front = unique(out_front, /*dim=*/0, /*sorted=*/true);
+  }
+  return restore_front_layout_(out_front, dim_norm);
+}
+
+Series setdiff_along(const Series& a,
+                     const Series& b,
+                     std::int64_t dim,
+                     bool sorted,
+                     bool assume_unique) {
+  const std::int64_t dim_norm = require_set_along_compatible_(a, b, dim, "setdiff_along");
+  const Series a_front = transpose_dim_front_(a, dim_norm);
+  const Series b_front = transpose_dim_front_(b, dim_norm);
+  const Series ua = assume_unique ? a_front : unique(a_front, /*dim=*/0, /*sorted=*/false);
+  const Series ub = assume_unique ? b_front : unique(b_front, /*dim=*/0, /*sorted=*/false);
+
+  Series out_front = empty_front_like_with_rows_(ua, 0);
+  if (ua.size(0) != 0) {
+    Series keep_mask = Series::ones({ua.size(0)}, ScalarType::Bool).to(ua.platform());
+    if (ub.size(0) != 0) {
+      const Series ua_rows = flatten_front_slices_(ua);
+      const Series ub_rows = flatten_front_slices_(ub);
+      keep_mask =
+          ua_rows.unsqueeze(1)
+              .eq(ub_rows.unsqueeze(0))
+              .all(/*dim=*/2, /*keepdim=*/false)
+              .any(/*dim=*/1, /*keepdim=*/false)
+              .logical_not();
+    }
+    const Series idx2d = nonzero(keep_mask);
+    if (idx2d.numel() > 0) {
+      const Series idx = idx2d.squeeze(-1);
+      out_front = ua.index_select(0, idx);
+    }
+  }
+
+  if (sorted) {
+    out_front = unique(out_front, /*dim=*/0, /*sorted=*/true);
+  }
+  return restore_front_layout_(out_front, dim_norm);
+}
+
+Series setxor_along(const Series& a,
+                    const Series& b,
+                    std::int64_t dim,
+                    bool sorted,
+                    bool assume_unique) {
+  const std::int64_t dim_norm = require_set_along_compatible_(a, b, dim, "setxor_along");
+  const Series only_a = setdiff_along(a, b, dim_norm, /*sorted=*/false, assume_unique);
+  const Series only_b = setdiff_along(b, a, dim_norm, /*sorted=*/false, assume_unique);
+  return unionize_along(only_a, only_b, dim_norm, sorted);
 }
 
 Series bincount(const Series& a, std::int64_t minlength) {
@@ -4174,28 +5337,27 @@ Series bincount(const Series& a, std::int64_t minlength) {
   }
 
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(a.scalar_type() == ScalarType::Int64,
-                "bincount: MPS path currently supports int64 input only");
-    auto x = a.contiguous();
+    PLUSS_CHECK(
+        a.scalar_type() == ScalarType::Int64 || a.scalar_type() == ScalarType::Int32,
+        "bincount: MPS path currently supports int32/int64 input only");
+    auto x = (a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous();
     if (x.numel() == 0) {
       const auto outn = std::max<std::int64_t>(0, minlength);
       return Series::zeros({outn}, ScalarType::Int64).to(Platform::MPS);
     }
 
-    auto xf = x.to(ScalarType::Float32);
-    auto min_s = amin(xf);
-    auto max_s = amax(xf);
-    const auto min_h = min_s.host<float>().array();
-    const auto max_h = max_s.host<float>().array();
-    PLUSS_CHECK(!min_h.data.empty() && !max_h.data.empty(), "bincount: internal scalar extraction failure");
-    PLUSS_CHECK(min_h.data[0] >= 0.0f, "bincount: input must be non-negative");
-    const auto maxv = static_cast<std::int64_t>(std::llround(static_cast<double>(max_h.data[0])));
+    const Series min_s = amin(x).to(Platform::CPU).contiguous();
+    const Series max_s = amax(x).to(Platform::CPU).contiguous();
+    PLUSS_CHECK(min_s.numel() == 1 && max_s.numel() == 1, "bincount: internal scalar extraction failure");
+    const auto min_v = read_i64_element(min_s, 0);
+    const auto maxv = read_i64_element(max_s, 0);
+    PLUSS_CHECK(min_v >= 0, "bincount: input must be non-negative");
     const auto outn = std::max<std::int64_t>(minlength, maxv + 1);
 
     auto src = Series::ones({x.numel()}, ScalarType::Float32).to(Platform::MPS);
     auto out = Series::zeros({outn}, ScalarType::Float32).to(Platform::MPS);
     out = scatter_add(out, 0, x, src);
-    return out.to(ScalarType::Int64);
+    return out.round().to(ScalarType::Int64);
   }
 
   PLUSS_CHECK(a.scalar_type() == ScalarType::Int64 || a.scalar_type() == ScalarType::Int32 ||
@@ -4237,7 +5399,7 @@ Series histc(const Series& a, std::int64_t bins, double min, double max) {
   }
 
   if (a.platform() == Platform::MPS) {
-    auto x = a.contiguous().to(ScalarType::Float32);
+    auto x = ((a.dim() == 1) ? a.contiguous() : a.reshape({a.numel()}).contiguous()).to(ScalarType::Float32);
     const auto n = x.numel();
 
     if (min == 0.0 && max == 0.0) {
@@ -4322,8 +5484,32 @@ Series histc(const Series& a, std::int64_t bins, double min, double max) {
 }
 
 Series nonzero(const Series& a) {
+  if (a.numel() == 0) {
+    const std::array<std::int64_t, 2> out_shape{{0, a.dim()}};
+    return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+                         ScalarType::Int64,
+                         a.platform());
+  }
+
+  const bool scalar_like = (a.dim() == 0) || (a.dim() == 1 && a.numel() == 1);
+  if (scalar_like) {
+    const bool present = a.ne(0.0).to(Platform::CPU).to_vec<bool>(0);
+    const std::array<std::int64_t, 2> out_shape{{present ? 1 : 0, 0}};
+    return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+                         ScalarType::Int64,
+                         a.platform());
+  }
+
   if (a.platform() == Platform::MPS) {
-    // Correctness-first route until nonzero native kernels are proven stable across edge cases.
+    const bool strict_native = !mps_cpu_fallback_enabled_();
+    const bool route_supported = native::mps::supports_nonzero(ScalarType::Bool);
+    if (strict_native && !route_supported) {
+      require_mps_native_dispatch_supported_("nonzero");
+    }
+    if (route_supported) {
+      const Series mask = a.ne(0.0).contiguous();
+      return native::mps::nonzero(mask);
+    }
     const Series cpu = a.to(Platform::CPU);
     return nonzero(cpu).to(Platform::MPS);
   }
@@ -4393,9 +5579,16 @@ static bool can_view_as(const Series& x, std::span<const std::int64_t> new_sizes
 
 Series mps_cat_along_dim_(const std::vector<Series>& xs_in, std::int64_t dim, std::string_view op_name) {
   PLUSS_CHECK(!xs_in.empty(), std::string(op_name) + ": expected at least one tensor");
-  PLUSS_CHECK(
-      native::mps::supports_scatter(ScalarType::Float32, ScalarType::Int64, ScalarType::Float32),
-      std::string(op_name) + ": native MPS scatter kernel unavailable");
+  const ScalarType target_dt = xs_in.front().scalar_type();
+  const bool supports_direct =
+      native::mps::supports_scatter(target_dt, ScalarType::Int64, target_dt);
+  const bool supports_f32 =
+      native::mps::supports_scatter(ScalarType::Float32, ScalarType::Int64, ScalarType::Float32);
+  const bool use_f32_lane = !supports_direct && mps_exact_f32_roundtrip_lane_dtype_(target_dt) && supports_f32;
+  require_mps_support_or_policy_(
+      supports_direct || use_f32_lane,
+      std::string(op_name));
+
   const auto nd = xs_in.front().dim();
   PLUSS_CHECK(nd >= 1, std::string(op_name) + ": scalar tensors are not supported");
 
@@ -4407,8 +5600,8 @@ Series mps_cat_along_dim_(const std::vector<Series>& xs_in, std::int64_t dim, st
   for (const auto& t : xs_in) {
     PLUSS_CHECK(t.defined(), std::string(op_name) + ": undefined tensor");
     PLUSS_CHECK(t.platform() == Platform::MPS, std::string(op_name) + ": expected MPS tensors");
-    PLUSS_CHECK(t.scalar_type() == ScalarType::Float32,
-                std::string(op_name) + ": current MPS path supports float32 tensors only");
+    PLUSS_CHECK(t.scalar_type() == target_dt,
+                std::string(op_name) + ": dtype mismatch across inputs");
     PLUSS_CHECK(t.dim() == nd, std::string(op_name) + ": rank mismatch");
     xs.push_back(t.is_contiguous() ? t : t.contiguous());
   }
@@ -4426,7 +5619,8 @@ Series mps_cat_along_dim_(const std::vector<Series>& xs_in, std::int64_t dim, st
   }
   out_sizes[static_cast<std::size_t>(dim)] = cat_len;
 
-  Series out = Series::empty(out_sizes, ScalarType::Float32, Platform::MPS);
+  const ScalarType work_dt = supports_direct ? target_dt : ScalarType::Float32;
+  Series out = Series::empty(out_sizes, work_dt, Platform::MPS);
   std::int64_t offset = 0;
   for (const auto& t : xs) {
     const auto& ts = t.sizes();
@@ -4449,8 +5643,12 @@ Series mps_cat_along_dim_(const std::vector<Series>& xs_in, std::int64_t dim, st
       }
     }
     const Series idx = idx_cpu.to(Platform::MPS);
-    native::mps::scatter_set_(out, dim, idx, t);
+    const Series src = (work_dt == target_dt) ? t : t.to(work_dt);
+    native::mps::scatter_set_(out, dim, idx, src);
     offset += dlen;
+  }
+  if (work_dt != target_dt) {
+    out = out.to(target_dt);
   }
   return out;
 }
@@ -5173,13 +6371,6 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
   const auto size_dim = sizes_v[static_cast<std::size_t>(dim)];
   if (index < 0) index += size_dim;
   if (index < 0 || index >= size_dim) PLUSS_FAIL("select: index out of range");
-  if (platform() == Platform::MPS) {
-    // MPS view-select backward is currently unstable for autograd-sensitive paths.
-    // Bridge this op through CPU while preserving tape links via to()/transport ops.
-    const Series cpu_self = this->to(Platform::CPU, scalar_type());
-    const Series cpu_sel = cpu_self.select(dim, index);
-    return cpu_sel.to(Platform::MPS, scalar_type());
-  }
   // Remove dimension, adjust offset
   const auto offset_add = index * strides_v[static_cast<std::size_t>(dim)];
   sizes_v.erase(sizes_v.begin() + dim);
@@ -5206,10 +6397,9 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
         if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
         if (sens.platform() != input.platform()) sens = sens.to(input.platform());
         Series grad = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
-        Series grad_sel = grad.select(dim, index);
-        SeriesIterator it = SeriesIterator::unary(sens, grad_sel);
-        it.copy_out_from_in(sens, grad_sel);
-        return grad;
+        Series sens_expanded = sens.unsqueeze(dim);
+        Series idx = Series::full(sens_expanded.sizes(), static_cast<double>(index), ScalarType::Int64).to(input.platform());
+        return ops_internal::scatter(grad, dim, idx, sens_expanded);
       });
   return out;
 }
@@ -5625,23 +6815,18 @@ static bool mps_take_put_exact_f32_roundtrip_dtype_(ScalarType dtype) noexcept {
   }
 }
 
-static bool mps_take_put_accumulate_native_dtype_(ScalarType dtype) noexcept {
-  switch (dtype) {
-    case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-      return true;
-    default:
-      return false;
-  }
-}
-
 static bool mps_take_fast_path_supported_(const Series& self, const Series& index) noexcept {
-  (void)self;
-  (void)index;
-  // Native MPS take/put fast path remains flaky on real hardware for strict lanes.
-  // Keep correctness-first CPU route for now.
-  return false;
+  if (!self.defined() || !index.defined()) return false;
+  if (self.platform() != Platform::MPS || index.platform() != Platform::MPS) return false;
+  if (index.scalar_type() != ScalarType::Int64) return false;
+  const bool direct_lane_dtype =
+      self.scalar_type() == ScalarType::Float32 || self.scalar_type() == ScalarType::Int32;
+  if (direct_lane_dtype && native::mps::supports_gather(self.scalar_type(), ScalarType::Int64)) return true;
+  const bool supports_f32 = native::mps::supports_gather(ScalarType::Float32, ScalarType::Int64);
+  const bool cast_lane =
+      supports_f32 &&
+      mps_take_put_exact_f32_roundtrip_dtype_(self.scalar_type());
+  return cast_lane;
 }
 
 static bool mps_put_fast_path_supported_(
@@ -5649,13 +6834,34 @@ static bool mps_put_fast_path_supported_(
     const Series& index,
     const Series& source,
     bool accumulate) noexcept {
-  (void)self;
-  (void)index;
-  (void)source;
-  (void)accumulate;
-  // Native MPS take/put fast path remains flaky on real hardware for strict lanes.
-  // Keep correctness-first CPU route for now.
-  return false;
+  if (!self.defined() || !index.defined() || !source.defined()) return false;
+  if (self.platform() != Platform::MPS || index.platform() != Platform::MPS || source.platform() != Platform::MPS) {
+    return false;
+  }
+  if (index.scalar_type() != ScalarType::Int64) return false;
+
+  const bool source_shape_ok = source.numel() == 1 || source.numel() == index.numel();
+  if (!source_shape_ok) return false;
+
+  const bool direct_set = native::mps::supports_scatter(self.scalar_type(), ScalarType::Int64, self.scalar_type());
+  const bool direct_reduce =
+      !accumulate || native::mps::supports_scatter_reduce(self.scalar_type(), ScalarType::Int64, self.scalar_type());
+  const bool source_direct_cast =
+      source.scalar_type() == self.scalar_type() ||
+      native::mps::supports_cast(source.scalar_type(), self.scalar_type());
+  if (direct_set && direct_reduce && source_direct_cast) {
+    return true;
+  }
+
+  const bool supports_f32_set =
+      native::mps::supports_scatter(ScalarType::Float32, ScalarType::Int64, ScalarType::Float32);
+  const bool f32_roundtrip =
+      mps_take_put_exact_f32_roundtrip_dtype_(self.scalar_type());
+  const bool source_f32_cast =
+      source.scalar_type() == ScalarType::Float32 ||
+      mps_take_put_exact_f32_roundtrip_dtype_(source.scalar_type()) ||
+      native::mps::supports_cast(source.scalar_type(), ScalarType::Float32);
+  return supports_f32_set && !accumulate && f32_roundtrip && source_f32_cast;
 }
 
 static bool has_duplicate_linear_indices_(const Series& index_cpu_i64_contig, std::int64_t total_numel) {
@@ -5840,14 +7046,7 @@ Series Series::unite(pluss::msharp::RangeView::Of<Series> others, std::int64_t d
     const auto nd = this->dim();
     if (dim < 0) dim += nd;
     PLUSS_CHECK(dim >= 0 && dim < nd, "unite: dim out of range");
-    if (series_tape::recording_enabled()) {
-      std::vector<Series> xs_cpu;
-      xs_cpu.reserve(xs.size());
-      for (const auto& t : xs) xs_cpu.push_back(t.to(Platform::CPU));
-      out = native::cpu::cat(xs_cpu, dim).to(Platform::MPS);
-    } else {
-      out = ops_internal::mps_cat_along_dim_(xs, dim, "unite");
-    }
+    out = ops_internal::mps_cat_along_dim_(xs, dim, "unite");
   } else if (platform() == Platform::CUDA) {
     auto cpu_route = [&]() -> Series {
       return native::cpu::cat(xs, dim);
@@ -5917,19 +7116,11 @@ Series Series::pile(pluss::msharp::RangeView::Of<Series> others, std::int64_t di
     const auto nd = this->dim() + 1;
     if (dim < 0) dim += nd;
     PLUSS_CHECK(dim >= 0 && dim < nd, "pile: dim out of range");
-    if (series_tape::recording_enabled()) {
-      std::vector<Series> xs_cpu;
-      xs_cpu.reserve(others.size() + 1);
-      xs_cpu.push_back(this->to(Platform::CPU));
-      for (const auto& t : others) xs_cpu.push_back(t.to(Platform::CPU));
-      out = native::cpu::stack(xs_cpu, dim).to(Platform::MPS);
-    } else {
-      std::vector<Series> xs;
-      xs.reserve(others.size() + 1);
-      xs.push_back(this->unsqueeze(dim).contiguous());
-      for (const auto& t : others) xs.push_back(t.unsqueeze(dim).contiguous());
-      out = ops_internal::mps_cat_along_dim_(xs, dim, "pile");
-    }
+    std::vector<Series> xs;
+    xs.reserve(others.size() + 1);
+    xs.push_back(this->unsqueeze(dim).contiguous());
+    for (const auto& t : others) xs.push_back(t.unsqueeze(dim).contiguous());
+    out = ops_internal::mps_cat_along_dim_(xs, dim, "pile");
   } else if (platform() == Platform::CUDA) {
     auto cpu_route = [&]() -> Series {
       std::vector<Series> xs;
@@ -6302,32 +7493,40 @@ Series Series::take(const Series& index) const {
   Series out;
   if (platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
-    if (mps_native_take_put_enabled_() && mps_take_fast_path_supported_(*this, index)) {
+    const bool native_supported = mps_take_fast_path_supported_(*this, index);
+    if (strict_native && !native_supported) {
+      require_mps_native_dispatch_supported_("take");
+    }
+    if (mps_native_take_put_enabled_() && native_supported) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
       const std::array<std::int64_t, 1> out_flat_shape{{index.numel()}};
-      const Series flat_self_f32 =
-          (scalar_type() == ScalarType::Float32 ? this->contiguous() : this->to(ScalarType::Float32).contiguous())
-              .reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
+      const bool direct_lane = native::mps::supports_gather(scalar_type(), ScalarType::Int64);
+      const ScalarType work_dt = direct_lane ? scalar_type() : ScalarType::Float32;
+      const Series work_self =
+          (scalar_type() == work_dt)
+              ? this->contiguous()
+              : this->to(Platform::CPU, work_dt).to(Platform::MPS).contiguous();
+      const Series flat_self =
+          work_self.reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
       const Series flat_idx = index.contiguous().reshape(std::span<const std::int64_t>(out_flat_shape.data(), out_flat_shape.size()));
       Series out_flat = Series::empty(
           std::span<const std::int64_t>(out_flat_shape.data(), out_flat_shape.size()),
-          ScalarType::Float32,
+          work_dt,
           Platform::MPS);
-      native::mps::gather(flat_self_f32, /*dim=*/0, flat_idx, out_flat);
-      out = out_flat.reshape(index.sizes());
-      if (scalar_type() != ScalarType::Float32) {
-        out = out.to(scalar_type());
+      native::mps::gather(flat_self, /*dim=*/0, flat_idx, out_flat);
+      // Keep reshaped aliases coherent when MPS buffer cache entries are keyed by impl.
+      (void)static_cast<const Series&>(out_flat).raw_data();
+      // Materialize a stable value buffer so downstream autodiff links don't
+      // depend on transient reshape aliases around MPS gather outputs.
+      out = out_flat.reshape(index.sizes()).clone();
+      if (work_dt != scalar_type()) {
+        out = out.to(Platform::CPU, scalar_type()).to(Platform::MPS);
       }
     } else {
-      if (strict_native &&
-          (index.scalar_type() != ScalarType::Int64 ||
-           !mps_take_put_exact_f32_roundtrip_dtype_(scalar_type()))) {
-        require_mps_native_dispatch_supported_("take");
-      }
-
       // Correctness-first fallback for unsupported dtype/index combinations.
       const Series cpu_self = this->to(Platform::CPU);
-      const Series cpu_idx = index.to(Platform::CPU);
+      const Series cpu_idx =
+          (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).to(Platform::CPU);
       out = pluss::codem::native::cpu::take(cpu_self, cpu_idx).to(Platform::MPS);
     }
   } else if (platform() == Platform::CUDA) {
@@ -6346,21 +7545,36 @@ Series Series::take(const Series& index) const {
   }
 
   const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
+  const Series idx_cpu = idx.to(Platform::CPU).contiguous();
   maybe_link_unary_op_(
       out,
       *this,
       "take",
-      [input = *this, idx](const Series& out_sens) {
+      [input = *this, idx, idx_cpu](const Series& out_sens) {
         const std::array<std::int64_t, 1> flat_index_shape{{idx.numel()}};
         const std::array<std::int64_t, 1> flat_input_shape{{input.numel()}};
-        const Series flat_idx =
+        const Series flat_idx_cpu =
+            idx_cpu.reshape(std::span<const std::int64_t>(flat_index_shape.data(), flat_index_shape.size())).contiguous();
+        Series flat_idx =
             idx.reshape(std::span<const std::int64_t>(flat_index_shape.data(), flat_index_shape.size()));
+        if (input.platform() == Platform::MPS) {
+          flat_idx = flat_idx_cpu.to(Platform::MPS);
+        }
 
         Series sens = out_sens;
         if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
         if (sens.platform() != input.platform()) sens = sens.to(input.platform());
         const Series flat_sens =
             sens.reshape(std::span<const std::int64_t>(flat_index_shape.data(), flat_index_shape.size()));
+
+        if (input.platform() == Platform::MPS) {
+          const Series flat_sens_cpu = flat_sens.to(Platform::CPU).contiguous();
+          Series base_flat_cpu =
+              Series::zeros(std::span<const std::int64_t>(flat_input_shape.data(), flat_input_shape.size()), input.scalar_type())
+                  .to(Platform::CPU);
+          Series grad_flat_cpu = native::cpu::scatter_add(base_flat_cpu, /*dim=*/0, flat_idx_cpu, flat_sens_cpu);
+          return grad_flat_cpu.to(Platform::MPS).reshape(input.sizes());
+        }
 
         Series base_flat =
             Series::zeros(std::span<const std::int64_t>(flat_input_shape.data(), flat_input_shape.size()), input.scalar_type())
@@ -6376,25 +7590,41 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   require_same_platform(*this, source, "put_");
   if (platform() == Platform::MPS) {
     const bool strict_native = !mps_cpu_fallback_enabled_();
+    const bool native_supported = mps_put_fast_path_supported_(*this, index, source, accumulate);
+    if (strict_native && !native_supported) {
+      require_mps_native_dispatch_supported_("put_");
+    }
     if (mps_native_take_put_enabled_() &&
-        mps_put_fast_path_supported_(*this, index, source, accumulate) &&
+        native_supported &&
         (source.numel() == 1 || source.numel() == index.numel())) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
       const std::array<std::int64_t, 1> idx_shape{{index.numel()}};
       const Series flat_idx = index.contiguous().reshape(std::span<const std::int64_t>(idx_shape.data(), idx_shape.size()));
       const Series idx_cpu = flat_idx.to(Platform::CPU);
+      const bool direct_lane =
+          native::mps::supports_scatter(scalar_type(), ScalarType::Int64, scalar_type()) &&
+          (!accumulate || native::mps::supports_scatter_reduce(scalar_type(), ScalarType::Int64, scalar_type()));
+      const ScalarType work_dt = direct_lane ? scalar_type() : ScalarType::Float32;
 
       // scatter_set is not deterministic for duplicate writes; preserve CPU last-write semantics.
       if (!accumulate && has_duplicate_linear_indices_(idx_cpu, numel())) {
         const Series cpu_self = this->to(Platform::CPU);
-        const Series cpu_idx = index.to(Platform::CPU);
-        const Series cpu_src = source.to(Platform::CPU);
+        const Series cpu_idx =
+            (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).to(Platform::CPU);
+        const Series cpu_src = source.to(scalar_type()).to(Platform::CPU);
         const Series cpu_out = pluss::codem::native::cpu::put(cpu_self, cpu_idx, cpu_src, accumulate);
         copy_(cpu_out.to(Platform::MPS));
         return finish_direct_inplace_value_op_(*this);
       }
 
-      Series flat_src = source.to(ScalarType::Float32).contiguous();
+      const auto to_work_lane_mps = [&](const Series& s) {
+        if (s.scalar_type() == work_dt) {
+          return s.contiguous();
+        }
+        return s.to(Platform::CPU, work_dt).to(Platform::MPS).contiguous();
+      };
+
+      Series flat_src = to_work_lane_mps(source);
       if (flat_src.numel() == 1 && flat_idx.numel() != 1) {
         const std::array<std::int64_t, 1> src_expand{{flat_idx.numel()}};
         flat_src = flat_src.expand(std::span<const std::int64_t>(src_expand.data(), src_expand.size()), true).contiguous();
@@ -6403,7 +7633,7 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
         flat_src = flat_src.reshape(std::span<const std::int64_t>(src_shape.data(), src_shape.size())).contiguous();
       }
 
-      Series flat_out = (scalar_type() == ScalarType::Float32 ? this->contiguous() : this->to(ScalarType::Float32).contiguous())
+      Series flat_out = to_work_lane_mps(*this)
                             .reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()))
                             .clone();
       if (accumulate) {
@@ -6411,26 +7641,22 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
       } else {
         native::mps::scatter_set_(flat_out, /*dim=*/0, flat_idx, flat_src);
       }
+      // Keep reshaped aliases coherent when MPS buffer cache entries are keyed by impl.
+      (void)static_cast<const Series&>(flat_out).raw_data();
 
       Series out = flat_out.reshape(sizes());
-      if (scalar_type() != ScalarType::Float32) {
-        out = out.to(scalar_type());
+      if (work_dt != scalar_type()) {
+        out = out.to(Platform::CPU, scalar_type()).to(Platform::MPS);
       }
       copy_(out);
       return finish_direct_inplace_value_op_(*this);
     }
-    if (strict_native &&
-        (index.scalar_type() != ScalarType::Int64 ||
-         !mps_take_put_exact_f32_roundtrip_dtype_(scalar_type()) ||
-         source.scalar_type() != scalar_type() ||
-         (accumulate && !mps_take_put_accumulate_native_dtype_(scalar_type())))) {
-      require_mps_native_dispatch_supported_("put_");
-    }
 
     // Correctness-first fallback for unsupported dtype/index/source combinations.
     const Series cpu_self = this->to(Platform::CPU);
-    const Series cpu_idx = index.to(Platform::CPU);
-    const Series cpu_src = source.to(Platform::CPU);
+    const Series cpu_idx =
+        (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).to(Platform::CPU);
+    const Series cpu_src = source.to(scalar_type()).to(Platform::CPU);
     const Series cpu_out = pluss::codem::native::cpu::put(cpu_self, cpu_idx, cpu_src, accumulate);
     copy_(cpu_out.to(Platform::MPS));
     return finish_direct_inplace_value_op_(*this);
@@ -6507,6 +7733,177 @@ Series& Series::masked_scatter_(const Series& mask, const Series& src) {
 }
 
 Series Series::unique(bool sorted) const {return pluss::codem::ops_internal::unique(*this, sorted);}
+Series Series::isin(const Series& test_elements) const {
+  return pluss::codem::ops_internal::isin(*this, test_elements);
+}
+Series Series::isin(const Series& test_elements, bool assume_unique) const {
+  return pluss::codem::ops_internal::isin(*this, test_elements, assume_unique);
+}
+Series Series::isin(const Series& test_elements, bool assume_unique, bool invert) const {
+  return pluss::codem::ops_internal::isin(*this, test_elements, assume_unique, invert);
+}
+Series Series::union1d(const Series& other) const {
+  return pluss::codem::ops_internal::union1d(*this, other);
+}
+Series Series::union1d(const Series& other, bool sorted) const {
+  return pluss::codem::ops_internal::union1d(*this, other, sorted);
+}
+Series Series::intersect1d(const Series& other) const {
+  return pluss::codem::ops_internal::intersect1d(*this, other);
+}
+Series Series::intersect1d(const Series& other, bool sorted) const {
+  return pluss::codem::ops_internal::intersect1d(*this, other, sorted);
+}
+Series Series::intersect1d(const Series& other, bool sorted, bool assume_unique) const {
+  return pluss::codem::ops_internal::intersect1d(*this, other, sorted, assume_unique);
+}
+Series Series::setdiff1d(const Series& other) const {
+  return pluss::codem::ops_internal::setdiff1d(*this, other);
+}
+Series Series::setdiff1d(const Series& other, bool sorted) const {
+  return pluss::codem::ops_internal::setdiff1d(*this, other, sorted);
+}
+Series Series::setdiff1d(const Series& other, bool sorted, bool assume_unique) const {
+  return pluss::codem::ops_internal::setdiff1d(*this, other, sorted, assume_unique);
+}
+Series Series::setxor1d(const Series& other) const {
+  return pluss::codem::ops_internal::setxor1d(*this, other);
+}
+Series Series::setxor1d(const Series& other, bool sorted) const {
+  return pluss::codem::ops_internal::setxor1d(*this, other, sorted);
+}
+Series Series::setxor1d(const Series& other, bool sorted, bool assume_unique) const {
+  return pluss::codem::ops_internal::setxor1d(*this, other, sorted, assume_unique);
+}
+Series Series::unionize(pluss::msharp::RangeView::Of<Series> others, bool sorted) const {
+  return pluss::codem::ops_internal::set_unionize(*this, others, sorted);
+}
+Series Series::intersection(pluss::msharp::RangeView::Of<Series> others,
+                            bool sorted,
+                            bool assume_unique) const {
+  return pluss::codem::ops_internal::set_intersection(*this, others, sorted, assume_unique);
+}
+Series Series::unionize_along(const Series& other, std::int64_t dim) const {
+  return pluss::codem::ops_internal::unionize_along(*this, other, dim, /*sorted=*/true);
+}
+Series Series::unionize_along(const Series& other, std::int64_t dim, bool sorted) const {
+  return pluss::codem::ops_internal::unionize_along(*this, other, dim, sorted);
+}
+Series Series::intersection_along(const Series& other, std::int64_t dim) const {
+  return pluss::codem::ops_internal::intersection_along(
+      *this,
+      other,
+      dim,
+      /*sorted=*/true,
+      /*assume_unique=*/false);
+}
+Series Series::intersection_along(const Series& other, std::int64_t dim, bool sorted) const {
+  return pluss::codem::ops_internal::intersection_along(
+      *this,
+      other,
+      dim,
+      sorted,
+      /*assume_unique=*/false);
+}
+Series Series::intersection_along(const Series& other,
+                                  std::int64_t dim,
+                                  bool sorted,
+                                  bool assume_unique) const {
+  return pluss::codem::ops_internal::intersection_along(*this, other, dim, sorted, assume_unique);
+}
+Series Series::setdiff_along(const Series& other, std::int64_t dim) const {
+  return pluss::codem::ops_internal::setdiff_along(
+      *this,
+      other,
+      dim,
+      /*sorted=*/true,
+      /*assume_unique=*/false);
+}
+Series Series::setdiff_along(const Series& other, std::int64_t dim, bool sorted) const {
+  return pluss::codem::ops_internal::setdiff_along(
+      *this,
+      other,
+      dim,
+      sorted,
+      /*assume_unique=*/false);
+}
+Series Series::setdiff_along(const Series& other,
+                             std::int64_t dim,
+                             bool sorted,
+                             bool assume_unique) const {
+  return pluss::codem::ops_internal::setdiff_along(*this, other, dim, sorted, assume_unique);
+}
+Series Series::setxor_along(const Series& other, std::int64_t dim) const {
+  return pluss::codem::ops_internal::setxor_along(
+      *this,
+      other,
+      dim,
+      /*sorted=*/true,
+      /*assume_unique=*/false);
+}
+Series Series::setxor_along(const Series& other, std::int64_t dim, bool sorted) const {
+  return pluss::codem::ops_internal::setxor_along(
+      *this,
+      other,
+      dim,
+      sorted,
+      /*assume_unique=*/false);
+}
+Series Series::setxor_along(const Series& other,
+                            std::int64_t dim,
+                            bool sorted,
+                            bool assume_unique) const {
+  return pluss::codem::ops_internal::setxor_along(*this, other, dim, sorted, assume_unique);
+}
+Series Series::comp(const Series& universe) const {
+  return pluss::codem::ops_internal::setdiff1d(
+      universe,
+      *this,
+      /*sorted=*/false,
+      /*assume_unique=*/false);
+}
+Series Series::comp(const Series& universe, bool sorted) const {
+  return pluss::codem::ops_internal::setdiff1d(
+      universe,
+      *this,
+      sorted,
+      /*assume_unique=*/false);
+}
+Series Series::comp(const Series& universe, bool sorted, bool assume_unique) const {
+  return pluss::codem::ops_internal::setdiff1d(universe, *this, sorted, assume_unique);
+}
+Series Series::cartprod(const Series& other) const {
+  return cartprod_pair_1d_(*this, other);
+}
+Series Series::cartprod(pluss::msharp::RangeView::Of<Series> others) const {
+  Series base = set_flatten_1d_(*this);
+  Series out = base.reshape({base.numel(), 1});
+  for (const Series& other : others) {
+    require_same_platform(out, other, "cartprod");
+    PLUSS_CHECK(out.scalar_type() == other.scalar_type(), "cartprod: input dtypes must match");
+    const Series rhs = set_flatten_1d_(other);
+    const std::int64_t left_rows = out.size(0);
+    const std::int64_t cols = out.size(1);
+    const std::int64_t m = rhs.numel();
+    if (left_rows == 0 || m == 0) {
+      out = Series::empty(std::vector<std::int64_t>{0, cols + 1}, out.scalar_type(), out.platform());
+      continue;
+    }
+    const Series left = out.repeat_interleave(m, /*dim=*/0);
+    const Series right = rhs.repeat(std::vector<std::int64_t>{left_rows}).reshape({left_rows * m, 1});
+    out = pluss::unite({left, right}, /*dim=*/1, /*strict_dtype=*/true);
+  }
+  return out;
+}
+Series Series::is_prime() const {
+  return is_prime_series_fast_(*this);
+}
+Series Series::prime() const {
+  return nth_prime_series_fast_(*this);
+}
+Series Series::factor() const {
+  return least_prime_factor_series_fast_(*this);
+}
 
 Series Series::bincount(std::int64_t minlength) const {return pluss::codem::ops_internal::bincount(*this, minlength);}
 

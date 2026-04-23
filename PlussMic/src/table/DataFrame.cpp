@@ -30,6 +30,7 @@
 #include "kindle/catalog.h"
 #include "table/Atlas.h"
 #include "table/display/Display.h"
+#include "table/io/CsvSchemaConvert.h"
 
 namespace pluss::table {
 
@@ -226,21 +227,35 @@ bool is_none_token(std::string_view s) {
 Thread infer_padded_thread_from_raw(const pluss::loader::CsvRawColumn& column,
                                     const pluss::loader::ReadCsvOptions& options,
                                     std::int64_t target_len) {
+  if (column.note_values.has_value()) {
+    std::vector<std::string> values;
+    values.reserve(static_cast<std::size_t>(column.note_values->numel()));
+    for (std::int64_t i = 0; i < column.note_values->numel(); ++i) {
+      values.emplace_back(column.note_values->at(i));
+    }
+    if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
+      values.resize(static_cast<std::size_t>(target_len));
+    }
+    return detail::infer_thread_from_raw_csv_column(column.name, column.source_index, values, options);
+  }
   std::vector<std::string> values = column.values;
   if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
     values.resize(static_cast<std::size_t>(target_len));
   }
-  return pluss::loader::infer_thread_from_raw_csv_column(column.name, column.source_index, values, options);
+  return detail::infer_thread_from_raw_csv_column(column.name, column.source_index, values, options);
 }
 
 DataFrame dataframe_from_raw_batch_padded(const pluss::loader::CsvRawBatch& raw,
                                           const pluss::loader::ReadCsvOptions& options) {
+  auto raw_col_size = [](const pluss::loader::CsvRawColumn& col) -> std::size_t {
+    return col.note_values.has_value() ? static_cast<std::size_t>(col.note_values->numel()) : col.values.size();
+  };
   std::int64_t target_len = 0;
   for (const auto& col : raw.features) {
-    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(col.values.size()));
+    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(col)));
   }
   if (raw.cases.has_value()) {
-    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw.cases->values.size()));
+    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(*raw.cases)));
   }
 
   std::vector<std::pair<std::string, Thread>> cols;

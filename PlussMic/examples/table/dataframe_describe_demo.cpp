@@ -88,12 +88,7 @@ int main() {
   std::cout << "file: " << us_csv << "\n";
   std::cout << "hardware_concurrency: " << std::thread::hardware_concurrency() << "\n";
 
-  constexpr std::size_t rounds = 3;
-
-  pluss::loader::ReadCsvOptions serial_opts;
-  serial_opts.engine = pluss::loader::CsvEngine::Serial;
-  serial_opts.parallel_min_bytes = 0;
-  serial_opts.profile = true;
+  constexpr std::size_t rounds = 1;
 
   pluss::loader::ReadCsvOptions parallel_opts;
   parallel_opts.engine = pluss::loader::CsvEngine::Parallel;
@@ -103,17 +98,33 @@ int main() {
     parallel_opts.parallel_threads = static_cast<std::size_t>(hw);
   }
 
-  const auto serial_stats = benchmark_csv_load("serial engine", rounds, [&]() {
-    return pluss::table::DataFrame::load_csv(us_csv, serial_opts);
-  });
+  pluss::loader::ReadCsvOptions serial_opts;
+  serial_opts.engine = pluss::loader::CsvEngine::Serial;
+  serial_opts.parallel_min_bytes = 0;
+  serial_opts.profile = true;
+
+  pluss::loader::ReadCsvOptions auto_opts;
+  auto_opts.engine = pluss::loader::CsvEngine::Auto;
+  auto_opts.parallel_min_bytes = 0;
+  auto_opts.profile = true;
+
   const auto parallel_stats = benchmark_csv_load("parallel engine", rounds, [&]() {
     return pluss::table::DataFrame::load_csv(us_csv, parallel_opts);
   });
+  const auto serial_stats = benchmark_csv_load("serial engine", rounds, [&]() {
+    return pluss::table::DataFrame::load_csv(us_csv, serial_opts);
+  });
+  const auto auto_stats = benchmark_csv_load("auto engine", rounds, [&]() {
+    return pluss::table::DataFrame::load_csv(us_csv, auto_opts);
+  });
 
-  const double speedup =
+  const double serial_vs_parallel =
       parallel_stats.avg_ms > 0.0 ? serial_stats.avg_ms / parallel_stats.avg_ms : 0.0;
+  const double auto_vs_parallel =
+      parallel_stats.avg_ms > 0.0 ? auto_stats.avg_ms / parallel_stats.avg_ms : 0.0;
   std::cout << std::string(72, '-') << "\n";
-  std::cout << "speedup (serial_avg / parallel_avg): " << speedup << "x\n";
+  std::cout << "ratio (serial_avg / parallel_avg): " << serial_vs_parallel << "x\n";
+  std::cout << "ratio (auto_avg / parallel_avg): " << auto_vs_parallel << "x\n";
   std::cout << std::string(72, '=') << "\n";
 
   return 0;

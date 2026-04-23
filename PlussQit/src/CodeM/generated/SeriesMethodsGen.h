@@ -1987,6 +1987,10 @@
   // Typed wrappers for `unique` (staged migration off variadic surface).
   Series unique() const { return pluss::codem::_compat::invoke("unique", *this, {true}); }
 
+  Series unique(std::int64_t dim) const { return pluss::codem::_compat::invoke("unique", *this, {dim}); }
+
+  Series unique(std::int64_t dim, bool sorted) const { return pluss::codem::_compat::invoke("unique", *this, {dim, sorted}); }
+
   // Typed wrappers for `unsafe_chunk` (staged migration off variadic surface).
   Series unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("unsafe_chunk", *this, {chunks, dim}); }
 

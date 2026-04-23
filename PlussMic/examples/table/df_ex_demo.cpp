@@ -19,7 +19,7 @@ int main() {
       data_file("messy_data.csv").string(),
       /*header=*/"infer", // use "none" if csv has no header row -> feat_0, feat_1, ...
       /*case=*/"Agency Name",
-      /*engine=*/"auto", // auto (default), serial, parallel
+      /*engine=*/"auto", // auto (default), parallel, serial
       /*ncases=*/20);
 
    df.head(10);

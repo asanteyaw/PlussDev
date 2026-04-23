@@ -204,6 +204,7 @@ void clamp_min(const Series& a, double min_v, Series& out) {
   switch (a.scalar_type()) {
     case ScalarType::Float64: clamp_min_loop<double>(a,min_v,out); return;
     case ScalarType::Float32: clamp_min_loop<float>(a,min_v,out); return;
+    case ScalarType::Int32: clamp_min_loop<std::int32_t>(a,min_v,out); return;
     case ScalarType::Int64: clamp_min_loop<std::int64_t>(a,min_v,out); return;
     default: break;
   }
@@ -215,6 +216,7 @@ void clamp_max(const Series& a, double max_v, Series& out) {
   switch (a.scalar_type()) {
     case ScalarType::Float64: clamp_max_loop<double>(a,max_v,out); return;
     case ScalarType::Float32: clamp_max_loop<float>(a,max_v,out); return;
+    case ScalarType::Int32: clamp_max_loop<std::int32_t>(a,max_v,out); return;
     case ScalarType::Int64: clamp_max_loop<std::int64_t>(a,max_v,out); return;
     default: break;
   }

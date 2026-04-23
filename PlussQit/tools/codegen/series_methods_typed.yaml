@@ -433,6 +433,14 @@ methods:
     signature: "Series unique() const"
     forward: "true"
 
+  - name: unique
+    signature: "Series unique(std::int64_t dim) const"
+    forward: "dim"
+
+  - name: unique
+    signature: "Series unique(std::int64_t dim, bool sorted) const"
+    forward: "dim, sorted"
+
   - name: bincount
     signature: "Series bincount() const"
     forward: "0"
@@ -2728,6 +2736,13 @@ skip_methods:
   - flatten
   - norm
   - unique
+  - isin
+  - union1d
+  - intersect1d
+  - setdiff1d
+  - setxor1d
+  - set_union
+  - set_intersection
   - bincount
   - histc
   - sum

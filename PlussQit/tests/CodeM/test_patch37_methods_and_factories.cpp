@@ -36,6 +36,21 @@ TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
   REQUIRE(stacked_temp.sizes()[2] == 2);
 
   auto list = pluss::sign_list(a, b);
+  REQUIRE(list.get(0).sizes()[0] == 2);
+  REQUIRE(list.get(1).sizes()[0] == 2);
+  REQUIRE_THROWS_AS(list.get(2), pluss::Error);
+  REQUIRE_THROWS_AS(list.get(-1), pluss::Error);
+  REQUIRE_THROWS_AS((void)list[2], pluss::Error);
+
+  auto extended_one = list.extend(a);
+  REQUIRE(list.size() == 2);
+  REQUIRE(extended_one.size() == 3);
+  REQUIRE(extended_one.get(2).sizes()[0] == 2);
+
+  auto extended_two = list.extend({a, b});
+  REQUIRE(extended_two.size() == 4);
+  REQUIRE(extended_two.get(3).sizes()[0] == 2);
+
   auto united_lvalue = pluss::unite(list, 0);
   REQUIRE(united_lvalue.sizes()[0] == 4);
   REQUIRE(united_lvalue.sizes()[1] == 2);

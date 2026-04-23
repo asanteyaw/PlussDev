@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -28,6 +29,7 @@
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "table/DataFrame.h"
+#include "table/io/CsvSchemaConvert.h"
 
 #ifndef PLUSSMIC_HAS_PARQUET_CPP
 #define PLUSSMIC_HAS_PARQUET_CPP 0
@@ -310,6 +312,12 @@ ReadCsvOptions csv_read_options_from_config(const Config& config) {
     }
   }
 
+  if (const auto* v = find_config(config, {"autoserialminbytes"})) {
+    if (auto n = parse_int_value(*v); n.has_value() && *n > 0) {
+      options.auto_serial_min_bytes = static_cast<std::size_t>(*n);
+    }
+  }
+
   if (const auto* v = find_config(config, {"profile", "csvprofile"})) {
     if (auto b = parse_bool_value(*v); b.has_value()) {
       options.profile = *b;
@@ -464,21 +472,37 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
 pluss::table::Thread infer_padded_thread_from_raw(const CsvRawColumn& column,
                                                   const ReadCsvOptions& options,
                                                   std::int64_t target_len) {
+  if (column.note_values.has_value()) {
+    std::vector<std::string> values;
+    values.reserve(static_cast<std::size_t>(column.note_values->numel()));
+    for (std::int64_t i = 0; i < column.note_values->numel(); ++i) {
+      values.emplace_back(column.note_values->at(i));
+    }
+    if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
+      values.resize(static_cast<std::size_t>(target_len));
+    }
+    return pluss::table::detail::infer_thread_from_raw_csv_column(
+        column.name, column.source_index, values, options);
+  }
   std::vector<std::string> values = column.values;
   if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
     values.resize(static_cast<std::size_t>(target_len));
   }
-  return infer_thread_from_raw_csv_column(column.name, column.source_index, values, options);
+  return pluss::table::detail::infer_thread_from_raw_csv_column(
+      column.name, column.source_index, values, options);
 }
 
 pluss::table::DataFrame dataframe_from_raw_batch_padded(const CsvRawBatch& raw,
                                                         const ReadCsvOptions& options) {
+  auto raw_col_size = [](const CsvRawColumn& col) -> std::size_t {
+    return col.note_values.has_value() ? static_cast<std::size_t>(col.note_values->numel()) : col.values.size();
+  };
   std::int64_t target_len = 0;
   for (const auto& col : raw.features) {
-    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(col.values.size()));
+    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(col)));
   }
   if (raw.cases.has_value()) {
-    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw.cases->values.size()));
+    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(*raw.cases)));
   }
 
   std::vector<std::pair<std::string, pluss::table::Thread>> cols;
@@ -1275,13 +1299,34 @@ CsvRawBatch raw_from_json_value(const JsonValue& root, const Config& config) {
 }
 
 void apply_projection_to_raw(CsvRawBatch& raw, const ReadCsvOptions& options) {
+  auto shrink_to = [](CsvRawColumn& col, std::size_t limit) {
+    if (col.note_values.has_value()) {
+      if (static_cast<std::size_t>(col.note_values->numel()) <= limit) {
+        return;
+      }
+      std::vector<std::string_view> kept;
+      kept.reserve(limit);
+      for (std::size_t i = 0; i < limit; ++i) {
+        kept.push_back(col.note_values->at(static_cast<std::int64_t>(i)));
+      }
+      const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(kept.size())};
+      col.note_values = pluss::coden::ops_internal::note_from_utf8(
+          std::span<const std::string_view>(kept.data(), kept.size()),
+          std::span<const std::int64_t>(shape.data(), shape.size()));
+      return;
+    }
+    if (col.values.size() > limit) {
+      col.values.resize(limit);
+    }
+  };
+
   if (options.ncases.has_value()) {
     const auto limit = *options.ncases;
     for (auto& col : raw.features) {
-      if (col.values.size() > limit) col.values.resize(limit);
+      shrink_to(col, limit);
     }
-    if (raw.cases.has_value() && raw.cases->values.size() > limit) {
-      raw.cases->values.resize(limit);
+    if (raw.cases.has_value()) {
+      shrink_to(*raw.cases, limit);
     }
   }
 

@@ -2962,6 +2962,19 @@ stochvol_models_test/fast:
 .PHONY : stochvol_models_test/fast
 
 #=============================================================================
+# Target rules for targets named adam_functional_torch_rigor_test
+
+# Build rule for target.
+adam_functional_torch_rigor_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 adam_functional_torch_rigor_test
+.PHONY : adam_functional_torch_rigor_test
+
+# fast build rule for target.
+adam_functional_torch_rigor_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/adam_functional_torch_rigor_test.dir/build
+.PHONY : adam_functional_torch_rigor_test/fast
+
+#=============================================================================
 # Target rules for targets named autodiff_audit_bridge_test
 
 # Build rule for target.
@@ -3051,6 +3064,32 @@ mads_nomad_parity_test: cmake_check_build_system
 mads_nomad_parity_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build
 .PHONY : mads_nomad_parity_test/fast
+
+#=============================================================================
+# Target rules for targets named minimax_optimizer_selection_test
+
+# Build rule for target.
+minimax_optimizer_selection_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 minimax_optimizer_selection_test
+.PHONY : minimax_optimizer_selection_test
+
+# fast build rule for target.
+minimax_optimizer_selection_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build
+.PHONY : minimax_optimizer_selection_test/fast
+
+#=============================================================================
+# Target rules for targets named minimax_rigor_suite_test
+
+# Build rule for target.
+minimax_rigor_suite_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 minimax_rigor_suite_test
+.PHONY : minimax_rigor_suite_test
+
+# fast build rule for target.
+minimax_rigor_suite_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build
+.PHONY : minimax_rigor_suite_test/fast
 
 #=============================================================================
 # Target rules for targets named pattern_search_minimizer_test
@@ -4561,6 +4600,19 @@ plussma_bike_sharing_regression_notebook_demo/fast:
 .PHONY : plussma_bike_sharing_regression_notebook_demo/fast
 
 #=============================================================================
+# Target rules for targets named actuarial_core_test
+
+# Build rule for target.
+actuarial_core_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 actuarial_core_test
+.PHONY : actuarial_core_test
+
+# fast build rule for target.
+actuarial_core_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Actuarial/core/test/CMakeFiles/actuarial_core_test.dir/build.make PlussMa/Actuarial/core/test/CMakeFiles/actuarial_core_test.dir/build
+.PHONY : actuarial_core_test/fast
+
+#=============================================================================
 # Target rules for targets named PlussMic
 
 # Build rule for target.
@@ -4780,6 +4832,19 @@ plussmic_time_series_accessor_demo: cmake_check_build_system
 plussmic_time_series_accessor_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_time_series_accessor_demo.dir/build
 .PHONY : plussmic_time_series_accessor_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_csv_engine_bench
+
+# Build rule for target.
+plussmic_csv_engine_bench: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_csv_engine_bench
+.PHONY : plussmic_csv_engine_bench
+
+# fast build rule for target.
+plussmic_csv_engine_bench/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build
+.PHONY : plussmic_csv_engine_bench/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_kindle_model_demo
@@ -5304,30 +5369,6 @@ PlussAI/NodeK/NN/optim/adamw.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adamw.cpp.s
 .PHONY : PlussAI/NodeK/NN/optim/adamw.cpp.s
 
-PlussAI/NodeK/NN/optim/minimax.o: PlussAI/NodeK/NN/optim/minimax.cpp.o
-.PHONY : PlussAI/NodeK/NN/optim/minimax.o
-
-# target to build an object file
-PlussAI/NodeK/NN/optim/minimax.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/minimax.cpp.o
-.PHONY : PlussAI/NodeK/NN/optim/minimax.cpp.o
-
-PlussAI/NodeK/NN/optim/minimax.i: PlussAI/NodeK/NN/optim/minimax.cpp.i
-.PHONY : PlussAI/NodeK/NN/optim/minimax.i
-
-# target to preprocess a source file
-PlussAI/NodeK/NN/optim/minimax.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/minimax.cpp.i
-.PHONY : PlussAI/NodeK/NN/optim/minimax.cpp.i
-
-PlussAI/NodeK/NN/optim/minimax.s: PlussAI/NodeK/NN/optim/minimax.cpp.s
-.PHONY : PlussAI/NodeK/NN/optim/minimax.s
-
-# target to generate assembly for a file
-PlussAI/NodeK/NN/optim/minimax.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/minimax.cpp.s
-.PHONY : PlussAI/NodeK/NN/optim/minimax.cpp.s
-
 PlussAI/NodeK/NN/optim/nadam.o: PlussAI/NodeK/NN/optim/nadam.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/nadam.o
 
@@ -5351,6 +5392,30 @@ PlussAI/NodeK/NN/optim/nadam.s: PlussAI/NodeK/NN/optim/nadam.cpp.s
 PlussAI/NodeK/NN/optim/nadam.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nadam.cpp.s
 .PHONY : PlussAI/NodeK/NN/optim/nadam.cpp.s
+
+PlussAI/NodeK/NN/optim/nexima.o: PlussAI/NodeK/NN/optim/nexima.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/nexima.o
+
+# target to build an object file
+PlussAI/NodeK/NN/optim/nexima.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nexima.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/nexima.cpp.o
+
+PlussAI/NodeK/NN/optim/nexima.i: PlussAI/NodeK/NN/optim/nexima.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/nexima.i
+
+# target to preprocess a source file
+PlussAI/NodeK/NN/optim/nexima.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nexima.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/nexima.cpp.i
+
+PlussAI/NodeK/NN/optim/nexima.s: PlussAI/NodeK/NN/optim/nexima.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/nexima.s
+
+# target to generate assembly for a file
+PlussAI/NodeK/NN/optim/nexima.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nexima.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/nexima.cpp.s
 
 PlussAI/NodeK/NN/optim/rmsprop.o: PlussAI/NodeK/NN/optim/rmsprop.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/rmsprop.o
@@ -5591,6 +5656,30 @@ PlussAI/utils/utils.s: PlussAI/utils/utils.cpp.s
 PlussAI/utils/utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/utils/utils.cpp.s
 .PHONY : PlussAI/utils/utils.cpp.s
+
+PlussMa/Actuarial/core/contingencies.o: PlussMa/Actuarial/core/contingencies.cpp.o
+.PHONY : PlussMa/Actuarial/core/contingencies.o
+
+# target to build an object file
+PlussMa/Actuarial/core/contingencies.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/core/contingencies.cpp.o
+.PHONY : PlussMa/Actuarial/core/contingencies.cpp.o
+
+PlussMa/Actuarial/core/contingencies.i: PlussMa/Actuarial/core/contingencies.cpp.i
+.PHONY : PlussMa/Actuarial/core/contingencies.i
+
+# target to preprocess a source file
+PlussMa/Actuarial/core/contingencies.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/core/contingencies.cpp.i
+.PHONY : PlussMa/Actuarial/core/contingencies.cpp.i
+
+PlussMa/Actuarial/core/contingencies.s: PlussMa/Actuarial/core/contingencies.cpp.s
+.PHONY : PlussMa/Actuarial/core/contingencies.s
+
+# target to generate assembly for a file
+PlussMa/Actuarial/core/contingencies.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/core/contingencies.cpp.s
+.PHONY : PlussMa/Actuarial/core/contingencies.cpp.s
 
 PlussMa/Eng/signal_proc/transforms/transforms.o: PlussMa/Eng/signal_proc/transforms/transforms.cpp.o
 .PHONY : PlussMa/Eng/signal_proc/transforms/transforms.o
@@ -7280,6 +7369,8 @@ help:
 	@echo "... PlussPl"
 	@echo "... PlussTilsCore"
 	@echo "... PlussTilsView"
+	@echo "... actuarial_core_test"
+	@echo "... adam_functional_torch_rigor_test"
 	@echo "... arima_test"
 	@echo "... astro_test"
 	@echo "... attention_transformer_test"
@@ -7327,6 +7418,8 @@ help:
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... mechanics_test"
+	@echo "... minimax_optimizer_selection_test"
+	@echo "... minimax_rigor_suite_test"
 	@echo "... module_snapshot_test"
 	@echo "... mv_vol_test"
 	@echo "... nn_loss_test"
@@ -7482,6 +7575,7 @@ help:
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
 	@echo "... plussmic_bundle_model_demo"
 	@echo "... plussmic_bundle_model_tests"
+	@echo "... plussmic_csv_engine_bench"
 	@echo "... plussmic_dataframe_describe_demo"
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
@@ -7653,12 +7747,12 @@ help:
 	@echo "... PlussAI/NodeK/NN/optim/adamw.o"
 	@echo "... PlussAI/NodeK/NN/optim/adamw.i"
 	@echo "... PlussAI/NodeK/NN/optim/adamw.s"
-	@echo "... PlussAI/NodeK/NN/optim/minimax.o"
-	@echo "... PlussAI/NodeK/NN/optim/minimax.i"
-	@echo "... PlussAI/NodeK/NN/optim/minimax.s"
 	@echo "... PlussAI/NodeK/NN/optim/nadam.o"
 	@echo "... PlussAI/NodeK/NN/optim/nadam.i"
 	@echo "... PlussAI/NodeK/NN/optim/nadam.s"
+	@echo "... PlussAI/NodeK/NN/optim/nexima.o"
+	@echo "... PlussAI/NodeK/NN/optim/nexima.i"
+	@echo "... PlussAI/NodeK/NN/optim/nexima.s"
 	@echo "... PlussAI/NodeK/NN/optim/rmsprop.o"
 	@echo "... PlussAI/NodeK/NN/optim/rmsprop.i"
 	@echo "... PlussAI/NodeK/NN/optim/rmsprop.s"
@@ -7689,6 +7783,9 @@ help:
 	@echo "... PlussAI/utils/utils.o"
 	@echo "... PlussAI/utils/utils.i"
 	@echo "... PlussAI/utils/utils.s"
+	@echo "... PlussMa/Actuarial/core/contingencies.o"
+	@echo "... PlussMa/Actuarial/core/contingencies.i"
+	@echo "... PlussMa/Actuarial/core/contingencies.s"
 	@echo "... PlussMa/Eng/signal_proc/transforms/transforms.o"
 	@echo "... PlussMa/Eng/signal_proc/transforms/transforms.i"
 	@echo "... PlussMa/Eng/signal_proc/transforms/transforms.s"

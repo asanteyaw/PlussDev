@@ -1,6 +1,7 @@
 #pragma once
 #include "CodeM/core/Series.h"
 #include <string_view>
+#include <vector>
 
 namespace pluss::codem::ops_internal {
 
@@ -205,6 +206,38 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
 
   // Counting / histogram / unique (CPU-only)
   Series unique(const Series& a, bool sorted=true);
+  Series unique(const Series& a, std::int64_t dim, bool sorted=true);
+  std::vector<Series> unique(const Series& a,
+                             std::int64_t dim,
+                             bool sorted,
+                             bool return_inverse,
+                             bool return_counts);
+  Series isin(const Series& elements, const Series& test_elements);
+  Series isin(const Series& elements, const Series& test_elements, bool assume_unique);
+  Series isin(const Series& elements,
+              const Series& test_elements,
+              bool assume_unique,
+              bool invert);
+  Series union1d(const Series& a, const Series& b);
+  Series union1d(const Series& a, const Series& b, bool sorted);
+  Series intersect1d(const Series& a, const Series& b);
+  Series intersect1d(const Series& a, const Series& b, bool sorted);
+  Series intersect1d(const Series& a,
+                     const Series& b,
+                     bool sorted,
+                     bool assume_unique);
+  Series setdiff1d(const Series& a, const Series& b);
+  Series setdiff1d(const Series& a, const Series& b, bool sorted);
+  Series setdiff1d(const Series& a,
+                   const Series& b,
+                   bool sorted,
+                   bool assume_unique);
+  Series setxor1d(const Series& a, const Series& b);
+  Series setxor1d(const Series& a, const Series& b, bool sorted);
+  Series setxor1d(const Series& a,
+                  const Series& b,
+                  bool sorted,
+                  bool assume_unique);
     // Shape ops
   Series squeeze(const Series& a);
   Series squeeze(const Series& a, std::int64_t dim);

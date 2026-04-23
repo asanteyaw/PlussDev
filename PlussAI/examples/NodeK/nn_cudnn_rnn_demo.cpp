@@ -2,6 +2,7 @@
 #include <pluss/ai.h>
 
 #include <iostream>
+#include <tuple>
 #include <vector>
 
 namespace {
@@ -80,8 +81,9 @@ int main() {
 
   const auto [rnn_y_cpu, rnn_h_cpu] = rnn(x, h0, rnn_w, run_cfg);
   const auto [gru_y_cpu, gru_h_cpu] = gru(x, h0, gru_w, run_cfg);
-  const auto [lstm_y_cpu, lstm_state_cpu] = lstm(x, h0, c0, lstm_w, run_cfg);
-  const auto [lstm_proj_y_cpu, lstm_proj_state_cpu] = lstm(x, h0_proj, c0_proj, lstm_proj_w, proj_cfg);
+  const auto [lstm_y_cpu, lstm_state_cpu] = lstm(x, std::make_tuple(h0, c0), lstm_w, run_cfg);
+  const auto [lstm_proj_y_cpu, lstm_proj_state_cpu] =
+      lstm(x, std::make_tuple(h0_proj, c0_proj), lstm_proj_w, proj_cfg);
 
   std::cout << "CPU run\n";
   std::cout << "rnn output: " << rnn_y_cpu << '\n';
@@ -121,16 +123,13 @@ int main() {
         h0.to(pluss::pCUDA),
         to_cuda_weights(gru_w),
         run_cfg);
-    const auto [lstm_y_gpu, lstm_state_gpu] = lstm(
-        x.to(pluss::pCUDA),
-        h0.to(pluss::pCUDA),
-        c0.to(pluss::pCUDA),
-        to_cuda_weights(lstm_w),
-        run_cfg);
+    const auto [lstm_y_gpu, lstm_state_gpu] = lstm(x.to(pluss::pCUDA),
+                                                    std::make_tuple(h0.to(pluss::pCUDA), c0.to(pluss::pCUDA)),
+                                                    to_cuda_weights(lstm_w),
+                                                    run_cfg);
     const auto [lstm_proj_y_gpu, lstm_proj_state_gpu] = lstm(
         x.to(pluss::pCUDA),
-        h0_proj.to(pluss::pCUDA),
-        c0_proj.to(pluss::pCUDA),
+        std::make_tuple(h0_proj.to(pluss::pCUDA), c0_proj.to(pluss::pCUDA)),
         to_cuda_weights(lstm_proj_w),
         proj_cfg);
     const auto [rnn_y_gpu_train, rnn_h_gpu_train] = rnn(
@@ -145,8 +144,7 @@ int main() {
         train_cfg);
     const auto [lstm_y_gpu_train, lstm_state_gpu_train] = lstm(
         x.to(pluss::pCUDA),
-        h0.to(pluss::pCUDA),
-        c0.to(pluss::pCUDA),
+        std::make_tuple(h0.to(pluss::pCUDA), c0.to(pluss::pCUDA)),
         to_cuda_weights(lstm_w),
         train_cfg);
 

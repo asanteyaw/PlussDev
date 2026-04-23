@@ -90,6 +90,36 @@ inline void atomic_amin_f32(device atomic_uint* addr, float v) {
   }
 }
 
+inline void atomic_add_i32(device atomic_int* addr, int v) {
+  atomic_fetch_add_explicit(addr, v, memory_order_relaxed);
+}
+
+inline void atomic_amax_i32(device atomic_int* addr, int v) {
+  int old = atomic_load_explicit(addr, memory_order_relaxed);
+  while (true) {
+    if (!(v > old)) break;
+    int expected = old;
+    if (atomic_compare_exchange_weak_explicit(addr, &expected, v,
+                                              memory_order_relaxed, memory_order_relaxed)) {
+      break;
+    }
+    old = expected;
+  }
+}
+
+inline void atomic_amin_i32(device atomic_int* addr, int v) {
+  int old = atomic_load_explicit(addr, memory_order_relaxed);
+  while (true) {
+    if (!(v < old)) break;
+    int expected = old;
+    if (atomic_compare_exchange_weak_explicit(addr, &expected, v,
+                                              memory_order_relaxed, memory_order_relaxed)) {
+      break;
+    }
+    old = expected;
+  }
+}
+
 kernel void scatter_set_f32_i64(
     const device float* src [[buffer(0)]],
     const device long* index [[buffer(1)]],
@@ -136,6 +166,53 @@ kernel void scatter_amin_f32_i64(
   device atomic_uint* out_bits = reinterpret_cast<device atomic_uint*>(out);
   atomic_amin_f32(out_bits + off, src[gid]);
 }
+
+kernel void scatter_set_i32_i64(
+    const device int* src [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device int* out [[buffer(2)]],
+    constant ScatterMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong off = out_offset_from_src_gid(static_cast<ulong>(gid), meta, index);
+  if (off == kBadOffset) return;
+  out[off] = src[gid];
+}
+
+kernel void scatter_add_i32_i64(
+    const device int* src [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device int* out [[buffer(2)]],
+    constant ScatterMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong off = out_offset_from_src_gid(static_cast<ulong>(gid), meta, index);
+  if (off == kBadOffset) return;
+  device atomic_int* out_int = reinterpret_cast<device atomic_int*>(out);
+  atomic_add_i32(out_int + off, src[gid]);
+}
+
+kernel void scatter_amax_i32_i64(
+    const device int* src [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device int* out [[buffer(2)]],
+    constant ScatterMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong off = out_offset_from_src_gid(static_cast<ulong>(gid), meta, index);
+  if (off == kBadOffset) return;
+  device atomic_int* out_int = reinterpret_cast<device atomic_int*>(out);
+  atomic_amax_i32(out_int + off, src[gid]);
+}
+
+kernel void scatter_amin_i32_i64(
+    const device int* src [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device int* out [[buffer(2)]],
+    constant ScatterMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong off = out_offset_from_src_gid(static_cast<ulong>(gid), meta, index);
+  if (off == kBadOffset) return;
+  device atomic_int* out_int = reinterpret_cast<device atomic_int*>(out);
+  atomic_amin_i32(out_int + off, src[gid]);
+}
 )metal";
 
 struct ScatterMetaHost {
@@ -155,6 +232,10 @@ struct Context {
   id<MTLComputePipelineState> scatter_add_f32_i64{nil};
   id<MTLComputePipelineState> scatter_amax_f32_i64{nil};
   id<MTLComputePipelineState> scatter_amin_f32_i64{nil};
+  id<MTLComputePipelineState> scatter_set_i32_i64{nil};
+  id<MTLComputePipelineState> scatter_add_i32_i64{nil};
+  id<MTLComputePipelineState> scatter_amax_i32_i64{nil};
+  id<MTLComputePipelineState> scatter_amin_i32_i64{nil};
   std::string error{};
 };
 
@@ -225,6 +306,10 @@ Context& ctx_() {
       if (!make_pipeline("scatter_add_f32_i64", &ctx.scatter_add_f32_i64)) return;
       if (!make_pipeline("scatter_amax_f32_i64", &ctx.scatter_amax_f32_i64)) return;
       if (!make_pipeline("scatter_amin_f32_i64", &ctx.scatter_amin_f32_i64)) return;
+      if (!make_pipeline("scatter_set_i32_i64", &ctx.scatter_set_i32_i64)) return;
+      if (!make_pipeline("scatter_add_i32_i64", &ctx.scatter_add_i32_i64)) return;
+      if (!make_pipeline("scatter_amax_i32_i64", &ctx.scatter_amax_i32_i64)) return;
+      if (!make_pipeline("scatter_amin_i32_i64", &ctx.scatter_amin_i32_i64)) return;
       ctx.ready = true;
     }
   });
@@ -246,8 +331,11 @@ void validate_inputs_(const Series& out,
   if (!out.is_contiguous() || !index.is_contiguous() || !src.is_contiguous()) {
     fail_(std::string(op) + ": requires contiguous Series");
   }
-  if (out.scalar_type() != ScalarType::Float32 || src.scalar_type() != ScalarType::Float32) {
-    fail_(std::string(op) + ": only float32 is supported on current MPS path");
+  if (out.scalar_type() != src.scalar_type()) {
+    fail_(std::string(op) + ": output/source dtype mismatch");
+  }
+  if (out.scalar_type() != ScalarType::Float32 && out.scalar_type() != ScalarType::Int32) {
+    fail_(std::string(op) + ": only float32/int32 is supported on current MPS path");
   }
   if (index.scalar_type() != ScalarType::Int64) {
     fail_(std::string(op) + ": index must be int64");
@@ -311,9 +399,10 @@ void encode_scatter_(id<MTLComputePipelineState> pso,
                      const char* op_name) {
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const std::size_t elem_bytes = (out.scalar_type() == ScalarType::Int32) ? sizeof(std::int32_t) : sizeof(float);
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     const std::size_t idx_bytes = static_cast<std::size_t>(index.numel()) * sizeof(std::int64_t);
-    const std::size_t src_bytes = static_cast<std::size_t>(src.numel()) * sizeof(float);
+    const std::size_t src_bytes = static_cast<std::size_t>(src.numel()) * elem_bytes;
     id<MTLBuffer> out_buf = ensure_device_buffer_for_read_mm(out, c.device, out_bytes);
     id<MTLBuffer> idx_buf = ensure_device_buffer_for_read_mm(index, c.device, idx_bytes);
     id<MTLBuffer> src_buf = ensure_device_buffer_for_read_mm(src, c.device, src_bytes);
@@ -349,11 +438,17 @@ void encode_scatter_(id<MTLComputePipelineState> pso,
 } // namespace
 
 bool supports_scatter(ScalarType out_dt, ScalarType index_dt, ScalarType src_dt) noexcept {
-  return out_dt == ScalarType::Float32 && src_dt == ScalarType::Float32 && index_dt == ScalarType::Int64;
+  const bool dt_ok =
+      (out_dt == ScalarType::Float32 || out_dt == ScalarType::Int32) &&
+      (src_dt == ScalarType::Float32 || src_dt == ScalarType::Int32);
+  return dt_ok && out_dt == src_dt && index_dt == ScalarType::Int64;
 }
 
 bool supports_scatter_reduce(ScalarType out_dt, ScalarType index_dt, ScalarType src_dt) noexcept {
-  return out_dt == ScalarType::Float32 && src_dt == ScalarType::Float32 && index_dt == ScalarType::Int64;
+  const bool dt_ok =
+      (out_dt == ScalarType::Float32 || out_dt == ScalarType::Int32) &&
+      (src_dt == ScalarType::Float32 || src_dt == ScalarType::Int32);
+  return dt_ok && out_dt == src_dt && index_dt == ScalarType::Int64;
 }
 
 void scatter_set_(Series& out, std::int64_t dim, const Series& index, const Series& src) {
@@ -365,7 +460,9 @@ void scatter_set_(Series& out, std::int64_t dim, const Series& index, const Seri
 
   ScatterMetaHost meta;
   validate_inputs_(out, dim, index, src, meta, "mps::scatter_set_");
-  encode_scatter_(c.scatter_set_f32_i64, out, index, src, meta, "mps::scatter_set_");
+  id<MTLComputePipelineState> pso =
+      (out.scalar_type() == ScalarType::Int32) ? c.scatter_set_i32_i64 : c.scatter_set_f32_i64;
+  encode_scatter_(pso, out, index, src, meta, "mps::scatter_set_");
 }
 
 void scatter_reduce_(Series& out, std::int64_t dim, const Series& index, const Series& src, ScatterReduceOp op) {
@@ -379,10 +476,20 @@ void scatter_reduce_(Series& out, std::int64_t dim, const Series& index, const S
   validate_inputs_(out, dim, index, src, meta, "mps::scatter_reduce_");
   id<MTLComputePipelineState> pso = nil;
   const char* name = "mps::scatter_reduce_";
+  const bool i32 = out.scalar_type() == ScalarType::Int32;
   switch (op) {
-    case ScatterReduceOp::Sum: pso = c.scatter_add_f32_i64; name = "mps::scatter_reduce_sum_"; break;
-    case ScatterReduceOp::AMax: pso = c.scatter_amax_f32_i64; name = "mps::scatter_reduce_amax_"; break;
-    case ScatterReduceOp::AMin: pso = c.scatter_amin_f32_i64; name = "mps::scatter_reduce_amin_"; break;
+    case ScatterReduceOp::Sum:
+      pso = i32 ? c.scatter_add_i32_i64 : c.scatter_add_f32_i64;
+      name = "mps::scatter_reduce_sum_";
+      break;
+    case ScatterReduceOp::AMax:
+      pso = i32 ? c.scatter_amax_i32_i64 : c.scatter_amax_f32_i64;
+      name = "mps::scatter_reduce_amax_";
+      break;
+    case ScatterReduceOp::AMin:
+      pso = i32 ? c.scatter_amin_i32_i64 : c.scatter_amin_f32_i64;
+      name = "mps::scatter_reduce_amin_";
+      break;
     default: fail_("mps::scatter_reduce_: unsupported reduce op");
   }
   encode_scatter_(pso, out, index, src, meta, name);

@@ -51,6 +51,9 @@ add_executable(plussmic_atlas_plot_demo
 add_executable(plussmic_time_series_accessor_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/time_series_accessor_demo.cpp
 )
+add_executable(plussmic_csv_engine_bench
+  ${CMAKE_CURRENT_SOURCE_DIR}/csv_engine_bench.cpp
+)
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
@@ -68,6 +71,7 @@ target_link_libraries(plussmic_sp500_eda_ml_prep_notebook_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_option_smile_skew_surface_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_atlas_plot_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_time_series_accessor_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_csv_engine_bench PRIVATE PlussMic)
 
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
@@ -116,5 +120,8 @@ target_compile_definitions(plussmic_atlas_plot_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_time_series_accessor_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_csv_engine_bench PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

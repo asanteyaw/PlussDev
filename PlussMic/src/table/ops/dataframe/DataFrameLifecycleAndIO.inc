@@ -193,7 +193,9 @@ DataFrame DataFrame::load(std::string_view source_type,
                           const pluss::loader::ReadCsvOptions& options) {
   const auto source = lower_copy(owned_name(source_type));
   if (source == "csv") {
-    return dataframe_from_raw_batch_padded(pluss::loader::read_csv_raw_batch(filepath, options), options);
+    const auto raw = pluss::loader::read_csv_raw_batch(filepath, options);
+    auto batch = detail::csv_batch_from_raw_batch(raw, options);
+    return DataFrame(std::move(batch.features), std::move(batch.cases));
   }
   if (source == "txt" || source == "text") {
     pluss::loader::Config config;
@@ -255,12 +257,16 @@ DataFrame DataFrame::load_csv(std::string_view filepath) {
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
-  return dataframe_from_raw_batch_padded(pluss::loader::read_csv_raw_batch(filepath, options), options);
+  const auto raw = pluss::loader::read_csv_raw_batch(filepath, options);
+  auto batch = detail::csv_batch_from_raw_batch(raw, options);
+  return DataFrame(std::move(batch.features), std::move(batch.cases));
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath, const pluss::loader::Config& config) {
   const auto options = pluss::loader::csv_options_from_config(config);
-  return dataframe_from_raw_batch_padded(pluss::loader::read_csv_raw_batch(filepath, options), options);
+  const auto raw = pluss::loader::read_csv_raw_batch(filepath, config);
+  auto batch = detail::csv_batch_from_raw_batch(raw, options);
+  return DataFrame(std::move(batch.features), std::move(batch.cases));
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath,

@@ -958,6 +958,8 @@
   // Typed wrappers for `int_repr` (staged migration off variadic surface).
   Series int_repr() const { return pluss::codem::_compat::invoke("int_repr", *this); }
 
+  // `intersect1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `is_coalesced` (staged migration off variadic surface).
   Series is_coalesced() const { return pluss::codem::_compat::invoke("is_coalesced", *this); }
 
@@ -1007,6 +1009,8 @@
   // `isfinite` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `isfinite_` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `isin` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `isinf` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -1677,6 +1681,14 @@
   // Typed wrappers for `set_data` (staged migration off variadic surface).
   Series set_data(const Series& other) const { return pluss::codem::_compat::invoke("set_data", *this, {other}); }
 
+  // `set_intersection` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `set_union` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `setdiff1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // `setxor1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `sgn` (staged migration off variadic surface).
   Series sgn() const { return pluss::codem::_compat::invoke("sgn", *this); }
 
@@ -1984,8 +1996,14 @@
 
   Series& uniform_(double from, double to) const { return pluss::codem::_compat::invoke_("uniform_", *this, {from, to}); }
 
+  // `union1d` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
   // Typed wrappers for `unique` (staged migration off variadic surface).
   Series unique() const { return pluss::codem::_compat::invoke("unique", *this, {true}); }
+
+  Series unique(std::int64_t dim) const { return pluss::codem::_compat::invoke("unique", *this, {dim}); }
+
+  Series unique(std::int64_t dim, bool sorted) const { return pluss::codem::_compat::invoke("unique", *this, {dim, sorted}); }
 
   // Typed wrappers for `unsafe_chunk` (staged migration off variadic surface).
   Series unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const { return pluss::codem::_compat::invoke("unsafe_chunk", *this, {chunks, dim}); }

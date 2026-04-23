@@ -19,6 +19,8 @@ namespace pluss::coden {
 class TextArena final : public ::pluss::flame::RefCounted {
 public:
   TextArena() = default;
+  explicit TextArena(::std::vector<char>&& bytes)
+      : data_(::std::move(bytes)) {}
 
   // Append bytes to the arena and return (offset, length).
   ::std::pair<::std::size_t, ::std::size_t> append(::std::string_view bytes) {

@@ -270,6 +270,8 @@ Series put(const Series& a, const Series& index, const Series& src, bool accumul
         reinterpret_cast<double*>(op)[k] += reinterpret_cast<const double*>(sp)[s_off];
       } else if (out.scalar_type() == ScalarType::Float32) {
         reinterpret_cast<float*>(op)[k] += reinterpret_cast<const float*>(sp)[s_off];
+      } else if (out.scalar_type() == ScalarType::Int32) {
+        reinterpret_cast<std::int32_t*>(op)[k] += reinterpret_cast<const std::int32_t*>(sp)[s_off];
       } else if (out.scalar_type() == ScalarType::Int64) {
         reinterpret_cast<std::int64_t*>(op)[k] += reinterpret_cast<const std::int64_t*>(sp)[s_off];
       } else {

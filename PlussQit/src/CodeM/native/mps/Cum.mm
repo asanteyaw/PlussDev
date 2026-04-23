@@ -86,6 +86,58 @@ kernel void cumprod_dim_f32(
   }
   out[gid] = acc;
 }
+
+kernel void cumsum_dim_i32(
+    const device int* in [[buffer(0)]],
+    device int* out [[buffer(1)]],
+    constant CumMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong in_off = 0;
+  ulong dim_i = 0;
+  for (int d = static_cast<int>(meta.ndim) - 1; d >= 0; --d) {
+    const ulong sz = meta.sizes[d];
+    const ulong coord = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    in_off += coord * meta.in_strides[d];
+    if (static_cast<uint>(d) == meta.dim) {
+      dim_i = coord;
+    }
+  }
+  const ulong step = meta.in_strides[meta.dim];
+  const ulong base = in_off - dim_i * step;
+  int acc = 0;
+  for (ulong r = 0; r <= dim_i; ++r) {
+    acc += in[base + r * step];
+  }
+  out[gid] = acc;
+}
+
+kernel void cumprod_dim_i32(
+    const device int* in [[buffer(0)]],
+    device int* out [[buffer(1)]],
+    constant CumMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong in_off = 0;
+  ulong dim_i = 0;
+  for (int d = static_cast<int>(meta.ndim) - 1; d >= 0; --d) {
+    const ulong sz = meta.sizes[d];
+    const ulong coord = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    in_off += coord * meta.in_strides[d];
+    if (static_cast<uint>(d) == meta.dim) {
+      dim_i = coord;
+    }
+  }
+  const ulong step = meta.in_strides[meta.dim];
+  const ulong base = in_off - dim_i * step;
+  int acc = 1;
+  for (ulong r = 0; r <= dim_i; ++r) {
+    acc *= in[base + r * step];
+  }
+  out[gid] = acc;
+}
 )metal";
 
 struct CumMetaHost {
@@ -102,6 +154,8 @@ struct Context {
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> cumsum_dim_f32{nil};
   id<MTLComputePipelineState> cumprod_dim_f32{nil};
+  id<MTLComputePipelineState> cumsum_dim_i32{nil};
+  id<MTLComputePipelineState> cumprod_dim_i32{nil};
   std::string error{};
 };
 
@@ -170,13 +224,20 @@ Context& ctx_() {
 
       if (!make_pipeline("cumsum_dim_f32", &ctx.cumsum_dim_f32)) return;
       if (!make_pipeline("cumprod_dim_f32", &ctx.cumprod_dim_f32)) return;
+      if (!make_pipeline("cumsum_dim_i32", &ctx.cumsum_dim_i32)) return;
+      if (!make_pipeline("cumprod_dim_i32", &ctx.cumprod_dim_i32)) return;
       ctx.ready = true;
     }
   });
   return ctx;
 }
 
-void validate_inputs_(const Series& in, const Series& out, std::int64_t dim, CumMetaHost& meta, const char* op) {
+void validate_inputs_(const Series& in,
+                      const Series& out,
+                      std::int64_t dim,
+                      ScalarType expected_dtype,
+                      CumMetaHost& meta,
+                      const char* op) {
   if (!in.defined() || !out.defined()) {
     fail_(std::string(op) + ": undefined Series");
   }
@@ -186,8 +247,8 @@ void validate_inputs_(const Series& in, const Series& out, std::int64_t dim, Cum
   if (!in.is_contiguous() || !out.is_contiguous()) {
     fail_(std::string(op) + ": requires contiguous Series");
   }
-  if (in.scalar_type() != ScalarType::Float32 || out.scalar_type() != ScalarType::Float32) {
-    fail_(std::string(op) + ": only float32 is supported");
+  if (in.scalar_type() != expected_dtype || out.scalar_type() != expected_dtype) {
+    fail_(std::string(op) + ": unsupported dtype");
   }
   if (!std::equal(in.sizes().begin(), in.sizes().end(), out.sizes().begin(), out.sizes().end())) {
     fail_(std::string(op) + ": input/output shape mismatch");
@@ -236,10 +297,20 @@ CumMetaHost cached_cum_meta_(const char* op_name, const Series& in, const Series
   const auto aux = make_cum_cache_aux_(in, out, dim);
   const GraphCacheKeyView cache_key{op_name, in.scalar_type(), in.sizes(), aux};
   if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
-    validate_inputs_(in, out, dim, meta, op_name);
+    validate_inputs_(in, out, dim, in.scalar_type(), meta, op_name);
     graph_cache_store(cache_key, &meta, sizeof(meta));
   }
   return meta;
+}
+
+std::size_t element_size_for_cum_dtype_(ScalarType dtype) {
+  switch (dtype) {
+    case ScalarType::Float32:
+    case ScalarType::Int32:
+      return 4;
+    default:
+      fail_("mps::cum: unsupported dtype");
+  }
 }
 
 void encode_cum_(id<MTLComputePipelineState> pso,
@@ -249,8 +320,9 @@ void encode_cum_(id<MTLComputePipelineState> pso,
                  const char* op_name) {
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t in_bytes = static_cast<std::size_t>(in.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const std::size_t item_size = element_size_for_cum_dtype_(in.scalar_type());
+    const std::size_t in_bytes = static_cast<std::size_t>(in.numel()) * item_size;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * item_size;
     id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(in, c.device, in_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
     if (in_buf == nil || out_buf == nil) {
@@ -290,11 +362,11 @@ void encode_cum_(id<MTLComputePipelineState> pso,
 } // namespace
 
 bool supports_cumsum_dim(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32;
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32;
 }
 
 bool supports_cumprod_dim(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32;
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32;
 }
 
 void cumsum_dim(const Series& in, std::int64_t dim, Series& out) {
@@ -304,7 +376,16 @@ void cumsum_dim(const Series& in, std::int64_t dim, Series& out) {
   }
   if (out.numel() == 0) return;
   const CumMetaHost meta = cached_cum_meta_("mps::cumsum_dim", in, out, dim);
-  encode_cum_(c.cumsum_dim_f32, in, out, meta, "mps::cumsum_dim");
+  switch (in.scalar_type()) {
+    case ScalarType::Float32:
+      encode_cum_(c.cumsum_dim_f32, in, out, meta, "mps::cumsum_dim");
+      return;
+    case ScalarType::Int32:
+      encode_cum_(c.cumsum_dim_i32, in, out, meta, "mps::cumsum_dim");
+      return;
+    default:
+      fail_("mps::cumsum_dim: unsupported dtype");
+  }
 }
 
 void cumprod_dim(const Series& in, std::int64_t dim, Series& out) {
@@ -314,7 +395,16 @@ void cumprod_dim(const Series& in, std::int64_t dim, Series& out) {
   }
   if (out.numel() == 0) return;
   const CumMetaHost meta = cached_cum_meta_("mps::cumprod_dim", in, out, dim);
-  encode_cum_(c.cumprod_dim_f32, in, out, meta, "mps::cumprod_dim");
+  switch (in.scalar_type()) {
+    case ScalarType::Float32:
+      encode_cum_(c.cumprod_dim_f32, in, out, meta, "mps::cumprod_dim");
+      return;
+    case ScalarType::Int32:
+      encode_cum_(c.cumprod_dim_i32, in, out, meta, "mps::cumprod_dim");
+      return;
+    default:
+      fail_("mps::cumprod_dim: unsupported dtype");
+  }
 }
 
 } // namespace pluss::codem::native::mps

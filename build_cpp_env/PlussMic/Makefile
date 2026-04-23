@@ -686,6 +686,30 @@ src/table/io/AtlasIO.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/AtlasIO.cpp.s
 .PHONY : src/table/io/AtlasIO.cpp.s
 
+src/table/io/CsvSchemaConvert.o: src/table/io/CsvSchemaConvert.cpp.o
+.PHONY : src/table/io/CsvSchemaConvert.o
+
+# target to build an object file
+src/table/io/CsvSchemaConvert.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/CsvSchemaConvert.cpp.o
+.PHONY : src/table/io/CsvSchemaConvert.cpp.o
+
+src/table/io/CsvSchemaConvert.i: src/table/io/CsvSchemaConvert.cpp.i
+.PHONY : src/table/io/CsvSchemaConvert.i
+
+# target to preprocess a source file
+src/table/io/CsvSchemaConvert.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/CsvSchemaConvert.cpp.i
+.PHONY : src/table/io/CsvSchemaConvert.cpp.i
+
+src/table/io/CsvSchemaConvert.s: src/table/io/CsvSchemaConvert.cpp.s
+.PHONY : src/table/io/CsvSchemaConvert.s
+
+# target to generate assembly for a file
+src/table/io/CsvSchemaConvert.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/CsvSchemaConvert.cpp.s
+.PHONY : src/table/io/CsvSchemaConvert.cpp.s
+
 src/table/io/DataFrameIO.o: src/table/io/DataFrameIO.cpp.o
 .PHONY : src/table/io/DataFrameIO.o
 
@@ -954,6 +978,9 @@ help:
 	@echo "... src/table/io/AtlasIO.o"
 	@echo "... src/table/io/AtlasIO.i"
 	@echo "... src/table/io/AtlasIO.s"
+	@echo "... src/table/io/CsvSchemaConvert.o"
+	@echo "... src/table/io/CsvSchemaConvert.i"
+	@echo "... src/table/io/CsvSchemaConvert.s"
 	@echo "... src/table/io/DataFrameIO.o"
 	@echo "... src/table/io/DataFrameIO.i"
 	@echo "... src/table/io/DataFrameIO.s"
