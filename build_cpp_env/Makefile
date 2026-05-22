@@ -830,84 +830,6 @@ plussai_nodej_unsupervised_demo/fast:
 .PHONY : plussai_nodej_unsupervised_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussai_lymph_quick_classification_demo
-
-# Build rule for target.
-plussai_lymph_quick_classification_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_quick_classification_demo
-.PHONY : plussai_lymph_quick_classification_demo
-
-# fast build rule for target.
-plussai_lymph_quick_classification_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build
-.PHONY : plussai_lymph_quick_classification_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_quick_regression_demo
-
-# Build rule for target.
-plussai_lymph_quick_regression_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_quick_regression_demo
-.PHONY : plussai_lymph_quick_regression_demo
-
-# fast build rule for target.
-plussai_lymph_quick_regression_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build
-.PHONY : plussai_lymph_quick_regression_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_presets_demo
-
-# Build rule for target.
-plussai_lymph_presets_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_presets_demo
-.PHONY : plussai_lymph_presets_demo
-
-# fast build rule for target.
-plussai_lymph_presets_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build
-.PHONY : plussai_lymph_presets_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_cv_tune_demo
-
-# Build rule for target.
-plussai_lymph_cv_tune_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_cv_tune_demo
-.PHONY : plussai_lymph_cv_tune_demo
-
-# fast build rule for target.
-plussai_lymph_cv_tune_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build
-.PHONY : plussai_lymph_cv_tune_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_flow_demo
-
-# Build rule for target.
-plussai_lymph_flow_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_flow_demo
-.PHONY : plussai_lymph_flow_demo
-
-# fast build rule for target.
-plussai_lymph_flow_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build
-.PHONY : plussai_lymph_flow_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_multiclass_demo
-
-# Build rule for target.
-plussai_lymph_multiclass_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_multiclass_demo
-.PHONY : plussai_lymph_multiclass_demo
-
-# fast build rule for target.
-plussai_lymph_multiclass_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build
-.PHONY : plussai_lymph_multiclass_demo/fast
-
-#=============================================================================
 # Target rules for targets named plussai_lymph_online_demo
 
 # Build rule for target.
@@ -919,19 +841,6 @@ plussai_lymph_online_demo: cmake_check_build_system
 plussai_lymph_online_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build
 .PHONY : plussai_lymph_online_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_lymph_unsupervised_demo
-
-# Build rule for target.
-plussai_lymph_unsupervised_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_unsupervised_demo
-.PHONY : plussai_lymph_unsupervised_demo
-
-# fast build rule for target.
-plussai_lymph_unsupervised_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build
-.PHONY : plussai_lymph_unsupervised_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussai_lymph_end_to_end_hour_workflow_showcase
@@ -1402,19 +1311,6 @@ fusion_route_test/fast:
 .PHONY : fusion_route_test/fast
 
 #=============================================================================
-# Target rules for targets named lymph_quick_test
-
-# Build rule for target.
-lymph_quick_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_quick_test
-.PHONY : lymph_quick_test
-
-# fast build rule for target.
-lymph_quick_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/build
-.PHONY : lymph_quick_test/fast
-
-#=============================================================================
 # Target rules for targets named module_snapshot_test
 
 # Build rule for target.
@@ -1441,6 +1337,19 @@ nn_loss_test/fast:
 .PHONY : nn_loss_test/fast
 
 #=============================================================================
+# Target rules for targets named nn_mps_lstm_native_route_test
+
+# Build rule for target.
+nn_mps_lstm_native_route_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_mps_lstm_native_route_test
+.PHONY : nn_mps_lstm_native_route_test
+
+# fast build rule for target.
+nn_mps_lstm_native_route_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build
+.PHONY : nn_mps_lstm_native_route_test/fast
+
+#=============================================================================
 # Target rules for targets named nn_mps_matmul_sum_sensitivity_test
 
 # Build rule for target.
@@ -1452,6 +1361,19 @@ nn_mps_matmul_sum_sensitivity_test: cmake_check_build_system
 nn_mps_matmul_sum_sensitivity_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build
 .PHONY : nn_mps_matmul_sum_sensitivity_test/fast
+
+#=============================================================================
+# Target rules for targets named nn_mps_schedule_family_trainability_test
+
+# Build rule for target.
+nn_mps_schedule_family_trainability_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_mps_schedule_family_trainability_test
+.PHONY : nn_mps_schedule_family_trainability_test
+
+# fast build rule for target.
+nn_mps_schedule_family_trainability_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build
+.PHONY : nn_mps_schedule_family_trainability_test/fast
 
 #=============================================================================
 # Target rules for targets named nn_optim_foreach_lane_test
@@ -1543,6 +1465,19 @@ nodej_ensemble_bayes_regression_test: cmake_check_build_system
 nodej_ensemble_bayes_regression_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build
 .PHONY : nodej_ensemble_bayes_regression_test/fast
+
+#=============================================================================
+# Target rules for targets named nodej_feature_inspect_text_test
+
+# Build rule for target.
+nodej_feature_inspect_text_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_feature_inspect_text_test
+.PHONY : nodej_feature_inspect_text_test
+
+# fast build rule for target.
+nodej_feature_inspect_text_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build.make PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build
+.PHONY : nodej_feature_inspect_text_test/fast
 
 #=============================================================================
 # Target rules for targets named nodej_flow_test
@@ -3066,32 +3001,6 @@ mads_nomad_parity_test/fast:
 .PHONY : mads_nomad_parity_test/fast
 
 #=============================================================================
-# Target rules for targets named minimax_optimizer_selection_test
-
-# Build rule for target.
-minimax_optimizer_selection_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 minimax_optimizer_selection_test
-.PHONY : minimax_optimizer_selection_test
-
-# fast build rule for target.
-minimax_optimizer_selection_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_optimizer_selection_test.dir/build
-.PHONY : minimax_optimizer_selection_test/fast
-
-#=============================================================================
-# Target rules for targets named minimax_rigor_suite_test
-
-# Build rule for target.
-minimax_rigor_suite_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 minimax_rigor_suite_test
-.PHONY : minimax_rigor_suite_test
-
-# fast build rule for target.
-minimax_rigor_suite_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/minimax_rigor_suite_test.dir/build
-.PHONY : minimax_rigor_suite_test/fast
-
-#=============================================================================
 # Target rules for targets named pattern_search_minimizer_test
 
 # Build rule for target.
@@ -3103,6 +3012,32 @@ pattern_search_minimizer_test: cmake_check_build_system
 pattern_search_minimizer_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build
 .PHONY : pattern_search_minimizer_test/fast
+
+#=============================================================================
+# Target rules for targets named septima_optimizer_selection_test
+
+# Build rule for target.
+septima_optimizer_selection_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 septima_optimizer_selection_test
+.PHONY : septima_optimizer_selection_test
+
+# fast build rule for target.
+septima_optimizer_selection_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_optimizer_selection_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_optimizer_selection_test.dir/build
+.PHONY : septima_optimizer_selection_test/fast
+
+#=============================================================================
+# Target rules for targets named septima_rigor_suite_test
+
+# Build rule for target.
+septima_rigor_suite_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 septima_rigor_suite_test
+.PHONY : septima_rigor_suite_test
+
+# fast build rule for target.
+septima_rigor_suite_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_rigor_suite_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_rigor_suite_test.dir/build
+.PHONY : septima_rigor_suite_test/fast
 
 #=============================================================================
 # Target rules for targets named optima_robustness_catch2
@@ -3443,56 +3378,56 @@ plussma_adam_functional_demo/fast:
 .PHONY : plussma_adam_functional_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussma_minimax_functional_demo
+# Target rules for targets named plussma_septima_functional_demo
 
 # Build rule for target.
-plussma_minimax_functional_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_minimax_functional_demo
-.PHONY : plussma_minimax_functional_demo
+plussma_septima_functional_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_septima_functional_demo
+.PHONY : plussma_septima_functional_demo
 
 # fast build rule for target.
-plussma_minimax_functional_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build
-.PHONY : plussma_minimax_functional_demo/fast
+plussma_septima_functional_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build
+.PHONY : plussma_septima_functional_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussma_minimax_functional_multiblock_demo
+# Target rules for targets named plussma_septima_functional_multiblock_demo
 
 # Build rule for target.
-plussma_minimax_functional_multiblock_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_minimax_functional_multiblock_demo
-.PHONY : plussma_minimax_functional_multiblock_demo
+plussma_septima_functional_multiblock_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_septima_functional_multiblock_demo
+.PHONY : plussma_septima_functional_multiblock_demo
 
 # fast build rule for target.
-plussma_minimax_functional_multiblock_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build
-.PHONY : plussma_minimax_functional_multiblock_demo/fast
+plussma_septima_functional_multiblock_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build
+.PHONY : plussma_septima_functional_multiblock_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussma_simple_minimax_functional_demo
+# Target rules for targets named plussma_simple_septima_functional_demo
 
 # Build rule for target.
-plussma_simple_minimax_functional_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_simple_minimax_functional_demo
-.PHONY : plussma_simple_minimax_functional_demo
+plussma_simple_septima_functional_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_simple_septima_functional_demo
+.PHONY : plussma_simple_septima_functional_demo
 
 # fast build rule for target.
-plussma_simple_minimax_functional_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build
-.PHONY : plussma_simple_minimax_functional_demo/fast
+plussma_simple_septima_functional_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build
+.PHONY : plussma_simple_septima_functional_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussma_simple_minimax_functional_multiblock_demo
+# Target rules for targets named plussma_simple_septima_functional_multiblock_demo
 
 # Build rule for target.
-plussma_simple_minimax_functional_multiblock_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_simple_minimax_functional_multiblock_demo
-.PHONY : plussma_simple_minimax_functional_multiblock_demo
+plussma_simple_septima_functional_multiblock_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_simple_septima_functional_multiblock_demo
+.PHONY : plussma_simple_septima_functional_multiblock_demo
 
 # fast build rule for target.
-plussma_simple_minimax_functional_multiblock_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build
-.PHONY : plussma_simple_minimax_functional_multiblock_demo/fast
+plussma_simple_septima_functional_multiblock_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build
+.PHONY : plussma_simple_septima_functional_multiblock_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussma_math_finance_finance_bates_demo
@@ -4613,6 +4548,45 @@ actuarial_core_test/fast:
 .PHONY : actuarial_core_test/fast
 
 #=============================================================================
+# Target rules for targets named life_contingencies_foundation_test
+
+# Build rule for target.
+life_contingencies_foundation_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 life_contingencies_foundation_test
+.PHONY : life_contingencies_foundation_test
+
+# fast build rule for target.
+life_contingencies_foundation_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Actuarial/life_contingencies/test/CMakeFiles/life_contingencies_foundation_test.dir/build.make PlussMa/Actuarial/life_contingencies/test/CMakeFiles/life_contingencies_foundation_test.dir/build
+.PHONY : life_contingencies_foundation_test/fast
+
+#=============================================================================
+# Target rules for targets named loss_models_foundation_test
+
+# Build rule for target.
+loss_models_foundation_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 loss_models_foundation_test
+.PHONY : loss_models_foundation_test
+
+# fast build rule for target.
+loss_models_foundation_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Actuarial/loss_models/test/CMakeFiles/loss_models_foundation_test.dir/build.make PlussMa/Actuarial/loss_models/test/CMakeFiles/loss_models_foundation_test.dir/build
+.PHONY : loss_models_foundation_test/fast
+
+#=============================================================================
+# Target rules for targets named actuarial_models_foundation_test
+
+# Build rule for target.
+actuarial_models_foundation_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 actuarial_models_foundation_test
+.PHONY : actuarial_models_foundation_test
+
+# fast build rule for target.
+actuarial_models_foundation_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Actuarial/actuarial_models/test/CMakeFiles/actuarial_models_foundation_test.dir/build.make PlussMa/Actuarial/actuarial_models/test/CMakeFiles/actuarial_models_foundation_test.dir/build
+.PHONY : actuarial_models_foundation_test/fast
+
+#=============================================================================
 # Target rules for targets named PlussMic
 
 # Build rule for target.
@@ -4937,30 +4911,6 @@ plussmic_table_ts_accessor_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build
 .PHONY : plussmic_table_ts_accessor_tests/fast
 
-PlussAI/Lymph/quick.o: PlussAI/Lymph/quick.cpp.o
-.PHONY : PlussAI/Lymph/quick.o
-
-# target to build an object file
-PlussAI/Lymph/quick.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/quick.cpp.o
-.PHONY : PlussAI/Lymph/quick.cpp.o
-
-PlussAI/Lymph/quick.i: PlussAI/Lymph/quick.cpp.i
-.PHONY : PlussAI/Lymph/quick.i
-
-# target to preprocess a source file
-PlussAI/Lymph/quick.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/quick.cpp.i
-.PHONY : PlussAI/Lymph/quick.cpp.i
-
-PlussAI/Lymph/quick.s: PlussAI/Lymph/quick.cpp.s
-.PHONY : PlussAI/Lymph/quick.s
-
-# target to generate assembly for a file
-PlussAI/Lymph/quick.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Lymph/quick.cpp.s
-.PHONY : PlussAI/Lymph/quick.cpp.s
-
 PlussAI/NodeJ/classifiers/family_classifier.o: PlussAI/NodeJ/classifiers/family_classifier.cpp.o
 .PHONY : PlussAI/NodeJ/classifiers/family_classifier.o
 
@@ -5056,6 +5006,54 @@ PlussAI/NodeJ/data/dataframe_bridge.s: PlussAI/NodeJ/data/dataframe_bridge.cpp.s
 PlussAI/NodeJ/data/dataframe_bridge.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/data/dataframe_bridge.cpp.s
 .PHONY : PlussAI/NodeJ/data/dataframe_bridge.cpp.s
+
+PlussAI/NodeJ/feature_select/feature_select.o: PlussAI/NodeJ/feature_select/feature_select.cpp.o
+.PHONY : PlussAI/NodeJ/feature_select/feature_select.o
+
+# target to build an object file
+PlussAI/NodeJ/feature_select/feature_select.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/feature_select/feature_select.cpp.o
+.PHONY : PlussAI/NodeJ/feature_select/feature_select.cpp.o
+
+PlussAI/NodeJ/feature_select/feature_select.i: PlussAI/NodeJ/feature_select/feature_select.cpp.i
+.PHONY : PlussAI/NodeJ/feature_select/feature_select.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/feature_select/feature_select.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/feature_select/feature_select.cpp.i
+.PHONY : PlussAI/NodeJ/feature_select/feature_select.cpp.i
+
+PlussAI/NodeJ/feature_select/feature_select.s: PlussAI/NodeJ/feature_select/feature_select.cpp.s
+.PHONY : PlussAI/NodeJ/feature_select/feature_select.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/feature_select/feature_select.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/feature_select/feature_select.cpp.s
+.PHONY : PlussAI/NodeJ/feature_select/feature_select.cpp.s
+
+PlussAI/NodeJ/inspection/inspection.o: PlussAI/NodeJ/inspection/inspection.cpp.o
+.PHONY : PlussAI/NodeJ/inspection/inspection.o
+
+# target to build an object file
+PlussAI/NodeJ/inspection/inspection.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/inspection/inspection.cpp.o
+.PHONY : PlussAI/NodeJ/inspection/inspection.cpp.o
+
+PlussAI/NodeJ/inspection/inspection.i: PlussAI/NodeJ/inspection/inspection.cpp.i
+.PHONY : PlussAI/NodeJ/inspection/inspection.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/inspection/inspection.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/inspection/inspection.cpp.i
+.PHONY : PlussAI/NodeJ/inspection/inspection.cpp.i
+
+PlussAI/NodeJ/inspection/inspection.s: PlussAI/NodeJ/inspection/inspection.cpp.s
+.PHONY : PlussAI/NodeJ/inspection/inspection.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/inspection/inspection.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/inspection/inspection.cpp.s
+.PHONY : PlussAI/NodeJ/inspection/inspection.cpp.s
 
 PlussAI/NodeJ/io/flow_bundle.o: PlussAI/NodeJ/io/flow_bundle.cpp.o
 .PHONY : PlussAI/NodeJ/io/flow_bundle.o
@@ -5225,6 +5223,30 @@ PlussAI/NodeJ/split/split.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/split/split.cpp.s
 .PHONY : PlussAI/NodeJ/split/split.cpp.s
 
+PlussAI/NodeJ/text/text.o: PlussAI/NodeJ/text/text.cpp.o
+.PHONY : PlussAI/NodeJ/text/text.o
+
+# target to build an object file
+PlussAI/NodeJ/text/text.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/text/text.cpp.o
+.PHONY : PlussAI/NodeJ/text/text.cpp.o
+
+PlussAI/NodeJ/text/text.i: PlussAI/NodeJ/text/text.cpp.i
+.PHONY : PlussAI/NodeJ/text/text.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/text/text.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/text/text.cpp.i
+.PHONY : PlussAI/NodeJ/text/text.cpp.i
+
+PlussAI/NodeJ/text/text.s: PlussAI/NodeJ/text/text.cpp.s
+.PHONY : PlussAI/NodeJ/text/text.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/text/text.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/text/text.cpp.s
+.PHONY : PlussAI/NodeJ/text/text.cpp.s
+
 PlussAI/NodeJ/transformers/family_transformer.o: PlussAI/NodeJ/transformers/family_transformer.cpp.o
 .PHONY : PlussAI/NodeJ/transformers/family_transformer.o
 
@@ -5369,6 +5391,30 @@ PlussAI/NodeK/NN/optim/adamw.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adamw.cpp.s
 .PHONY : PlussAI/NodeK/NN/optim/adamw.cpp.s
 
+PlussAI/NodeK/NN/optim/minimax.o: PlussAI/NodeK/NN/optim/minimax.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/minimax.o
+
+# target to build an object file
+PlussAI/NodeK/NN/optim/minimax.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/minimax.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/minimax.cpp.o
+
+PlussAI/NodeK/NN/optim/minimax.i: PlussAI/NodeK/NN/optim/minimax.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/minimax.i
+
+# target to preprocess a source file
+PlussAI/NodeK/NN/optim/minimax.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/minimax.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/minimax.cpp.i
+
+PlussAI/NodeK/NN/optim/minimax.s: PlussAI/NodeK/NN/optim/minimax.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/minimax.s
+
+# target to generate assembly for a file
+PlussAI/NodeK/NN/optim/minimax.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/minimax.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/minimax.cpp.s
+
 PlussAI/NodeK/NN/optim/nadam.o: PlussAI/NodeK/NN/optim/nadam.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/nadam.o
 
@@ -5392,30 +5438,6 @@ PlussAI/NodeK/NN/optim/nadam.s: PlussAI/NodeK/NN/optim/nadam.cpp.s
 PlussAI/NodeK/NN/optim/nadam.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nadam.cpp.s
 .PHONY : PlussAI/NodeK/NN/optim/nadam.cpp.s
-
-PlussAI/NodeK/NN/optim/nexima.o: PlussAI/NodeK/NN/optim/nexima.cpp.o
-.PHONY : PlussAI/NodeK/NN/optim/nexima.o
-
-# target to build an object file
-PlussAI/NodeK/NN/optim/nexima.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nexima.cpp.o
-.PHONY : PlussAI/NodeK/NN/optim/nexima.cpp.o
-
-PlussAI/NodeK/NN/optim/nexima.i: PlussAI/NodeK/NN/optim/nexima.cpp.i
-.PHONY : PlussAI/NodeK/NN/optim/nexima.i
-
-# target to preprocess a source file
-PlussAI/NodeK/NN/optim/nexima.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nexima.cpp.i
-.PHONY : PlussAI/NodeK/NN/optim/nexima.cpp.i
-
-PlussAI/NodeK/NN/optim/nexima.s: PlussAI/NodeK/NN/optim/nexima.cpp.s
-.PHONY : PlussAI/NodeK/NN/optim/nexima.s
-
-# target to generate assembly for a file
-PlussAI/NodeK/NN/optim/nexima.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/nexima.cpp.s
-.PHONY : PlussAI/NodeK/NN/optim/nexima.cpp.s
 
 PlussAI/NodeK/NN/optim/rmsprop.o: PlussAI/NodeK/NN/optim/rmsprop.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/rmsprop.o
@@ -5537,6 +5559,70 @@ PlussAI/NodeK/kernels/cudnn_rnn.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/cudnn_rnn.cpp.s
 .PHONY : PlussAI/NodeK/kernels/cudnn_rnn.cpp.s
 
+PlussAI/NodeK/kernels/mps_conv.o: PlussAI/NodeK/kernels/mps_conv.mm.o
+.PHONY : PlussAI/NodeK/kernels/mps_conv.o
+
+# target to build an object file
+PlussAI/NodeK/kernels/mps_conv.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_conv.mm.o
+.PHONY : PlussAI/NodeK/kernels/mps_conv.mm.o
+
+PlussAI/NodeK/kernels/mps_conv_stub.o: PlussAI/NodeK/kernels/mps_conv_stub.cpp.o
+.PHONY : PlussAI/NodeK/kernels/mps_conv_stub.o
+
+# target to build an object file
+PlussAI/NodeK/kernels/mps_conv_stub.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_conv_stub.cpp.o
+.PHONY : PlussAI/NodeK/kernels/mps_conv_stub.cpp.o
+
+PlussAI/NodeK/kernels/mps_conv_stub.i: PlussAI/NodeK/kernels/mps_conv_stub.cpp.i
+.PHONY : PlussAI/NodeK/kernels/mps_conv_stub.i
+
+# target to preprocess a source file
+PlussAI/NodeK/kernels/mps_conv_stub.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_conv_stub.cpp.i
+.PHONY : PlussAI/NodeK/kernels/mps_conv_stub.cpp.i
+
+PlussAI/NodeK/kernels/mps_conv_stub.s: PlussAI/NodeK/kernels/mps_conv_stub.cpp.s
+.PHONY : PlussAI/NodeK/kernels/mps_conv_stub.s
+
+# target to generate assembly for a file
+PlussAI/NodeK/kernels/mps_conv_stub.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_conv_stub.cpp.s
+.PHONY : PlussAI/NodeK/kernels/mps_conv_stub.cpp.s
+
+PlussAI/NodeK/kernels/mps_rnn.o: PlussAI/NodeK/kernels/mps_rnn.mm.o
+.PHONY : PlussAI/NodeK/kernels/mps_rnn.o
+
+# target to build an object file
+PlussAI/NodeK/kernels/mps_rnn.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_rnn.mm.o
+.PHONY : PlussAI/NodeK/kernels/mps_rnn.mm.o
+
+PlussAI/NodeK/kernels/mps_rnn_stub.o: PlussAI/NodeK/kernels/mps_rnn_stub.cpp.o
+.PHONY : PlussAI/NodeK/kernels/mps_rnn_stub.o
+
+# target to build an object file
+PlussAI/NodeK/kernels/mps_rnn_stub.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_rnn_stub.cpp.o
+.PHONY : PlussAI/NodeK/kernels/mps_rnn_stub.cpp.o
+
+PlussAI/NodeK/kernels/mps_rnn_stub.i: PlussAI/NodeK/kernels/mps_rnn_stub.cpp.i
+.PHONY : PlussAI/NodeK/kernels/mps_rnn_stub.i
+
+# target to preprocess a source file
+PlussAI/NodeK/kernels/mps_rnn_stub.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_rnn_stub.cpp.i
+.PHONY : PlussAI/NodeK/kernels/mps_rnn_stub.cpp.i
+
+PlussAI/NodeK/kernels/mps_rnn_stub.s: PlussAI/NodeK/kernels/mps_rnn_stub.cpp.s
+.PHONY : PlussAI/NodeK/kernels/mps_rnn_stub.s
+
+# target to generate assembly for a file
+PlussAI/NodeK/kernels/mps_rnn_stub.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/kernels/mps_rnn_stub.cpp.s
+.PHONY : PlussAI/NodeK/kernels/mps_rnn_stub.cpp.s
+
 PlussAI/NodeK/kernels/transformer.o: PlussAI/NodeK/kernels/transformer.cpp.o
 .PHONY : PlussAI/NodeK/kernels/transformer.o
 
@@ -5657,6 +5743,30 @@ PlussAI/utils/utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/utils/utils.cpp.s
 .PHONY : PlussAI/utils/utils.cpp.s
 
+PlussMa/Actuarial/actuarial_models/foundation.o: PlussMa/Actuarial/actuarial_models/foundation.cpp.o
+.PHONY : PlussMa/Actuarial/actuarial_models/foundation.o
+
+# target to build an object file
+PlussMa/Actuarial/actuarial_models/foundation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/actuarial_models/foundation.cpp.o
+.PHONY : PlussMa/Actuarial/actuarial_models/foundation.cpp.o
+
+PlussMa/Actuarial/actuarial_models/foundation.i: PlussMa/Actuarial/actuarial_models/foundation.cpp.i
+.PHONY : PlussMa/Actuarial/actuarial_models/foundation.i
+
+# target to preprocess a source file
+PlussMa/Actuarial/actuarial_models/foundation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/actuarial_models/foundation.cpp.i
+.PHONY : PlussMa/Actuarial/actuarial_models/foundation.cpp.i
+
+PlussMa/Actuarial/actuarial_models/foundation.s: PlussMa/Actuarial/actuarial_models/foundation.cpp.s
+.PHONY : PlussMa/Actuarial/actuarial_models/foundation.s
+
+# target to generate assembly for a file
+PlussMa/Actuarial/actuarial_models/foundation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/actuarial_models/foundation.cpp.s
+.PHONY : PlussMa/Actuarial/actuarial_models/foundation.cpp.s
+
 PlussMa/Actuarial/core/contingencies.o: PlussMa/Actuarial/core/contingencies.cpp.o
 .PHONY : PlussMa/Actuarial/core/contingencies.o
 
@@ -5680,6 +5790,54 @@ PlussMa/Actuarial/core/contingencies.s: PlussMa/Actuarial/core/contingencies.cpp
 PlussMa/Actuarial/core/contingencies.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/core/contingencies.cpp.s
 .PHONY : PlussMa/Actuarial/core/contingencies.cpp.s
+
+PlussMa/Actuarial/life_contingencies/foundation.o: PlussMa/Actuarial/life_contingencies/foundation.cpp.o
+.PHONY : PlussMa/Actuarial/life_contingencies/foundation.o
+
+# target to build an object file
+PlussMa/Actuarial/life_contingencies/foundation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/life_contingencies/foundation.cpp.o
+.PHONY : PlussMa/Actuarial/life_contingencies/foundation.cpp.o
+
+PlussMa/Actuarial/life_contingencies/foundation.i: PlussMa/Actuarial/life_contingencies/foundation.cpp.i
+.PHONY : PlussMa/Actuarial/life_contingencies/foundation.i
+
+# target to preprocess a source file
+PlussMa/Actuarial/life_contingencies/foundation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/life_contingencies/foundation.cpp.i
+.PHONY : PlussMa/Actuarial/life_contingencies/foundation.cpp.i
+
+PlussMa/Actuarial/life_contingencies/foundation.s: PlussMa/Actuarial/life_contingencies/foundation.cpp.s
+.PHONY : PlussMa/Actuarial/life_contingencies/foundation.s
+
+# target to generate assembly for a file
+PlussMa/Actuarial/life_contingencies/foundation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/life_contingencies/foundation.cpp.s
+.PHONY : PlussMa/Actuarial/life_contingencies/foundation.cpp.s
+
+PlussMa/Actuarial/loss_models/foundation.o: PlussMa/Actuarial/loss_models/foundation.cpp.o
+.PHONY : PlussMa/Actuarial/loss_models/foundation.o
+
+# target to build an object file
+PlussMa/Actuarial/loss_models/foundation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/loss_models/foundation.cpp.o
+.PHONY : PlussMa/Actuarial/loss_models/foundation.cpp.o
+
+PlussMa/Actuarial/loss_models/foundation.i: PlussMa/Actuarial/loss_models/foundation.cpp.i
+.PHONY : PlussMa/Actuarial/loss_models/foundation.i
+
+# target to preprocess a source file
+PlussMa/Actuarial/loss_models/foundation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/loss_models/foundation.cpp.i
+.PHONY : PlussMa/Actuarial/loss_models/foundation.cpp.i
+
+PlussMa/Actuarial/loss_models/foundation.s: PlussMa/Actuarial/loss_models/foundation.cpp.s
+.PHONY : PlussMa/Actuarial/loss_models/foundation.s
+
+# target to generate assembly for a file
+PlussMa/Actuarial/loss_models/foundation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Actuarial/loss_models/foundation.cpp.s
+.PHONY : PlussMa/Actuarial/loss_models/foundation.cpp.s
 
 PlussMa/Eng/signal_proc/transforms/transforms.o: PlussMa/Eng/signal_proc/transforms/transforms.cpp.o
 .PHONY : PlussMa/Eng/signal_proc/transforms/transforms.o
@@ -7370,6 +7528,7 @@ help:
 	@echo "... PlussTilsCore"
 	@echo "... PlussTilsView"
 	@echo "... actuarial_core_test"
+	@echo "... actuarial_models_foundation_test"
 	@echo "... adam_functional_torch_rigor_test"
 	@echo "... arima_test"
 	@echo "... astro_test"
@@ -7413,17 +7572,18 @@ help:
 	@echo "... hypothesis_test"
 	@echo "... kinetics_test"
 	@echo "... lag_features_test"
-	@echo "... lymph_quick_test"
+	@echo "... life_contingencies_foundation_test"
+	@echo "... loss_models_foundation_test"
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... mechanics_test"
-	@echo "... minimax_optimizer_selection_test"
-	@echo "... minimax_rigor_suite_test"
 	@echo "... module_snapshot_test"
 	@echo "... mv_vol_test"
 	@echo "... nn_loss_test"
+	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
+	@echo "... nn_mps_schedule_family_trainability_test"
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
@@ -7431,6 +7591,7 @@ help:
 	@echo "... nodej_cv_tune_test"
 	@echo "... nodej_dataframe_bridge_test"
 	@echo "... nodej_ensemble_bayes_regression_test"
+	@echo "... nodej_feature_inspect_text_test"
 	@echo "... nodej_flow_test"
 	@echo "... nodej_multiclass_test"
 	@echo "... nodej_neighbor_test"
@@ -7457,17 +7618,10 @@ help:
 	@echo "... plussai_func_attention_demo"
 	@echo "... plussai_func_conv_demo"
 	@echo "... plussai_func_rnn_demo"
-	@echo "... plussai_lymph_cv_tune_demo"
 	@echo "... plussai_lymph_end_to_end_hour_workflow_showcase"
 	@echo "... plussai_lymph_feature_transformer_workflow_demo"
-	@echo "... plussai_lymph_flow_demo"
 	@echo "... plussai_lymph_housing_ch2_end_to_end_notebook"
-	@echo "... plussai_lymph_multiclass_demo"
 	@echo "... plussai_lymph_online_demo"
-	@echo "... plussai_lymph_presets_demo"
-	@echo "... plussai_lymph_quick_classification_demo"
-	@echo "... plussai_lymph_quick_regression_demo"
-	@echo "... plussai_lymph_unsupervised_demo"
 	@echo "... plussai_minimax_demo"
 	@echo "... plussai_minimax_multiblock_constraints_demo"
 	@echo "... plussai_nn_binary_classifier_minimal_demo"
@@ -7534,8 +7688,6 @@ help:
 	@echo "... plussma_math_finance_pricing_models_demo"
 	@echo "... plussma_math_finance_roughvol_fft_demo"
 	@echo "... plussma_matlab_parity_probe"
-	@echo "... plussma_minimax_functional_demo"
-	@echo "... plussma_minimax_functional_multiblock_demo"
 	@echo "... plussma_ols_summary_demo"
 	@echo "... plussma_optima_clone_parity_bench"
 	@echo "... plussma_optima_clone_parity_scorecard"
@@ -7550,11 +7702,13 @@ help:
 	@echo "... plussma_pattern_search_demo"
 	@echo "... plussma_poly_summary_demo"
 	@echo "... plussma_quantile_summary_demo"
+	@echo "... plussma_septima_functional_demo"
+	@echo "... plussma_septima_functional_multiblock_demo"
 	@echo "... plussma_series_objective_analytic_grad_demo"
 	@echo "... plussma_simple_garch11_objective_first_demo"
 	@echo "... plussma_simple_garch11_optim_demo"
-	@echo "... plussma_simple_minimax_functional_demo"
-	@echo "... plussma_simple_minimax_functional_multiblock_demo"
+	@echo "... plussma_simple_septima_functional_demo"
+	@echo "... plussma_simple_septima_functional_multiblock_demo"
 	@echo "... plussma_trace_objective_autodiff_demo"
 	@echo "... plussma_ts_arima_sarima_raw_demo"
 	@echo "... plussma_ts_arimax_raw_demo"
@@ -7673,6 +7827,8 @@ help:
 	@echo "... rnn_fusion_test"
 	@echo "... sabr_slv_pricing_test"
 	@echo "... schedule_test"
+	@echo "... septima_optimizer_selection_test"
+	@echo "... septima_rigor_suite_test"
 	@echo "... series_ts_transforms_test"
 	@echo "... simulator_matlab_parity_test"
 	@echo "... ssm_test"
@@ -7693,9 +7849,6 @@ help:
 	@echo "... ts_vecm_test"
 	@echo "... ts_vol_catch2"
 	@echo "... vol_bridge_test"
-	@echo "... PlussAI/Lymph/quick.o"
-	@echo "... PlussAI/Lymph/quick.i"
-	@echo "... PlussAI/Lymph/quick.s"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.o"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.i"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.s"
@@ -7708,6 +7861,12 @@ help:
 	@echo "... PlussAI/NodeJ/data/dataframe_bridge.o"
 	@echo "... PlussAI/NodeJ/data/dataframe_bridge.i"
 	@echo "... PlussAI/NodeJ/data/dataframe_bridge.s"
+	@echo "... PlussAI/NodeJ/feature_select/feature_select.o"
+	@echo "... PlussAI/NodeJ/feature_select/feature_select.i"
+	@echo "... PlussAI/NodeJ/feature_select/feature_select.s"
+	@echo "... PlussAI/NodeJ/inspection/inspection.o"
+	@echo "... PlussAI/NodeJ/inspection/inspection.i"
+	@echo "... PlussAI/NodeJ/inspection/inspection.s"
 	@echo "... PlussAI/NodeJ/io/flow_bundle.o"
 	@echo "... PlussAI/NodeJ/io/flow_bundle.i"
 	@echo "... PlussAI/NodeJ/io/flow_bundle.s"
@@ -7729,6 +7888,9 @@ help:
 	@echo "... PlussAI/NodeJ/split/split.o"
 	@echo "... PlussAI/NodeJ/split/split.i"
 	@echo "... PlussAI/NodeJ/split/split.s"
+	@echo "... PlussAI/NodeJ/text/text.o"
+	@echo "... PlussAI/NodeJ/text/text.i"
+	@echo "... PlussAI/NodeJ/text/text.s"
 	@echo "... PlussAI/NodeJ/transformers/family_transformer.o"
 	@echo "... PlussAI/NodeJ/transformers/family_transformer.i"
 	@echo "... PlussAI/NodeJ/transformers/family_transformer.s"
@@ -7747,12 +7909,12 @@ help:
 	@echo "... PlussAI/NodeK/NN/optim/adamw.o"
 	@echo "... PlussAI/NodeK/NN/optim/adamw.i"
 	@echo "... PlussAI/NodeK/NN/optim/adamw.s"
+	@echo "... PlussAI/NodeK/NN/optim/minimax.o"
+	@echo "... PlussAI/NodeK/NN/optim/minimax.i"
+	@echo "... PlussAI/NodeK/NN/optim/minimax.s"
 	@echo "... PlussAI/NodeK/NN/optim/nadam.o"
 	@echo "... PlussAI/NodeK/NN/optim/nadam.i"
 	@echo "... PlussAI/NodeK/NN/optim/nadam.s"
-	@echo "... PlussAI/NodeK/NN/optim/nexima.o"
-	@echo "... PlussAI/NodeK/NN/optim/nexima.i"
-	@echo "... PlussAI/NodeK/NN/optim/nexima.s"
 	@echo "... PlussAI/NodeK/NN/optim/rmsprop.o"
 	@echo "... PlussAI/NodeK/NN/optim/rmsprop.i"
 	@echo "... PlussAI/NodeK/NN/optim/rmsprop.s"
@@ -7768,6 +7930,14 @@ help:
 	@echo "... PlussAI/NodeK/kernels/cudnn_rnn.o"
 	@echo "... PlussAI/NodeK/kernels/cudnn_rnn.i"
 	@echo "... PlussAI/NodeK/kernels/cudnn_rnn.s"
+	@echo "... PlussAI/NodeK/kernels/mps_conv.o"
+	@echo "... PlussAI/NodeK/kernels/mps_conv_stub.o"
+	@echo "... PlussAI/NodeK/kernels/mps_conv_stub.i"
+	@echo "... PlussAI/NodeK/kernels/mps_conv_stub.s"
+	@echo "... PlussAI/NodeK/kernels/mps_rnn.o"
+	@echo "... PlussAI/NodeK/kernels/mps_rnn_stub.o"
+	@echo "... PlussAI/NodeK/kernels/mps_rnn_stub.i"
+	@echo "... PlussAI/NodeK/kernels/mps_rnn_stub.s"
 	@echo "... PlussAI/NodeK/kernels/transformer.o"
 	@echo "... PlussAI/NodeK/kernels/transformer.i"
 	@echo "... PlussAI/NodeK/kernels/transformer.s"
@@ -7783,9 +7953,18 @@ help:
 	@echo "... PlussAI/utils/utils.o"
 	@echo "... PlussAI/utils/utils.i"
 	@echo "... PlussAI/utils/utils.s"
+	@echo "... PlussMa/Actuarial/actuarial_models/foundation.o"
+	@echo "... PlussMa/Actuarial/actuarial_models/foundation.i"
+	@echo "... PlussMa/Actuarial/actuarial_models/foundation.s"
 	@echo "... PlussMa/Actuarial/core/contingencies.o"
 	@echo "... PlussMa/Actuarial/core/contingencies.i"
 	@echo "... PlussMa/Actuarial/core/contingencies.s"
+	@echo "... PlussMa/Actuarial/life_contingencies/foundation.o"
+	@echo "... PlussMa/Actuarial/life_contingencies/foundation.i"
+	@echo "... PlussMa/Actuarial/life_contingencies/foundation.s"
+	@echo "... PlussMa/Actuarial/loss_models/foundation.o"
+	@echo "... PlussMa/Actuarial/loss_models/foundation.i"
+	@echo "... PlussMa/Actuarial/loss_models/foundation.s"
 	@echo "... PlussMa/Eng/signal_proc/transforms/transforms.o"
 	@echo "... PlussMa/Eng/signal_proc/transforms/transforms.i"
 	@echo "... PlussMa/Eng/signal_proc/transforms/transforms.s"

@@ -53,6 +53,27 @@ int main() {
   }
 
   {
+    const Series ages = pluss::make_series(std::vector<double>{40.0, 41.0, 42.0}, {3}, cfg);
+    const double b = 1.0e-4;
+    const double c = 1.1;
+    const double a = 2.0e-4;
+    const auto gom_mu = as_f64_vec(gompertz_force_surface(ages, b, c));
+    const auto mak_mu = as_f64_vec(makeham_force_surface(ages, a, b, c));
+    expect(gom_mu.size() == 3 && mak_mu.size() == 3, "law surface sizes", &failures);
+    for (std::size_t i = 0; i < 3; ++i) {
+      const double g_ref = b * std::pow(c, 40.0 + static_cast<double>(i));
+      expect(approx(gom_mu[i], g_ref, 1e-12), "gompertz_force_surface values", &failures);
+      expect(approx(mak_mu[i], a + g_ref, 1e-12), "makeham_force_surface values", &failures);
+    }
+
+    const auto q_from_mu = as_f64_vec(qx_from_force(makeham_force_surface(ages, a, b, c)));
+    const auto q_makeham = as_f64_vec(makeham_qx_surface(ages, a, b, c));
+    for (std::size_t i = 0; i < q_makeham.size(); ++i) {
+      expect(approx(q_makeham[i], q_from_mu[i], 1e-12), "makeham_qx_surface matches qx_from_force", &failures);
+    }
+  }
+
+  {
     const auto mu = as_f64_vec(force_of_mortality_from_qx(qx));
     const auto H = as_f64_vec(cumulative_hazard_from_qx(qx));
     expect(mu.size() == 2 && H.size() == 2, "hazard vector sizes", &failures);
@@ -86,6 +107,59 @@ int main() {
   }
 
   {
+    const Series qx_tab = pluss::make_series(std::vector<double>{0.1, 0.2, 0.3}, {3}, cfg);
+    const auto lx = as_f64_vec(lx_from_qx(qx_tab, 1000.0));
+    expect(lx.size() == 4, "lx_from_qx size", &failures);
+    expect(approx(lx[0], 1000.0, 1e-12) && approx(lx[1], 900.0, 1e-12) && approx(lx[2], 720.0, 1e-12) &&
+               approx(lx[3], 504.0, 1e-12),
+           "lx_from_qx values",
+           &failures);
+
+    const Series lx_s = pluss::make_series(lx, {4}, cfg);
+    const auto dx = as_f64_vec(dx_from_lx(lx_s));
+    expect(dx.size() == 3, "dx_from_lx size", &failures);
+    expect(approx(dx[0], 100.0, 1e-12) && approx(dx[1], 180.0, 1e-12) && approx(dx[2], 216.0, 1e-12),
+           "dx_from_lx values",
+           &failures);
+
+    const auto px_l = as_f64_vec(px_from_lx(lx_s));
+    const auto qx_l = as_f64_vec(qx_from_lx(lx_s));
+    expect(approx(px_l[0], 0.9, 1e-12) && approx(px_l[1], 0.8, 1e-12) && approx(px_l[2], 0.7, 1e-12),
+           "px_from_lx values",
+           &failures);
+    expect(approx(qx_l[0], 0.1, 1e-12) && approx(qx_l[1], 0.2, 1e-12) && approx(qx_l[2], 0.3, 1e-12),
+           "qx_from_lx values",
+           &failures);
+
+    const auto lx_from_px_v = as_f64_vec(lx_from_px(px_from_qx(qx_tab), 1000.0));
+    expect(lx_from_px_v.size() == 4, "lx_from_px size", &failures);
+    for (std::size_t i = 0; i < lx.size(); ++i) {
+      expect(approx(lx_from_px_v[i], lx[i], 1e-12), "lx_from_px matches lx_from_qx", &failures);
+    }
+  }
+
+  {
+    const Series select_q = pluss::make_series(std::vector<double>{0.01, 0.02}, {2}, cfg);
+    const Series ultimate_scalar = pluss::make_series(std::vector<double>{0.03}, {1}, cfg);
+    const auto q_proj_scalar = as_f64_vec(compose_select_ultimate_qx(select_q, ultimate_scalar, 5));
+    expect(q_proj_scalar.size() == 5, "compose_select_ultimate_qx scalar ultimate size", &failures);
+    expect(approx(q_proj_scalar[0], 0.01, 1e-12) && approx(q_proj_scalar[1], 0.02, 1e-12) &&
+               approx(q_proj_scalar[2], 0.03, 1e-12) && approx(q_proj_scalar[3], 0.03, 1e-12) &&
+               approx(q_proj_scalar[4], 0.03, 1e-12),
+           "compose_select_ultimate_qx scalar ultimate values",
+           &failures);
+
+    const Series ultimate_vec = pluss::make_series(std::vector<double>{0.03, 0.04, 0.05}, {3}, cfg);
+    const auto q_proj_vec = as_f64_vec(compose_select_ultimate_qx(select_q, ultimate_vec, 5));
+    expect(q_proj_vec.size() == 5, "compose_select_ultimate_qx vector ultimate size", &failures);
+    expect(approx(q_proj_vec[0], 0.01, 1e-12) && approx(q_proj_vec[1], 0.02, 1e-12) &&
+               approx(q_proj_vec[2], 0.03, 1e-12) && approx(q_proj_vec[3], 0.04, 1e-12) &&
+               approx(q_proj_vec[4], 0.05, 1e-12),
+           "compose_select_ultimate_qx vector ultimate values",
+           &failures);
+  }
+
+  {
     bool threw = false;
     try {
       const Series bad = pluss::make_series(std::vector<double>{1.0}, {1}, cfg);
@@ -94,6 +168,51 @@ int main() {
       threw = true;
     }
     expect(threw, "force_of_mortality_from_qx should reject qx == 1", &failures);
+  }
+
+  {
+    bool threw = false;
+    try {
+      const Series ages_bad = pluss::make_series(std::vector<double>{-1.0, 10.0}, {2}, cfg);
+      (void)gompertz_force_surface(ages_bad, 1e-4, 1.08);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    expect(threw, "gompertz_force_surface should reject negative ages", &failures);
+  }
+
+  {
+    bool threw = false;
+    try {
+      const Series select_q = pluss::make_series(std::vector<double>{0.01}, {1}, cfg);
+      const Series empty = pluss::make_series(std::vector<double>{}, {0}, cfg);
+      (void)compose_select_ultimate_qx(select_q, empty, 3);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    expect(threw, "compose_select_ultimate_qx should reject missing required ultimate tail", &failures);
+  }
+
+  {
+    bool threw = false;
+    try {
+      const Series bad_lx = pluss::make_series(std::vector<double>{100.0, 105.0, 90.0}, {3}, cfg);
+      (void)qx_from_lx(bad_lx);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    expect(threw, "qx_from_lx should reject increasing lx", &failures);
+  }
+
+  {
+    bool threw = false;
+    try {
+      const Series bad_lx = pluss::make_series(std::vector<double>{100.0, 0.0, 0.0}, {3}, cfg);
+      (void)px_from_lx(bad_lx);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    expect(threw, "px_from_lx should reject zero denominator rows", &failures);
   }
 
   return failures == 0 ? 0 : 1;

@@ -11,6 +11,7 @@
 #include "pluss/detail/series_finalize.h"
 #include "MSharp/RangeView.h"
 #include "CodeM/core/Config.h"
+#include "CodeM/native/mps/Stochastic.h"
 #include "pluss/detail/data_reader.h"
 
 #include <cstdint>
@@ -190,6 +191,10 @@ namespace pluss {
   inline Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
   inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return rand(pluss::msharp::RangeView::Int(sizes), dt, seed);}
   inline Series rand(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
+    if (cfg.platform == Platform::MPS && cfg.dtype != ScalarType::Float64 &&
+        pluss::codem::native::mps::supports_uniform_stochastic(ScalarType::Float32)) {
+      return pluss::codem::native::mps::uniform_stochastic(sizes, ScalarType::Float32, 0.0, 1.0, seed).to(cfg.dtype);
+    }
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::rand(sizes, cfg.dtype, seed),
         cfg,
@@ -232,6 +237,10 @@ namespace pluss {
     return randn(pluss::msharp::RangeView::Int(sizes), dt, seed);
   }
   inline Series randn(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
+    if (cfg.platform == Platform::MPS && cfg.dtype != ScalarType::Float64 &&
+        pluss::codem::native::mps::supports_normal_stochastic(ScalarType::Float32)) {
+      return pluss::codem::native::mps::normal_stochastic(sizes, ScalarType::Float32, 0.0, 1.0, seed).to(cfg.dtype);
+    }
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         Series::randn(sizes, cfg.dtype, seed),
         cfg,
@@ -262,8 +271,16 @@ namespace pluss {
     return randint(lo, hi, pluss::msharp::RangeView::Int(sizes), dt, seed);
   }
   inline Series randint(std::int64_t lo, std::int64_t hi, pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed = 0) {
+    if (hi <= lo) pluss::codem::throw_error("randint: expected hi > lo");
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
+    if (cfg.platform == Platform::MPS &&
+        pluss::codem::native::mps::supports_uniform_stochastic(ScalarType::Float32)) {
+      const double span = static_cast<double>(hi - lo);
+      Series out = pluss::codem::native::mps::uniform_stochastic(sizes, ScalarType::Float32, 0.0, 1.0, seed);
+      out = out.mul(span).floor().add(static_cast<double>(lo));
+      return out.to(dt);
+    }
     return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
         randint(lo, hi, sizes, dt, seed),
         cfg,
@@ -333,6 +350,10 @@ namespace pluss {
                        Config cfg,
                        std::uint64_t seed = 0) {
     PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
+    if (cfg.platform == Platform::MPS && cfg.dtype != ScalarType::Float64 &&
+        pluss::codem::native::mps::supports_normal_stochastic(ScalarType::Float32)) {
+      return pluss::codem::native::mps::normal_stochastic(sizes, ScalarType::Float32, mean, std, seed).to(cfg.dtype);
+    }
     return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
         Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean),
         cfg,
@@ -379,6 +400,13 @@ namespace pluss {
                           std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Bool;
+    if (cfg.platform == Platform::MPS &&
+        pluss::codem::native::mps::supports_uniform_stochastic(ScalarType::Float32)) {
+      PLUSS_CHECK(p >= 0.0 && p <= 1.0, "bernoulli: expected 0 <= p <= 1");
+      Series out = pluss::codem::native::mps::uniform_stochastic(sizes, ScalarType::Float32, 0.0, 1.0, seed);
+      out = out.lt(p);
+      return (dt == ScalarType::Bool) ? out : out.to(dt);
+    }
     return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
         bernoulli(sizes, p, dt, seed),
         cfg,

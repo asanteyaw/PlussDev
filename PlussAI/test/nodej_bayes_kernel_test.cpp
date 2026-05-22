@@ -13,9 +13,12 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
+using pluss::ai::nodej::AssessOptions;
 using pluss::ai::nodej::BayesFamilyOptions;
+using pluss::ai::nodej::BayesLikelihood;
 using pluss::ai::nodej::FeatureBatch;
 using pluss::ai::nodej::KernelFamilyOptions;
+using pluss::ai::nodej::KernelForm;
 using pluss::ai::nodej::KernelKind;
 using pluss::ai::nodej::LabeledBatch;
 using pluss::ai::nodej::LinearFamilyOptions;
@@ -109,6 +112,57 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
   }
 
   {
+    const Series x_train = pluss::make_series(std::vector<double>{
+                                                  -1.0, -1.0,
+                                                  -0.8, -0.9,
+                                                  -0.9, -0.7,
+                                                   0.9,  0.8,
+                                                   1.1,  0.9,
+                                                   0.8,  1.0},
+                                              {6, 2},
+                                              f64());
+    const FeatureBatch train{.x = x_train, .layout = ObservationLayout::Rows};
+    const Series x_query = pluss::make_series(std::vector<double>{
+                                                  -1.0, -1.0,
+                                                   1.0,  1.0,
+                                                   6.0,  6.0},
+                                              {3, 2},
+                                              f64());
+    const FeatureBatch query{.x = x_query, .layout = ObservationLayout::Rows};
+
+    const ModelSpec spec{
+        .task = TaskKind::Transform,
+        .family = ModelFamily::Kernel,
+        .options = KernelFamilyOptions{
+            .kernel = KernelKind::Rbf,
+            .form = KernelForm::OneClass,
+            .gamma = 0.7,
+            .nu = 0.34,
+        },
+    };
+    auto tr_or = pluss::ai::nodej::make_transformer(spec);
+    if (!tr_or.ok()) {
+      if (err) *err << "make_transformer should build kernel one-class transformer\n";
+      return false;
+    }
+    auto tr = tr_or.move_value();
+    if (!tr->learn(train).ok()) {
+      if (err) *err << "kernel one-class transformer learn should succeed\n";
+      return false;
+    }
+    auto map_or = tr->map(query);
+    if (!map_or.ok()) {
+      if (err) *err << "kernel one-class transformer map should succeed\n";
+      return false;
+    }
+    const auto labels = map_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+    if (!(labels[0] > 0.0 && labels[1] > 0.0 && labels[2] < 0.0)) {
+      if (err) *err << "kernel one-class transformer should tag far sample as outlier\n";
+      return false;
+    }
+  }
+
+  {
     const Series x = pluss::make_series(std::vector<double>{
                                             -1.0, -1.0,
                                             -1.0,  1.0,
@@ -129,9 +183,11 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
         .family = ModelFamily::Kernel,
         .options = KernelFamilyOptions{
             .kernel = KernelKind::Rbf,
+            .form = KernelForm::Nu,
             .c = 50.0,
             .gamma = 2.0,
             .epsilon = 0.0,
+            .nu = 0.5,
         },
     };
     auto cls_or = pluss::ai::nodej::make_classifier(spec);
@@ -190,9 +246,11 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
         .family = ModelFamily::Kernel,
         .options = KernelFamilyOptions{
             .kernel = KernelKind::Rbf,
+            .form = KernelForm::Nu,
             .c = 100.0,
             .gamma = 0.7,
             .epsilon = 0.0,
+            .nu = 0.6,
         },
     };
     auto reg_or = pluss::ai::nodej::make_regressor(spec);
@@ -238,7 +296,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
     const LabeledBatch batch{.features = features, .y = y};
 
-    const ModelSpec bad_bayes{
+    const ModelSpec bernoulli_bayes{
         .task = TaskKind::Classification,
         .family = ModelFamily::Bayes,
         .options = BayesFamilyOptions{
@@ -246,15 +304,51 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
             .smoothing = 1e-9,
         },
     };
-    auto bayes_or = pluss::ai::nodej::make_classifier(bad_bayes);
+    auto bayes_or = pluss::ai::nodej::make_classifier(bernoulli_bayes);
     if (!bayes_or.ok()) {
       if (err) *err << "builder should still construct bayes classifier\n";
       return false;
     }
     auto bayes = bayes_or.move_value();
     const auto bayes_status = bayes->learn(batch);
-    if (bayes_status.ok() || bayes_status.code != StatusCode::NotImplemented) {
-      if (err) *err << "bayes classifier should reject unsupported likelihood mode\n";
+    if (!bayes_status.ok()) {
+      if (err) *err << "bayes classifier should support legacy non-gaussian Bernoulli mode\n";
+      return false;
+    }
+    auto bernoulli_pred_or = bayes->infer(features);
+    if (!bernoulli_pred_or.ok()) {
+      if (err) *err << "bernoulli bayes infer should succeed\n";
+      return false;
+    }
+
+    const ModelSpec multinomial_bayes{
+        .task = TaskKind::Classification,
+        .family = ModelFamily::Bayes,
+        .options = BayesFamilyOptions{
+            .likelihood = BayesLikelihood::Multinomial,
+            .use_gaussian = true,
+            .smoothing = 1e-9,
+        },
+    };
+    auto multi_or = pluss::ai::nodej::make_classifier(multinomial_bayes);
+    if (!multi_or.ok()) {
+      if (err) *err << "builder should construct multinomial bayes classifier\n";
+      return false;
+    }
+    auto multi = multi_or.move_value();
+    const auto multi_status = multi->learn(batch);
+    if (!multi_status.ok()) {
+      if (err) *err << "multinomial bayes classifier learn should succeed\n";
+      return false;
+    }
+    auto multi_metrics_or = multi->assess(batch, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
+    if (!multi_metrics_or.ok()) {
+      if (err) *err << "multinomial bayes classifier assess should succeed\n";
+      return false;
+    }
+    const auto multi_metrics = multi_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (multi_metrics.size() != 2 || multi_metrics[0] < 0.5 || multi_metrics[1] > 1.0) {
+      if (err) *err << "multinomial bayes classifier metrics should be finite and reasonable\n";
       return false;
     }
 

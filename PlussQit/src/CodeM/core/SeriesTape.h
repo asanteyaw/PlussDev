@@ -93,6 +93,13 @@ void bind_source_link(
     const Series& s,
     std::shared_ptr<SourceLink> link,
     const std::source_location& loc = std::source_location::current());
+// Records alias lineage without forcing `tracks_slope=true` on `s`.
+// This is used by view-producing ops so later in-place mutations can recover
+// the base alias chain even when the base was not tracked at view creation.
+void bind_alias_link(
+    const Series& s,
+    std::shared_ptr<SourceLink> link,
+    const std::source_location& loc = std::source_location::current());
 void clear_source_link(const Series& s);
 
 void clear_sensitivity(const Series& s);

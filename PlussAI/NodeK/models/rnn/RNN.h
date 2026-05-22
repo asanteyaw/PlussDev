@@ -4,6 +4,7 @@
 #include "lstm_impl.h"
 #include "rnn_impl.h"
 #include <NodeK/kernels/cudnn_rnn.h>
+#include <NodeK/kernels/mps_rnn.h>
 
 #include <tuple>
 #include <utility>
@@ -14,6 +15,7 @@ namespace pluss::ai::rnn::detail {
 inline bool weight_tracks_slope_(const NetWeight& w) {
   return (w.weight_ih.defined() && w.weight_ih.tracks_slope()) ||
       (w.weight_hh.defined() && w.weight_hh.tracks_slope()) ||
+      (w.bias.defined() && w.bias.tracks_slope()) ||
       (w.bias_ih.defined() && w.bias_ih.tracks_slope()) ||
       (w.bias_hh.defined() && w.bias_hh.tracks_slope()) ||
       (w.weight_hr.defined() && w.weight_hr.tracks_slope());
@@ -84,7 +86,7 @@ inline std::pair<Series, Series> gru_layer(const Series& input,
       const Series r = gate_chunk(step, 0, 3).add(gate_chunk(gh, 0, 3)).sigmoid();
       const Series z = gate_chunk(step, 1, 3).add(gate_chunk(gh, 1, 3)).sigmoid();
       const Series n = gate_chunk(step, 2, 3).add(r.mul(gate_chunk(gh, 2, 3))).tanh();
-      hidden = z.mul(hidden).add((1.0 - z).mul(n));
+      hidden = n.add(z.mul(hidden.sub(n)));
     } else {
       hidden = gru_impl(step, hidden, params, cfg.split_bias);
     }
@@ -300,6 +302,12 @@ inline std::tuple<Series, LSTMState> lstm(const Series& input,
       (x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_lstm(x0, hidden, cell, params, cfg, require_backward);
+        routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+  if (x0.platform() == pluss::pMPS) {
+    if (const auto routed = ::pluss::ai::kernels::mps::try_lstm(x0, hidden, cell, params, cfg, require_backward);
         routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
     }

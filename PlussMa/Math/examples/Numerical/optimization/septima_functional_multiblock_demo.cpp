@@ -35,14 +35,8 @@ int main() {
   constraints.equalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum() + p[1] - 2.0};
   };
-  constraints.equalities_trace = [](const std::vector<Trace>& p) {
-    return std::vector<Trace>{pluss::subsp::math::diff::sum(p[0]) + p[1] - 2.0};
-  };
   constraints.inequalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].square().sum() - 5.0};
-  };
-  constraints.inequalities_trace = [](const std::vector<Trace>& p) {
-    return std::vector<Trace>{pluss::subsp::math::diff::sum(pluss::subsp::math::diff::square(p[0])) - 5.0};
   };
   constraints.lbs = {
       pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg),

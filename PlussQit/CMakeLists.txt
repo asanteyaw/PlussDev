@@ -267,6 +267,7 @@ if(APPLE)
     src/CodeM/native/mps/Reductions.mm
     src/CodeM/native/mps/Scatter.mm
     src/CodeM/native/mps/Sorting.mm
+    src/CodeM/native/mps/Stochastic.mm
   )
 else()
   set(PLUSSQIT_CODEM_MPS_SRC
@@ -284,6 +285,7 @@ else()
     src/CodeM/native/mps/ReductionsStub.cpp
     src/CodeM/native/mps/ScatterStub.cpp
     src/CodeM/native/mps/SortingStub.cpp
+    src/CodeM/native/mps/StochasticStub.cpp
   )
 endif()
 
@@ -708,6 +710,11 @@ if (PLUSSQIT_BUILD_TESTS)
   else()
     add_executable(plussqit_tests ${CODEM_TEST_SOURCES})
     target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
+    if(TARGET PlussQit::CodeH)
+      target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeH)
+    elseif(TARGET PlussQit::CodeN)
+      target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeN)
+    endif()
     target_compile_features(plussqit_tests PRIVATE cxx_std_20)
 
     add_executable(plussqit_codem_autodiff_tests
@@ -823,6 +830,7 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch171_unique_dim_contract.cpp
       tests/CodeM/test_patch172_series_set_ops.cpp
       tests/CodeM/test_patch173_series_set_number_ops.cpp
+      tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp
     )
     target_link_libraries(plussqit_codem_optim_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_optim_tests PRIVATE cxx_std_20)

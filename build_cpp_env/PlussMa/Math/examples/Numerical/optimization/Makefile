@@ -529,60 +529,60 @@ plussma_adam_functional_demo/fast:
 .PHONY : plussma_adam_functional_demo/fast
 
 # Convenience name for target.
-PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule
+PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/rule
+.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/rule
 
 # Convenience name for target.
-plussma_minimax_functional_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule
-.PHONY : plussma_minimax_functional_demo
+plussma_septima_functional_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/rule
+.PHONY : plussma_septima_functional_demo
 
 # fast build rule for target.
-plussma_minimax_functional_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build
-.PHONY : plussma_minimax_functional_demo/fast
+plussma_septima_functional_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build
+.PHONY : plussma_septima_functional_demo/fast
 
 # Convenience name for target.
-PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule
+PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/rule
+.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/rule
 
 # Convenience name for target.
-plussma_minimax_functional_multiblock_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule
-.PHONY : plussma_minimax_functional_multiblock_demo
+plussma_septima_functional_multiblock_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/rule
+.PHONY : plussma_septima_functional_multiblock_demo
 
 # fast build rule for target.
-plussma_minimax_functional_multiblock_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build
-.PHONY : plussma_minimax_functional_multiblock_demo/fast
+plussma_septima_functional_multiblock_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build
+.PHONY : plussma_septima_functional_multiblock_demo/fast
 
 # Convenience name for target.
-PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule
+PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/rule
+.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/rule
 
 # Convenience name for target.
-plussma_simple_minimax_functional_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule
-.PHONY : plussma_simple_minimax_functional_demo
+plussma_simple_septima_functional_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/rule
+.PHONY : plussma_simple_septima_functional_demo
 
 # fast build rule for target.
-plussma_simple_minimax_functional_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build
-.PHONY : plussma_simple_minimax_functional_demo/fast
+plussma_simple_septima_functional_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build
+.PHONY : plussma_simple_septima_functional_demo/fast
 
 # Convenience name for target.
-PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule
+PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/rule
+.PHONY : PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/rule
 
 # Convenience name for target.
-plussma_simple_minimax_functional_multiblock_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule
-.PHONY : plussma_simple_minimax_functional_multiblock_demo
+plussma_simple_septima_functional_multiblock_demo: PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/rule
+.PHONY : plussma_simple_septima_functional_multiblock_demo
 
 # fast build rule for target.
-plussma_simple_minimax_functional_multiblock_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build
-.PHONY : plussma_simple_minimax_functional_multiblock_demo/fast
+plussma_simple_septima_functional_multiblock_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build
+.PHONY : plussma_simple_septima_functional_multiblock_demo/fast
 
 adam_functional_demo.o: adam_functional_demo.cpp.o
 .PHONY : adam_functional_demo.o
@@ -799,54 +799,6 @@ mads_blackbox_native_demo.s: mads_blackbox_native_demo.cpp.s
 mads_blackbox_native_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_mads_blackbox_native_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_mads_blackbox_native_demo.dir/mads_blackbox_native_demo.cpp.s
 .PHONY : mads_blackbox_native_demo.cpp.s
-
-minimax_functional_demo.o: minimax_functional_demo.cpp.o
-.PHONY : minimax_functional_demo.o
-
-# target to build an object file
-minimax_functional_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/minimax_functional_demo.cpp.o
-.PHONY : minimax_functional_demo.cpp.o
-
-minimax_functional_demo.i: minimax_functional_demo.cpp.i
-.PHONY : minimax_functional_demo.i
-
-# target to preprocess a source file
-minimax_functional_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/minimax_functional_demo.cpp.i
-.PHONY : minimax_functional_demo.cpp.i
-
-minimax_functional_demo.s: minimax_functional_demo.cpp.s
-.PHONY : minimax_functional_demo.s
-
-# target to generate assembly for a file
-minimax_functional_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/minimax_functional_demo.cpp.s
-.PHONY : minimax_functional_demo.cpp.s
-
-minimax_functional_multiblock_demo.o: minimax_functional_multiblock_demo.cpp.o
-.PHONY : minimax_functional_multiblock_demo.o
-
-# target to build an object file
-minimax_functional_multiblock_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/minimax_functional_multiblock_demo.cpp.o
-.PHONY : minimax_functional_multiblock_demo.cpp.o
-
-minimax_functional_multiblock_demo.i: minimax_functional_multiblock_demo.cpp.i
-.PHONY : minimax_functional_multiblock_demo.i
-
-# target to preprocess a source file
-minimax_functional_multiblock_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/minimax_functional_multiblock_demo.cpp.i
-.PHONY : minimax_functional_multiblock_demo.cpp.i
-
-minimax_functional_multiblock_demo.s: minimax_functional_multiblock_demo.cpp.s
-.PHONY : minimax_functional_multiblock_demo.s
-
-# target to generate assembly for a file
-minimax_functional_multiblock_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/minimax_functional_multiblock_demo.cpp.s
-.PHONY : minimax_functional_multiblock_demo.cpp.s
 
 optima_clone_parity_bench.o: optima_clone_parity_bench.cpp.o
 .PHONY : optima_clone_parity_bench.o
@@ -1112,6 +1064,54 @@ pattern_search_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_pattern_search_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_pattern_search_demo.dir/pattern_search_demo.cpp.s
 .PHONY : pattern_search_demo.cpp.s
 
+septima_functional_demo.o: septima_functional_demo.cpp.o
+.PHONY : septima_functional_demo.o
+
+# target to build an object file
+septima_functional_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/septima_functional_demo.cpp.o
+.PHONY : septima_functional_demo.cpp.o
+
+septima_functional_demo.i: septima_functional_demo.cpp.i
+.PHONY : septima_functional_demo.i
+
+# target to preprocess a source file
+septima_functional_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/septima_functional_demo.cpp.i
+.PHONY : septima_functional_demo.cpp.i
+
+septima_functional_demo.s: septima_functional_demo.cpp.s
+.PHONY : septima_functional_demo.s
+
+# target to generate assembly for a file
+septima_functional_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_demo.dir/septima_functional_demo.cpp.s
+.PHONY : septima_functional_demo.cpp.s
+
+septima_functional_multiblock_demo.o: septima_functional_multiblock_demo.cpp.o
+.PHONY : septima_functional_multiblock_demo.o
+
+# target to build an object file
+septima_functional_multiblock_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/septima_functional_multiblock_demo.cpp.o
+.PHONY : septima_functional_multiblock_demo.cpp.o
+
+septima_functional_multiblock_demo.i: septima_functional_multiblock_demo.cpp.i
+.PHONY : septima_functional_multiblock_demo.i
+
+# target to preprocess a source file
+septima_functional_multiblock_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/septima_functional_multiblock_demo.cpp.i
+.PHONY : septima_functional_multiblock_demo.cpp.i
+
+septima_functional_multiblock_demo.s: septima_functional_multiblock_demo.cpp.s
+.PHONY : septima_functional_multiblock_demo.s
+
+# target to generate assembly for a file
+septima_functional_multiblock_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_septima_functional_multiblock_demo.dir/septima_functional_multiblock_demo.cpp.s
+.PHONY : septima_functional_multiblock_demo.cpp.s
+
 series_objective_analytic_grad_demo.o: series_objective_analytic_grad_demo.cpp.o
 .PHONY : series_objective_analytic_grad_demo.o
 
@@ -1184,53 +1184,53 @@ simple_garch11_optim_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_garch11_optim_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_garch11_optim_demo.dir/simple_garch11_optim_demo.cpp.s
 .PHONY : simple_garch11_optim_demo.cpp.s
 
-simple_minimax_functional_demo.o: simple_minimax_functional_demo.cpp.o
-.PHONY : simple_minimax_functional_demo.o
+simple_septima_functional_demo.o: simple_septima_functional_demo.cpp.o
+.PHONY : simple_septima_functional_demo.o
 
 # target to build an object file
-simple_minimax_functional_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/simple_minimax_functional_demo.cpp.o
-.PHONY : simple_minimax_functional_demo.cpp.o
+simple_septima_functional_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/simple_septima_functional_demo.cpp.o
+.PHONY : simple_septima_functional_demo.cpp.o
 
-simple_minimax_functional_demo.i: simple_minimax_functional_demo.cpp.i
-.PHONY : simple_minimax_functional_demo.i
+simple_septima_functional_demo.i: simple_septima_functional_demo.cpp.i
+.PHONY : simple_septima_functional_demo.i
 
 # target to preprocess a source file
-simple_minimax_functional_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/simple_minimax_functional_demo.cpp.i
-.PHONY : simple_minimax_functional_demo.cpp.i
+simple_septima_functional_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/simple_septima_functional_demo.cpp.i
+.PHONY : simple_septima_functional_demo.cpp.i
 
-simple_minimax_functional_demo.s: simple_minimax_functional_demo.cpp.s
-.PHONY : simple_minimax_functional_demo.s
+simple_septima_functional_demo.s: simple_septima_functional_demo.cpp.s
+.PHONY : simple_septima_functional_demo.s
 
 # target to generate assembly for a file
-simple_minimax_functional_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/simple_minimax_functional_demo.cpp.s
-.PHONY : simple_minimax_functional_demo.cpp.s
+simple_septima_functional_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_demo.dir/simple_septima_functional_demo.cpp.s
+.PHONY : simple_septima_functional_demo.cpp.s
 
-simple_minimax_functional_multiblock_demo.o: simple_minimax_functional_multiblock_demo.cpp.o
-.PHONY : simple_minimax_functional_multiblock_demo.o
+simple_septima_functional_multiblock_demo.o: simple_septima_functional_multiblock_demo.cpp.o
+.PHONY : simple_septima_functional_multiblock_demo.o
 
 # target to build an object file
-simple_minimax_functional_multiblock_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/simple_minimax_functional_multiblock_demo.cpp.o
-.PHONY : simple_minimax_functional_multiblock_demo.cpp.o
+simple_septima_functional_multiblock_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/simple_septima_functional_multiblock_demo.cpp.o
+.PHONY : simple_septima_functional_multiblock_demo.cpp.o
 
-simple_minimax_functional_multiblock_demo.i: simple_minimax_functional_multiblock_demo.cpp.i
-.PHONY : simple_minimax_functional_multiblock_demo.i
+simple_septima_functional_multiblock_demo.i: simple_septima_functional_multiblock_demo.cpp.i
+.PHONY : simple_septima_functional_multiblock_demo.i
 
 # target to preprocess a source file
-simple_minimax_functional_multiblock_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/simple_minimax_functional_multiblock_demo.cpp.i
-.PHONY : simple_minimax_functional_multiblock_demo.cpp.i
+simple_septima_functional_multiblock_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/simple_septima_functional_multiblock_demo.cpp.i
+.PHONY : simple_septima_functional_multiblock_demo.cpp.i
 
-simple_minimax_functional_multiblock_demo.s: simple_minimax_functional_multiblock_demo.cpp.s
-.PHONY : simple_minimax_functional_multiblock_demo.s
+simple_septima_functional_multiblock_demo.s: simple_septima_functional_multiblock_demo.cpp.s
+.PHONY : simple_septima_functional_multiblock_demo.s
 
 # target to generate assembly for a file
-simple_minimax_functional_multiblock_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/simple_minimax_functional_multiblock_demo.cpp.s
-.PHONY : simple_minimax_functional_multiblock_demo.cpp.s
+simple_septima_functional_multiblock_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/simple_septima_functional_multiblock_demo.cpp.s
+.PHONY : simple_septima_functional_multiblock_demo.cpp.s
 
 trace_objective_autodiff_demo.o: trace_objective_autodiff_demo.cpp.o
 .PHONY : trace_objective_autodiff_demo.o
@@ -1280,8 +1280,6 @@ help:
 	@echo "... plussma_garch11_optima_demo"
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
-	@echo "... plussma_minimax_functional_demo"
-	@echo "... plussma_minimax_functional_multiblock_demo"
 	@echo "... plussma_optima_clone_parity_bench"
 	@echo "... plussma_optima_clone_parity_scorecard"
 	@echo "... plussma_optima_demo"
@@ -1293,11 +1291,13 @@ help:
 	@echo "... plussma_optima_working_set_bench"
 	@echo "... plussma_optima_working_set_demo"
 	@echo "... plussma_pattern_search_demo"
+	@echo "... plussma_septima_functional_demo"
+	@echo "... plussma_septima_functional_multiblock_demo"
 	@echo "... plussma_series_objective_analytic_grad_demo"
 	@echo "... plussma_simple_garch11_objective_first_demo"
 	@echo "... plussma_simple_garch11_optim_demo"
-	@echo "... plussma_simple_minimax_functional_demo"
-	@echo "... plussma_simple_minimax_functional_multiblock_demo"
+	@echo "... plussma_simple_septima_functional_demo"
+	@echo "... plussma_simple_septima_functional_multiblock_demo"
 	@echo "... plussma_trace_objective_autodiff_demo"
 	@echo "... adam_functional_demo.o"
 	@echo "... adam_functional_demo.i"
@@ -1326,12 +1326,6 @@ help:
 	@echo "... mads_blackbox_native_demo.o"
 	@echo "... mads_blackbox_native_demo.i"
 	@echo "... mads_blackbox_native_demo.s"
-	@echo "... minimax_functional_demo.o"
-	@echo "... minimax_functional_demo.i"
-	@echo "... minimax_functional_demo.s"
-	@echo "... minimax_functional_multiblock_demo.o"
-	@echo "... minimax_functional_multiblock_demo.i"
-	@echo "... minimax_functional_multiblock_demo.s"
 	@echo "... optima_clone_parity_bench.o"
 	@echo "... optima_clone_parity_bench.i"
 	@echo "... optima_clone_parity_bench.s"
@@ -1365,6 +1359,12 @@ help:
 	@echo "... pattern_search_demo.o"
 	@echo "... pattern_search_demo.i"
 	@echo "... pattern_search_demo.s"
+	@echo "... septima_functional_demo.o"
+	@echo "... septima_functional_demo.i"
+	@echo "... septima_functional_demo.s"
+	@echo "... septima_functional_multiblock_demo.o"
+	@echo "... septima_functional_multiblock_demo.i"
+	@echo "... septima_functional_multiblock_demo.s"
 	@echo "... series_objective_analytic_grad_demo.o"
 	@echo "... series_objective_analytic_grad_demo.i"
 	@echo "... series_objective_analytic_grad_demo.s"
@@ -1374,12 +1374,12 @@ help:
 	@echo "... simple_garch11_optim_demo.o"
 	@echo "... simple_garch11_optim_demo.i"
 	@echo "... simple_garch11_optim_demo.s"
-	@echo "... simple_minimax_functional_demo.o"
-	@echo "... simple_minimax_functional_demo.i"
-	@echo "... simple_minimax_functional_demo.s"
-	@echo "... simple_minimax_functional_multiblock_demo.o"
-	@echo "... simple_minimax_functional_multiblock_demo.i"
-	@echo "... simple_minimax_functional_multiblock_demo.s"
+	@echo "... simple_septima_functional_demo.o"
+	@echo "... simple_septima_functional_demo.i"
+	@echo "... simple_septima_functional_demo.s"
+	@echo "... simple_septima_functional_multiblock_demo.o"
+	@echo "... simple_septima_functional_multiblock_demo.i"
+	@echo "... simple_septima_functional_multiblock_demo.s"
 	@echo "... trace_objective_autodiff_demo.o"
 	@echo "... trace_objective_autodiff_demo.i"
 	@echo "... trace_objective_autodiff_demo.s"

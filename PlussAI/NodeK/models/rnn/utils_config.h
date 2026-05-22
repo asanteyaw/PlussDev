@@ -11,11 +11,12 @@ namespace pluss::ai::rnn {
 struct NetWeight {
   Series weight_ih{};
   Series weight_hh{};
+  Series bias{};
   Series bias_ih{};
   Series bias_hh{};
   Series weight_hr{};
 
-  [[nodiscard]] bool has_bias() const noexcept { return bias_ih.defined() || bias_hh.defined(); }
+  [[nodiscard]] bool has_bias() const noexcept { return bias.defined() || bias_ih.defined() || bias_hh.defined(); }
   [[nodiscard]] bool has_projection() const noexcept { return weight_hr.defined(); }
 };
 
@@ -43,17 +44,17 @@ inline void validate_config(const NetConfig& cfg) {
 }
 
 inline Series unified_bias(const NetWeight& params, const Series& like) {
-  if (params.bias_ih.defined() && params.bias_hh.defined()) {
-    return ::pluss::detail::nn::cast_like_(params.bias_ih, like).add(::pluss::detail::nn::cast_like_(params.bias_hh, like));
-  }
-  if (params.bias_ih.defined()) return ::pluss::detail::nn::cast_like_(params.bias_ih, like);
-  if (params.bias_hh.defined()) return ::pluss::detail::nn::cast_like_(params.bias_hh, like);
+  if (params.bias.defined()) return ::pluss::detail::nn::cast_like_(params.bias, like);
   return Series();
 }
 
 inline Series gate_chunk(const Series& gates, std::int64_t chunk, std::int64_t chunks) {
+  PLUSS_CHECK(chunks > 0, "pluss::rnn: gate chunk expects chunks > 0");
+  PLUSS_CHECK(gates.dim() >= 2, "pluss::rnn: gate chunk expects rank >= 2");
+  PLUSS_CHECK(gates.sizes()[1] % chunks == 0, "pluss::rnn: gate chunk expects divisible feature axis");
   const std::int64_t hidden = gates.sizes()[1] / chunks;
-  return ::pluss::detail::nn::narrow_dim_(gates, 1, chunk * hidden, hidden);
+  PLUSS_CHECK(chunk >= 0 && chunk < chunks, "pluss::rnn: gate chunk index out of range");
+  return ::pluss::detail::nn::narrow_dim_(gates, 1, chunk * hidden, hidden).contiguous();
 }
 
 namespace detail {
@@ -109,31 +110,57 @@ inline void validate_bias_layout(pluss::msharp::RangeView::Of<NetWeight> params,
                                  const char* what) {
   for (std::size_t i = 0; i < params.size(); ++i) {
     const auto& p = params[i];
+    const bool has_b = p.bias.defined();
     const bool has_bih = p.bias_ih.defined();
     const bool has_bhh = p.bias_hh.defined();
 
     if (!cfg.use_bias) {
-      PLUSS_CHECK(!has_bih && !has_bhh,
+      PLUSS_CHECK(!has_b && !has_bih && !has_bhh,
                   std::string("pluss::") + what +
                       ": use_bias=false but a bias tensor is defined in parameter block " + std::to_string(i));
       continue;
     }
 
     if (cfg.split_bias) {
+      PLUSS_CHECK(!has_b,
+                  std::string("pluss::") + what +
+                      ": split_bias=true does not allow unified bias tensor `bias` in block " + std::to_string(i));
       PLUSS_CHECK(has_bih == has_bhh,
                   std::string("pluss::") + what +
                       ": split_bias=true requires bias_ih and bias_hh to be both defined or both undefined in block " +
                       std::to_string(i));
+      PLUSS_CHECK(has_bih && has_bhh,
+                  std::string("pluss::") + what +
+                      ": use_bias=true and split_bias=true requires both bias_ih and bias_hh in block " +
+                      std::to_string(i) + "; set use_bias=false to disable bias");
       continue;
     }
 
-    if (has_bih && has_bhh && p.bias_ih.tracks_slope() && p.bias_hh.tracks_slope()) {
-      PLUSS_CHECK(false,
-                  std::string("pluss::") + what +
-                      ": split_bias=false with both bias_ih and bias_hh trainable is redundant; "
-                      "provide one unified bias (define only one) or set split_bias=true");
-    }
+    PLUSS_CHECK(!has_bih && !has_bhh,
+                std::string("pluss::") + what +
+                    ": split_bias=false does not allow bias_ih/bias_hh in block " + std::to_string(i) +
+                    "; define unified `bias` instead or set split_bias=true");
+    PLUSS_CHECK(has_b,
+                std::string("pluss::") + what +
+                    ": use_bias=true and split_bias=false requires unified bias tensor `bias` in block " +
+                    std::to_string(i) + "; set use_bias=false to disable bias");
   }
+}
+
+inline void validate_impl_bias_layout(const NetWeight& params, bool split_bias, const char* what) {
+  const bool has_b = params.bias.defined();
+  const bool has_bih = params.bias_ih.defined();
+  const bool has_bhh = params.bias_hh.defined();
+  if (split_bias) {
+    PLUSS_CHECK(!has_b, std::string("pluss::") + what + ": split_bias=true does not allow unified `bias`");
+    PLUSS_CHECK(has_bih == has_bhh,
+                std::string("pluss::") + what +
+                    ": split_bias=true requires bias_ih and bias_hh to be both defined or both undefined");
+    return;
+  }
+  PLUSS_CHECK(!has_bih && !has_bhh,
+              std::string("pluss::") + what +
+                  ": split_bias=false does not allow bias_ih/bias_hh; define unified `bias` instead");
 }
 
 } // namespace detail

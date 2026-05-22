@@ -105,9 +105,10 @@ inline Series dropout_(const Series& x, double p, bool training, std::uint64_t s
   require_defined_(x, "dropout");
   PLUSS_CHECK(p >= 0.0 && p < 1.0, "pluss::dropout: expected p in [0, 1)");
   if (!training || p == 0.0) return x;
+  const ScalarType mask_dtype = x.platform() == pMPS ? ScalarType::Float32 : ScalarType::Float64;
   const Series mask = pluss::rand(
                           x.sizes(),
-                          Config{}.with_dtype(ScalarType::Float64).with_platform(x.platform()),
+                          Config{}.with_dtype(mask_dtype).with_platform(x.platform()),
                           seed)
                           .ge(p)
                           .to(x.scalar_type());

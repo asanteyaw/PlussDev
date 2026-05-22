@@ -537,6 +537,28 @@ void test_dispatch_extensions() {
   auto xt = pluss::codem::_compat::invoke("tile", x, std::vector<std::int64_t>{2});
   expect_eq(xt.to_vec<std::int64_t>(), {1, 2, 3, 1, 2, 3}, "tile alias");
 
+  std::cout << "[RUN] dispatch_extensions:repeat_like\n";
+  auto like_rep = pluss::rand({2, 6}, pluss::ScalarType::Float32, 7);
+  auto x_like = x.repeat_like(like_rep);
+  expect_true(x_like.sizes().size() == 2 && x_like.sizes()[0] == 2 && x_like.sizes()[1] == 6,
+              "repeat_like target shape");
+  expect_true(x_like.scalar_type() == pluss::ScalarType::Int64,
+              "repeat_like keeps source dtype for mixed int/float inputs");
+  expect_eq(x_like.to_vec<std::int64_t>(), {1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3}, "repeat_like values");
+
+  std::cout << "[RUN] dispatch_extensions:expand_like\n";
+  auto one = pluss::make_series(std::vector<std::int64_t>{9}, {1, 1});
+  auto one_like = one.expand_like(like_rep);
+  expect_true(one_like.sizes().size() == 2 && one_like.sizes()[0] == 2 && one_like.sizes()[1] == 6,
+              "expand_like target shape");
+  expect_true(one_like.scalar_type() == pluss::ScalarType::Int64,
+              "expand_like keeps source dtype for mixed int/float inputs");
+  expect_eq(one_like.to_vec<std::int64_t>(), {9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9}, "expand_like values");
+
+  std::cout << "[RUN] dispatch_extensions:repeat_like_incompatible\n";
+  auto bad_like = pluss::rand({2, 5}, pluss::ScalarType::Float32, 8);
+  expect_throws([&] { (void)x.repeat_like(bad_like); }, "repeat_like throws for non-multiple target dimension");
+
   std::cout << "[RUN] dispatch_extensions:repeat_interleave\n";
   auto xi = pluss::codem::_compat::invoke("repeat_interleave", x, 2);
   expect_eq(xi.to_vec<std::int64_t>(), {1, 1, 2, 2, 3, 3}, "repeat_interleave flat");

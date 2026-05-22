@@ -5,6 +5,7 @@ find_package(Catch2 3 QUIET)
 file(GLOB AI_TEST_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp
 )
+list(FILTER AI_TEST_SOURCES EXCLUDE REGEX ".*/lymph_quick_test\\.cpp$")
 
 foreach(test_src ${AI_TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)

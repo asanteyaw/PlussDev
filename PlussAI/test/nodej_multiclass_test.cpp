@@ -23,7 +23,6 @@ using pluss::ai::nodej::ModelFamily;
 using pluss::ai::nodej::ModelSpec;
 using pluss::ai::nodej::ObservationLayout;
 using pluss::ai::nodej::RegularizationKind;
-using pluss::ai::nodej::StatusCode;
 using pluss::ai::nodej::TaskKind;
 using pluss::ai::nodej::TreeCriterion;
 using pluss::ai::nodej::TreeFamilyOptions;
@@ -139,8 +138,13 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
     pluss::ai::nodej::AssessOptions roc_assess{};
     roc_assess.metrics = {MetricKind::RocAuc};
     auto roc_or = cls->assess(tri, roc_assess);
-    if (roc_or.ok() || roc_or.status().code != StatusCode::NotImplemented) {
-      if (err) *err << "multiclass RocAuc should currently report NotImplemented\n";
+    if (!roc_or.ok()) {
+      if (err) *err << "multiclass RocAuc should be available\n";
+      return false;
+    }
+    const auto roc = roc_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (roc.size() != 1 || roc[0] < 0.9 || roc[0] > 1.0) {
+      if (err) *err << "multiclass RocAuc should be finite and high on separable data\n";
       return false;
     }
   }
@@ -183,12 +187,27 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
 
   {
     const LabeledBatch binary = make_binary_batch();
-    auto cls_or = pluss::ai::lymph::quick::linear_logistic_classifier(binary, 1e-6);
+    const ModelSpec spec{
+        .task = TaskKind::Classification,
+        .family = ModelFamily::Linear,
+        .options = LinearFamilyOptions{
+            .objective = LinearObjective::Logistic,
+            .regularization = RegularizationKind::L2,
+            .regularization_strength = 1e-6,
+            .fit_intercept = true,
+        },
+    };
+    auto cls_or = pluss::ai::nodej::make_classifier(spec);
     if (!cls_or.ok()) {
-      if (err) *err << "lymph linear_logistic_classifier should train for binary data\n";
+      if (err) *err << "nodej linear logistic classifier builder should succeed for binary data\n";
       return false;
     }
-    auto score_or = cls_or.value()->infer_scores(binary.features);
+    auto cls = cls_or.move_value();
+    if (!cls->learn(binary).ok()) {
+      if (err) *err << "nodej linear logistic classifier learn should succeed for binary data\n";
+      return false;
+    }
+    auto score_or = cls->infer_scores(binary.features);
     if (!score_or.ok()) {
       if (err) *err << "binary infer_scores should succeed\n";
       return false;

@@ -6,8 +6,11 @@
 #include "MSharp/RangeView.h"
 
 #include <cstdint>
+#include <initializer_list>
 #include <memory>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -32,6 +35,11 @@ enum class TransformKind : std::uint8_t {
   LabelEncoder = 15,
 };
 
+enum class RouteRemainderPolicy : std::uint8_t {
+  PassThrough = 0,
+  Drop = 1,
+};
+
 using TransformOptions = std::variant<prep::StandardScalerOptions,
                                       prep::MinMaxScalerOptions,
                                       prep::RobustScalerOptions,
@@ -53,6 +61,25 @@ struct TransformSpec {
   TransformKind kind = TransformKind::StandardScaler;
   TransformOptions options = prep::StandardScalerOptions{};
   std::vector<std::int64_t> feature_route{};
+  RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough;
+  std::string stage_key{};
+};
+
+struct FlowStageInfo {
+  std::int64_t index = 0;
+  std::string stage_key{};
+  TransformKind kind = TransformKind::StandardScaler;
+  std::int64_t routed_feature_count = 0;
+  RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough;
+  bool route_active = false;
+};
+
+struct FlowGraphInfo {
+  TaskKind task = TaskKind::Transform;
+  bool trained = false;
+  bool has_model = false;
+  bool has_opaque_transforms = false;
+  std::vector<FlowStageInfo> stages{};
 };
 
 class Flow final {
@@ -71,6 +98,37 @@ public:
   [[nodiscard]] bool has_opaque_transforms() const noexcept;
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept;
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept;
+  [[nodiscard]] StatusOr<FlowGraphInfo> graph_info() const;
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const;
+  [[nodiscard]] StatusOr<double> nested_param(std::string_view path) const;
+  Status set_nested_param(std::string_view path, double value);
+  [[nodiscard]] std::string flow_summary() const;
+  [[nodiscard]] StatusOr<std::string> save_blueprint() const;
+  Status load_blueprint(std::string_view text);
+
+  Status add_named_transform(TransformKind kind,
+                             const TransformOptions& options,
+                             std::string stage_key = {},
+                             pluss::msharp::RangeView::Int feature_route = {},
+                             RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough);
+  Status add_column_stage(std::string stage_key,
+                          TransformKind kind,
+                          const TransformOptions& options,
+                          pluss::msharp::RangeView::Int feature_route = {},
+                          RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough);
+  Status add_column_stage(std::string stage_key,
+                          TransformKind kind,
+                          const TransformOptions& options,
+                          std::initializer_list<std::int64_t> feature_route,
+                          RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough) {
+    return add_column_stage(std::move(stage_key), kind, options, pluss::msharp::RangeView::Int(feature_route), remainder);
+  }
+  Status set_stage_key(std::int64_t stage_index, std::string stage_key);
+  Status set_stage_route(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route);
+  Status set_stage_route(std::int64_t stage_index, std::initializer_list<std::int64_t> feature_route) {
+    return set_stage_route(stage_index, pluss::msharp::RangeView::Int(feature_route));
+  }
+  Status set_stage_remainder(std::int64_t stage_index, RouteRemainderPolicy remainder);
 
   Status append_transform(std::unique_ptr<TransformerBase> transformer);
   void clear_transforms() noexcept;

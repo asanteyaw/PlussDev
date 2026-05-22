@@ -1,9 +1,11 @@
 #include <pluss/ai/ml.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <unordered_map>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -23,6 +25,10 @@ Config f64() {
 
 std::vector<double> as_f64(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+}
+
+std::vector<std::int64_t> as_i64(const Series& x) {
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
 }
 
 LabeledBatch make_xor_batch() {
@@ -144,6 +150,49 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
   }
 
   {
+    SplitOptions group_split = split;
+    group_split.plan = CVPlanKind::GroupKFold;
+    group_split.folds = 4;
+    group_split.shuffle = false;
+    group_split.groups = pluss::make_series(std::vector<std::int64_t>{
+                                                0, 0,
+                                                1, 1,
+                                                2, 2,
+                                                3, 3,
+                                                4, 4,
+                                                5, 5,
+                                                6, 6,
+                                                7, 7},
+                                            {16},
+                                            Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+
+    auto cv_or = cross_assess(linear_logistic_spec(), batch, group_split, train, assess);
+    if (!cv_or.ok()) {
+      if (err) *err << "cross_assess GroupKFold should succeed when groups are provided\n";
+      return false;
+    }
+    const CrossAssessReport& cv = cv_or.value();
+    if (cv.folds.size() != 4) {
+      if (err) *err << "cross_assess GroupKFold should emit requested fold count\n";
+      return false;
+    }
+
+    const auto groups = as_i64(group_split.groups);
+    std::unordered_map<std::int64_t, std::int64_t> group_to_fold{};
+    for (std::size_t fold_id = 0; fold_id < cv.folds.size(); ++fold_id) {
+      const auto test = as_i64(cv.folds[fold_id].test_indices);
+      for (std::int64_t idx : test) {
+        const std::int64_t g = groups[static_cast<std::size_t>(idx)];
+        const auto [it, inserted] = group_to_fold.emplace(g, static_cast<std::int64_t>(fold_id));
+        if (!inserted && it->second != static_cast<std::int64_t>(fold_id)) {
+          if (err) *err << "cross_assess GroupKFold should keep each group in exactly one test fold\n";
+          return false;
+        }
+      }
+    }
+  }
+
+  {
     const std::vector<ModelSpec> candidates{linear_logistic_spec(), rbf_kernel_spec()};
     AssessOptions tune_assess{};
     tune_assess.metrics = {MetricKind::Accuracy};
@@ -162,6 +211,11 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     const TuneReport& report = sweep_or.value();
     if (report.trials.size() != 2 || report.best_index < 0) {
       if (err) *err << "sweep should evaluate all candidates and choose a best trial\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()
+        || report.objective_rank[static_cast<std::size_t>(report.best_index)] != 1) {
+      if (err) *err << "sweep should populate objective ranks with best trial rank=1\n";
       return false;
     }
     if (!(report.best_index == 1)) {
@@ -203,8 +257,285 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
       if (err) *err << "probe should emit one trial per requested sample\n";
       return false;
     }
+    if (report.objective_rank.size() != report.trials.size()) {
+      if (err) *err << "probe should populate objective ranks for all trials\n";
+      return false;
+    }
     if (report.trials[1].status.code != StatusCode::InvalidArgument) {
       if (err) *err << "probe should preserve sampler failure status in the corresponding trial\n";
+      return false;
+    }
+  }
+
+  {
+    const std::vector<ModelSpec> candidates{linear_logistic_spec(), rbf_kernel_spec()};
+    AssessOptions tune_assess{};
+    tune_assess.metrics = {MetricKind::Accuracy};
+
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::Grid;
+    tune_options.max_parallel = 2;
+    tune_options.split = split;
+
+    auto tune_or = tune(candidates,
+                        batch,
+                        tune_options,
+                        train,
+                        tune_assess,
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune grid dispatcher should succeed for candidate list\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() != 2 || report.best_index < 0) {
+      if (err) *err << "tune grid should evaluate all candidates and choose a best trial\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()
+        || report.objective_rank[static_cast<std::size_t>(report.best_index)] != 1) {
+      if (err) *err << "tune grid should return rank metadata\n";
+      return false;
+    }
+  }
+
+  {
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::Random;
+    tune_options.trials = 5;
+    tune_options.max_parallel = 2;
+    tune_options.random.seed = 91;
+    tune_options.random.deterministic = true;
+    tune_options.split = split;
+
+    auto sampler = [](std::int64_t trial_index, std::uint64_t seed) -> StatusOr<ModelSpec> {
+      return StatusOr<ModelSpec>(((seed + static_cast<std::uint64_t>(trial_index)) % 2) == 0
+                                     ? linear_logistic_spec()
+                                     : rbf_kernel_spec());
+    };
+
+    auto tune_or = tune(sampler,
+                        batch,
+                        tune_options,
+                        train,
+                        AssessOptions{.metrics = {MetricKind::Accuracy}},
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune random dispatcher should succeed for sampler path\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() != 5 || report.best_index < 0) {
+      if (err) *err << "tune random should emit requested trial count and a best index\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()) {
+      if (err) *err << "tune random should return rank metadata\n";
+      return false;
+    }
+  }
+
+  {
+    const std::vector<ModelSpec> candidates{
+        linear_logistic_spec(),
+        linear_logistic_spec(),
+        rbf_kernel_spec(),
+        rbf_kernel_spec(),
+    };
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::Random;
+    tune_options.trials = 3;
+    tune_options.max_parallel = 2;
+    tune_options.random.seed = 13;
+    tune_options.random.deterministic = true;
+    tune_options.split = split;
+
+    auto tune_or = tune(candidates,
+                        batch,
+                        tune_options,
+                        train,
+                        AssessOptions{.metrics = {MetricKind::Accuracy}},
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune random dispatcher should support candidate-list sampling\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() != 3 || report.best_index < 0) {
+      if (err) *err << "candidate-list random tuning should evaluate sampled trial count\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()) {
+      if (err) *err << "candidate-list random tuning should return rank metadata\n";
+      return false;
+    }
+  }
+
+  {
+    const std::vector<ModelSpec> candidates{
+        linear_logistic_spec(),
+        linear_logistic_spec(),
+        linear_logistic_spec(),
+        rbf_kernel_spec(),
+        rbf_kernel_spec(),
+    };
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::Bayesian;
+    tune_options.trials = 4;
+    tune_options.random.seed = 123;
+    tune_options.random.deterministic = true;
+    tune_options.split = split;
+
+    auto tune_or = tune(candidates,
+                        batch,
+                        tune_options,
+                        train,
+                        AssessOptions{.metrics = {MetricKind::Accuracy}},
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune bayesian should succeed for candidate-list path\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() != 4 || report.best_index < 0) {
+      if (err) *err << "tune bayesian should respect trial budget and produce best index\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()
+        || report.objective_rank[static_cast<std::size_t>(report.best_index)] != 1) {
+      if (err) *err << "tune bayesian should return rank metadata\n";
+      return false;
+    }
+    std::int64_t max_stage = 0;
+    for (const auto& trial : report.trials) {
+      max_stage = std::max<std::int64_t>(max_stage, trial.stage);
+    }
+    if (max_stage < 2) {
+      if (err) *err << "tune bayesian should run sequential staged selection\n";
+      return false;
+    }
+  }
+
+  {
+    const std::vector<ModelSpec> candidates{
+        linear_logistic_spec(),
+        linear_logistic_spec(),
+        linear_logistic_spec(),
+        rbf_kernel_spec(),
+    };
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::SuccessiveHalving;
+    tune_options.max_parallel = 2;
+    tune_options.split = split;
+
+    auto tune_or = tune(candidates,
+                        batch,
+                        tune_options,
+                        train,
+                        AssessOptions{.metrics = {MetricKind::Accuracy}},
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune successive-halving dispatcher should succeed for candidate list\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() <= candidates.size() || report.best_index < 0) {
+      if (err) *err << "tune successive-halving should run multi-round elimination\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()
+        || report.objective_rank[static_cast<std::size_t>(report.best_index)] != 1) {
+      if (err) *err << "tune successive-halving should return rank metadata\n";
+      return false;
+    }
+    std::int64_t max_stage = 0;
+    for (const auto& trial : report.trials) {
+      max_stage = std::max<std::int64_t>(max_stage, trial.stage);
+    }
+    if (max_stage <= 0) {
+      if (err) *err << "tune successive-halving should annotate multi-stage trial progression\n";
+      return false;
+    }
+    if (report.trials[static_cast<std::size_t>(report.best_index)].spec.family != ModelFamily::Kernel) {
+      if (err) *err << "tune successive-halving should retain best kernel trial on XOR\n";
+      return false;
+    }
+  }
+
+  {
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::SuccessiveHalving;
+    tune_options.trials = 5;
+    tune_options.max_parallel = 2;
+    tune_options.random.seed = 19;
+    tune_options.random.deterministic = true;
+    tune_options.split = split;
+
+    auto sampler = [](std::int64_t trial_index, std::uint64_t seed) -> StatusOr<ModelSpec> {
+      return StatusOr<ModelSpec>(((seed + static_cast<std::uint64_t>(trial_index)) % 3) == 0
+                                     ? rbf_kernel_spec()
+                                     : linear_logistic_spec());
+    };
+
+    auto tune_or = tune(sampler,
+                        batch,
+                        tune_options,
+                        train,
+                        AssessOptions{.metrics = {MetricKind::Accuracy}},
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune successive-halving dispatcher should support sampler path\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() <= static_cast<std::size_t>(tune_options.trials) || report.best_index < 0) {
+      if (err) *err << "sampler successive-halving should evaluate across multiple rounds\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()) {
+      if (err) *err << "sampler successive-halving should return rank metadata\n";
+      return false;
+    }
+  }
+
+  {
+    TuneOptions tune_options{};
+    tune_options.search = SearchKind::Bayesian;
+    tune_options.trials = 4;
+    tune_options.random.seed = 77;
+    tune_options.random.deterministic = true;
+    tune_options.split = split;
+
+    auto sampler = [](std::int64_t trial_index, std::uint64_t seed) -> StatusOr<ModelSpec> {
+      return StatusOr<ModelSpec>(((seed + static_cast<std::uint64_t>(trial_index)) % 5) <= 1
+                                     ? rbf_kernel_spec()
+                                     : linear_logistic_spec());
+    };
+
+    auto tune_or = tune(sampler,
+                        batch,
+                        tune_options,
+                        train,
+                        AssessOptions{.metrics = {MetricKind::Accuracy}},
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+    if (!tune_or.ok()) {
+      if (err) *err << "tune bayesian should succeed for sampler path\n";
+      return false;
+    }
+    const TuneReport& report = tune_or.value();
+    if (report.trials.size() != 4 || report.best_index < 0) {
+      if (err) *err << "sampler bayesian should respect trial budget and produce best index\n";
+      return false;
+    }
+    if (report.objective_rank.size() != report.trials.size()) {
+      if (err) *err << "sampler bayesian should return rank metadata\n";
       return false;
     }
   }

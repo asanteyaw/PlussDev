@@ -29,7 +29,8 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
                                                     const pluss::Config& cfg,
                                                     std::uint64_t seed_base,
                                                     std::int64_t proj_size = 0,
-                                                    bool use_bias = true) {
+                                                    bool use_bias = true,
+                                                    bool split_bias = true) {
   const std::int64_t dirs = bidirectional ? 2 : 1;
   const bool projected_lstm = gates == 4 && proj_size > 0;
   const std::int64_t hidden_out = projected_lstm ? proj_size : hidden_size;
@@ -42,8 +43,9 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
       out.push_back(pluss::ai::rnn::NetWeight{
           .weight_ih = pluss::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
           .weight_hh = pluss::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
-          .bias_ih = use_bias ? pluss::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_hh = use_bias ? pluss::rand({gates * hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
+          .bias = (use_bias && !split_bias) ? pluss::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
+          .bias_ih = (use_bias && split_bias) ? pluss::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
+          .bias_hh = (use_bias && split_bias) ? pluss::rand({gates * hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
           .weight_hr = projected_lstm ? pluss::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
       });
     }

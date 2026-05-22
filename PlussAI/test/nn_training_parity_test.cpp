@@ -2,6 +2,7 @@
 #include <pluss/ai.h>
 
 #include <cmath>
+#include <cctype>
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
@@ -39,6 +40,16 @@ int env_int_or_(const char* name, int fallback) {
   if (!value) return fallback;
   try {
     return std::stoi(value);
+  } catch (...) {
+    return fallback;
+  }
+}
+
+double env_double_or_(const char* name, double fallback) {
+  const char* value = std::getenv(name);
+  if (!value) return fallback;
+  try {
+    return std::stod(value);
   } catch (...) {
     return fallback;
   }
@@ -475,6 +486,18 @@ void seed_model_parameters_(ModelT& model, float value) {
   }
 }
 
+template <class ModelT>
+void seed_model_parameters_ramp_(ModelT& model, float value, float ramp_step) {
+  auto params = model->parameters();
+  for (Series* p : params) {
+    if (!p || !p->defined()) continue;
+    const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(p->platform());
+    const Series idx =
+        pluss::arange(0, p->numel(), 1, icfg).to(p->platform(), ScalarType::Float32).reshape(p->sizes());
+    *p = pluss::full_like(*p, value, ScalarType::Float32).add(idx.mul(ramp_step));
+  }
+}
+
 std::unique_ptr<pluss::nn::optim::Optimizer> make_linear_optimizer(
     LinearOptimizerKind kind,
     pluss::nn::Fusion& model) {
@@ -678,8 +701,12 @@ TrainingTrace run_lstm_training_trace(Platform platform, int epochs) {
   verify_lstm_seeded_parameters_(model, platform);
 
   pluss::nn::optim::AdamOptions opt{};
-  opt.learning_rate = 1e-2;
+  opt.learning_rate = (platform == pluss::pMPS) ? 2e-3 : 1e-2;
   opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+  if (platform == pluss::pMPS) {
+    opt.clip.mode = pluss::nn::optim::GradientClipMode::ByNorm;
+    opt.clip.threshold = 1.0;
+  }
   pluss::nn::optim::Adam optimizer(*model, opt);
   pluss::nn::optim::StepDiagnosticsOptions diag{};
   diag.fail_if_no_sensitivity = true;
@@ -845,6 +872,8 @@ TrainingTrace run_gru_training_trace(Platform platform, int epochs) {
   const auto [x_cpu, y_cpu] = make_rnn_data();
   const Series x = x_cpu.to(platform, ScalarType::Float32);
   const Series y = y_cpu.to(platform, ScalarType::Float32);
+  const bool debug_trace = env_flag_is_true_("PLUSS_GRU_DEBUG_TRACE");
+  const int debug_epochs = std::max(0, env_int_or_("PLUSS_GRU_DEBUG_EPOCHS", 3));
 
   TinyGRUParityRegressor model(cfg);
   model->train(true);
@@ -865,8 +894,51 @@ TrainingTrace run_gru_training_trace(Platform platform, int epochs) {
     optimizer.clear();
     const Series pred = model->forward(x);
     const Series loss = pluss::nn::losses::MSE(pred, y);
+    std::vector<double> pre_param_l1{};
+    if (debug_trace && epoch < debug_epochs) {
+      auto params_dbg = model->parameters();
+      pre_param_l1.reserve(params_dbg.size());
+      for (Series* p : params_dbg) {
+        if (!p || !p->defined()) {
+          pre_param_l1.push_back(0.0);
+          continue;
+        }
+        pre_param_l1.push_back(p->to(pluss::pCPU, ScalarType::Float64).abs().sum().item<double>());
+      }
+    }
     loss.reverse();
+    if (debug_trace && epoch < debug_epochs) {
+      std::cout << "[gru-debug] platform=" << platform_name_(platform)
+                << " epoch=" << (epoch + 1)
+                << " loss=" << loss.to(pluss::pCPU, ScalarType::Float64).item<double>() << "\n";
+      const auto named = model->named_parameters();
+      for (const auto& named_param : named) {
+        const Series* p = named_param.series;
+        if (!p || !p->defined()) continue;
+        if (!p->has_sensitivity()) {
+          std::cout << "  param=" << named_param.name << " grad=missing\n";
+          continue;
+        }
+        const Series grad_cpu = p->sensitivity().to(pluss::pCPU, ScalarType::Float64);
+        std::cout << "  param=" << named_param.name
+                  << " grad_dtype=" << static_cast<int>(p->sensitivity().scalar_type())
+                  << " grad_platform=" << static_cast<int>(p->sensitivity().platform())
+                  << " grad_l2=" << grad_cpu.square().sum().sqrt().item<double>()
+                  << " grad_max=" << grad_cpu.abs().max().item<double>()
+                  << "\n";
+      }
+    }
     optimizer.step();
+    if (debug_trace && epoch < debug_epochs) {
+      auto params_dbg = model->parameters();
+      for (std::size_t i = 0; i < params_dbg.size(); ++i) {
+        Series* p = params_dbg[i];
+        if (!p || !p->defined()) continue;
+        const double post_l1 = p->to(pluss::pCPU, ScalarType::Float64).abs().sum().item<double>();
+        const double delta = post_l1 - (i < pre_param_l1.size() ? pre_param_l1[i] : 0.0);
+        std::cout << "  step_delta_l1[" << i << "]=" << delta << "\n";
+      }
+    }
     trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
   }
 
@@ -928,6 +1000,28 @@ TrainingTrace run_conv_training_trace(Platform platform, int epochs) {
   const auto [x_cpu, y_cpu] = make_conv_data();
   const Series x = x_cpu.to(platform, ScalarType::Float32);
   const Series y = y_cpu.to(platform, ScalarType::Float32);
+  const bool debug_trace = env_flag_is_true_("PLUSS_CONV_DEBUG_TRACE");
+  const int debug_epochs = std::max(0, env_int_or_("PLUSS_CONV_DEBUG_EPOCHS", 4));
+  if (debug_trace) {
+    const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+    const Series idx = pluss::make_series(std::vector<std::int64_t>{0, 1, 2}, {3}, icfg);
+    const Series idx_from_cpu = pluss::make_series(std::vector<std::int64_t>{0, 1, 2}, {3}, Config{}.with_dtype(ScalarType::Int64))
+                                    .to(platform, ScalarType::Int64);
+    const Series base = x.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1);
+    const Series pick = x.index_select(2, idx).to(pluss::pCPU, ScalarType::Float64).flatten(0, -1);
+    const Series unf = x.unfold(2, 3, 1).to(pluss::pCPU, ScalarType::Float64).flatten(0, -1);
+    const auto idx_v = idx.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+    const auto idx_from_cpu_v = idx_from_cpu.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+    const auto base_v = base.to_vec<double>();
+    const auto pick_v = pick.to_vec<double>();
+    const auto unf_v = unf.to_vec<double>();
+    std::cout << "[conv-probe] platform=" << platform_name_(platform)
+              << " idx_native=[" << idx_v[0] << "," << idx_v[1] << "," << idx_v[2] << "]"
+              << " idx_from_cpu=[" << idx_from_cpu_v[0] << "," << idx_from_cpu_v[1] << "," << idx_from_cpu_v[2] << "]"
+              << " base=[" << base_v[0] << "," << base_v[1] << "," << base_v[2] << "]"
+              << " pick=[" << pick_v[0] << "," << pick_v[1] << "," << pick_v[2] << "]"
+              << " unfold_w0=[" << unf_v[0] << "," << unf_v[1] << "," << unf_v[2] << "]\n";
+  }
 
   pluss::nn::Conv1d model(pluss::nn::Conv1dOptions{
       .in_channels = 1,
@@ -953,9 +1047,39 @@ TrainingTrace run_conv_training_trace(Platform platform, int epochs) {
   TrainingTrace trace{};
   trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
   for (int epoch = 0; epoch < epochs; ++epoch) {
-    const Series loss = optimizer.step([&]() -> Series {
-      return pluss::nn::losses::MSE(model->forward(x), y);
-    });
+    Series loss;
+    if (debug_trace && epoch < debug_epochs) {
+      optimizer.clear();
+      const Series pred = model->forward(x);
+      loss = pluss::nn::losses::MSE(pred, y);
+      const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
+      loss.reverse();
+      const Series gw = model->weight().sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({model->weight().numel()});
+      const Series gb = model->bias().sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({model->bias().numel()});
+      const Series w = model->weight().to(pluss::pCPU, ScalarType::Float64).reshape({model->weight().numel()});
+      const Series b = model->bias().to(pluss::pCPU, ScalarType::Float64).reshape({model->bias().numel()});
+      const auto wv = w.to_vec<double>();
+      const auto gwv = gw.to_vec<double>();
+      std::cout << "[conv-debug] platform=" << platform_name_(platform)
+                << " epoch=" << (epoch + 1)
+                << " loss=" << loss_value
+                << " w0=" << wv[0]
+                << " w1=" << (wv.size() > 1 ? wv[1] : 0.0)
+                << " w2=" << (wv.size() > 2 ? wv[2] : 0.0)
+                << " b0=" << b.to_vec<double>()[0]
+                << " gw0=" << gwv[0]
+                << " gw1=" << (gwv.size() > 1 ? gwv[1] : 0.0)
+                << " gw2=" << (gwv.size() > 2 ? gwv[2] : 0.0)
+                << " gb0=" << gb.to_vec<double>()[0]
+                << " gw_l2=" << gw.square().sum().sqrt().item<double>()
+                << " gb_l2=" << gb.square().sum().sqrt().item<double>()
+                << "\n";
+      optimizer.step();
+    } else {
+      loss = optimizer.step([&]() -> Series {
+        return pluss::nn::losses::MSE(model->forward(x), y);
+      });
+    }
     trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
   }
 
@@ -1031,25 +1155,74 @@ TrainingTrace run_custom_objective_training_trace(Platform platform, int epochs)
   w.tracks_slope_(true);
 
   pluss::nn::optim::AdamOptions opt{};
-  opt.learning_rate = 2e-2;
+  opt.learning_rate = env_double_or_(
+      "PLUSS_OBJECTIVE_LR",
+      (platform == pluss::pMPS) ? 5e-4 : 2e-2);
   opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
   pluss::nn::optim::Adam optimizer(std::vector<Series*>{&w}, opt);
 
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
   const Series idx = pluss::make_series(std::vector<std::int64_t>{2, 0}, {2}, icfg);
+  const bool debug_trace = env_flag_is_true_("PLUSS_OBJECTIVE_DEBUG_TRACE");
+  const int debug_epochs = std::max(0, env_int_or_("PLUSS_OBJECTIVE_DEBUG_EPOCHS", 6));
 
   TrainingTrace trace{};
   trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
   for (int epoch = 0; epoch < epochs; ++epoch) {
-    const Series loss = optimizer.step([&]() -> Series {
+    const auto objective = [&]() -> Series {
       const Series pred = x.matmul(w.reshape({3, 1})).reshape({x.sizes()[0], 1});
       const Series resid = pred.sub(y);
       const Series mse = resid.square().mean();
       const Series reg1 = w.sin().square().mean().mul(0.10);
       const Series reg2 = w.abs().mean().mul(0.05);
       const Series reg3 = w.take(idx).square().sum().mul(0.01);
+      if (debug_trace && epoch == 0) {
+        const Series x_device_roundtrip =
+            x.add(0.0).to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()});
+        const Series pred_from_cpu_copy =
+            x.to(pluss::pCPU, ScalarType::Float64)
+                .matmul(w.to(pluss::pCPU, ScalarType::Float64).reshape({3, 1}))
+                .reshape({x.sizes()[0], 1});
+        const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
+        const auto pvc = pred_from_cpu_copy.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
+        const auto yv = y.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
+        const auto xv = x.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
+        const auto xdv = x_device_roundtrip.to_vec<double>();
+        const auto xsel = x.select(1, 0).to(pluss::pCPU, ScalarType::Float64).reshape({x.sizes()[0]}).to_vec<double>();
+        const auto wrv = w.reshape({3, 1}).to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+        const auto wrcv = w.reshape({3, 1}).contiguous().to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+        std::cout << "[objective-terms] platform=" << platform_name_(platform)
+                  << " mse=" << mse.to(pluss::pCPU, ScalarType::Float64).item<double>()
+                  << " reg1=" << reg1.to(pluss::pCPU, ScalarType::Float64).item<double>()
+                  << " reg2=" << reg2.to(pluss::pCPU, ScalarType::Float64).item<double>()
+                  << " reg3=" << reg3.to(pluss::pCPU, ScalarType::Float64).item<double>()
+                  << " x0=" << xv[0] << " x1=" << xv[1] << " x2=" << xv[2]
+                  << " xd0=" << xdv[0] << " xd1=" << xdv[1] << " xd2=" << xdv[2]
+                  << " xs0=" << xsel[0] << " xs1=" << xsel[1] << " xs2=" << xsel[2]
+                  << " wr0=" << wrv[0] << " wr1=" << wrv[1] << " wr2=" << wrv[2]
+                  << " wrc0=" << wrcv[0] << " wrc1=" << wrcv[1] << " wrc2=" << wrcv[2]
+                  << " pred0=" << pv[0] << " pred1=" << pv[1] << " pred2=" << pv[2]
+                  << " pred_cpu_copy0=" << pvc[0] << " pred_cpu_copy1=" << pvc[1] << " pred_cpu_copy2=" << pvc[2]
+                  << " y0=" << yv[0] << " y1=" << yv[1] << " y2=" << yv[2]
+                  << "\n";
+      }
       return mse.add(reg1).add(reg2).add(reg3);
-    });
+    };
+    optimizer.clear();
+    Series loss = objective();
+    const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
+    loss.reverse();
+    if (debug_trace && epoch < debug_epochs) {
+      const auto grad = w.sensitivity().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto val = w.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      std::cout << "[objective-debug] platform=" << platform_name_(platform)
+                << " epoch=" << (epoch + 1)
+                << " loss=" << loss_value
+                << " w=(" << val[0] << "," << val[1] << "," << val[2] << ")"
+                << " g=(" << grad[0] << "," << grad[1] << "," << grad[2] << ")"
+                << "\n";
+    }
+    optimizer.step();
     trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
   }
 
@@ -1216,12 +1389,16 @@ bool run_training_parity_checks(std::ostream* err = nullptr) {
   const bool run_cpu = want_cpu;
   const bool run_mps = want_mps && pluss::mps::is_ready();
   const bool run_cuda = want_cuda && pluss::cuda::is_ready();
-  if (want_mps && !run_mps) {
+  if (mode == ParityBackendMode::MPS && !run_mps) {
     if (err) *err << "MPS backend requested but runtime is unavailable\n";
     return false;
   }
-  if (want_cuda && !run_cuda) {
+  if (mode == ParityBackendMode::CUDA && !run_cuda) {
     if (err) *err << "CUDA backend requested but runtime is unavailable\n";
+    return false;
+  }
+  if (!run_cpu && !run_mps && !run_cuda) {
+    if (err) *err << "No requested training parity backend is available\n";
     return false;
   }
 
@@ -1261,6 +1438,51 @@ bool run_training_parity_checks(std::ostream* err = nullptr) {
     }
     return true;
   };
+
+  const char* model_raw = std::getenv("PLUSS_PARITY_MODEL");
+  if (model_raw != nullptr && *model_raw != '\0') {
+    std::string model(model_raw);
+    for (char& c : model) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    if (model != "all") {
+      auto run_single_model = [&](Platform platform, const char* tag) -> bool {
+        TrainingTrace trace{};
+        const std::string lane = std::string(tag) + "_" + model;
+        const bool ok = guarded(lane.c_str(), [&]() {
+          if (model == "linear") {
+            trace = run_linear_training_trace(platform, kLinearEpochs);
+          } else if (model == "lstm") {
+            trace = run_lstm_training_trace(platform, kLstmEpochs);
+          } else if (model == "rnn") {
+            trace = run_rnn_training_trace(platform, kRnnEpochs);
+          } else if (model == "gru") {
+            trace = run_gru_training_trace(platform, kGruEpochs);
+          } else if (model == "schedule") {
+            trace = run_schedule_training_trace(platform, kScheduleEpochs);
+          } else if (model == "conv") {
+            trace = run_conv_training_trace(platform, kConvEpochs);
+          } else if (model == "transformer") {
+            trace = run_transformer_training_trace(platform, kTransformerEpochs);
+          } else if (model == "objective") {
+            trace = run_custom_objective_training_trace(platform, kObjectiveEpochs);
+          } else {
+            if (err) {
+              *err << "unknown PLUSS_PARITY_MODEL='" << model
+                   << "' (expected all|linear|lstm|rnn|gru|schedule|conv|transformer|objective)\n";
+            }
+            return false;
+          }
+          return true;
+        });
+        if (!ok) return false;
+        return check_trace((std::string(tag) + " " + model).c_str(), trace);
+      };
+
+      if (run_cpu && !run_single_model(pluss::pCPU, "cpu")) return false;
+      if (run_mps && !run_single_model(pluss::pMPS, "mps")) return false;
+      if (run_cuda && !run_single_model(pluss::pCUDA, "cuda")) return false;
+      return true;
+    }
+  }
 
   auto check_replay = [&](const char* lane,
                           auto&& rerun,

@@ -2,7 +2,15 @@
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
+#include <charconv>
+#include <cctype>
+#include <cstdlib>
+#include <iomanip>
+#include <optional>
+#include <sstream>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <vector>
 
 namespace pluss::ai::nodej {
@@ -41,6 +49,154 @@ namespace {
   std::vector<std::int64_t> out;
   out.reserve(feature_route.size());
   out.insert(out.end(), feature_route.begin(), feature_route.end());
+  return out;
+}
+
+[[nodiscard]] const char* transform_kind_name(TransformKind kind) {
+  switch (kind) {
+    case TransformKind::StandardScaler: return "standard_scaler";
+    case TransformKind::MinMaxScaler: return "minmax_scaler";
+    case TransformKind::RobustScaler: return "robust_scaler";
+    case TransformKind::SimpleImputer: return "simple_imputer";
+    case TransformKind::NeighborImputer: return "neighbor_imputer";
+    case TransformKind::IterativeImputer: return "iterative_imputer";
+    case TransformKind::OneHotEncoder: return "one_hot_encoder";
+    case TransformKind::FrequencyEncoder: return "frequency_encoder";
+    case TransformKind::VectorNormalizer: return "vector_normalizer";
+    case TransformKind::MaxAbsScaler: return "maxabs_scaler";
+    case TransformKind::QuantileMap: return "quantile_map";
+    case TransformKind::PowerMap: return "power_map";
+    case TransformKind::ThresholdBinarizer: return "threshold_binarizer";
+    case TransformKind::PolynomialLift: return "polynomial_lift";
+    case TransformKind::OrdinalEncoder: return "ordinal_encoder";
+    case TransformKind::LabelEncoder: return "label_encoder";
+  }
+  return "unknown";
+}
+
+[[nodiscard]] std::optional<TransformKind> parse_transform_kind(std::string_view text) {
+  if (text == "standard_scaler") return TransformKind::StandardScaler;
+  if (text == "minmax_scaler") return TransformKind::MinMaxScaler;
+  if (text == "robust_scaler") return TransformKind::RobustScaler;
+  if (text == "simple_imputer") return TransformKind::SimpleImputer;
+  if (text == "neighbor_imputer") return TransformKind::NeighborImputer;
+  if (text == "iterative_imputer") return TransformKind::IterativeImputer;
+  if (text == "one_hot_encoder") return TransformKind::OneHotEncoder;
+  if (text == "frequency_encoder") return TransformKind::FrequencyEncoder;
+  if (text == "vector_normalizer") return TransformKind::VectorNormalizer;
+  if (text == "maxabs_scaler") return TransformKind::MaxAbsScaler;
+  if (text == "quantile_map") return TransformKind::QuantileMap;
+  if (text == "power_map") return TransformKind::PowerMap;
+  if (text == "threshold_binarizer") return TransformKind::ThresholdBinarizer;
+  if (text == "polynomial_lift") return TransformKind::PolynomialLift;
+  if (text == "ordinal_encoder") return TransformKind::OrdinalEncoder;
+  if (text == "label_encoder") return TransformKind::LabelEncoder;
+  return std::nullopt;
+}
+
+[[nodiscard]] const char* remainder_name(RouteRemainderPolicy policy) {
+  return policy == RouteRemainderPolicy::Drop ? "drop" : "pass";
+}
+
+[[nodiscard]] std::optional<RouteRemainderPolicy> parse_remainder(std::string_view text) {
+  if (text == "drop") return RouteRemainderPolicy::Drop;
+  if (text == "pass") return RouteRemainderPolicy::PassThrough;
+  return std::nullopt;
+}
+
+template <class T>
+[[nodiscard]] std::optional<T> parse_scalar(std::string_view text) {
+  if (text.empty()) return std::nullopt;
+  std::string tmp(text);
+  if constexpr (std::is_same_v<T, bool>) {
+    if (tmp == "1" || tmp == "true") return true;
+    if (tmp == "0" || tmp == "false") return false;
+    return std::nullopt;
+  } else if constexpr (std::is_integral_v<T>) {
+    T out{};
+    auto* begin = tmp.data();
+    auto* end = tmp.data() + tmp.size();
+    const auto [ptr, ec] = std::from_chars(begin, end, out);
+    if (ec != std::errc{} || ptr != end) return std::nullopt;
+    return out;
+  } else {
+    char* end_ptr = nullptr;
+    const double value = std::strtod(tmp.c_str(), &end_ptr);
+    if (end_ptr == tmp.c_str() || end_ptr != (tmp.c_str() + static_cast<std::ptrdiff_t>(tmp.size()))) {
+      return std::nullopt;
+    }
+    if constexpr (std::is_same_v<T, float>) return static_cast<float>(value);
+    return static_cast<T>(value);
+  }
+}
+
+[[nodiscard]] StatusOr<std::unique_ptr<TransformerBase>> make_transformer_from_spec(TransformKind kind,
+                                                                                    const TransformOptions& options) {
+  switch (kind) {
+    case TransformKind::StandardScaler:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::StandardScaler>(
+          std::get<prep::StandardScalerOptions>(options)));
+    case TransformKind::MinMaxScaler:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::MinMaxScaler>(
+          std::get<prep::MinMaxScalerOptions>(options)));
+    case TransformKind::RobustScaler:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::RobustScaler>(
+          std::get<prep::RobustScalerOptions>(options)));
+    case TransformKind::SimpleImputer:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::SimpleImputer>(
+          std::get<prep::SimpleImputerOptions>(options)));
+    case TransformKind::NeighborImputer:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::NeighborImputer>(
+          std::get<prep::NeighborImputerOptions>(options)));
+    case TransformKind::IterativeImputer:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::IterativeImputer>(
+          std::get<prep::IterativeImputerOptions>(options)));
+    case TransformKind::OneHotEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::OneHotEncoder>(
+          std::get<prep::OneHotEncoderOptions>(options)));
+    case TransformKind::FrequencyEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::FrequencyEncoder>(
+          std::get<prep::FrequencyEncoderOptions>(options)));
+    case TransformKind::VectorNormalizer:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::VectorNormalizer>(
+          std::get<prep::VectorNormalizerOptions>(options)));
+    case TransformKind::MaxAbsScaler:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::MaxAbsScaler>(
+          std::get<prep::MaxAbsScalerOptions>(options)));
+    case TransformKind::QuantileMap:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::QuantileMap>(
+          std::get<prep::QuantileMapOptions>(options)));
+    case TransformKind::PowerMap:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::PowerMap>(
+          std::get<prep::PowerMapOptions>(options)));
+    case TransformKind::ThresholdBinarizer:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::ThresholdBinarizer>(
+          std::get<prep::ThresholdBinarizerOptions>(options)));
+    case TransformKind::PolynomialLift:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::PolynomialLift>(
+          std::get<prep::PolynomialLiftOptions>(options)));
+    case TransformKind::OrdinalEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::OrdinalEncoder>(
+          std::get<prep::OrdinalEncoderOptions>(options)));
+    case TransformKind::LabelEncoder:
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::LabelEncoder>(
+          std::get<prep::LabelEncoderOptions>(options)));
+  }
+  return StatusOr<std::unique_ptr<TransformerBase>>(Status::invalid_argument("Unsupported transform kind."));
+}
+
+[[nodiscard]] std::vector<std::string> split_sv(std::string_view text, char delim) {
+  std::vector<std::string> out{};
+  std::size_t start = 0;
+  while (start <= text.size()) {
+    const std::size_t end = text.find(delim, start);
+    if (end == std::string_view::npos) {
+      out.emplace_back(text.substr(start));
+      break;
+    }
+    out.emplace_back(text.substr(start, end - start));
+    start = end + 1;
+  }
   return out;
 }
 
@@ -93,6 +249,7 @@ namespace {
 [[nodiscard]] StatusOr<FeatureBatch> merge_routed_features(const FeatureBatch& original,
                                                            const FeatureBatch& routed_mapped,
                                                            const std::vector<std::int64_t>& route,
+                                                           RouteRemainderPolicy remainder,
                                                            std::int64_t stage_index,
                                                            const char* where) {
   Status check = validate_features(original);
@@ -108,6 +265,9 @@ namespace {
         std::string(where) + " stage " + std::to_string(stage_index) + " route merge sample count mismatch."));
   }
   if (route.empty()) return StatusOr<FeatureBatch>(routed_mapped);
+  if (remainder == RouteRemainderPolicy::Drop) {
+    return StatusOr<FeatureBatch>(routed_mapped);
+  }
 
   const std::int64_t feature_count = original.feature_count();
   if (static_cast<std::int64_t>(route.size()) == feature_count) {
@@ -118,21 +278,31 @@ namespace {
   for (std::int64_t idx : route) selected[static_cast<std::size_t>(idx)] = true;
 
   std::vector<Series> parts{};
-  parts.reserve(static_cast<std::size_t>(feature_count - static_cast<std::int64_t>(route.size()) + 1));
+  parts.reserve(1 + route.size());
+  auto push_slice = [&](const std::vector<std::int64_t>& ids) {
+    if (ids.empty()) return;
+    const Series idx = make_index_series(ids, original.x.platform());
+    const Series slab =
+        original.layout == ObservationLayout::Rows ? original.x.index_select(1, idx) : original.x.index_select(0, idx);
+    parts.push_back(slab);
+  };
+
   bool inserted = false;
+  std::vector<std::int64_t> carry{};
+  carry.reserve(static_cast<std::size_t>(feature_count));
   for (std::int64_t f = 0; f < feature_count; ++f) {
     if (selected[static_cast<std::size_t>(f)]) {
       if (!inserted) {
+        push_slice(carry);
+        carry.clear();
         parts.push_back(routed_mapped.x);
         inserted = true;
       }
       continue;
     }
-    const Series single = make_index_series(std::vector<std::int64_t>{f}, original.x.platform());
-    const Series col =
-        original.layout == ObservationLayout::Rows ? original.x.index_select(1, single) : original.x.index_select(0, single);
-    parts.push_back(col);
+    carry.push_back(f);
   }
+  push_slice(carry);
 
   if (parts.empty()) {
     return StatusOr<FeatureBatch>(Status::internal(std::string(where) + " stage " + std::to_string(stage_index)
@@ -179,6 +349,251 @@ const std::optional<ModelSpec>& Flow::model_spec() const noexcept { return model
 
 const std::vector<TransformSpec>& Flow::transform_specs() const noexcept { return transform_specs_; }
 
+StatusOr<FlowGraphInfo> Flow::graph_info() const {
+  FlowGraphInfo info{};
+  info.task = task_kind();
+  info.trained = trained_;
+  info.has_model = has_model();
+  info.has_opaque_transforms = has_opaque_transforms_;
+  info.stages.reserve(transform_specs_.size());
+  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
+    const TransformSpec& spec = transform_specs_[i];
+    info.stages.push_back(FlowStageInfo{
+        .index = static_cast<std::int64_t>(i),
+        .stage_key = spec.stage_key,
+        .kind = spec.kind,
+        .routed_feature_count = static_cast<std::int64_t>(spec.feature_route.size()),
+        .remainder = spec.remainder,
+        .route_active = !spec.feature_route.empty(),
+    });
+  }
+  return StatusOr<FlowGraphInfo>(std::move(info));
+}
+
+std::vector<std::string> Flow::nested_param_keys() const {
+  std::vector<std::string> out{};
+  out.reserve(transform_specs_.size() * 4);
+  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
+    const TransformSpec& spec = transform_specs_[i];
+    const std::string base = !spec.stage_key.empty() ? spec.stage_key : ("stage" + std::to_string(i));
+    out.push_back(base + "::route_size");
+    out.push_back(base + "::remainder");
+    out.push_back(base + "::kind");
+    out.push_back(base + "::stage_index");
+  }
+  return out;
+}
+
+StatusOr<double> Flow::nested_param(std::string_view path) const {
+  const std::vector<std::string> parts = split_sv(path, ':');
+  if (parts.size() != 3 || parts[1] != "") {
+    return StatusOr<double>(Status::invalid_argument("nested_param path must be '<stage>::<param>'."));
+  }
+  const std::string stage = parts[0];
+  const std::string param = parts[2];
+  std::int64_t stage_index = -1;
+  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
+    if (transform_specs_[i].stage_key == stage || ("stage" + std::to_string(i)) == stage) {
+      stage_index = static_cast<std::int64_t>(i);
+      break;
+    }
+  }
+  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+    return StatusOr<double>(Status::invalid_argument("nested_param could not resolve stage key."));
+  }
+  const TransformSpec& spec = transform_specs_[static_cast<std::size_t>(stage_index)];
+  if (param == "route_size") return StatusOr<double>(static_cast<double>(spec.feature_route.size()));
+  if (param == "remainder") return StatusOr<double>(spec.remainder == RouteRemainderPolicy::Drop ? 1.0 : 0.0);
+  if (param == "kind") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(spec.kind)));
+  if (param == "stage_index") return StatusOr<double>(static_cast<double>(stage_index));
+  return StatusOr<double>(Status::invalid_argument("nested_param currently supports route_size|remainder|kind|stage_index."));
+}
+
+Status Flow::set_nested_param(std::string_view path, double value) {
+  const std::vector<std::string> parts = split_sv(path, ':');
+  if (parts.size() != 3 || parts[1] != "") {
+    return Status::invalid_argument("set_nested_param path must be '<stage>::<param>'.");
+  }
+  const std::string stage = parts[0];
+  const std::string param = parts[2];
+  std::int64_t stage_index = -1;
+  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
+    if (transform_specs_[i].stage_key == stage || ("stage" + std::to_string(i)) == stage) {
+      stage_index = static_cast<std::int64_t>(i);
+      break;
+    }
+  }
+  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+    return Status::invalid_argument("set_nested_param could not resolve stage key.");
+  }
+  if (param == "remainder") {
+    return set_stage_remainder(stage_index, value >= 0.5 ? RouteRemainderPolicy::Drop : RouteRemainderPolicy::PassThrough);
+  }
+  return Status::invalid_argument("set_nested_param currently supports '<stage>::remainder' only.");
+}
+
+std::string Flow::flow_summary() const {
+  std::ostringstream oss;
+  oss << "task=" << static_cast<int>(task_kind())
+      << " stages=" << transform_specs_.size()
+      << " trained=" << (trained_ ? "1" : "0")
+      << " model=" << (has_model() ? "1" : "0");
+  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
+    const auto& spec = transform_specs_[i];
+    oss << "\n[" << i << "] "
+        << (spec.stage_key.empty() ? ("stage" + std::to_string(i)) : spec.stage_key)
+        << " kind=" << transform_kind_name(spec.kind)
+        << " route=" << spec.feature_route.size()
+        << " remainder=" << remainder_name(spec.remainder);
+  }
+  return oss.str();
+}
+
+StatusOr<std::string> Flow::save_blueprint() const {
+  if (has_opaque_transforms_) {
+    return StatusOr<std::string>(
+        Status::invalid_argument("Flow::save_blueprint does not support opaque append_transform stages."));
+  }
+  std::ostringstream oss;
+  oss << "pluss_flow_blueprint_v1\n";
+  for (const auto& spec : transform_specs_) {
+    oss << transform_kind_name(spec.kind) << "|"
+        << (spec.stage_key.empty() ? "-" : spec.stage_key) << "|"
+        << remainder_name(spec.remainder) << "|";
+    for (std::size_t i = 0; i < spec.feature_route.size(); ++i) {
+      if (i != 0) oss << ",";
+      oss << spec.feature_route[i];
+    }
+    oss << "\n";
+  }
+  return StatusOr<std::string>(oss.str());
+}
+
+Status Flow::load_blueprint(std::string_view text) {
+  std::istringstream iss{std::string(text)};
+  std::string line{};
+  if (!std::getline(iss, line)) {
+    return Status::invalid_argument("Flow::load_blueprint requires a non-empty blueprint.");
+  }
+  if (line != "pluss_flow_blueprint_v1") {
+    return Status::invalid_argument("Flow::load_blueprint invalid blueprint header.");
+  }
+  clear_transforms();
+  while (std::getline(iss, line)) {
+    if (line.empty()) continue;
+    const std::vector<std::string> fields = split_sv(line, '|');
+    if (fields.size() != 4) return Status::invalid_argument("Flow::load_blueprint malformed stage line.");
+    const std::optional<TransformKind> kind = parse_transform_kind(fields[0]);
+    if (!kind.has_value()) return Status::invalid_argument("Flow::load_blueprint unknown stage kind.");
+    const std::optional<RouteRemainderPolicy> remainder = parse_remainder(fields[2]);
+    if (!remainder.has_value()) return Status::invalid_argument("Flow::load_blueprint invalid remainder policy.");
+    std::vector<std::int64_t> route{};
+    if (!fields[3].empty()) {
+      const std::vector<std::string> ids = split_sv(fields[3], ',');
+      route.reserve(ids.size());
+      for (const std::string& token : ids) {
+        const auto parsed = parse_scalar<std::int64_t>(token);
+        if (!parsed.has_value()) return Status::invalid_argument("Flow::load_blueprint route parse error.");
+        route.push_back(parsed.value());
+      }
+    }
+    TransformOptions options{};
+    switch (kind.value()) {
+      case TransformKind::StandardScaler: options = prep::StandardScalerOptions{}; break;
+      case TransformKind::MinMaxScaler: options = prep::MinMaxScalerOptions{}; break;
+      case TransformKind::RobustScaler: options = prep::RobustScalerOptions{}; break;
+      case TransformKind::SimpleImputer: options = prep::SimpleImputerOptions{}; break;
+      case TransformKind::NeighborImputer: options = prep::NeighborImputerOptions{}; break;
+      case TransformKind::IterativeImputer: options = prep::IterativeImputerOptions{}; break;
+      case TransformKind::OneHotEncoder: options = prep::OneHotEncoderOptions{}; break;
+      case TransformKind::FrequencyEncoder: options = prep::FrequencyEncoderOptions{}; break;
+      case TransformKind::VectorNormalizer: options = prep::VectorNormalizerOptions{}; break;
+      case TransformKind::MaxAbsScaler: options = prep::MaxAbsScalerOptions{}; break;
+      case TransformKind::QuantileMap: options = prep::QuantileMapOptions{}; break;
+      case TransformKind::PowerMap: options = prep::PowerMapOptions{}; break;
+      case TransformKind::ThresholdBinarizer: options = prep::ThresholdBinarizerOptions{}; break;
+      case TransformKind::PolynomialLift: options = prep::PolynomialLiftOptions{}; break;
+      case TransformKind::OrdinalEncoder: options = prep::OrdinalEncoderOptions{}; break;
+      case TransformKind::LabelEncoder: options = prep::LabelEncoderOptions{}; break;
+    }
+    Status status = add_named_transform(kind.value(),
+                                        options,
+                                        fields[1] == "-" ? std::string{} : fields[1],
+                                        pluss::msharp::RangeView::Int(route),
+                                        remainder.value());
+    if (!status.ok()) return status;
+  }
+  return Status::success();
+}
+
+Status Flow::add_named_transform(TransformKind kind,
+                                 const TransformOptions& options,
+                                 std::string stage_key,
+                                 pluss::msharp::RangeView::Int feature_route,
+                                 RouteRemainderPolicy remainder) {
+  if (!stage_key.empty()) {
+    for (const TransformSpec& spec : transform_specs_) {
+      if (spec.stage_key == stage_key) {
+        return Status::invalid_argument("Flow::add_named_transform requires unique stage_key values.");
+      }
+    }
+  }
+  StatusOr<std::unique_ptr<TransformerBase>> stage_or = make_transformer_from_spec(kind, options);
+  if (!stage_or.ok()) return stage_or.status();
+  transforms_.push_back(stage_or.move_value());
+  transform_specs_.push_back(TransformSpec{
+      .kind = kind,
+      .options = options,
+      .feature_route = route_vec(feature_route),
+      .remainder = remainder,
+      .stage_key = std::move(stage_key),
+  });
+  trained_ = false;
+  return Status::success();
+}
+
+Status Flow::add_column_stage(std::string stage_key,
+                              TransformKind kind,
+                              const TransformOptions& options,
+                              pluss::msharp::RangeView::Int feature_route,
+                              RouteRemainderPolicy remainder) {
+  return add_named_transform(kind, options, std::move(stage_key), feature_route, remainder);
+}
+
+Status Flow::set_stage_key(std::int64_t stage_index, std::string stage_key) {
+  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+    return Status::invalid_argument("Flow::set_stage_key stage index out of range.");
+  }
+  if (!stage_key.empty()) {
+    for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
+      if (static_cast<std::int64_t>(i) == stage_index) continue;
+      if (transform_specs_[i].stage_key == stage_key) {
+        return Status::invalid_argument("Flow::set_stage_key requires unique stage_key values.");
+      }
+    }
+  }
+  transform_specs_[static_cast<std::size_t>(stage_index)].stage_key = std::move(stage_key);
+  return Status::success();
+}
+
+Status Flow::set_stage_route(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route) {
+  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+    return Status::invalid_argument("Flow::set_stage_route stage index out of range.");
+  }
+  transform_specs_[static_cast<std::size_t>(stage_index)].feature_route = route_vec(feature_route);
+  trained_ = false;
+  return Status::success();
+}
+
+Status Flow::set_stage_remainder(std::int64_t stage_index, RouteRemainderPolicy remainder) {
+  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+    return Status::invalid_argument("Flow::set_stage_remainder stage index out of range.");
+  }
+  transform_specs_[static_cast<std::size_t>(stage_index)].remainder = remainder;
+  trained_ = false;
+  return Status::success();
+}
+
 Status Flow::append_transform(std::unique_ptr<TransformerBase> transformer) {
   if (!transformer) return Status::invalid_argument("Flow::append_transform requires a non-null transformer.");
   transforms_.push_back(std::move(transformer));
@@ -195,179 +610,86 @@ void Flow::clear_transforms() noexcept {
 }
 
 Status Flow::add_standard_scaler(prep::StandardScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::StandardScaler>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::StandardScaler,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::StandardScaler, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_minmax_scaler(prep::MinMaxScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::MinMaxScaler>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::MinMaxScaler,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::MinMaxScaler, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_robust_scaler(prep::RobustScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::RobustScaler>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::RobustScaler,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::RobustScaler, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_simple_imputer(prep::SimpleImputerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::SimpleImputer>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::SimpleImputer,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::SimpleImputer, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_neighbor_imputer(prep::NeighborImputerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::NeighborImputer>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::NeighborImputer,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::NeighborImputer, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_iterative_imputer(prep::IterativeImputerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::IterativeImputer>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::IterativeImputer,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::IterativeImputer, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_one_hot_encoder(prep::OneHotEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::OneHotEncoder>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::OneHotEncoder,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::OneHotEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_frequency_encoder(prep::FrequencyEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::FrequencyEncoder>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::FrequencyEncoder,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::FrequencyEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_vector_normalizer(prep::VectorNormalizerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::VectorNormalizer>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::VectorNormalizer,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::VectorNormalizer, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_maxabs_scaler(prep::MaxAbsScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::MaxAbsScaler>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::MaxAbsScaler,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::MaxAbsScaler, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_quantile_map(prep::QuantileMapOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::QuantileMap>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::QuantileMap,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::QuantileMap, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_power_map(prep::PowerMapOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::PowerMap>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::PowerMap,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::PowerMap, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_threshold_binarizer(prep::ThresholdBinarizerOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::ThresholdBinarizer>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::ThresholdBinarizer,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(TransformKind::ThresholdBinarizer,
+                             TransformOptions{options},
+                             std::string{},
+                             feature_route,
+                             RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_polynomial_lift(prep::PolynomialLiftOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::PolynomialLift>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::PolynomialLift,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::PolynomialLift, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_ordinal_encoder(prep::OrdinalEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::OrdinalEncoder>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::OrdinalEncoder,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::OrdinalEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_label_encoder(prep::LabelEncoderOptions options, pluss::msharp::RangeView::Int feature_route) {
-  transforms_.push_back(std::make_unique<prep::LabelEncoder>(options));
-  transform_specs_.push_back(TransformSpec{
-      .kind = TransformKind::LabelEncoder,
-      .options = options,
-      .feature_route = route_vec(feature_route),
-  });
-  trained_ = false;
-  return Status::success();
+  return add_named_transform(
+      TransformKind::LabelEncoder, TransformOptions{options}, std::string{}, feature_route, RouteRemainderPolicy::PassThrough);
 }
 
 Status Flow::add_function_transformer(prep::FunctionTransformer transformer) {
@@ -460,8 +782,10 @@ StatusOr<FeatureBatch> Flow::apply_map(const FeatureBatch& batch, const InferOpt
         mapped_or.move_value(), current.layout, expected_samples, static_cast<std::int64_t>(i), "Flow::map");
     if (!mapped_routed_or.ok()) return StatusOr<FeatureBatch>(mapped_routed_or.status());
 
+    const RouteRemainderPolicy remainder =
+        (i < transform_specs_.size()) ? transform_specs_[i].remainder : RouteRemainderPolicy::PassThrough;
     StatusOr<FeatureBatch> merged_or = merge_routed_features(
-        current, mapped_routed_or.value(), route, static_cast<std::int64_t>(i), "Flow::map");
+        current, mapped_routed_or.value(), route, remainder, static_cast<std::int64_t>(i), "Flow::map");
     if (!merged_or.ok()) return StatusOr<FeatureBatch>(merged_or.status());
     current = merged_or.move_value();
   }
@@ -506,8 +830,10 @@ StatusOr<FeatureBatch> Flow::apply_learn_map(const FeatureBatch& batch,
         mapped_or.move_value(), current.layout, expected_samples, static_cast<std::int64_t>(i), "Flow::learn");
     if (!mapped_routed_or.ok()) return StatusOr<FeatureBatch>(mapped_routed_or.status());
 
+    const RouteRemainderPolicy remainder =
+        (i < transform_specs_.size()) ? transform_specs_[i].remainder : RouteRemainderPolicy::PassThrough;
     StatusOr<FeatureBatch> merged_or = merge_routed_features(
-        current, mapped_routed_or.value(), route, static_cast<std::int64_t>(i), "Flow::learn");
+        current, mapped_routed_or.value(), route, remainder, static_cast<std::int64_t>(i), "Flow::learn");
     if (!merged_or.ok()) return StatusOr<FeatureBatch>(merged_or.status());
     current = merged_or.move_value();
   }

@@ -10,6 +10,7 @@
 #include <map>
 #include <numeric>
 #include <random>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -145,6 +146,18 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
   return StatusOr<std::vector<double>>(std::move(values));
 }
 
+[[nodiscard]] StatusOr<std::vector<double>> flatten_group_values(const Series& groups) {
+  if (!groups.defined()) return StatusOr<std::vector<double>>(Status::invalid_argument("groups must be a defined Series."));
+  if (groups.numel() < 2) return StatusOr<std::vector<double>>(Status::invalid_argument("groups must contain at least 2 observations."));
+
+  const Series flat = groups.to(ScalarType::Float64).reshape({groups.numel()});
+  if (flat.isnan().any().item<bool>()) {
+    return StatusOr<std::vector<double>>(Status::invalid_argument("groups must not contain NaN."));
+  }
+  std::vector<double> values = flat.to_vec<double>();
+  return StatusOr<std::vector<double>>(std::move(values));
+}
+
 [[nodiscard]] std::vector<std::vector<std::int64_t>> class_partitions(const std::vector<double>& labels) {
   // sklearn np.unique returns sorted classes; keep that ordering for parity.
   std::vector<double> unique_labels = labels;
@@ -238,6 +251,70 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
     return Status::invalid_argument("strat_holdout_split requires test size to be >= number of classes.");
   }
   return Status::success();
+}
+
+[[nodiscard]] std::vector<double> sorted_unique_values(std::vector<double> values) {
+  for (double& value : values) {
+    if (value == 0.0) value = 0.0;
+  }
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end()), values.end());
+  return values;
+}
+
+[[nodiscard]] StatusOr<std::vector<std::int64_t>> encoded_groups(const std::vector<double>& groups,
+                                                                 std::vector<double>* unique_groups_out) {
+  std::vector<double> unique_groups = sorted_unique_values(groups);
+  if (unique_groups.empty()) {
+    return StatusOr<std::vector<std::int64_t>>(Status::invalid_argument("group_fold_plan requires at least one group."));
+  }
+
+  std::vector<std::int64_t> group_idx(groups.size(), 0);
+  for (std::size_t i = 0; i < groups.size(); ++i) {
+    double value = groups[i];
+    if (value == 0.0) value = 0.0;
+    const auto it = std::lower_bound(unique_groups.begin(), unique_groups.end(), value);
+    if (it == unique_groups.end() || *it != value) {
+      return StatusOr<std::vector<std::int64_t>>(Status::internal("group_fold_plan: failed to encode group id."));
+    }
+    group_idx[i] = static_cast<std::int64_t>(it - unique_groups.begin());
+  }
+  *unique_groups_out = std::move(unique_groups);
+  return StatusOr<std::vector<std::int64_t>>(std::move(group_idx));
+}
+
+[[nodiscard]] std::vector<std::int64_t> argsort_stable_ascending(const std::vector<std::int64_t>& values) {
+  std::vector<std::int64_t> order(values.size(), 0);
+  std::iota(order.begin(), order.end(), std::int64_t{0});
+  std::stable_sort(order.begin(),
+                   order.end(),
+                   [&](std::int64_t lhs, std::int64_t rhs) {
+                     return values[static_cast<std::size_t>(lhs)] < values[static_cast<std::size_t>(rhs)];
+                   });
+  return order;
+}
+
+[[nodiscard]] std::vector<std::int64_t> split_counts(std::int64_t total, std::int64_t parts) {
+  std::vector<std::int64_t> counts(static_cast<std::size_t>(parts), total / parts);
+  for (std::int64_t i = 0; i < (total % parts); ++i) {
+    ++counts[static_cast<std::size_t>(i)];
+  }
+  return counts;
+}
+
+[[nodiscard]] std::vector<std::int64_t> gather_train_indices(std::int64_t sample_count,
+                                                             const std::vector<std::int64_t>& test_indices) {
+  std::vector<bool> is_test(static_cast<std::size_t>(sample_count), false);
+  for (std::int64_t index : test_indices) {
+    is_test[static_cast<std::size_t>(index)] = true;
+  }
+
+  std::vector<std::int64_t> train_indices{};
+  train_indices.reserve(static_cast<std::size_t>(sample_count - static_cast<std::int64_t>(test_indices.size())));
+  for (std::int64_t i = 0; i < sample_count; ++i) {
+    if (!is_test[static_cast<std::size_t>(i)]) train_indices.push_back(i);
+  }
+  return train_indices;
 }
 
 } // namespace
@@ -446,6 +523,109 @@ StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& op
   }
 
   return StatusOr<SplitPlan>(std::move(plan));
+}
+
+StatusOr<SplitPlan> group_fold_plan(const Series& groups, const SplitOptions& options) {
+  StatusOr<std::vector<double>> groups_or = flatten_group_values(groups);
+  if (!groups_or.ok()) return StatusOr<SplitPlan>(groups_or.status());
+
+  const std::vector<double>& group_values = groups_or.value();
+  const std::int64_t sample_count = static_cast<std::int64_t>(group_values.size());
+  Status args_status = validate_fold_args(sample_count, options);
+  if (!args_status.ok()) return StatusOr<SplitPlan>(std::move(args_status));
+
+  std::vector<double> unique_groups{};
+  StatusOr<std::vector<std::int64_t>> group_idx_or = encoded_groups(group_values, &unique_groups);
+  if (!group_idx_or.ok()) return StatusOr<SplitPlan>(group_idx_or.status());
+  const std::vector<std::int64_t>& group_idx = group_idx_or.value();
+
+  const std::int64_t n_groups = static_cast<std::int64_t>(unique_groups.size());
+  const std::int64_t fold_count = options.folds;
+  if (fold_count > n_groups) {
+    return StatusOr<SplitPlan>(Status::invalid_argument(
+        "group_fold_plan requires SplitOptions.folds <= number of distinct groups."));
+  }
+
+  SplitPlan plan{};
+  plan.folds.reserve(static_cast<std::size_t>(fold_count));
+
+  if (options.shuffle) {
+    std::vector<std::int64_t> shuffled_group_ids(static_cast<std::size_t>(n_groups), 0);
+    std::iota(shuffled_group_ids.begin(), shuffled_group_ids.end(), std::int64_t{0});
+    NumpyRandomState rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+    shuffle_like_numpy(shuffled_group_ids, rng);
+
+    const std::vector<std::int64_t> per_fold_group_counts = split_counts(n_groups, fold_count);
+    std::int64_t offset = 0;
+    for (std::int64_t fold_id = 0; fold_id < fold_count; ++fold_id) {
+      const std::int64_t count = per_fold_group_counts[static_cast<std::size_t>(fold_id)];
+      std::unordered_set<std::int64_t> fold_groups{};
+      fold_groups.reserve(static_cast<std::size_t>(count * 2 + 1));
+      for (std::int64_t j = 0; j < count; ++j) {
+        fold_groups.insert(shuffled_group_ids[static_cast<std::size_t>(offset + j)]);
+      }
+      offset += count;
+
+      std::vector<std::int64_t> test_indices{};
+      for (std::size_t i = 0; i < group_idx.size(); ++i) {
+        if (fold_groups.contains(group_idx[i])) {
+          test_indices.push_back(static_cast<std::int64_t>(i));
+        }
+      }
+      std::vector<std::int64_t> train_indices = gather_train_indices(sample_count, test_indices);
+      plan.folds.push_back(IndexSplit{
+          .train_indices = make_index_series(train_indices),
+          .test_indices = make_index_series(test_indices),
+      });
+    }
+    return StatusOr<SplitPlan>(std::move(plan));
+  }
+
+  std::vector<std::int64_t> n_samples_per_group(static_cast<std::size_t>(n_groups), 0);
+  for (std::int64_t encoded_group : group_idx) {
+    ++n_samples_per_group[static_cast<std::size_t>(encoded_group)];
+  }
+
+  std::vector<std::int64_t> indices = argsort_stable_ascending(n_samples_per_group);
+  std::reverse(indices.begin(), indices.end());
+
+  std::vector<std::int64_t> sorted_group_weights{};
+  sorted_group_weights.reserve(n_samples_per_group.size());
+  for (std::int64_t idx : indices) {
+    sorted_group_weights.push_back(n_samples_per_group[static_cast<std::size_t>(idx)]);
+  }
+
+  std::vector<double> n_samples_per_fold(static_cast<std::size_t>(fold_count), 0.0);
+  std::vector<std::int64_t> group_to_fold(static_cast<std::size_t>(n_groups), 0);
+  for (std::size_t ordered_group = 0; ordered_group < sorted_group_weights.size(); ++ordered_group) {
+    const auto lightest_fold_it = std::min_element(n_samples_per_fold.begin(), n_samples_per_fold.end());
+    const std::size_t lightest_fold = static_cast<std::size_t>(lightest_fold_it - n_samples_per_fold.begin());
+    n_samples_per_fold[lightest_fold] += static_cast<double>(sorted_group_weights[ordered_group]);
+    const std::int64_t original_group = indices[ordered_group];
+    group_to_fold[static_cast<std::size_t>(original_group)] = static_cast<std::int64_t>(lightest_fold);
+  }
+
+  std::vector<std::vector<std::int64_t>> test_indices_by_fold(static_cast<std::size_t>(fold_count));
+  for (std::size_t i = 0; i < group_idx.size(); ++i) {
+    const std::int64_t fold_id = group_to_fold[static_cast<std::size_t>(group_idx[i])];
+    test_indices_by_fold[static_cast<std::size_t>(fold_id)].push_back(static_cast<std::int64_t>(i));
+  }
+
+  for (std::int64_t fold_id = 0; fold_id < fold_count; ++fold_id) {
+    const auto& test_indices = test_indices_by_fold[static_cast<std::size_t>(fold_id)];
+    std::vector<std::int64_t> train_indices = gather_train_indices(sample_count, test_indices);
+    plan.folds.push_back(IndexSplit{
+        .train_indices = make_index_series(train_indices),
+        .test_indices = make_index_series(test_indices),
+    });
+  }
+  return StatusOr<SplitPlan>(std::move(plan));
+}
+
+StatusOr<SplitPlan> group_fold_plan(pluss::msharp::RangeView::Of<std::int64_t> groups, const SplitOptions& options) {
+  const std::vector<std::int64_t> values(groups.begin(), groups.end());
+  const Series group_series = pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, index_config());
+  return group_fold_plan(group_series, options);
 }
 
 StatusOr<FeatureBatch> slice_feature_batch(const FeatureBatch& in, const Series& indices) {

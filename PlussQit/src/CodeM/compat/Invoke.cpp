@@ -17,6 +17,7 @@
 #include "CodeM/native/cpu/SortingKernels.h"
 #include "CodeM/native/mps/Matmul.h"
 #include "CodeM/native/mps/Sorting.h"
+#include "CodeM/native/mps/Stochastic.h"
 #include "CodeM/native/cuda/SelectionOps.h"
 #include "CodeM/native/cuda/MatmulOps.h"
 #include "CodeM/native/cuda/StochasticOps.h"
@@ -150,15 +151,159 @@ static Series cuda_native_matmul_reference_(const Series& a, const Series& b) {
   return native::cpu::matmul(a, b);
 }
 
+static std::vector<std::int64_t> leading_batch_dims_(const Series& s) {
+  PLUSS_CHECK(s.dim() >= 2, "matmul: expected rank >= 2 for batched path");
+  return std::vector<std::int64_t>(s.sizes().begin(), s.sizes().end() - 2);
+}
+
+static std::vector<std::int64_t> prepend_ones_(std::span<const std::int64_t> shape, std::size_t count) {
+  std::vector<std::int64_t> out;
+  out.reserve(count + shape.size());
+  out.insert(out.end(), count, 1);
+  out.insert(out.end(), shape.begin(), shape.end());
+  return out;
+}
+
+static std::int64_t product_shape_(std::span<const std::int64_t> shape) {
+  if (shape.empty()) return 1;
+  std::int64_t p = 1;
+  for (const auto v : shape) p *= v;
+  return p;
+}
+
+static Series mps_matmul_batched_dispatch_(const Series& a, const Series& b) {
+  const Series aa0 = a.is_contiguous() ? a : a.contiguous();
+  const Series bb0 = b.is_contiguous() ? b : b.contiguous();
+
+  // Vector/matrix promotion follows torch semantics.
+  if (aa0.dim() == 1 && bb0.dim() == 1) {
+    const Series mm = mps_matmul_batched_dispatch_(aa0.unsqueeze(0), bb0.unsqueeze(-1));
+    return mm.reshape({});
+  }
+  if (aa0.dim() == 1) {
+    return mps_matmul_batched_dispatch_(aa0.unsqueeze(0), bb0).squeeze(0);
+  }
+  if (bb0.dim() == 1) {
+    return mps_matmul_batched_dispatch_(aa0, bb0.unsqueeze(-1)).squeeze(-1);
+  }
+
+  PLUSS_CHECK(aa0.dim() >= 2 && bb0.dim() >= 2, "matmul: MPS path expects rank>=2 inputs");
+  PLUSS_CHECK(aa0.scalar_type() == bb0.scalar_type(), "matmul: MPS path expects matching dtypes");
+
+  const std::int64_t m = aa0.sizes()[aa0.dim() - 2];
+  const std::int64_t k = aa0.sizes()[aa0.dim() - 1];
+  const std::int64_t k2 = bb0.sizes()[bb0.dim() - 2];
+  const std::int64_t n = bb0.sizes()[bb0.dim() - 1];
+  PLUSS_CHECK(k == k2, "matmul: shape mismatch (inner dimensions)");
+
+  const auto a_batch = leading_batch_dims_(aa0);
+  const auto b_batch = leading_batch_dims_(bb0);
+  const auto out_batch = SeriesIterator::broadcast_shape(
+      std::span<const std::int64_t>(a_batch.data(), a_batch.size()),
+      std::span<const std::int64_t>(b_batch.data(), b_batch.size()));
+
+  std::vector<std::int64_t> out_shape = out_batch;
+  out_shape.push_back(m);
+  out_shape.push_back(n);
+  if (product_shape_(std::span<const std::int64_t>(out_shape.data(), out_shape.size())) == 0) {
+    return Series::empty(out_shape, aa0.scalar_type(), Platform::MPS);
+  }
+
+  const std::size_t out_batch_rank = out_batch.size();
+  const std::size_t a_batch_rank = static_cast<std::size_t>(aa0.dim() - 2);
+  const std::size_t b_batch_rank = static_cast<std::size_t>(bb0.dim() - 2);
+
+  const std::vector<std::int64_t> a_view_shape =
+      prepend_ones_(std::span<const std::int64_t>(aa0.sizes().data(), aa0.sizes().size()), out_batch_rank - a_batch_rank);
+  const std::vector<std::int64_t> b_view_shape =
+      prepend_ones_(std::span<const std::int64_t>(bb0.sizes().data(), bb0.sizes().size()), out_batch_rank - b_batch_rank);
+
+  Series aa = (std::vector<std::int64_t>(aa0.sizes().begin(), aa0.sizes().end()) == a_view_shape)
+                  ? aa0
+                  : aa0.reshape(a_view_shape);
+  Series bb = (std::vector<std::int64_t>(bb0.sizes().begin(), bb0.sizes().end()) == b_view_shape)
+                  ? bb0
+                  : bb0.reshape(b_view_shape);
+
+  std::vector<std::int64_t> a_target = out_batch;
+  a_target.push_back(m);
+  a_target.push_back(k);
+  std::vector<std::int64_t> b_target = out_batch;
+  b_target.push_back(k);
+  b_target.push_back(n);
+
+  if (std::vector<std::int64_t>(aa.sizes().begin(), aa.sizes().end()) != a_target) {
+    aa = aa.expand(a_target, true).contiguous();
+  }
+  if (std::vector<std::int64_t>(bb.sizes().begin(), bb.sizes().end()) != b_target) {
+    bb = bb.expand(b_target, true).contiguous();
+  }
+
+  const std::int64_t batch = product_shape_(std::span<const std::int64_t>(out_batch.data(), out_batch.size()));
+  if (batch == 1) {
+    return native::mps::matmul(
+        aa.reshape({m, k}).contiguous(),
+        bb.reshape({k, n}).contiguous());
+  }
+
+  const Series aa_flat = aa.reshape({batch, m, k}).contiguous();
+  const Series bb_flat = bb.reshape({batch, k, n}).contiguous();
+  std::vector<Series> pages;
+  pages.reserve(static_cast<std::size_t>(batch));
+  for (std::int64_t i = 0; i < batch; ++i) {
+    pages.push_back(native::mps::matmul(
+        aa_flat.select(0, i).contiguous(),
+        bb_flat.select(0, i).contiguous()));
+  }
+  PLUSS_CHECK(!pages.empty(), "matmul: internal MPS batched pages unexpectedly empty");
+  Series out_batched = pages.front();
+  if (pages.size() > 1) {
+    std::vector<Series> tails;
+    tails.reserve(pages.size() - 1);
+    for (std::size_t i = 1; i < pages.size(); ++i) tails.push_back(pages[i]);
+    out_batched = out_batched.pile(tails, 0);
+  } else {
+    out_batched = out_batched.unsqueeze(0);
+  }
+  return out_batched.reshape(out_shape);
+}
+
 static Series matmul_dispatch_(const Series& a, const Series& b) {
   ops_internal::require_same_platform(a, b, "matmul");
   if (a.platform() == Platform::MPS) {
     const Series aa = a.is_contiguous() ? a : a.contiguous();
     const Series bb = b.is_contiguous() ? b : b.contiguous();
-    if (!native::mps::supports_matmul(aa, bb)) {
-      throw_error("matmul: MPS path currently supports contiguous 2D float32/int32 only");
+    const auto mps_matmul_cpu_bridge_enabled = []() noexcept {
+      const char* raw = std::getenv("PLUSS_MPS_MATMUL_CPU_BRIDGE");
+      if (raw == nullptr || *raw == '\0') return true;
+      auto eq_lit = [&](const char* lit) noexcept {
+        const char* x = raw;
+        const char* y = lit;
+        while (*x != '\0' && *y != '\0') {
+          if (std::tolower(static_cast<unsigned char>(*x)) !=
+              std::tolower(static_cast<unsigned char>(*y))) {
+            return false;
+          }
+          ++x;
+          ++y;
+        }
+        return *x == '\0' && *y == '\0';
+      };
+      return eq_lit("1") || eq_lit("true") || eq_lit("yes") || eq_lit("on");
+    }();
+    if (mps_matmul_cpu_bridge_enabled &&
+        aa.dim() == 2 &&
+        bb.dim() == 2 &&
+        bb.sizes()[1] == 1) {
+      return native::cpu::matmul(
+                 aa.to(Platform::CPU, aa.scalar_type()),
+                 bb.to(Platform::CPU, bb.scalar_type()))
+          .to(Platform::MPS, aa.scalar_type());
     }
-    return native::mps::matmul(aa, bb);
+    if (native::mps::supports_matmul(aa, bb)) {
+      return native::mps::matmul(aa, bb);
+    }
+    return mps_matmul_batched_dispatch_(aa, bb);
   }
   if (a.platform() == Platform::CUDA) {
     if (auto cublas_out = native::cuda::try_cublas_matmul(a, b); cublas_out.has_value()) {
@@ -411,6 +556,29 @@ static bool is_numeric_scalar_arg(const Arg& a) {
          std::holds_alternative<Scalar>(a.v);
 }
 
+static const Series* as_optional_series_ptr(const Arg& a) {
+  if (std::holds_alternative<std::monostate>(a.v)) return nullptr;
+  if (std::holds_alternative<const Series*>(a.v)) return std::get<const Series*>(a.v);
+  PLUSS_CHECK(false, "Expected optional Series");
+  return nullptr;
+}
+
+static Series& as_mutable_series_ref(const Arg& a) {
+  PLUSS_CHECK(std::holds_alternative<const Series*>(a.v), "Expected mutable Series reference");
+  return *const_cast<Series*>(std::get<const Series*>(a.v));
+}
+
+static double as_numeric_or_series_scalar_double(const Arg& a) {
+  if (is_numeric_scalar_arg(a)) return as_double(a);
+  if (std::holds_alternative<const Series*>(a.v)) {
+    const Series& s = as_series(a);
+    PLUSS_CHECK(s.defined() && s.numel() == 1, "Expected scalar Series");
+    return s.to(ScalarType::Float64).item<double>();
+  }
+  PLUSS_CHECK(false, "Expected numeric scalar or scalar Series");
+  return 0.0;
+}
+
 static Series scalar_like(const Series& self, double value) {
   const std::array<std::int64_t, 1> one{{1}};
   // Force construction on the target platform scope to avoid leaking a prior
@@ -567,11 +735,99 @@ static Series make_pre_copy_parent_snapshot_(const Series& root_before) {
   const auto root_link = series_tape::source_link(root_before);
   if (!root_link) return Series::undefined();
 
-  Series snapshot = series_tape::separate(root_before);
+  // Snapshot must own stable storage so subsequent in-place writes on root do
+  // not invalidate saved-version checks for historical links.
+  Series snapshot = root_before.clone();
   series_tape::set_tracks_slope(snapshot, true);
   auto snapshot_link = std::make_shared<series_tape::SourceLink>(*root_link);
   series_tape::bind_source_link(snapshot, std::move(snapshot_link));
   return snapshot;
+}
+
+static Series make_inplace_bridge_input_snapshot_(const Series& self) {
+  Series snapshot = Series::empty(self.sizes(), self.scalar_type()).to(self.platform());
+  assign_inplace_preserve_storage_(snapshot, self);
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(self)) {
+    return snapshot;
+  }
+  const Series parent_snapshot = make_pre_copy_parent_snapshot_(self);
+  series_tape::set_tracks_slope(snapshot, true);
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "inplace_bridge_input";
+  if (parent_snapshot.defined()) {
+    link->parents = {parent_snapshot};
+  }
+  link->propagate = [self, parent_snapshot](const Series& out_sens) {
+    Series sens = out_sens;
+    if (sens.platform() != self.platform()) sens = sens.to(self.platform());
+    if (sens.scalar_type() != self.scalar_type()) sens = sens.to(self.scalar_type());
+    if (std::vector<std::int64_t>(sens.sizes().begin(), sens.sizes().end()) !=
+        std::vector<std::int64_t>(self.sizes().begin(), self.sizes().end())) {
+      sens = sens.reshape(std::vector<std::int64_t>(self.sizes().begin(), self.sizes().end()));
+    }
+    if (parent_snapshot.defined()) {
+      Series parent_sens = sens;
+      if (parent_sens.platform() != parent_snapshot.platform()) {
+        parent_sens = parent_sens.to(parent_snapshot.platform());
+      }
+      if (parent_sens.scalar_type() != parent_snapshot.scalar_type()) {
+        parent_sens = parent_sens.to(parent_snapshot.scalar_type());
+      }
+      if (std::vector<std::int64_t>(parent_sens.sizes().begin(), parent_sens.sizes().end()) !=
+          std::vector<std::int64_t>(parent_snapshot.sizes().begin(), parent_snapshot.sizes().end())) {
+        parent_sens = parent_sens.reshape(
+            std::vector<std::int64_t>(parent_snapshot.sizes().begin(), parent_snapshot.sizes().end()));
+      }
+      series_tape::accumulate_sensitivity(parent_snapshot, parent_sens);
+      return;
+    }
+    series_tape::accumulate_sensitivity(self, sens);
+  };
+  series_tape::bind_source_link(snapshot, std::move(link));
+  return snapshot;
+}
+
+struct InplaceBridgeArgs final {
+  Args args;
+  std::vector<Series> owned_views;
+};
+
+static InplaceBridgeArgs remap_inplace_bridge_args_to_snapshot_(
+    const Args& args,
+    const Series& self,
+    const Series& snapshot) {
+  InplaceBridgeArgs out;
+  out.args.reserve(args.size());
+  for (const auto& arg : args) {
+    if (std::holds_alternative<const Series*>(arg.v)) {
+      const Series& ref = *std::get<const Series*>(arg.v);
+      if (shares_storage_(ref, self) && ref.scalar_type() == self.scalar_type()) {
+        out.owned_views.push_back(alias_view_on_(snapshot, ref));
+        out.args.emplace_back(out.owned_views.back());
+        continue;
+      }
+      out.args.push_back(arg);
+      continue;
+    }
+    if (std::holds_alternative<Arg::SeriesList>(arg.v)) {
+      const auto& list = std::get<Arg::SeriesList>(arg.v);
+      bool aliased = false;
+      for (const auto& s : list) {
+        if (s.defined() && shares_storage_(s, self)) {
+          aliased = true;
+          break;
+        }
+      }
+      PLUSS_CHECK(
+          !aliased,
+          "in-place autodiff bridge: SeriesList argument aliases destination; "
+          "use copy_/put_/index_put_ for aliased indexed writes");
+      out.args.push_back(arg);
+      continue;
+    }
+    out.args.push_back(arg);
+  }
+  return out;
 }
 
 static Series select_with_index_list_(const Series& self, const std::vector<Series>& indices) {
@@ -729,9 +985,9 @@ static Series put_dispatch_copy_(
     if (supports_put_autodiff_1d_(self, idx, val)) {
       bind_put_backward_1d_(out, self, idx, val, accumulate);
     } else {
-      warn(
-          "index_put_: autograd link not yet implemented for this indexing pattern; "
-          "sensitivity may disconnect (supported now: 1D integer index with scalar/equal-length source).");
+      // Generic index-list fallback keeps autograd connected for broader
+      // index_put_ patterns (mirrors SeriesList path behavior).
+      bind_put_backward_index_list_(out, self, std::vector<Series>{idx}, val, accumulate);
     }
   }
   return out;
@@ -835,6 +1091,11 @@ static Series& copy_dispatch_inplace_(Series& self, const Series& other) {
       }
     };
     series_tape::bind_source_link(root_after, std::move(link));
+    if (track_root && !root_parent_snapshot.defined()) {
+      // Leaf-root copy_ writes should retain post-reverse sensitivity on the
+      // destination tensor to match leaf gradient expectations.
+      series_tape::set_keep_sensitivity(root_after, true);
+    }
   }
   return self;
 }
@@ -906,9 +1167,28 @@ static Series index_select_dispatch_(const Series& self, std::int64_t dim, const
       self.platform());
   Series out = ops_internal::gather(self, dim, idx_expanded);
 
-  // MPS autograd: index_select built via gather can drop sensitivities on some
-  // gather/squeeze paths. Rebind a direct backward rule that scatters on CPU.
+  // Optional MPS fallback hook: rebind index_select backward to a CPU scatter
+  // route only when explicitly requested. Default path stays fully device-native.
+  const auto use_mps_cpu_index_select_backward = []() noexcept {
+    const char* raw = std::getenv("PLUSS_MPS_INDEX_SELECT_CPU_BACKWARD");
+    if (raw == nullptr || *raw == '\0') return false;
+    auto eq_lit = [&](const char* lit) noexcept {
+      const char* a = raw;
+      const char* b = lit;
+      while (*a != '\0' && *b != '\0') {
+        if (std::tolower(static_cast<unsigned char>(*a)) !=
+            std::tolower(static_cast<unsigned char>(*b))) {
+          return false;
+        }
+        ++a;
+        ++b;
+      }
+      return *a == '\0' && *b == '\0';
+    };
+    return eq_lit("1") || eq_lit("true") || eq_lit("yes") || eq_lit("on");
+  }();
   if (self.platform() == Platform::MPS &&
+      use_mps_cpu_index_select_backward &&
       series_tape::recording_enabled() &&
       series_tape::tracks_slope(self)) {
     Series idx_cpu = idx;
@@ -1226,6 +1506,43 @@ static Series repeat_impl(const Series& self, std::span<const std::int64_t> repe
   return out;
 }
 
+static std::vector<std::int64_t> repeat_factors_like_impl_(const Series& self,
+                                                            const Series& like) {
+  const std::vector<std::int64_t> src_sizes(self.sizes().begin(), self.sizes().end());
+  const std::vector<std::int64_t> dst_sizes(like.sizes().begin(), like.sizes().end());
+  if (dst_sizes.empty()) {
+    PLUSS_CHECK(src_sizes.empty(),
+                "repeat_like: cannot repeat a non-scalar Series to a scalar target");
+    return {};
+  }
+  PLUSS_CHECK(src_sizes.size() <= dst_sizes.size(),
+              "repeat_like: self cannot have more dimensions than like");
+
+  std::vector<std::int64_t> aligned_src(dst_sizes.size(), 1);
+  if (!src_sizes.empty()) {
+    std::copy(src_sizes.begin(),
+              src_sizes.end(),
+              aligned_src.end() - static_cast<std::ptrdiff_t>(src_sizes.size()));
+  }
+
+  std::vector<std::int64_t> repeats(dst_sizes.size(), 1);
+  for (std::size_t i = 0; i < dst_sizes.size(); ++i) {
+    const std::int64_t src = aligned_src[i];
+    const std::int64_t dst = dst_sizes[i];
+    PLUSS_CHECK(dst >= 0, "repeat_like: like sizes must be >= 0");
+    if (src == 0) {
+      PLUSS_CHECK(dst == 0,
+                  "repeat_like: zero-sized self dimension can only map to zero-sized like dimension");
+      repeats[i] = 1;
+      continue;
+    }
+    PLUSS_CHECK(dst % src == 0,
+                "repeat_like: each like dimension must be an integer multiple of self");
+    repeats[i] = dst / src;
+  }
+  return repeats;
+}
+
 static Series expand_impl(const Series& self, std::span<const std::int64_t> target_sizes) {
   PLUSS_CHECK(!target_sizes.empty() || self.dim() == 0, "expand: invalid target shape");
 
@@ -1416,9 +1733,35 @@ Series cuda_stochastic_route_or_bridge_(
   throw_cuda_stochastic_unavailable_(op, native_enabled, native_strict, route_supported);
 }
 
+ScalarType stochastic_work_dtype_(Platform platform) noexcept {
+  return platform == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64;
+}
+
+Series rand_work_(pluss::msharp::RangeView::Int sizes, Platform platform, std::uint64_t seed = 0) {
+  if (platform == Platform::MPS && native::mps::supports_uniform_stochastic(stochastic_work_dtype_(platform))) {
+    return native::mps::uniform_stochastic(sizes, stochastic_work_dtype_(platform), 0.0, 1.0, seed);
+  }
+  Series out = Series::rand(sizes, stochastic_work_dtype_(platform), seed);
+  return platform == Platform::CPU ? out : out.to(platform);
+}
+
+Series randn_work_(pluss::msharp::RangeView::Int sizes, Platform platform, std::uint64_t seed = 0) {
+  if (platform == Platform::MPS && native::mps::supports_normal_stochastic(stochastic_work_dtype_(platform))) {
+    return native::mps::normal_stochastic(sizes, stochastic_work_dtype_(platform), 0.0, 1.0, seed);
+  }
+  Series out = Series::randn(sizes, stochastic_work_dtype_(platform), seed);
+  return platform == Platform::CPU ? out : out.to(platform);
+}
+
 static Series bernoulli_sample_from_probs_cpu_(const Series& probs) {
   auto p = ops_internal::clamp(probs.to(Platform::CPU).to(ScalarType::Float64), 0.0, 1.0);
   auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0);
+  return ops_internal::lt(u, p);
+}
+
+static Series bernoulli_sample_from_probs_mps_(const Series& probs) {
+  auto p = ops_internal::clamp(probs.to(ScalarType::Float32), 0.0, 1.0);
+  auto u = rand_work_(p.sizes(), Platform::MPS, /*seed=*/0);
   return ops_internal::lt(u, p);
 }
 
@@ -1433,6 +1776,9 @@ static Series bernoulli_sample_from_probs(const Series& probs) {
         native_strict,
         route_supported,
         [&]() { return bernoulli_sample_from_probs_cpu_(probs).to(Platform::CUDA); });
+  }
+  if (probs.platform() == Platform::MPS) {
+    return bernoulli_sample_from_probs_mps_(probs);
   }
   return bernoulli_sample_from_probs_cpu_(probs);
 }
@@ -1456,6 +1802,12 @@ static Series uniform_like(const Series& self, double from, double to) {
         route_supported,
         [&]() { return uniform_like_cpu_(self, from, to).to(Platform::CUDA); });
   }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(to > from, "uniform_: expected to > from");
+    Series x = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    x = add_scalar(mul_scalar(x, to - from), from);
+    return x.to(self.scalar_type());
+  }
   return uniform_like_cpu_(self, from, to);
 }
 
@@ -1477,6 +1829,12 @@ static Series normal_like(const Series& self, double mean, double std) {
         native_strict,
         route_supported,
         [&]() { return normal_like_cpu_(self, mean, std).to(Platform::CUDA); });
+  }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(std >= 0.0, "normal_: expected std >= 0");
+    Series x = randn_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    x = add_scalar(mul_scalar(x, std), mean);
+    return x.to(self.scalar_type());
   }
   return normal_like_cpu_(self, mean, std);
 }
@@ -1500,6 +1858,13 @@ static Series exponential_like(const Series& self, double lambda) {
         native_strict,
         route_supported,
         [&]() { return exponential_like_cpu_(self, lambda).to(Platform::CUDA); });
+  }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(lambda > 0.0, "exponential_: expected lambda > 0");
+    Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    u = ops_internal::clamp_min(u, 1e-12);
+    Series x = mul_scalar(ops_internal::log(u), -1.0 / lambda);
+    return x.to(self.scalar_type());
   }
   return exponential_like_cpu_(self, lambda);
 }
@@ -1526,6 +1891,15 @@ static Series geometric_like(const Series& self, double p) {
         route_supported,
         [&]() { return geometric_like_cpu_(self, p).to(Platform::CUDA); });
   }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(p > 0.0 && p <= 1.0, "geometric_: expected 0 < p <= 1");
+    Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    Series one_minus_u = ops_internal::sub(scalar_like(u, 1.0), u);
+    const double denom = std::log(1.0 - p);
+    Series x = ops_internal::floor(div_scalar(ops_internal::log(one_minus_u), denom));
+    x = add_scalar(x, 1.0);
+    return x.to(self.scalar_type());
+  }
   return geometric_like_cpu_(self, p);
 }
 
@@ -1550,6 +1924,14 @@ static Series cauchy_like(const Series& self, double median, double sigma) {
         route_supported,
         [&]() { return cauchy_like_cpu_(self, median, sigma).to(Platform::CUDA); });
   }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(sigma > 0.0, "cauchy_: expected sigma > 0");
+    Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    Series centered = sub_scalar(u, 0.5);
+    Series t = ops_internal::tan(mul_scalar(centered, kPi));
+    Series x = add_scalar(mul_scalar(t, sigma), median);
+    return x.to(self.scalar_type());
+  }
   return cauchy_like_cpu_(self, median, sigma);
 }
 
@@ -1571,7 +1953,155 @@ static Series bernoulli_like(const Series& self, double p) {
         route_supported,
         [&]() { return bernoulli_like_cpu_(self, p).to(Platform::CUDA); });
   }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(p >= 0.0 && p <= 1.0, "bernoulli_: expected 0 <= p <= 1");
+    Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    return ops_internal::lt(u, scalar_like(u, p)).to(self.scalar_type());
+  }
   return bernoulli_like_cpu_(self, p);
+}
+
+static Series hardsigmoid_impl_(const Series& self) {
+  return ops_internal::clamp(add_scalar(div_scalar(self, 6.0), 0.5), 0.0, 1.0);
+}
+
+static Series hardswish_impl_(const Series& self) {
+  return ops_internal::mul(self, hardsigmoid_impl_(self));
+}
+
+static Series mish_impl_(const Series& self) {
+  return ops_internal::mul(self, ops_internal::tanh(ops_internal::softplus(self, 1.0, 20.0)));
+}
+
+static Series elu_impl_(const Series& self, double alpha, double scale, double input_scale) {
+  const Series zero = scalar_like(self, 0.0);
+  const Series pos = mul_scalar(self, scale);
+  const Series neg = mul_scalar(ops_internal::sub(ops_internal::exp(mul_scalar(self, input_scale)), 1.0),
+                                alpha * scale);
+  return ops_internal::where(ops_internal::gt(self, zero), pos, neg);
+}
+
+static Series celu_impl_(const Series& self, double alpha) {
+  PLUSS_CHECK(alpha > 0.0, "celu: expected alpha > 0");
+  const Series zero = scalar_like(self, 0.0);
+  const Series neg = mul_scalar(ops_internal::sub(ops_internal::exp(div_scalar(self, alpha)), 1.0), alpha);
+  return ops_internal::where(ops_internal::gt(self, zero), self, neg);
+}
+
+static Series selu_impl_(const Series& self) {
+  constexpr double kSeluAlpha = 1.6732632423543772;
+  constexpr double kSeluScale = 1.0507009873554805;
+  return elu_impl_(self, kSeluAlpha, kSeluScale, 1.0);
+}
+
+static Series threshold_impl_(const Series& self, double threshold, double value) {
+  return ops_internal::where(ops_internal::le(self, scalar_like(self, threshold)),
+                             scalar_like(self, value),
+                             self);
+}
+
+static Series dropout_impl_(const Series& self, double p, bool train) {
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "dropout: expected 0 <= p <= 1");
+  if (!train || p == 0.0) return self;
+  if (p == 1.0) return Series::zeros(self.sizes(), self.scalar_type()).to(self.platform());
+  const double keep = 1.0 - p;
+  const Series mask = bernoulli_like(self, keep).to(self.scalar_type());
+  return div_scalar(ops_internal::mul(self, mask), keep);
+}
+
+static bool series_any_true_(const Series& x) {
+  const Series nz = ops_internal::any(ops_internal::ne(x, scalar_like(x, 0.0)));
+  return nz.to(ScalarType::Int64).item<std::int64_t>() != 0;
+}
+
+static bool series_has_nonfinite_(const Series& x) {
+  const Series bad = ops_internal::logical_not(ops_internal::isfinite(x));
+  return series_any_true_(bad);
+}
+
+static Series maybe_unscale_grad_(const Series& grad, const Series* grad_scale) {
+  if (grad_scale == nullptr || !grad_scale->defined()) return grad;
+  return ops_internal::div(grad, *grad_scale);
+}
+
+static bool should_skip_amp_step_(const Series* found_inf) {
+  if (found_inf == nullptr || !found_inf->defined()) return false;
+  return series_any_true_(*found_inf);
+}
+
+static double step_from_tensor_(const Series& step) {
+  PLUSS_CHECK(step.defined() && step.numel() == 1, "optimizer state_step must be a defined scalar Series");
+  return step.to(ScalarType::Float64).item<double>();
+}
+
+static void write_scalar_value_(Series& s, double value) {
+  PLUSS_CHECK(s.defined() && s.numel() == 1, "Expected defined scalar Series");
+  switch (s.scalar_type()) {
+    case ScalarType::Bool:
+      *reinterpret_cast<std::uint8_t*>(s.raw_mutable_data()) = value != 0.0 ? 1u : 0u;
+      return;
+    case ScalarType::UInt8:
+      *reinterpret_cast<std::uint8_t*>(s.raw_mutable_data()) = static_cast<std::uint8_t>(value);
+      return;
+    case ScalarType::UInt16:
+      *reinterpret_cast<std::uint16_t*>(s.raw_mutable_data()) = static_cast<std::uint16_t>(value);
+      return;
+    case ScalarType::UInt32:
+      *reinterpret_cast<std::uint32_t*>(s.raw_mutable_data()) = static_cast<std::uint32_t>(value);
+      return;
+    case ScalarType::UInt64:
+      *reinterpret_cast<std::uint64_t*>(s.raw_mutable_data()) = static_cast<std::uint64_t>(value);
+      return;
+    case ScalarType::Int8:
+      *reinterpret_cast<std::int8_t*>(s.raw_mutable_data()) = static_cast<std::int8_t>(value);
+      return;
+    case ScalarType::Int16:
+      *reinterpret_cast<std::int16_t*>(s.raw_mutable_data()) = static_cast<std::int16_t>(value);
+      return;
+    case ScalarType::Int32:
+      *reinterpret_cast<std::int32_t*>(s.raw_mutable_data()) = static_cast<std::int32_t>(value);
+      return;
+    case ScalarType::Int64:
+      *reinterpret_cast<std::int64_t*>(s.raw_mutable_data()) = static_cast<std::int64_t>(value);
+      return;
+    case ScalarType::Float16:
+      *reinterpret_cast<Float16*>(s.raw_mutable_data()) = float_to_float16(static_cast<float>(value));
+      return;
+    case ScalarType::BFloat16:
+      *reinterpret_cast<BFloat16*>(s.raw_mutable_data()) = float_to_bfloat16(static_cast<float>(value));
+      return;
+    case ScalarType::Float32:
+      *reinterpret_cast<float*>(s.raw_mutable_data()) = static_cast<float>(value);
+      return;
+    case ScalarType::Float64:
+      *reinterpret_cast<double*>(s.raw_mutable_data()) = value;
+      return;
+    default:
+      s = Series::full(s.sizes(), value, s.scalar_type()).to(s.platform());
+      return;
+  }
+}
+
+static Series rrelu_impl_(const Series& self, double lower, double upper, bool training) {
+  PLUSS_CHECK(lower >= 0.0 && upper >= lower, "rrelu: expected 0 <= lower <= upper");
+  if (!training) {
+    return ops_internal::leaky_relu(self, 0.5 * (lower + upper));
+  }
+  const Series slopes = uniform_like(self, lower, upper).to(self.scalar_type());
+  const Series zero = scalar_like(self, 0.0);
+  return ops_internal::where(ops_internal::gt(self, zero), self, ops_internal::mul(self, slopes));
+}
+
+static Series rrelu_with_noise_impl_(
+    const Series& self,
+    const Series& noise,
+    double lower,
+    double upper,
+    bool training) {
+  if (!training) return ops_internal::leaky_relu(self, 0.5 * (lower + upper));
+  const Series slopes = noise.to(self.scalar_type());
+  const Series zero = scalar_like(self, 0.0);
+  return ops_internal::where(ops_internal::gt(self, zero), self, ops_internal::mul(self, slopes));
 }
 
 static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable);
@@ -2216,6 +2746,15 @@ static Series random_like(const Series& self, double lo, double hi) {
         route_supported,
         [&]() { return random_like_cpu_(self, lo, hi).to(Platform::CUDA); });
   }
+  if (self.platform() == Platform::MPS) {
+    PLUSS_CHECK(hi > lo, "random_: expected hi > lo");
+    if (is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type())) {
+      return uniform_like(self, lo, hi);
+    }
+    Series u = rand_work_(self.sizes(), Platform::MPS, /*seed=*/0);
+    Series x = ops_internal::floor(add_scalar(mul_scalar(u, hi - lo), lo));
+    return x.to(self.scalar_type());
+  }
   return random_like_cpu_(self, lo, hi);
 }
 
@@ -2579,23 +3118,29 @@ static Series unfold_impl(const Series& self, std::int64_t dim, std::int64_t siz
   out_sizes.push_back(m);
   out_sizes.push_back(size);
   for (std::int64_t d = dim + 1; d < x.dim(); ++d) out_sizes.push_back(x.sizes()[(std::size_t)d]);
-  auto out = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), x.scalar_type());
-  const auto item = x.dtype().itemsize;
-  const auto* src = x.raw_data();
-  auto* dst = reinterpret_cast<std::byte*>(out.raw_data());
-  std::int64_t outer = 1;
-  std::int64_t inner = 1;
-  for (std::int64_t d = 0; d < dim; ++d) outer *= x.sizes()[(std::size_t)d];
-  for (std::int64_t d = dim + 1; d < x.dim(); ++d) inner *= x.sizes()[(std::size_t)d];
-  for (std::int64_t o = 0; o < outer; ++o) {
-    for (std::int64_t w = 0; w < m; ++w) {
-      const auto start = w * step;
-      for (std::int64_t k = 0; k < size; ++k) {
-        const auto src_base = ((o * n + (start + k)) * inner);
-        const auto dst_base = (((o * m + w) * size + k) * inner);
-        std::memcpy(dst + dst_base * item, src + src_base * item, static_cast<std::size_t>(inner * item));
-      }
+  if (m == 0) {
+    return Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), x.scalar_type(), x.platform());
+  }
+  std::vector<Series> windows;
+  windows.reserve(static_cast<std::size_t>(m));
+  for (std::int64_t w = 0; w < m; ++w) {
+    const std::int64_t start = w * step;
+    const Series idx = Series::arange(
+                           static_cast<double>(start),
+                           static_cast<double>(start + size),
+                           1.0,
+                           ScalarType::Int64)
+                           .to(x.platform(), ScalarType::Int64);
+    windows.push_back(x.index_select(dim, idx).contiguous());
+  }
+  Series out = windows.front().unsqueeze(dim);
+  if (windows.size() > 1) {
+    std::vector<Series> tails;
+    tails.reserve(windows.size() - 1);
+    for (std::size_t i = 1; i < windows.size(); ++i) {
+      tails.push_back(windows[i].unsqueeze(dim));
     }
+    out = out.unite(tails, dim);
   }
   return out;
 }
@@ -3868,6 +4413,7 @@ static std::string_view canonical_op(std::string_view op) {
   if (op == "true_divide") return "div";
   if (op == "multiply") return "mul";
   if (op == "subtract") return "sub";
+  if (op == "clip") return "clamp";
   if (op == "greater") return "gt";
   if (op == "greater_equal") return "ge";
   if (op == "less") return "lt";
@@ -3879,6 +4425,13 @@ static std::string_view canonical_op(std::string_view op) {
   if (op == "split_with_sizes") return "split";
   if (op == "unsafe_split_with_sizes") return "split";
   if (op == "conj_physical") return "conj";
+  if (op == "_mkldnn_transpose") return "transpose";
+  if (op == "_index_put_impl") return "index_put";
+  if (op == "_resize_output") return "resize";
+  if (op == "copy_sparse_to_sparse") return "copy";
+  if (op == "alpha_dropout") return "dropout";
+  if (op == "feature_dropout") return "dropout";
+  if (op == "feature_alpha_dropout") return "dropout";
   if (op == "_conj") return "conj";
   if (op == "_conj_physical") return "conj";
   if (op == "_to_dense") return "to_dense";
@@ -3904,6 +4457,52 @@ static std::string_view canonical_inplace_op(std::string_view op) {
   if (op == "less_") return "lt_";
   if (op == "less_equal_") return "le_";
   if (op == "not_equal_") return "ne_";
+  if (op == "clip_") return "clamp_";
+  if (op == "_mkldnn_transpose_") return "transpose_";
+  if (op == "_index_put_impl_") return "index_put_";
+  if (op == "_resize_output_") return "resize_";
+  if (op == "copy_sparse_to_sparse_") return "copy_";
+  if (op == "alpha_dropout_") return "dropout_";
+  if (op == "feature_dropout_") return "dropout_";
+  if (op == "feature_alpha_dropout_") return "dropout_";
+  if (op == "_foreach_abs_") return "abs_";
+  if (op == "_foreach_acos_") return "acos_";
+  if (op == "_foreach_asin_") return "asin_";
+  if (op == "_foreach_atan_") return "atan_";
+  if (op == "_foreach_ceil_") return "ceil_";
+  if (op == "_foreach_copy_") return "copy_";
+  if (op == "_foreach_cos_") return "cos_";
+  if (op == "_foreach_cosh_") return "cosh_";
+  if (op == "_foreach_erf_") return "erf_";
+  if (op == "_foreach_erfc_") return "erfc_";
+  if (op == "_foreach_exp_") return "exp_";
+  if (op == "_foreach_expm1_") return "expm1_";
+  if (op == "_foreach_floor_") return "floor_";
+  if (op == "_foreach_frac_") return "frac_";
+  if (op == "_foreach_lgamma_") return "lgamma_";
+  if (op == "_foreach_log10_") return "log10_";
+  if (op == "_foreach_log1p_") return "log1p_";
+  if (op == "_foreach_log2_") return "log2_";
+  if (op == "_foreach_log_") return "log_";
+  if (op == "_foreach_neg_") return "neg_";
+  if (op == "_foreach_reciprocal_") return "reciprocal_";
+  if (op == "_foreach_round_") return "round_";
+  if (op == "_foreach_rsqrt_") return "rsqrt_";
+  if (op == "_foreach_sigmoid_") return "sigmoid_";
+  if (op == "_foreach_sign_") return "sign_";
+  if (op == "_foreach_sin_") return "sin_";
+  if (op == "_foreach_sinh_") return "sinh_";
+  if (op == "_foreach_sqrt_") return "sqrt_";
+  if (op == "_foreach_tan_") return "tan_";
+  if (op == "_foreach_tanh_") return "tanh_";
+  if (op == "_foreach_trunc_") return "trunc_";
+  if (op == "_foreach_zero_") return "zero_";
+  if (op == "_sobol_engine_ff_") return "random_";
+  if (op == "_sobol_engine_initialize_state_") return "random_";
+  if (op == "_sobol_engine_scramble_") return "random_";
+  if (op == "_fill_mem_eff_dropout_mask_") return "dropout_";
+  if (op == "range.out_") return "random_";
+  if (op == "requires_grad_") return "tracks_slope_";
   return op;
 }
 
@@ -3919,7 +4518,38 @@ static bool inplace_op_mutates_value_(std::string_view op) {
 }
 
 static bool inplace_op_has_autodiff_write_support_(std::string_view op) {
-  return op == "copy_" || op == "put_" || op == "index_put_";
+  return op == "copy_" || op == "put_" || op == "index_put_" ||
+      op == "_amp_foreach_non_finite_check_and_unscale_" ||
+      op == "_amp_update_scale_" ||
+      op == "_fused_adagrad_" ||
+      op == "_fused_adam_" ||
+      op == "_fused_adamw_" ||
+      op == "_fused_sgd_";
+}
+
+static bool inplace_functional_bridge_enabled_() noexcept {
+  return true;
+}
+
+static bool inplace_op_has_functional_bridge_(std::string_view op) {
+  if (op == "copy_" || op == "put_" || op == "index_put_") return false;
+  if (op == "_amp_foreach_non_finite_check_and_unscale_" ||
+      op == "_amp_update_scale_" ||
+      op == "_fused_adagrad_" ||
+      op == "_fused_adam_" ||
+      op == "_fused_adamw_" ||
+      op == "_fused_sgd_") {
+    return false;
+  }
+  if (op == "sparse_resize_and_clear_") return false;
+  if (!op.ends_with('_')) return false;
+  return true;
+}
+
+static std::string functional_bridge_target_op_(std::string_view inplace_op) {
+  PLUSS_CHECK(inplace_op_has_functional_bridge_(inplace_op),
+              "functional bridge target requested for unsupported in-place op");
+  return std::string(inplace_op.substr(0, inplace_op.size() - 1));
 }
 
 static void check_inplace_autograd_write_(std::string_view op, const Series& self) {
@@ -3927,6 +4557,8 @@ static void check_inplace_autograd_write_(std::string_view op, const Series& sel
   if (!series_tape::recording_enabled()) return;
   if (!series_tape::tracks_slope(self)) return;
   if (inplace_op_has_autodiff_write_support_(op)) return;
+  if (inplace_functional_bridge_enabled_() &&
+      inplace_op_has_functional_bridge_(op)) return;
   throw_error(
       std::string(op) +
       ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
@@ -4039,9 +4671,21 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
 
     // elementwise math
     if (op == "relu") return ops_internal::relu(self);
+    if (op == "relu6") return ops_internal::clamp(self, 0.0, 6.0);
     if (op == "sigmoid") return ops_internal::sigmoid(self);
+    if (op == "hardsigmoid") return hardsigmoid_impl_(self);
+    if (op == "hardswish") return hardswish_impl_(self);
     if (op == "softplus") return ops_internal::softplus(self, /*beta=*/1.0, /*threshold=*/20.0);
+    if (op == "mish") return mish_impl_(self);
     if (op == "silu") return ops_internal::silu(self);
+    if (op == "selu") return selu_impl_(self);
+    if (op == "hardtanh") return ops_internal::clamp(self, -1.0, 1.0);
+    if (op == "celu") return celu_impl_(self, 1.0);
+    if (op == "elu") return elu_impl_(self, 1.0, 1.0, 1.0);
+    if (op == "dropout" || op == "feature_dropout" ||
+        op == "alpha_dropout" || op == "feature_alpha_dropout") {
+      return dropout_impl_(self, /*p=*/0.5, /*train=*/true);
+    }
     if (op == "gelu") return ops_internal::gelu(self);
 
     if (op == "exp") return ops_internal::exp(self);
@@ -4394,6 +5038,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "logit") return logit_impl(self, s);
       if (op == "hardshrink") return hardshrink_impl(self, s);
       if (op == "leaky_relu") return ops_internal::leaky_relu(self, s);
+      if (op == "celu") return celu_impl_(self, s);
+      if (op == "elu") return elu_impl_(self, s, 1.0, 1.0);
       if (op == "heaviside") return heaviside_impl(self, scalar_like(self, s));
       if (op == "gcd") return gcd_impl(self, scalar_like(self, s));
       if (op == "lcm") return lcm_impl(self, scalar_like(self, s));
@@ -4493,6 +5139,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "cumsum") return self.cumsum((std::int64_t)s, /*keepdim=*/false);
       if (op == "cumprod") return self.cumprod((std::int64_t)s, /*keepdim=*/false);
       if (op == "bernoulli") return bernoulli_like(self, s);
+      if (op == "dropout" || op == "feature_dropout" ||
+          op == "alpha_dropout" || op == "feature_alpha_dropout") {
+        return dropout_impl_(self, s, /*train=*/true);
+      }
       if (op == "histogram") return self.histc((std::int64_t)s, 0.0, 0.0);
       return not_impl(op, args, self);
     }
@@ -4513,6 +5163,15 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (std::holds_alternative<bool>(a0)) {
       const bool b = as_bool(args[0]);
       if (op == "gelu") return ops_internal::gelu(self, b);
+      if (op == "rrelu") return rrelu_impl_(self, 0.125, 0.3333333333333333, b);
+      if (op == "requires_grad") {
+        series_tape::set_tracks_slope(self, b);
+        return self;
+      }
+      if (op == "dropout" || op == "feature_dropout" ||
+          op == "alpha_dropout" || op == "feature_alpha_dropout") {
+        return dropout_impl_(self, /*p=*/0.5, b);
+      }
       if (op == "retain_grad") {
         series_tape::set_keep_sensitivity(self, b);
         return self;
@@ -4631,6 +5290,12 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "cross") return cross_impl(self, other, -1);
       if (op == "dist") return ops_internal::sub(self, other).norm(2.0);
       if (op == "expand_as") return self.expand(other.sizes());
+      if (op == "expand_like") return expand_impl(self, other.sizes());
+      if (op == "repeat_like") {
+        const std::vector<std::int64_t> reps = repeat_factors_like_impl_(self, other);
+        if (reps.empty()) return self.clone();
+        return repeat_impl(self, std::span<const std::int64_t>(reps.data(), reps.size()));
+      }
       if (op == "align_as") return self;
       if (op == "heaviside") return heaviside_impl(self, other);
       if (op == "gcd") return gcd_impl(self, other);
@@ -4698,6 +5363,9 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const double x = as_double(args[0]);
       const double y = as_double(args[1]);
       if (op == "clamp") return ops_internal::clamp(self, x, y);
+      if (op == "hardtanh") return ops_internal::clamp(self, x, y);
+      if (op == "threshold") return threshold_impl_(self, x, y);
+      if (op == "rrelu") return rrelu_impl_(self, x, y, /*training=*/false);
       if (op == "softplus") return ops_internal::softplus(self, x, y);
       if (op == "nan_to_num") return ops_internal::nan_to_num(self, x, y, y);
       if (op == "lerp") return ops_internal::add(self, mul_scalar(ops_internal::sub(scalar_like(self, x), self), y));
@@ -4744,13 +5412,22 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
                          std::span<const std::int64_t>(dims.data(), dims.size()));
       }
       if (op == "repeat_interleave") return repeat_interleave_impl(self, (std::int64_t)x, (std::int64_t)y);
+      if (op == "dropout" || op == "feature_dropout" ||
+          op == "alpha_dropout" || op == "feature_alpha_dropout") {
+        return dropout_impl_(self, x, /*train=*/(y != 0.0));
+      }
       return not_impl(op, args, self);
     }
 
     // dim + keepdim(bool)
     if (is_numeric_scalar_arg(args[0]) && std::holds_alternative<bool>(a1)) {
       const auto dim = as_i64(args[0]);
+      const double p = as_double(args[0]);
       const bool keepdim = as_bool(args[1]);
+      if (op == "dropout" || op == "feature_dropout" ||
+          op == "alpha_dropout" || op == "feature_alpha_dropout") {
+        return dropout_impl_(self, p, keepdim);
+      }
       if (op == "sum") return ops_internal::sum(self, dim, keepdim);
       if (op == "mean") return ops_internal::mean(self, dim, keepdim);
       if (op == "nansum") return nan_sum_impl(self, dim, keepdim);
@@ -4933,6 +5610,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto x = as_i64(args[0]);
       const auto y = as_i64(args[1]);
       const bool b = as_bool(args[2]);
+      if (op == "rrelu") return rrelu_impl_(self, as_double(args[0]), as_double(args[1]), b);
       if (op == "topk") return topk_values_only(self, x, y, b, /*sorted=*/true);
       if (op == "kthvalue") return kthvalue_values_only(self, x, y, b);
       if (op == "norm") return self.norm(as_double(args[0]), y, b);
@@ -4980,6 +5658,7 @@ if (is_numeric_scalar_arg(args[0]) &&
     if (is_numeric_scalar_arg(args[0]) &&
         is_numeric_scalar_arg(args[1]) &&
         is_numeric_scalar_arg(args[2])) {
+      if (op == "elu") return elu_impl_(self, as_double(args[0]), as_double(args[1]), as_double(args[2]));
       if (op == "renorm") return renorm_impl(self, as_double(args[0]), as_i64(args[1]), as_double(args[2]));
       if (op == "unfold") return unfold_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]));
       if (op == "rot90") return rot90_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]));
@@ -5156,6 +5835,19 @@ if (is_numeric_scalar_arg(args[0]) &&
       }
     }
 
+    if (std::holds_alternative<const Series*>(args[0].v) &&
+        std::holds_alternative<const Series*>(args[1].v) &&
+        std::holds_alternative<bool>(args[2].v) &&
+        std::holds_alternative<bool>(args[3].v)) {
+      const Series& index = as_series(args[0]);
+      const Series& src = as_series(args[1]);
+      const bool accumulate = as_bool(args[2]);
+      if (op == "index_put" || op == "put") {
+        return put_dispatch_copy_(self, index, src, accumulate);
+      }
+      return not_impl(op, args, self);
+    }
+
     if (is_numeric_scalar_arg(args[0]) &&
         is_numeric_scalar_arg(args[1]) &&
         std::holds_alternative<bool>(args[2].v) &&
@@ -5211,6 +5903,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       const double rtol = as_double(args[1]);
       const double atol = as_double(args[2]);
       const bool equal_nan = as_bool(args[3]);
+      if (op == "rrelu_with_noise") return rrelu_with_noise_impl_(self, other, rtol, atol, equal_nan);
       if (op == "allclose") return ops_internal::all(isclose_impl(self, other, rtol, atol, equal_nan));
       if (op == "isclose") return isclose_impl(self, other, rtol, atol, equal_nan);
     }
@@ -5294,12 +5987,46 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     ops_internal::PlatformScope platform_scope(self.platform());
     validate_series_arg_platforms(op, self, args);
     check_inplace_autograd_write_(op, self);
+    const bool tracked_mutation_with_bridge =
+        inplace_functional_bridge_enabled_() &&
+        inplace_op_mutates_value_(op) &&
+        series_tape::recording_enabled() &&
+        series_tape::tracks_slope(self) &&
+        inplace_op_has_functional_bridge_(op);
     const bool guard_version_bump =
         inplace_op_mutates_value_(op) &&
+        !tracked_mutation_with_bridge &&
         op != "copy_" &&
         op != "put_" &&
         op != "index_put_";
     InplaceVersionGuard version_guard(self, guard_version_bump);
+
+  if (tracked_mutation_with_bridge) {
+    const Series bridge_input = make_inplace_bridge_input_snapshot_(self);
+    InplaceBridgeArgs bridge_args = remap_inplace_bridge_args_to_snapshot_(args, self, bridge_input);
+    Series value = invoke_any(functional_bridge_target_op_(op), bridge_input, bridge_args.args);
+    if (value.defined() && self.defined()) {
+      const std::vector<std::int64_t> self_shape(self.sizes().begin(), self.sizes().end());
+      const bool same_rank = value.sizes().size() == self_shape.size();
+      bool same_shape = same_rank;
+      if (same_shape) {
+        for (std::size_t i = 0; i < self_shape.size(); ++i) {
+          if (value.sizes()[i] != self_shape[i]) {
+            same_shape = false;
+            break;
+          }
+        }
+      }
+      if (!same_shape) {
+        if (self_shape.empty()) {
+          value = value.reshape(self_shape);
+        } else {
+          value = value.expand(self_shape, /*allow_copy=*/true);
+        }
+      }
+    }
+    return copy_dispatch_inplace_(self, value);
+  }
 
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;
@@ -5312,9 +6039,18 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (op == "i0_") { self = i0_impl(self).to(self.scalar_type()); return self; }
 
     if (op == "relu_") return ops_internal::relu_(self);
+    if (op == "relu6_") { self = ops_internal::clamp(self, 0.0, 6.0); return self; }
     if (op == "sigmoid_") return ops_internal::sigmoid_(self);
+    if (op == "hardsigmoid_") { self = hardsigmoid_impl_(self).to(self.scalar_type()); return self; }
+    if (op == "hardswish_") { self = hardswish_impl_(self).to(self.scalar_type()); return self; }
     if (op == "softplus_") return ops_internal::softplus_(self, 1.0, 20.0);
+    if (op == "mish_") { self = mish_impl_(self).to(self.scalar_type()); return self; }
     if (op == "silu_") return ops_internal::silu_(self);
+    if (op == "selu_") { self = selu_impl_(self).to(self.scalar_type()); return self; }
+    if (op == "hardtanh_") { self = ops_internal::clamp(self, -1.0, 1.0); return self; }
+    if (op == "celu_") { self = celu_impl_(self, 1.0).to(self.scalar_type()); return self; }
+    if (op == "elu_") { self = elu_impl_(self, 1.0, 1.0, 1.0).to(self.scalar_type()); return self; }
+    if (op == "rrelu_") { self = rrelu_impl_(self, 0.125, 0.3333333333333333, /*training=*/false).to(self.scalar_type()); return self; }
     if (op == "gelu_") return ops_internal::gelu_(self);
 
     if (op == "exp_") return ops_internal::exp_(self);
@@ -5405,6 +6141,11 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (op == "geometric_") { self = geometric_like(self, 0.5); return self; }
     if (op == "cauchy_") { self = cauchy_like(self, 0.0, 1.0); return self; }
     if (op == "bernoulli_") { self = bernoulli_sample_from_probs(self).to(self.scalar_type()); return self; }
+    if (op == "dropout_" || op == "feature_dropout_" ||
+        op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
+      self = dropout_impl_(self, /*p=*/0.5, /*train=*/true).to(self.scalar_type());
+      return self;
+    }
     if (op == "sinc_") { self = sinc_impl(self).to(self.scalar_type()); return self; }
     if (op == "random_") {
       if (is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type())) {
@@ -5441,6 +6182,13 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "gt_") { self = ops_internal::gt(self, scalar_like(self, s)); return self; }
       if (op == "ge_") { self = ops_internal::ge(self, scalar_like(self, s)); return self; }
       if (op == "heaviside_") { self = heaviside_impl(self, scalar_like(self, s)); return self; }
+      if (op == "celu_") { self = celu_impl_(self, s).to(self.scalar_type()); return self; }
+      if (op == "elu_") { self = elu_impl_(self, s, 1.0, 1.0).to(self.scalar_type()); return self; }
+      if (op == "dropout_" || op == "feature_dropout_" ||
+          op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
+        self = dropout_impl_(self, s, /*train=*/true).to(self.scalar_type());
+        return self;
+      }
       if (op == "gcd_") { self = gcd_impl(self, scalar_like(self, s)); return self; }
       if (op == "lcm_") { self = lcm_impl(self, scalar_like(self, s)); return self; }
       if (op == "logit_") { self = logit_impl(self, s).to(self.scalar_type()); return self; }
@@ -5553,6 +6301,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         series_tape::set_tracks_slope(self, std::get<bool>(a0));
         return self;
       }
+      if (op == "rrelu_") {
+        self = rrelu_impl_(self, 0.125, 0.3333333333333333, std::get<bool>(a0)).to(self.scalar_type());
+        return self;
+      }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<Arg::IntList>(a0)) {
@@ -5570,11 +6322,30 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   if (args.size() == 2) {
     const auto& a0 = args[0].v;
     const auto& a1 = args[1].v;
+    if (op == "_amp_foreach_non_finite_check_and_unscale_" &&
+        std::holds_alternative<const Series*>(a0) &&
+        std::holds_alternative<const Series*>(a1)) {
+      Series& found_inf = as_mutable_series_ref(args[0]);
+      const Series& inv_scale = as_series(args[1]);
+      PLUSS_CHECK(found_inf.defined() && found_inf.numel() == 1,
+                  "_amp_foreach_non_finite_check_and_unscale_: found_inf must be a defined scalar Series");
+      PLUSS_CHECK(inv_scale.defined() && inv_scale.numel() == 1,
+                  "_amp_foreach_non_finite_check_and_unscale_: inv_scale must be a defined scalar Series");
+      if (series_has_nonfinite_(self)) {
+        write_scalar_value_(found_inf, 1.0);
+      }
+      const double inv = inv_scale.to(ScalarType::Float64).item<double>();
+      return assign_inplace_preserve_storage_(self, mul_scalar(self, inv));
+    }
     if (is_numeric_scalar_arg(args[0]) && is_numeric_scalar_arg(args[1])) {
       const double x = as_double(args[0]);
       const double y = as_double(args[1]);
       if (op == "clamp_") return ops_internal::clamp_(self, x, y);
+      if (op == "hardtanh_") { self = ops_internal::clamp(self, x, y); return self; }
+      if (op == "threshold_") { self = threshold_impl_(self, x, y).to(self.scalar_type()); return self; }
+      if (op == "rrelu_") { self = rrelu_impl_(self, x, y, /*training=*/false).to(self.scalar_type()); return self; }
       if (op == "softplus_") return ops_internal::softplus_(self, x, y);
+      if (op == "elu_") { self = elu_impl_(self, x, y, 1.0).to(self.scalar_type()); return self; }
       if (op == "nan_to_num_") return ops_internal::nan_to_num_(self, x, y, y);
       if (op == "transpose_" || op == "movedim_" || op == "moveaxis_" || op == "swapdims_" || op == "swapaxes_") {
         self = self.transpose((std::int64_t)x, (std::int64_t)y);
@@ -5589,11 +6360,22 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "log_normal_") { self = ops_internal::exp(normal_like(self, x, y)); return self; }
       if (op == "cauchy_") { self = cauchy_like(self, x, y); return self; }
       if (op == "random_") { self = random_like(self, x, y); return self; }
+      if (op == "dropout_" || op == "feature_dropout_" ||
+          op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
+        self = dropout_impl_(self, x, /*train=*/(y != 0.0)).to(self.scalar_type());
+        return self;
+      }
       return not_impl_inplace(op, args, self);
     }
     if (is_numeric_scalar_arg(args[0]) && std::holds_alternative<bool>(a1)) {
       const auto dim = as_i64(args[0]);
+      const double p = as_double(args[0]);
       const bool keepdim = as_bool(args[1]);
+      if (op == "dropout_" || op == "feature_dropout_" ||
+          op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
+        self = dropout_impl_(self, p, keepdim).to(self.scalar_type());
+        return self;
+      }
       if (op == "fill_diagonal_") return fill_diagonal_impl(self, as_double(args[0]), keepdim);
       if (op == "cumsum_") return self.cumsum_(dim, keepdim);
       if (op == "cumprod_") return self.cumprod_(dim, keepdim);
@@ -5672,9 +6454,32 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   }
 
   if (args.size() == 3) {
+    if (is_numeric_scalar_arg(args[0]) &&
+        is_numeric_scalar_arg(args[1]) &&
+        std::holds_alternative<bool>(args[2].v)) {
+      if (op == "rrelu_") {
+        self = rrelu_impl_(self, as_double(args[0]), as_double(args[1]), as_bool(args[2])).to(self.scalar_type());
+        return self;
+      }
+      return not_impl_inplace(op, args, self);
+    }
     if (is_numeric_scalar_arg(args[0]) && is_numeric_scalar_arg(args[1]) && is_numeric_scalar_arg(args[2])) {
+      if (op == "elu_") {
+        self = elu_impl_(self, as_double(args[0]), as_double(args[1]), as_double(args[2])).to(self.scalar_type());
+        return self;
+      }
       if (op == "renorm_") { self = renorm_impl(self, as_double(args[0]), as_i64(args[1]), as_double(args[2])).to(self.scalar_type()); return self; }
       if (op == "nan_to_num_") return ops_internal::nan_to_num_(self, as_double(args[0]), as_double(args[1]), as_double(args[2]));
+      return not_impl_inplace(op, args, self);
+    }
+    if (std::holds_alternative<const Series*>(args[0].v) &&
+        is_numeric_scalar_arg(args[1]) &&
+        is_numeric_scalar_arg(args[2])) {
+      if (op == "embedding_renorm_") {
+        const auto dim = (self.dim() > 1) ? 1 : 0;
+        self = renorm_impl(self, as_double(args[2]), dim, as_double(args[1])).to(self.scalar_type());
+        return self;
+      }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<Arg::IntList>(args[0].v) &&
@@ -5757,6 +6562,30 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   }
 
   if (args.size() == 4) {
+    if (std::holds_alternative<const Series*>(args[0].v) &&
+        std::holds_alternative<const Series*>(args[1].v) &&
+        std::holds_alternative<bool>(args[2].v) &&
+        std::holds_alternative<bool>(args[3].v)) {
+      const Series& index = as_series(args[0]);
+      const Series& src = as_series(args[1]);
+      const bool accumulate = as_bool(args[2]);
+      if (op == "index_put_" || op == "put_") {
+        return put_dispatch_inplace_(self, index, src, accumulate);
+      }
+      return not_impl_inplace(op, args, self);
+    }
+    if (std::holds_alternative<const Series*>(args[0].v) &&
+        is_numeric_scalar_arg(args[1]) &&
+        is_numeric_scalar_arg(args[2]) &&
+        std::holds_alternative<bool>(args[3].v)) {
+      if (op == "rrelu_with_noise_") {
+        const Series& noise = as_series(args[0]);
+        self = rrelu_with_noise_impl_(self, noise, as_double(args[1]), as_double(args[2]), as_bool(args[3]))
+                   .to(self.scalar_type());
+        return self;
+      }
+      return not_impl_inplace(op, args, self);
+    }
     if (is_numeric_scalar_arg(args[0]) &&
         std::holds_alternative<const Series*>(args[1].v) &&
         std::holds_alternative<const Series*>(args[2].v) &&
@@ -5821,6 +6650,42 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   }
 
   if (args.size() == 5) {
+    if (op == "_amp_update_scale_" &&
+        std::holds_alternative<const Series*>(args[0].v) &&
+        std::holds_alternative<const Series*>(args[1].v) &&
+        is_numeric_scalar_arg(args[2]) &&
+        is_numeric_scalar_arg(args[3]) &&
+        is_numeric_scalar_arg(args[4])) {
+      Series& growth_tracker = as_mutable_series_ref(args[0]);
+      const Series& found_inf = as_series(args[1]);
+      const double growth_factor = as_double(args[2]);
+      const double backoff_factor = as_double(args[3]);
+      const std::int64_t growth_interval = as_i64(args[4]);
+      PLUSS_CHECK(self.defined() && self.numel() == 1, "_amp_update_scale_: self must be a defined scalar Series");
+      PLUSS_CHECK(growth_tracker.defined() && growth_tracker.numel() == 1,
+                  "_amp_update_scale_: growth_tracker must be a defined scalar Series");
+      PLUSS_CHECK(found_inf.defined() && found_inf.numel() == 1,
+                  "_amp_update_scale_: found_inf must be a defined scalar Series");
+      PLUSS_CHECK(growth_interval > 0, "_amp_update_scale_: growth_interval must be > 0");
+      const double scale_value = self.to(ScalarType::Float64).item<double>();
+      if (series_any_true_(found_inf)) {
+        write_scalar_value_(self, scale_value * backoff_factor);
+        write_scalar_value_(growth_tracker, 0.0);
+        return self;
+      }
+      const double successful = growth_tracker.to(ScalarType::Float64).item<double>() + 1.0;
+      if (successful >= static_cast<double>(growth_interval)) {
+        const double grown_value = scale_value * growth_factor;
+        if (std::isfinite(grown_value)) {
+          write_scalar_value_(self, grown_value);
+        }
+        write_scalar_value_(growth_tracker, 0.0);
+        return self;
+      }
+      write_scalar_value_(growth_tracker, successful);
+      return self;
+    }
+
     if (is_numeric_scalar_arg(args[0]) &&
         std::holds_alternative<const Series*>(args[1].v) &&
         std::holds_alternative<const Series*>(args[2].v) &&
@@ -5850,6 +6715,141 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       return not_impl_inplace(op, args, self);
     }
     return not_impl_inplace(op, args, self);
+  }
+
+  if (op == "_fused_sgd_" && args.size() >= 9 && args.size() <= 11 &&
+      std::holds_alternative<const Series*>(args[0].v) &&
+      std::holds_alternative<const Series*>(args[1].v)) {
+    const Series& grad = as_series(args[0]);
+    Series& momentum_buffer = as_mutable_series_ref(args[1]);
+    const double weight_decay = as_double(args[2]);
+    const double momentum = as_double(args[3]);
+    const double lr = as_numeric_or_series_scalar_double(args[4]);
+    const double dampening = as_double(args[5]);
+    const bool nesterov = as_bool(args[6]);
+    const bool maximize = as_bool(args[7]);
+    const bool is_first_step = as_bool(args[8]);
+    const Series* grad_scale = args.size() > 9 ? as_optional_series_ptr(args[9]) : nullptr;
+    const Series* found_inf = args.size() > 10 ? as_optional_series_ptr(args[10]) : nullptr;
+    if (should_skip_amp_step_(found_inf)) return self;
+
+    Series g = maybe_unscale_grad_(grad.to(self.scalar_type()), grad_scale);
+    if (maximize) g = ops_internal::neg(g);
+    if (weight_decay != 0.0) g = ops_internal::add(g, mul_scalar(self, weight_decay));
+
+    Series update = g;
+    if (momentum != 0.0) {
+      const Series next_buffer = is_first_step
+          ? g
+          : ops_internal::add(mul_scalar(momentum_buffer, momentum), mul_scalar(g, 1.0 - dampening));
+      assign_inplace_preserve_storage_(momentum_buffer, next_buffer.to(momentum_buffer.scalar_type()));
+      update = nesterov
+          ? ops_internal::add(g, mul_scalar(momentum_buffer.to(self.scalar_type()), momentum))
+          : momentum_buffer.to(self.scalar_type());
+    }
+    return assign_inplace_preserve_storage_(self, ops_internal::sub(self, mul_scalar(update, lr)));
+  }
+
+  if (op == "_fused_adagrad_" && args.size() >= 8 && args.size() <= 10 &&
+      std::holds_alternative<const Series*>(args[0].v) &&
+      std::holds_alternative<const Series*>(args[1].v) &&
+      std::holds_alternative<const Series*>(args[2].v)) {
+    const Series& grad = as_series(args[0]);
+    Series& state_sum = as_mutable_series_ref(args[1]);
+    const Series& state_step = as_series(args[2]);
+    const double lr = as_numeric_or_series_scalar_double(args[3]);
+    const double lr_decay = as_double(args[4]);
+    const double weight_decay = as_double(args[5]);
+    const double eps = as_double(args[6]);
+    const bool maximize = as_bool(args[7]);
+    const Series* grad_scale = args.size() > 8 ? as_optional_series_ptr(args[8]) : nullptr;
+    const Series* found_inf = args.size() > 9 ? as_optional_series_ptr(args[9]) : nullptr;
+    if (should_skip_amp_step_(found_inf)) return self;
+
+    const double step = step_from_tensor_(state_step);
+    Series g = maybe_unscale_grad_(grad.to(self.scalar_type()), grad_scale);
+    if (maximize) g = ops_internal::neg(g);
+    if (weight_decay != 0.0) g = ops_internal::add(g, mul_scalar(self, weight_decay));
+
+    const double clr = lr / (1.0 + (step - 1.0) * lr_decay);
+    assign_inplace_preserve_storage_(
+        state_sum,
+        ops_internal::add(state_sum, ops_internal::mul(g.to(state_sum.scalar_type()),
+                                                       g.to(state_sum.scalar_type()))));
+    const Series denom = add_scalar(ops_internal::sqrt(state_sum.to(self.scalar_type())), eps);
+    return assign_inplace_preserve_storage_(
+        self,
+        ops_internal::sub(self, mul_scalar(ops_internal::div(g, denom), clr)));
+  }
+
+  if ((op == "_fused_adam_" || op == "_fused_adamw_") &&
+      args.size() >= 12 && args.size() <= 14 &&
+      std::holds_alternative<const Series*>(args[0].v) &&
+      std::holds_alternative<const Series*>(args[1].v) &&
+      std::holds_alternative<const Series*>(args[2].v) &&
+      std::holds_alternative<const Series*>(args[3].v) &&
+      std::holds_alternative<const Series*>(args[4].v)) {
+    const Series& grad = as_series(args[0]);
+    Series& exp_avg = as_mutable_series_ref(args[1]);
+    Series& exp_avg_sq = as_mutable_series_ref(args[2]);
+    Series& max_exp_avg_sq = as_mutable_series_ref(args[3]);
+    const Series& state_step = as_series(args[4]);
+    const double lr = as_numeric_or_series_scalar_double(args[5]);
+    const double beta1 = as_double(args[6]);
+    const double beta2 = as_double(args[7]);
+    const double weight_decay = as_double(args[8]);
+    const double eps = as_double(args[9]);
+    const bool amsgrad = as_bool(args[10]);
+    const bool maximize = as_bool(args[11]);
+    const Series* grad_scale = args.size() > 12 ? as_optional_series_ptr(args[12]) : nullptr;
+    const Series* found_inf = args.size() > 13 ? as_optional_series_ptr(args[13]) : nullptr;
+    if (should_skip_amp_step_(found_inf)) return self;
+
+    const double step = step_from_tensor_(state_step);
+    PLUSS_CHECK(step > 0.0, std::string(op) + ": state_step must be > 0 (caller should increment step before fused update)");
+    Series g = maybe_unscale_grad_(grad.to(self.scalar_type()), grad_scale);
+    if (maximize) g = ops_internal::neg(g);
+
+    if (weight_decay != 0.0) {
+      if (op == "_fused_adamw_") {
+        assign_inplace_preserve_storage_(self, mul_scalar(self, 1.0 - lr * weight_decay));
+      } else {
+        g = ops_internal::add(g, mul_scalar(self, weight_decay));
+      }
+    }
+
+    const Series one = scalar_like(self, 1.0);
+    const Series beta1_s = scalar_like(self, beta1);
+    const Series beta2_s = scalar_like(self, beta2);
+    const Series one_minus_beta1 = sub_scalar(one, beta1);
+    const Series one_minus_beta2 = sub_scalar(one, beta2);
+
+    const Series g_exp_dtype = g.to(exp_avg.scalar_type());
+    const Series g_sq_exp_dtype = ops_internal::mul(g_exp_dtype, g_exp_dtype);
+    assign_inplace_preserve_storage_(
+        exp_avg,
+        ops_internal::add(ops_internal::mul(exp_avg, beta1_s.to(exp_avg.scalar_type())),
+                          ops_internal::mul(g_exp_dtype, one_minus_beta1.to(exp_avg.scalar_type()))));
+    assign_inplace_preserve_storage_(
+        exp_avg_sq,
+        ops_internal::add(ops_internal::mul(exp_avg_sq, beta2_s.to(exp_avg_sq.scalar_type())),
+                          ops_internal::mul(g_sq_exp_dtype, one_minus_beta2.to(exp_avg_sq.scalar_type()))));
+
+    const double bias_correction1 = 1.0 - std::pow(beta1, step);
+    const double bias_correction2_sqrt = std::sqrt(1.0 - std::pow(beta2, step));
+    const Series denom_base = [&]() -> Series {
+      if (amsgrad) {
+        assign_inplace_preserve_storage_(max_exp_avg_sq, ops_internal::maximum(max_exp_avg_sq, exp_avg_sq));
+        return max_exp_avg_sq.to(self.scalar_type());
+      }
+      return exp_avg_sq.to(self.scalar_type());
+    }();
+
+    const Series denom = add_scalar(div_scalar(ops_internal::sqrt(denom_base), bias_correction2_sqrt), eps);
+    const Series step_term = div_scalar(exp_avg.to(self.scalar_type()), bias_correction1);
+    return assign_inplace_preserve_storage_(
+        self,
+        ops_internal::sub(self, mul_scalar(ops_internal::div(step_term, denom), lr)));
   }
 
     return not_impl_inplace(op, args, self);

@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <future>
 #include <limits>
 #include <memory>
@@ -15,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -166,11 +168,17 @@ struct DenseFeatureMatrix {
   if (options.objective != LinearObjective::Logistic && options.objective != LinearObjective::Hinge) {
     return Status::not_implemented("Linear classifier currently supports LinearObjective::Logistic or LinearObjective::Hinge.");
   }
-  if (options.regularization != RegularizationKind::None && options.regularization != RegularizationKind::L2) {
-    return Status::not_implemented("Linear classifier currently supports RegularizationKind::None or RegularizationKind::L2.");
+  if (options.regularization != RegularizationKind::None
+      && options.regularization != RegularizationKind::L1
+      && options.regularization != RegularizationKind::L2
+      && options.regularization != RegularizationKind::Elastic) {
+    return Status::invalid_argument("Linear classifier received unknown RegularizationKind.");
   }
   if (!std::isfinite(options.regularization_strength) || options.regularization_strength < 0.0) {
     return Status::invalid_argument("LinearFamilyOptions.regularization_strength must be finite and >= 0.");
+  }
+  if (!std::isfinite(options.elastic_l1_ratio) || options.elastic_l1_ratio < 0.0 || options.elastic_l1_ratio > 1.0) {
+    return Status::invalid_argument("LinearFamilyOptions.elastic_l1_ratio must be finite and in [0, 1].");
   }
   return Status::success();
 }
@@ -178,6 +186,12 @@ struct DenseFeatureMatrix {
 [[nodiscard]] Status validate_neighbor_classifier_options(const NeighborFamilyOptions& options) {
   if (options.k <= 0) {
     return Status::invalid_argument("Neighbor classifier requires NeighborFamilyOptions.k > 0.");
+  }
+  if (!std::isfinite(options.radius) || options.radius < 0.0) {
+    return Status::invalid_argument("Neighbor classifier requires NeighborFamilyOptions.radius to be finite and >= 0.");
+  }
+  if (options.radius_fallback_k <= 0) {
+    return Status::invalid_argument("Neighbor classifier requires NeighborFamilyOptions.radius_fallback_k > 0.");
   }
   return Status::success();
 }
@@ -199,16 +213,27 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Status validate_bayes_classifier_options(const BayesFamilyOptions& options) {
-  if (!options.use_gaussian) {
-    return Status::not_implemented("Bayes classifier currently supports gaussian likelihoods only.");
-  }
   if (!std::isfinite(options.smoothing) || options.smoothing <= 0.0) {
     return Status::invalid_argument("BayesFamilyOptions.smoothing must be finite and > 0.");
   }
   return Status::success();
 }
 
+[[nodiscard]] BayesLikelihood resolved_bayes_likelihood(const BayesFamilyOptions& options) {
+  if (!options.use_gaussian && options.likelihood == BayesLikelihood::Gaussian) {
+    // Legacy option shape exposed only a gaussian toggle.
+    return BayesLikelihood::Bernoulli;
+  }
+  return options.likelihood;
+}
+
 [[nodiscard]] Status validate_kernel_classifier_options(const KernelFamilyOptions& options) {
+  if (!std::isfinite(options.nu) || options.nu <= 0.0 || options.nu > 1.0) {
+    return Status::invalid_argument("KernelFamilyOptions.nu must be finite and in (0, 1].");
+  }
+  if (options.form == KernelForm::OneClass) {
+    return Status::not_implemented("Kernel classifier does not support KernelForm::OneClass. Use TaskKind::Transform.");
+  }
   if (!std::isfinite(options.c) || options.c <= 0.0) {
     return Status::invalid_argument("KernelFamilyOptions.c must be finite and > 0.");
   }
@@ -222,15 +247,21 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Status validate_ensemble_classifier_options(const EnsembleFamilyOptions& options) {
-  if (options.method != EnsembleMethod::Bagging && options.method != EnsembleMethod::RandomForest) {
+  if (options.method != EnsembleMethod::Bagging
+      && options.method != EnsembleMethod::RandomForest
+      && options.method != EnsembleMethod::GradientBoost
+      && options.method != EnsembleMethod::AdaBoost) {
     return Status::not_implemented(
-        "Ensemble classifier currently supports EnsembleMethod::Bagging and EnsembleMethod::RandomForest only.");
+        "Ensemble classifier currently supports EnsembleMethod::Bagging, EnsembleMethod::RandomForest, EnsembleMethod::GradientBoost, and EnsembleMethod::AdaBoost.");
   }
   if (options.learners <= 0) {
     return Status::invalid_argument("EnsembleFamilyOptions.learners must be positive.");
   }
   if (!std::isfinite(options.subsample) || options.subsample <= 0.0 || options.subsample > 1.0) {
     return Status::invalid_argument("EnsembleFamilyOptions.subsample must be finite and in (0, 1].");
+  }
+  if (!std::isfinite(options.learning_rate) || options.learning_rate <= 0.0) {
+    return Status::invalid_argument("EnsembleFamilyOptions.learning_rate must be finite and > 0.");
   }
   return Status::success();
 }
@@ -325,6 +356,83 @@ struct DenseFeatureMatrix {
     }
   }
 
+  return pluss::make_series(out, {nq}, f64_cpu());
+}
+
+[[nodiscard]] Series radius_probability_cpu(const Series& query_rows,
+                                            const Series& train_rows,
+                                            const Series& y_train,
+                                            double radius,
+                                            std::int64_t fallback_k,
+                                            bool distance_weighted) {
+  const std::int64_t nq = query_rows.sizes()[0];
+  const std::int64_t nt = train_rows.sizes()[0];
+  const std::int64_t d = train_rows.sizes()[1];
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(fallback_k, nt));
+  const double radius2 = radius * radius;
+  std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
+  constexpr double eps = 1e-12;
+
+  for (std::int64_t qi = 0; qi < nq; ++qi) {
+    const std::size_t qbase = static_cast<std::size_t>(qi * d);
+    std::vector<std::pair<double, std::int64_t>> in_radius{};
+    in_radius.reserve(static_cast<std::size_t>(nt));
+    std::vector<std::pair<double, std::int64_t>> best{};
+    best.reserve(static_cast<std::size_t>(kk));
+    for (std::int64_t ti = 0; ti < nt; ++ti) {
+      const std::size_t tbase = static_cast<std::size_t>(ti * d);
+      double d2 = 0.0;
+      for (std::int64_t f = 0; f < d; ++f) {
+        const double dv = qv[qbase + static_cast<std::size_t>(f)] - tv[tbase + static_cast<std::size_t>(f)];
+        d2 += dv * dv;
+      }
+      if (d2 <= radius2) {
+        in_radius.emplace_back(d2, ti);
+      }
+      if (static_cast<std::int64_t>(best.size()) < kk) {
+        best.emplace_back(d2, ti);
+        if (static_cast<std::int64_t>(best.size()) == kk) {
+          std::make_heap(best.begin(), best.end());
+        }
+      } else if (d2 < best.front().first) {
+        std::pop_heap(best.begin(), best.end());
+        best.back() = std::pair<double, std::int64_t>{d2, ti};
+        std::push_heap(best.begin(), best.end());
+      }
+    }
+    const auto& selected = in_radius.empty() ? best : in_radius;
+
+    if (distance_weighted) {
+      double zero_sum = 0.0;
+      double zero_count = 0.0;
+      for (const auto& [d2, ti] : selected) {
+        if (d2 <= eps) {
+          zero_sum += yv[static_cast<std::size_t>(ti)];
+          zero_count += 1.0;
+        }
+      }
+      if (zero_count > 0.0) {
+        out[static_cast<std::size_t>(qi)] = std::clamp(zero_sum / zero_count, 0.0, 1.0);
+        continue;
+      }
+      double wsum = 0.0;
+      double ysum = 0.0;
+      for (const auto& [d2, ti] : selected) {
+        const double w = 1.0 / std::sqrt(d2 + eps);
+        wsum += w;
+        ysum += w * yv[static_cast<std::size_t>(ti)];
+      }
+      out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? std::clamp(ysum / wsum, 0.0, 1.0) : 0.0;
+    } else {
+      double sum = 0.0;
+      for (const auto& [_, ti] : selected) sum += yv[static_cast<std::size_t>(ti)];
+      out[static_cast<std::size_t>(qi)] =
+          selected.empty() ? 0.0 : std::clamp(sum / static_cast<double>(selected.size()), 0.0, 1.0);
+    }
+  }
   return pluss::make_series(out, {nq}, f64_cpu());
 }
 
@@ -623,6 +731,9 @@ public:
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
     k_ = std::min<std::int64_t>(options_.k, sample_count_);
+    query_mode_ = options_.query_mode;
+    radius_ = options_.radius;
+    radius_fallback_k_ = std::min<std::int64_t>(options_.radius_fallback_k, sample_count_);
     if (k_ <= 0) {
       return Status::invalid_argument("NeighborClassifier requires at least one training sample.");
     }
@@ -663,32 +774,41 @@ public:
       x_query = standardize_apply_rows(x_query, mean_, scale_);
     }
 
-    const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
     Series probs = Series::undefined();
-    if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
-      probs = knn_probability_cpu(x_query, x_train_, y_train_, neighbor_count, options_.distance_weighted);
+    if (query_mode_ == NeighborQueryMode::Radius) {
+      probs = radius_probability_cpu(x_query.to(pluss::pCPU, ScalarType::Float64),
+                                     x_train_.to(pluss::pCPU, ScalarType::Float64),
+                                     y_train_.to(pluss::pCPU, ScalarType::Float64),
+                                     radius_,
+                                     radius_fallback_k_,
+                                     options_.distance_weighted);
     } else {
-      const Series dist2 = pairwise_distance2(x_query, x_train_);
-      const Series sort_idx = dist2.argsort(1, false, true);
-      const Series k_cols =
-          pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
-      const Series knn_idx = sort_idx.index_select(1, k_cols);
-      const Series y_train_2d =
-          y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
-      const Series y_knn = y_train_2d.gather(1, knn_idx);
-
-      if (options_.distance_weighted) {
-        constexpr double eps = 1e-12;
-        const Series d2_knn = dist2.gather(1, knn_idx);
-        const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
-        const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
-        const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
-        const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
-        const Series wsum = weights.sum(1, false);
-        const Series ysum = weights.mul(y_knn).sum(1, false);
-        probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+      const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
+      if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
+        probs = knn_probability_cpu(x_query, x_train_, y_train_, neighbor_count, options_.distance_weighted);
       } else {
-        probs = y_knn.mean(1, false).clamp(0.0, 1.0);
+        const Series dist2 = pairwise_distance2(x_query, x_train_);
+        const Series sort_idx = dist2.argsort(1, false, true);
+        const Series k_cols =
+            pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
+        const Series knn_idx = sort_idx.index_select(1, k_cols);
+        const Series y_train_2d =
+            y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
+        const Series y_knn = y_train_2d.gather(1, knn_idx);
+
+        if (options_.distance_weighted) {
+          constexpr double eps = 1e-12;
+          const Series d2_knn = dist2.gather(1, knn_idx);
+          const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
+          const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
+          const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
+          const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
+          const Series wsum = weights.sum(1, false);
+          const Series ysum = weights.mul(y_knn).sum(1, false);
+          probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+        } else {
+          probs = y_knn.mean(1, false).clamp(0.0, 1.0);
+        }
       }
     }
 
@@ -759,7 +879,11 @@ public:
                    static_cast<double>(k_),
                    negative_label_,
                    positive_label_,
-                   static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_)),
+                   static_cast<double>(static_cast<std::int64_t>(query_mode_)),
+                   radius_,
+                   static_cast<double>(radius_fallback_k_),
+                   2.0}),
         x_train_,
         y_train_,
         mean_,
@@ -778,6 +902,14 @@ public:
     negative_label_ = meta[4];
     positive_label_ = meta[5];
     label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[6]));
+    const bool v2_state = meta.size() >= 11 && meta[10] >= 2.0;
+    query_mode_ = v2_state && meta.size() >= 8
+                      ? static_cast<NeighborQueryMode>(static_cast<std::int64_t>(meta[7]))
+                      : NeighborQueryMode::KNearest;
+    radius_ = v2_state && meta.size() >= 9 ? meta[8] : options_.radius;
+    radius_fallback_k_ = v2_state && meta.size() >= 10
+                             ? static_cast<std::int64_t>(meta[9])
+                             : std::max<std::int64_t>(1, std::min<std::int64_t>(options_.radius_fallback_k, sample_count_));
     x_train_ = state[1];
     y_train_ = state[2];
     mean_ = state[3];
@@ -801,6 +933,9 @@ private:
   std::int64_t sample_count_{0};
   std::int64_t feature_count_{0};
   std::int64_t k_{1};
+  NeighborQueryMode query_mode_{NeighborQueryMode::KNearest};
+  double radius_{1.0};
+  std::int64_t radius_fallback_k_{1};
   Series x_train_ = Series::undefined();
   Series y_train_ = Series::undefined();
   Series mean_ = Series::undefined();
@@ -1280,6 +1415,10 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
+    method_ = options_.method;
+    learning_rate_ = options_.learning_rate;
+    initial_score_ = 0.0;
+    gb_newton_leaf_updates_ = false;
     const std::vector<double> x_train_host =
         matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
     const std::vector<double> y_train_host =
@@ -1300,7 +1439,7 @@ public:
       base_seed = (static_cast<std::uint64_t>(rd()) << 32U) ^ static_cast<std::uint64_t>(rd());
     }
 
-    auto train_member = [&](std::int64_t learner_index) -> StatusOr<EnsembleMember> {
+    auto train_bagged_member = [&](std::int64_t learner_index) -> StatusOr<EnsembleMember> {
       std::mt19937_64 rng(splitmix64(base_seed + static_cast<std::uint64_t>(learner_index)));
       std::uniform_int_distribution<std::int64_t> row_dist(0, sample_count_ - 1);
 
@@ -1329,16 +1468,8 @@ public:
           continue;
         }
 
-        std::vector<double> x_sub_host(static_cast<std::size_t>(subsample_count * learner_features), 0.0);
-        for (std::int64_t i = 0; i < subsample_count; ++i) {
-          const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
-          const std::size_t in_base = static_cast<std::size_t>(row * feature_count_);
-          const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
-          for (std::int64_t j = 0; j < learner_features; ++j) {
-            const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
-            x_sub_host[out_base + static_cast<std::size_t>(j)] = x_train_host[in_base + static_cast<std::size_t>(f)];
-          }
-        }
+        std::vector<double> x_sub_host = project_rows_with_sampling(
+            x_train_host, row_ids, feature_count_, feature_ids, learner_features);
 
         const Series x_sub = pluss::make_series(std::move(x_sub_host), {subsample_count, learner_features}, f64_cpu());
         const Series y_sub = pluss::make_series(std::move(y_sub_host), {subsample_count}, f64_cpu());
@@ -1351,8 +1482,10 @@ public:
         Status tree_status = tree->learn(sub_batch, options);
         if (!tree_status.ok()) continue;
         EnsembleMember member{};
-        member.tree = std::move(tree);
+        member.classifier_tree = std::move(tree);
         member.feature_ids = std::move(feature_ids);
+        member.weight = 1.0;
+        member.flavor = LearnerFlavor::ClassifierTree;
         return StatusOr<EnsembleMember>(std::move(member));
       }
 
@@ -1361,25 +1494,180 @@ public:
           + std::to_string(learner_index) + "."));
     };
 
-    const std::int64_t workers = resolved_parallel_workers(learner_count);
-    if (workers <= 1) {
+    if (options_.method == EnsembleMethod::GradientBoost) {
+      constexpr double eps = 1e-12;
+      auto logit = [eps](double p) -> double {
+        const double pc = std::clamp(p, eps, 1.0 - eps);
+        return std::log(pc / (1.0 - pc));
+      };
+
+      const double mean_label =
+          std::accumulate(y_train_host.begin(), y_train_host.end(), 0.0) / static_cast<double>(sample_count_);
+      initial_score_ = logit(mean_label);
+      std::vector<double> running_scores(static_cast<std::size_t>(sample_count_), initial_score_);
+      std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
+      std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
+      const std::int64_t learner_features = feature_count_;
+      std::mt19937_64 rng(splitmix64(base_seed));
+      gb_newton_leaf_updates_ = true;
+
       for (std::int64_t l = 0; l < learner_count; ++l) {
-        StatusOr<EnsembleMember> member_or = train_member(l);
-        if (!member_or.ok()) return member_or.status();
-        learners_.push_back(member_or.move_value());
+        std::vector<std::int64_t> row_ids =
+            draw_stochastic_boost_rows(rng, sample_count_, subsample_count);
+        std::vector<double> residual_targets(static_cast<std::size_t>(subsample_count), 0.0);
+        for (std::int64_t i = 0; i < subsample_count; ++i) {
+          const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
+          const double prob = sigmoid_score(running_scores[static_cast<std::size_t>(row)]);
+          residual_targets[static_cast<std::size_t>(i)] =
+              y_train_host[static_cast<std::size_t>(row)] - prob;
+        }
+
+        std::vector<double> x_sub_host = project_rows_with_sampling(
+            x_train_host, row_ids, feature_count_, feature_ids, learner_features);
+
+        const Series x_sub = pluss::make_series(std::move(x_sub_host), {subsample_count, learner_features}, f64_cpu());
+        const Series y_sub = pluss::make_series(std::move(residual_targets), {subsample_count}, f64_cpu());
+        const LabeledBatch sub_batch{
+            .features = FeatureBatch{.x = x_sub, .layout = ObservationLayout::Rows},
+            .y = y_sub,
+        };
+
+        StatusOr<std::unique_ptr<RegressorBase>> tree_or = make_regressor(ModelSpec{
+            .task = TaskKind::Regression,
+            .family = ModelFamily::Tree,
+            .options = TreeFamilyOptions{.criterion = TreeCriterion::Mse},
+        });
+        if (!tree_or.ok()) return tree_or.status();
+        std::unique_ptr<RegressorBase> tree = tree_or.move_value();
+        Status tree_status = tree->learn(sub_batch, options);
+        if (!tree_status.ok()) {
+          return Status::internal(
+              "EnsembleClassifier::learn failed while fitting gradient-boost tree for learner "
+              + std::to_string(l) + ".");
+        }
+
+        StatusOr<std::vector<Series>> tree_state_or = tree->dump_state();
+        if (!tree_state_or.ok()) return tree_state_or.status();
+        std::vector<Series> tree_state = tree_state_or.move_value();
+        std::vector<double> stage_update{};
+        Status update_status = apply_binomial_newton_leaf_updates(tree_state,
+                                                                  x_train_host,
+                                                                  y_train_host,
+                                                                  running_scores,
+                                                                  row_ids,
+                                                                  sample_count_,
+                                                                  feature_count_,
+                                                                  stage_update);
+        if (!update_status.ok()) return update_status;
+        Status load_status = tree->load_state(pluss::msharp::RangeView::Series(tree_state));
+        if (!load_status.ok()) return load_status;
+
+        for (std::int64_t i = 0; i < sample_count_; ++i) {
+          running_scores[static_cast<std::size_t>(i)] += learning_rate_ * stage_update[static_cast<std::size_t>(i)];
+        }
+
+        EnsembleMember member{};
+        member.regressor_tree = std::move(tree);
+        member.feature_ids = feature_ids;
+        member.weight = learning_rate_;
+        member.flavor = LearnerFlavor::RegressorTree;
+        learners_.push_back(std::move(member));
+      }
+    } else if (options_.method == EnsembleMethod::AdaBoost) {
+      std::vector<double> sample_weights(static_cast<std::size_t>(sample_count_), 1.0 / static_cast<double>(sample_count_));
+      std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
+      std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
+      const std::int64_t learner_features = feature_count_;
+      std::mt19937_64 rng(splitmix64(base_seed));
+
+      for (std::int64_t l = 0; l < learner_count; ++l) {
+        constexpr std::int64_t max_attempts = 8;
+        bool built = false;
+        for (std::int64_t attempt = 0; attempt < max_attempts && !built; ++attempt) {
+          std::vector<std::int64_t> row_ids =
+              draw_weighted_bootstrap_rows(rng, sample_weights, sample_count_);
+          std::vector<double> y_sub_host(static_cast<std::size_t>(sample_count_), 0.0);
+          for (std::int64_t i = 0; i < sample_count_; ++i) {
+            const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
+            y_sub_host[static_cast<std::size_t>(i)] = y_train_host[static_cast<std::size_t>(row)];
+          }
+          std::vector<double> x_sub_host = project_rows_with_sampling(
+              x_train_host, row_ids, feature_count_, feature_ids, learner_features);
+          const Series x_sub = pluss::make_series(std::move(x_sub_host), {sample_count_, learner_features}, f64_cpu());
+          const Series y_sub = pluss::make_series(std::move(y_sub_host), {sample_count_}, f64_cpu());
+          const LabeledBatch sub_batch{
+              .features = FeatureBatch{.x = x_sub, .layout = ObservationLayout::Rows},
+              .y = y_sub,
+          };
+
+          auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{});
+          Status tree_status = tree->learn(sub_batch, options);
+          if (!tree_status.ok()) continue;
+
+          std::vector<double> probs{};
+          Status pred_status = tree->predict_prob_host_rows(x_train_host, sample_count_, feature_count_, probs);
+          if (!pred_status.ok()) return pred_status;
+
+          double weighted_error = 0.0;
+          for (std::int64_t i = 0; i < sample_count_; ++i) {
+            const bool pred_pos = probs[static_cast<std::size_t>(i)] >= 0.5;
+            const bool true_pos = y_train_host[static_cast<std::size_t>(i)] >= 0.5;
+            if (pred_pos != true_pos) {
+              weighted_error += sample_weights[static_cast<std::size_t>(i)];
+            }
+          }
+          weighted_error = std::clamp(weighted_error, 1e-12, 1.0 - 1e-12);
+          if (weighted_error >= 0.5) continue;
+
+          const double alpha = 0.5 * std::log((1.0 - weighted_error) / weighted_error) * learning_rate_;
+          double norm = 0.0;
+          for (std::int64_t i = 0; i < sample_count_; ++i) {
+            const double yi = y_train_host[static_cast<std::size_t>(i)] >= 0.5 ? 1.0 : -1.0;
+            const double pi = probs[static_cast<std::size_t>(i)] >= 0.5 ? 1.0 : -1.0;
+            sample_weights[static_cast<std::size_t>(i)] *= std::exp(-alpha * yi * pi);
+            norm += sample_weights[static_cast<std::size_t>(i)];
+          }
+          if (!(norm > 0.0) || !std::isfinite(norm)) {
+            return Status::numerical_failure("EnsembleClassifier::learn AdaBoost weight normalization failed.");
+          }
+          for (double& w : sample_weights) w /= norm;
+
+          EnsembleMember member{};
+          member.classifier_tree = std::move(tree);
+          member.feature_ids = feature_ids;
+          member.weight = alpha;
+          member.flavor = LearnerFlavor::ClassifierTree;
+          learners_.push_back(std::move(member));
+          built = true;
+        }
+        if (!built) {
+          return Status::internal(
+              "EnsembleClassifier::learn failed while fitting adaboost tree for learner "
+              + std::to_string(l) + ".");
+        }
       }
     } else {
-      for (std::int64_t start = 0; start < learner_count; start += workers) {
-        const std::int64_t end = std::min(learner_count, start + workers);
-        std::vector<std::future<StatusOr<EnsembleMember>>> futures{};
-        futures.reserve(static_cast<std::size_t>(end - start));
-        for (std::int64_t l = start; l < end; ++l) {
-          futures.emplace_back(std::async(std::launch::async, [&, l]() { return train_member(l); }));
-        }
-        for (std::int64_t l = start; l < end; ++l) {
-          StatusOr<EnsembleMember> member_or = futures[static_cast<std::size_t>(l - start)].get();
+      gb_newton_leaf_updates_ = false;
+      const std::int64_t workers = resolved_parallel_workers(learner_count);
+      if (workers <= 1) {
+        for (std::int64_t l = 0; l < learner_count; ++l) {
+          StatusOr<EnsembleMember> member_or = train_bagged_member(l);
           if (!member_or.ok()) return member_or.status();
           learners_.push_back(member_or.move_value());
+        }
+      } else {
+        for (std::int64_t start = 0; start < learner_count; start += workers) {
+          const std::int64_t end = std::min(learner_count, start + workers);
+          std::vector<std::future<StatusOr<EnsembleMember>>> futures{};
+          futures.reserve(static_cast<std::size_t>(end - start));
+          for (std::int64_t l = start; l < end; ++l) {
+            futures.emplace_back(std::async(std::launch::async, [&, l]() { return train_bagged_member(l); }));
+          }
+          for (std::int64_t l = start; l < end; ++l) {
+            StatusOr<EnsembleMember> member_or = futures[static_cast<std::size_t>(l - start)].get();
+            if (!member_or.ok()) return member_or.status();
+            learners_.push_back(member_or.move_value());
+          }
         }
       }
     }
@@ -1414,34 +1702,70 @@ public:
     }
 
     const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-    std::vector<double> probs_sum(static_cast<std::size_t>(matrix.sample_count), 0.0);
+    std::vector<double> scores_sum(static_cast<std::size_t>(matrix.sample_count), 0.0);
+    if (method_ == EnsembleMethod::GradientBoost) {
+      std::fill(scores_sum.begin(), scores_sum.end(), initial_score_);
+    }
 
     auto infer_member = [&](std::size_t member_index) -> StatusOr<std::vector<double>> {
       const EnsembleMember& member = learners_[member_index];
       const std::int64_t learner_features = static_cast<std::int64_t>(member.feature_ids.size());
-      std::vector<double> x_sub_host(static_cast<std::size_t>(matrix.sample_count * learner_features), 0.0);
-      for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
-        const std::size_t x_row_base = static_cast<std::size_t>(i * matrix.feature_count);
-        const std::size_t out_row_base = static_cast<std::size_t>(i * learner_features);
-        for (std::int64_t j = 0; j < learner_features; ++j) {
-          const std::int64_t f = member.feature_ids[static_cast<std::size_t>(j)];
-          x_sub_host[out_row_base + static_cast<std::size_t>(j)] = x_host[x_row_base + static_cast<std::size_t>(f)];
+      const bool full_route = is_full_route(member.feature_ids, matrix.feature_count);
+      std::vector<double> x_sub_host{};
+      const std::vector<double>* x_input = &x_host;
+      std::int64_t infer_feature_count = matrix.feature_count;
+      if (!full_route) {
+        x_sub_host = project_rows_full(
+            x_host, matrix.sample_count, matrix.feature_count, member.feature_ids, learner_features);
+        x_input = &x_sub_host;
+        infer_feature_count = learner_features;
+      }
+      std::vector<double> member_values{};
+      if (member.flavor == LearnerFlavor::RegressorTree) {
+        if (!member.regressor_tree) {
+          return StatusOr<std::vector<double>>(
+              Status::internal("EnsembleClassifier::infer_scores missing regressor tree member."));
+        }
+        const Series x_series = pluss::make_series(*x_input, {matrix.sample_count, infer_feature_count}, f64_cpu());
+        const FeatureBatch fb{.x = x_series, .layout = ObservationLayout::Rows};
+        StatusOr<Series> pred_or = member.regressor_tree->infer(fb);
+        if (!pred_or.ok()) return StatusOr<std::vector<double>>(pred_or.status());
+        member_values =
+            pred_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({matrix.sample_count}).contiguous().to_vec<double>();
+        for (double& value : member_values) {
+          value *= member.weight;
+        }
+        return StatusOr<std::vector<double>>(std::move(member_values));
+      }
+      if (!member.classifier_tree) {
+        return StatusOr<std::vector<double>>(
+            Status::internal("EnsembleClassifier::infer_scores missing classifier tree member."));
+      }
+      Status member_status = member.classifier_tree->predict_prob_host_rows(
+          *x_input, matrix.sample_count, infer_feature_count, member_values);
+      if (!member_status.ok()) return StatusOr<std::vector<double>>(member_status);
+      if (method_ == EnsembleMethod::GradientBoost) {
+        constexpr double eps = 1e-12;
+        for (double& value : member_values) {
+          const double p = std::clamp(value, eps, 1.0 - eps);
+          value = member.weight * std::clamp(std::log(p / (1.0 - p)), -8.0, 8.0);
+        }
+      } else if (method_ == EnsembleMethod::AdaBoost) {
+        for (double& value : member_values) {
+          value = value >= 0.5 ? member.weight : -member.weight;
         }
       }
-      std::vector<double> member_probs{};
-      Status member_status = member.tree->predict_prob_host_rows(x_sub_host, matrix.sample_count, learner_features, member_probs);
-      if (!member_status.ok()) return StatusOr<std::vector<double>>(member_status);
-      return StatusOr<std::vector<double>>(std::move(member_probs));
+      return StatusOr<std::vector<double>>(std::move(member_values));
     };
 
     const std::int64_t workers = resolved_parallel_workers(static_cast<std::int64_t>(learners_.size()));
     if (workers <= 1) {
       for (std::size_t mi = 0; mi < learners_.size(); ++mi) {
-        StatusOr<std::vector<double>> member_probs_or = infer_member(mi);
-        if (!member_probs_or.ok()) return StatusOr<Series>(member_probs_or.status());
-        const auto& member_probs = member_probs_or.value();
+        StatusOr<std::vector<double>> member_scores_or = infer_member(mi);
+        if (!member_scores_or.ok()) return StatusOr<Series>(member_scores_or.status());
+        const auto& member_scores = member_scores_or.value();
         for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
-          probs_sum[static_cast<std::size_t>(i)] += member_probs[static_cast<std::size_t>(i)];
+          scores_sum[static_cast<std::size_t>(i)] += member_scores[static_cast<std::size_t>(i)];
         }
       }
     } else {
@@ -1453,23 +1777,28 @@ public:
           futures.emplace_back(std::async(std::launch::async, [&, mi]() { return infer_member(mi); }));
         }
         for (std::size_t mi = start; mi < end; ++mi) {
-          StatusOr<std::vector<double>> member_probs_or = futures[mi - start].get();
-          if (!member_probs_or.ok()) return StatusOr<Series>(member_probs_or.status());
-          const auto& member_probs = member_probs_or.value();
+          StatusOr<std::vector<double>> member_scores_or = futures[mi - start].get();
+          if (!member_scores_or.ok()) return StatusOr<Series>(member_scores_or.status());
+          const auto& member_scores = member_scores_or.value();
           for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
-            probs_sum[static_cast<std::size_t>(i)] += member_probs[static_cast<std::size_t>(i)];
+            scores_sum[static_cast<std::size_t>(i)] += member_scores[static_cast<std::size_t>(i)];
           }
         }
       }
     }
 
+    if (method_ == EnsembleMethod::GradientBoost || method_ == EnsembleMethod::AdaBoost) {
+      const Series scores = pluss::make_series(scores_sum, {matrix.sample_count}, f64_cpu());
+      return StatusOr<Series>(scores.to(matrix.original_platform, ScalarType::Float64));
+    }
+
     const double denom = static_cast<double>(learners_.size());
     constexpr double eps = 1e-12;
-    for (double& v : probs_sum) {
+    for (double& v : scores_sum) {
       v /= denom;
       v = std::clamp(v, eps, 1.0 - eps);
     }
-    const Series probs = pluss::make_series(probs_sum, {matrix.sample_count}, f64_cpu());
+    const Series probs = pluss::make_series(scores_sum, {matrix.sample_count}, f64_cpu());
     const Series scores = probs.log().sub(probs.mul(-1.0).add(1.0).log());
     return StatusOr<Series>(scores.to(matrix.original_platform, ScalarType::Float64));
   }
@@ -1534,23 +1863,36 @@ public:
 
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
     std::vector<Series> out{};
-    out.reserve(2 + learners_.size() * 4);
+    out.reserve(2 + learners_.size() * 5);
     out.push_back(state_f64({trained_ ? 1.0 : 0.0,
                              static_cast<double>(sample_count_),
                              static_cast<double>(feature_count_),
                              negative_label_,
                              positive_label_,
                              static_cast<double>(static_cast<std::int64_t>(label_dtype_)),
-                             static_cast<double>(learners_.size())}));
+                             static_cast<double>(learners_.size()),
+                             static_cast<double>(static_cast<std::int64_t>(method_)),
+                             initial_score_,
+                             learning_rate_,
+                             3.0,
+                             gb_newton_leaf_updates_ ? 1.0 : 0.0}));
     for (const auto& member : learners_) {
       out.push_back(state_i64(member.feature_ids));
-      if (!member.tree) {
+      out.push_back(state_f64({member.weight, static_cast<double>(static_cast<std::int64_t>(member.flavor))}));
+      StatusOr<std::vector<Series>> tree_state_or =
+          member.flavor == LearnerFlavor::RegressorTree
+              ? (member.regressor_tree
+                     ? member.regressor_tree->dump_state()
+                     : StatusOr<std::vector<Series>>(Status::internal("EnsembleClassifier::dump_state missing regressor tree member.")))
+              : (member.classifier_tree
+                     ? member.classifier_tree->dump_state()
+                     : StatusOr<std::vector<Series>>(Status::internal("EnsembleClassifier::dump_state missing classifier tree member.")));
+      if (!tree_state_or.ok()) return StatusOr<std::vector<Series>>(tree_state_or.status());
+      const auto& tree_state = tree_state_or.value();
+      if (tree_state.empty()) {
         out.push_back(state_i64({0}));
         continue;
       }
-      StatusOr<std::vector<Series>> tree_state_or = member.tree->dump_state();
-      if (!tree_state_or.ok()) return StatusOr<std::vector<Series>>(tree_state_or.status());
-      const auto& tree_state = tree_state_or.value();
       out.push_back(state_i64({static_cast<std::int64_t>(tree_state.size())}));
       out.insert(out.end(), tree_state.begin(), tree_state.end());
     }
@@ -1568,6 +1910,16 @@ public:
     positive_label_ = meta[4];
     label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[5]));
     const std::int64_t learner_count = static_cast<std::int64_t>(meta[6]);
+    method_ = meta.size() >= 8
+                  ? static_cast<EnsembleMethod>(static_cast<std::int64_t>(meta[7]))
+                  : EnsembleMethod::Bagging;
+    initial_score_ = meta.size() >= 9 ? meta[8] : 0.0;
+    learning_rate_ = meta.size() >= 10 ? meta[9] : options_.learning_rate;
+    const double state_version = meta.size() >= 11 ? meta[10] : 1.0;
+    const bool v2_state = state_version >= 2.0;
+    const bool v3_state = state_version >= 3.0;
+    gb_newton_leaf_updates_ =
+        meta.size() >= 12 ? (meta[11] > 0.5) : false;
 
     learners_.clear();
     learners_.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, learner_count)));
@@ -1576,6 +1928,21 @@ public:
       if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state truncated state.");
       EnsembleMember member{};
       member.feature_ids = vec_i64(state[cursor++]);
+      member.weight = 1.0;
+      member.flavor = LearnerFlavor::ClassifierTree;
+      if (v2_state) {
+        if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state missing member weight.");
+        const auto weight_vec = vec_f64(state[cursor++]);
+        member.weight = weight_vec.empty() ? 1.0 : weight_vec.front();
+        if (v3_state && weight_vec.size() >= 2) {
+          member.flavor = static_cast<LearnerFlavor>(static_cast<std::int64_t>(weight_vec[1]));
+        }
+      } else if (method_ == EnsembleMethod::GradientBoost) {
+        member.weight = learning_rate_;
+      }
+      if (method_ == EnsembleMethod::GradientBoost && !v3_state) {
+        member.flavor = gb_newton_leaf_updates_ ? LearnerFlavor::RegressorTree : LearnerFlavor::ClassifierTree;
+      }
       if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state missing tree state size.");
       const auto size_vec = vec_i64(state[cursor++]);
       const std::int64_t tree_items = size_vec.empty() ? 0 : size_vec.front();
@@ -1589,20 +1956,226 @@ public:
         if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state truncated tree state.");
         tree_state.push_back(state[cursor++]);
       }
-      auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{.criterion = TreeCriterion::Gini});
-      Status load_status = tree->load_state(tree_state);
-      if (!load_status.ok()) return load_status;
-      member.tree = std::move(tree);
+      if (member.flavor == LearnerFlavor::RegressorTree) {
+        StatusOr<std::unique_ptr<RegressorBase>> tree_or = make_regressor(ModelSpec{
+            .task = TaskKind::Regression,
+            .family = ModelFamily::Tree,
+            .options = TreeFamilyOptions{.criterion = TreeCriterion::Mse},
+        });
+        if (!tree_or.ok()) return tree_or.status();
+        std::unique_ptr<RegressorBase> tree = tree_or.move_value();
+        Status load_status = tree->load_state(pluss::msharp::RangeView::Series(tree_state));
+        if (!load_status.ok()) return load_status;
+        member.regressor_tree = std::move(tree);
+      } else {
+        auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{.criterion = TreeCriterion::Gini});
+        Status load_status = tree->load_state(pluss::msharp::RangeView::Series(tree_state));
+        if (!load_status.ok()) return load_status;
+        member.classifier_tree = std::move(tree);
+      }
       learners_.push_back(std::move(member));
     }
     return Status::success();
   }
 
 private:
-  struct EnsembleMember {
-    std::unique_ptr<TreeClassifier> tree{};
-    std::vector<std::int64_t> feature_ids{};
+  enum class LearnerFlavor : std::int64_t {
+    ClassifierTree = 0,
+    RegressorTree = 1,
   };
+
+  struct EnsembleMember {
+    std::unique_ptr<TreeClassifier> classifier_tree{};
+    std::unique_ptr<RegressorBase> regressor_tree{};
+    std::vector<std::int64_t> feature_ids{};
+    double weight{1.0};
+    LearnerFlavor flavor{LearnerFlavor::ClassifierTree};
+  };
+
+  [[nodiscard]] static bool is_full_route(const std::vector<std::int64_t>& feature_ids,
+                                          std::int64_t feature_count) {
+    if (static_cast<std::int64_t>(feature_ids.size()) != feature_count) return false;
+    for (std::int64_t i = 0; i < feature_count; ++i) {
+      if (feature_ids[static_cast<std::size_t>(i)] != i) return false;
+    }
+    return true;
+  }
+
+  [[nodiscard]] static std::vector<double> project_rows_with_sampling(const std::vector<double>& x_host,
+                                                                      const std::vector<std::int64_t>& row_ids,
+                                                                      std::int64_t feature_count,
+                                                                      const std::vector<std::int64_t>& feature_ids,
+                                                                      std::int64_t learner_features) {
+    std::vector<double> out(static_cast<std::size_t>(row_ids.size() * learner_features), 0.0);
+    if (is_full_route(feature_ids, feature_count)) {
+      for (std::int64_t i = 0; i < static_cast<std::int64_t>(row_ids.size()); ++i) {
+        const std::size_t in_base = static_cast<std::size_t>(row_ids[static_cast<std::size_t>(i)] * feature_count);
+        const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
+        std::copy_n(x_host.begin() + static_cast<std::vector<double>::difference_type>(in_base),
+                    feature_count,
+                    out.begin() + static_cast<std::vector<double>::difference_type>(out_base));
+      }
+      return out;
+    }
+    for (std::int64_t i = 0; i < static_cast<std::int64_t>(row_ids.size()); ++i) {
+      const std::size_t in_base = static_cast<std::size_t>(row_ids[static_cast<std::size_t>(i)] * feature_count);
+      const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
+      for (std::int64_t j = 0; j < learner_features; ++j) {
+        const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
+        out[out_base + static_cast<std::size_t>(j)] = x_host[in_base + static_cast<std::size_t>(f)];
+      }
+    }
+    return out;
+  }
+
+  [[nodiscard]] static std::vector<std::int64_t> draw_stochastic_boost_rows(std::mt19937_64& rng,
+                                                                             std::int64_t sample_count,
+                                                                             std::int64_t subsample_count) {
+    if (subsample_count >= sample_count) {
+      std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
+      std::iota(rows.begin(), rows.end(), static_cast<std::int64_t>(0));
+      return rows;
+    }
+    std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
+    std::iota(rows.begin(), rows.end(), static_cast<std::int64_t>(0));
+    std::shuffle(rows.begin(), rows.end(), rng);
+    rows.resize(static_cast<std::size_t>(subsample_count));
+    return rows;
+  }
+
+  [[nodiscard]] static std::vector<std::int64_t> draw_weighted_bootstrap_rows(
+      std::mt19937_64& rng,
+      const std::vector<double>& sample_weights,
+      std::int64_t sample_count) {
+    std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
+    std::discrete_distribution<std::int64_t> dist(sample_weights.begin(), sample_weights.end());
+    for (std::int64_t i = 0; i < sample_count; ++i) {
+      rows[static_cast<std::size_t>(i)] = dist(rng);
+    }
+    return rows;
+  }
+
+  [[nodiscard]] static std::vector<double> project_rows_full(const std::vector<double>& x_host,
+                                                             std::int64_t sample_count,
+                                                             std::int64_t feature_count,
+                                                             const std::vector<std::int64_t>& feature_ids,
+                                                             std::int64_t learner_features) {
+    if (is_full_route(feature_ids, feature_count)) return x_host;
+    std::vector<double> out(static_cast<std::size_t>(sample_count * learner_features), 0.0);
+    for (std::int64_t i = 0; i < sample_count; ++i) {
+      const std::size_t x_row_base = static_cast<std::size_t>(i * feature_count);
+      const std::size_t out_row_base = static_cast<std::size_t>(i * learner_features);
+      for (std::int64_t j = 0; j < learner_features; ++j) {
+        const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
+        out[out_row_base + static_cast<std::size_t>(j)] = x_host[x_row_base + static_cast<std::size_t>(f)];
+      }
+    }
+    return out;
+  }
+
+  struct FlatTreeNode {
+    bool is_leaf{true};
+    std::int64_t feature{-1};
+    double threshold{0.0};
+    std::int64_t left{-1};
+    std::int64_t right{-1};
+    double leaf_value{0.0};
+  };
+
+  [[nodiscard]] static double sigmoid_score(double x) {
+    if (x >= 0.0) {
+      const double z = std::exp(-x);
+      return 1.0 / (1.0 + z);
+    }
+    const double z = std::exp(x);
+    return z / (1.0 + z);
+  }
+
+  [[nodiscard]] static StatusOr<std::vector<FlatTreeNode>> parse_flat_regression_tree(const std::vector<double>& flat) {
+    if (flat.size() % 6 != 0) {
+      return StatusOr<std::vector<FlatTreeNode>>(
+          Status::invalid_argument("EnsembleClassifier::GradientBoost tree state is malformed."));
+    }
+    const std::size_t node_count = flat.size() / 6;
+    std::vector<FlatTreeNode> nodes(node_count);
+    for (std::size_t i = 0; i < node_count; ++i) {
+      const std::size_t base = i * 6;
+      nodes[i].is_leaf = flat[base] > 0.5;
+      nodes[i].feature = static_cast<std::int64_t>(flat[base + 1]);
+      nodes[i].threshold = flat[base + 2];
+      nodes[i].left = static_cast<std::int64_t>(flat[base + 3]);
+      nodes[i].right = static_cast<std::int64_t>(flat[base + 4]);
+      nodes[i].leaf_value = flat[base + 5];
+    }
+    return StatusOr<std::vector<FlatTreeNode>>(std::move(nodes));
+  }
+
+  [[nodiscard]] static Status apply_binomial_newton_leaf_updates(std::vector<Series>& tree_state,
+                                                                 const std::vector<double>& x_host,
+                                                                 const std::vector<double>& y01,
+                                                                 const std::vector<double>& running_scores,
+                                                                 const std::vector<std::int64_t>& inbag_rows,
+                                                                 std::int64_t sample_count,
+                                                                 std::int64_t feature_count,
+                                                                 std::vector<double>& full_stage_update) {
+    if (tree_state.size() < 2) {
+      return Status::invalid_argument(
+          "EnsembleClassifier::GradientBoost requires a tree dump with metadata + nodes.");
+    }
+    std::vector<double> flat = vec_f64(tree_state[1]);
+    StatusOr<std::vector<FlatTreeNode>> nodes_or = parse_flat_regression_tree(flat);
+    if (!nodes_or.ok()) return nodes_or.status();
+    std::vector<FlatTreeNode> nodes = nodes_or.move_value();
+    if (nodes.empty()) {
+      return Status::invalid_argument("EnsembleClassifier::GradientBoost received an empty tree.");
+    }
+
+    std::vector<std::int64_t> leaf_for_row(static_cast<std::size_t>(sample_count), 0);
+    for (std::int64_t row = 0; row < sample_count; ++row) {
+      std::int64_t node_idx = 0;
+      while (!nodes[static_cast<std::size_t>(node_idx)].is_leaf) {
+        const FlatTreeNode& node = nodes[static_cast<std::size_t>(node_idx)];
+        if (node.feature < 0 || node.feature >= feature_count
+            || node.left < 0 || node.right < 0
+            || node.left >= static_cast<std::int64_t>(nodes.size())
+            || node.right >= static_cast<std::int64_t>(nodes.size())) {
+          return Status::invalid_argument("EnsembleClassifier::GradientBoost tree contains invalid split indices.");
+        }
+        const double xv = x_host[static_cast<std::size_t>(row * feature_count + node.feature)];
+        node_idx = xv < node.threshold ? node.left : node.right;
+      }
+      leaf_for_row[static_cast<std::size_t>(row)] = node_idx;
+    }
+
+    constexpr double hessian_floor = 1e-150;
+    std::vector<double> numerator(nodes.size(), 0.0);
+    std::vector<double> denominator(nodes.size(), 0.0);
+    for (std::int64_t row : inbag_rows) {
+      if (row < 0 || row >= sample_count) {
+        return Status::invalid_argument("EnsembleClassifier::GradientBoost in-bag row index is out of range.");
+      }
+      const std::size_t r = static_cast<std::size_t>(row);
+      const std::size_t leaf = static_cast<std::size_t>(leaf_for_row[r]);
+      const double prob = sigmoid_score(running_scores[r]);
+      numerator[leaf] += y01[r] - prob;
+      denominator[leaf] += prob * (1.0 - prob);
+    }
+
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+      if (!nodes[i].is_leaf) continue;
+      const double denom = denominator[i];
+      nodes[i].leaf_value = std::abs(denom) < hessian_floor ? 0.0 : (numerator[i] / denom);
+      flat[i * 6 + 5] = nodes[i].leaf_value;
+    }
+
+    tree_state[1] = state_f64(std::move(flat));
+    full_stage_update.assign(static_cast<std::size_t>(sample_count), 0.0);
+    for (std::int64_t row = 0; row < sample_count; ++row) {
+      const std::size_t leaf = static_cast<std::size_t>(leaf_for_row[static_cast<std::size_t>(row)]);
+      full_stage_update[static_cast<std::size_t>(row)] = nodes[leaf].leaf_value;
+    }
+    return Status::success();
+  }
 
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -1619,6 +2192,10 @@ private:
   std::int64_t sample_count_{0};
   std::int64_t feature_count_{0};
   std::vector<EnsembleMember> learners_{};
+  EnsembleMethod method_{EnsembleMethod::Bagging};
+  double initial_score_{0.0};
+  double learning_rate_{0.1};
+  bool gb_newton_leaf_updates_{false};
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};
@@ -1804,6 +2381,7 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
+    likelihood_ = resolved_bayes_likelihood(options_);
     const Series x = matrix.x_rows;
     const Series y01 = labels.y01.reshape({sample_count_});
     const Series ycol = y01.reshape({sample_count_, 1});
@@ -1817,18 +2395,53 @@ public:
       return Status::invalid_argument("BayesClassifier::learn requires both classes to be present in training data.");
     }
 
-    mean0_ = x.mul(mask0).sum(0, false).div(n0).reshape({feature_count_});
-    mean1_ = x.mul(mask1).sum(0, false).div(n1).reshape({feature_count_});
+    mean0_ = Series::undefined();
+    mean1_ = Series::undefined();
+    var0_ = Series::undefined();
+    var1_ = Series::undefined();
+    log_prob0_ = Series::undefined();
+    log_prob1_ = Series::undefined();
+    log_inv_prob0_ = Series::undefined();
+    log_inv_prob1_ = Series::undefined();
 
-    const Series d0 = x.sub(mean0_.reshape({1, feature_count_}));
-    const Series d1 = x.sub(mean1_.reshape({1, feature_count_}));
-    var0_ = d0.square().mul(mask0).sum(0, false).div(n0).add(options_.smoothing).reshape({feature_count_});
-    var1_ = d1.square().mul(mask1).sum(0, false).div(n1).add(options_.smoothing).reshape({feature_count_});
-    if (!all_finite(var0_) || var0_.le(0.0).any().item<bool>()) {
-      return Status::numerical_failure("BayesClassifier::learn produced invalid variance for class 0.");
-    }
-    if (!all_finite(var1_) || var1_.le(0.0).any().item<bool>()) {
-      return Status::numerical_failure("BayesClassifier::learn produced invalid variance for class 1.");
+    if (likelihood_ == BayesLikelihood::Gaussian) {
+      mean0_ = x.mul(mask0).sum(0, false).div(n0).reshape({feature_count_});
+      mean1_ = x.mul(mask1).sum(0, false).div(n1).reshape({feature_count_});
+
+      const Series d0 = x.sub(mean0_.reshape({1, feature_count_}));
+      const Series d1 = x.sub(mean1_.reshape({1, feature_count_}));
+      var0_ = d0.square().mul(mask0).sum(0, false).div(n0).add(options_.smoothing).reshape({feature_count_});
+      var1_ = d1.square().mul(mask1).sum(0, false).div(n1).add(options_.smoothing).reshape({feature_count_});
+      if (!all_finite(var0_) || var0_.le(0.0).any().item<bool>()) {
+        return Status::numerical_failure("BayesClassifier::learn produced invalid variance for class 0.");
+      }
+      if (!all_finite(var1_) || var1_.le(0.0).any().item<bool>()) {
+        return Status::numerical_failure("BayesClassifier::learn produced invalid variance for class 1.");
+      }
+    } else if (likelihood_ == BayesLikelihood::Bernoulli) {
+      const Series xb = x.gt(0.0).to(ScalarType::Float64);
+      const Series alpha = pluss::ones({1}, f64_on(x.platform())).mul(options_.smoothing);
+      const Series denom0 = pluss::ones({1}, f64_on(x.platform())).mul(n0).add(alpha.mul(2.0));
+      const Series denom1 = pluss::ones({1}, f64_on(x.platform())).mul(n1).add(alpha.mul(2.0));
+      const Series p0 = xb.mul(mask0).sum(0, false).add(alpha).div(denom0).reshape({feature_count_}).clamp(1e-12, 1.0 - 1e-12);
+      const Series p1 = xb.mul(mask1).sum(0, false).add(alpha).div(denom1).reshape({feature_count_}).clamp(1e-12, 1.0 - 1e-12);
+      log_prob0_ = p0.log();
+      log_prob1_ = p1.log();
+      log_inv_prob0_ = p0.mul(-1.0).add(1.0).log();
+      log_inv_prob1_ = p1.mul(-1.0).add(1.0).log();
+    } else if (likelihood_ == BayesLikelihood::Multinomial) {
+      const Series x_nonneg = x.clamp_min(0.0);
+      const Series alpha = pluss::ones({1}, f64_on(x.platform())).mul(options_.smoothing);
+      const Series count0 = x_nonneg.mul(mask0).sum(0, false);
+      const Series count1 = x_nonneg.mul(mask1).sum(0, false);
+      const Series total0 = count0.sum().add(alpha.mul(static_cast<double>(feature_count_)));
+      const Series total1 = count1.sum().add(alpha.mul(static_cast<double>(feature_count_)));
+      const Series p0 = count0.add(alpha).div(total0).reshape({feature_count_}).clamp_min(1e-12);
+      const Series p1 = count1.add(alpha).div(total1).reshape({feature_count_}).clamp_min(1e-12);
+      log_prob0_ = p0.log();
+      log_prob1_ = p1.log();
+    } else {
+      return Status::invalid_argument("BayesClassifier::learn encountered unsupported BayesLikelihood.");
     }
 
     prior0_ = n0 / static_cast<double>(sample_count_);
@@ -1854,21 +2467,44 @@ public:
           "BayesClassifier::infer_scores does not support NaN features; apply the fitted imputer used for learn()."));
     }
 
-    constexpr double two_pi = 6.28318530717958647692;
     const Series x = matrix.x_rows;
-    const Series mu0 = mean0_.reshape({1, feature_count_});
-    const Series mu1 = mean1_.reshape({1, feature_count_});
-    const Series v0 = var0_.reshape({1, feature_count_});
-    const Series v1 = var1_.reshape({1, feature_count_});
+    Series logp0 = Series::undefined();
+    Series logp1 = Series::undefined();
 
-    const Series d0 = x.sub(mu0);
-    const Series d1 = x.sub(mu1);
-    const Series q0 = d0.square().div(v0).sum(1, false);
-    const Series q1 = d1.square().div(v1).sum(1, false);
-    const Series c0 = v0.mul(two_pi).log().sum(1, false).mul(-0.5).add(std::log(prior0_));
-    const Series c1 = v1.mul(two_pi).log().sum(1, false).mul(-0.5).add(std::log(prior1_));
-    const Series logp0 = q0.mul(-0.5).add(c0);
-    const Series logp1 = q1.mul(-0.5).add(c1);
+    if (likelihood_ == BayesLikelihood::Gaussian) {
+      constexpr double two_pi = 6.28318530717958647692;
+      const Series mu0 = mean0_.reshape({1, feature_count_});
+      const Series mu1 = mean1_.reshape({1, feature_count_});
+      const Series v0 = var0_.reshape({1, feature_count_});
+      const Series v1 = var1_.reshape({1, feature_count_});
+
+      const Series d0 = x.sub(mu0);
+      const Series d1 = x.sub(mu1);
+      const Series q0 = d0.square().div(v0).sum(1, false);
+      const Series q1 = d1.square().div(v1).sum(1, false);
+      const Series c0 = v0.mul(two_pi).log().sum(1, false).mul(-0.5).add(std::log(prior0_));
+      const Series c1 = v1.mul(two_pi).log().sum(1, false).mul(-0.5).add(std::log(prior1_));
+      logp0 = q0.mul(-0.5).add(c0);
+      logp1 = q1.mul(-0.5).add(c1);
+    } else if (likelihood_ == BayesLikelihood::Bernoulli) {
+      const Series xb = x.gt(0.0).to(ScalarType::Float64);
+      const Series one = pluss::ones({1, feature_count_}, f64_on(x.platform()));
+      logp0 = xb.mul(log_prob0_.reshape({1, feature_count_}))
+                  .add(one.sub(xb).mul(log_inv_prob0_.reshape({1, feature_count_})))
+                  .sum(1, false)
+                  .add(std::log(prior0_));
+      logp1 = xb.mul(log_prob1_.reshape({1, feature_count_}))
+                  .add(one.sub(xb).mul(log_inv_prob1_.reshape({1, feature_count_})))
+                  .sum(1, false)
+                  .add(std::log(prior1_));
+    } else if (likelihood_ == BayesLikelihood::Multinomial) {
+      const Series x_nonneg = x.clamp_min(0.0);
+      logp0 = x_nonneg.mul(log_prob0_.reshape({1, feature_count_})).sum(1, false).add(std::log(prior0_));
+      logp1 = x_nonneg.mul(log_prob1_.reshape({1, feature_count_})).sum(1, false).add(std::log(prior1_));
+    } else {
+      return StatusOr<Series>(Status::invalid_argument("BayesClassifier::infer_scores encountered unsupported BayesLikelihood."));
+    }
+
     const Series scores = logp1.sub(logp0);
     return StatusOr<Series>(scores.to(matrix.original_platform, ScalarType::Float64));
   }
@@ -1941,16 +2577,21 @@ public:
                    prior1_,
                    negative_label_,
                    positive_label_,
-                   static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_)),
+                   static_cast<double>(static_cast<std::int64_t>(likelihood_))}),
         mean0_,
         mean1_,
         var0_,
         var1_,
+        log_prob0_,
+        log_prob1_,
+        log_inv_prob0_,
+        log_inv_prob1_,
     });
   }
 
   Status load_state(pluss::msharp::RangeView::Series state) override {
-    if (state.size() < 5) return Status::invalid_argument("BayesClassifier::load_state expects 5 tensors.");
+    if (state.size() < 5) return Status::invalid_argument("BayesClassifier::load_state expects at least 5 tensors.");
     const auto meta = vec_f64(state[0]);
     if (meta.size() < 8) return Status::invalid_argument("BayesClassifier::load_state invalid metadata.");
     trained_ = meta[0] > 0.5;
@@ -1961,10 +2602,19 @@ public:
     negative_label_ = meta[5];
     positive_label_ = meta[6];
     label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[7]));
+    if (meta.size() >= 9) {
+      likelihood_ = static_cast<BayesLikelihood>(static_cast<std::int64_t>(meta[8]));
+    } else {
+      likelihood_ = BayesLikelihood::Gaussian;
+    }
     mean0_ = state[1];
     mean1_ = state[2];
     var0_ = state[3];
     var1_ = state[4];
+    log_prob0_ = state.size() > 5 ? state[5] : Series::undefined();
+    log_prob1_ = state.size() > 6 ? state[6] : Series::undefined();
+    log_inv_prob0_ = state.size() > 7 ? state[7] : Series::undefined();
+    log_inv_prob1_ = state.size() > 8 ? state[8] : Series::undefined();
     return Status::success();
   }
 
@@ -1987,11 +2637,16 @@ private:
   Series mean1_ = Series::undefined();
   Series var0_ = Series::undefined();
   Series var1_ = Series::undefined();
+  Series log_prob0_ = Series::undefined();
+  Series log_prob1_ = Series::undefined();
+  Series log_inv_prob0_ = Series::undefined();
+  Series log_inv_prob1_ = Series::undefined();
   double prior0_{0.5};
   double prior1_{0.5};
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};
+  BayesLikelihood likelihood_{BayesLikelihood::Gaussian};
 };
 
 class KernelClassifier final : public ClassifierBase {
@@ -2024,7 +2679,8 @@ public:
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
     gamma_ = resolved_gamma(options_.gamma, feature_count_);
-    lambda_ = 1.0 / options_.c;
+    const double nu_scale = options_.form == KernelForm::Nu ? std::max(1e-6, options_.nu) : 1.0;
+    lambda_ = 1.0 / (options_.c * nu_scale);
     x_train_ = matrix.x_rows;
     const Series y_pm1 = labels.y01.mul(2.0).sub(1.0).reshape({sample_count_, 1});
     const Series k_series = kernel_matrix(x_train_, x_train_, options_.kernel, gamma_);
@@ -2193,6 +2849,55 @@ private:
   ScalarType label_dtype_{ScalarType::Float64};
 };
 
+struct LinearPenalty {
+  double l1 = 0.0;
+  double l2 = 0.0;
+};
+
+[[nodiscard]] LinearPenalty resolve_linear_penalty(const LinearFamilyOptions& options) {
+  LinearPenalty out{};
+  switch (options.regularization) {
+    case RegularizationKind::None:
+      break;
+    case RegularizationKind::L1:
+      out.l1 = options.regularization_strength;
+      break;
+    case RegularizationKind::L2:
+      out.l2 = options.regularization_strength;
+      break;
+    case RegularizationKind::Elastic:
+      out.l1 = options.regularization_strength * options.elastic_l1_ratio;
+      out.l2 = options.regularization_strength * (1.0 - options.elastic_l1_ratio);
+      break;
+  }
+  return out;
+}
+
+[[nodiscard]] Series apply_l1_prox(const Series& weights,
+                                   double shrink,
+                                   bool fit_intercept) {
+  if (shrink <= 0.0) return weights;
+  Series out = weights.sign().mul(weights.abs().sub(shrink).clamp_min(0.0));
+  if (fit_intercept) {
+    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, out.platform());
+    const Series w0 = weights.index_select(0, idx0).reshape({1});
+    out = pluss::index_put(out, std::vector<Series>{idx0}, w0, false);
+  }
+  return out;
+}
+
+[[nodiscard]] double linear_l1_term(const Series& weights,
+                                    bool fit_intercept,
+                                    double lambda_l1) {
+  if (lambda_l1 <= 0.0) return 0.0;
+  Series penalized = weights;
+  if (fit_intercept) {
+    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, penalized.platform());
+    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(penalized.platform())), false);
+  }
+  return lambda_l1 * penalized.abs().sum().item<double>();
+}
+
 [[nodiscard]] Series logistic_gradient(const Series& design,
                                        const Series& y01,
                                        const Series& sample_weight,
@@ -2222,21 +2927,23 @@ private:
                                         const Series& sample_weight,
                                         const Series& weights,
                                         bool fit_intercept,
-                                        double lambda) {
+                                        double lambda_l2,
+                                        double lambda_l1) {
   const std::int64_t n = design.sizes()[0];
   const Series logits = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
   const Series loss_terms = logits.softplus().sub(y01.mul(logits));
   const double denom = sample_weight.sum().item<double>();
   double loss = loss_terms.mul(sample_weight).sum().div(denom).item<double>();
 
-  if (lambda > 0.0) {
+  if (lambda_l2 > 0.0) {
     Series ridge = weights;
     if (fit_intercept) {
       const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, ridge.platform());
       ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
     }
-    loss += 0.5 * lambda * ridge.square().sum().item<double>();
+    loss += 0.5 * lambda_l2 * ridge.square().sum().item<double>();
   }
+  loss += linear_l1_term(weights, fit_intercept, lambda_l1);
   return loss;
 }
 
@@ -2324,7 +3031,7 @@ private:
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite coefficients."));
     }
 
-    const double loss = logistic_objective(design, y01, sample_weight, weights, fit_intercept, lambda);
+    const double loss = logistic_objective(design, y01, sample_weight, weights, fit_intercept, lambda, 0.0);
     if (!std::isfinite(loss)) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
     }
@@ -2369,7 +3076,8 @@ private:
                                      const Series& sample_weight,
                                      const Series& weights,
                                      bool fit_intercept,
-                                     double lambda) {
+                                     double lambda_l2,
+                                     double lambda_l1) {
   const std::int64_t n = design.sizes()[0];
   const Series scores = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
   const Series ypm = y01.mul(2.0).sub(1.0);
@@ -2377,14 +3085,15 @@ private:
   const double denom = sample_weight.sum().item<double>();
   double loss = margin.relu().mul(sample_weight).sum().div(denom).item<double>();
 
-  if (lambda > 0.0) {
+  if (lambda_l2 > 0.0) {
     Series ridge = weights;
     if (fit_intercept) {
       const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, ridge.platform());
       ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
     }
-    loss += 0.5 * lambda * ridge.square().sum().item<double>();
+    loss += 0.5 * lambda_l2 * ridge.square().sum().item<double>();
   }
+  loss += linear_l1_term(weights, fit_intercept, lambda_l1);
   return loss;
 }
 
@@ -2511,6 +3220,63 @@ private:
   return StatusOr<Series>(merged.reshape({static_cast<std::int64_t>(out.size())}).to(y.platform(), ScalarType::Float64));
 }
 
+[[nodiscard]] StatusOr<Series> ovr_auc_binary01(const Series& truth01,
+                                                const Series& positive_scores,
+                                                const char* where) {
+  const Series yb = truth01.to(ScalarType::Float64).reshape({truth01.numel()});
+  const Series p = positive_scores.to(ScalarType::Float64).reshape({positive_scores.numel()});
+  if (yb.numel() == 0 || yb.numel() != p.numel()) {
+    return StatusOr<Series>(Status::shape_mismatch(std::string(where) + " requires equal non-empty vectors."));
+  }
+
+  const Series pos_count = yb.sum();
+  const Series neg_count = yb.mul(-1.0).add(1.0).sum();
+  const Series has_both = pos_count.gt(0.0).to(ScalarType::Float64).mul(neg_count.gt(0.0).to(ScalarType::Float64));
+  const Series pos_safe = pos_count.clamp_min(1.0);
+  const Series neg_safe = neg_count.clamp_min(1.0);
+  const std::int64_t n = p.numel();
+  const Platform platform = p.platform();
+  const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+
+  const Series order = p.argsort(0, true, true);
+  const Series p_sorted = p.index_select(0, order);
+  const Series y_sorted = yb.index_select(0, order);
+  const Series one_vec = pluss::ones({n}, f64_on(platform));
+  const Series tp_cum = y_sorted.cumsum(0, false);
+  const Series fp_cum = one_vec.sub(y_sorted).cumsum(0, false);
+
+  Series idx_next = pluss::arange(1, n, i64_cfg);
+  if (idx_next.numel() == 0) {
+    idx_next = pluss::make_series(std::vector<std::int64_t>{0}, {1}, i64_cfg);
+  }
+  Series p_next = p_sorted.index_select(0, idx_next).reshape({idx_next.numel()});
+  if (n == 1) {
+    p_next = p_sorted.add(1.0);
+  } else {
+    p_next = p_next.unite({p_sorted.reshape({n}).index_select(0, pluss::arange(n - 1, n, i64_cfg)).add(1.0)}, 0);
+  }
+  const Series boundary = p_sorted.ne(p_next).reshape({n});
+  const Series tpr_curve = tp_cum.div(pos_safe);
+  const Series fpr_curve = fp_cum.div(neg_safe);
+  const Series tpr_u = tpr_curve.masked_select(boundary);
+  const Series fpr_u = fpr_curve.masked_select(boundary);
+  const std::int64_t m = fpr_u.numel();
+  const Series tpr_prev = (m > 1)
+                              ? pluss::zeros({1}, f64_on(platform)).unite(
+                                    {tpr_u.index_select(0, pluss::arange(0, m - 1, i64_cfg))},
+                                    0)
+                              : pluss::zeros({1}, f64_on(platform));
+  const Series fpr_prev = (m > 1)
+                              ? pluss::zeros({1}, f64_on(platform)).unite(
+                                    {fpr_u.index_select(0, pluss::arange(0, m - 1, i64_cfg))},
+                                    0)
+                              : pluss::zeros({1}, f64_on(platform));
+  const Series auc_raw = fpr_u.sub(fpr_prev).mul(tpr_u.add(tpr_prev)).mul(0.5).sum().clamp(0.0, 1.0).reshape({1});
+  const Series half = pluss::ones({1}, f64_on(platform)).mul(0.5);
+  const Series auc = auc_raw.mul(has_both).add(half.mul(pluss::ones({1}, f64_on(platform)).sub(has_both)));
+  return StatusOr<Series>(auc.reshape({1}));
+}
+
 [[nodiscard]] StatusOr<Series> classification_metrics_multiclass(const Series& truth_labels,
                                                                  const Series& pred_labels,
                                                                  const Series& score_matrix,
@@ -2576,6 +3342,28 @@ private:
   }
   const Series logloss = probs.mul(one_hot).sum(1, false).clamp(eps, 1.0).log().mul(-1.0).mean().reshape({1});
 
+  bool needs_roc_auc = false;
+  for (MetricKind metric : requested) {
+    if (metric == MetricKind::RocAuc) {
+      needs_roc_auc = true;
+      break;
+    }
+  }
+  Series macro_roc_auc = Series::undefined();
+  if (needs_roc_auc) {
+    Series auc_sum = pluss::zeros({1}, f64_on(platform));
+    for (std::int64_t ci = 0; ci < k; ++ci) {
+      const Series idx = pluss::arange(ci, ci + 1, i64_cfg);
+      const Series cls_value = cls.index_select(0, idx).reshape({1});
+      const Series y01 = y.eq(cls_value).to(ScalarType::Float64).reshape({n});
+      const Series score_col = probs.index_select(1, idx).reshape({n});
+      StatusOr<Series> auc_or = ovr_auc_binary01(y01, score_col, "classification_metrics_multiclass");
+      if (!auc_or.ok()) return StatusOr<Series>(auc_or.status());
+      auc_sum = auc_sum.add(auc_or.value().reshape({1}));
+    }
+    macro_roc_auc = auc_sum.div(k_scalar).reshape({1});
+  }
+
   std::vector<Series> out{};
   out.reserve(requested.size());
   for (MetricKind metric : requested) {
@@ -2599,8 +3387,8 @@ private:
         out.push_back(logloss);
         break;
       case MetricKind::RocAuc:
-        return StatusOr<Series>(
-            Status::not_implemented("multiclass RocAuc is not implemented yet; use one-vs-rest externally if needed."));
+        out.push_back(macro_roc_auc);
+        break;
       default:
         return StatusOr<Series>(Status::invalid_argument("Unsupported classification metric in multiclass assess()."));
     }
@@ -2659,8 +3447,7 @@ public:
 
     const std::int64_t param_count = design.sizes()[1];
     Series weights = pluss::zeros({param_count}, f64_on(design.platform()));
-    const double lambda =
-        options_.regularization == RegularizationKind::L2 ? options_.regularization_strength : 0.0;
+    const LinearPenalty penalty = resolve_linear_penalty(options_);
 
     optim::AdamState adam = optim::adam_state_like(std::vector<Series>{weights});
     optim::AdamOptions adam_opt{};
@@ -2671,6 +3458,11 @@ public:
     optim::SeptimaConstraints septima_constraints{};
     optim::SeptimaOptions septima_options{};
     optim::SeptimaSolveOptions septima_solve_options{};
+
+    if (use_parameter_bounds && penalty.l1 > 0.0) {
+      return Status::not_implemented(
+          "LinearClassifier::learn currently does not support L1/Elastic regularization when parameter bounds are enabled.");
+    }
 
     if (use_parameter_bounds) {
       StatusOr<Series> lb_or =
@@ -2700,13 +3492,13 @@ public:
       septima_solve_options.constraint_tolerance = 0.0;
     }
 
-    if (options_.objective == LinearObjective::Logistic && !use_parameter_bounds) {
+    if (options_.objective == LinearObjective::Logistic && !use_parameter_bounds && penalty.l1 <= 0.0) {
       StatusOr<Series> fast_weights_or =
           solve_logistic_newton(design,
                                 labels.y01,
                                 sample_weight,
                                 options_.fit_intercept,
-                                lambda,
+                                penalty.l2,
                                 options.max_iterations,
                                 options.tolerance,
                                 "LinearClassifier::learn");
@@ -2717,9 +3509,9 @@ public:
       for (std::int64_t iter = 0; iter < options.max_iterations; ++iter) {
         Series grad = Series::undefined();
         if (options_.objective == LinearObjective::Logistic) {
-          grad = logistic_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
+          grad = logistic_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, penalty.l2);
         } else {
-          grad = hinge_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
+          grad = hinge_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, penalty.l2);
         }
         if (!all_finite(grad)) {
           return Status::numerical_failure("LinearClassifier::learn encountered non-finite gradient.");
@@ -2743,10 +3535,25 @@ public:
         } catch (const std::exception& ex) {
           return Status::numerical_failure(std::string("LinearClassifier::learn optimizer failure: ") + ex.what());
         }
+        if (penalty.l1 > 0.0) {
+          weights = apply_l1_prox(weights, penalty.l1 * adam_opt.learning_rate, options_.fit_intercept);
+        }
 
         const double loss = options_.objective == LinearObjective::Logistic
-                                ? logistic_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda)
-                                : hinge_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
+                                ? logistic_objective(design,
+                                                     labels.y01,
+                                                     sample_weight,
+                                                     weights,
+                                                     options_.fit_intercept,
+                                                     penalty.l2,
+                                                     penalty.l1)
+                                : hinge_objective(design,
+                                                  labels.y01,
+                                                  sample_weight,
+                                                  weights,
+                                                  options_.fit_intercept,
+                                                  penalty.l2,
+                                                  penalty.l1);
         if (!std::isfinite(loss)) {
           return Status::numerical_failure("LinearClassifier::learn encountered non-finite objective.");
         }

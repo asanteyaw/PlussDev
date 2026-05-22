@@ -441,10 +441,8 @@ cudnnRNNMode_t mode_for_kind_(RnnKind kind, const ::pluss::ai::rnn::NetConfig& c
   return CUDNN_RNN_TANH;
 }
 
-Series add_bias_maybe_(const Series& a, const Series& b, ScalarType dtype) {
-  if (a.defined() && b.defined()) return to_cuda_dtype_contiguous_(a, dtype).add(to_cuda_dtype_contiguous_(b, dtype));
+Series add_bias_maybe_(const Series& a, ScalarType dtype) {
   if (a.defined()) return to_cuda_dtype_contiguous_(a, dtype);
-  if (b.defined()) return to_cuda_dtype_contiguous_(b, dtype);
   return Series();
 }
 
@@ -468,7 +466,7 @@ void materialize_biases_(
     return;
   }
 
-  const Series unified = add_bias_maybe_(p.bias_ih, p.bias_hh, dtype);
+  const Series unified = add_bias_maybe_(p.bias, dtype);
   *bias_ih = unified.defined() ? unified : zero;
   *bias_hh = zero.clone();
 }
@@ -579,6 +577,41 @@ bool supports_kind_(
       }
       if (p.weight_hh.sizes()[1] != hidden_out) {
         if (reason != nullptr) *reason = "weight_hh recurrent size mismatch";
+        return false;
+      }
+      const bool has_b = p.bias.defined();
+      const bool has_bih = p.bias_ih.defined();
+      const bool has_bhh = p.bias_hh.defined();
+      if (!cfg.use_bias && (has_b || has_bih || has_bhh)) {
+        if (reason != nullptr) *reason = "use_bias=false does not allow bias tensors";
+        return false;
+      }
+      if (cfg.use_bias && cfg.split_bias) {
+        if (has_b) {
+          if (reason != nullptr) *reason = "split_bias=true does not allow unified bias";
+          return false;
+        }
+        if (has_bih != has_bhh) {
+          if (reason != nullptr) *reason = "split_bias=true requires bias_ih and bias_hh together";
+          return false;
+        }
+        if (!has_bih) {
+          if (reason != nullptr) *reason = "use_bias=true and split_bias=true require both bias_ih and bias_hh";
+          return false;
+        }
+      }
+      if (cfg.use_bias && !cfg.split_bias) {
+        if (has_bih || has_bhh) {
+          if (reason != nullptr) *reason = "split_bias=false does not allow bias_ih/bias_hh";
+          return false;
+        }
+        if (!has_b) {
+          if (reason != nullptr) *reason = "use_bias=true and split_bias=false require unified bias";
+          return false;
+        }
+      }
+      if (p.bias.defined() && (p.bias.dim() != 1 || p.bias.sizes()[0] != gate_hidden)) {
+        if (reason != nullptr) *reason = "bias shape mismatch";
         return false;
       }
       if (p.bias_ih.defined() && (p.bias_ih.dim() != 1 || p.bias_ih.sizes()[0] != gate_hidden)) {

@@ -53,6 +53,18 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/metrics")
     add_subdirectory(NodeJ/metrics)
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/feature_select")
+    add_subdirectory(NodeJ/feature_select)
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/inspection")
+    add_subdirectory(NodeJ/inspection)
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/text")
+    add_subdirectory(NodeJ/text)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/compose")
     add_subdirectory(NodeJ/compose)
 endif()

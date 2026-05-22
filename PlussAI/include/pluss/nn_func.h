@@ -25,6 +25,7 @@ using ::pluss::ai::causal_padding1d;
 using ::pluss::ai::conv;
 using ::pluss::ai::conv1d;
 using ::pluss::ai::conv2d;
+using ::pluss::ai::conv3d;
 using ::pluss::ai::cudnn_conv_enabled;
 using ::pluss::ai::cudnn_conv_strict;
 using ::pluss::ai::cudnn_conv_ready;

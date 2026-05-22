@@ -1,6 +1,7 @@
 #include "pluss/ai/nodej/builders.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -120,6 +121,40 @@ struct DenseFeatureMatrix {
     return Status::invalid_argument("DecomposeFamilyOptions.tolerance must be positive.");
   }
   return Status::success();
+}
+
+[[nodiscard]] Status validate_kernel_transform_options(const KernelFamilyOptions& options) {
+  if (options.form != KernelForm::OneClass) {
+    return Status::invalid_argument("Kernel transformer requires KernelFamilyOptions.form = KernelForm::OneClass.");
+  }
+  if (!std::isfinite(options.nu) || options.nu <= 0.0 || options.nu > 1.0) {
+    return Status::invalid_argument("KernelFamilyOptions.nu must be finite and in (0, 1].");
+  }
+  if (!std::isfinite(options.gamma) || options.gamma < 0.0) {
+    return Status::invalid_argument("KernelFamilyOptions.gamma must be finite and >= 0.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] double resolved_gamma(double gamma, std::int64_t feature_count) {
+  if (gamma > 0.0 && std::isfinite(gamma)) return gamma;
+  return 1.0 / static_cast<double>(std::max<std::int64_t>(1, feature_count));
+}
+
+[[nodiscard]] Series kernel_similarity(const Series& query_rows,
+                                       const Series& train_rows,
+                                       KernelKind kernel,
+                                       double gamma) {
+  if (kernel == KernelKind::Linear) {
+    return query_rows.matmul(train_rows.transpose(0, 1));
+  }
+  if (kernel == KernelKind::Rbf) {
+    return pairwise_distance2(query_rows, train_rows).mul(-gamma).exp();
+  }
+  if (kernel == KernelKind::Polynomial) {
+    return query_rows.matmul(train_rows.transpose(0, 1)).mul(gamma).add(1.0).pow(2.0);
+  }
+  return query_rows.matmul(train_rows.transpose(0, 1)).mul(gamma).tanh();
 }
 
 class KMeansTransformer final : public TransformerBase {
@@ -265,6 +300,113 @@ private:
   std::int64_t feature_count_{0};
   ObservationLayout layout_{ObservationLayout::Rows};
   Series centers_ = Series::undefined();
+};
+
+class KernelOneClassTransformer final : public TransformerBase {
+public:
+  explicit KernelOneClassTransformer(KernelFamilyOptions options) : options_(options) {}
+
+  [[nodiscard]] bool trained() const noexcept override { return trained_; }
+
+  Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override {
+    (void)options;
+    Status data_status = validate_features(batch);
+    if (!data_status.ok()) return data_status;
+    Status option_status = validate_kernel_transform_options(options_);
+    if (!option_status.ok()) return option_status;
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch, "KernelOneClassTransformer::learn");
+    if (!matrix_or.ok()) return matrix_or.status();
+    DenseFeatureMatrix matrix = matrix_or.move_value();
+    if (has_nan(matrix.x_rows)) {
+      return Status::invalid_argument("KernelOneClassTransformer::learn does not support NaN features.");
+    }
+
+    feature_count_ = matrix.feature_count;
+    layout_ = batch.layout;
+    gamma_ = resolved_gamma(options_.gamma, feature_count_);
+    x_train_ = matrix.x_rows;
+
+    const Series k = kernel_similarity(x_train_, x_train_, options_.kernel, gamma_);
+    const Series score = k.mean(1, false).reshape({matrix.sample_count});
+    const Series sorted = score.sort(0, false, false).reshape({matrix.sample_count});
+    const std::int64_t qidx = std::clamp<std::int64_t>(
+        static_cast<std::int64_t>(std::floor(options_.nu * static_cast<double>(matrix.sample_count))) - 1,
+        0,
+        matrix.sample_count - 1);
+    const Series qseries = pluss::make_series(std::vector<std::int64_t>{qidx}, {1}, i64_on(sorted.platform()));
+    offset_ = sorted.index_select(0, qseries).reshape({1}).item<double>();
+    trained_ = std::isfinite(offset_);
+    if (!trained_) {
+      return Status::numerical_failure("KernelOneClassTransformer::learn failed to produce finite offset.");
+    }
+    return Status::success();
+  }
+
+  [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override {
+    (void)options;
+    if (!trained_) {
+      return StatusOr<Series>(Status::precondition("KernelOneClassTransformer requires learn() before map()."));
+    }
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch, "KernelOneClassTransformer::map");
+    if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+    DenseFeatureMatrix matrix = matrix_or.move_value();
+    if (matrix.feature_count != feature_count_) {
+      return StatusOr<Series>(Status::shape_mismatch("KernelOneClassTransformer::map feature count mismatch."));
+    }
+    if (has_nan(matrix.x_rows)) {
+      return StatusOr<Series>(Status::invalid_argument("KernelOneClassTransformer::map does not support NaN features."));
+    }
+    const Series k = kernel_similarity(matrix.x_rows, x_train_, options_.kernel, gamma_);
+    const Series score = k.mean(1, false).reshape({matrix.sample_count});
+    const Series ones = pluss::ones_like(score, ScalarType::Float64);
+    const Series labels = score.ge(offset_).where(ones, ones.mul(-1.0));
+    if (matrix.layout == ObservationLayout::Rows) {
+      return StatusOr<Series>(labels.to(matrix.original_platform, ScalarType::Float64).reshape({matrix.sample_count, 1}));
+    }
+    return StatusOr<Series>(labels.to(matrix.original_platform, ScalarType::Float64).reshape({1, matrix.sample_count}));
+  }
+
+  [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options = {},
+                                           const InferOptions& infer_options = {}) override {
+    Status status = learn(batch, learn_options);
+    if (!status.ok()) return StatusOr<Series>(status);
+    return map(batch, infer_options);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(feature_count_),
+                   static_cast<double>(static_cast<std::int64_t>(layout_)),
+                   gamma_,
+                   offset_}),
+        x_train_,
+    });
+  }
+
+  Status load_state(pluss::msharp::RangeView::Series state) override {
+    if (state.size() < 2) return Status::invalid_argument("KernelOneClassTransformer::load_state expects 2 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 5) return Status::invalid_argument("KernelOneClassTransformer::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[1]);
+    layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[2]));
+    gamma_ = meta[3];
+    offset_ = meta[4];
+    x_train_ = state[1];
+    return Status::success();
+  }
+
+private:
+  KernelFamilyOptions options_{};
+  bool trained_{false};
+  std::int64_t feature_count_{0};
+  ObservationLayout layout_{ObservationLayout::Rows};
+  double gamma_{1.0};
+  double offset_{0.0};
+  Series x_train_ = Series::undefined();
 };
 
 class PcaTransformer final : public TransformerBase {
@@ -452,8 +594,16 @@ StatusOr<std::unique_ptr<TransformerBase>> make_transformer(const ModelSpec& spe
     }
     return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<PcaTransformer>(*options));
   }
+  if (spec.family == ModelFamily::Kernel) {
+    const auto* options = std::get_if<KernelFamilyOptions>(&spec.options);
+    if (options == nullptr) {
+      return StatusOr<std::unique_ptr<TransformerBase>>(
+          Status::invalid_argument("Kernel transformer requires KernelFamilyOptions in ModelSpec.options."));
+    }
+    return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<KernelOneClassTransformer>(*options));
+  }
   return StatusOr<std::unique_ptr<TransformerBase>>(
-      Status::invalid_argument("Unsupported transformer family; expected Cluster or Decompose."));
+      Status::invalid_argument("Unsupported transformer family; expected Cluster, Decompose, or Kernel(one-class)."));
 }
 
 } // namespace pluss::ai::nodej

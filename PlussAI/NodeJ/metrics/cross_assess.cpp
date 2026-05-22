@@ -47,7 +47,15 @@ namespace {
     return time_series_fold_plan(batch.features.sample_count(), split);
   }
   if (split.plan == CVPlanKind::GroupKFold) {
-    return StatusOr<SplitPlan>(Status::not_implemented("cross_assess currently supports Holdout, KFold, StratifiedKFold, TimeSeries."));
+    if (!split.groups.defined()) {
+      return StatusOr<SplitPlan>(
+          Status::invalid_argument("cross_assess GroupKFold requires SplitOptions.groups to be defined."));
+    }
+    if (split.groups.numel() != batch.features.sample_count()) {
+      return StatusOr<SplitPlan>(
+          Status::shape_mismatch("cross_assess GroupKFold requires SplitOptions.groups length to match sample count."));
+    }
+    return group_fold_plan(split.groups, split);
   }
   return StatusOr<SplitPlan>(Status::invalid_argument("cross_assess received unknown SplitOptions.plan."));
 }

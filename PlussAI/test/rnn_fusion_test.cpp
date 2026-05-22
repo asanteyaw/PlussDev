@@ -256,24 +256,43 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
 
   const Series rnn_input = pluss::make_series(std::vector<double>{1.0, 2.0}, {1, 2}, cfg);
   const Series rnn_hidden = pluss::make_series(std::vector<double>{0.5}, {1, 1}, cfg);
-  const pluss::ai::rnn::NetWeight rnn_params{
+  const pluss::ai::rnn::NetWeight rnn_split_params{
       .weight_ih = pluss::make_series(std::vector<double>{1.0, -1.0}, {1, 2}, cfg),
       .weight_hh = pluss::make_series(std::vector<double>{3.0}, {1, 1}, cfg),
       .bias_ih = pluss::make_series(std::vector<double>{0.25}, {1}, cfg),
       .bias_hh = pluss::make_series(std::vector<double>{-0.5}, {1}, cfg),
   };
-  if (!approx(scalar_f64(pluss::ai::rnn::rnn_impl(rnn_input, rnn_hidden, rnn_params, false, "relu")), 0.25)) {
+  const pluss::ai::rnn::NetWeight rnn_unified_params{
+      .weight_ih = rnn_split_params.weight_ih,
+      .weight_hh = rnn_split_params.weight_hh,
+      .bias = pluss::make_series(std::vector<double>{-0.25}, {1}, cfg),
+  };
+  if (!approx(scalar_f64(pluss::ai::rnn::rnn_impl(rnn_input, rnn_hidden, rnn_unified_params, false, "relu")), 0.25)) {
     if (err) *err << "rnn_impl mismatch\n";
     return false;
   }
 
-  const auto gru_params = make_gru_params();
+  const auto gru_split_params = make_gru_params();
+  pluss::ai::rnn::NetWeight gru_unified_params = gru_split_params;
+  gru_unified_params.bias = gru_split_params.bias_ih.add(gru_split_params.bias_hh);
+  gru_unified_params.bias_ih = Series();
+  gru_unified_params.bias_hh = Series();
   const Series gru_x = pluss::make_series(std::vector<double>{0.4, -0.2}, {1, 2}, cfg);
   const Series gru_h = pluss::make_series(std::vector<double>{0.3}, {1, 1}, cfg);
-  const Series gru_split = pluss::ai::rnn::gru_impl(gru_x, gru_h, gru_params, true);
-  const Series gru_unified = pluss::ai::rnn::gru_impl(gru_x, gru_h, gru_params, false);
+  const Series gru_split = pluss::ai::rnn::gru_impl(gru_x, gru_h, gru_split_params, true);
+  const Series gru_unified = pluss::ai::rnn::gru_impl(gru_x, gru_h, gru_unified_params, false);
   if (!(std::abs(scalar_f64(gru_split) - scalar_f64(gru_unified)) > 1e-6)) {
     if (err) *err << "split_bias should change GRU output\n";
+    return false;
+  }
+  bool bad_gru_impl_threw = false;
+  try {
+    (void)pluss::ai::rnn::gru_impl(gru_x, gru_h, gru_split_params, false);
+  } catch (...) {
+    bad_gru_impl_threw = true;
+  }
+  if (!bad_gru_impl_threw) {
+    if (err) *err << "gru_impl should reject split-bias tensors when split_bias=false\n";
     return false;
   }
 
@@ -290,8 +309,21 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
                                         {2, 2, 2},
                                         cfg);
   const Series h0 = pluss::zeros({1, 2, 1}, cfg);
+  bool bad_gru_layout_threw = false;
+  try {
+    auto bad_cfg = run_cfg;
+    bad_cfg.split_bias = false;
+    bad_cfg.use_bias = true;
+    (void)pluss::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_split_params}, bad_cfg);
+  } catch (...) {
+    bad_gru_layout_threw = true;
+  }
+  if (!bad_gru_layout_threw) {
+    if (err) *err << "gru should reject bias_ih/bias_hh when split_bias=false\n";
+    return false;
+  }
   const auto [gru_func_out, gru_func_hn] =
-      pluss::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_params}, run_cfg);
+      pluss::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_split_params}, run_cfg);
 
   pluss::nn::RNN rnn_module(pluss::nn::RNNOptions{
       .input_size = 2,
@@ -307,7 +339,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
       .seed = 3ULL,
       .training = true,
   });
-  rnn_module->params().front() = rnn_params;
+  rnn_module->params().front() = rnn_split_params;
   rnn_module->eval();
   if (rnn_module.is_training() || rnn_module->options().training) {
     if (err) *err << "RNN eval should disable training mode\n";
@@ -337,11 +369,29 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
       .seed = 5ULL,
       .training = true,
   });
-  gru_module->params().front() = gru_params;
+  gru_module->params().front() = gru_split_params;
   const auto [gru_mod_out, gru_mod_hn] = gru_module->forward(seq, h0);
   if (!approx_vec(vec_f64(gru_mod_out), vec_f64(gru_func_out)) ||
       !approx_vec(vec_f64(gru_mod_hn), vec_f64(gru_func_hn))) {
     if (err) *err << "GRU module/functional mismatch\n";
+    return false;
+  }
+  pluss::nn::GRU gru_unified_module(pluss::nn::GRUOptions{
+      .input_size = 2,
+      .hidden_size = 1,
+      .num_layers = 1,
+      .bias = true,
+      .batch_first = true,
+      .dropout = 0.0,
+      .bidirectional = false,
+      .split_bias = false,
+      .cfg = cfg,
+      .seed = 6ULL,
+      .training = true,
+  });
+  const auto [gru_unified_mod_out, gru_unified_mod_hn] = gru_unified_module->forward(seq, h0);
+  if (gru_unified_mod_out.sizes()[0] != 2 || gru_unified_mod_hn.sizes()[0] != 1) {
+    if (err) *err << "GRU unified-bias module shape mismatch\n";
     return false;
   }
 

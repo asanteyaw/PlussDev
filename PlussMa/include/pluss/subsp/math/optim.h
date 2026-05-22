@@ -8446,6 +8446,7 @@ inline void septima_validate_params_(const std::vector<Series>& params) {
 inline void septima_validate_constraints_(const std::vector<Series>& params,
                                           const SeptimaConstraints& constraints,
                                           bool require_trace_callbacks) {
+  (void)require_trace_callbacks;
   if (!constraints.lbs.empty() && constraints.lbs.size() != params.size()) {
     ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbs size mismatch");
   }
@@ -8465,14 +8466,6 @@ inline void septima_validate_constraints_(const std::vector<Series>& params,
   }
   if (!constraints.inequalities && constraints.inequalities_trace) {
     ::pluss::throw_error("subsp::math::optim::septima_step_inplace: inequalities_trace requires inequalities");
-  }
-  if (require_trace_callbacks && constraints.equalities && !constraints.equalities_trace) {
-    ::pluss::throw_error(
-        "subsp::math::optim::septima_step_inplace: equalities callback requires equalities_trace");
-  }
-  if (require_trace_callbacks && constraints.inequalities && !constraints.inequalities_trace) {
-    ::pluss::throw_error(
-        "subsp::math::optim::septima_step_inplace: inequalities callback requires inequalities_trace");
   }
 
   auto check_bound = [&](const std::vector<Series>& bounds, const char* name) {
@@ -8505,6 +8498,41 @@ inline std::vector<Series> septima_evaluate_residuals_(
   if (out.empty()) {
     ::pluss::throw_error(std::string("subsp::math::optim::septima_step_inplace: empty ") + name +
                              " residual vector");
+  }
+  return out;
+}
+
+inline std::vector<Trace> septima_evaluate_trace_residuals_(
+    const std::vector<Trace>& vars,
+    const SeptimaConstraints::ResidualFn& series_fn,
+    const SeptimaConstraints::TraceResidualFn& trace_fn,
+    const char* name) {
+  // Prefer the Series residual callback to keep primal/dual paths aligned and avoid
+  // trace-only callback disconnects.
+  if (series_fn) {
+    std::vector<Series> values;
+    values.reserve(vars.size());
+    for (const auto& v : vars) values.push_back(v.value());
+    const auto residual_values = septima_evaluate_residuals_(values, series_fn, name);
+    std::vector<Trace> out;
+    out.reserve(residual_values.size());
+    for (const auto& r : residual_values) out.emplace_back(r);
+    return out;
+  }
+
+  if (!trace_fn) return {};
+  const auto out = trace_fn(vars);
+  for (const auto& r : out) {
+    if (!r.defined()) {
+      ::pluss::throw_error(std::string("subsp::math::optim::septima_step_inplace: undefined ") + name +
+                           " trace residual");
+    }
+    require_same_platform_(vars.front().value(), r.value(), "septima_step_inplace");
+    require_float_dtype_(r.value(), "septima_step_inplace");
+  }
+  if (out.empty()) {
+    ::pluss::throw_error(std::string("subsp::math::optim::septima_step_inplace: empty ") + name +
+                         " residual vector");
   }
   return out;
 }
@@ -8638,8 +8666,9 @@ inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
                                                  const SeptimaOptions& options) {
   Trace objective = sum(vars.front() * 0.0);
 
-  if (constraints.equalities_trace) {
-    const auto residuals = constraints.equalities_trace(vars);
+  if (constraints.equalities) {
+    const auto residuals = septima_evaluate_trace_residuals_(
+        vars, constraints.equalities, constraints.equalities_trace, "equalities");
     if (residuals.size() != state.lambda_equalities.size()) {
       ::pluss::throw_error("subsp::math::optim::septima_step_inplace: equality multiplier size mismatch");
     }
@@ -8650,8 +8679,9 @@ inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
     }
   }
 
-  if (constraints.inequalities_trace) {
-    const auto residuals = constraints.inequalities_trace(vars);
+  if (constraints.inequalities) {
+    const auto residuals = septima_evaluate_trace_residuals_(
+        vars, constraints.inequalities, constraints.inequalities_trace, "inequalities");
     if (residuals.size() != state.lambda_inequalities.size()) {
       ::pluss::throw_error("subsp::math::optim::septima_step_inplace: inequality multiplier size mismatch");
     }

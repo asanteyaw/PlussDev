@@ -193,90 +193,6 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_quick_classification_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/rule
-.PHONY : plussai_lymph_quick_classification_demo
-
-# fast build rule for target.
-plussai_lymph_quick_classification_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build
-.PHONY : plussai_lymph_quick_classification_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_quick_regression_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/rule
-.PHONY : plussai_lymph_quick_regression_demo
-
-# fast build rule for target.
-plussai_lymph_quick_regression_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build
-.PHONY : plussai_lymph_quick_regression_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_presets_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/rule
-.PHONY : plussai_lymph_presets_demo
-
-# fast build rule for target.
-plussai_lymph_presets_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build
-.PHONY : plussai_lymph_presets_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_cv_tune_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/rule
-.PHONY : plussai_lymph_cv_tune_demo
-
-# fast build rule for target.
-plussai_lymph_cv_tune_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build
-.PHONY : plussai_lymph_cv_tune_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_flow_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/rule
-.PHONY : plussai_lymph_flow_demo
-
-# fast build rule for target.
-plussai_lymph_flow_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build
-.PHONY : plussai_lymph_flow_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_multiclass_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/rule
-.PHONY : plussai_lymph_multiclass_demo
-
-# fast build rule for target.
-plussai_lymph_multiclass_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build
-.PHONY : plussai_lymph_multiclass_demo/fast
-
-# Convenience name for target.
 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/rule
 .PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/rule
@@ -289,20 +205,6 @@ plussai_lymph_online_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph
 plussai_lymph_online_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build
 .PHONY : plussai_lymph_online_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule
-.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule
-
-# Convenience name for target.
-plussai_lymph_unsupervised_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule
-.PHONY : plussai_lymph_unsupervised_demo
-
-# fast build rule for target.
-plussai_lymph_unsupervised_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build
-.PHONY : plussai_lymph_unsupervised_demo/fast
 
 # Convenience name for target.
 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/rule:
@@ -345,30 +247,6 @@ plussai_lymph_housing_ch2_end_to_end_notebook: PlussAI/examples/NodeJ/lymph/CMak
 plussai_lymph_housing_ch2_end_to_end_notebook/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build
 .PHONY : plussai_lymph_housing_ch2_end_to_end_notebook/fast
-
-lymph_cv_tune_demo.o: lymph_cv_tune_demo.cpp.o
-.PHONY : lymph_cv_tune_demo.o
-
-# target to build an object file
-lymph_cv_tune_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/lymph_cv_tune_demo.cpp.o
-.PHONY : lymph_cv_tune_demo.cpp.o
-
-lymph_cv_tune_demo.i: lymph_cv_tune_demo.cpp.i
-.PHONY : lymph_cv_tune_demo.i
-
-# target to preprocess a source file
-lymph_cv_tune_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/lymph_cv_tune_demo.cpp.i
-.PHONY : lymph_cv_tune_demo.cpp.i
-
-lymph_cv_tune_demo.s: lymph_cv_tune_demo.cpp.s
-.PHONY : lymph_cv_tune_demo.s
-
-# target to generate assembly for a file
-lymph_cv_tune_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/lymph_cv_tune_demo.cpp.s
-.PHONY : lymph_cv_tune_demo.cpp.s
 
 lymph_end_to_end_hour_workflow_showcase.o: lymph_end_to_end_hour_workflow_showcase.cpp.o
 .PHONY : lymph_end_to_end_hour_workflow_showcase.o
@@ -418,30 +296,6 @@ lymph_feature_transformer_workflow_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_feature_transformer_workflow_demo.dir/lymph_feature_transformer_workflow_demo.cpp.s
 .PHONY : lymph_feature_transformer_workflow_demo.cpp.s
 
-lymph_flow_demo.o: lymph_flow_demo.cpp.o
-.PHONY : lymph_flow_demo.o
-
-# target to build an object file
-lymph_flow_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/lymph_flow_demo.cpp.o
-.PHONY : lymph_flow_demo.cpp.o
-
-lymph_flow_demo.i: lymph_flow_demo.cpp.i
-.PHONY : lymph_flow_demo.i
-
-# target to preprocess a source file
-lymph_flow_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/lymph_flow_demo.cpp.i
-.PHONY : lymph_flow_demo.cpp.i
-
-lymph_flow_demo.s: lymph_flow_demo.cpp.s
-.PHONY : lymph_flow_demo.s
-
-# target to generate assembly for a file
-lymph_flow_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/lymph_flow_demo.cpp.s
-.PHONY : lymph_flow_demo.cpp.s
-
 lymph_housing_ch2_end_to_end_notebook.o: lymph_housing_ch2_end_to_end_notebook.cpp.o
 .PHONY : lymph_housing_ch2_end_to_end_notebook.o
 
@@ -465,30 +319,6 @@ lymph_housing_ch2_end_to_end_notebook.s: lymph_housing_ch2_end_to_end_notebook.c
 lymph_housing_ch2_end_to_end_notebook.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_housing_ch2_end_to_end_notebook.dir/lymph_housing_ch2_end_to_end_notebook.cpp.s
 .PHONY : lymph_housing_ch2_end_to_end_notebook.cpp.s
-
-lymph_multiclass_demo.o: lymph_multiclass_demo.cpp.o
-.PHONY : lymph_multiclass_demo.o
-
-# target to build an object file
-lymph_multiclass_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/lymph_multiclass_demo.cpp.o
-.PHONY : lymph_multiclass_demo.cpp.o
-
-lymph_multiclass_demo.i: lymph_multiclass_demo.cpp.i
-.PHONY : lymph_multiclass_demo.i
-
-# target to preprocess a source file
-lymph_multiclass_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/lymph_multiclass_demo.cpp.i
-.PHONY : lymph_multiclass_demo.cpp.i
-
-lymph_multiclass_demo.s: lymph_multiclass_demo.cpp.s
-.PHONY : lymph_multiclass_demo.s
-
-# target to generate assembly for a file
-lymph_multiclass_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/lymph_multiclass_demo.cpp.s
-.PHONY : lymph_multiclass_demo.cpp.s
 
 lymph_online_demo.o: lymph_online_demo.cpp.o
 .PHONY : lymph_online_demo.o
@@ -514,102 +344,6 @@ lymph_online_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/lymph_online_demo.cpp.s
 .PHONY : lymph_online_demo.cpp.s
 
-lymph_presets_demo.o: lymph_presets_demo.cpp.o
-.PHONY : lymph_presets_demo.o
-
-# target to build an object file
-lymph_presets_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/lymph_presets_demo.cpp.o
-.PHONY : lymph_presets_demo.cpp.o
-
-lymph_presets_demo.i: lymph_presets_demo.cpp.i
-.PHONY : lymph_presets_demo.i
-
-# target to preprocess a source file
-lymph_presets_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/lymph_presets_demo.cpp.i
-.PHONY : lymph_presets_demo.cpp.i
-
-lymph_presets_demo.s: lymph_presets_demo.cpp.s
-.PHONY : lymph_presets_demo.s
-
-# target to generate assembly for a file
-lymph_presets_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/lymph_presets_demo.cpp.s
-.PHONY : lymph_presets_demo.cpp.s
-
-lymph_quick_classification_demo.o: lymph_quick_classification_demo.cpp.o
-.PHONY : lymph_quick_classification_demo.o
-
-# target to build an object file
-lymph_quick_classification_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/lymph_quick_classification_demo.cpp.o
-.PHONY : lymph_quick_classification_demo.cpp.o
-
-lymph_quick_classification_demo.i: lymph_quick_classification_demo.cpp.i
-.PHONY : lymph_quick_classification_demo.i
-
-# target to preprocess a source file
-lymph_quick_classification_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/lymph_quick_classification_demo.cpp.i
-.PHONY : lymph_quick_classification_demo.cpp.i
-
-lymph_quick_classification_demo.s: lymph_quick_classification_demo.cpp.s
-.PHONY : lymph_quick_classification_demo.s
-
-# target to generate assembly for a file
-lymph_quick_classification_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_classification_demo.dir/lymph_quick_classification_demo.cpp.s
-.PHONY : lymph_quick_classification_demo.cpp.s
-
-lymph_quick_regression_demo.o: lymph_quick_regression_demo.cpp.o
-.PHONY : lymph_quick_regression_demo.o
-
-# target to build an object file
-lymph_quick_regression_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/lymph_quick_regression_demo.cpp.o
-.PHONY : lymph_quick_regression_demo.cpp.o
-
-lymph_quick_regression_demo.i: lymph_quick_regression_demo.cpp.i
-.PHONY : lymph_quick_regression_demo.i
-
-# target to preprocess a source file
-lymph_quick_regression_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/lymph_quick_regression_demo.cpp.i
-.PHONY : lymph_quick_regression_demo.cpp.i
-
-lymph_quick_regression_demo.s: lymph_quick_regression_demo.cpp.s
-.PHONY : lymph_quick_regression_demo.s
-
-# target to generate assembly for a file
-lymph_quick_regression_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/lymph_quick_regression_demo.cpp.s
-.PHONY : lymph_quick_regression_demo.cpp.s
-
-lymph_unsupervised_demo.o: lymph_unsupervised_demo.cpp.o
-.PHONY : lymph_unsupervised_demo.o
-
-# target to build an object file
-lymph_unsupervised_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/lymph_unsupervised_demo.cpp.o
-.PHONY : lymph_unsupervised_demo.cpp.o
-
-lymph_unsupervised_demo.i: lymph_unsupervised_demo.cpp.i
-.PHONY : lymph_unsupervised_demo.i
-
-# target to preprocess a source file
-lymph_unsupervised_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/lymph_unsupervised_demo.cpp.i
-.PHONY : lymph_unsupervised_demo.cpp.i
-
-lymph_unsupervised_demo.s: lymph_unsupervised_demo.cpp.s
-.PHONY : lymph_unsupervised_demo.s
-
-# target to generate assembly for a file
-lymph_unsupervised_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/lymph_unsupervised_demo.cpp.s
-.PHONY : lymph_unsupervised_demo.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -625,50 +359,22 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... plussai_lymph_cv_tune_demo"
 	@echo "... plussai_lymph_end_to_end_hour_workflow_showcase"
 	@echo "... plussai_lymph_feature_transformer_workflow_demo"
-	@echo "... plussai_lymph_flow_demo"
 	@echo "... plussai_lymph_housing_ch2_end_to_end_notebook"
-	@echo "... plussai_lymph_multiclass_demo"
 	@echo "... plussai_lymph_online_demo"
-	@echo "... plussai_lymph_presets_demo"
-	@echo "... plussai_lymph_quick_classification_demo"
-	@echo "... plussai_lymph_quick_regression_demo"
-	@echo "... plussai_lymph_unsupervised_demo"
-	@echo "... lymph_cv_tune_demo.o"
-	@echo "... lymph_cv_tune_demo.i"
-	@echo "... lymph_cv_tune_demo.s"
 	@echo "... lymph_end_to_end_hour_workflow_showcase.o"
 	@echo "... lymph_end_to_end_hour_workflow_showcase.i"
 	@echo "... lymph_end_to_end_hour_workflow_showcase.s"
 	@echo "... lymph_feature_transformer_workflow_demo.o"
 	@echo "... lymph_feature_transformer_workflow_demo.i"
 	@echo "... lymph_feature_transformer_workflow_demo.s"
-	@echo "... lymph_flow_demo.o"
-	@echo "... lymph_flow_demo.i"
-	@echo "... lymph_flow_demo.s"
 	@echo "... lymph_housing_ch2_end_to_end_notebook.o"
 	@echo "... lymph_housing_ch2_end_to_end_notebook.i"
 	@echo "... lymph_housing_ch2_end_to_end_notebook.s"
-	@echo "... lymph_multiclass_demo.o"
-	@echo "... lymph_multiclass_demo.i"
-	@echo "... lymph_multiclass_demo.s"
 	@echo "... lymph_online_demo.o"
 	@echo "... lymph_online_demo.i"
 	@echo "... lymph_online_demo.s"
-	@echo "... lymph_presets_demo.o"
-	@echo "... lymph_presets_demo.i"
-	@echo "... lymph_presets_demo.s"
-	@echo "... lymph_quick_classification_demo.o"
-	@echo "... lymph_quick_classification_demo.i"
-	@echo "... lymph_quick_classification_demo.s"
-	@echo "... lymph_quick_regression_demo.o"
-	@echo "... lymph_quick_regression_demo.i"
-	@echo "... lymph_quick_regression_demo.s"
-	@echo "... lymph_unsupervised_demo.o"
-	@echo "... lymph_unsupervised_demo.i"
-	@echo "... lymph_unsupervised_demo.s"
 .PHONY : help
 
 

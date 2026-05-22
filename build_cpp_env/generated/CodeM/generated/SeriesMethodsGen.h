@@ -677,6 +677,9 @@
   // Typed wrappers for `expand_as` (staged migration off variadic surface).
   Series expand_as(const Series& rhs) const { return pluss::codem::_compat::invoke("expand_as", *this, {rhs}); }
 
+  // Typed wrappers for `expand_like` (staged migration off variadic surface).
+  Series expand_like(const Series& like) const { return pluss::codem::_compat::invoke("expand_like", *this, {like}); }
+
   // `expm1` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `expm1_` has concrete declarations/definitions; variadic wrapper intentionally skipped.
@@ -1578,6 +1581,9 @@
   Series repeat_interleave(std::int64_t repeats) const { return pluss::codem::_compat::invoke("repeat_interleave", *this, {repeats}); }
 
   Series repeat_interleave(std::int64_t repeats, std::int64_t dim) const { return pluss::codem::_compat::invoke("repeat_interleave", *this, {repeats, dim}); }
+
+  // Typed wrappers for `repeat_like` (staged migration off variadic surface).
+  Series repeat_like(const Series& like) const { return pluss::codem::_compat::invoke("repeat_like", *this, {like}); }
 
   // `reshape` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 

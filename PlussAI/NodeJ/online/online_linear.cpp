@@ -200,6 +200,32 @@ struct BinaryLabelEncoding {
   return grad;
 }
 
+[[nodiscard]] Series robust_gradient(const Series& design,
+                                     const Series& y,
+                                     const Series& weights,
+                                     bool fit_intercept,
+                                     double lambda,
+                                     double robust_transition) {
+  const std::int64_t n = design.sizes()[0];
+  const Series pred = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
+  const Series residual = pred.sub(y);
+  const Series abs_residual = residual.abs();
+  const Series clipped_grad = abs_residual.le(robust_transition).where(
+      residual,
+      residual.sign().mul(robust_transition));
+  Series grad = design.transpose(0, 1).matmul(clipped_grad.reshape({n, 1})).div(static_cast<double>(n)).reshape({weights.numel()});
+
+  if (lambda > 0.0) {
+    Series ridge = weights;
+    if (fit_intercept) {
+      const Series idx0 = pluss::arange(0, 1, i64_on(ridge.platform()));
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+    }
+    grad = grad.add(ridge.mul(lambda));
+  }
+  return grad;
+}
+
 [[nodiscard]] Series labels_from_scores(const Series& scores,
                                         double negative_label,
                                         double positive_label,
@@ -334,8 +360,9 @@ struct BinaryLabelEncoding {
 }
 
 [[nodiscard]] Status validate_regressor_online_options(const OnlineLinearOptions& options) {
-  if (options.family.objective != LinearObjective::LeastSquares) {
-    return Status::invalid_argument("OnlineLinearRegressor requires LinearObjective::LeastSquares.");
+  if (options.family.objective != LinearObjective::LeastSquares
+      && options.family.objective != LinearObjective::RobustLeast) {
+    return Status::invalid_argument("OnlineLinearRegressor requires LinearObjective::LeastSquares or LinearObjective::RobustLeast.");
   }
   if (options.family.regularization != RegularizationKind::None && options.family.regularization != RegularizationKind::L2) {
     return Status::invalid_argument("OnlineLinearRegressor supports RegularizationKind::None or RegularizationKind::L2.");
@@ -345,6 +372,9 @@ struct BinaryLabelEncoding {
   }
   if (!std::isfinite(options.family.regularization_strength) || options.family.regularization_strength < 0.0) {
     return Status::invalid_argument("LinearFamilyOptions.regularization_strength must be finite and >= 0.");
+  }
+  if (!(options.family.robust_transition > 0.0) || !std::isfinite(options.family.robust_transition)) {
+    return Status::invalid_argument("LinearFamilyOptions.robust_transition must be finite and > 0.");
   }
   return Status::success();
 }
@@ -557,7 +587,14 @@ Status OnlineLinearRegressor::advance(const LabeledBatch& batch, const TrainOpti
   Series design = matrix.x_rows;
   if (options_.family.fit_intercept) design = prepend_intercept(design);
   const double lambda = options_.family.regularization == RegularizationKind::L2 ? options_.family.regularization_strength : 0.0;
-  const Series grad = mse_gradient(design, y, weights_, options_.family.fit_intercept, lambda);
+  const Series grad = options_.family.objective == LinearObjective::RobustLeast
+                          ? robust_gradient(design,
+                                            y,
+                                            weights_,
+                                            options_.family.fit_intercept,
+                                            lambda,
+                                            options_.family.robust_transition)
+                          : mse_gradient(design, y, weights_, options_.family.fit_intercept, lambda);
   if (!all_finite(grad)) return Status::numerical_failure("OnlineLinearRegressor::advance produced non-finite gradient.");
 
   const double rate_scale = options_.decaying_rate ? std::sqrt(1.0 + static_cast<double>(updates_)) : 1.0;

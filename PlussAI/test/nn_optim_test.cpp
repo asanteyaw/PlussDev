@@ -1133,6 +1133,26 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  stage = "minimax tape staged inplace";
+  Series minimax_tape_staged_param = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
+  pluss::nn::optim::Minimax minimax_tape_staged({&minimax_tape_staged_param}, minimax_opt, minimax_constraints);
+  for (int i = 0; i < 120; ++i) {
+    auto tx = pluss::subsp::math::diff::trace(minimax_tape_staged_param, true);
+    Series staged = pluss::zeros_like(tx.value());
+    staged.select(0, 0).copy_(tx.value().select(0, 0));
+    staged.select(0, 1).copy_(tx.value().select(0, 1));
+    const Series loss = staged.sub(minimax_target).square().sum().mul(0.5);
+    tx.clear_sensitivity();
+    loss.reverse();
+    minimax_tape_staged.step();
+  }
+  const auto minimax_tape_staged_v = vec_f64(minimax_tape_staged_param);
+  if (!(minimax_tape_staged_v[0] >= -1e-5 && minimax_tape_staged_v[1] >= -1e-5 &&
+        minimax_tape_staged_v[0] + minimax_tape_staged_v[1] <= 4.05)) {
+    if (err) *err << "Minimax tape staged-inplace constrained step mismatch\n";
+    return false;
+  }
+
   stage = "minimax methods";
   for (const auto method : {pluss::nn::optim::MinimaxPrimalMethod::Adam,
                             pluss::nn::optim::MinimaxPrimalMethod::AdamW,

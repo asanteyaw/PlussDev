@@ -5,3 +5,6 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("core")
+subdirs("life_contingencies")
+subdirs("loss_models")
+subdirs("actuarial_models")

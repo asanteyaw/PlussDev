@@ -25,6 +25,7 @@ struct MatmulMeta {
   uint m;
   uint n;
   uint k;
+  uint pad;
 };
 
 kernel void strict_matmul_f32(
@@ -279,21 +280,28 @@ Series matmul(const Series& a, const Series& b) {
       fail_("mps::matmul: failed to allocate Metal buffers");
     }
 
-    if (matmul_algo_() == MatmulAlgo::Fast && dt == ScalarType::Float32) {
+    const NSUInteger a_row_bytes_f32 = k * sizeof(float);
+    const NSUInteger b_row_bytes_f32 = n * sizeof(float);
+    const NSUInteger out_row_bytes_f32 = n * sizeof(float);
+    const bool fast_rowbytes_aligned =
+        (a_row_bytes_f32 % 16u == 0u) &&
+        (b_row_bytes_f32 % 16u == 0u) &&
+        (out_row_bytes_f32 % 16u == 0u);
+    if (matmul_algo_() == MatmulAlgo::Fast && dt == ScalarType::Float32 && fast_rowbytes_aligned) {
       MPSMatrixDescriptor* a_desc =
           [MPSMatrixDescriptor matrixDescriptorWithRows:m
                                                 columns:k
-                                               rowBytes:k * sizeof(float)
+                                               rowBytes:a_row_bytes_f32
                                                dataType:MPSDataTypeFloat32];
       MPSMatrixDescriptor* b_desc =
           [MPSMatrixDescriptor matrixDescriptorWithRows:k
                                                 columns:n
-                                               rowBytes:n * sizeof(float)
+                                               rowBytes:b_row_bytes_f32
                                                dataType:MPSDataTypeFloat32];
       MPSMatrixDescriptor* out_desc =
           [MPSMatrixDescriptor matrixDescriptorWithRows:m
                                                 columns:n
-                                               rowBytes:n * sizeof(float)
+                                               rowBytes:out_row_bytes_f32
                                                dataType:MPSDataTypeFloat32];
 
       MPSMatrix* a_mat = [[MPSMatrix alloc] initWithBuffer:a_buf descriptor:a_desc];
@@ -342,10 +350,12 @@ Series matmul(const Series& a, const Series& b) {
       std::uint32_t m;
       std::uint32_t n;
       std::uint32_t k;
+      std::uint32_t pad;
     } meta{
         static_cast<std::uint32_t>(m),
         static_cast<std::uint32_t>(n),
         static_cast<std::uint32_t>(k),
+        0u,
     };
     [enc setBytes:&meta length:sizeof(meta) atIndex:3];
 

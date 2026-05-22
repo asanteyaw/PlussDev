@@ -15,4 +15,5 @@
 #include "NodeK/NN/modules/attention/transformer.h"
 #include "NodeK/NN/modules/cnn/NNconv1d.h"
 #include "NodeK/NN/modules/cnn/NNconvNd.h"
+#include "NodeK/NN/modules/cnn/NNconv3d.h"
 #include "NodeK/NN/optim/optim.h"

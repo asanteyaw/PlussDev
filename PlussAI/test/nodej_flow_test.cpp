@@ -190,6 +190,82 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
 
   {
     Flow flow{};
+    const auto stage_status = flow.add_column_stage(
+        "cat",
+        TransformKind::OneHotEncoder,
+        TransformOptions{prep::OneHotEncoderOptions{}},
+        std::vector<std::int64_t>{1},
+        RouteRemainderPolicy::Drop);
+    if (!stage_status.ok()) {
+      if (err) *err << "Flow::add_column_stage should support named routed stages\n";
+      return false;
+    }
+    auto graph_or = flow.graph_info();
+    if (!graph_or.ok() || graph_or.value().stages.size() != 1 || graph_or.value().stages.front().stage_key != "cat") {
+      if (err) *err << "Flow::graph_info should expose named stage metadata\n";
+      return false;
+    }
+    auto remainder_or = flow.nested_param("cat::remainder");
+    if (!remainder_or.ok() || remainder_or.value() != 1.0) {
+      if (err) *err << "Flow::nested_param should expose stage remainder policy\n";
+      return false;
+    }
+
+    const FeatureBatch features{
+        .x = pluss::make_series(std::vector<double>{
+                                    10.0, 0.0, 100.0,
+                                    20.0, 1.0, 200.0,
+                                    30.0, 0.0, 300.0,
+                                    40.0, 2.0, 400.0},
+                                {4, 3},
+                                f64()),
+        .layout = ObservationLayout::Rows,
+    };
+
+    auto drop_or = flow.learn_map(features);
+    if (!drop_or.ok()) {
+      if (err) *err << "Flow::learn_map should succeed for named routed drop stage\n";
+      return false;
+    }
+    const auto drop_sizes = drop_or.value().sizes();
+    if (drop_sizes.size() != 2 || drop_sizes[0] != 4 || drop_sizes[1] >= 3) {
+      if (err) *err << "RouteRemainderPolicy::Drop should exclude non-routed features\n";
+      return false;
+    }
+
+    if (!flow.set_nested_param("cat::remainder", 0.0).ok()) {
+      if (err) *err << "Flow::set_nested_param should allow stage remainder updates\n";
+      return false;
+    }
+    auto pass_or = flow.learn_map(features);
+    if (!pass_or.ok()) {
+      if (err) *err << "Flow::learn_map should succeed after nested remainder update\n";
+      return false;
+    }
+    const auto pass_sizes = pass_or.value().sizes();
+    if (pass_sizes.size() != 2 || pass_sizes[0] != 4 || pass_sizes[1] <= drop_sizes[1]) {
+      if (err) *err << "RouteRemainderPolicy::PassThrough should preserve non-routed features\n";
+      return false;
+    }
+
+    auto blueprint_or = flow.save_blueprint();
+    if (!blueprint_or.ok()) {
+      if (err) *err << "Flow::save_blueprint should succeed for non-opaque transforms\n";
+      return false;
+    }
+    Flow restored{};
+    if (!restored.load_blueprint(blueprint_or.value()).ok()) {
+      if (err) *err << "Flow::load_blueprint should rebuild transform graph\n";
+      return false;
+    }
+    if (restored.stage_count() != 1 || restored.transform_specs().front().stage_key != "cat") {
+      if (err) *err << "Flow::load_blueprint should preserve stage key and count\n";
+      return false;
+    }
+  }
+
+  {
+    Flow flow{};
     if (!flow.add_neighbor_imputer(prep::NeighborImputerOptions{.neighbors = 1}).ok()
         || !flow.add_power_map(prep::PowerMapOptions{.mode = prep::PowerMapMode::YeoJohnson, .standardize = false, .lambda = 1.0}).ok()
         || !flow.add_quantile_map(prep::QuantileMapOptions{.output = prep::QuantileMapOutput::Uniform}).ok()

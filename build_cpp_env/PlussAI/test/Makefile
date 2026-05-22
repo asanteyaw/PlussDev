@@ -347,20 +347,6 @@ fusion_route_test/fast:
 .PHONY : fusion_route_test/fast
 
 # Convenience name for target.
-PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule
-.PHONY : PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule
-
-# Convenience name for target.
-lymph_quick_test: PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule
-.PHONY : lymph_quick_test
-
-# fast build rule for target.
-lymph_quick_test/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/build
-.PHONY : lymph_quick_test/fast
-
-# Convenience name for target.
 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
@@ -389,6 +375,20 @@ nn_loss_test/fast:
 .PHONY : nn_loss_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule
+
+# Convenience name for target.
+nn_mps_lstm_native_route_test: PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule
+.PHONY : nn_mps_lstm_native_route_test
+
+# fast build rule for target.
+nn_mps_lstm_native_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build
+.PHONY : nn_mps_lstm_native_route_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule
@@ -401,6 +401,20 @@ nn_mps_matmul_sum_sensitivity_test: PlussAI/test/CMakeFiles/nn_mps_matmul_sum_se
 nn_mps_matmul_sum_sensitivity_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build
 .PHONY : nn_mps_matmul_sum_sensitivity_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/rule
+
+# Convenience name for target.
+nn_mps_schedule_family_trainability_test: PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/rule
+.PHONY : nn_mps_schedule_family_trainability_test
+
+# fast build rule for target.
+nn_mps_schedule_family_trainability_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build
+.PHONY : nn_mps_schedule_family_trainability_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule:
@@ -499,6 +513,20 @@ nodej_ensemble_bayes_regression_test: PlussAI/test/CMakeFiles/nodej_ensemble_bay
 nodej_ensemble_bayes_regression_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build
 .PHONY : nodej_ensemble_bayes_regression_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/rule
+
+# Convenience name for target.
+nodej_feature_inspect_text_test: PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/rule
+.PHONY : nodej_feature_inspect_text_test
+
+# fast build rule for target.
+nodej_feature_inspect_text_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build.make PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build
+.PHONY : nodej_feature_inspect_text_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_flow_test.dir/rule:
@@ -932,30 +960,6 @@ fusion_route_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/fusion_route_test.cpp.s
 .PHONY : fusion_route_test.cpp.s
 
-lymph_quick_test.o: lymph_quick_test.cpp.o
-.PHONY : lymph_quick_test.o
-
-# target to build an object file
-lymph_quick_test.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.o
-.PHONY : lymph_quick_test.cpp.o
-
-lymph_quick_test.i: lymph_quick_test.cpp.i
-.PHONY : lymph_quick_test.i
-
-# target to preprocess a source file
-lymph_quick_test.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.i
-.PHONY : lymph_quick_test.cpp.i
-
-lymph_quick_test.s: lymph_quick_test.cpp.s
-.PHONY : lymph_quick_test.s
-
-# target to generate assembly for a file
-lymph_quick_test.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.s
-.PHONY : lymph_quick_test.cpp.s
-
 module_snapshot_test.o: module_snapshot_test.cpp.o
 .PHONY : module_snapshot_test.o
 
@@ -1004,6 +1008,30 @@ nn_loss_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_loss_test.dir/build.make PlussAI/test/CMakeFiles/nn_loss_test.dir/nn_loss_test.cpp.s
 .PHONY : nn_loss_test.cpp.s
 
+nn_mps_lstm_native_route_test.o: nn_mps_lstm_native_route_test.cpp.o
+.PHONY : nn_mps_lstm_native_route_test.o
+
+# target to build an object file
+nn_mps_lstm_native_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/nn_mps_lstm_native_route_test.cpp.o
+.PHONY : nn_mps_lstm_native_route_test.cpp.o
+
+nn_mps_lstm_native_route_test.i: nn_mps_lstm_native_route_test.cpp.i
+.PHONY : nn_mps_lstm_native_route_test.i
+
+# target to preprocess a source file
+nn_mps_lstm_native_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/nn_mps_lstm_native_route_test.cpp.i
+.PHONY : nn_mps_lstm_native_route_test.cpp.i
+
+nn_mps_lstm_native_route_test.s: nn_mps_lstm_native_route_test.cpp.s
+.PHONY : nn_mps_lstm_native_route_test.s
+
+# target to generate assembly for a file
+nn_mps_lstm_native_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/nn_mps_lstm_native_route_test.cpp.s
+.PHONY : nn_mps_lstm_native_route_test.cpp.s
+
 nn_mps_matmul_sum_sensitivity_test.o: nn_mps_matmul_sum_sensitivity_test.cpp.o
 .PHONY : nn_mps_matmul_sum_sensitivity_test.o
 
@@ -1027,6 +1055,30 @@ nn_mps_matmul_sum_sensitivity_test.s: nn_mps_matmul_sum_sensitivity_test.cpp.s
 nn_mps_matmul_sum_sensitivity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/nn_mps_matmul_sum_sensitivity_test.cpp.s
 .PHONY : nn_mps_matmul_sum_sensitivity_test.cpp.s
+
+nn_mps_schedule_family_trainability_test.o: nn_mps_schedule_family_trainability_test.cpp.o
+.PHONY : nn_mps_schedule_family_trainability_test.o
+
+# target to build an object file
+nn_mps_schedule_family_trainability_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/nn_mps_schedule_family_trainability_test.cpp.o
+.PHONY : nn_mps_schedule_family_trainability_test.cpp.o
+
+nn_mps_schedule_family_trainability_test.i: nn_mps_schedule_family_trainability_test.cpp.i
+.PHONY : nn_mps_schedule_family_trainability_test.i
+
+# target to preprocess a source file
+nn_mps_schedule_family_trainability_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/nn_mps_schedule_family_trainability_test.cpp.i
+.PHONY : nn_mps_schedule_family_trainability_test.cpp.i
+
+nn_mps_schedule_family_trainability_test.s: nn_mps_schedule_family_trainability_test.cpp.s
+.PHONY : nn_mps_schedule_family_trainability_test.s
+
+# target to generate assembly for a file
+nn_mps_schedule_family_trainability_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/nn_mps_schedule_family_trainability_test.cpp.s
+.PHONY : nn_mps_schedule_family_trainability_test.cpp.s
 
 nn_optim_foreach_lane_test.o: nn_optim_foreach_lane_test.cpp.o
 .PHONY : nn_optim_foreach_lane_test.o
@@ -1195,6 +1247,30 @@ nodej_ensemble_bayes_regression_test.s: nodej_ensemble_bayes_regression_test.cpp
 nodej_ensemble_bayes_regression_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/nodej_ensemble_bayes_regression_test.cpp.s
 .PHONY : nodej_ensemble_bayes_regression_test.cpp.s
+
+nodej_feature_inspect_text_test.o: nodej_feature_inspect_text_test.cpp.o
+.PHONY : nodej_feature_inspect_text_test.o
+
+# target to build an object file
+nodej_feature_inspect_text_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build.make PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/nodej_feature_inspect_text_test.cpp.o
+.PHONY : nodej_feature_inspect_text_test.cpp.o
+
+nodej_feature_inspect_text_test.i: nodej_feature_inspect_text_test.cpp.i
+.PHONY : nodej_feature_inspect_text_test.i
+
+# target to preprocess a source file
+nodej_feature_inspect_text_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build.make PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/nodej_feature_inspect_text_test.cpp.i
+.PHONY : nodej_feature_inspect_text_test.cpp.i
+
+nodej_feature_inspect_text_test.s: nodej_feature_inspect_text_test.cpp.s
+.PHONY : nodej_feature_inspect_text_test.s
+
+# target to generate assembly for a file
+nodej_feature_inspect_text_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/build.make PlussAI/test/CMakeFiles/nodej_feature_inspect_text_test.dir/nodej_feature_inspect_text_test.cpp.s
+.PHONY : nodej_feature_inspect_text_test.cpp.s
 
 nodej_flow_test.o: nodej_flow_test.cpp.o
 .PHONY : nodej_flow_test.o
@@ -1510,10 +1586,11 @@ help:
 	@echo "... cudnn_strict_route_test"
 	@echo "... cudnn_transformer_rigorous_test"
 	@echo "... fusion_route_test"
-	@echo "... lymph_quick_test"
 	@echo "... module_snapshot_test"
 	@echo "... nn_loss_test"
+	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
+	@echo "... nn_mps_schedule_family_trainability_test"
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
@@ -1521,6 +1598,7 @@ help:
 	@echo "... nodej_cv_tune_test"
 	@echo "... nodej_dataframe_bridge_test"
 	@echo "... nodej_ensemble_bayes_regression_test"
+	@echo "... nodej_feature_inspect_text_test"
 	@echo "... nodej_flow_test"
 	@echo "... nodej_multiclass_test"
 	@echo "... nodej_neighbor_test"
@@ -1566,18 +1644,21 @@ help:
 	@echo "... fusion_route_test.o"
 	@echo "... fusion_route_test.i"
 	@echo "... fusion_route_test.s"
-	@echo "... lymph_quick_test.o"
-	@echo "... lymph_quick_test.i"
-	@echo "... lymph_quick_test.s"
 	@echo "... module_snapshot_test.o"
 	@echo "... module_snapshot_test.i"
 	@echo "... module_snapshot_test.s"
 	@echo "... nn_loss_test.o"
 	@echo "... nn_loss_test.i"
 	@echo "... nn_loss_test.s"
+	@echo "... nn_mps_lstm_native_route_test.o"
+	@echo "... nn_mps_lstm_native_route_test.i"
+	@echo "... nn_mps_lstm_native_route_test.s"
 	@echo "... nn_mps_matmul_sum_sensitivity_test.o"
 	@echo "... nn_mps_matmul_sum_sensitivity_test.i"
 	@echo "... nn_mps_matmul_sum_sensitivity_test.s"
+	@echo "... nn_mps_schedule_family_trainability_test.o"
+	@echo "... nn_mps_schedule_family_trainability_test.i"
+	@echo "... nn_mps_schedule_family_trainability_test.s"
 	@echo "... nn_optim_foreach_lane_test.o"
 	@echo "... nn_optim_foreach_lane_test.i"
 	@echo "... nn_optim_foreach_lane_test.s"
@@ -1599,6 +1680,9 @@ help:
 	@echo "... nodej_ensemble_bayes_regression_test.o"
 	@echo "... nodej_ensemble_bayes_regression_test.i"
 	@echo "... nodej_ensemble_bayes_regression_test.s"
+	@echo "... nodej_feature_inspect_text_test.o"
+	@echo "... nodej_feature_inspect_text_test.i"
+	@echo "... nodej_feature_inspect_text_test.s"
 	@echo "... nodej_flow_test.o"
 	@echo "... nodej_flow_test.i"
 	@echo "... nodej_flow_test.s"

@@ -67,6 +67,7 @@ std::vector<pluss::ai::rnn::NetWeight> to_cuda_(
     out.push_back(pluss::ai::rnn::NetWeight{
         .weight_ih = p.weight_ih.to(pluss::pCUDA),
         .weight_hh = p.weight_hh.to(pluss::pCUDA),
+        .bias = p.bias.defined() ? p.bias.to(pluss::pCUDA) : pluss::Series(),
         .bias_ih = p.bias_ih.defined() ? p.bias_ih.to(pluss::pCUDA) : pluss::Series(),
         .bias_hh = p.bias_hh.defined() ? p.bias_hh.to(pluss::pCUDA) : pluss::Series(),
         .weight_hr = p.weight_hr.defined() ? p.weight_hr.to(pluss::pCUDA) : pluss::Series(),
@@ -93,6 +94,7 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights_(
       out.push_back(pluss::ai::rnn::NetWeight{
           .weight_ih = pluss::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
           .weight_hh = pluss::rand({gates * hidden_size, hidden_size}, cfg, seed + 2ULL),
+          .bias = pluss::Series(),
           .bias_ih = pluss::rand({gates * hidden_size}, cfg, seed + 3ULL),
           .bias_hh = pluss::rand({gates * hidden_size}, cfg, seed + 4ULL),
           .weight_hr = pluss::Series(),

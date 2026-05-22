@@ -288,6 +288,47 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
   }
 
   {
+    // With MAE criterion, a depth-0 leaf should predict the median (robust to outliers).
+    const Series x = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}, {4, 1}, f64());
+    const Series y = pluss::make_series(std::vector<double>{1.0, 3.0, 5.0, 100.0}, {4}, f64());
+    const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
+    const LabeledBatch batch{.features = features, .y = y};
+
+    const ModelSpec spec{
+        .task = TaskKind::Regression,
+        .family = ModelFamily::Tree,
+        .options = TreeFamilyOptions{
+            .criterion = TreeCriterion::Mae,
+            .max_depth = 0,
+            .min_samples_leaf = 1,
+            .min_samples_split = 2,
+        },
+    };
+    auto reg_or = pluss::ai::nodej::make_regressor(spec);
+    if (!reg_or.ok()) {
+      if (err) *err << "make_regressor should succeed for MAE tree\n";
+      return false;
+    }
+    auto reg = reg_or.move_value();
+    if (!reg->learn(batch).ok()) {
+      if (err) *err << "MAE tree regressor learn should succeed\n";
+      return false;
+    }
+    auto pred_or = reg->infer(features);
+    if (!pred_or.ok()) {
+      if (err) *err << "MAE tree regressor infer should succeed\n";
+      return false;
+    }
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (double v : pred) {
+      if (!approx(v, 4.0, 1e-8)) {
+        if (err) *err << "depth-0 MAE regressor should output global median response\n";
+        return false;
+      }
+    }
+  }
+
+  {
     // Stress case: larger synthetic regression batch should not crash or emit NaN/Inf.
     constexpr std::int64_t n = 1024;
     constexpr std::int64_t p = 6;

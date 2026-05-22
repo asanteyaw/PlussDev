@@ -20,6 +20,7 @@ struct TuneTrialResult {
   Status status = Status::success();
   CrossAssessReport assess{};
   double objective = std::numeric_limits<double>::quiet_NaN();
+  std::int64_t stage = 0;
 };
 
 struct TuneReport {
@@ -27,6 +28,9 @@ struct TuneReport {
   std::int64_t best_index = -1;
   MetricKind objective_metric = MetricKind::Accuracy;
   TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto;
+  // 1-based rank where 1 is best, inspired by sklearn rank_test_score.
+  // Trials with failed/non-finite objective receive the worst rank bucket.
+  std::vector<std::int64_t> objective_rank{};
 };
 
 using ProbeSpecSampler = std::function<StatusOr<ModelSpec>(std::int64_t trial_index, std::uint64_t seed)>;
@@ -50,5 +54,21 @@ StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
                            TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto,
                            RandomState random = {},
                            std::int64_t max_parallel = 0);
+
+StatusOr<TuneReport> tune(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                          const LabeledBatch& batch,
+                          const TuneOptions& tune_options = {},
+                          const TrainOptions& train_options = {},
+                          const AssessOptions& assess_options = {},
+                          MetricKind objective_metric = MetricKind::Accuracy,
+                          TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto);
+
+StatusOr<TuneReport> tune(const ProbeSpecSampler& sampler,
+                          const LabeledBatch& batch,
+                          const TuneOptions& tune_options = {},
+                          const TrainOptions& train_options = {},
+                          const AssessOptions& assess_options = {},
+                          MetricKind objective_metric = MetricKind::Accuracy,
+                          TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto);
 
 } // namespace pluss::ai::nodej

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <bit>
 #include <cstdint>
+#include <initializer_list>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -774,6 +775,7 @@ struct CrossValidationOptions {
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
   bool stratified = false;
+  Series groups = Series::undefined();
   bool reliability_defaults = true;
   bool shuffle = true;
   std::uint64_t random_state = 0;
@@ -801,6 +803,7 @@ struct CrossValidationReport {
   split.holdout_fraction = options.holdout_fraction;
   split.folds = options.folds;
   split.stratified = options.stratified;
+  split.groups = options.groups;
   split.reliability_defaults = options.reliability_defaults;
   split.shuffle = options.shuffle;
   split.random.seed = options.random_state;
@@ -1609,7 +1612,16 @@ private:
       }
       return resolve(pluss::ai::nodej::strat_fold_plan(batch.y, split), "strat_fold_plan");
     }
-    ::pluss::throw_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold are currently supported.");
+    if (split.plan == CVPlanKind::GroupKFold) {
+      if (!split.groups.defined()) {
+        ::pluss::throw_error("cross_validate(model,...): GroupKFold requires CrossValidationOptions.groups.");
+      }
+      if (split.groups.numel() != batch.features.sample_count()) {
+        ::pluss::throw_error("cross_validate(model,...): GroupKFold requires groups length to match sample count.");
+      }
+      return resolve(pluss::ai::nodej::group_fold_plan(split.groups, split), "group_fold_plan");
+    }
+    ::pluss::throw_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold/GroupKFold are currently supported.");
   };
 
   SplitOptions split = make_cross_validation_split_options(cv);
@@ -1963,6 +1975,23 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
 }
 
 [[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    pluss::msharp::RangeView::Of<std::string> feature_order,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(copy_range_values(feature_order), copy_range_values(branches), remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    std::initializer_list<std::string> feature_order,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      pluss::msharp::RangeView::Of<std::string>(feature_order),
+      pluss::msharp::RangeView::Of<workflow::feature::Branch>(branches),
+      remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
     const pluss::table::DataFrame& frame,
     const DataFrameBatchOptions& data_options,
     const std::vector<workflow::feature::Branch>& branches,
@@ -1975,11 +2004,138 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
 
 [[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
     const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, data_options, copy_range_values(branches), remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      frame,
+      data_options,
+      pluss::msharp::RangeView::Of<workflow::feature::Branch>(branches),
+      remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
     const std::vector<workflow::feature::Branch>& branches,
     prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
   DataFrameBatchOptions options{};
   options.feature_names = frame.feature_names();
   return make_feature_transformer(frame, options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  DataFrameBatchOptions options{};
+  options.feature_names = frame.feature_names();
+  return make_feature_transformer(frame, options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      frame,
+      pluss::msharp::RangeView::Of<workflow::feature::Branch>(branches),
+      remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    pluss::msharp::RangeView::Of<std::string> feature_order,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    std::initializer_list<std::string> feature_order,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    pluss::msharp::RangeView::Of<std::string> feature_order,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    std::initializer_list<std::string> feature_order,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, branches, remainder);
 }
 
 class Workflow final {
@@ -2360,6 +2516,49 @@ private:
   }
 
 };
+
+[[nodiscard]] inline Workflow make_pipeline(WorkflowModel model,
+                                            pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  Workflow out{};
+  out.model.emplace(std::move(model));
+  out.stages = copy_range_values(stages);
+  return out;
+}
+
+[[nodiscard]] inline Workflow make_pipeline(const ModelSpec& spec,
+                                            pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  return make_pipeline(WorkflowModel(spec), stages);
+}
+
+[[nodiscard]] inline Workflow make_pipeline(WorkflowModel model,
+                                            std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(std::move(model), pluss::msharp::RangeView::Of<TransformSpec>(stages));
+}
+
+[[nodiscard]] inline Workflow make_pipeline(const ModelSpec& spec,
+                                            std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(spec, pluss::msharp::RangeView::Of<TransformSpec>(stages));
+}
+
+[[nodiscard]] inline Workflow pipeline(WorkflowModel model,
+                                       pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  return make_pipeline(std::move(model), stages);
+}
+
+[[nodiscard]] inline Workflow pipeline(const ModelSpec& spec,
+                                       pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  return make_pipeline(spec, stages);
+}
+
+[[nodiscard]] inline Workflow pipeline(WorkflowModel model,
+                                       std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(std::move(model), stages);
+}
+
+[[nodiscard]] inline Workflow pipeline(const ModelSpec& spec,
+                                       std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(spec, stages);
+}
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& workflow,
                                                           const LabeledBatch& batch,
@@ -4037,6 +4236,30 @@ struct SpecTuneResult {
 }
 
 [[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                                               const LabeledBatch& batch,
+                                               const TuneOptions& tune_options,
+                                               const TrainOptions& train_options = {},
+                                               const AssessOptions& assess_options = {},
+                                               MetricKind objective_metric = MetricKind::Accuracy,
+                                               TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  auto report = resolve(::pluss::ai::nodej::tune(candidates,
+                                                 batch,
+                                                 tune_options,
+                                                 train_options,
+                                                 assess_options,
+                                                 objective_metric,
+                                                 objective_policy),
+                        "selection::tune_specs.tune");
+  if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
+    ::pluss::throw_error("selection::tune_specs: best_index is out of range.");
+  }
+  return SpecTuneResult{
+      .report = report,
+      .best_spec = report.trials[static_cast<std::size_t>(report.best_index)].spec,
+  };
+}
+
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
                                                const Series& y,
                                                const SplitOptions& split = {},
@@ -4051,6 +4274,19 @@ struct SpecTuneResult {
 
 [[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
+                                               const Series& y,
+                                               const TuneOptions& tune_options,
+                                               const TrainOptions& train_options = {},
+                                               const AssessOptions& assess_options = {},
+                                               MetricKind objective_metric = MetricKind::Accuracy,
+                                               TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const auto names = cross_validate_default_feature_names_(x, "selection::tune_specs(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "selection::tune_specs(x,y)");
+  return tune_specs(candidates, batch, tune_options, train_options, assess_options, objective_metric, objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                                               const pluss::table::DataFrame& x,
                                                const pluss::table::Thread& y,
                                                const SplitOptions& split = {},
                                                const TrainOptions& train_options = {},
@@ -4061,6 +4297,24 @@ struct SpecTuneResult {
                     x,
                     as_stratify_series(y),
                     split,
+                    train_options,
+                    assess_options,
+                    objective_metric,
+                    objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                                               const pluss::table::DataFrame& x,
+                                               const pluss::table::Thread& y,
+                                               const TuneOptions& tune_options,
+                                               const TrainOptions& train_options = {},
+                                               const AssessOptions& assess_options = {},
+                                               MetricKind objective_metric = MetricKind::Accuracy,
+                                               TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  return tune_specs(candidates,
+                    x,
+                    as_stratify_series(y),
+                    tune_options,
                     train_options,
                     assess_options,
                     objective_metric,
@@ -4096,6 +4350,30 @@ struct SpecTuneResult {
 }
 
 [[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
+                                                const LabeledBatch& batch,
+                                                const TuneOptions& tune_options,
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  auto report = resolve(::pluss::ai::nodej::tune(sampler,
+                                                 batch,
+                                                 tune_options,
+                                                 train_options,
+                                                 assess_options,
+                                                 objective_metric,
+                                                 objective_policy),
+                        "selection::probe_specs.tune");
+  if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
+    ::pluss::throw_error("selection::probe_specs: best_index is out of range.");
+  }
+  return SpecTuneResult{
+      .report = report,
+      .best_spec = report.trials[static_cast<std::size_t>(report.best_index)].spec,
+  };
+}
+
+[[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
                                                 std::int64_t trials,
                                                 const pluss::table::DataFrame& x,
                                                 const Series& y,
@@ -4119,6 +4397,25 @@ struct SpecTuneResult {
 }
 
 [[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
+                                                const pluss::table::DataFrame& x,
+                                                const Series& y,
+                                                const TuneOptions& tune_options,
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const auto names = cross_validate_default_feature_names_(x, "selection::probe_specs(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "selection::probe_specs(x,y)");
+  return probe_specs(sampler,
+                     batch,
+                     tune_options,
+                     train_options,
+                     assess_options,
+                     objective_metric,
+                     objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
                                                 std::int64_t trials,
                                                 const pluss::table::DataFrame& x,
                                                 const pluss::table::Thread& y,
@@ -4138,6 +4435,24 @@ struct SpecTuneResult {
                      objective_metric,
                      objective_policy,
                      random);
+}
+
+[[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
+                                                const pluss::table::DataFrame& x,
+                                                const pluss::table::Thread& y,
+                                                const TuneOptions& tune_options,
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  return probe_specs(sampler,
+                     x,
+                     as_stratify_series(y),
+                     tune_options,
+                     train_options,
+                     assess_options,
+                     objective_metric,
+                     objective_policy);
 }
 
 } // namespace selection

@@ -41,6 +41,7 @@
 #include "CodeM/native/cpu/UnaryExtraMathKernels.h"
 #include "CodeM/native/cpu/BinaryExtraMathKernels.h"
 #include "CodeM/native/mps/Elementwise.h"
+#include "CodeM/native/mps/BufferCache.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
 #include "CodeM/native/cuda/ElementwiseOps.h"
 #include "CodeM/native/cuda/ReductionOps.h"
@@ -123,6 +124,12 @@ bool mps_cpu_fallback_enabled_() noexcept {
 
 bool mps_native_take_put_enabled_() noexcept {
   return parse_bool_env_("PLUSS_MPS_NATIVE_TAKE_PUT", true);
+}
+
+void sync_mps_alias_source_if_needed_(const Series& input) {
+  if (input.defined() && input.platform() == Platform::MPS) {
+    native::mps::sync_host_if_needed(input);
+  }
 }
 
 bool mps_exact_f32_roundtrip_lane_dtype_(ScalarType dtype) noexcept {
@@ -1048,6 +1055,20 @@ static void maybe_link_transport_op_(const Series& out, const Series& input, std
     series_tape::accumulate_sensitivity(input, grad);
   };
   series_tape::bind_source_link(out, std::move(link));
+}
+
+static void maybe_link_alias_lineage_(const Series& out, const Series& input, const char* op_name) {
+  if (!series_tape::recording_enabled()) return;
+  if (!out.defined() || !input.defined()) return;
+  if (out.storage().handle().get() != input.storage().handle().get()) return;
+  if (series_tape::source_link(out)) return;
+
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = op_name ? op_name : "alias";
+  link->parents = {input};
+  // Alias lineage metadata only; propagation is attached when/if this alias
+  // becomes tracked by later mutating ops (e.g. copy_ on a view).
+  series_tape::bind_alias_link(out, std::move(link));
 }
 
 static Series i64_index_vector_on_(std::span<const std::int64_t> values, Platform platform) {
@@ -5886,6 +5907,7 @@ Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarTyp
 Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
   if (!defined()) PLUSS_FAIL("view: undefined");
   if (!can_view_as(*this, new_sizes)) PLUSS_FAIL("view: requires contiguous in v0");
+  sync_mps_alias_source_if_needed_(*this);
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::vector<std::int64_t>(new_sizes.begin(), new_sizes.end()),
@@ -5899,6 +5921,7 @@ Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
       [shape = std::vector<std::int64_t>(sizes().begin(), sizes().end())](const Series& out_sens) {
         return out_sens.reshape(shape);
       });
+  maybe_link_alias_lineage_(out, *this, "view");
   return out;
 }
 
@@ -5914,6 +5937,7 @@ Series Series::reshape(pluss::msharp::RangeView::Int new_sizes) const {
 
 Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
   if (!defined()) PLUSS_FAIL("transpose: undefined");
+  sync_mps_alias_source_if_needed_(*this);
   const auto nd = dim();
   if (d0 < 0) d0 += nd;
   if (d1 < 0) d1 += nd;
@@ -5937,12 +5961,14 @@ Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
       [d0, d1](const Series& out_sens) {
         return out_sens.transpose(d0, d1);
       });
+  maybe_link_alias_lineage_(out, *this, "transpose");
   return out;
 }
 
 
 Series Series::permute(pluss::msharp::RangeView::Int dims) const {
   if (!defined()) PLUSS_FAIL("permute: undefined");
+  sync_mps_alias_source_if_needed_(*this);
   const auto nd = dim();
   PLUSS_CHECK((std::int64_t)dims.size() == nd, "permute: dims must have length == dim()");
   std::vector<std::int64_t> dd(dims.begin(), dims.end());
@@ -5976,11 +6002,13 @@ Series Series::permute(pluss::msharp::RangeView::Int dims) const {
       [inv](const Series& out_sens) {
         return out_sens.permute(inv);
       });
+  maybe_link_alias_lineage_(out, *this, "permute");
   return out;
 }
 
 Series Series::unsqueeze(std::int64_t dim_) const {
   if (!defined()) PLUSS_FAIL("unsqueeze: undefined");
+  sync_mps_alias_source_if_needed_(*this);
   const auto nd = dim();
   if (dim_ < 0) dim_ += (nd + 1);
   PLUSS_CHECK(dim_ >= 0 && dim_ <= nd, "unsqueeze: dim out of range");
@@ -6005,11 +6033,13 @@ Series Series::unsqueeze(std::int64_t dim_) const {
       [shape = std::move(orig_shape)](const Series& out_sens) {
         return out_sens.reshape(shape);
       });
+  maybe_link_alias_lineage_(out, *this, "unsqueeze");
   return out;
 }
 
 Series Series::squeeze() const {
   if (!defined()) PLUSS_FAIL("squeeze: undefined");
+  sync_mps_alias_source_if_needed_(*this);
   const auto nd = dim();
   std::vector<std::int64_t> ns;
   std::vector<std::int64_t> nt;
@@ -6034,11 +6064,13 @@ Series Series::squeeze() const {
       [shape = std::move(orig_shape)](const Series& out_sens) {
         return out_sens.reshape(shape);
       });
+  maybe_link_alias_lineage_(out, *this, "squeeze");
   return out;
 }
 
 Series Series::squeeze(std::int64_t dim_) const {
   if (!defined()) PLUSS_FAIL("squeeze(dim): undefined");
+  sync_mps_alias_source_if_needed_(*this);
   const auto nd = dim();
   if (dim_ < 0) dim_ += nd;
   PLUSS_CHECK(dim_ >= 0 && dim_ < nd, "squeeze(dim): dim out of range");
@@ -6061,6 +6093,7 @@ Series Series::squeeze(std::int64_t dim_) const {
       [shape = std::move(orig_shape)](const Series& out_sens) {
         return out_sens.reshape(shape);
       });
+  maybe_link_alias_lineage_(out, *this, "squeeze");
   return out;
 }
 
@@ -6363,6 +6396,7 @@ Series Series::to(ScalarType dst) const {
 
 Series Series::select(std::int64_t dim, std::int64_t index) const {
   if (!defined()) PLUSS_FAIL("select: undefined");
+  sync_mps_alias_source_if_needed_(*this);
   const auto nd = this->dim();
   PLUSS_CHECK(nd > 0, "select: cannot be applied to a 0-dim Series");
   if (dim < 0) dim += nd;
@@ -6401,6 +6435,7 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
         Series idx = Series::full(sens_expanded.sizes(), static_cast<double>(index), ScalarType::Int64).to(input.platform());
         return ops_internal::scatter(grad, dim, idx, sens_expanded);
       });
+  maybe_link_alias_lineage_(out, *this, "select");
   return out;
 }
 
@@ -6492,6 +6527,7 @@ Series Series::slice(
         scatter_view_copy(grad_cpu, sens_cpu);
         return grad_cpu.to(input.platform(), input.scalar_type()).contiguous();
       });
+  maybe_link_alias_lineage_(out, *this, "slice");
   return out;
 }
 

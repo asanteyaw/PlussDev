@@ -75,6 +75,51 @@ bool run_conv_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  const Series conv3_input = pluss::make_series(std::vector<double>{
+                                                    1.0, 2.0, 3.0,
+                                                    4.0, 5.0, 6.0,
+                                                    7.0, 8.0, 9.0,
+                                                    10.0, 11.0, 12.0,
+                                                    13.0, 14.0, 15.0,
+                                                    16.0, 17.0, 18.0,
+                                                    19.0, 20.0, 21.0,
+                                                    22.0, 23.0, 24.0,
+                                                    25.0, 26.0, 27.0},
+                                                {1, 1, 3, 3, 3},
+                                                cfg);
+  const Series conv3_weight = pluss::make_series(std::vector<double>{
+                                                     1.0, 0.0,
+                                                     0.0, 0.0,
+                                                     0.0, 0.0,
+                                                     0.0, -1.0},
+                                                 {1, 1, 2, 2, 2},
+                                                 cfg);
+  const Series conv3_bias = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
+  const Series conv3_out = pluss::conv3d(conv3_input, conv3_weight, conv3_bias, 1, 0, 1, 1);
+  if (!approx_vec(vec_f64(conv3_out), std::vector<double>{-12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5})) {
+    if (err) *err << "conv3d functional output mismatch\n";
+    return false;
+  }
+
+  pluss::nn::Conv3d conv3_module(pluss::nn::Conv3dOptions{
+      .in_channels = 1,
+      .out_channels = 1,
+      .kernel_size = {2, 2, 2},
+      .stride = {1, 1, 1},
+      .padding = {0, 0, 0},
+      .dilation = {1, 1, 1},
+      .groups = 1,
+      .bias = true,
+      .cfg = cfg,
+      .seed = 17ULL,
+  });
+  conv3_module->weight() = conv3_weight;
+  conv3_module->bias() = conv3_bias;
+  if (!approx_vec(vec_f64(conv3_module->forward(conv3_input)), vec_f64(conv3_out))) {
+    if (err) *err << "conv3d module output mismatch\n";
+    return false;
+  }
+
   const Series conv1_input = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {1, 1, 6}, cfg);
   const Series conv1_weight = pluss::make_series(std::vector<double>{1.0, -1.0, 2.0}, {1, 1, 3}, cfg);
   const Series conv1_bias = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);

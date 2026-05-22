@@ -171,6 +171,80 @@ int main() {
     expect(std::isfinite(lbfgs_fit.objective_value), "LBFGS constrained objective should be finite", &failures);
   }
 
+  // 2b) Regression: view copy_ on an initially untracked staged buffer should
+  // remain connected to traced inputs (select(...).copy_ pattern).
+  {
+    const Series init = pluss::make_series(
+        std::vector<double>{0.3, -0.1, 0.2, -0.5, 0.4, 0.7},
+        {2, 3},
+        cfg);
+    pluss::subsp::math::diff::DerivativePolicy policy{};
+    policy.strict_dependency = true;
+    policy.warn_on_disconnected = false;
+
+    bool connected = true;
+    try {
+      const auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
+          [](const std::vector<Trace>& xs) -> Trace {
+            const Series x = xs[0].value();
+            Series staged = pluss::empty_like(x);
+            staged.select(1, 0).copy_(x.select(1, 0).mul(2.0));
+            staged.select(1, 1).copy_(x.select(1, 1).square());
+            staged.select(1, 2).copy_(x.select(1, 2).add(1.0));
+            return Trace(staged.sum());
+          },
+          std::vector<Series>{init},
+          policy);
+      expect(value.defined() && value.numel() == 1, "view copy_ regression value should be scalar", &failures);
+      expect(grads.size() == 1 && grads[0].defined(), "view copy_ regression gradient should be defined", &failures);
+      expect(as_f64_scalar(grads[0].abs().sum()) > 0.0,
+             "view copy_ regression gradient should be non-zero",
+             &failures);
+    } catch (const std::exception&) {
+      connected = false;
+    }
+    expect(connected, "view copy_ regression should stay connected under strict dependency", &failures);
+  }
+
+  // 2c) End-to-end septima path with Series objective + staged in-place writes.
+  {
+    const Series init = pluss::make_series(
+        std::vector<double>{0.25, -0.15, 0.20, -0.30, 0.40, 0.10},
+        {2, 3},
+        cfg);
+    const Series target = pluss::make_series(
+        std::vector<double>{0.8, 0.3, -0.1, -0.2, 0.5, 0.7},
+        {2, 3},
+        cfg);
+
+    SeptimaSolveOptions opts = make_base_options();
+    opts.max_iterations = 90;
+    opts.step.optimizer = SeptimaOptimizer::Adam;
+    opts.step.adam.learning_rate = 0.12;
+    opts.step.enable_constraint_autodiff = true;
+
+    SeptimaConstraints c{};
+    c.inequalities = [](const std::vector<Series>& p) {
+      return std::vector<Series>{p[0].select(1, 0).square() + p[0].select(1, 1).square() - 4.0};
+    };
+
+    const auto fit = pluss::optim::septima(
+        [target](const Series& x) -> Series {
+          Series staged = pluss::zeros_like(x);
+          for (std::int64_t t = 0; t < x.size(1); ++t) {
+            staged.select(1, t).copy_(x.select(1, t));
+          }
+          return (staged - target).square().sum();
+        },
+        init,
+        opts,
+        c);
+
+    expect(std::isfinite(fit.objective_value), "series-objective septima objective should be finite", &failures);
+    expect(fit.step_inf_norm > 0.0, "series-objective septima should take at least one non-zero step", &failures);
+    expect(fit.params.size() == 1 && fit.params[0].defined(), "series-objective septima should return parameter block", &failures);
+  }
+
   // 3) Progress hook stop semantics.
   {
     const Series init = make_vec({4.0, -4.0}, cfg);
@@ -273,6 +347,78 @@ int main() {
   }
 
   // 8) Option validation failures.
+  {
+    // Series-only constraint callbacks should be sufficient when constraint autodiff is enabled.
+    const Series init = make_vec({0.95, 0.05}, cfg);
+    const Series target = make_vec({0.30, 0.70}, cfg);
+
+    SeptimaSolveOptions opts = make_base_options();
+    opts.max_iterations = 180;
+    opts.step.enable_constraint_autodiff = true;
+
+    SeptimaConstraints c{};
+    c.equalities = [](const std::vector<Series>& p) {
+      return std::vector<Series>{p[0].sum() - 1.0};
+    };
+    c.inequalities = [](const std::vector<Series>& p) {
+      return std::vector<Series>{p[0].square().sum() - 1.0};
+    };
+    c.lbs = {make_vec({0.0, 0.0}, cfg)};
+    c.ubs = {make_vec({1.0, 1.0}, cfg)};
+
+    const auto fit = pluss::optim::septima(
+        [target](const Trace& x) -> Trace {
+          return sum(square(x - trace(target, false))) * 0.5;
+        },
+        init,
+        opts,
+        c);
+
+    expect(std::isfinite(fit.objective_value),
+           "series-only constraints should run with constraint autodiff",
+           &failures);
+    expect(fit.constraint_violation <= 5e-4,
+           "series-only constraints should satisfy bounds and residuals",
+           &failures);
+  }
+
+  // 9) Series-only constraints should also work when constraint autodiff is disabled.
+  {
+    const Series init = make_vec({0.95, 0.05}, cfg);
+    const Series target = make_vec({0.30, 0.70}, cfg);
+
+    SeptimaSolveOptions opts = make_base_options();
+    opts.max_iterations = 120;
+    opts.step.enable_constraint_autodiff = false;
+    opts.step.optimizer = SeptimaOptimizer::Adam;
+
+    SeptimaConstraints c{};
+    c.equalities = [](const std::vector<Series>& p) {
+      return std::vector<Series>{p[0].sum() - 1.0};
+    };
+    c.inequalities = [](const std::vector<Series>& p) {
+      return std::vector<Series>{p[0].square().sum() - 1.0};
+    };
+    c.lbs = {make_vec({0.0, 0.0}, cfg)};
+    c.ubs = {make_vec({1.0, 1.0}, cfg)};
+
+    const auto fit = pluss::optim::septima(
+        [target](const Trace& x) -> Trace {
+          return sum(square(x - trace(target, false))) * 0.5;
+        },
+        init,
+        opts,
+        c);
+
+    expect(std::isfinite(fit.objective_value),
+           "series-only constraints should run with constraint autodiff disabled",
+           &failures);
+    expect(fit.constraint_violation <= 1e-3,
+           "series-only constraints should remain enforceable without constraint autodiff",
+           &failures);
+  }
+
+  // 10) Option validation failures.
   {
     bool threw_dual = false;
     try {

@@ -15,3 +15,6 @@
 #include "pluss/ai/nodej/tune.h"
 #include "pluss/ai/nodej/online.h"
 #include "pluss/ai/nodej/io.h"
+#include "pluss/ai/nodej/feature_select.h"
+#include "pluss/ai/nodej/inspection.h"
+#include "pluss/ai/nodej/text.h"

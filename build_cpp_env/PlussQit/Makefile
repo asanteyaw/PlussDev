@@ -3332,6 +3332,14 @@ src/CodeM/native/mps/Sorting.mm.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Sorting.mm.o
 .PHONY : src/CodeM/native/mps/Sorting.mm.o
 
+src/CodeM/native/mps/Stochastic.o: src/CodeM/native/mps/Stochastic.mm.o
+.PHONY : src/CodeM/native/mps/Stochastic.o
+
+# target to build an object file
+src/CodeM/native/mps/Stochastic.mm.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Stochastic.mm.o
+.PHONY : src/CodeM/native/mps/Stochastic.mm.o
+
 src/CodeN/compat/Dispatch.o: src/CodeN/compat/Dispatch.cpp.o
 .PHONY : src/CodeN/compat/Dispatch.o
 
@@ -5563,6 +5571,57 @@ tests/CodeM/test_patch173_series_set_number_ops.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.s
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch173_series_set_number_ops.cpp.s
 .PHONY : tests/CodeM/test_patch173_series_set_number_ops.cpp.s
+
+tests/CodeM/test_patch174_torch_inplace_parity_aliases.o: tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.o
+.PHONY : tests/CodeM/test_patch174_torch_inplace_parity_aliases.o
+
+# target to build an object file
+tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.o
+.PHONY : tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.o
+
+tests/CodeM/test_patch174_torch_inplace_parity_aliases.i: tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.i
+.PHONY : tests/CodeM/test_patch174_torch_inplace_parity_aliases.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.i
+.PHONY : tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.i
+
+tests/CodeM/test_patch174_torch_inplace_parity_aliases.s: tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.s
+.PHONY : tests/CodeM/test_patch174_torch_inplace_parity_aliases.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.s
+.PHONY : tests/CodeM/test_patch174_torch_inplace_parity_aliases.cpp.s
+
+tests/CodeM/test_patch175_mps_stochastic_dropout_parity.o: tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o
+.PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.o
+
+# target to build an object file
+tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o
+.PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o
+
+tests/CodeM/test_patch175_mps_stochastic_dropout_parity.i: tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
+.PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
+.PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
+
+tests/CodeM/test_patch175_mps_stochastic_dropout_parity.s: tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
+.PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
+.PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
 
 tests/CodeM/test_patch17_unary_cat_scatter.o: tests/CodeM/test_patch17_unary_cat_scatter.cpp.o
 .PHONY : tests/CodeM/test_patch17_unary_cat_scatter.o
@@ -8493,6 +8552,7 @@ help:
 	@echo "... src/CodeM/native/mps/Reductions.o"
 	@echo "... src/CodeM/native/mps/Scatter.o"
 	@echo "... src/CodeM/native/mps/Sorting.o"
+	@echo "... src/CodeM/native/mps/Stochastic.o"
 	@echo "... src/CodeN/compat/Dispatch.o"
 	@echo "... src/CodeN/compat/Dispatch.i"
 	@echo "... src/CodeN/compat/Dispatch.s"
@@ -8751,6 +8811,12 @@ help:
 	@echo "... tests/CodeM/test_patch173_series_set_number_ops.o"
 	@echo "... tests/CodeM/test_patch173_series_set_number_ops.i"
 	@echo "... tests/CodeM/test_patch173_series_set_number_ops.s"
+	@echo "... tests/CodeM/test_patch174_torch_inplace_parity_aliases.o"
+	@echo "... tests/CodeM/test_patch174_torch_inplace_parity_aliases.i"
+	@echo "... tests/CodeM/test_patch174_torch_inplace_parity_aliases.s"
+	@echo "... tests/CodeM/test_patch175_mps_stochastic_dropout_parity.o"
+	@echo "... tests/CodeM/test_patch175_mps_stochastic_dropout_parity.i"
+	@echo "... tests/CodeM/test_patch175_mps_stochastic_dropout_parity.s"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.o"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.i"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.s"

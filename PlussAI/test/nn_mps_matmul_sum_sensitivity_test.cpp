@@ -28,6 +28,31 @@ bool run_case_(std::ostream* err = nullptr) {
   const Config i64_mps = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pMPS);
 
   {
+    const Series base = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {4}, mps);
+    const Series device_written = base.mul(2.0).reshape({2, 2});
+    const auto transposed = device_written.transpose(0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const std::vector<double> expect_transposed{2.0, 6.0, 4.0, 8.0};
+    for (std::size_t i = 0; i < expect_transposed.size(); ++i) {
+      if (!approx_(transposed[i], expect_transposed[i], 1e-6, 1e-6)) {
+        if (err) *err << "mps alias view forward sync mismatch\n";
+        return false;
+      }
+    }
+
+    const Series row = pluss::make_series(std::vector<float>{0.25f, 0.5f}, {2}, mps).add(1.0);
+    const Series row_time = row.unsqueeze(0);
+    const Series joined = row_time.unite(std::vector<Series>{row_time}, 0);
+    const auto joined_v = joined.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const std::vector<double> expect_joined{1.25, 1.5, 1.25, 1.5};
+    for (std::size_t i = 0; i < expect_joined.size(); ++i) {
+      if (!approx_(joined_v[i], expect_joined[i], 1e-6, 1e-6)) {
+        if (err) *err << "mps alias unite forward sync mismatch\n";
+        return false;
+      }
+    }
+  }
+
+  {
     Series v = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {4}, mps);
     v.tracks_slope_(true);
     v.sum().reverse();
@@ -263,6 +288,30 @@ bool run_case_(std::ostream* err = nullptr) {
     for (std::size_t i = 0; i < gb_cpu.size() && i < gb_mps.size(); ++i) {
       if (!approx_(gb_cpu[i], gb_mps[i], 1e-4, 1e-4)) {
         if (err) *err << "mps matmul parity mismatch\n";
+        return false;
+      }
+    }
+  }
+
+  {
+    const Series x_cpu = pluss::make_series(
+        std::vector<float>{
+            -1.0f, -1.25f, -1.20f,
+            -0.9f, -1.05f, -1.00f,
+            -0.8f, -0.95f, -0.90f,
+            -0.7f, -0.85f, -0.80f,
+        },
+        {4, 3},
+        cpu);
+    const Series w_cpu = pluss::make_series(std::vector<float>{0.2f, -0.1f, 0.05f}, {3, 1}, cpu);
+    const auto ref = x_cpu.matmul(w_cpu).to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+
+    const Series x_mps = x_cpu.to(pluss::pMPS, ScalarType::Float32);
+    const Series w_mps = w_cpu.to(pluss::pMPS, ScalarType::Float32);
+    const auto got = x_mps.matmul(w_mps).to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    for (std::size_t i = 0; i < ref.size() && i < got.size(); ++i) {
+      if (!approx_(ref[i], got[i], 1e-4, 1e-4)) {
+        if (err) *err << "mps matmul (n=1,k=3) forward parity mismatch\n";
         return false;
       }
     }

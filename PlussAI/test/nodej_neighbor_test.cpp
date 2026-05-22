@@ -106,6 +106,41 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       return false;
     }
 
+    const ModelSpec radius_spec{
+        .task = TaskKind::Classification,
+        .family = ModelFamily::Neighbor,
+        .options = NeighborFamilyOptions{
+            .k = 3,
+            .query_mode = pluss::ai::nodej::NeighborQueryMode::Radius,
+            .radius = 0.05,
+            .radius_fallback_k = 1,
+            .distance_weighted = true,
+            .standardize = true,
+        },
+    };
+    auto rcls_or = pluss::ai::nodej::make_classifier(radius_spec);
+    if (!rcls_or.ok()) {
+      if (err) *err << "make_classifier should succeed for radius neighbor classifier\n";
+      return false;
+    }
+    auto rcls = rcls_or.move_value();
+    if (!rcls->learn(batch).ok()) {
+      if (err) *err << "radius neighbor classifier learn should succeed\n";
+      return false;
+    }
+    auto rpred_or = rcls->infer(features);
+    if (!rpred_or.ok()) {
+      if (err) *err << "radius neighbor classifier infer should succeed\n";
+      return false;
+    }
+    const auto rpred = rpred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::size_t i = 0; i < rpred.size(); ++i) {
+      if (!approx(rpred[i], truth[i])) {
+        if (err) *err << "radius neighbor classifier should fit training labels with fallback\n";
+        return false;
+      }
+    }
+
     const Series x_bad = pluss::make_series(std::vector<double>{
                                                 1.0, 2.0, 3.0,
                                                 4.0, 5.0, 6.0},
@@ -168,6 +203,41 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
     if (metrics.size() < 3 || metrics[0] > 1e-12 || metrics[2] < 0.999999) {
       if (err) *err << "neighbor regressor default metrics should indicate perfect fit for k=1\n";
       return false;
+    }
+
+    const ModelSpec radius_reg_spec{
+        .task = TaskKind::Regression,
+        .family = ModelFamily::Neighbor,
+        .options = NeighborFamilyOptions{
+            .k = 1,
+            .query_mode = pluss::ai::nodej::NeighborQueryMode::Radius,
+            .radius = 0.01,
+            .radius_fallback_k = 1,
+            .distance_weighted = false,
+            .standardize = true,
+        },
+    };
+    auto rreg_or = pluss::ai::nodej::make_regressor(radius_reg_spec);
+    if (!rreg_or.ok()) {
+      if (err) *err << "make_regressor should succeed for radius neighbor regressor\n";
+      return false;
+    }
+    auto rreg = rreg_or.move_value();
+    if (!rreg->learn(batch).ok()) {
+      if (err) *err << "radius neighbor regressor learn should succeed\n";
+      return false;
+    }
+    auto rreg_pred_or = rreg->infer(features);
+    if (!rreg_pred_or.ok()) {
+      if (err) *err << "radius neighbor regressor infer should succeed\n";
+      return false;
+    }
+    const auto rreg_pred = rreg_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::size_t i = 0; i < rreg_pred.size(); ++i) {
+      if (!approx(rreg_pred[i], truth[i], 1e-8)) {
+        if (err) *err << "radius neighbor regressor should fit training targets with fallback\n";
+        return false;
+      }
     }
   }
 

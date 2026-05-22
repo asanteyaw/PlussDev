@@ -1499,6 +1499,21 @@ public:
     return extract_from_specs_({specs.begin(), specs.end()});
   }
 
+  Series extract(ExtractSpec a0, ExtractSpec a1) const {
+    const std::array<ExtractSpec, 2> specs{a0, a1};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+  }
+
+  Series extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2) const {
+    const std::array<ExtractSpec, 3> specs{a0, a1, a2};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+  }
+
+  Series extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2, ExtractSpec a3) const {
+    const std::array<ExtractSpec, 4> specs{a0, a1, a2, a3};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+  }
+
   Series& extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) {
     return extract_put_from_specs_({specs.begin(), specs.end()}, values);
   }

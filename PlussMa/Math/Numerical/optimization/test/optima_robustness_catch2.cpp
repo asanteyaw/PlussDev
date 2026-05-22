@@ -220,3 +220,38 @@ TEST_CASE("Internal protocol does not enter feasibility mode when already feasib
   REQUIRE(result.evaluation.max_constraint_violation <= options.internal_protocol.constraint_tolerance);
   REQUIRE_FALSE(mentions_feasibility);
 }
+
+TEST_CASE("Optima autodiff stays connected through staged copy_ objectives", "[optima][autodiff][inplace]") {
+  ConstrainedProblem problem;
+  const Series target = pluss::make_series(std::vector<double>{0.4, -0.6, 0.8}, {3}).to(ScalarType::Float64);
+  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
+    const Trace x = p.at("x");
+    const Series xv = x.value();
+    Series staged = pluss::zeros_like(xv);
+    for (std::int64_t i = 0; i < xv.size(0); ++i) {
+      staged.select(0, i).copy_(xv.select(0, i));
+    }
+    const Trace diff = Trace(staged) - trace(target, false);
+    return sum(square(diff));
+  };
+  problem.bounds.lower = pluss::optim::pack_series(pluss::make_series(std::vector<double>{-2.0, -2.0, -2.0}, {3}).to(ScalarType::Float64));
+  problem.bounds.upper = pluss::optim::pack_series(pluss::make_series(std::vector<double>{2.0, 2.0, 2.0}, {3}).to(ScalarType::Float64));
+
+  const Series initial = pluss::make_series(std::vector<double>{1.4, -1.2, 1.1}, {3}).to(ScalarType::Float64);
+  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  options.internal_protocol.max_iterations = 80;
+  options.internal_protocol.constraint_tolerance = 1e-8;
+  options.internal_protocol.optimality_tolerance = 1e-6;
+
+  const auto result = optima(problem, initial, options);
+
+  INFO("exit=" << static_cast<int>(result.exit_flag)
+               << " status=" << static_cast<int>(result.evaluation.status)
+               << " objective=" << as_f64_scalar(result.evaluation.value)
+               << " first_order=" << result.output.first_order_optimality
+               << " detail=" << result.output.detail_message);
+
+  REQUIRE(result.evaluation.status == EvalStatus::Ok);
+  REQUIRE(std::isfinite(as_f64_scalar(result.evaluation.value)));
+  REQUIRE(std::isfinite(result.output.first_order_optimality));
+}

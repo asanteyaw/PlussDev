@@ -28,6 +28,13 @@ if(APPLE
 endif()
 
 project(plussma VERSION 0.1.0 LANGUAGES CXX)
+if(APPLE)
+    enable_language(OBJCXX)
+    if(NOT CMAKE_OBJCXX_COMPILE_OBJECT)
+        set(CMAKE_OBJCXX_COMPILE_OBJECT
+            "<CMAKE_OBJCXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -x objective-c++ -o <OBJECT> -c <SOURCE>")
+    endif()
+endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)
@@ -336,6 +343,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussAI/include/
     PATTERN "*.h"
     PATTERN "*.hpp"
     PATTERN "*.hh"
+    PATTERN "pluss/ai/lymph/quick.h" EXCLUDE
     PATTERN ".DS_Store" EXCLUDE
 )
 

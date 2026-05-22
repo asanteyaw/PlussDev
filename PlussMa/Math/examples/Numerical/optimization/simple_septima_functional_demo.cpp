@@ -27,13 +27,7 @@ int main() {
 
   pluss::optim::SeptimaConstraints c{};
   c.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].sum() - 3.0}; };
-  c.equalities_trace = [](const std::vector<Trace>& x) {
-    return std::vector<Trace>{pluss::subsp::math::diff::sum(x[0]) - 3.0};
-  };
   c.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 10.0}; };
-  c.inequalities_trace = [](const std::vector<Trace>& x) {
-    return std::vector<Trace>{pluss::subsp::math::diff::sum(pluss::subsp::math::diff::square(x[0])) - 10.0};
-  };
   c.lbs = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg)};
 
   const auto fit = pluss::optim::septima(

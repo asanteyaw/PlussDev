@@ -238,6 +238,276 @@ struct DenseFeatureMatrix {
   return StatusOr<Series>(Status::numerical_failure("Linear regression failed to produce finite coefficients."));
 }
 
+struct LinearPenalty {
+  double l1 = 0.0;
+  double l2 = 0.0;
+};
+
+[[nodiscard]] LinearPenalty resolve_linear_penalty(const LinearFamilyOptions& options) {
+  LinearPenalty out{};
+  switch (options.regularization) {
+    case RegularizationKind::None:
+      break;
+    case RegularizationKind::L1:
+      out.l1 = options.regularization_strength;
+      break;
+    case RegularizationKind::L2:
+      out.l2 = options.regularization_strength;
+      break;
+    case RegularizationKind::Elastic:
+      out.l1 = options.regularization_strength * options.elastic_l1_ratio;
+      out.l2 = options.regularization_strength * (1.0 - options.elastic_l1_ratio);
+      break;
+  }
+  return out;
+}
+
+[[nodiscard]] Series apply_l1_prox(const Series& weights,
+                                   double shrink,
+                                   bool fit_intercept) {
+  if (shrink <= 0.0) return weights;
+  Series out = weights.sign().mul(weights.abs().sub(shrink).clamp_min(0.0));
+  if (fit_intercept) {
+    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, out.platform());
+    const Series w0 = weights.index_select(0, idx0).reshape({1});
+    out = pluss::index_put(out, std::vector<Series>{idx0}, w0, false);
+  }
+  return out;
+}
+
+[[nodiscard]] double linear_l2_term(const Series& weights, bool fit_intercept, double lambda_l2) {
+  if (lambda_l2 <= 0.0) return 0.0;
+  Series penalized = weights;
+  if (fit_intercept) {
+    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, penalized.platform());
+    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(penalized.platform())), false);
+  }
+  return 0.5 * lambda_l2 * penalized.square().sum().item<double>();
+}
+
+[[nodiscard]] double linear_l1_term(const Series& weights, bool fit_intercept, double lambda_l1) {
+  if (lambda_l1 <= 0.0) return 0.0;
+  Series penalized = weights;
+  if (fit_intercept) {
+    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, penalized.platform());
+    penalized = pluss::index_put(penalized, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(penalized.platform())), false);
+  }
+  return lambda_l1 * penalized.abs().sum().item<double>();
+}
+
+[[nodiscard]] StatusOr<Series> solve_elastic_least_squares(const Series& design,
+                                                           const Series& labels,
+                                                           bool fit_intercept,
+                                                           double lambda_l1,
+                                                           double lambda_l2,
+                                                           std::int64_t max_iterations,
+                                                           double tolerance,
+                                                           const char* where) {
+  const std::int64_t n = design.sizes()[0];
+  const std::int64_t p = design.sizes()[1];
+  if (n <= 0 || p <= 0) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires non-empty design matrix."));
+  }
+  if (max_iterations <= 0 || !(tolerance > 0.0)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires positive max_iterations and tolerance."));
+  }
+
+  Series weights = pluss::zeros({p}, f64_on(design.platform()));
+  const Series design_t = design.transpose(0, 1);
+  const Series col_sq_sum = design.square().sum(0, false);
+  const double max_col_sq = col_sq_sum.max().reshape({1}).item<double>();
+  double lipschitz = (std::isfinite(max_col_sq) ? max_col_sq : 0.0) / static_cast<double>(n);
+  lipschitz += std::max(0.0, lambda_l2);
+  if (!(lipschitz > 0.0) || !std::isfinite(lipschitz)) {
+    lipschitz = 1.0;
+  }
+  const double step = 1.0 / lipschitz;
+
+  double prev_loss = std::numeric_limits<double>::infinity();
+  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
+    const Series pred = design.matmul(weights.reshape({p, 1})).reshape({n});
+    const Series residual = pred.sub(labels);
+    Series grad = design_t.matmul(residual.reshape({n, 1})).div(static_cast<double>(n)).reshape({p});
+    if (lambda_l2 > 0.0) {
+      Series ridge = weights;
+      if (fit_intercept) {
+        const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, ridge.platform());
+        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      }
+      grad = grad.add(ridge.mul(lambda_l2));
+    }
+    if (!all_finite(grad)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite gradient."));
+    }
+
+    const Series w_step = weights.sub(grad.mul(step));
+    const Series w_next = apply_l1_prox(w_step, lambda_l1 * step, fit_intercept);
+    if (!all_finite(w_next)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite coefficients."));
+    }
+
+    const Series next_pred = design.matmul(w_next.reshape({p, 1})).reshape({n});
+    const double data_loss = 0.5 * next_pred.sub(labels).square().mean().item<double>();
+    const double loss = data_loss + linear_l2_term(w_next, fit_intercept, lambda_l2) + linear_l1_term(w_next, fit_intercept, lambda_l1);
+    if (!std::isfinite(loss)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
+    }
+
+    const double step_inf = w_next.sub(weights).abs().max().reshape({1}).item<double>();
+    if (step_inf <= tolerance || std::abs(prev_loss - loss) <= tolerance) {
+      weights = w_next;
+      break;
+    }
+    weights = w_next;
+    prev_loss = loss;
+  }
+  return StatusOr<Series>(weights);
+}
+
+[[nodiscard]] StatusOr<Series> solve_robust_least_squares(const Series& design,
+                                                          const Series& labels,
+                                                          bool fit_intercept,
+                                                          double robust_transition,
+                                                          double lambda_l1,
+                                                          double lambda_l2,
+                                                          std::int64_t max_iterations,
+                                                          double tolerance,
+                                                          const char* where) {
+  const std::int64_t n = design.sizes()[0];
+  const std::int64_t p = design.sizes()[1];
+  if (n <= 0 || p <= 0) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires non-empty design matrix."));
+  }
+  if (max_iterations <= 0 || !(tolerance > 0.0)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires positive max_iterations and tolerance."));
+  }
+  if (!(robust_transition > 0.0) || !std::isfinite(robust_transition)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires finite robust_transition > 0."));
+  }
+
+  Series weights = pluss::zeros({p}, f64_on(design.platform()));
+  const Series design_t = design.transpose(0, 1);
+  const Series col_sq_sum = design.square().sum(0, false);
+  const double max_col_sq = col_sq_sum.max().reshape({1}).item<double>();
+  // Lipschitz upper bound for Huber gradient in prediction space is 1.
+  double lipschitz = (std::isfinite(max_col_sq) ? max_col_sq : 0.0) / static_cast<double>(n);
+  lipschitz += std::max(0.0, lambda_l2);
+  if (!(lipschitz > 0.0) || !std::isfinite(lipschitz)) {
+    lipschitz = 1.0;
+  }
+  const double step = 1.0 / lipschitz;
+
+  double prev_loss = std::numeric_limits<double>::infinity();
+  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
+    const Series pred = design.matmul(weights.reshape({p, 1})).reshape({n});
+    const Series residual = pred.sub(labels);
+    const Series abs_residual = residual.abs();
+    const Series huber_grad = abs_residual.le(robust_transition).where(
+        residual,
+        residual.sign().mul(robust_transition));
+
+    Series grad = design_t.matmul(huber_grad.reshape({n, 1})).div(static_cast<double>(n)).reshape({p});
+    if (lambda_l2 > 0.0) {
+      Series ridge = weights;
+      if (fit_intercept) {
+        const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, ridge.platform());
+        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      }
+      grad = grad.add(ridge.mul(lambda_l2));
+    }
+    if (!all_finite(grad)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite gradient."));
+    }
+
+    const Series w_step = weights.sub(grad.mul(step));
+    const Series w_next = apply_l1_prox(w_step, lambda_l1 * step, fit_intercept);
+    if (!all_finite(w_next)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite coefficients."));
+    }
+
+    const Series next_pred = design.matmul(w_next.reshape({p, 1})).reshape({n});
+    const Series next_residual = next_pred.sub(labels);
+    const Series next_abs = next_residual.abs();
+    const Series quadratic = next_abs.clamp_max(robust_transition);
+    const Series linear = next_abs.sub(quadratic);
+    const Series huber_loss = quadratic.square().mul(0.5).add(linear.mul(robust_transition)).mean();
+    const double loss = huber_loss.item<double>() + linear_l2_term(w_next, fit_intercept, lambda_l2) + linear_l1_term(w_next, fit_intercept, lambda_l1);
+    if (!std::isfinite(loss)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
+    }
+
+    const double step_inf = w_next.sub(weights).abs().max().reshape({1}).item<double>();
+    if (step_inf <= tolerance || std::abs(prev_loss - loss) <= tolerance) {
+      weights = w_next;
+      break;
+    }
+    weights = w_next;
+    prev_loss = loss;
+  }
+  return StatusOr<Series>(weights);
+}
+
+[[nodiscard]] StatusOr<Series> solve_bernoulli_map(const Series& design,
+                                                   const Series& labels01,
+                                                   bool fit_intercept,
+                                                   double lambda_l2,
+                                                   std::int64_t max_iterations,
+                                                   double tolerance,
+                                                   const char* where) {
+  const std::int64_t n = design.sizes()[0];
+  const std::int64_t p = design.sizes()[1];
+  if (n <= 0 || p <= 0) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires non-empty design matrix."));
+  }
+  Series y = labels01.to(ScalarType::Float64).reshape({n}).clamp(0.0, 1.0);
+  Series weights = pluss::zeros({p}, f64_on(design.platform()));
+  const Series design_t = design.transpose(0, 1);
+  const Series eye = pluss::eye(p, p, f64_on(design.platform()));
+  const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, design.platform());
+
+  double prev_loss = std::numeric_limits<double>::infinity();
+  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
+    const Series logits = design.matmul(weights.reshape({p, 1})).reshape({n});
+    const Series probs = logits.sigmoid().clamp(1e-9, 1.0 - 1e-9);
+    const Series err = probs.sub(y);
+    Series grad = design_t.matmul(err.reshape({n, 1})).div(static_cast<double>(n)).reshape({p});
+    if (lambda_l2 > 0.0) {
+      Series ridge = weights;
+      if (fit_intercept) {
+        ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+      }
+      grad = grad.add(ridge.mul(lambda_l2));
+    }
+    const Series w_diag = probs.mul(probs.mul(-1.0).add(1.0)).clamp_min(1e-8).reshape({n, 1});
+    Series hessian = design_t.matmul(design.mul(w_diag)).div(static_cast<double>(n));
+    if (lambda_l2 > 0.0) {
+      Series reg = eye.mul(lambda_l2);
+      if (fit_intercept) {
+        reg = pluss::index_put(reg, std::vector<Series>{idx0, idx0}, pluss::zeros({1}, f64_on(reg.platform())), false);
+      }
+      hessian = hessian.add(reg);
+    }
+    const Series delta =
+        pluss::subsp::math::linalg::pinverse(hessian.add(eye.mul(1e-12)), 1e-12).matmul(grad.reshape({p, 1})).reshape({p});
+    const Series next = weights.sub(delta);
+    if (!all_finite(next)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite coefficients."));
+    }
+    const Series p_next = design.matmul(next.reshape({p, 1})).reshape({n}).sigmoid().clamp(1e-9, 1.0 - 1e-9);
+    const Series bce = y.mul(p_next.log()).add(y.mul(-1.0).add(1.0).mul(p_next.mul(-1.0).add(1.0).log())).mul(-1.0);
+    Series ridge = next;
+    if (fit_intercept) {
+      ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::zeros({1}, f64_on(ridge.platform())), false);
+    }
+    const double loss = bce.mean().item<double>() + 0.5 * lambda_l2 * ridge.square().sum().item<double>();
+    const double step = delta.abs().max().reshape({1}).item<double>();
+    weights = next;
+    if (step <= tolerance || std::abs(prev_loss - loss) <= tolerance) break;
+    prev_loss = loss;
+  }
+  return StatusOr<Series>(weights);
+}
+
 [[nodiscard]] StatusOr<Series> regression_metrics(const Series& truth,
                                                   const Series& prediction,
                                                   const std::vector<MetricKind>& requested,
@@ -304,14 +574,24 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Status validate_linear_regression_options(const LinearFamilyOptions& options) {
-  if (options.objective != LinearObjective::LeastSquares) {
-    return Status::not_implemented("Linear regressor currently supports LinearObjective::LeastSquares only.");
+  if (options.objective != LinearObjective::LeastSquares
+      && options.objective != LinearObjective::RobustLeast) {
+    return Status::not_implemented("Linear regressor currently supports LinearObjective::LeastSquares or LinearObjective::RobustLeast.");
   }
-  if (options.regularization != RegularizationKind::None && options.regularization != RegularizationKind::L2) {
-    return Status::not_implemented("Linear regressor currently supports RegularizationKind::None or RegularizationKind::L2.");
+  if (options.regularization != RegularizationKind::None
+      && options.regularization != RegularizationKind::L1
+      && options.regularization != RegularizationKind::L2
+      && options.regularization != RegularizationKind::Elastic) {
+    return Status::invalid_argument("Linear regressor received unknown RegularizationKind.");
   }
   if (!std::isfinite(options.regularization_strength) || options.regularization_strength < 0.0) {
     return Status::invalid_argument("LinearFamilyOptions.regularization_strength must be finite and >= 0.");
+  }
+  if (!std::isfinite(options.elastic_l1_ratio) || options.elastic_l1_ratio < 0.0 || options.elastic_l1_ratio > 1.0) {
+    return Status::invalid_argument("LinearFamilyOptions.elastic_l1_ratio must be finite and in [0, 1].");
+  }
+  if (!(options.robust_transition > 0.0) || !std::isfinite(options.robust_transition)) {
+    return Status::invalid_argument("LinearFamilyOptions.robust_transition must be finite and > 0.");
   }
   return Status::success();
 }
@@ -320,12 +600,19 @@ struct DenseFeatureMatrix {
   if (options.k <= 0) {
     return Status::invalid_argument("Neighbor regressor requires NeighborFamilyOptions.k > 0.");
   }
+  if (!std::isfinite(options.radius) || options.radius < 0.0) {
+    return Status::invalid_argument("Neighbor regressor requires NeighborFamilyOptions.radius to be finite and >= 0.");
+  }
+  if (options.radius_fallback_k <= 0) {
+    return Status::invalid_argument("Neighbor regressor requires NeighborFamilyOptions.radius_fallback_k > 0.");
+  }
   return Status::success();
 }
 
 [[nodiscard]] Status validate_tree_regression_options(const TreeFamilyOptions& options) {
-  if (options.criterion != TreeCriterion::Mse) {
-    return Status::not_implemented("Tree regressor currently supports TreeCriterion::Mse only.");
+  if (options.criterion != TreeCriterion::Mse
+      && options.criterion != TreeCriterion::Mae) {
+    return Status::not_implemented("Tree regressor currently supports TreeCriterion::Mse or TreeCriterion::Mae.");
   }
   if (options.max_depth < -1) {
     return Status::invalid_argument("TreeFamilyOptions.max_depth must be -1 (unlimited) or >= 0.");
@@ -340,6 +627,12 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Status validate_kernel_regression_options(const KernelFamilyOptions& options) {
+  if (!std::isfinite(options.nu) || options.nu <= 0.0 || options.nu > 1.0) {
+    return Status::invalid_argument("KernelFamilyOptions.nu must be finite and in (0, 1].");
+  }
+  if (options.form == KernelForm::OneClass) {
+    return Status::not_implemented("Kernel regressor does not support KernelForm::OneClass. Use TaskKind::Transform.");
+  }
   if (!std::isfinite(options.c) || options.c <= 0.0) {
     return Status::invalid_argument("KernelFamilyOptions.c must be finite and > 0.");
   }
@@ -353,25 +646,35 @@ struct DenseFeatureMatrix {
 }
 
 [[nodiscard]] Status validate_bayes_regression_options(const BayesFamilyOptions& options) {
-  if (!options.use_gaussian) {
-    return Status::not_implemented("Bayes regressor currently supports gaussian likelihoods only.");
-  }
   if (!std::isfinite(options.smoothing) || options.smoothing <= 0.0) {
     return Status::invalid_argument("BayesFamilyOptions.smoothing must be finite and > 0.");
   }
   return Status::success();
 }
 
+[[nodiscard]] BayesLikelihood resolved_bayes_likelihood(const BayesFamilyOptions& options) {
+  if (!options.use_gaussian && options.likelihood == BayesLikelihood::Gaussian) {
+    return BayesLikelihood::Bernoulli;
+  }
+  return options.likelihood;
+}
+
 [[nodiscard]] Status validate_ensemble_regression_options(const EnsembleFamilyOptions& options) {
-  if (options.method != EnsembleMethod::Bagging && options.method != EnsembleMethod::RandomForest) {
+  if (options.method != EnsembleMethod::Bagging
+      && options.method != EnsembleMethod::RandomForest
+      && options.method != EnsembleMethod::GradientBoost
+      && options.method != EnsembleMethod::AdaBoost) {
     return Status::not_implemented(
-        "Ensemble regressor currently supports EnsembleMethod::Bagging and EnsembleMethod::RandomForest only.");
+        "Ensemble regressor currently supports EnsembleMethod::Bagging, EnsembleMethod::RandomForest, EnsembleMethod::GradientBoost, and EnsembleMethod::AdaBoost.");
   }
   if (options.learners <= 0) {
     return Status::invalid_argument("EnsembleFamilyOptions.learners must be positive.");
   }
   if (!std::isfinite(options.subsample) || options.subsample <= 0.0 || options.subsample > 1.0) {
     return Status::invalid_argument("EnsembleFamilyOptions.subsample must be finite and in (0, 1].");
+  }
+  if (!std::isfinite(options.learning_rate) || options.learning_rate <= 0.0) {
+    return Status::invalid_argument("EnsembleFamilyOptions.learning_rate must be finite and > 0.");
   }
   return Status::success();
 }
@@ -469,6 +772,77 @@ struct DenseFeatureMatrix {
   return pluss::make_series(out, {nq}, f64_cpu());
 }
 
+[[nodiscard]] Series radius_predict_cpu(const Series& query_rows,
+                                        const Series& train_rows,
+                                        const Series& y_train,
+                                        double radius,
+                                        std::int64_t fallback_k,
+                                        bool distance_weighted) {
+  const std::int64_t nq = query_rows.sizes()[0];
+  const std::int64_t nt = train_rows.sizes()[0];
+  const std::int64_t d = train_rows.sizes()[1];
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(fallback_k, nt));
+  const double radius2 = radius * radius;
+  std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
+  constexpr double eps = 1e-12;
+
+  for (std::int64_t qi = 0; qi < nq; ++qi) {
+    const std::size_t qbase = static_cast<std::size_t>(qi * d);
+    std::vector<std::pair<double, std::int64_t>> in_radius{};
+    in_radius.reserve(static_cast<std::size_t>(nt));
+    std::vector<std::pair<double, std::int64_t>> best{};
+    best.reserve(static_cast<std::size_t>(kk));
+    for (std::int64_t ti = 0; ti < nt; ++ti) {
+      const std::size_t tbase = static_cast<std::size_t>(ti * d);
+      double d2 = 0.0;
+      for (std::int64_t f = 0; f < d; ++f) {
+        const double dv = qv[qbase + static_cast<std::size_t>(f)] - tv[tbase + static_cast<std::size_t>(f)];
+        d2 += dv * dv;
+      }
+      if (d2 <= radius2) in_radius.emplace_back(d2, ti);
+      if (static_cast<std::int64_t>(best.size()) < kk) {
+        best.emplace_back(d2, ti);
+        if (static_cast<std::int64_t>(best.size()) == kk) std::make_heap(best.begin(), best.end());
+      } else if (d2 < best.front().first) {
+        std::pop_heap(best.begin(), best.end());
+        best.back() = std::pair<double, std::int64_t>{d2, ti};
+        std::push_heap(best.begin(), best.end());
+      }
+    }
+    const auto& selected = in_radius.empty() ? best : in_radius;
+    if (distance_weighted) {
+      double zero_sum = 0.0;
+      double zero_count = 0.0;
+      for (const auto& [d2, ti] : selected) {
+        if (d2 <= eps) {
+          zero_sum += yv[static_cast<std::size_t>(ti)];
+          zero_count += 1.0;
+        }
+      }
+      if (zero_count > 0.0) {
+        out[static_cast<std::size_t>(qi)] = zero_sum / zero_count;
+        continue;
+      }
+      double wsum = 0.0;
+      double ysum = 0.0;
+      for (const auto& [d2, ti] : selected) {
+        const double w = 1.0 / std::sqrt(d2 + eps);
+        wsum += w;
+        ysum += w * yv[static_cast<std::size_t>(ti)];
+      }
+      out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? ysum / wsum : 0.0;
+    } else {
+      double sum = 0.0;
+      for (const auto& [_, ti] : selected) sum += yv[static_cast<std::size_t>(ti)];
+      out[static_cast<std::size_t>(qi)] = selected.empty() ? 0.0 : sum / static_cast<double>(selected.size());
+    }
+  }
+  return pluss::make_series(out, {nq}, f64_cpu());
+}
+
 class NeighborRegressor final : public RegressorBase {
 public:
   explicit NeighborRegressor(NeighborFamilyOptions options) : options_(options) {}
@@ -498,6 +872,9 @@ public:
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
     k_ = std::min<std::int64_t>(options_.k, sample_count_);
+    query_mode_ = options_.query_mode;
+    radius_ = options_.radius;
+    radius_fallback_k_ = std::min<std::int64_t>(options_.radius_fallback_k, sample_count_);
     if (k_ <= 0) {
       return Status::invalid_argument("NeighborRegressor requires at least one training sample.");
     }
@@ -535,32 +912,41 @@ public:
       x_query = standardize_apply_rows(x_query, mean_, scale_);
     }
 
-    const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
     Series pred = Series::undefined();
-    if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
-      pred = knn_predict_cpu(x_query, x_train_, y_train_, neighbor_count, options_.distance_weighted);
+    if (query_mode_ == NeighborQueryMode::Radius) {
+      pred = radius_predict_cpu(x_query.to(pluss::pCPU, ScalarType::Float64),
+                                x_train_.to(pluss::pCPU, ScalarType::Float64),
+                                y_train_.to(pluss::pCPU, ScalarType::Float64),
+                                radius_,
+                                radius_fallback_k_,
+                                options_.distance_weighted);
     } else {
-      const Series dist2 = pairwise_distance2(x_query, x_train_);
-      const Series sort_idx = dist2.argsort(1, false, true);
-      const Series k_cols =
-          pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
-      const Series knn_idx = sort_idx.index_select(1, k_cols);
-      const Series y_train_2d =
-          y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
-      const Series y_knn = y_train_2d.gather(1, knn_idx);
-
-      if (options_.distance_weighted) {
-        constexpr double eps = 1e-12;
-        const Series d2_knn = dist2.gather(1, knn_idx);
-        const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
-        const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
-        const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
-        const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
-        const Series wsum = weights.sum(1, false);
-        const Series ysum = weights.mul(y_knn).sum(1, false);
-        pred = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64));
+      const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
+      if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
+        pred = knn_predict_cpu(x_query, x_train_, y_train_, neighbor_count, options_.distance_weighted);
       } else {
-        pred = y_knn.mean(1, false);
+        const Series dist2 = pairwise_distance2(x_query, x_train_);
+        const Series sort_idx = dist2.argsort(1, false, true);
+        const Series k_cols =
+            pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
+        const Series knn_idx = sort_idx.index_select(1, k_cols);
+        const Series y_train_2d =
+            y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
+        const Series y_knn = y_train_2d.gather(1, knn_idx);
+
+        if (options_.distance_weighted) {
+          constexpr double eps = 1e-12;
+          const Series d2_knn = dist2.gather(1, knn_idx);
+          const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
+          const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
+          const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
+          const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
+          const Series wsum = weights.sum(1, false);
+          const Series ysum = weights.mul(y_knn).sum(1, false);
+          pred = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64));
+        } else {
+          pred = y_knn.mean(1, false);
+        }
       }
     }
 
@@ -595,7 +981,11 @@ public:
         state_f64({trained_ ? 1.0 : 0.0,
                    static_cast<double>(feature_count_),
                    static_cast<double>(sample_count_),
-                   static_cast<double>(k_)}),
+                   static_cast<double>(k_),
+                   static_cast<double>(static_cast<std::int64_t>(query_mode_)),
+                   radius_,
+                   static_cast<double>(radius_fallback_k_),
+                   2.0}),
         x_train_,
         y_train_,
         mean_,
@@ -611,6 +1001,14 @@ public:
     feature_count_ = static_cast<std::int64_t>(meta[1]);
     sample_count_ = static_cast<std::int64_t>(meta[2]);
     k_ = static_cast<std::int64_t>(meta[3]);
+    const bool v2_state = meta.size() >= 9 && meta[8] >= 2.0;
+    query_mode_ = v2_state && meta.size() >= 5
+                      ? static_cast<NeighborQueryMode>(static_cast<std::int64_t>(meta[4]))
+                      : NeighborQueryMode::KNearest;
+    radius_ = v2_state && meta.size() >= 6 ? meta[5] : options_.radius;
+    radius_fallback_k_ = v2_state && meta.size() >= 7
+                             ? static_cast<std::int64_t>(meta[6])
+                             : std::max<std::int64_t>(1, std::min<std::int64_t>(options_.radius_fallback_k, sample_count_));
     x_train_ = state[1];
     y_train_ = state[2];
     mean_ = state[3];
@@ -634,6 +1032,9 @@ private:
   std::int64_t sample_count_{0};
   std::int64_t feature_count_{0};
   std::int64_t k_{1};
+  NeighborQueryMode query_mode_{NeighborQueryMode::KNearest};
+  double radius_{1.0};
+  std::int64_t radius_fallback_k_{1};
   Series x_train_ = Series::undefined();
   Series y_train_ = Series::undefined();
   Series mean_ = Series::undefined();
@@ -850,23 +1251,54 @@ private:
     return y_train_host_[static_cast<std::size_t>(row)];
   }
 
-  std::int64_t build_node(const std::vector<std::int64_t>& indices, std::int64_t depth) {
-    const std::int64_t n = static_cast<std::int64_t>(indices.size());
+  [[nodiscard]] double median_of_values(std::vector<double>& values) const {
+    if (values.empty()) return 0.0;
+    const std::size_t n = values.size();
+    const std::size_t mid = n / 2;
+    std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid), values.end());
+    const double upper = values[mid];
+    if ((n & 1U) != 0U) return upper;
+    const double lower = *std::max_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid));
+    return 0.5 * (lower + upper);
+  }
 
-    double sum = 0.0;
-    double sumsq = 0.0;
-    for (std::int64_t idx : indices) {
-      const double yi = y_train_at(idx);
-      sum += yi;
-      sumsq += yi * yi;
+  [[nodiscard]] std::pair<double, double> median_and_sad_of_values(std::vector<double> values) const {
+    const double median = median_of_values(values);
+    double sad = 0.0;
+    for (double v : values) sad += std::abs(v - median);
+    return {median, sad};
+  }
+
+  [[nodiscard]] std::pair<double, double> leaf_value_and_impurity(const std::vector<std::int64_t>& indices) const {
+    const std::int64_t n = static_cast<std::int64_t>(indices.size());
+    if (n <= 0) return {0.0, 0.0};
+    if (options_.criterion == TreeCriterion::Mse) {
+      double sum = 0.0;
+      double sumsq = 0.0;
+      for (std::int64_t idx : indices) {
+        const double yi = y_train_at(idx);
+        sum += yi;
+        sumsq += yi * yi;
+      }
+      const double mean = sum / static_cast<double>(n);
+      const double sse = sumsq - (sum * sum) / static_cast<double>(n);
+      const double impurity = std::max(0.0, sse / static_cast<double>(n));
+      return {mean, impurity};
     }
 
-    const double mean = sum / static_cast<double>(n);
-    const double sse = sumsq - (sum * sum) / static_cast<double>(n);
-    const double parent_impurity = std::max(0.0, sse / static_cast<double>(n));
+    std::vector<double> y_values{};
+    y_values.reserve(static_cast<std::size_t>(n));
+    for (std::int64_t idx : indices) y_values.push_back(y_train_at(idx));
+    const auto [median, sad] = median_and_sad_of_values(std::move(y_values));
+    return {median, sad / static_cast<double>(n)};
+  }
+
+  std::int64_t build_node(const std::vector<std::int64_t>& indices, std::int64_t depth) {
+    const std::int64_t n = static_cast<std::int64_t>(indices.size());
+    const auto [leaf_value, parent_impurity] = leaf_value_and_impurity(indices);
 
     TreeNode node{};
-    node.leaf_value = mean;
+    node.leaf_value = leaf_value;
 
     const std::int64_t node_index = static_cast<std::int64_t>(nodes_.size());
     nodes_.push_back(node);
@@ -930,8 +1362,10 @@ private:
     double total_sumsq = 0.0;
     for (std::int64_t idx : indices) {
       const double yi = y_train_at(idx);
-      total_sum += yi;
-      total_sumsq += yi * yi;
+      if (options_.criterion == TreeCriterion::Mse) {
+        total_sum += yi;
+        total_sumsq += yi * yi;
+      }
       values.emplace_back(x_train_at(idx, feature), yi);
     }
     std::sort(values.begin(), values.end(),
@@ -941,36 +1375,79 @@ private:
               });
     if (values.front().first == values.back().first) return best;
 
-    double left_sum = 0.0;
-    double left_sumsq = 0.0;
-    for (std::int64_t i = 0; i < n - 1; ++i) {
-      const double yi = values[static_cast<std::size_t>(i)].second;
-      left_sum += yi;
-      left_sumsq += yi * yi;
-      const std::int64_t left_n = i + 1;
-      const std::int64_t right_n = n - left_n;
-      if (left_n < options_.min_samples_leaf || right_n < options_.min_samples_leaf) continue;
+    if (options_.criterion == TreeCriterion::Mse) {
+      double left_sum = 0.0;
+      double left_sumsq = 0.0;
+      for (std::int64_t i = 0; i < n - 1; ++i) {
+        const double yi = values[static_cast<std::size_t>(i)].second;
+        left_sum += yi;
+        left_sumsq += yi * yi;
+        const std::int64_t left_n = i + 1;
+        const std::int64_t right_n = n - left_n;
+        if (left_n < options_.min_samples_leaf || right_n < options_.min_samples_leaf) continue;
 
-      const double xi = values[static_cast<std::size_t>(i)].first;
-      const double xj = values[static_cast<std::size_t>(i + 1)].first;
-      if (xi == xj) continue;
+        const double xi = values[static_cast<std::size_t>(i)].first;
+        const double xj = values[static_cast<std::size_t>(i + 1)].first;
+        if (xi == xj) continue;
 
-      const double right_sum = total_sum - left_sum;
-      const double right_sumsq = total_sumsq - left_sumsq;
-      const double left_sse = left_sumsq - (left_sum * left_sum) / static_cast<double>(left_n);
-      const double right_sse = right_sumsq - (right_sum * right_sum) / static_cast<double>(right_n);
-      const double weighted_impurity = std::max(0.0, (left_sse + right_sse) / static_cast<double>(n));
-      const double gain = parent_impurity - weighted_impurity;
-      const double threshold = xi + (xj - xi) * 0.5;
+        const double right_sum = total_sum - left_sum;
+        const double right_sumsq = total_sumsq - left_sumsq;
+        const double left_sse = left_sumsq - (left_sum * left_sum) / static_cast<double>(left_n);
+        const double right_sse = right_sumsq - (right_sum * right_sum) / static_cast<double>(right_n);
+        const double weighted_impurity = std::max(0.0, (left_sse + right_sse) / static_cast<double>(n));
+        const double gain = parent_impurity - weighted_impurity;
+        const double threshold = xi + (xj - xi) * 0.5;
 
-      const SplitCandidate candidate{
-          .valid = true,
-          .feature = feature,
-          .threshold = threshold,
-          .gain = gain,
-      };
-      if (split_better(candidate, best)) {
-        best = candidate;
+        const SplitCandidate candidate{
+            .valid = true,
+            .feature = feature,
+            .threshold = threshold,
+            .gain = gain,
+        };
+        if (split_better(candidate, best)) {
+          best = candidate;
+        }
+      }
+    } else {
+      std::vector<double> left_values{};
+      std::vector<double> right_values{};
+      left_values.reserve(static_cast<std::size_t>(n));
+      right_values.reserve(static_cast<std::size_t>(n));
+      for (std::int64_t i = 0; i < n - 1; ++i) {
+        const std::int64_t left_n = i + 1;
+        const std::int64_t right_n = n - left_n;
+        if (left_n < options_.min_samples_leaf || right_n < options_.min_samples_leaf) continue;
+
+        const double xi = values[static_cast<std::size_t>(i)].first;
+        const double xj = values[static_cast<std::size_t>(i + 1)].first;
+        if (xi == xj) continue;
+
+        left_values.clear();
+        right_values.clear();
+        for (std::int64_t j = 0; j <= i; ++j) {
+          left_values.push_back(values[static_cast<std::size_t>(j)].second);
+        }
+        for (std::int64_t j = i + 1; j < n; ++j) {
+          right_values.push_back(values[static_cast<std::size_t>(j)].second);
+        }
+
+        const auto [left_median, left_sad] = median_and_sad_of_values(std::move(left_values));
+        const auto [right_median, right_sad] = median_and_sad_of_values(std::move(right_values));
+        (void)left_median;
+        (void)right_median;
+        const double weighted_impurity = (left_sad + right_sad) / static_cast<double>(n);
+        const double gain = parent_impurity - weighted_impurity;
+        const double threshold = xi + (xj - xi) * 0.5;
+
+        const SplitCandidate candidate{
+            .valid = true,
+            .feature = feature,
+            .threshold = threshold,
+            .gain = gain,
+        };
+        if (split_better(candidate, best)) {
+          best = candidate;
+        }
       }
     }
     return best;
@@ -1049,10 +1526,36 @@ public:
 
     StatusOr<Series> y_or = to_label_vector(batch, matrix.sample_count, "BayesRegressor::learn");
     if (!y_or.ok()) return y_or.status();
-    Series y = y_or.move_value();
-
+    Series y = y_or.move_value().to(ScalarType::Float64).reshape({matrix.sample_count});
+    likelihood_ = resolved_bayes_likelihood(options_);
     Series design = prepend_intercept(matrix.x_rows);
-    StatusOr<Series> beta_or = solve_ridge_least_squares(design, y, options_.smoothing, true, pinv_rcond_);
+    StatusOr<Series> beta_or = [&]() -> StatusOr<Series> {
+      if (likelihood_ == BayesLikelihood::Gaussian) {
+        return solve_ridge_least_squares(design, y, options_.smoothing, true, pinv_rcond_);
+      }
+      if (likelihood_ == BayesLikelihood::Bernoulli) {
+        if (!all_finite(y) || y.lt(0.0).any().item<bool>() || y.gt(1.0).any().item<bool>()) {
+          return StatusOr<Series>(Status::invalid_argument(
+              "BayesRegressor::learn Bernoulli likelihood expects labels in [0, 1]."));
+        }
+        return solve_bernoulli_map(design,
+                                   y,
+                                   true,
+                                   options_.smoothing,
+                                   options.max_iterations,
+                                   options.tolerance,
+                                   "BayesRegressor::learn");
+      }
+      if (likelihood_ == BayesLikelihood::Multinomial) {
+        if (!all_finite(y)) {
+          return StatusOr<Series>(
+              Status::invalid_argument("BayesRegressor::learn Multinomial likelihood expects finite labels."));
+        }
+        const Series y_log = y.clamp_min(0.0).add(1.0).log();
+        return solve_ridge_least_squares(design, y_log, options_.smoothing, true, pinv_rcond_);
+      }
+      return StatusOr<Series>(Status::invalid_argument("BayesRegressor::learn encountered unsupported BayesLikelihood."));
+    }();
     if (!beta_or.ok()) return beta_or.status();
 
     beta_ = beta_or.move_value();
@@ -1076,7 +1579,12 @@ public:
     }
 
     Series design = prepend_intercept(matrix.x_rows);
-    const Series pred = design.matmul(beta_.reshape({beta_.numel(), 1})).reshape({matrix.sample_count});
+    Series pred = design.matmul(beta_.reshape({beta_.numel(), 1})).reshape({matrix.sample_count});
+    if (likelihood_ == BayesLikelihood::Bernoulli) {
+      pred = pred.sigmoid();
+    } else if (likelihood_ == BayesLikelihood::Multinomial) {
+      pred = pred.exp().sub(1.0).clamp_min(0.0);
+    }
     if (!all_finite(pred)) {
       return StatusOr<Series>(Status::numerical_failure("BayesRegressor::infer produced non-finite predictions."));
     }
@@ -1110,7 +1618,8 @@ public:
     return StatusOr<std::vector<Series>>(std::vector<Series>{
         state_f64({trained_ ? 1.0 : 0.0,
                    static_cast<double>(feature_count_),
-                   pinv_rcond_}),
+                   pinv_rcond_,
+                   static_cast<double>(static_cast<std::int64_t>(likelihood_))}),
         beta_,
     });
   }
@@ -1122,6 +1631,9 @@ public:
     trained_ = meta[0] > 0.5;
     feature_count_ = static_cast<std::int64_t>(meta[1]);
     pinv_rcond_ = meta[2];
+    likelihood_ = meta.size() >= 4
+                      ? static_cast<BayesLikelihood>(static_cast<std::int64_t>(meta[3]))
+                      : BayesLikelihood::Gaussian;
     beta_ = state[1];
     return Status::success();
   }
@@ -1142,6 +1654,7 @@ private:
   std::int64_t feature_count_{0};
   Series beta_ = Series::undefined();
   double pinv_rcond_{1e-12};
+  BayesLikelihood likelihood_{BayesLikelihood::Gaussian};
 };
 
 class EnsembleRegressor final : public RegressorBase {
@@ -1181,6 +1694,9 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
+    method_ = options_.method;
+    learning_rate_ = options_.learning_rate;
+    initial_prediction_ = 0.0;
 
     const std::int64_t learner_count = options_.learners;
     const std::int64_t subsample_count =
@@ -1197,7 +1713,8 @@ public:
       base_seed = (static_cast<std::uint64_t>(rd()) << 32U) ^ static_cast<std::uint64_t>(rd());
     }
 
-    auto train_member = [&](std::int64_t learner_index) -> StatusOr<EnsembleMember> {
+    auto train_bagged_member = [&](std::int64_t learner_index,
+                                   const std::vector<double>& targets) -> StatusOr<EnsembleMember> {
       std::mt19937_64 rng(splitmix64(base_seed + static_cast<std::uint64_t>(learner_index)));
       std::uniform_int_distribution<std::int64_t> row_dist(0, sample_count_ - 1);
 
@@ -1215,18 +1732,9 @@ public:
         row_ids[static_cast<std::size_t>(i)] = row_dist(rng);
       }
 
-      std::vector<double> x_sub_host(static_cast<std::size_t>(subsample_count * learner_features), 0.0);
-      std::vector<double> y_sub_host(static_cast<std::size_t>(subsample_count), 0.0);
-      for (std::int64_t i = 0; i < subsample_count; ++i) {
-        const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
-        const std::size_t in_base = static_cast<std::size_t>(row * feature_count_);
-        const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
-        for (std::int64_t j = 0; j < learner_features; ++j) {
-          const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
-          x_sub_host[out_base + static_cast<std::size_t>(j)] = x_train_host[in_base + static_cast<std::size_t>(f)];
-        }
-        y_sub_host[static_cast<std::size_t>(i)] = y_train_host[static_cast<std::size_t>(row)];
-      }
+      std::vector<double> x_sub_host = project_rows_with_sampling(
+          x_train_host, row_ids, sample_count_, feature_count_, feature_ids, learner_features);
+      std::vector<double> y_sub_host = gather_rows(targets, row_ids);
 
       const Series x_series = pluss::make_series(std::move(x_sub_host), {subsample_count, learner_features}, f64_cpu());
       const Series y_series = pluss::make_series(std::move(y_sub_host), {subsample_count}, f64_cpu());
@@ -1248,28 +1756,179 @@ public:
       EnsembleMember member{};
       member.tree = std::move(tree);
       member.feature_ids = std::move(feature_ids);
+      member.weight = 1.0;
       return StatusOr<EnsembleMember>(std::move(member));
     };
 
-    const std::int64_t workers = resolved_parallel_workers(learner_count);
-    if (workers <= 1) {
+    if (options_.method == EnsembleMethod::GradientBoost) {
+      initial_prediction_ =
+          std::accumulate(y_train_host.begin(), y_train_host.end(), 0.0) / static_cast<double>(sample_count_);
+      std::vector<double> running_prediction(static_cast<std::size_t>(sample_count_), initial_prediction_);
+      std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
+      std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
+      const std::int64_t learner_features = feature_count_;
+      std::mt19937_64 rng(splitmix64(base_seed));
+
       for (std::int64_t l = 0; l < learner_count; ++l) {
-        StatusOr<EnsembleMember> member_or = train_member(l);
-        if (!member_or.ok()) return member_or.status();
-        learners_.push_back(member_or.move_value());
+        std::vector<std::int64_t> row_ids =
+            draw_stochastic_boost_rows(rng, sample_count_, subsample_count);
+        std::vector<double> residual_targets(static_cast<std::size_t>(subsample_count), 0.0);
+        for (std::int64_t i = 0; i < subsample_count; ++i) {
+          const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
+          residual_targets[static_cast<std::size_t>(i)] =
+              y_train_host[static_cast<std::size_t>(row)] - running_prediction[static_cast<std::size_t>(row)];
+        }
+
+        std::vector<double> x_sub_host = project_rows_with_sampling(
+            x_train_host, row_ids, sample_count_, feature_count_, feature_ids, learner_features);
+
+        const Series x_series = pluss::make_series(std::move(x_sub_host), {subsample_count, learner_features}, f64_cpu());
+        const Series y_series = pluss::make_series(std::move(residual_targets), {subsample_count}, f64_cpu());
+        const LabeledBatch sub_batch{
+            .features = FeatureBatch{.x = x_series, .layout = ObservationLayout::Rows},
+            .y = y_series,
+        };
+
+        auto tree = std::make_unique<TreeRegressor>(TreeFamilyOptions{
+            .criterion = TreeCriterion::Mse,
+        });
+        Status tree_status = tree->learn(sub_batch, options);
+        if (!tree_status.ok()) {
+          return Status::internal(
+              "EnsembleRegressor::learn failed while fitting gradient-boost tree for learner "
+              + std::to_string(l) + ".");
+        }
+
+        std::vector<double> update_values{};
+        Status pred_status = tree->predict_host_rows(x_train_host, sample_count_, feature_count_, update_values);
+        if (!pred_status.ok()) return pred_status;
+
+        const double step = learning_rate_;
+        for (std::int64_t i = 0; i < sample_count_; ++i) {
+          running_prediction[static_cast<std::size_t>(i)] += step * update_values[static_cast<std::size_t>(i)];
+        }
+
+        EnsembleMember member{};
+        member.tree = std::move(tree);
+        member.feature_ids = feature_ids;
+        member.weight = step;
+        learners_.push_back(std::move(member));
+
+        double residual_mse = 0.0;
+        for (std::int64_t i = 0; i < sample_count_; ++i) {
+          const double e = y_train_host[static_cast<std::size_t>(i)] - running_prediction[static_cast<std::size_t>(i)];
+          residual_mse += e * e;
+        }
+        residual_mse /= static_cast<double>(sample_count_);
+        if (residual_mse <= options.tolerance) {
+          break;
+        }
+      }
+    } else if (options_.method == EnsembleMethod::AdaBoost) {
+      std::vector<double> sample_weights(static_cast<std::size_t>(sample_count_), 1.0 / static_cast<double>(sample_count_));
+      std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
+      std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
+      const std::int64_t learner_features = feature_count_;
+      std::mt19937_64 rng(splitmix64(base_seed));
+
+      for (std::int64_t l = 0; l < learner_count; ++l) {
+        std::vector<std::int64_t> row_ids =
+            draw_weighted_bootstrap_rows(rng, sample_weights, sample_count_);
+        std::vector<double> y_sub_host = gather_rows(y_train_host, row_ids);
+        std::vector<double> x_sub_host = project_rows_with_sampling(
+            x_train_host, row_ids, sample_count_, feature_count_, feature_ids, learner_features);
+
+        const Series x_series = pluss::make_series(std::move(x_sub_host), {sample_count_, learner_features}, f64_cpu());
+        const Series y_series = pluss::make_series(std::move(y_sub_host), {sample_count_}, f64_cpu());
+        const LabeledBatch sub_batch{
+            .features = FeatureBatch{.x = x_series, .layout = ObservationLayout::Rows},
+            .y = y_series,
+        };
+
+        auto tree = std::make_unique<TreeRegressor>(TreeFamilyOptions{
+            .criterion = TreeCriterion::Mse,
+        });
+        Status tree_status = tree->learn(sub_batch, options);
+        if (!tree_status.ok()) {
+          return Status::internal(
+              "EnsembleRegressor::learn failed while fitting adaboost tree for learner "
+              + std::to_string(l) + ".");
+        }
+
+        std::vector<double> pred_values{};
+        Status pred_status = tree->predict_host_rows(x_train_host, sample_count_, feature_count_, pred_values);
+        if (!pred_status.ok()) return pred_status;
+
+        double max_abs_err = 0.0;
+        std::vector<double> abs_err(static_cast<std::size_t>(sample_count_), 0.0);
+        for (std::int64_t i = 0; i < sample_count_; ++i) {
+          const double e = std::abs(y_train_host[static_cast<std::size_t>(i)] - pred_values[static_cast<std::size_t>(i)]);
+          abs_err[static_cast<std::size_t>(i)] = e;
+          max_abs_err = std::max(max_abs_err, e);
+        }
+        if (!(max_abs_err > 0.0)) {
+          EnsembleMember member{};
+          member.tree = std::move(tree);
+          member.feature_ids = feature_ids;
+          member.weight = learning_rate_;
+          learners_.push_back(std::move(member));
+          break;
+        }
+
+        double weighted_loss = 0.0;
+        std::vector<double> loss(static_cast<std::size_t>(sample_count_), 0.0);
+        for (std::int64_t i = 0; i < sample_count_; ++i) {
+          const double li = std::clamp(abs_err[static_cast<std::size_t>(i)] / max_abs_err, 0.0, 1.0);
+          loss[static_cast<std::size_t>(i)] = li;
+          weighted_loss += sample_weights[static_cast<std::size_t>(i)] * li;
+        }
+        weighted_loss = std::clamp(weighted_loss, 1e-12, 1.0 - 1e-12);
+        if (weighted_loss >= 0.5) {
+          return Status::internal(
+              "EnsembleRegressor::learn AdaBoost weighted loss reached >= 0.5; weak learner unsuitable.");
+        }
+        const double beta = weighted_loss / (1.0 - weighted_loss);
+        const double alpha = learning_rate_ * std::log(1.0 / beta);
+
+        double norm = 0.0;
+        for (std::int64_t i = 0; i < sample_count_; ++i) {
+          sample_weights[static_cast<std::size_t>(i)] *= std::pow(beta, 1.0 - loss[static_cast<std::size_t>(i)]);
+          norm += sample_weights[static_cast<std::size_t>(i)];
+        }
+        if (!(norm > 0.0) || !std::isfinite(norm)) {
+          return Status::numerical_failure("EnsembleRegressor::learn AdaBoost weight normalization failed.");
+        }
+        for (double& w : sample_weights) w /= norm;
+
+        EnsembleMember member{};
+        member.tree = std::move(tree);
+        member.feature_ids = feature_ids;
+        member.weight = alpha;
+        learners_.push_back(std::move(member));
       }
     } else {
-      for (std::int64_t start = 0; start < learner_count; start += workers) {
-        const std::int64_t end = std::min(learner_count, start + workers);
-        std::vector<std::future<StatusOr<EnsembleMember>>> futures{};
-        futures.reserve(static_cast<std::size_t>(end - start));
-        for (std::int64_t l = start; l < end; ++l) {
-          futures.emplace_back(std::async(std::launch::async, [&, l]() { return train_member(l); }));
-        }
-        for (std::int64_t l = start; l < end; ++l) {
-          StatusOr<EnsembleMember> member_or = futures[static_cast<std::size_t>(l - start)].get();
+      const std::int64_t workers = resolved_parallel_workers(learner_count);
+      if (workers <= 1) {
+        for (std::int64_t l = 0; l < learner_count; ++l) {
+          StatusOr<EnsembleMember> member_or = train_bagged_member(l, y_train_host);
           if (!member_or.ok()) return member_or.status();
           learners_.push_back(member_or.move_value());
+        }
+      } else {
+        for (std::int64_t start = 0; start < learner_count; start += workers) {
+          const std::int64_t end = std::min(learner_count, start + workers);
+          std::vector<std::future<StatusOr<EnsembleMember>>> futures{};
+          futures.reserve(static_cast<std::size_t>(end - start));
+          for (std::int64_t l = start; l < end; ++l) {
+            futures.emplace_back(std::async(std::launch::async, [&, l]() {
+              return train_bagged_member(l, y_train_host);
+            }));
+          }
+          for (std::int64_t l = start; l < end; ++l) {
+            StatusOr<EnsembleMember> member_or = futures[static_cast<std::size_t>(l - start)].get();
+            if (!member_or.ok()) return member_or.status();
+            learners_.push_back(member_or.move_value());
+          }
         }
       }
     }
@@ -1302,23 +1961,32 @@ public:
 
     const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
     std::vector<double> pred_sum(static_cast<std::size_t>(matrix.sample_count), 0.0);
+    if (method_ == EnsembleMethod::GradientBoost) {
+      std::fill(pred_sum.begin(), pred_sum.end(), initial_prediction_);
+    }
 
     auto infer_member = [&](std::size_t member_index) -> StatusOr<std::vector<double>> {
       const EnsembleMember& member = learners_[member_index];
       const std::int64_t learner_features = static_cast<std::int64_t>(member.feature_ids.size());
-      std::vector<double> x_sub_host(static_cast<std::size_t>(matrix.sample_count * learner_features), 0.0);
-      for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
-        const std::size_t x_row_base = static_cast<std::size_t>(i * matrix.feature_count);
-        const std::size_t out_row_base = static_cast<std::size_t>(i * learner_features);
-        for (std::int64_t j = 0; j < learner_features; ++j) {
-          const std::int64_t f = member.feature_ids[static_cast<std::size_t>(j)];
-          x_sub_host[out_row_base + static_cast<std::size_t>(j)] = x_host[x_row_base + static_cast<std::size_t>(f)];
-        }
+      const bool full_route = is_full_route(member.feature_ids, matrix.feature_count);
+      std::vector<double> x_sub_host{};
+      const std::vector<double>* x_input = &x_host;
+      std::int64_t infer_feature_count = matrix.feature_count;
+      if (!full_route) {
+        x_sub_host = project_rows_full(
+            x_host, matrix.sample_count, matrix.feature_count, member.feature_ids, learner_features);
+        x_input = &x_sub_host;
+        infer_feature_count = learner_features;
       }
 
       std::vector<double> member_pred{};
-      Status member_status = member.tree->predict_host_rows(x_sub_host, matrix.sample_count, learner_features, member_pred);
+      Status member_status = member.tree->predict_host_rows(*x_input, matrix.sample_count, infer_feature_count, member_pred);
       if (!member_status.ok()) return StatusOr<std::vector<double>>(member_status);
+      if (member.weight != 1.0) {
+        for (double& value : member_pred) {
+          value *= member.weight;
+        }
+      }
       return StatusOr<std::vector<double>>(std::move(member_pred));
     };
 
@@ -1351,8 +2019,16 @@ public:
       }
     }
 
-    const double denom = static_cast<double>(learners_.size());
-    for (double& v : pred_sum) v /= denom;
+    if (method_ != EnsembleMethod::GradientBoost) {
+      double denom = 0.0;
+      if (method_ == EnsembleMethod::AdaBoost) {
+        for (const auto& member : learners_) denom += member.weight;
+      } else {
+        denom = static_cast<double>(learners_.size());
+      }
+      denom = std::max(denom, 1e-12);
+      for (double& v : pred_sum) v /= denom;
+    }
     Series out = pluss::make_series(pred_sum, {matrix.sample_count}, f64_cpu());
     return StatusOr<Series>(out.to(matrix.original_platform, ScalarType::Float64));
   }
@@ -1382,13 +2058,18 @@ public:
 
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
     std::vector<Series> out{};
-    out.reserve(2 + learners_.size() * 4);
+    out.reserve(2 + learners_.size() * 5);
     out.push_back(state_f64({trained_ ? 1.0 : 0.0,
                              static_cast<double>(sample_count_),
                              static_cast<double>(feature_count_),
-                             static_cast<double>(learners_.size())}));
+                             static_cast<double>(learners_.size()),
+                             static_cast<double>(static_cast<std::int64_t>(method_)),
+                             initial_prediction_,
+                             learning_rate_,
+                             2.0}));
     for (const auto& member : learners_) {
       out.push_back(state_i64(member.feature_ids));
+      out.push_back(state_f64({member.weight}));
       if (!member.tree) {
         out.push_back(state_i64({0}));
         continue;
@@ -1410,6 +2091,12 @@ public:
     sample_count_ = static_cast<std::int64_t>(meta[1]);
     feature_count_ = static_cast<std::int64_t>(meta[2]);
     const std::int64_t learner_count = static_cast<std::int64_t>(meta[3]);
+    method_ = meta.size() >= 5
+                  ? static_cast<EnsembleMethod>(static_cast<std::int64_t>(meta[4]))
+                  : EnsembleMethod::Bagging;
+    initial_prediction_ = meta.size() >= 6 ? meta[5] : 0.0;
+    learning_rate_ = meta.size() >= 7 ? meta[6] : options_.learning_rate;
+    const bool v2_state = meta.size() >= 8 && meta[7] >= 2.0;
 
     learners_.clear();
     learners_.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, learner_count)));
@@ -1418,6 +2105,14 @@ public:
       if (cursor >= state.size()) return Status::invalid_argument("EnsembleRegressor::load_state truncated state.");
       EnsembleMember member{};
       member.feature_ids = vec_i64(state[cursor++]);
+      member.weight = 1.0;
+      if (v2_state) {
+        if (cursor >= state.size()) return Status::invalid_argument("EnsembleRegressor::load_state missing member weight.");
+        const auto weight_vec = vec_f64(state[cursor++]);
+        member.weight = weight_vec.empty() ? 1.0 : weight_vec.front();
+      } else if (method_ == EnsembleMethod::GradientBoost) {
+        member.weight = learning_rate_;
+      }
       if (cursor >= state.size()) return Status::invalid_argument("EnsembleRegressor::load_state missing tree state size.");
       const auto size_vec = vec_i64(state[cursor++]);
       const std::int64_t tree_items = size_vec.empty() ? 0 : size_vec.front();
@@ -1444,7 +2139,100 @@ private:
   struct EnsembleMember {
     std::unique_ptr<TreeRegressor> tree{};
     std::vector<std::int64_t> feature_ids{};
+    double weight{1.0};
   };
+
+  [[nodiscard]] static bool is_full_route(const std::vector<std::int64_t>& feature_ids,
+                                          std::int64_t feature_count) {
+    if (static_cast<std::int64_t>(feature_ids.size()) != feature_count) return false;
+    for (std::int64_t i = 0; i < feature_count; ++i) {
+      if (feature_ids[static_cast<std::size_t>(i)] != i) return false;
+    }
+    return true;
+  }
+
+  [[nodiscard]] static std::vector<double> gather_rows(const std::vector<double>& source,
+                                                       const std::vector<std::int64_t>& row_ids) {
+    std::vector<double> out(static_cast<std::size_t>(row_ids.size()), 0.0);
+    for (std::size_t i = 0; i < row_ids.size(); ++i) {
+      out[i] = source[static_cast<std::size_t>(row_ids[i])];
+    }
+    return out;
+  }
+
+  [[nodiscard]] static std::vector<std::int64_t> draw_stochastic_boost_rows(std::mt19937_64& rng,
+                                                                             std::int64_t sample_count,
+                                                                             std::int64_t subsample_count) {
+    if (subsample_count >= sample_count) {
+      std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
+      std::iota(rows.begin(), rows.end(), static_cast<std::int64_t>(0));
+      return rows;
+    }
+    std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
+    std::iota(rows.begin(), rows.end(), static_cast<std::int64_t>(0));
+    std::shuffle(rows.begin(), rows.end(), rng);
+    rows.resize(static_cast<std::size_t>(subsample_count));
+    return rows;
+  }
+
+  [[nodiscard]] static std::vector<std::int64_t> draw_weighted_bootstrap_rows(
+      std::mt19937_64& rng,
+      const std::vector<double>& sample_weights,
+      std::int64_t sample_count) {
+    std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
+    std::discrete_distribution<std::int64_t> dist(sample_weights.begin(), sample_weights.end());
+    for (std::int64_t i = 0; i < sample_count; ++i) {
+      rows[static_cast<std::size_t>(i)] = dist(rng);
+    }
+    return rows;
+  }
+
+  [[nodiscard]] static std::vector<double> project_rows_with_sampling(const std::vector<double>& x_host,
+                                                                      const std::vector<std::int64_t>& row_ids,
+                                                                      std::int64_t sample_count,
+                                                                      std::int64_t feature_count,
+                                                                      const std::vector<std::int64_t>& feature_ids,
+                                                                      std::int64_t learner_features) {
+    (void)sample_count;
+    std::vector<double> out(static_cast<std::size_t>(row_ids.size() * learner_features), 0.0);
+    if (is_full_route(feature_ids, feature_count)) {
+      for (std::int64_t i = 0; i < static_cast<std::int64_t>(row_ids.size()); ++i) {
+        const std::size_t in_base = static_cast<std::size_t>(row_ids[static_cast<std::size_t>(i)] * feature_count);
+        const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
+        std::copy_n(x_host.begin() + static_cast<std::vector<double>::difference_type>(in_base),
+                    feature_count,
+                    out.begin() + static_cast<std::vector<double>::difference_type>(out_base));
+      }
+      return out;
+    }
+    for (std::int64_t i = 0; i < static_cast<std::int64_t>(row_ids.size()); ++i) {
+      const std::size_t in_base = static_cast<std::size_t>(row_ids[static_cast<std::size_t>(i)] * feature_count);
+      const std::size_t out_base = static_cast<std::size_t>(i * learner_features);
+      for (std::int64_t j = 0; j < learner_features; ++j) {
+        const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
+        out[out_base + static_cast<std::size_t>(j)] = x_host[in_base + static_cast<std::size_t>(f)];
+      }
+    }
+    return out;
+  }
+
+  [[nodiscard]] static std::vector<double> project_rows_full(const std::vector<double>& x_host,
+                                                             std::int64_t sample_count,
+                                                             std::int64_t feature_count,
+                                                             const std::vector<std::int64_t>& feature_ids,
+                                                             std::int64_t learner_features) {
+    if (is_full_route(feature_ids, feature_count)) return x_host;
+    std::vector<double> out(static_cast<std::size_t>(sample_count * learner_features), 0.0);
+    for (std::int64_t i = 0; i < sample_count; ++i) {
+      const std::size_t x_row_base = static_cast<std::size_t>(i * feature_count);
+      const std::size_t out_row_base = static_cast<std::size_t>(i * learner_features);
+      for (std::int64_t j = 0; j < learner_features; ++j) {
+        const std::int64_t f = feature_ids[static_cast<std::size_t>(j)];
+        out[out_row_base + static_cast<std::size_t>(j)] = x_host[x_row_base + static_cast<std::size_t>(f)];
+      }
+    }
+    return out;
+  }
 
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -1461,6 +2249,9 @@ private:
   std::int64_t sample_count_{0};
   std::int64_t feature_count_{0};
   std::vector<EnsembleMember> learners_{};
+  EnsembleMethod method_{EnsembleMethod::Bagging};
+  double initial_prediction_{0.0};
+  double learning_rate_{0.1};
 };
 
 [[nodiscard]] double resolved_gamma(double gamma, std::int64_t feature_count) {
@@ -1620,7 +2411,8 @@ public:
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
     gamma_ = resolved_gamma(options_.gamma, feature_count_);
-    lambda_ = 1.0 / options_.c;
+    const double nu_scale = options_.form == KernelForm::Nu ? std::max(1e-6, options_.nu) : 1.0;
+    lambda_ = 1.0 / (options_.c * nu_scale);
     x_train_ = matrix.x_rows;
     const Series k_series = kernel_matrix(x_train_, x_train_, options_.kernel, gamma_);
     StatusOr<Series> alpha_or = solve_kernel_dual_cg(k_series,
@@ -1772,12 +2564,33 @@ public:
       design = prepend_intercept(design);
     }
 
-    const double lambda =
-        options_.regularization == RegularizationKind::L2 ? options_.regularization_strength : 0.0;
-    StatusOr<Series> beta_or = solve_ridge_least_squares(design, y, lambda, options_.fit_intercept, pinv_rcond_);
+    const LinearPenalty penalty = resolve_linear_penalty(options_);
+    StatusOr<Series> beta_or = StatusOr<Series>(Status::internal("unreachable linear objective path"));
+    if (options_.objective == LinearObjective::RobustLeast) {
+      beta_or = solve_robust_least_squares(design,
+                                           y,
+                                           options_.fit_intercept,
+                                           options_.robust_transition,
+                                           penalty.l1,
+                                           penalty.l2,
+                                           options.max_iterations,
+                                           options.tolerance,
+                                           "LinearRegressor::learn");
+    } else if (penalty.l1 > 0.0) {
+      beta_or = solve_elastic_least_squares(design,
+                                            y,
+                                            options_.fit_intercept,
+                                            penalty.l1,
+                                            penalty.l2,
+                                            options.max_iterations,
+                                            options.tolerance,
+                                            "LinearRegressor::learn");
+    } else {
+      beta_or = solve_ridge_least_squares(design, y, penalty.l2, options_.fit_intercept, pinv_rcond_);
+    }
     if (!beta_or.ok()) return beta_or.status();
 
-    beta_ = beta_or.move_value();
+    beta_ = beta_or.value();
     feature_count_ = matrix.feature_count;
     trained_ = true;
     return Status::success();

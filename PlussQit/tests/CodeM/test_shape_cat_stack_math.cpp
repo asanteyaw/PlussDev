@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+#include <cstdint>
 #include <vector>
 
 using pluss::codem::Series;
@@ -22,6 +23,28 @@ TEST_CASE("reshape and expand", "[shape]") {
   auto b = Series::zeros({1,3}, ScalarType::Float64);
   auto be = b.expand(std::vector<std::int64_t>{2,3}, true);
   REQUIRE(be.strides()[0] == 0);
+}
+
+TEST_CASE("expand_like and repeat_like", "[shape]") {
+  const auto like = pluss::rand({2, 6}, ScalarType::Float32, 123);
+
+  const auto scalar = pluss::make_series(std::vector<int>{7}, {1, 1});
+  const auto expanded = scalar.expand_like(like);
+  REQUIRE(expanded.sizes()[0] == 2);
+  REQUIRE(expanded.sizes()[1] == 6);
+  REQUIRE(expanded.scalar_type() == ScalarType::Int64);
+  REQUIRE(expanded.to_vec<std::int64_t>() == std::vector<std::int64_t>{7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7});
+
+  const auto base = pluss::make_series(std::vector<int>{1, 2, 3}, {3});
+  const auto repeated = base.repeat_like(like);
+  REQUIRE(repeated.sizes()[0] == 2);
+  REQUIRE(repeated.sizes()[1] == 6);
+  REQUIRE(repeated.scalar_type() == ScalarType::Int64);
+  REQUIRE(repeated.to_vec<std::int64_t>() ==
+          std::vector<std::int64_t>{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3});
+
+  const auto bad_like = pluss::rand({2, 5}, ScalarType::Float32, 11);
+  REQUIRE_THROWS(base.repeat_like(bad_like));
 }
 
 TEST_CASE("cat and stack", "[cat]") {

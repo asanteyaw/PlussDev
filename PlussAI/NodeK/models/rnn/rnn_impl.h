@@ -14,6 +14,7 @@ inline Series rnn_impl(const Series& input,
                        std::string_view nonlinearity = "tanh") {
   detail::require_rank_at_least_(input, 2, "rnn_impl");
   detail::require_rank_at_least_(hidden, 2, "rnn_impl");
+  detail::validate_impl_bias_layout(params, split_bias, "rnn_impl");
   const Series gi = split_bias
                         ? pluss::ai::ff(input, params.weight_ih, params.bias_ih)
                         : pluss::ai::ff(input, params.weight_ih, unified_bias(params, input));

@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -235,6 +236,97 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
         if (err) *err << "time_series_fold_plan should enforce configured gap\n";
         return false;
       }
+    }
+  }
+
+  {
+    SplitOptions options{};
+    options.folds = 3;
+    options.shuffle = false;
+
+    const Series groups = pluss::make_series(std::vector<std::int64_t>{
+                                                 10, 10,
+                                                 20, 20,
+                                                 30, 30,
+                                                 40, 40,
+                                                 50, 50,
+                                                 60, 60},
+                                             {12},
+                                             i64());
+    auto plan_or = pluss::ai::nodej::group_fold_plan(groups, options);
+    if (!plan_or.ok()) {
+      if (err) *err << "group_fold_plan should succeed for valid groups\n";
+      return false;
+    }
+    const auto& folds = plan_or.value().folds;
+    if (folds.size() != 3) {
+      if (err) *err << "group_fold_plan should emit requested fold count\n";
+      return false;
+    }
+
+    const auto group_values = as_i64_vec(groups);
+    std::vector<std::int64_t> all_test{};
+    std::unordered_map<std::int64_t, std::int64_t> group_to_fold{};
+    for (std::size_t fold_id = 0; fold_id < folds.size(); ++fold_id) {
+      const auto test = as_i64_vec(folds[fold_id].test_indices);
+      all_test.insert(all_test.end(), test.begin(), test.end());
+      for (std::int64_t idx : test) {
+        const std::int64_t g = group_values[static_cast<std::size_t>(idx)];
+        const auto [it, inserted] = group_to_fold.emplace(g, static_cast<std::int64_t>(fold_id));
+        if (!inserted && it->second != static_cast<std::int64_t>(fold_id)) {
+          if (err) *err << "group_fold_plan should keep each group in exactly one test fold\n";
+          return false;
+        }
+      }
+    }
+    std::sort(all_test.begin(), all_test.end());
+    if (all_test.size() != 12 || all_test.front() != 0 || all_test.back() != 11
+        || std::adjacent_find(all_test.begin(), all_test.end()) != all_test.end()) {
+      if (err) *err << "group_fold_plan should cover each sample exactly once in test folds\n";
+      return false;
+    }
+  }
+
+  {
+    SplitOptions options{};
+    options.folds = 3;
+    options.shuffle = true;
+    options.random.seed = 101;
+    options.random.deterministic = true;
+    const Series groups = pluss::make_series(std::vector<std::int64_t>{
+                                                 1, 1, 1,
+                                                 2, 2,
+                                                 3, 3, 3,
+                                                 4,
+                                                 5, 5,
+                                                 6, 6},
+                                             {13},
+                                             i64());
+    auto plan_a = pluss::ai::nodej::group_fold_plan(groups, options);
+    auto plan_b = pluss::ai::nodej::group_fold_plan(groups, options);
+    if (!plan_a.ok() || !plan_b.ok()) {
+      if (err) *err << "group_fold_plan should support shuffled deterministic splits\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < plan_a.value().folds.size(); ++i) {
+      const auto ta = as_i64_vec(plan_a.value().folds[i].test_indices);
+      const auto tb = as_i64_vec(plan_b.value().folds[i].test_indices);
+      if (ta != tb) {
+        if (err) *err << "group_fold_plan should be reproducible for deterministic random state\n";
+        return false;
+      }
+    }
+  }
+
+  {
+    SplitOptions options{};
+    options.folds = 4;
+    options.shuffle = false;
+    const Series groups = pluss::make_series(std::vector<std::int64_t>{0, 0, 1, 1, 2, 2}, {6}, i64());
+    auto plan_or = pluss::ai::nodej::group_fold_plan(groups, options);
+    if (plan_or.ok() || plan_or.status().code != StatusCode::InvalidArgument) {
+      if (err) *err << "group_fold_plan should reject folds greater than distinct groups\n";
+      return false;
     }
   }
 

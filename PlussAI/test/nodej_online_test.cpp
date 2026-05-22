@@ -151,16 +151,6 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto lymph_or = pluss::ai::lymph::quick::online_linear_classifier(warm, options, warm_train);
-    if (!lymph_or.ok()) {
-      if (err) *err << "lymph online_linear_classifier should succeed\n";
-      return false;
-    }
-    auto lymph_model = lymph_or.move_value();
-    if (!lymph_model.advance(stream_a).ok()) {
-      if (err) *err << "lymph online classifier should support advance after warm start\n";
-      return false;
-    }
   }
 
   {
@@ -217,14 +207,77 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto lymph_or = pluss::ai::lymph::quick::online_linear_regressor(warm, options, warm_train);
-    if (!lymph_or.ok()) {
-      if (err) *err << "lymph online_linear_regressor should succeed\n";
+  }
+
+  {
+    std::vector<double> xv{};
+    std::vector<double> yv{};
+    xv.reserve(84);
+    yv.reserve(84);
+    for (int i = 0; i < 80; ++i) {
+      const double x0 = -4.0 + 0.1 * static_cast<double>(i);
+      const double y0 = 1.0 + 2.0 * x0;
+      xv.push_back(x0);
+      yv.push_back(y0);
+    }
+    xv.push_back(4.5);
+    xv.push_back(5.0);
+    xv.push_back(5.5);
+    xv.push_back(6.0);
+    yv.push_back(42.0);
+    yv.push_back(-30.0);
+    yv.push_back(48.0);
+    yv.push_back(-36.0);
+
+    const Series x = pluss::make_series(std::move(xv), {84, 1}, f64());
+    const Series y = pluss::make_series(std::move(yv), {84}, f64());
+    const LabeledBatch full{
+        .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+        .y = y,
+    };
+    const LabeledBatch warm = slice_rows(full, 0, 64);
+    const LabeledBatch stream = slice_rows(full, 64, 20);
+    const LabeledBatch inliers = slice_rows(full, 0, 80);
+
+    OnlineLinearOptions options{};
+    options.family = LinearFamilyOptions{
+        .objective = LinearObjective::RobustLeast,
+        .regularization = RegularizationKind::L2,
+        .regularization_strength = 1e-8,
+        .robust_transition = 1.35,
+        .fit_intercept = true,
+    };
+    options.learning_rate = 0.02;
+    options.decaying_rate = false;
+
+    auto model_or = pluss::ai::nodej::online::make_online_linear_regressor(options);
+    if (!model_or.ok()) {
+      if (err) *err << "make_online_linear_regressor should construct robust objective variant\n";
       return false;
     }
-    auto lymph_model = lymph_or.move_value();
-    if (!lymph_model.advance(stream_a).ok()) {
-      if (err) *err << "lymph online regressor should support advance after warm start\n";
+    auto model = model_or.move_value();
+    TrainOptions warm_train{};
+    warm_train.max_iterations = 350;
+    warm_train.tolerance = 1e-6;
+    if (!model.learn(warm, warm_train).ok()) {
+      if (err) *err << "online robust regressor warm learn should succeed\n";
+      return false;
+    }
+    if (!model.advance(stream).ok()) {
+      if (err) *err << "online robust regressor stream advance should succeed\n";
+      return false;
+    }
+
+    auto metrics_or = model.assess(inliers, pluss::ai::nodej::AssessOptions{.metrics = {MetricKind::Mae, MetricKind::R2}});
+    if (!metrics_or.ok()) {
+      if (err) *err << "online robust regressor assess should succeed on inliers\n";
+      return false;
+    }
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (metrics.size() != 2 || metrics[0] > 0.35 || metrics[1] < 0.97) {
+      if (err) *err << "online robust regressor should preserve inlier fit under outliers; got mae="
+                    << (metrics.empty() ? -1.0 : metrics[0]) << ", r2="
+                    << (metrics.size() < 2 ? -1.0 : metrics[1]) << '\n';
       return false;
     }
   }

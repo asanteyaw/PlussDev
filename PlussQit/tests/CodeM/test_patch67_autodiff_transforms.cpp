@@ -222,6 +222,134 @@ TEST_CASE("autodiff reverse propagates traverse_put_ through copy_ path", "[auto
   REQUIRE(gs[1] == Approx(1.0));
 }
 
+TEST_CASE("autodiff strict dependency stays connected for staged inplace write APIs", "[autodiff][inplace][strict]") {
+  DerivativePolicy strict{};
+  strict.strict_dependency = true;
+  strict.warn_on_disconnected = false;
+
+  const Series init = make_series(
+      std::vector<double>{0.3, -0.1, 0.2, -0.5, 0.4, 0.7},
+      {2, 3}).to(ScalarType::Float64);
+
+  SECTION("copy_ through select views on untracked staged base") {
+    const auto [value, grads] = value_and_grad(
+        [](const std::vector<Trace>& xs) -> Trace {
+          const Series x = xs[0].value();
+          Series staged = pluss::zeros_like(x);
+          staged.select(1, 0).copy_(x.select(1, 0).mul(2.0));
+          staged.select(1, 1).copy_(x.select(1, 1).square());
+          staged.select(1, 2).copy_(x.select(1, 2).add(1.0));
+          return Trace(staged.sum());
+        },
+        std::vector<Series>{init},
+        strict);
+    REQUIRE(value.defined());
+    REQUIRE(value.numel() == 1);
+    REQUIRE(grads.size() == 1);
+    REQUIRE(grads[0].defined());
+    REQUIRE(grads[0].abs().sum().item<double>() > 0.0);
+  }
+
+  SECTION("traverse_put_ on untracked staged base") {
+    const auto [value, grads] = value_and_grad(
+        [](const std::vector<Trace>& xs) -> Trace {
+          const Series x = xs[0].value();
+          Series staged = pluss::zeros_like(x);
+          const std::array<ExtractSpec, 2> specs{
+              ExtractSpec{pluss::Slicing::SliceAll()},
+              ExtractSpec{1, 3}};
+          staged.traverse_put_(
+              pluss::msharp::RangeView::Of<ExtractSpec>(specs),
+              x.slice(1, 1, 3, 1));
+          return Trace(staged.sum());
+        },
+        std::vector<Series>{init},
+        strict);
+    REQUIRE(value.defined());
+    REQUIRE(value.numel() == 1);
+    REQUIRE(grads.size() == 1);
+    REQUIRE(grads[0].defined());
+    REQUIRE(grads[0].abs().sum().item<double>() > 0.0);
+  }
+
+  SECTION("extract_put_ on untracked staged base") {
+    const auto [value, grads] = value_and_grad(
+        [](const std::vector<Trace>& xs) -> Trace {
+          const Series x = xs[0].value();
+          Series staged = pluss::zeros_like(x);
+          staged.extract_put_(
+              {pluss::Slicing::SliceAll(), pluss::Slicing::SliceRange(1, 3, 1)},
+              x.slice(1, 1, 3, 1));
+          return Trace(staged.sum());
+        },
+        std::vector<Series>{init},
+        strict);
+    REQUIRE(value.defined());
+    REQUIRE(value.numel() == 1);
+    REQUIRE(grads.size() == 1);
+    REQUIRE(grads[0].defined());
+    REQUIRE(grads[0].abs().sum().item<double>() > 0.0);
+  }
+
+  SECTION("index_put_ single-index path stays connected beyond 1D-specialized case") {
+    const auto [value, grads] = value_and_grad(
+        [](const std::vector<Trace>& xs) -> Trace {
+          const Series x = xs[0].value();
+          Series staged = pluss::zeros({6}, x.scalar_type()).to(x.platform());
+          const Series idx = make_series(std::vector<std::int64_t>{1, 4}, {2});
+          const Series src = x.reshape({6}).slice(0, 0, 2, 1);
+          staged.index_put_({idx}, src, false);
+          return Trace(staged.sum());
+        },
+        std::vector<Series>{init},
+        strict);
+    REQUIRE(value.defined());
+    REQUIRE(value.numel() == 1);
+    REQUIRE(grads.size() == 1);
+    REQUIRE(grads[0].defined());
+    REQUIRE(grads[0].abs().sum().item<double>() > 0.0);
+  }
+
+  SECTION("index_put_ multi-index path stays connected on staged base") {
+    const auto [value, grads] = value_and_grad(
+        [](const std::vector<Trace>& xs) -> Trace {
+          const Series x = xs[0].value();
+          Series staged = pluss::zeros_like(x);
+          const Series i0 = make_series(std::vector<std::int64_t>{0, 1}, {2}).to(ScalarType::Int64);
+          const Series i1 = make_series(std::vector<std::int64_t>{1, 2}, {2}).to(ScalarType::Int64);
+          const Series src = x.select(1, 0).reshape({2});
+          staged.index_put_({i0, i1}, src, false);
+          return Trace(staged.sum());
+        },
+        std::vector<Series>{init},
+        strict);
+    REQUIRE(value.defined());
+    REQUIRE(value.numel() == 1);
+    REQUIRE(grads.size() == 1);
+    REQUIRE(grads[0].defined());
+    REQUIRE(grads[0].abs().sum().item<double>() > 0.0);
+  }
+
+  SECTION("repeated copy_ writes on staged base remain connected") {
+    const auto [value, grads] = value_and_grad(
+        [](const std::vector<Trace>& xs) -> Trace {
+          const Series x = xs[0].value();
+          Series staged = pluss::zeros_like(x);
+          for (std::int64_t t = 0; t < x.size(1); ++t) {
+            staged.select(1, t).copy_(x.select(1, t).add(static_cast<double>(t + 1)));
+          }
+          return Trace(staged.square().sum());
+        },
+        std::vector<Series>{init},
+        strict);
+    REQUIRE(value.defined());
+    REQUIRE(value.numel() == 1);
+    REQUIRE(grads.size() == 1);
+    REQUIRE(grads[0].defined());
+    REQUIRE(grads[0].abs().sum().item<double>() > 0.0);
+  }
+}
+
 TEST_CASE("autodiff reverse propagates take sensitivities with duplicate indices", "[autodiff][reverse]") {
   Series x = make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}, {4}).to(ScalarType::Float64);
   x.tracks_slope_(true);
@@ -310,12 +438,15 @@ TEST_CASE("autodiff reverse one-shot keep_graph=false fails on reuse", "[autodif
       Catch::Matchers::ContainsSubstring("one-shot reverse pass"));
 }
 
-TEST_CASE("autodiff in-place mutation is rejected for tracked series", "[autodiff][diagnostics]") {
+TEST_CASE("autodiff tracked leaf in-place arithmetic stays connected", "[autodiff][inplace][strict]") {
   Series x = make_series(3.0).to(ScalarType::Float64);
   x.tracks_slope_(true);
-  REQUIRE_THROWS_WITH(
-      x.add_(1.0),
-      Catch::Matchers::ContainsSubstring("in-place mutation on autograd-tracked Series is disallowed"));
+  x.add_(1.0);
+  const Series loss = x.square().sum();
+  loss.reverse();
+
+  REQUIRE(x.has_sensitivity());
+  REQUIRE(x.sensitivity().item<double>() == Approx(8.0).margin(1e-12));
 }
 
 TEST_CASE("autodiff index propagates sensitivities for single integer index tensor", "[autodiff][reverse]") {

@@ -7,7 +7,7 @@
 
 namespace pluss::ai::nodej::io {
 
-inline constexpr std::uint32_t k_flow_bundle_schema = 2U;
+inline constexpr std::uint32_t k_flow_bundle_schema = 3U;
 
 struct FlowBundleMetadata {
   std::uint32_t schema_version = k_flow_bundle_schema;

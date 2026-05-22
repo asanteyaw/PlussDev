@@ -248,13 +248,16 @@ void write_family_options(BinaryWriter& w, const ModelSpec& spec) {
   if (spec.family == ModelFamily::Kernel) {
     const auto& o = std::get<KernelFamilyOptions>(spec.options);
     write_enum(w, o.kernel);
+    write_enum(w, o.form);
     w.pod(o.c);
     w.pod(o.gamma);
     w.pod(o.epsilon);
+    w.pod(o.nu);
     return;
   }
   if (spec.family == ModelFamily::Bayes) {
     const auto& o = std::get<BayesFamilyOptions>(spec.options);
+    write_enum(w, o.likelihood);
     w.pod(static_cast<std::uint8_t>(o.use_gaussian ? 1U : 0U));
     w.pod(o.smoothing);
     return;
@@ -309,14 +312,19 @@ bool read_family_options(BinaryReader& r, ModelSpec& spec) {
   }
   if (spec.family == ModelFamily::Kernel) {
     KernelFamilyOptions o{};
-    if (!read_enum(r, o.kernel) || !r.pod(o.c) || !r.pod(o.gamma) || !r.pod(o.epsilon)) return false;
+    if (!read_enum(r, o.kernel)
+        || !read_enum(r, o.form)
+        || !r.pod(o.c)
+        || !r.pod(o.gamma)
+        || !r.pod(o.epsilon)
+        || !r.pod(o.nu)) return false;
     spec.options = o;
     return true;
   }
   if (spec.family == ModelFamily::Bayes) {
     BayesFamilyOptions o{};
     std::uint8_t use = 0;
-    if (!r.pod(use) || !r.pod(o.smoothing)) return false;
+    if (!read_enum(r, o.likelihood) || !r.pod(use) || !r.pod(o.smoothing)) return false;
     o.use_gaussian = use != 0;
     spec.options = o;
     return true;
@@ -356,6 +364,8 @@ void write_transform_spec(BinaryWriter& w, const TransformSpec& spec) {
   for (std::int64_t idx : spec.feature_route) {
     w.pod(idx);
   }
+  write_enum(w, spec.remainder);
+  w.string(spec.stage_key);
   switch (spec.kind) {
     case TransformKind::StandardScaler: {
       const auto& o = std::get<prep::StandardScalerOptions>(spec.options);
@@ -487,6 +497,7 @@ bool read_transform_spec(BinaryReader& r, TransformSpec& spec) {
   for (std::uint64_t i = 0; i < route_count; ++i) {
     if (!r.pod(spec.feature_route[static_cast<std::size_t>(i)])) return false;
   }
+  if (!read_enum(r, spec.remainder) || !r.string(spec.stage_key)) return false;
   switch (spec.kind) {
     case TransformKind::StandardScaler: {
       prep::StandardScalerOptions o{};
@@ -624,41 +635,7 @@ bool read_transform_spec(BinaryReader& r, TransformSpec& spec) {
 }
 
 Status add_transform_from_spec(Flow& flow, const TransformSpec& spec) {
-  switch (spec.kind) {
-    case TransformKind::StandardScaler:
-      return flow.add_standard_scaler(std::get<prep::StandardScalerOptions>(spec.options), spec.feature_route);
-    case TransformKind::MinMaxScaler:
-      return flow.add_minmax_scaler(std::get<prep::MinMaxScalerOptions>(spec.options), spec.feature_route);
-    case TransformKind::RobustScaler:
-      return flow.add_robust_scaler(std::get<prep::RobustScalerOptions>(spec.options), spec.feature_route);
-    case TransformKind::SimpleImputer:
-      return flow.add_simple_imputer(std::get<prep::SimpleImputerOptions>(spec.options), spec.feature_route);
-    case TransformKind::NeighborImputer:
-      return flow.add_neighbor_imputer(std::get<prep::NeighborImputerOptions>(spec.options), spec.feature_route);
-    case TransformKind::IterativeImputer:
-      return flow.add_iterative_imputer(std::get<prep::IterativeImputerOptions>(spec.options), spec.feature_route);
-    case TransformKind::OneHotEncoder:
-      return flow.add_one_hot_encoder(std::get<prep::OneHotEncoderOptions>(spec.options), spec.feature_route);
-    case TransformKind::FrequencyEncoder:
-      return flow.add_frequency_encoder(std::get<prep::FrequencyEncoderOptions>(spec.options), spec.feature_route);
-    case TransformKind::VectorNormalizer:
-      return flow.add_vector_normalizer(std::get<prep::VectorNormalizerOptions>(spec.options), spec.feature_route);
-    case TransformKind::MaxAbsScaler:
-      return flow.add_maxabs_scaler(std::get<prep::MaxAbsScalerOptions>(spec.options), spec.feature_route);
-    case TransformKind::QuantileMap:
-      return flow.add_quantile_map(std::get<prep::QuantileMapOptions>(spec.options), spec.feature_route);
-    case TransformKind::PowerMap:
-      return flow.add_power_map(std::get<prep::PowerMapOptions>(spec.options), spec.feature_route);
-    case TransformKind::ThresholdBinarizer:
-      return flow.add_threshold_binarizer(std::get<prep::ThresholdBinarizerOptions>(spec.options), spec.feature_route);
-    case TransformKind::PolynomialLift:
-      return flow.add_polynomial_lift(std::get<prep::PolynomialLiftOptions>(spec.options), spec.feature_route);
-    case TransformKind::OrdinalEncoder:
-      return flow.add_ordinal_encoder(std::get<prep::OrdinalEncoderOptions>(spec.options), spec.feature_route);
-    case TransformKind::LabelEncoder:
-      return flow.add_label_encoder(std::get<prep::LabelEncoderOptions>(spec.options), spec.feature_route);
-  }
-  return Status::invalid_argument("Unknown TransformKind in flow bundle.");
+  return flow.add_named_transform(spec.kind, spec.options, spec.stage_key, spec.feature_route, spec.remainder);
 }
 
 } // namespace

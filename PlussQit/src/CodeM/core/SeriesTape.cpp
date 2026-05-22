@@ -247,6 +247,32 @@ void bind_source_link(
   st.source_link = std::move(link);
 }
 
+void bind_alias_link(
+    const Series& s,
+    std::shared_ptr<SourceLink> link,
+    const std::source_location& loc) {
+  if (!s.defined()) return;
+  if (link && link->capture_file.empty()) {
+    link->capture_file = loc.file_name();
+    link->capture_function = loc.function_name();
+    link->capture_line = loc.line();
+  }
+  if (link && link->parent_versions.empty()) {
+    link->parent_versions.reserve(link->parents.size());
+    for (const auto& p : link->parents) {
+      link->parent_versions.push_back(p.defined() ? p.storage().version() : 0);
+    }
+  }
+  if (link) {
+    link->output_version = s.storage().version();
+  }
+  std::scoped_lock lk(g_mu);
+  auto& st = ensure_locked_(s);
+  st.source_link_released = false;
+  st.released_op_name.clear();
+  st.source_link = std::move(link);
+}
+
 void clear_source_link(const Series& s) {
   if (!s.defined()) return;
   std::scoped_lock lk(g_mu);

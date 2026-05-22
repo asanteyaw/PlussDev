@@ -168,6 +168,38 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  const ModelSpec cls_l1_spec{
+      .task = TaskKind::Classification,
+      .family = ModelFamily::Linear,
+      .options = LinearFamilyOptions{
+          .objective = pluss::ai::nodej::LinearObjective::Logistic,
+          .regularization = pluss::ai::nodej::RegularizationKind::L1,
+          .regularization_strength = 1e-4,
+          .fit_intercept = true,
+      },
+  };
+  auto cls_l1_or = pluss::ai::nodej::make_classifier(cls_l1_spec);
+  if (!cls_l1_or.ok()) {
+    if (err) *err << "make_classifier should succeed for classification/linear L1\n";
+    return false;
+  }
+  auto cls_l1 = cls_l1_or.move_value();
+  if (!cls_l1->learn(cls_batch, train_opts).ok()) {
+    if (err) *err << "linear logistic L1 classifier learn should succeed\n";
+    return false;
+  }
+  auto cls_l1_pred = cls_l1->infer(features);
+  if (!cls_l1_pred.ok()) {
+    if (err) *err << "linear logistic L1 classifier infer should succeed\n";
+    return false;
+  }
+  const auto cls_l1_pred_vec = cls_l1_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  if (!(approx(cls_l1_pred_vec[0], 0.0) && approx(cls_l1_pred_vec[1], 0.0)
+        && approx(cls_l1_pred_vec[2], 1.0) && approx(cls_l1_pred_vec[3], 1.0))) {
+    if (err) *err << "linear logistic L1 classifier predictions should match separable training labels\n";
+    return false;
+  }
+
   auto cls_shape = cls->infer(bad_features);
   if (cls_shape.ok() || cls_shape.status().code != StatusCode::ShapeMismatch) {
     if (err) *err << "classifier infer should enforce learn-time feature count\n";
@@ -247,6 +279,38 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
   const auto reg_metric_vec = linear_reg_metrics.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
   if (reg_metric_vec.size() < 3 || reg_metric_vec[0] > 1e-6 || reg_metric_vec[2] < 0.9999) {
     if (err) *err << "linear regressor default metrics should show near-perfect fit\n";
+    return false;
+  }
+
+  const ModelSpec linear_reg_elastic_spec{
+      .task = TaskKind::Regression,
+      .family = ModelFamily::Linear,
+      .options = LinearFamilyOptions{
+          .objective = pluss::ai::nodej::LinearObjective::LeastSquares,
+          .regularization = pluss::ai::nodej::RegularizationKind::Elastic,
+          .regularization_strength = 1e-4,
+          .elastic_l1_ratio = 0.5,
+          .fit_intercept = true,
+      },
+  };
+  auto linear_reg_elastic_or = pluss::ai::nodej::make_regressor(linear_reg_elastic_spec);
+  if (!linear_reg_elastic_or.ok()) {
+    if (err) *err << "make_regressor should succeed for regression/linear elastic\n";
+    return false;
+  }
+  auto linear_reg_elastic = linear_reg_elastic_or.move_value();
+  if (!linear_reg_elastic->learn(reg_batch, train_opts).ok()) {
+    if (err) *err << "linear elastic regressor learn should succeed\n";
+    return false;
+  }
+  auto linear_reg_elastic_pred = linear_reg_elastic->infer(features);
+  if (!linear_reg_elastic_pred.ok()) {
+    if (err) *err << "linear elastic regressor infer should succeed\n";
+    return false;
+  }
+  const auto reg_elastic_vec = linear_reg_elastic_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  if (!(approx(reg_elastic_vec[0], -5.0, 2e-2) && approx(reg_elastic_vec[3], 5.0, 2e-2))) {
+    if (err) *err << "linear elastic regressor predictions should stay close to training signal\n";
     return false;
   }
 

@@ -3,6 +3,10 @@ methods:
     signature: "Series expand(pluss::msharp::RangeView::Int target_sizes, bool implicit=false) const"
     forward: "target_sizes, implicit"
 
+  - name: expand_like
+    signature: "Series expand_like(const Series& like) const"
+    forward: "like"
+
   - name: add
     signature: "Series add(const Series& rhs) const"
     forward: "rhs, 1.0"
@@ -456,6 +460,10 @@ methods:
   - name: repeat
     signature: "Series repeat(pluss::msharp::RangeView::Int repeats) const"
     forward: "repeats"
+
+  - name: repeat_like
+    signature: "Series repeat_like(const Series& like) const"
+    forward: "like"
 
   - name: tile
     signature: "Series tile(pluss::msharp::RangeView::Int dims) const"
