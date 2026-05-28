@@ -103,8 +103,11 @@ inline Series uniform_(std::initializer_list<std::int64_t> sizes, double lo, dou
 
 inline Series dropout_(const Series& x, double p, bool training, std::uint64_t seed) {
   require_defined_(x, "dropout");
-  PLUSS_CHECK(p >= 0.0 && p < 1.0, "pluss::dropout: expected p in [0, 1)");
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "pluss::dropout: expected p in [0, 1]");
   if (!training || p == 0.0) return x;
+  if (p == 1.0) {
+    return pluss::zeros(x.sizes(), Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
+  }
   const ScalarType mask_dtype = x.platform() == pMPS ? ScalarType::Float32 : ScalarType::Float64;
   const Series mask = pluss::rand(
                           x.sizes(),

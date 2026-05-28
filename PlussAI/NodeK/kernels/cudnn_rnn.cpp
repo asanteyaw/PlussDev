@@ -504,6 +504,10 @@ bool supports_kind_(
     if (reason != nullptr) *reason = "num_layers must be > 0";
     return false;
   }
+  if (cfg.training && cfg.dropout >= 1.0 && cfg.num_layers > 1) {
+    if (reason != nullptr) *reason = "dropout=1 is handled by the Series route";
+    return false;
+  }
   const std::int64_t dirs = cfg.bidirectional ? 2 : 1;
   const std::int64_t expected_blocks = cfg.num_layers * dirs;
   if (static_cast<std::int64_t>(params.size()) != expected_blocks) {

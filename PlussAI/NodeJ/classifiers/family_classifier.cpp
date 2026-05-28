@@ -701,6 +701,219 @@ struct BinaryLabelEncoding {
   return StatusOr<Series>(params);
 }
 
+[[nodiscard]] StatusOr<double> fit_temperature_calibrator(const Series& scores,
+                                                          const Series& y01,
+                                                          const Series& sample_weights,
+                                                          std::int64_t max_iterations,
+                                                          double tolerance,
+                                                          const char* where) {
+  if (scores.numel() != y01.numel() || scores.numel() != sample_weights.numel()) {
+    return StatusOr<double>(Status::shape_mismatch(std::string(where) + " expects equal scores/labels/weights lengths."));
+  }
+  if (scores.numel() == 0) {
+    return StatusOr<double>(Status::invalid_argument(std::string(where) + " requires non-empty scores."));
+  }
+  if (max_iterations <= 0 || !(tolerance > 0.0)) {
+    return StatusOr<double>(Status::invalid_argument(std::string(where) + " requires positive iterations and tolerance."));
+  }
+
+  const double weight_sum = sample_weights.sum().item<double>();
+  if (!(weight_sum > 0.0) || !std::isfinite(weight_sum)) {
+    return StatusOr<double>(Status::invalid_argument(std::string(where) + " requires strictly positive total sample weight."));
+  }
+
+  constexpr double min_temperature = 1e-6;
+  constexpr double max_temperature = 1e6;
+  double theta = 0.0; // log(T)
+  double prev_loss = std::numeric_limits<double>::infinity();
+  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
+    const double inv_t = std::exp(-theta);
+    const Series logits = scores.mul(inv_t);
+    const Series probs = logits.sigmoid();
+    const Series err = probs.sub(y01).mul(sample_weights);
+
+    const double grad = err.mul(logits).sum().item<double>() / weight_sum * (-1.0);
+    if (!std::isfinite(grad)) {
+      return StatusOr<double>(Status::numerical_failure(std::string(where) + " encountered non-finite temperature gradient."));
+    }
+
+    theta -= 0.05 * grad;
+    theta = std::clamp(theta, std::log(min_temperature), std::log(max_temperature));
+
+    const Series clipped = probs.clamp(1e-12, 1.0 - 1e-12);
+    const Series loss_terms = y01.mul(clipped.log()).add(y01.mul(-1.0).add(1.0).mul(clipped.mul(-1.0).add(1.0).log())).mul(-1.0);
+    const double loss = loss_terms.mul(sample_weights).sum().div(weight_sum).item<double>();
+    if (!std::isfinite(loss)) {
+      return StatusOr<double>(Status::numerical_failure(std::string(where) + " encountered non-finite temperature objective."));
+    }
+    if (std::abs(prev_loss - loss) <= tolerance) break;
+    prev_loss = loss;
+  }
+
+  const double temperature = std::exp(theta);
+  if (!std::isfinite(temperature) || temperature < min_temperature || temperature > max_temperature) {
+    return StatusOr<double>(Status::numerical_failure(std::string(where) + " produced invalid temperature."));
+  }
+  return StatusOr<double>(temperature);
+}
+
+struct IsotonicCalibratorState {
+  std::vector<double> x_thresholds{};
+  std::vector<double> y_thresholds{};
+};
+
+[[nodiscard]] StatusOr<IsotonicCalibratorState> fit_isotonic_calibrator(const Series& scores,
+                                                                        const Series& y01,
+                                                                        const Series& sample_weights,
+                                                                        const char* where) {
+  if (scores.numel() != y01.numel() || scores.numel() != sample_weights.numel()) {
+    return StatusOr<IsotonicCalibratorState>(
+        Status::shape_mismatch(std::string(where) + " expects equal scores/labels/weights lengths."));
+  }
+  if (scores.numel() == 0) {
+    return StatusOr<IsotonicCalibratorState>(Status::invalid_argument(std::string(where) + " requires non-empty scores."));
+  }
+
+  const std::int64_t n = scores.numel();
+  const auto xs = scores.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  const auto ys = y01.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  const auto ws = sample_weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+
+  std::vector<std::int64_t> order(static_cast<std::size_t>(n), 0);
+  std::iota(order.begin(), order.end(), static_cast<std::int64_t>(0));
+  std::stable_sort(order.begin(), order.end(), [&](std::int64_t a, std::int64_t b) {
+    return xs[static_cast<std::size_t>(a)] < xs[static_cast<std::size_t>(b)];
+  });
+
+  std::vector<double> x_unique{};
+  std::vector<double> w_unique{};
+  std::vector<double> wy_unique{};
+  x_unique.reserve(static_cast<std::size_t>(n));
+  w_unique.reserve(static_cast<std::size_t>(n));
+  wy_unique.reserve(static_cast<std::size_t>(n));
+
+  for (std::int64_t oi = 0; oi < n; ++oi) {
+    const std::int64_t idx = order[static_cast<std::size_t>(oi)];
+    const double x = xs[static_cast<std::size_t>(idx)];
+    const double y = std::clamp(ys[static_cast<std::size_t>(idx)], 0.0, 1.0);
+    const double w = ws[static_cast<std::size_t>(idx)];
+    if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(w) || w <= 0.0) {
+      return StatusOr<IsotonicCalibratorState>(
+          Status::invalid_argument(std::string(where) + " requires finite scores/labels and strictly positive weights."));
+    }
+    if (!x_unique.empty() && x == x_unique.back()) {
+      w_unique.back() += w;
+      wy_unique.back() += w * y;
+    } else {
+      x_unique.push_back(x);
+      w_unique.push_back(w);
+      wy_unique.push_back(w * y);
+    }
+  }
+
+  if (x_unique.empty()) {
+    return StatusOr<IsotonicCalibratorState>(
+        Status::invalid_argument(std::string(where) + " could not construct isotonic support points."));
+  }
+
+  struct IsoBlock {
+    std::int64_t left = 0;
+    std::int64_t right = 0;
+    double w = 0.0;
+    double wy = 0.0;
+  };
+
+  std::vector<IsoBlock> blocks{};
+  blocks.reserve(x_unique.size());
+  for (std::size_t i = 0; i < x_unique.size(); ++i) {
+    blocks.push_back(IsoBlock{
+        .left = static_cast<std::int64_t>(i),
+        .right = static_cast<std::int64_t>(i),
+        .w = w_unique[i],
+        .wy = wy_unique[i],
+    });
+    while (blocks.size() >= 2) {
+      const std::size_t m = blocks.size();
+      const double prev_mean = blocks[m - 2].wy / blocks[m - 2].w;
+      const double last_mean = blocks[m - 1].wy / blocks[m - 1].w;
+      if (prev_mean <= last_mean) break;
+      blocks[m - 2].right = blocks[m - 1].right;
+      blocks[m - 2].w += blocks[m - 1].w;
+      blocks[m - 2].wy += blocks[m - 1].wy;
+      blocks.pop_back();
+    }
+  }
+
+  IsotonicCalibratorState out{};
+  out.x_thresholds.reserve(x_unique.size() * 2);
+  out.y_thresholds.reserve(x_unique.size() * 2);
+  for (const IsoBlock& b : blocks) {
+    const double yhat = std::clamp(b.wy / b.w, 0.0, 1.0);
+    const double xl = x_unique[static_cast<std::size_t>(b.left)];
+    const double xr = x_unique[static_cast<std::size_t>(b.right)];
+    if (out.x_thresholds.empty() || xl > out.x_thresholds.back()) {
+      out.x_thresholds.push_back(xl);
+      out.y_thresholds.push_back(yhat);
+    } else {
+      out.y_thresholds.back() = yhat;
+    }
+    if (xr > out.x_thresholds.back()) {
+      out.x_thresholds.push_back(xr);
+      out.y_thresholds.push_back(yhat);
+    }
+  }
+
+  if (out.x_thresholds.empty() || out.x_thresholds.size() != out.y_thresholds.size()) {
+    return StatusOr<IsotonicCalibratorState>(
+        Status::numerical_failure(std::string(where) + " produced invalid isotonic thresholds."));
+  }
+  return StatusOr<IsotonicCalibratorState>(std::move(out));
+}
+
+[[nodiscard]] StatusOr<Series> apply_isotonic_calibrator(const Series& scores,
+                                                         const std::vector<double>& x_thresholds,
+                                                         const std::vector<double>& y_thresholds,
+                                                         const char* where) {
+  if (x_thresholds.empty() || x_thresholds.size() != y_thresholds.size()) {
+    return StatusOr<Series>(Status::precondition(std::string(where) + " isotonic calibrator is not initialized."));
+  }
+  const std::int64_t n = scores.numel();
+  const auto in = scores.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  std::vector<double> out{};
+  out.reserve(in.size());
+
+  const std::size_t last = x_thresholds.size() - 1;
+  for (double x : in) {
+    if (!std::isfinite(x)) {
+      out.push_back(std::numeric_limits<double>::quiet_NaN());
+      continue;
+    }
+    if (x <= x_thresholds.front()) {
+      out.push_back(y_thresholds.front());
+      continue;
+    }
+    if (x >= x_thresholds[last]) {
+      out.push_back(y_thresholds[last]);
+      continue;
+    }
+    const auto it = std::upper_bound(x_thresholds.begin(), x_thresholds.end(), x);
+    const std::size_t hi = static_cast<std::size_t>(std::distance(x_thresholds.begin(), it));
+    const std::size_t lo = hi - 1;
+    const double xl = x_thresholds[lo];
+    const double xr = x_thresholds[hi];
+    const double yl = y_thresholds[lo];
+    const double yr = y_thresholds[hi];
+    if (!(xr > xl)) {
+      out.push_back(std::clamp(yr, 0.0, 1.0));
+      continue;
+    }
+    const double t = (x - xl) / (xr - xl);
+    out.push_back(std::clamp(yl + (yr - yl) * t, 0.0, 1.0));
+  }
+
+  return StatusOr<Series>(pluss::make_series(std::move(out), {n}, f64_cpu()).to(scores.platform(), ScalarType::Float64));
+}
+
 class NeighborClassifier final : public ClassifierBase {
 public:
   explicit NeighborClassifier(NeighborFamilyOptions options) : options_(options) {}
@@ -3415,10 +3628,10 @@ public:
     if (!data_status.ok()) return data_status;
     if (options.max_iterations <= 0) return Status::invalid_argument("TrainOptions.max_iterations must be positive.");
     if (!(options.tolerance > 0.0)) return Status::invalid_argument("TrainOptions.tolerance must be positive.");
-    if (options.calibration == ScoreCalibration::Platt
+    if ((options.calibration == ScoreCalibration::Platt || options.calibration == ScoreCalibration::Temperature)
         && (options.calibration_iterations <= 0 || !(options.calibration_tolerance > 0.0))) {
       return Status::invalid_argument(
-          "LinearClassifier::learn with ScoreCalibration::Platt requires positive calibration iterations and tolerance.");
+          "LinearClassifier::learn with selected calibration requires positive calibration iterations and tolerance.");
     }
 
     Status option_status = validate_linear_classifier_options(options_);
@@ -3569,8 +3782,12 @@ public:
     }
 
     calibrated_scores_ = false;
+    calibration_kind_ = CalibrationKind::None;
     calibration_a_ = 1.0;
     calibration_b_ = 0.0;
+    calibration_temperature_ = 1.0;
+    isotonic_x_.clear();
+    isotonic_y_.clear();
     if (options.calibration == ScoreCalibration::Platt) {
       const Series train_scores = design.matmul(weights.reshape({weights.numel(), 1})).reshape({matrix.sample_count});
       StatusOr<Series> params_or = fit_platt_calibrator(train_scores,
@@ -3586,6 +3803,28 @@ public:
       calibration_a_ = params.index_select(0, idx0).reshape({1}).item<double>();
       calibration_b_ = params.index_select(0, idx1).reshape({1}).item<double>();
       calibrated_scores_ = true;
+      calibration_kind_ = CalibrationKind::Platt;
+    } else if (options.calibration == ScoreCalibration::Isotonic) {
+      const Series train_scores = design.matmul(weights.reshape({weights.numel(), 1})).reshape({matrix.sample_count});
+      StatusOr<IsotonicCalibratorState> iso_or =
+          fit_isotonic_calibrator(train_scores, labels.y01, sample_weight, "LinearClassifier::learn");
+      if (!iso_or.ok()) return iso_or.status();
+      isotonic_x_ = std::move(iso_or.value().x_thresholds);
+      isotonic_y_ = std::move(iso_or.value().y_thresholds);
+      calibrated_scores_ = true;
+      calibration_kind_ = CalibrationKind::Isotonic;
+    } else if (options.calibration == ScoreCalibration::Temperature) {
+      const Series train_scores = design.matmul(weights.reshape({weights.numel(), 1})).reshape({matrix.sample_count});
+      StatusOr<double> temp_or = fit_temperature_calibrator(train_scores,
+                                                            labels.y01,
+                                                            sample_weight,
+                                                            options.calibration_iterations,
+                                                            options.calibration_tolerance,
+                                                            "LinearClassifier::learn");
+      if (!temp_or.ok()) return temp_or.status();
+      calibration_temperature_ = temp_or.value();
+      calibrated_scores_ = true;
+      calibration_kind_ = CalibrationKind::Temperature;
     }
 
     weights_ = std::move(weights);
@@ -3630,7 +3869,9 @@ public:
     if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> scores_or = infer_scores(batch, options);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
-    const Series probs = probabilities_from_scores(scores_or.value().reshape({scores_or.value().numel()}));
+    StatusOr<Series> probs_or = probabilities_from_scores(scores_or.value().reshape({scores_or.value().numel()}));
+    if (!probs_or.ok()) return StatusOr<Series>(probs_or.status());
+    const Series probs = probs_or.move_value();
 
     const Series out =
         labels_from_probabilities(probs, negative_label_, positive_label_, options.positive_threshold, batch.x.platform(), label_dtype_);
@@ -3655,21 +3896,14 @@ public:
 
     StatusOr<Series> scores_or = infer_scores(batch.features);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
-    const Series probs = probabilities_from_scores(scores_or.value().reshape({scores_or.value().numel()}));
+    StatusOr<Series> probs_or = probabilities_from_scores(scores_or.value().reshape({scores_or.value().numel()}));
+    if (!probs_or.ok()) return StatusOr<Series>(probs_or.status());
+    const Series probs = probs_or.move_value();
 
-    const InferOptions infer_options{
-        .layout = options.layout,
-        .missing = MissingPolicy::KeepNaN,
-        .unknown_categorical = UnknownCategoryPolicy::Ignore,
-        .positive_threshold = options.positive_threshold,
-    };
-    StatusOr<Series> pred_or = infer(batch.features, infer_options);
-    if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
-    const Series pred01 = pred_or.value()
-                              .to(ScalarType::Float64)
-                              .eq(positive_label_)
-                              .to(ScalarType::Float64)
-                              .reshape({pred_or.value().numel()});
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "LinearClassifier::assess");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
+    const Series pred01 = probs.ge(options.positive_threshold).to(ScalarType::Float64).reshape({probs.numel()});
 
     std::vector<MetricKind> metrics = options.metrics;
     if (metrics.empty()) {
@@ -3679,17 +3913,24 @@ public:
   }
 
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
-    return StatusOr<std::vector<Series>>(std::vector<Series>{
+    std::vector<Series> out{
         state_f64({trained_ ? 1.0 : 0.0,
                    static_cast<double>(feature_count_),
                    calibrated_scores_ ? 1.0 : 0.0,
+                   static_cast<double>(static_cast<std::int64_t>(calibration_kind_)),
                    calibration_a_,
                    calibration_b_,
+                   calibration_temperature_,
                    negative_label_,
                    positive_label_,
                    static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
         weights_,
-    });
+    };
+    if (!isotonic_x_.empty() && isotonic_x_.size() == isotonic_y_.size()) {
+      out.push_back(pluss::make_series(isotonic_x_, {static_cast<std::int64_t>(isotonic_x_.size())}, f64_cpu()));
+      out.push_back(pluss::make_series(isotonic_y_, {static_cast<std::int64_t>(isotonic_y_.size())}, f64_cpu()));
+    }
+    return StatusOr<std::vector<Series>>(std::move(out));
   }
 
   Status load_state(pluss::msharp::RangeView::Series state) override {
@@ -3699,12 +3940,37 @@ public:
     trained_ = meta[0] > 0.5;
     feature_count_ = static_cast<std::int64_t>(meta[1]);
     calibrated_scores_ = meta[2] > 0.5;
-    calibration_a_ = meta[3];
-    calibration_b_ = meta[4];
-    negative_label_ = meta[5];
-    positive_label_ = meta[6];
-    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[7]));
+    if (meta.size() >= 10) {
+      calibration_kind_ = static_cast<CalibrationKind>(static_cast<std::int64_t>(meta[3]));
+      calibration_a_ = meta[4];
+      calibration_b_ = meta[5];
+      calibration_temperature_ = meta[6];
+      negative_label_ = meta[7];
+      positive_label_ = meta[8];
+      label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[9]));
+    } else {
+      // Backward compatibility with previous [trained, features, calibrated, a, b, neg, pos, dtype] metadata.
+      calibration_kind_ = calibrated_scores_ ? CalibrationKind::Platt : CalibrationKind::None;
+      calibration_a_ = meta[3];
+      calibration_b_ = meta[4];
+      calibration_temperature_ = 1.0;
+      negative_label_ = meta[5];
+      positive_label_ = meta[6];
+      label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[7]));
+    }
     weights_ = state[1];
+    isotonic_x_.clear();
+    isotonic_y_.clear();
+    if (state.size() >= 4 && calibration_kind_ == CalibrationKind::Isotonic) {
+      isotonic_x_ = vec_f64(state[2]);
+      isotonic_y_ = vec_f64(state[3]);
+      if (isotonic_x_.empty() || isotonic_x_.size() != isotonic_y_.size()) {
+        return Status::invalid_argument("LinearClassifier::load_state invalid isotonic calibration state.");
+      }
+    }
+    if (calibration_kind_ == CalibrationKind::Temperature) {
+      calibration_temperature_ = std::clamp(calibration_temperature_, 1e-6, 1e6);
+    }
     return Status::success();
   }
 
@@ -3719,18 +3985,38 @@ private:
     return Status::success();
   }
 
-  [[nodiscard]] Series probabilities_from_scores(const Series& scores) const {
-    if (!calibrated_scores_) return scores.sigmoid();
-    return scores.mul(calibration_a_).add(calibration_b_).sigmoid();
+  [[nodiscard]] StatusOr<Series> probabilities_from_scores(const Series& scores) const {
+    if (!calibrated_scores_ || calibration_kind_ == CalibrationKind::None) {
+      return StatusOr<Series>(scores.sigmoid());
+    }
+    if (calibration_kind_ == CalibrationKind::Platt) {
+      return StatusOr<Series>(scores.mul(calibration_a_).add(calibration_b_).sigmoid());
+    }
+    if (calibration_kind_ == CalibrationKind::Temperature) {
+      const double t = std::clamp(calibration_temperature_, 1e-6, 1e6);
+      return StatusOr<Series>(scores.div(t).sigmoid());
+    }
+    return apply_isotonic_calibrator(scores, isotonic_x_, isotonic_y_, "LinearClassifier::probabilities_from_scores");
   }
+
+  enum class CalibrationKind : std::int64_t {
+    None = 0,
+    Platt = 1,
+    Isotonic = 2,
+    Temperature = 3,
+  };
 
   LinearFamilyOptions options_{};
   bool trained_{false};
   std::int64_t feature_count_{0};
   Series weights_ = Series::undefined();
   bool calibrated_scores_{false};
+  CalibrationKind calibration_kind_{CalibrationKind::None};
   double calibration_a_{1.0};
   double calibration_b_{0.0};
+  double calibration_temperature_{1.0};
+  std::vector<double> isotonic_x_{};
+  std::vector<double> isotonic_y_{};
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};

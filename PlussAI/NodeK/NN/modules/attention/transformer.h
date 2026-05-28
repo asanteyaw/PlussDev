@@ -201,8 +201,8 @@ private:
         options_.dim_feedforward > 0,
         "pluss::ai::nn::TransformerEncoderLayer: dim_feedforward must be > 0");
     PLUSS_CHECK(
-        options_.dropout >= 0.0 && options_.dropout < 1.0,
-        "pluss::ai::nn::TransformerEncoderLayer: dropout must be in [0,1)");
+        options_.dropout >= 0.0 && options_.dropout <= 1.0,
+        "pluss::ai::nn::TransformerEncoderLayer: dropout must be in [0,1]");
     PLUSS_CHECK(
         options_.layer_norm_eps > 0.0,
         "pluss::ai::nn::TransformerEncoderLayer: layer_norm_eps must be > 0");
@@ -582,8 +582,8 @@ private:
         options_.dim_feedforward > 0,
         "pluss::ai::nn::TransformerDecoderLayer: dim_feedforward must be > 0");
     PLUSS_CHECK(
-        options_.dropout >= 0.0 && options_.dropout < 1.0,
-        "pluss::ai::nn::TransformerDecoderLayer: dropout must be in [0,1)");
+        options_.dropout >= 0.0 && options_.dropout <= 1.0,
+        "pluss::ai::nn::TransformerDecoderLayer: dropout must be in [0,1]");
     PLUSS_CHECK(
         options_.layer_norm_eps > 0.0,
         "pluss::ai::nn::TransformerDecoderLayer: layer_norm_eps must be > 0");

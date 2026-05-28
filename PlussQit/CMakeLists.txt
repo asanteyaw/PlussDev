@@ -758,6 +758,7 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch169_mps_masking_counting_int32_strict.cpp
       tests/CodeM/test_patch170_mps_torchwide_series_strict.cpp
       tests/CodeM/test_patch171_mps_torchwide_series_extended_strict.cpp
+      tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp
     )
     set(CODEM_CUDA_GATE_TEST_SOURCES
       tests/CodeM/test_patch97_linalg_backend_info.cpp

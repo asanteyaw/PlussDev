@@ -72,6 +72,8 @@ enum class ClassWeightMode : std::uint8_t {
 enum class ScoreCalibration : std::uint8_t {
   None = 0,
   Platt = 1,
+  Isotonic = 2,
+  Temperature = 3,
 };
 
 struct RandomState {

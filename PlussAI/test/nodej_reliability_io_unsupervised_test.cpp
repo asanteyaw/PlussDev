@@ -84,12 +84,16 @@ bool run_nodej_reliability_io_unsupervised_checks(std::ostream* err = nullptr) {
 
     auto plain_or = make_classifier(spec);
     auto weighted_or = make_classifier(spec);
-    if (!plain_or.ok() || !weighted_or.ok()) {
+    auto isotonic_or = make_classifier(spec);
+    auto temperature_or = make_classifier(spec);
+    if (!plain_or.ok() || !weighted_or.ok() || !isotonic_or.ok() || !temperature_or.ok()) {
       if (err) *err << "make_classifier should succeed for reliability checks\n";
       return false;
     }
     auto plain = plain_or.move_value();
     auto weighted = weighted_or.move_value();
+    auto isotonic = isotonic_or.move_value();
+    auto temperature = temperature_or.move_value();
     TrainOptions plain_opts{};
     plain_opts.max_iterations = 3000;
     plain_opts.tolerance = 1e-8;
@@ -98,21 +102,46 @@ bool run_nodej_reliability_io_unsupervised_checks(std::ostream* err = nullptr) {
     weighted_opts.calibration = ScoreCalibration::Platt;
     weighted_opts.calibration_iterations = 300;
     weighted_opts.calibration_tolerance = 1e-7;
-    if (!plain->learn(batch, plain_opts).ok() || !weighted->learn(batch, weighted_opts).ok()) {
-      if (err) *err << "plain/weighted learn should succeed\n";
+    TrainOptions isotonic_opts = weighted_opts;
+    isotonic_opts.calibration = ScoreCalibration::Isotonic;
+    TrainOptions temperature_opts = weighted_opts;
+    temperature_opts.calibration = ScoreCalibration::Temperature;
+
+    if (!plain->learn(batch, plain_opts).ok()
+        || !weighted->learn(batch, weighted_opts).ok()
+        || !isotonic->learn(batch, isotonic_opts).ok()
+        || !temperature->learn(batch, temperature_opts).ok()) {
+      if (err) *err << "plain/calibrated learn should succeed\n";
       return false;
     }
     auto pred_plain_or = plain->infer(batch.features, InferOptions{.positive_threshold = 0.8});
     auto pred_weight_or = weighted->infer(batch.features, InferOptions{.positive_threshold = 0.8});
     auto pred_lo_or = weighted->infer(batch.features, InferOptions{.positive_threshold = 0.3});
-    if (!pred_plain_or.ok() || !pred_weight_or.ok() || !pred_lo_or.ok()) {
+    auto pred_iso_hi_or = isotonic->infer(batch.features, InferOptions{.positive_threshold = 0.8});
+    auto pred_iso_lo_or = isotonic->infer(batch.features, InferOptions{.positive_threshold = 0.3});
+    auto pred_tmp_hi_or = temperature->infer(batch.features, InferOptions{.positive_threshold = 0.8});
+    auto pred_tmp_lo_or = temperature->infer(batch.features, InferOptions{.positive_threshold = 0.3});
+    if (!pred_plain_or.ok()
+        || !pred_weight_or.ok()
+        || !pred_lo_or.ok()
+        || !pred_iso_hi_or.ok()
+        || !pred_iso_lo_or.ok()
+        || !pred_tmp_hi_or.ok()
+        || !pred_tmp_lo_or.ok()) {
       if (err) *err << "thresholded infer should succeed\n";
       return false;
     }
     const std::int64_t hi_plain = positive_count(pred_plain_or.value());
     const std::int64_t hi_weight = positive_count(pred_weight_or.value());
     const std::int64_t lo_weight = positive_count(pred_lo_or.value());
-    if (!(hi_weight >= hi_plain && lo_weight >= hi_weight)) {
+    const std::int64_t hi_iso = positive_count(pred_iso_hi_or.value());
+    const std::int64_t lo_iso = positive_count(pred_iso_lo_or.value());
+    const std::int64_t hi_tmp = positive_count(pred_tmp_hi_or.value());
+    const std::int64_t lo_tmp = positive_count(pred_tmp_lo_or.value());
+    if (!(hi_weight >= hi_plain
+          && lo_weight >= hi_weight
+          && lo_iso >= hi_iso
+          && lo_tmp >= hi_tmp)) {
       if (err) *err << "class weighting + threshold hooks should produce monotonic positive prediction behavior\n";
       return false;
     }

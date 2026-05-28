@@ -75,6 +75,135 @@ kernel void cast_f32_to_f16(
   out[gid] = half(in[gid]);
 }
 
+kernel void cast_bf16_to_f32(
+    const device ushort* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  const uint bits = uint(in[gid]) << 16;
+  out[gid] = as_type<float>(bits);
+}
+
+kernel void cast_f32_to_bf16(
+    const device float* in [[buffer(0)]],
+    device ushort* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  const uint bits = as_type<uint>(in[gid]);
+  const uint lsb = (bits >> 16) & 1u;
+  out[gid] = ushort((bits + 0x7FFFu + lsb) >> 16);
+}
+
+kernel void cast_i8_to_f32(
+    const device char* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = float(in[gid]);
+}
+
+kernel void cast_f32_to_i8(
+    const device float* in [[buffer(0)]],
+    device char* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = char(in[gid]);
+}
+
+kernel void cast_u8_raw_to_f32(
+    const device uchar* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = float(in[gid]);
+}
+
+kernel void cast_f32_to_u8_raw(
+    const device float* in [[buffer(0)]],
+    device uchar* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = uchar(in[gid]);
+}
+
+kernel void cast_i16_to_f32(
+    const device short* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = float(in[gid]);
+}
+
+kernel void cast_f32_to_i16(
+    const device float* in [[buffer(0)]],
+    device short* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = short(in[gid]);
+}
+
+kernel void cast_u16_to_f32(
+    const device ushort* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = float(in[gid]);
+}
+
+kernel void cast_f32_to_u16(
+    const device float* in [[buffer(0)]],
+    device ushort* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = ushort(in[gid]);
+}
+
+kernel void cast_i8_to_i64(
+    const device char* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = long(in[gid]);
+}
+
+kernel void cast_i64_to_i8(
+    const device long* in [[buffer(0)]],
+    device char* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = char(in[gid]);
+}
+
+kernel void cast_u8_raw_to_i64(
+    const device uchar* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = long(in[gid]);
+}
+
+kernel void cast_i64_to_u8_raw(
+    const device long* in [[buffer(0)]],
+    device uchar* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = uchar(in[gid]);
+}
+
+kernel void cast_i16_to_i64(
+    const device short* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = long(in[gid]);
+}
+
+kernel void cast_i64_to_i16(
+    const device long* in [[buffer(0)]],
+    device short* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = short(in[gid]);
+}
+
+kernel void cast_u16_to_i64(
+    const device ushort* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = long(in[gid]);
+}
+
+kernel void cast_i64_to_u16(
+    const device long* in [[buffer(0)]],
+    device ushort* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = ushort(in[gid]);
+}
+
 kernel void cast_i32_to_f32(
     const device int* in [[buffer(0)]],
     device float* out [[buffer(1)]],
@@ -131,6 +260,24 @@ struct Context {
   id<MTLComputePipelineState> cast_i64_to_u8{nil};
   id<MTLComputePipelineState> cast_f16_to_f32{nil};
   id<MTLComputePipelineState> cast_f32_to_f16{nil};
+  id<MTLComputePipelineState> cast_bf16_to_f32{nil};
+  id<MTLComputePipelineState> cast_f32_to_bf16{nil};
+  id<MTLComputePipelineState> cast_i8_to_f32{nil};
+  id<MTLComputePipelineState> cast_f32_to_i8{nil};
+  id<MTLComputePipelineState> cast_u8_raw_to_f32{nil};
+  id<MTLComputePipelineState> cast_f32_to_u8_raw{nil};
+  id<MTLComputePipelineState> cast_i16_to_f32{nil};
+  id<MTLComputePipelineState> cast_f32_to_i16{nil};
+  id<MTLComputePipelineState> cast_u16_to_f32{nil};
+  id<MTLComputePipelineState> cast_f32_to_u16{nil};
+  id<MTLComputePipelineState> cast_i8_to_i64{nil};
+  id<MTLComputePipelineState> cast_i64_to_i8{nil};
+  id<MTLComputePipelineState> cast_u8_raw_to_i64{nil};
+  id<MTLComputePipelineState> cast_i64_to_u8_raw{nil};
+  id<MTLComputePipelineState> cast_i16_to_i64{nil};
+  id<MTLComputePipelineState> cast_i64_to_i16{nil};
+  id<MTLComputePipelineState> cast_u16_to_i64{nil};
+  id<MTLComputePipelineState> cast_i64_to_u16{nil};
   id<MTLComputePipelineState> cast_i32_to_f32{nil};
   id<MTLComputePipelineState> cast_f32_to_i32{nil};
   id<MTLComputePipelineState> cast_i32_to_i64{nil};
@@ -203,6 +350,24 @@ Context& ctx_() {
       if (!make_pipeline("cast_i64_to_u8", &ctx.cast_i64_to_u8)) return;
       if (!make_pipeline("cast_f16_to_f32", &ctx.cast_f16_to_f32)) return;
       if (!make_pipeline("cast_f32_to_f16", &ctx.cast_f32_to_f16)) return;
+      if (!make_pipeline("cast_bf16_to_f32", &ctx.cast_bf16_to_f32)) return;
+      if (!make_pipeline("cast_f32_to_bf16", &ctx.cast_f32_to_bf16)) return;
+      if (!make_pipeline("cast_i8_to_f32", &ctx.cast_i8_to_f32)) return;
+      if (!make_pipeline("cast_f32_to_i8", &ctx.cast_f32_to_i8)) return;
+      if (!make_pipeline("cast_u8_raw_to_f32", &ctx.cast_u8_raw_to_f32)) return;
+      if (!make_pipeline("cast_f32_to_u8_raw", &ctx.cast_f32_to_u8_raw)) return;
+      if (!make_pipeline("cast_i16_to_f32", &ctx.cast_i16_to_f32)) return;
+      if (!make_pipeline("cast_f32_to_i16", &ctx.cast_f32_to_i16)) return;
+      if (!make_pipeline("cast_u16_to_f32", &ctx.cast_u16_to_f32)) return;
+      if (!make_pipeline("cast_f32_to_u16", &ctx.cast_f32_to_u16)) return;
+      if (!make_pipeline("cast_i8_to_i64", &ctx.cast_i8_to_i64)) return;
+      if (!make_pipeline("cast_i64_to_i8", &ctx.cast_i64_to_i8)) return;
+      if (!make_pipeline("cast_u8_raw_to_i64", &ctx.cast_u8_raw_to_i64)) return;
+      if (!make_pipeline("cast_i64_to_u8_raw", &ctx.cast_i64_to_u8_raw)) return;
+      if (!make_pipeline("cast_i16_to_i64", &ctx.cast_i16_to_i64)) return;
+      if (!make_pipeline("cast_i64_to_i16", &ctx.cast_i64_to_i16)) return;
+      if (!make_pipeline("cast_u16_to_i64", &ctx.cast_u16_to_i64)) return;
+      if (!make_pipeline("cast_i64_to_u16", &ctx.cast_i64_to_u16)) return;
       if (!make_pipeline("cast_i32_to_f32", &ctx.cast_i32_to_f32)) return;
       if (!make_pipeline("cast_f32_to_i32", &ctx.cast_f32_to_i32)) return;
       if (!make_pipeline("cast_i32_to_i64", &ctx.cast_i32_to_i64)) return;
@@ -258,6 +423,60 @@ id<MTLComputePipelineState> choose_pso_(Context& c, ScalarType src, ScalarType d
   if (src == ScalarType::Float32 && dst == ScalarType::Float16) {
     return c.cast_f32_to_f16;
   }
+  if (src == ScalarType::BFloat16 && dst == ScalarType::Float32) {
+    return c.cast_bf16_to_f32;
+  }
+  if (src == ScalarType::Float32 && dst == ScalarType::BFloat16) {
+    return c.cast_f32_to_bf16;
+  }
+  if (src == ScalarType::Int8 && dst == ScalarType::Float32) {
+    return c.cast_i8_to_f32;
+  }
+  if (src == ScalarType::Float32 && dst == ScalarType::Int8) {
+    return c.cast_f32_to_i8;
+  }
+  if (src == ScalarType::UInt8 && dst == ScalarType::Float32) {
+    return c.cast_u8_raw_to_f32;
+  }
+  if (src == ScalarType::Float32 && dst == ScalarType::UInt8) {
+    return c.cast_f32_to_u8_raw;
+  }
+  if (src == ScalarType::Int16 && dst == ScalarType::Float32) {
+    return c.cast_i16_to_f32;
+  }
+  if (src == ScalarType::Float32 && dst == ScalarType::Int16) {
+    return c.cast_f32_to_i16;
+  }
+  if (src == ScalarType::UInt16 && dst == ScalarType::Float32) {
+    return c.cast_u16_to_f32;
+  }
+  if (src == ScalarType::Float32 && dst == ScalarType::UInt16) {
+    return c.cast_f32_to_u16;
+  }
+  if (src == ScalarType::Int8 && dst == ScalarType::Int64) {
+    return c.cast_i8_to_i64;
+  }
+  if (src == ScalarType::Int64 && dst == ScalarType::Int8) {
+    return c.cast_i64_to_i8;
+  }
+  if (src == ScalarType::UInt8 && dst == ScalarType::Int64) {
+    return c.cast_u8_raw_to_i64;
+  }
+  if (src == ScalarType::Int64 && dst == ScalarType::UInt8) {
+    return c.cast_i64_to_u8_raw;
+  }
+  if (src == ScalarType::Int16 && dst == ScalarType::Int64) {
+    return c.cast_i16_to_i64;
+  }
+  if (src == ScalarType::Int64 && dst == ScalarType::Int16) {
+    return c.cast_i64_to_i16;
+  }
+  if (src == ScalarType::UInt16 && dst == ScalarType::Int64) {
+    return c.cast_u16_to_i64;
+  }
+  if (src == ScalarType::Int64 && dst == ScalarType::UInt16) {
+    return c.cast_i64_to_u16;
+  }
   if (src == ScalarType::Int32 && dst == ScalarType::Float32) {
     return c.cast_i32_to_f32;
   }
@@ -283,6 +502,11 @@ std::size_t dtype_bytes_(ScalarType dt) {
   switch (dt) {
     case ScalarType::Float32: return sizeof(float);
     case ScalarType::Float16: return sizeof(std::uint16_t);
+    case ScalarType::BFloat16: return sizeof(std::uint16_t);
+    case ScalarType::Int8: return sizeof(std::int8_t);
+    case ScalarType::UInt8: return sizeof(std::uint8_t);
+    case ScalarType::Int16: return sizeof(std::int16_t);
+    case ScalarType::UInt16: return sizeof(std::uint16_t);
     case ScalarType::Int32: return sizeof(std::int32_t);
     case ScalarType::Bool: return sizeof(std::uint8_t);
     case ScalarType::Int64: return sizeof(std::int64_t);
@@ -302,6 +526,24 @@ bool supports_cast(ScalarType src, ScalarType dst) noexcept {
          (src == ScalarType::Int64 && dst == ScalarType::Bool) ||
          (src == ScalarType::Float16 && dst == ScalarType::Float32) ||
          (src == ScalarType::Float32 && dst == ScalarType::Float16) ||
+         (src == ScalarType::BFloat16 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Float32 && dst == ScalarType::BFloat16) ||
+         (src == ScalarType::Int8 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Float32 && dst == ScalarType::Int8) ||
+         (src == ScalarType::UInt8 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Float32 && dst == ScalarType::UInt8) ||
+         (src == ScalarType::Int16 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Float32 && dst == ScalarType::Int16) ||
+         (src == ScalarType::UInt16 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Float32 && dst == ScalarType::UInt16) ||
+         (src == ScalarType::Int8 && dst == ScalarType::Int64) ||
+         (src == ScalarType::Int64 && dst == ScalarType::Int8) ||
+         (src == ScalarType::UInt8 && dst == ScalarType::Int64) ||
+         (src == ScalarType::Int64 && dst == ScalarType::UInt8) ||
+         (src == ScalarType::Int16 && dst == ScalarType::Int64) ||
+         (src == ScalarType::Int64 && dst == ScalarType::Int16) ||
+         (src == ScalarType::UInt16 && dst == ScalarType::Int64) ||
+         (src == ScalarType::Int64 && dst == ScalarType::UInt16) ||
          (src == ScalarType::Int32 && dst == ScalarType::Float32) ||
          (src == ScalarType::Float32 && dst == ScalarType::Int32) ||
          (src == ScalarType::Int32 && dst == ScalarType::Int64) ||

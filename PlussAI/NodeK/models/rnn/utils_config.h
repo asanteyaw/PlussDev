@@ -37,7 +37,7 @@ struct NetConfig {
 
 inline void validate_config(const NetConfig& cfg) {
   PLUSS_CHECK(cfg.num_layers > 0, "pluss::rnn: num_layers must be > 0");
-  PLUSS_CHECK(cfg.dropout >= 0.0 && cfg.dropout < 1.0, "pluss::rnn: dropout must be in [0, 1)");
+  PLUSS_CHECK(cfg.dropout >= 0.0 && cfg.dropout <= 1.0, "pluss::rnn: dropout must be in [0, 1]");
   PLUSS_CHECK(cfg.nonlinearity == "tanh" || cfg.nonlinearity == "relu",
               "pluss::rnn: nonlinearity must be 'tanh' or 'relu'");
   PLUSS_CHECK(cfg.proj_size >= 0, "pluss::rnn: proj_size must be >= 0");

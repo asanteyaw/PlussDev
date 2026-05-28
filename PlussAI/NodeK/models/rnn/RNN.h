@@ -161,6 +161,11 @@ inline std::tuple<Series, Series> rnn(const Series& input,
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
     }
   }
+  if (x0.platform() == pluss::pMPS) {
+    if (const auto routed = ::pluss::ai::kernels::mps::try_rnn(x0, state, params, cfg, require_backward); routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
 
   std::vector<Series> final_hidden;
   final_hidden.reserve(static_cast<std::size_t>(cfg.num_layers * dirs));
@@ -226,6 +231,11 @@ inline std::tuple<Series, Series> gru(const Series& input,
       cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+  if (x0.platform() == pluss::pMPS) {
+    if (const auto routed = ::pluss::ai::kernels::mps::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
     }
   }

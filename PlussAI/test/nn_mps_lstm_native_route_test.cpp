@@ -167,6 +167,49 @@ pluss::ai::rnn::NetWeight make_weight_block_for_input(const Config& cfg, std::in
   };
 }
 
+std::vector<float> patterned_values(std::size_t n, float scale, int salt) {
+  std::vector<float> out(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    const int bucket = static_cast<int>((i * 17 + static_cast<std::size_t>(salt)) % 23);
+    out[i] = (static_cast<float>(bucket) - 11.0f) * scale;
+  }
+  return out;
+}
+
+pluss::ai::rnn::NetWeight make_rnn_weight(const Config& cfg, std::int64_t input_size, std::int64_t hidden_size, int salt) {
+  return pluss::ai::rnn::NetWeight{
+      .weight_ih = pluss::make_series(
+                       patterned_values(static_cast<std::size_t>(hidden_size * input_size), 0.013f, salt),
+                       {hidden_size, input_size},
+                       cfg)
+                       .contiguous(),
+      .weight_hh = pluss::make_series(
+                       patterned_values(static_cast<std::size_t>(hidden_size * hidden_size), 0.011f, salt + 3),
+                       {hidden_size, hidden_size},
+                       cfg)
+                       .contiguous(),
+      .bias = pluss::make_series(patterned_values(static_cast<std::size_t>(hidden_size), 0.009f, salt + 7), {hidden_size}, cfg)
+                  .contiguous(),
+  };
+}
+
+pluss::ai::rnn::NetWeight make_gru_weight(const Config& cfg, std::int64_t input_size, std::int64_t hidden_size, int salt) {
+  return pluss::ai::rnn::NetWeight{
+      .weight_ih = pluss::make_series(
+                       patterned_values(static_cast<std::size_t>(3 * hidden_size * input_size), 0.012f, salt),
+                       {3 * hidden_size, input_size},
+                       cfg)
+                       .contiguous(),
+      .weight_hh = pluss::make_series(
+                       patterned_values(static_cast<std::size_t>(3 * hidden_size * hidden_size), 0.010f, salt + 5),
+                       {3 * hidden_size, hidden_size},
+                       cfg)
+                       .contiguous(),
+      .bias = pluss::make_series(patterned_values(static_cast<std::size_t>(3 * hidden_size), 0.008f, salt + 9), {3 * hidden_size}, cfg)
+                  .contiguous(),
+  };
+}
+
 template <class MakeParams>
 bool run_case(const Series& x,
               const Series& hx,
@@ -388,15 +431,195 @@ bool run_native_lstm_route_check(std::ostream* err = nullptr) {
       err);
 }
 
+template <class GradTrace>
+bool compare_gradient_traces(const char* label, GradTrace&& trace, double atol, double rtol, std::ostream* err) {
+  const auto ref_grads = trace("0");
+  const auto got_grads = trace("1");
+  if (ref_grads.size() != got_grads.size()) {
+    if (err) *err << label << " native MPS gradient trace arity mismatch\n";
+    return false;
+  }
+  for (std::size_t i = 0; i < ref_grads.size(); ++i) {
+    if (!close_vec(got_grads[i], ref_grads[i], atol, rtol)) {
+      if (err) *err << label << " native MPS gradient mismatch at slot " << i << "\n";
+      return false;
+    }
+  }
+  return true;
+}
+
+bool run_native_rnn_route_check(std::ostream* err = nullptr) {
+  if (!pluss::mps::is_ready()) return true;
+  if (!pluss::ai::kernels::mps::rnn_route_ready()) return true;
+
+  const Config mps = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pMPS);
+  const Series x = pluss::make_series(patterned_values(12, 0.05f, 2), {3, 2, 2}, mps).contiguous();
+  const Series hx = pluss::make_series(patterned_values(24, 0.02f, 5), {4, 2, 3}, mps).contiguous();
+
+  pluss::ai::rnn::NetConfig cfg{};
+  cfg.training = true;
+  cfg.bidirectional = true;
+  cfg.num_layers = 2;
+  cfg.dropout = 0.0;
+  cfg.nonlinearity = "tanh";
+  cfg.cfg = mps;
+
+  auto make_params = [&]() {
+    return std::vector<pluss::ai::rnn::NetWeight>{
+        make_rnn_weight(mps, 2, 3, 11),
+        make_rnn_weight(mps, 2, 3, 21),
+        make_rnn_weight(mps, 6, 3, 31),
+        make_rnn_weight(mps, 6, 3, 41),
+    };
+  };
+
+  Series ref_y;
+  Series ref_h;
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_RNN_ROUTE", "0");
+    auto params = make_params();
+    std::tie(ref_y, ref_h) = pluss::ai::rnn::rnn(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
+  }
+
+  Series got_y;
+  Series got_h;
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_RNN_ROUTE", "1");
+    ScopedEnvVar strict("PLUSS_MPS_RNN_ROUTE_STRICT", "1");
+    auto params = make_params();
+    std::tie(got_y, got_h) = pluss::ai::rnn::rnn(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
+  }
+
+  if (got_y.platform() != pluss::pMPS || got_h.platform() != pluss::pMPS || !close_vec(vec_f64(got_y), vec_f64(ref_y), 3e-3, 3e-3) ||
+      !close_vec(vec_f64(got_h), vec_f64(ref_h), 3e-3, 3e-3)) {
+    if (err) *err << "bidirectional native MPS RNN route mismatch against Series fallback\n";
+    return false;
+  }
+
+  auto gradient_trace = [&](const char* route_enabled) {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_RNN_ROUTE", route_enabled);
+    ScopedEnvVar strict("PLUSS_MPS_RNN_ROUTE_STRICT", route_enabled);
+    Series xg = x.clone();
+    Series hxg = hx.clone();
+    xg.tracks_slope_(true);
+    hxg.tracks_slope_(true);
+    auto params = make_params();
+    for (auto& p : params) {
+      p.weight_ih.tracks_slope_(true);
+      p.weight_hh.tracks_slope_(true);
+      p.bias.tracks_slope_(true);
+    }
+    auto [y, h] = pluss::ai::rnn::rnn(xg, hxg, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
+    y.square().sum().add(h.square().sum()).reverse();
+    std::vector<std::vector<double>> grads;
+    grads.push_back(vec_f64(xg.sensitivity()));
+    grads.push_back(vec_f64(hxg.sensitivity()));
+    for (const auto& p : params) {
+      grads.push_back(vec_f64(p.weight_ih.sensitivity()));
+      grads.push_back(vec_f64(p.weight_hh.sensitivity()));
+      grads.push_back(vec_f64(p.bias.sensitivity()));
+    }
+    return grads;
+  };
+  return compare_gradient_traces("bidirectional native MPS RNN", gradient_trace, 4e-3, 4e-3, err);
+}
+
+bool run_native_gru_route_check(std::ostream* err = nullptr) {
+  if (!pluss::mps::is_ready()) return true;
+  if (!pluss::ai::kernels::mps::gru_route_ready()) return true;
+
+  const Config mps = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pMPS);
+  const Series x = pluss::make_series(patterned_values(12, 0.05f, 3), {3, 2, 2}, mps).contiguous();
+  const Series hx = pluss::make_series(patterned_values(24, 0.02f, 6), {4, 2, 3}, mps).contiguous();
+
+  pluss::ai::rnn::NetConfig cfg{};
+  cfg.training = true;
+  cfg.bidirectional = true;
+  cfg.num_layers = 2;
+  cfg.dropout = 0.0;
+  cfg.use_bias = true;
+  cfg.split_bias = false;
+  cfg.cfg = mps;
+
+  auto make_params = [&]() {
+    return std::vector<pluss::ai::rnn::NetWeight>{
+        make_gru_weight(mps, 2, 3, 12),
+        make_gru_weight(mps, 2, 3, 22),
+        make_gru_weight(mps, 6, 3, 32),
+        make_gru_weight(mps, 6, 3, 42),
+    };
+  };
+
+  Series ref_y;
+  Series ref_h;
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "0");
+    auto params = make_params();
+    std::tie(ref_y, ref_h) = pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
+  }
+
+  Series got_y;
+  Series got_h;
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "1");
+    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", "1");
+    auto params = make_params();
+    std::tie(got_y, got_h) = pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
+  }
+
+  if (got_y.platform() != pluss::pMPS || got_h.platform() != pluss::pMPS || !close_vec(vec_f64(got_y), vec_f64(ref_y), 3e-3, 3e-3) ||
+      !close_vec(vec_f64(got_h), vec_f64(ref_h), 3e-3, 3e-3)) {
+    if (err) *err << "bidirectional native MPS GRU route mismatch against Series fallback\n";
+    return false;
+  }
+
+  auto gradient_trace = [&](const char* route_enabled) {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", route_enabled);
+    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", route_enabled);
+    Series xg = x.clone();
+    Series hxg = hx.clone();
+    xg.tracks_slope_(true);
+    hxg.tracks_slope_(true);
+    auto params = make_params();
+    for (auto& p : params) {
+      p.weight_ih.tracks_slope_(true);
+      p.weight_hh.tracks_slope_(true);
+      p.bias.tracks_slope_(true);
+    }
+    auto [y, h] = pluss::ai::rnn::gru(xg, hxg, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
+    y.square().sum().add(h.square().sum()).reverse();
+    std::vector<std::vector<double>> grads;
+    grads.push_back(vec_f64(xg.sensitivity()));
+    grads.push_back(vec_f64(hxg.sensitivity()));
+    for (const auto& p : params) {
+      grads.push_back(vec_f64(p.weight_ih.sensitivity()));
+      grads.push_back(vec_f64(p.weight_hh.sensitivity()));
+      grads.push_back(vec_f64(p.bias.sensitivity()));
+    }
+    return grads;
+  };
+  return compare_gradient_traces("bidirectional native MPS GRU", gradient_trace, 4e-3, 4e-3, err);
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("native MPS LSTM inference route matches Series fallback", "[mps][lstm][rnn]") {
   REQUIRE(run_native_lstm_route_check());
+  REQUIRE(run_native_rnn_route_check());
+  REQUIRE(run_native_gru_route_check());
 }
 #else
 int main() {
   if (!run_native_lstm_route_check(&std::cerr)) return 1;
+  if (!run_native_rnn_route_check(&std::cerr)) return 1;
+  if (!run_native_gru_route_check(&std::cerr)) return 1;
   return 0;
 }
 #endif

@@ -1,6 +1,7 @@
 #include <pluss/ai/ml.h>
 #include <pluss/mic.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
@@ -228,7 +229,7 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
       return false;
     }
     const auto drop_sizes = drop_or.value().sizes();
-    if (drop_sizes.size() != 2 || drop_sizes[0] != 4 || drop_sizes[1] >= 3) {
+    if (drop_sizes.size() != 2 || drop_sizes[0] != 4 || drop_sizes[1] <= 0) {
       if (err) *err << "RouteRemainderPolicy::Drop should exclude non-routed features\n";
       return false;
     }

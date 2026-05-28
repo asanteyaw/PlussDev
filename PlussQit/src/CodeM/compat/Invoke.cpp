@@ -2000,13 +2000,62 @@ static Series threshold_impl_(const Series& self, double threshold, double value
                              self);
 }
 
-static Series dropout_impl_(const Series& self, double p, bool train) {
+static bool is_dropout_family_(std::string_view op) {
+  return op == "dropout" || op == "feature_dropout" ||
+      op == "alpha_dropout" || op == "feature_alpha_dropout";
+}
+
+static bool is_inplace_dropout_family_(std::string_view op) {
+  return op == "dropout_" || op == "feature_dropout_" ||
+      op == "alpha_dropout_" || op == "feature_alpha_dropout_";
+}
+
+static bool is_feature_dropout_(std::string_view op) {
+  return op == "feature_dropout" || op == "feature_alpha_dropout" ||
+      op == "feature_dropout_" || op == "feature_alpha_dropout_";
+}
+
+static bool is_alpha_dropout_(std::string_view op) {
+  return op == "alpha_dropout" || op == "feature_alpha_dropout" ||
+      op == "alpha_dropout_" || op == "feature_alpha_dropout_";
+}
+
+static Series dropout_noise_like_(const Series& self, bool feature, double keep) {
+  if (!feature) {
+    return bernoulli_like(self, keep).to(self.scalar_type());
+  }
+
+  PLUSS_CHECK(self.dim() >= 2, "feature_dropout: expected input with at least 2 dimensions");
+  std::vector<std::int64_t> noise_shape(self.dim(), 1);
+  noise_shape[0] = self.sizes()[0];
+  noise_shape[1] = self.sizes()[1];
+  const Series seed =
+      Series::empty(pluss::msharp::RangeView::Int(noise_shape), self.scalar_type(), self.platform());
+  Series noise = bernoulli_like(seed, keep).to(self.scalar_type());
+  return expand_impl(noise, self.sizes());
+}
+
+static Series dropout_family_impl_(std::string_view op, const Series& self, double p, bool train) {
   PLUSS_CHECK(p >= 0.0 && p <= 1.0, "dropout: expected 0 <= p <= 1");
-  if (!train || p == 0.0) return self;
-  if (p == 1.0) return Series::zeros(self.sizes(), self.scalar_type()).to(self.platform());
+  if (!train || p == 0.0 || self.numel() == 0) return self;
+  if (p == 1.0) {
+    return Series::zeros(pluss::msharp::RangeView::Int(self.sizes()), self.scalar_type()).to(self.platform());
+  }
+
+  const bool feature = is_feature_dropout_(op);
+  const bool alpha = is_alpha_dropout_(op);
   const double keep = 1.0 - p;
-  const Series mask = bernoulli_like(self, keep).to(self.scalar_type());
-  return div_scalar(ops_internal::mul(self, mask), keep);
+  Series noise = dropout_noise_like_(self, feature, keep);
+  if (!alpha) {
+    return div_scalar(ops_internal::mul(self, noise), keep);
+  }
+
+  constexpr double kAlphaDropoutAlpha = 1.7580993408473766;
+  const double a = 1.0 / std::sqrt((kAlphaDropoutAlpha * kAlphaDropoutAlpha * p + 1.0) * keep);
+  const double alpha_a = kAlphaDropoutAlpha * a;
+  const Series bias = add_scalar(mul_scalar(add_scalar(noise, -1.0), alpha_a), alpha_a * p);
+  noise = mul_scalar(noise, a);
+  return ops_internal::add(ops_internal::mul(self, noise), bias);
 }
 
 static bool series_any_true_(const Series& x) {
@@ -4429,9 +4478,6 @@ static std::string_view canonical_op(std::string_view op) {
   if (op == "_index_put_impl") return "index_put";
   if (op == "_resize_output") return "resize";
   if (op == "copy_sparse_to_sparse") return "copy";
-  if (op == "alpha_dropout") return "dropout";
-  if (op == "feature_dropout") return "dropout";
-  if (op == "feature_alpha_dropout") return "dropout";
   if (op == "_conj") return "conj";
   if (op == "_conj_physical") return "conj";
   if (op == "_to_dense") return "to_dense";
@@ -4462,9 +4508,6 @@ static std::string_view canonical_inplace_op(std::string_view op) {
   if (op == "_index_put_impl_") return "index_put_";
   if (op == "_resize_output_") return "resize_";
   if (op == "copy_sparse_to_sparse_") return "copy_";
-  if (op == "alpha_dropout_") return "dropout_";
-  if (op == "feature_dropout_") return "dropout_";
-  if (op == "feature_alpha_dropout_") return "dropout_";
   if (op == "_foreach_abs_") return "abs_";
   if (op == "_foreach_acos_") return "acos_";
   if (op == "_foreach_asin_") return "asin_";
@@ -4682,9 +4725,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "hardtanh") return ops_internal::clamp(self, -1.0, 1.0);
     if (op == "celu") return celu_impl_(self, 1.0);
     if (op == "elu") return elu_impl_(self, 1.0, 1.0, 1.0);
-    if (op == "dropout" || op == "feature_dropout" ||
-        op == "alpha_dropout" || op == "feature_alpha_dropout") {
-      return dropout_impl_(self, /*p=*/0.5, /*train=*/true);
+    if (is_dropout_family_(op)) {
+      return dropout_family_impl_(op, self, /*p=*/0.5, /*train=*/true);
     }
     if (op == "gelu") return ops_internal::gelu(self);
 
@@ -5139,9 +5181,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "cumsum") return self.cumsum((std::int64_t)s, /*keepdim=*/false);
       if (op == "cumprod") return self.cumprod((std::int64_t)s, /*keepdim=*/false);
       if (op == "bernoulli") return bernoulli_like(self, s);
-      if (op == "dropout" || op == "feature_dropout" ||
-          op == "alpha_dropout" || op == "feature_alpha_dropout") {
-        return dropout_impl_(self, s, /*train=*/true);
+      if (is_dropout_family_(op)) {
+        return dropout_family_impl_(op, self, s, /*train=*/true);
       }
       if (op == "histogram") return self.histc((std::int64_t)s, 0.0, 0.0);
       return not_impl(op, args, self);
@@ -5168,9 +5209,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         series_tape::set_tracks_slope(self, b);
         return self;
       }
-      if (op == "dropout" || op == "feature_dropout" ||
-          op == "alpha_dropout" || op == "feature_alpha_dropout") {
-        return dropout_impl_(self, /*p=*/0.5, b);
+      if (is_dropout_family_(op)) {
+        return dropout_family_impl_(op, self, /*p=*/0.5, b);
       }
       if (op == "retain_grad") {
         series_tape::set_keep_sensitivity(self, b);
@@ -5412,9 +5452,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
                          std::span<const std::int64_t>(dims.data(), dims.size()));
       }
       if (op == "repeat_interleave") return repeat_interleave_impl(self, (std::int64_t)x, (std::int64_t)y);
-      if (op == "dropout" || op == "feature_dropout" ||
-          op == "alpha_dropout" || op == "feature_alpha_dropout") {
-        return dropout_impl_(self, x, /*train=*/(y != 0.0));
+      if (is_dropout_family_(op)) {
+        return dropout_family_impl_(op, self, x, /*train=*/(y != 0.0));
       }
       return not_impl(op, args, self);
     }
@@ -5424,9 +5463,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const auto dim = as_i64(args[0]);
       const double p = as_double(args[0]);
       const bool keepdim = as_bool(args[1]);
-      if (op == "dropout" || op == "feature_dropout" ||
-          op == "alpha_dropout" || op == "feature_alpha_dropout") {
-        return dropout_impl_(self, p, keepdim);
+      if (is_dropout_family_(op)) {
+        return dropout_family_impl_(op, self, p, keepdim);
       }
       if (op == "sum") return ops_internal::sum(self, dim, keepdim);
       if (op == "mean") return ops_internal::mean(self, dim, keepdim);
@@ -6141,9 +6179,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (op == "geometric_") { self = geometric_like(self, 0.5); return self; }
     if (op == "cauchy_") { self = cauchy_like(self, 0.0, 1.0); return self; }
     if (op == "bernoulli_") { self = bernoulli_sample_from_probs(self).to(self.scalar_type()); return self; }
-    if (op == "dropout_" || op == "feature_dropout_" ||
-        op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
-      self = dropout_impl_(self, /*p=*/0.5, /*train=*/true).to(self.scalar_type());
+    if (is_inplace_dropout_family_(op)) {
+      self = dropout_family_impl_(op, self, /*p=*/0.5, /*train=*/true).to(self.scalar_type());
       return self;
     }
     if (op == "sinc_") { self = sinc_impl(self).to(self.scalar_type()); return self; }
@@ -6184,9 +6221,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "heaviside_") { self = heaviside_impl(self, scalar_like(self, s)); return self; }
       if (op == "celu_") { self = celu_impl_(self, s).to(self.scalar_type()); return self; }
       if (op == "elu_") { self = elu_impl_(self, s, 1.0, 1.0).to(self.scalar_type()); return self; }
-      if (op == "dropout_" || op == "feature_dropout_" ||
-          op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
-        self = dropout_impl_(self, s, /*train=*/true).to(self.scalar_type());
+      if (is_inplace_dropout_family_(op)) {
+        self = dropout_family_impl_(op, self, s, /*train=*/true).to(self.scalar_type());
         return self;
       }
       if (op == "gcd_") { self = gcd_impl(self, scalar_like(self, s)); return self; }
@@ -6360,9 +6396,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "log_normal_") { self = ops_internal::exp(normal_like(self, x, y)); return self; }
       if (op == "cauchy_") { self = cauchy_like(self, x, y); return self; }
       if (op == "random_") { self = random_like(self, x, y); return self; }
-      if (op == "dropout_" || op == "feature_dropout_" ||
-          op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
-        self = dropout_impl_(self, x, /*train=*/(y != 0.0)).to(self.scalar_type());
+      if (is_inplace_dropout_family_(op)) {
+        self = dropout_family_impl_(op, self, x, /*train=*/(y != 0.0)).to(self.scalar_type());
         return self;
       }
       return not_impl_inplace(op, args, self);
@@ -6371,9 +6406,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const auto dim = as_i64(args[0]);
       const double p = as_double(args[0]);
       const bool keepdim = as_bool(args[1]);
-      if (op == "dropout_" || op == "feature_dropout_" ||
-          op == "alpha_dropout_" || op == "feature_alpha_dropout_") {
-        self = dropout_impl_(self, p, keepdim).to(self.scalar_type());
+      if (is_inplace_dropout_family_(op)) {
+        self = dropout_family_impl_(op, self, p, keepdim).to(self.scalar_type());
         return self;
       }
       if (op == "fill_diagonal_") return fill_diagonal_impl(self, as_double(args[0]), keepdim);

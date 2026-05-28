@@ -366,6 +366,32 @@ TEST_CASE("autodiff reverse propagates take sensitivities with duplicate indices
   REQUIRE(g[3] == Approx(2.0));
 }
 
+TEST_CASE("autodiff reverse distributes amax and amin ties across reduced lanes", "[autodiff][reverse][reduction]") {
+  Series x = make_series(std::vector<double>{1.0, 5.0, 5.0, 2.0, -1.0, 2.0}, {2, 3}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  x.amax(1, false).sum().reverse();
+  {
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g == std::vector<double>{0.0, 0.5, 0.5, 0.5, 0.0, 0.5});
+  }
+
+  x.clear_sensitivity();
+  x.amin(0, false).sum().reverse();
+  {
+    const auto g = x.sensitivity().to_vec<double>();
+    REQUIRE(g == std::vector<double>{1.0, 0.0, 0.0, 0.0, 1.0, 1.0});
+  }
+}
+
+TEST_CASE("autodiff reverse propagates cumsum sensitivities with reverse scan", "[autodiff][reverse][scan]") {
+  Series x = make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {2, 3}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  x.cumsum(1).sum().reverse();
+
+  const auto g = x.sensitivity().to_vec<double>();
+  REQUIRE(g == std::vector<double>{3.0, 2.0, 1.0, 3.0, 2.0, 1.0});
+}
+
 TEST_CASE("autodiff reverse seed shape mismatch fails loudly", "[autodiff][diagnostics]") {
   Series x = make_f64({0.3, -0.2, 0.5});
   x.tracks_slope_(true);
