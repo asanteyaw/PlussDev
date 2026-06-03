@@ -364,7 +364,10 @@ Series cuda_indexing_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_indexing_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -406,7 +409,10 @@ Series cuda_scatter_gather_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_scatter_gather_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -448,7 +454,10 @@ Series cuda_elementwise_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_elementwise_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -490,7 +499,10 @@ Series cuda_reduction_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_reduction_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -532,7 +544,10 @@ Series cuda_scan_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_scan_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -574,7 +589,10 @@ Series cuda_masking_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_masking_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -616,7 +634,10 @@ Series cuda_bitwise_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_bitwise_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -658,7 +679,10 @@ Series cuda_compose_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_compose_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -700,7 +724,10 @@ Series cuda_counting_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_counting_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     PLUSS_FAIL(
@@ -1135,11 +1162,89 @@ Series sub(const Series& a, const Series& b) {
   return out;
 }
 
+static bool complex_scalar_type_(ScalarType st) noexcept {
+  return st == ScalarType::Complex64 || st == ScalarType::Complex128;
+}
+
+static Series conjugate_if_complex_(const Series& x) {
+  return complex_scalar_type_(x.scalar_type()) ? conj(x) : x;
+}
+
+static Series complex_from_parts_(const Series& real_part, const Series& imag_part, ScalarType out_dt) {
+  PLUSS_CHECK(
+      out_dt == ScalarType::Complex64 || out_dt == ScalarType::Complex128,
+      "complex_from_parts: output dtype must be complex");
+  require_same_platform(real_part, imag_part, "complex_from_parts");
+  PLUSS_CHECK(same_shape_(real_part, imag_part), "complex_from_parts: real/imag shape mismatch");
+
+  if (real_part.platform() == Platform::MPS) {
+    PLUSS_CHECK(out_dt == ScalarType::Complex64, "complex_from_parts: MPS supports complex64 output");
+    Series rr = real_part.to(ScalarType::Float32).contiguous();
+    Series ii = imag_part.to(ScalarType::Float32).contiguous();
+    Series out = Series::empty(real_part.sizes(), ScalarType::Complex64, Platform::MPS);
+    native::mps::complex_from_parts(rr, ii, out);
+    return out;
+  }
+
+  if (real_part.platform() != Platform::CPU) {
+    require_backend_dispatch_supported_(real_part.platform(), "complex_from_parts");
+  }
+
+  if (out_dt == ScalarType::Complex64) {
+    Series rr = real_part.to(ScalarType::Float32).contiguous();
+    Series ii = imag_part.to(ScalarType::Float32).contiguous();
+    Series out = Series::empty(real_part.sizes(), ScalarType::Complex64, Platform::CPU);
+    const auto* rp = reinterpret_cast<const float*>(rr.raw_data());
+    const auto* ip = reinterpret_cast<const float*>(ii.raw_data());
+    auto* op = reinterpret_cast<Complex64*>(out.raw_data());
+    for (std::int64_t i = 0; i < out.numel(); ++i) op[i] = Complex64(rp[i], ip[i]);
+    return out;
+  }
+
+  Series rr = real_part.to(ScalarType::Float64).contiguous();
+  Series ii = imag_part.to(ScalarType::Float64).contiguous();
+  Series out = Series::empty(real_part.sizes(), ScalarType::Complex128, Platform::CPU);
+  const auto* rp = reinterpret_cast<const double*>(rr.raw_data());
+  const auto* ip = reinterpret_cast<const double*>(ii.raw_data());
+  auto* op = reinterpret_cast<Complex128*>(out.raw_data());
+  for (std::int64_t i = 0; i < out.numel(); ++i) op[i] = Complex128(rp[i], ip[i]);
+  return out;
+}
+
+static Series complex_real_lift_(const Series& real_part, ScalarType out_dt) {
+  return complex_from_parts_(real_part, real_part.mul(0.0), out_dt);
+}
+
+static Series complex_imag_lift_(const Series& imag_part, ScalarType out_dt) {
+  return complex_from_parts_(imag_part.mul(0.0), imag_part, out_dt);
+}
+
+static Series complex_abs_backward_(const Series& out_sens, const Series& input) {
+  const Series mag = abs(input);
+  const Series zero_real = mag.mul(0.0);
+  const Series denom = complex_from_parts_(mag, zero_real, input.scalar_type());
+  const Series grad = complex_real_lift_(out_sens, input.scalar_type()).mul(input).div(denom);
+  const Series zero_complex = complex_from_parts_(zero_real, zero_real, input.scalar_type());
+  return where(eq(input, zero_complex), zero_complex, grad);
+}
+
+static Series complex_angle_backward_(const Series& out_sens, const Series& input) {
+  const Series mag = abs(input);
+  const Series mag2 = mag.mul(mag);
+  const Series zero_real = mag2.mul(0.0);
+  const Series denom = complex_from_parts_(mag2, zero_real, input.scalar_type());
+  const Series i_grad = complex_imag_lift_(out_sens, input.scalar_type());
+  const Series grad = i_grad.mul(input).div(denom);
+  const Series zero_complex = complex_from_parts_(zero_real, zero_real, input.scalar_type());
+  return where(eq(input, zero_complex), zero_complex, grad);
+}
+
 static Series mul_backward_product_(const Series& lhs, const Series& rhs) {
   require_same_platform(lhs, rhs, "mul(backprop)");
   // On MPS, recurrent backprop can hit non-finite products in native multiply;
   // use a stable CPU product while tape recording is paused during reverse.
-  if (lhs.platform() == Platform::MPS && !series_tape::recording_enabled()) {
+  if (lhs.platform() == Platform::MPS && !series_tape::recording_enabled() &&
+      !complex_scalar_type_(lhs.scalar_type()) && !complex_scalar_type_(rhs.scalar_type())) {
     Series lhs_cpu = lhs.to(Platform::CPU, ScalarType::Float32);
     Series rhs_cpu = rhs.to(Platform::CPU, ScalarType::Float32);
     Series out_cpu = lhs_cpu.mul(rhs_cpu);
@@ -1156,8 +1261,8 @@ Series mul(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Mul, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "mul",
-      [b](const Series& g) { return mul_backward_product_(g, b); },
-      [a](const Series& g) { return mul_backward_product_(g, a); });
+      [b](const Series& g) { return mul_backward_product_(g, conjugate_if_complex_(b)); },
+      [a](const Series& g) { return mul_backward_product_(g, conjugate_if_complex_(a)); });
   return out;
 }
 Series div(const Series& a, const Series& b) {
@@ -1167,10 +1272,12 @@ Series div(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Div, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "div",
-      [b](const Series& g) { return g.div(b); },
+      [b](const Series& g) { return g.div(conjugate_if_complex_(b)); },
       [a, b](const Series& g) {
-        const Series denom = b.mul(b);
-        return g.mul(a).div(denom).neg();
+        const Series cb = conjugate_if_complex_(b);
+        const Series ca = conjugate_if_complex_(a);
+        const Series denom = cb.mul(cb);
+        return g.mul(ca).div(denom).neg();
       });
   return out;
 }
@@ -1259,6 +1366,12 @@ Series conj(const Series& a) {
   PLUSS_CHECK(a.defined(), "conj: undefined");
   if (a.platform() == Platform::MPS &&
       (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128)) {
+    if (native::mps::supports_complex_conj(a.scalar_type())) {
+      Series out = Series::empty(a.sizes(), a.scalar_type(), Platform::MPS);
+      native::mps::complex_conj(a.contiguous(), out);
+      maybe_link_unary_op_(out, a, "conj", [](const Series& g) { return conj(g); });
+      return out;
+    }
     require_backend_dispatch_supported_(a.platform(), "conj(complex)");
   }
   if (a.scalar_type() == ScalarType::Complex64) {
@@ -1285,6 +1398,12 @@ Series real(const Series& a) {
   PLUSS_CHECK(a.defined(), "real: undefined");
   if (a.platform() == Platform::MPS &&
       (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128)) {
+    if (native::mps::supports_complex_component(a.scalar_type(), ScalarType::Float32)) {
+      Series out = Series::empty(a.sizes(), ScalarType::Float32, Platform::MPS);
+      native::mps::complex_component(native::mps::ComplexComponentOp::Real, a.contiguous(), out);
+      maybe_link_unary_op_(out, a, "real", [a](const Series& g) { return complex_real_lift_(g, a.scalar_type()); });
+      return out;
+    }
     require_backend_dispatch_supported_(a.platform(), "real(complex)");
   }
   if (a.scalar_type() == ScalarType::Complex64) {
@@ -1293,6 +1412,7 @@ Series real(const Series& a) {
     auto* op = reinterpret_cast<float*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::real(ap[i]);
+    maybe_link_unary_op_(out, a, "real", [a](const Series& g) { return complex_real_lift_(g, a.scalar_type()); });
     return out;
   }
   if (a.scalar_type() == ScalarType::Complex128) {
@@ -1301,6 +1421,7 @@ Series real(const Series& a) {
     auto* op = reinterpret_cast<double*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::real(ap[i]);
+    maybe_link_unary_op_(out, a, "real", [a](const Series& g) { return complex_real_lift_(g, a.scalar_type()); });
     return out;
   }
   return a.clone();
@@ -1310,6 +1431,12 @@ Series imag(const Series& a) {
   PLUSS_CHECK(a.defined(), "imag: undefined");
   if (a.platform() == Platform::MPS &&
       (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128)) {
+    if (native::mps::supports_complex_component(a.scalar_type(), ScalarType::Float32)) {
+      Series out = Series::empty(a.sizes(), ScalarType::Float32, Platform::MPS);
+      native::mps::complex_component(native::mps::ComplexComponentOp::Imag, a.contiguous(), out);
+      maybe_link_unary_op_(out, a, "imag", [a](const Series& g) { return complex_imag_lift_(g, a.scalar_type()); });
+      return out;
+    }
     require_backend_dispatch_supported_(a.platform(), "imag(complex)");
   }
   if (a.scalar_type() == ScalarType::Complex64) {
@@ -1318,6 +1445,7 @@ Series imag(const Series& a) {
     auto* op = reinterpret_cast<float*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::imag(ap[i]);
+    maybe_link_unary_op_(out, a, "imag", [a](const Series& g) { return complex_imag_lift_(g, a.scalar_type()); });
     return out;
   }
   if (a.scalar_type() == ScalarType::Complex128) {
@@ -1326,6 +1454,7 @@ Series imag(const Series& a) {
     auto* op = reinterpret_cast<double*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::imag(ap[i]);
+    maybe_link_unary_op_(out, a, "imag", [a](const Series& g) { return complex_imag_lift_(g, a.scalar_type()); });
     return out;
   }
   // real dtype -> 0
@@ -1339,6 +1468,12 @@ Series angle(const Series& a) {
   PLUSS_CHECK(a.defined(), "angle: undefined");
   if (a.platform() == Platform::MPS &&
       (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128)) {
+    if (native::mps::supports_complex_component(a.scalar_type(), ScalarType::Float32)) {
+      Series out = Series::empty(a.sizes(), ScalarType::Float32, Platform::MPS);
+      native::mps::complex_component(native::mps::ComplexComponentOp::Angle, a.contiguous(), out);
+      maybe_link_unary_op_(out, a, "angle", [a](const Series& g) { return complex_angle_backward_(g, a); });
+      return out;
+    }
     require_backend_dispatch_supported_(a.platform(), "angle(complex)");
   }
   if (a.scalar_type() == ScalarType::Complex64) {
@@ -1347,6 +1482,7 @@ Series angle(const Series& a) {
     auto* op = reinterpret_cast<float*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::arg(ap[i]);
+    maybe_link_unary_op_(out, a, "angle", [a](const Series& g) { return complex_angle_backward_(g, a); });
     return out;
   }
   if (a.scalar_type() == ScalarType::Complex128) {
@@ -1355,6 +1491,7 @@ Series angle(const Series& a) {
     auto* op = reinterpret_cast<double*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::arg(ap[i]);
+    maybe_link_unary_op_(out, a, "angle", [a](const Series& g) { return complex_angle_backward_(g, a); });
     return out;
   }
   if (a.platform() == Platform::MPS) {
@@ -1383,6 +1520,12 @@ Series angle(const Series& a) {
 Series abs(const Series& a) {
   if (a.platform() == Platform::MPS &&
       (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128)) {
+    if (native::mps::supports_complex_component(a.scalar_type(), ScalarType::Float32)) {
+      Series out = Series::empty(a.sizes(), ScalarType::Float32, Platform::MPS);
+      native::mps::complex_component(native::mps::ComplexComponentOp::Abs, a.contiguous(), out);
+      maybe_link_unary_op_(out, a, "abs", [a](const Series& g) { return complex_abs_backward_(g, a); });
+      return out;
+    }
     require_backend_dispatch_supported_(a.platform(), "abs(complex)");
   }
   if (a.scalar_type() == ScalarType::Complex64) {
@@ -1391,6 +1534,7 @@ Series abs(const Series& a) {
     auto* op = reinterpret_cast<float*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::abs(ap[i]);
+    maybe_link_unary_op_(out, a, "abs", [a](const Series& g) { return complex_abs_backward_(g, a); });
     return out;
   }
   if (a.scalar_type() == ScalarType::Complex128) {
@@ -1399,6 +1543,7 @@ Series abs(const Series& a) {
     auto* op = reinterpret_cast<double*>(out.raw_data());
     const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
     for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::abs(ap[i]);
+    maybe_link_unary_op_(out, a, "abs", [a](const Series& g) { return complex_abs_backward_(g, a); });
     return out;
   }
   auto out = unary_op_(native::cpu::UnaryOpId::Abs, a);
@@ -1419,7 +1564,9 @@ Series abs(const Series& a) {
 }
 Series& abs_(Series& a) { a = abs(a); return a; }
 Series neg(const Series& a) {
-  auto out = unary_op_(native::cpu::UnaryOpId::Neg, a);
+  auto out = (a.platform() == Platform::MPS && complex_scalar_type_(a.scalar_type()))
+      ? mul(a, -1.0)
+      : unary_op_(native::cpu::UnaryOpId::Neg, a);
   if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "neg";
@@ -5796,7 +5943,9 @@ Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platfor
   const auto n = compute_numel(sizes);
   const auto bytes = std::max<std::size_t>(
       1, static_cast<std::size_t>(n) * dt.itemsize);
-  Storage storage(bytes);
+  Storage storage = (platform == Platform::CUDA && native::cuda::device_storage_enabled())
+      ? Storage::cuda_device(bytes)
+      : Storage(bytes);
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       std::move(storage), 0,
       std::vector<std::int64_t>(sizes.begin(), sizes.end()),
@@ -5810,12 +5959,24 @@ Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platfor
 Series Series::zeros(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   auto t = empty(sizes, st);
   const auto dt = t.dtype();
-  std::memset(t.raw_data(), 0, static_cast<std::size_t>(t.numel()) * dt.itemsize);
+  const auto nbytes = static_cast<std::size_t>(t.numel()) * dt.itemsize;
+  if (t.platform() == Platform::CUDA &&
+      t.storage().location() == StorageLocation::CudaDevice) {
+    if (!native::cuda::memset_device(t.raw_data(), 0, nbytes)) {
+      PLUSS_FAIL("Series::zeros(..., CUDA): cudaMemset failed");
+    }
+    return t;
+  }
+  std::memset(t.raw_data(), 0, nbytes);
   return t;
 }
 
 Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   auto t = empty(sizes, st);
+  if (t.platform() == Platform::CUDA &&
+      t.storage().location() == StorageLocation::CudaDevice) {
+    PLUSS_FAIL("Series::ones(..., CUDA): native CUDA fill kernel is not implemented yet");
+  }
   const auto n = t.numel();
   switch (st) {
     case ScalarType::Float64: {
@@ -5888,6 +6049,17 @@ Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st) {
 
 Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st) {
   auto t = empty(sizes, st);
+  if (t.platform() == Platform::CUDA &&
+      t.storage().location() == StorageLocation::CudaDevice) {
+    if (value == 0.0) {
+      const auto nbytes = static_cast<std::size_t>(t.numel()) * t.dtype().itemsize;
+      if (!native::cuda::memset_device(t.raw_data(), 0, nbytes)) {
+        PLUSS_FAIL("Series::full(..., CUDA, 0): cudaMemset failed");
+      }
+      return t;
+    }
+    PLUSS_FAIL("Series::full(..., CUDA): native CUDA fill kernel is not implemented yet");
+  }
   const auto n = t.numel();
   switch (st) {
     case ScalarType::Float64: {
@@ -6327,6 +6499,12 @@ Series Series::platform(Platform target) const {
 
   switch (target) {
     case Platform::CPU:
+      if (src_platform == Platform::CUDA &&
+          native::cuda::cpu_materialization_forbidden()) {
+        PLUSS_FAIL(
+            "Series::platform(CPU): CUDA CPU materialization is forbidden by "
+            "PLUSS_CUDA_FORBID_CPU_MATERIALIZATION");
+      }
       break;
     case Platform::CUDA:
       if (!native::cuda::runtime_available()) {
@@ -6354,7 +6532,26 @@ Series Series::platform(Platform target) const {
   const auto nbytes =
       static_cast<std::size_t>(src.numel()) * static_cast<std::size_t>(src.itemsize());
   if (nbytes > 0) {
-    std::memcpy(out.raw_mutable_data(), src.raw_data(), nbytes);
+    const bool src_cuda_device =
+        src.storage().location() == StorageLocation::CudaDevice;
+    const bool dst_cuda_device =
+        out.storage().location() == StorageLocation::CudaDevice;
+    bool copied = false;
+    if (src_cuda_device && dst_cuda_device) {
+      copied = native::cuda::copy_device_to_device(out.raw_mutable_data(), src.raw_data(), nbytes);
+    } else if (src_cuda_device) {
+      copied = native::cuda::copy_device_to_host(out.raw_mutable_data(), src.raw_data(), nbytes);
+    } else if (dst_cuda_device) {
+      copied = native::cuda::copy_host_to_device(out.raw_mutable_data(), src.raw_data(), nbytes);
+    } else {
+      std::memcpy(out.raw_mutable_data(), src.raw_data(), nbytes);
+      copied = true;
+    }
+    if (!copied) {
+      PLUSS_FAIL(
+          std::string("Series::platform(") + platform_name_(target) +
+          "): CUDA storage transfer failed");
+    }
   }
   maybe_link_transport_op_(
       out,

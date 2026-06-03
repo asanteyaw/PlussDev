@@ -1,5 +1,6 @@
 #include "CodeM/core/Storage.h"
 #include "CodeM/core/Errors.h"
+#include "CodeM/native/cuda/CUDARuntime.h"
 
 #include <cctype>
 #include <cstdlib>
@@ -136,6 +137,27 @@ Storage::Storage(std::size_t nbytes, std::size_t alignment)
   if (!p) p = std::aligned_alloc(alignment, alloc_size);
   if (!p) throw_error("Storage: aligned_alloc failed");
   data_ = std::shared_ptr<std::byte>(reinterpret_cast<std::byte*>(p), AlignedDeleter{alloc_size, alignment});
+}
+
+Storage Storage::cuda_device(std::size_t nbytes) {
+  Storage storage;
+  storage.version_state_ = std::make_shared<VersionState>();
+  storage.nbytes_ = nbytes;
+  storage.alignment_ = 1;
+  storage.location_ = StorageLocation::CudaDevice;
+  if (nbytes == 0) {
+    return storage;
+  }
+  void* p = nullptr;
+  if (!native::cuda::allocate_device(&p, nbytes) || p == nullptr) {
+    throw_error("Storage::cuda_device: cuda device allocation failed");
+  }
+  storage.data_ = std::shared_ptr<std::byte>(
+      reinterpret_cast<std::byte*>(p),
+      [](std::byte* q) noexcept {
+        (void)native::cuda::free_device(q);
+      });
+  return storage;
 }
 
 Storage::Storage(std::shared_ptr<std::byte> external, std::size_t nbytes, std::size_t alignment)

@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <cmath>
+#include <random>
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -426,15 +427,48 @@ namespace pluss {
     return bernoulli(pluss::msharp::RangeView::Int(sizes), p, cfg, seed);
   }
 
-  inline Series poisson(pluss::msharp::RangeView::Int, double, ScalarType = ScalarType::Int64, std::uint64_t = 0) {
-    pluss::codem::throw_error("poisson factory: not implemented yet for CPU");
-    return Series::undefined();
+  inline Series poisson(pluss::msharp::RangeView::Int sizes,
+                        double lambda,
+                        ScalarType dt = ScalarType::Int64,
+                        std::uint64_t seed = 0) {
+    PLUSS_CHECK(lambda >= 0.0 && std::isfinite(lambda), "poisson: expected finite lambda >= 0");
+    std::int64_t n = 1;
+    for (const auto s : sizes) {
+      PLUSS_CHECK(s >= 0, "poisson: sizes must be >= 0");
+      n *= s;
+    }
+    std::vector<std::int64_t> samples(static_cast<std::size_t>(n), 0);
+    auto rng = FactoryCore::make_rng(seed);
+    std::poisson_distribution<std::int64_t> dist(lambda);
+    for (auto& sample : samples) {
+      sample = dist(rng);
+    }
+    Series out = codem::make_series<std::int64_t>(samples, sizes, Config{}.with_dtype(ScalarType::Int64));
+    return (dt == ScalarType::Int64) ? out : out.to(dt);
   }
   inline Series poisson(std::initializer_list<std::int64_t> sizes,
                         double lambda,
                         ScalarType dt = ScalarType::Int64,
                         std::uint64_t seed = 0) {
     return poisson(pluss::msharp::RangeView::Int(sizes), lambda, dt, seed);
+  }
+  inline Series poisson(pluss::msharp::RangeView::Int sizes,
+                        double lambda,
+                        Config cfg,
+                        std::uint64_t seed = 0) {
+    ScalarType dt = cfg.dtype;
+    if (dt == ScalarType::Float32) dt = ScalarType::Int64;
+    return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
+        poisson(sizes, lambda, dt, seed),
+        cfg.with_dtype(dt),
+        "poisson",
+        pluss::cuda::supports_poisson_stochastic_baseline(dt));
+  }
+  inline Series poisson(std::initializer_list<std::int64_t> sizes,
+                        double lambda,
+                        Config cfg,
+                        std::uint64_t seed = 0) {
+    return poisson(pluss::msharp::RangeView::Int(sizes), lambda, cfg, seed);
   }
 
   inline Series multinomial(std::span<const double> probs,

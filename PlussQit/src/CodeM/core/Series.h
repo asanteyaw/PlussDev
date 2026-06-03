@@ -738,6 +738,7 @@ public:
     Series svd_u(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_u(self(), full_matrices); }
     Series svd_s(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_s(self(), full_matrices); }
     Series svd_vh(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_vh(self(), full_matrices); }
+    pluss::subsp::linearalg::SvdDecomposition svd(bool full_matrices = true) const;
 
     Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
       return pluss::subsp::linearalg::triangular_solve(self(), b, upper, unitriangular);
@@ -804,6 +805,7 @@ public:
     Series svd_u(bool full_matrices = true) const { return (*this)().svd_u(full_matrices); }
     Series svd_s(bool full_matrices = true) const { return (*this)().svd_s(full_matrices); }
     Series svd_vh(bool full_matrices = true) const { return (*this)().svd_vh(full_matrices); }
+    pluss::subsp::linearalg::SvdDecomposition svd(bool full_matrices = true) const;
     Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
       return (*this)().triangular_solve(b, upper, unitriangular);
     }

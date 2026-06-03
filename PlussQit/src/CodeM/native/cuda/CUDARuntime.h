@@ -29,9 +29,15 @@ const char* cudnn_provider_error_cstr() noexcept;
 
 TransferPolicy transfer_policy() noexcept;
 bool cpu_bridge_enabled() noexcept;
+bool cpu_materialization_forbidden() noexcept;
+bool device_storage_enabled() noexcept;
 const char* transfer_policy_name(TransferPolicy policy) noexcept;
 
 bool copy_host_to_device(void* dst, const void* src, std::size_t nbytes) noexcept;
 bool copy_device_to_host(void* dst, const void* src, std::size_t nbytes) noexcept;
+bool copy_device_to_device(void* dst, const void* src, std::size_t nbytes) noexcept;
+bool memset_device(void* dst, int value, std::size_t nbytes) noexcept;
+bool allocate_device(void** ptr, std::size_t nbytes) noexcept;
+bool free_device(void* ptr) noexcept;
 
 } // namespace pluss::codem::native::cuda

@@ -98,6 +98,81 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
   }
 
   {
+    const ModelSpec spec{
+        .task = TaskKind::Transform,
+        .family = ModelFamily::Kernel,
+        .options = KernelFamilyOptions{
+            .kernel = KernelKind::Rbf,
+            .form = KernelForm::OneClass,
+            .gamma = 0.8,
+            .nu = 0.5,
+        },
+    };
+    auto flow_or = make_flow(spec);
+    if (!flow_or.ok()) {
+      if (err) *err << "make_flow(transform one-class) should succeed\n";
+      return false;
+    }
+    Flow flow = flow_or.move_value();
+    if (flow.task_kind() != TaskKind::Transform || flow.stage_count() != 1 || !flow.has_model_spec()) {
+      if (err) *err << "make_flow(transform one-class) should configure a transform-only spec flow\n";
+      return false;
+    }
+    if (flow.has_opaque_transforms()) {
+      if (err) *err << "make_flow(transform one-class) should remain serializable, not opaque\n";
+      return false;
+    }
+
+    const FeatureBatch train{
+        .x = pluss::make_series(std::vector<double>{-1.0, -1.0, -0.9, -0.8, 1.0, 1.0, 7.0, 7.0}, {4, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    auto labels_or = flow.learn_map(train);
+    if (!labels_or.ok()) {
+      if (err) *err << "transform spec flow learn_map should succeed\n";
+      return false;
+    }
+    const auto labels = as_f64(labels_or.value());
+    if (labels.size() != 4 || labels.back() >= 0.0) {
+      if (err) *err << "transform spec flow should reject far one-class sample\n";
+      return false;
+    }
+
+    auto states_or = flow.dump_transform_states();
+    if (!states_or.ok()) {
+      if (err) *err << "transform spec flow dump_transform_states should succeed\n";
+      return false;
+    }
+    auto reload_or = make_flow(spec);
+    if (!reload_or.ok()) {
+      if (err) *err << "make_flow(transform one-class reload) should succeed\n";
+      return false;
+    }
+    Flow reloaded = reload_or.move_value();
+    if (!reloaded.load_transform_states(states_or.value()).ok()) {
+      if (err) *err << "transform spec flow load_transform_states should succeed\n";
+      return false;
+    }
+    reloaded.mark_trained(true);
+    auto reload_or_labels = reloaded.map(train);
+    if (!reload_or_labels.ok()) {
+      if (err) *err << "reloaded transform spec flow map should succeed\n";
+      return false;
+    }
+    const auto reload_labels = as_f64(reload_or_labels.value());
+    if (reload_labels.size() != labels.size()) {
+      if (err) *err << "reloaded transform spec flow label count mismatch\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < labels.size(); ++i) {
+      if (std::abs(reload_labels[i] - labels[i]) > 1e-9) {
+        if (err) *err << "reloaded transform spec flow should reproduce labels\n";
+        return false;
+      }
+    }
+  }
+
+  {
     Flow flow{};
     if (!flow.add_one_hot_encoder(prep::OneHotEncoderOptions{}, std::vector<std::int64_t>{1}).ok()) {
       if (err) *err << "Flow routed one-hot stage should be accepted\n";
@@ -211,6 +286,25 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
       if (err) *err << "Flow::nested_param should expose stage remainder policy\n";
       return false;
     }
+    auto max_cat_before_or = flow.nested_param("cat::opt.max_categories");
+    if (!max_cat_before_or.ok() || max_cat_before_or.value() != 20.0) {
+      if (err) *err << "Flow::nested_param should expose stage option parameters\n";
+      return false;
+    }
+    if (!flow.set_nested_param("cat::opt.max_categories", 3.0).ok()) {
+      if (err) *err << "Flow::set_nested_param should update stage option parameters\n";
+      return false;
+    }
+    auto max_cat_after_or = flow.nested_param("cat::opt.max_categories");
+    if (!max_cat_after_or.ok() || max_cat_after_or.value() != 3.0) {
+      if (err) *err << "Flow::set_nested_param should persist stage option updates\n";
+      return false;
+    }
+    const auto keys = flow.nested_param_keys();
+    if (std::find(keys.begin(), keys.end(), "cat::opt.max_categories") == keys.end()) {
+      if (err) *err << "Flow::nested_param_keys should include stage option keys\n";
+      return false;
+    }
 
     const FeatureBatch features{
         .x = pluss::make_series(std::vector<double>{
@@ -254,6 +348,10 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
       if (err) *err << "Flow::save_blueprint should succeed for non-opaque transforms\n";
       return false;
     }
+    if (blueprint_or.value().find("pluss_flow_blueprint_v2\n") != 0) {
+      if (err) *err << "Flow::save_blueprint should emit v2 header\n";
+      return false;
+    }
     Flow restored{};
     if (!restored.load_blueprint(blueprint_or.value()).ok()) {
       if (err) *err << "Flow::load_blueprint should rebuild transform graph\n";
@@ -261,6 +359,43 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
     }
     if (restored.stage_count() != 1 || restored.transform_specs().front().stage_key != "cat") {
       if (err) *err << "Flow::load_blueprint should preserve stage key and count\n";
+      return false;
+    }
+    auto max_cat_restored_or = restored.nested_param("cat::opt.max_categories");
+    if (!max_cat_restored_or.ok() || max_cat_restored_or.value() != 3.0) {
+      if (err) *err << "Flow::load_blueprint should preserve serialized transform options\n";
+      return false;
+    }
+  }
+
+  {
+    Flow flow{};
+    const ModelSpec spec{
+        .task = TaskKind::Classification,
+        .family = ModelFamily::Linear,
+        .options = LinearFamilyOptions{.objective = LinearObjective::Logistic, .regularization_strength = 1e-3},
+    };
+    if (!flow.set_model(spec).ok()) {
+      if (err) *err << "Flow::set_model should configure model nested params\n";
+      return false;
+    }
+    auto reg_or = flow.nested_param("model::opt.regularization_strength");
+    if (!reg_or.ok() || std::abs(reg_or.value() - 1e-3) > 1e-12) {
+      if (err) *err << "Flow::nested_param should expose model option parameters\n";
+      return false;
+    }
+    if (!flow.set_nested_param("model::opt.regularization_strength", 2e-3).ok()) {
+      if (err) *err << "Flow::set_nested_param should update model option parameters\n";
+      return false;
+    }
+    auto reg2_or = flow.nested_param("model::opt.regularization_strength");
+    if (!reg2_or.ok() || std::abs(reg2_or.value() - 2e-3) > 1e-12) {
+      if (err) *err << "Flow model option update should be queryable\n";
+      return false;
+    }
+    const auto keys = flow.nested_param_keys();
+    if (std::find(keys.begin(), keys.end(), "model::opt.regularization_strength") == keys.end()) {
+      if (err) *err << "Flow::nested_param_keys should include model option keys\n";
       return false;
     }
   }

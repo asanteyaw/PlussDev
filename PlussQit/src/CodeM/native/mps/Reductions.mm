@@ -37,6 +37,11 @@ struct ReduceMeta {
   ulong out_sizes[kMaxRank];
 };
 
+struct Complex64 {
+  float re;
+  float im;
+};
+
 inline ulong in_base_from_out_gid(uint gid, constant ReduceMeta& m) {
   ulong rem = static_cast<ulong>(gid);
   ulong base = 0;
@@ -61,6 +66,23 @@ kernel void sum_dim_f32(
   float acc = 0.0f;
   for (ulong r = 0; r < rsz; ++r) {
     acc += in[base + r * rstep];
+  }
+  out[gid] = acc;
+}
+
+kernel void sum_dim_c64(
+    const device Complex64* in [[buffer(0)]],
+    device Complex64* out [[buffer(1)]],
+    constant ReduceMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong base = in_base_from_out_gid(gid, meta);
+  const ulong rsz = meta.in_sizes[meta.dim];
+  const ulong rstep = meta.in_strides[meta.dim];
+  Complex64 acc{0.0f, 0.0f};
+  for (ulong r = 0; r < rsz; ++r) {
+    const Complex64 v = in[base + r * rstep];
+    acc.re += v.re;
+    acc.im += v.im;
   }
   out[gid] = acc;
 }
@@ -202,6 +224,7 @@ struct Context {
   id<MTLCommandQueue> queue{nil};
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> sum_dim_f32{nil};
+  id<MTLComputePipelineState> sum_dim_c64{nil};
   id<MTLComputePipelineState> prod_dim_f32{nil};
   id<MTLComputePipelineState> amax_dim_f32{nil};
   id<MTLComputePipelineState> amin_dim_f32{nil};
@@ -276,6 +299,7 @@ Context& ctx_() {
       };
 
       if (!make_pipeline("sum_dim_f32", &ctx.sum_dim_f32)) return;
+      if (!make_pipeline("sum_dim_c64", &ctx.sum_dim_c64)) return;
       if (!make_pipeline("prod_dim_f32", &ctx.prod_dim_f32)) return;
       if (!make_pipeline("amax_dim_f32", &ctx.amax_dim_f32)) return;
       if (!make_pipeline("amin_dim_f32", &ctx.amin_dim_f32)) return;
@@ -422,7 +446,7 @@ void encode_reduce_(id<MTLComputePipelineState> pso,
 } // namespace
 
 bool supports_sum_dim(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32;
+  return dt == ScalarType::Float32 || dt == ScalarType::Complex64;
 }
 
 bool supports_prod_dim(ScalarType dt) noexcept {
@@ -443,20 +467,29 @@ bool supports_argmax_argmin_dim(ScalarType dt) noexcept {
 
 void sum_dim(const Series& a, std::int64_t dim, Series& out) {
   validate_reduce_inputs_(a, out, "mps::sum_dim");
-  if (a.scalar_type() != ScalarType::Float32 || out.scalar_type() != ScalarType::Float32) {
-    fail_("mps::sum_dim: only float32 is supported");
+  if (a.scalar_type() != out.scalar_type() ||
+      (a.scalar_type() != ScalarType::Float32 && a.scalar_type() != ScalarType::Complex64)) {
+    fail_("mps::sum_dim: only float32/complex64 is supported");
   }
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const std::size_t elem_bytes = a.scalar_type() == ScalarType::Complex64 ? sizeof(float) * 2u : sizeof(float);
+    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(a, c.device, in_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::sum_dim: failed to allocate Metal buffers");
     }
     const ReduceMetaHost meta = cached_reduce_meta_("mps::sum_dim", a, out, dim);
-    encode_reduce_(c.sum_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::sum_dim");
+    encode_reduce_(
+        a.scalar_type() == ScalarType::Complex64 ? c.sum_dim_c64 : c.sum_dim_f32,
+        in_buf,
+        out_buf,
+        meta,
+        out.numel(),
+        out,
+        "mps::sum_dim");
   }
 }
 

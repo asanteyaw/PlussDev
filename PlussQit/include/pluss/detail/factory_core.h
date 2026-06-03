@@ -65,6 +65,11 @@ struct FactoryCore final {
     const bool native_strict = pluss::cuda::native_factory_strict();
 
     if (native_enabled && route_supported) {
+      if (!pluss::cuda::cpu_bridge_enabled()) {
+        pluss::codem::throw_error(
+            std::string(op_name) +
+            ": CUDA native factory route declared but kernel is not implemented yet");
+      }
       return (s.platform() == target) ? s : s.to(target);
     }
     if (native_strict) {
@@ -96,6 +101,11 @@ struct FactoryCore final {
     const bool native_strict = pluss::cuda::native_stochastic_strict();
 
     if (native_enabled && route_supported) {
+      if (!pluss::cuda::cpu_bridge_enabled()) {
+        pluss::codem::throw_error(
+            std::string(op_name) +
+            ": CUDA native stochastic route declared but kernel is not implemented yet");
+      }
       return (s.platform() == target) ? s : s.to(target);
     }
     if (native_strict) {

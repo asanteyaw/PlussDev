@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iomanip>
+#include <map>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -200,6 +201,529 @@ template <class T>
   return out;
 }
 
+[[nodiscard]] std::map<std::string, std::string> parse_option_map(std::string_view text) {
+  std::map<std::string, std::string> out{};
+  if (text.empty()) return out;
+  const std::vector<std::string> parts = split_sv(text, ';');
+  for (const std::string& kv : parts) {
+    if (kv.empty()) continue;
+    const std::size_t eq = kv.find('=');
+    if (eq == std::string::npos) continue;
+    out.emplace(kv.substr(0, eq), kv.substr(eq + 1));
+  }
+  return out;
+}
+
+[[nodiscard]] std::string scalar_text(double value) {
+  std::ostringstream oss;
+  oss << std::setprecision(17) << value;
+  return oss.str();
+}
+
+[[nodiscard]] bool to_flag(double value) {
+  return value >= 0.5;
+}
+
+[[nodiscard]] StatusOr<std::int64_t> resolve_stage_index(const std::vector<TransformSpec>& specs, std::string_view stage) {
+  for (std::size_t i = 0; i < specs.size(); ++i) {
+    if (specs[i].stage_key == stage || ("stage" + std::to_string(i)) == stage) {
+      return StatusOr<std::int64_t>(static_cast<std::int64_t>(i));
+    }
+  }
+  return StatusOr<std::int64_t>(Status::invalid_argument("could not resolve stage key."));
+}
+
+void append_transform_option_param_keys(const TransformOptions& options, const std::string& prefix, std::vector<std::string>& out) {
+  std::visit(
+      [&](const auto& opt) {
+        using Opt = std::decay_t<decltype(opt)>;
+        if constexpr (std::is_same_v<Opt, prep::StandardScalerOptions>) {
+          out.push_back(prefix + "with_centering");
+          out.push_back(prefix + "with_scaling");
+          out.push_back(prefix + "variance_floor");
+        } else if constexpr (std::is_same_v<Opt, prep::MinMaxScalerOptions>) {
+          out.push_back(prefix + "lower");
+          out.push_back(prefix + "upper");
+          out.push_back(prefix + "clip");
+          out.push_back(prefix + "range_floor");
+        } else if constexpr (std::is_same_v<Opt, prep::RobustScalerOptions>) {
+          out.push_back(prefix + "with_centering");
+          out.push_back(prefix + "with_scaling");
+          out.push_back(prefix + "lower_quantile");
+          out.push_back(prefix + "upper_quantile");
+          out.push_back(prefix + "range_floor");
+        } else if constexpr (std::is_same_v<Opt, prep::SimpleImputerOptions>) {
+          out.push_back(prefix + "strategy");
+          out.push_back(prefix + "constant_value");
+          out.push_back(prefix + "empty_feature_fallback");
+        } else if constexpr (std::is_same_v<Opt, prep::OneHotEncoderOptions>) {
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
+          out.push_back(prefix + "include_unknown_bucket");
+        } else if constexpr (std::is_same_v<Opt, prep::FrequencyEncoderOptions>) {
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
+          out.push_back(prefix + "unknown_frequency");
+        } else if constexpr (std::is_same_v<Opt, prep::OrdinalEncoderOptions>) {
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
+          out.push_back(prefix + "include_unknown_bucket");
+          out.push_back(prefix + "one_based");
+        } else if constexpr (std::is_same_v<Opt, prep::LabelEncoderOptions>) {
+          out.push_back(prefix + "max_categories");
+          out.push_back(prefix + "overflow");
+          out.push_back(prefix + "include_unknown_bucket");
+          out.push_back(prefix + "one_based");
+        } else if constexpr (std::is_same_v<Opt, prep::NeighborImputerOptions>) {
+          out.push_back(prefix + "neighbors");
+          out.push_back(prefix + "weighting");
+          out.push_back(prefix + "distance_floor");
+          out.push_back(prefix + "empty_feature_fallback");
+        } else if constexpr (std::is_same_v<Opt, prep::IterativeImputerOptions>) {
+          out.push_back(prefix + "rounds");
+          out.push_back(prefix + "ridge");
+          out.push_back(prefix + "empty_feature_fallback");
+        } else if constexpr (std::is_same_v<Opt, prep::VectorNormalizerOptions>) {
+          out.push_back(prefix + "norm");
+          out.push_back(prefix + "floor");
+        } else if constexpr (std::is_same_v<Opt, prep::MaxAbsScalerOptions>) {
+          out.push_back(prefix + "floor");
+        } else if constexpr (std::is_same_v<Opt, prep::QuantileMapOptions>) {
+          out.push_back(prefix + "output");
+          out.push_back(prefix + "clip");
+        } else if constexpr (std::is_same_v<Opt, prep::PowerMapOptions>) {
+          out.push_back(prefix + "mode");
+          out.push_back(prefix + "standardize");
+          out.push_back(prefix + "lambda");
+          out.push_back(prefix + "lambda_is_set");
+          out.push_back(prefix + "lambda_min");
+          out.push_back(prefix + "lambda_max");
+          out.push_back(prefix + "lambda_grid");
+          out.push_back(prefix + "variance_floor");
+        } else if constexpr (std::is_same_v<Opt, prep::ThresholdBinarizerOptions>) {
+          out.push_back(prefix + "threshold");
+          out.push_back(prefix + "low_value");
+          out.push_back(prefix + "high_value");
+        } else if constexpr (std::is_same_v<Opt, prep::PolynomialLiftOptions>) {
+          out.push_back(prefix + "degree");
+          out.push_back(prefix + "interactions_only");
+          out.push_back(prefix + "include_bias");
+        }
+      },
+      options);
+}
+
+[[nodiscard]] StatusOr<double> transform_option_param(const TransformOptions& options, std::string_view param) {
+  return std::visit(
+      [&](const auto& opt) -> StatusOr<double> {
+        using Opt = std::decay_t<decltype(opt)>;
+        if constexpr (std::is_same_v<Opt, prep::StandardScalerOptions>) {
+          if (param == "with_centering") return StatusOr<double>(opt.with_centering ? 1.0 : 0.0);
+          if (param == "with_scaling") return StatusOr<double>(opt.with_scaling ? 1.0 : 0.0);
+          if (param == "variance_floor") return StatusOr<double>(opt.variance_floor);
+        } else if constexpr (std::is_same_v<Opt, prep::MinMaxScalerOptions>) {
+          if (param == "lower") return StatusOr<double>(opt.lower);
+          if (param == "upper") return StatusOr<double>(opt.upper);
+          if (param == "clip") return StatusOr<double>(opt.clip ? 1.0 : 0.0);
+          if (param == "range_floor") return StatusOr<double>(opt.range_floor);
+        } else if constexpr (std::is_same_v<Opt, prep::RobustScalerOptions>) {
+          if (param == "with_centering") return StatusOr<double>(opt.with_centering ? 1.0 : 0.0);
+          if (param == "with_scaling") return StatusOr<double>(opt.with_scaling ? 1.0 : 0.0);
+          if (param == "lower_quantile") return StatusOr<double>(opt.lower_quantile);
+          if (param == "upper_quantile") return StatusOr<double>(opt.upper_quantile);
+          if (param == "range_floor") return StatusOr<double>(opt.range_floor);
+        } else if constexpr (std::is_same_v<Opt, prep::SimpleImputerOptions>) {
+          if (param == "strategy") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.strategy)));
+          if (param == "constant_value") return StatusOr<double>(opt.constant_value);
+          if (param == "empty_feature_fallback") return StatusOr<double>(opt.empty_feature_fallback);
+        } else if constexpr (std::is_same_v<Opt, prep::OneHotEncoderOptions>) {
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
+          if (param == "include_unknown_bucket") return StatusOr<double>(opt.include_unknown_bucket ? 1.0 : 0.0);
+        } else if constexpr (std::is_same_v<Opt, prep::FrequencyEncoderOptions>) {
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
+          if (param == "unknown_frequency") return StatusOr<double>(opt.unknown_frequency);
+        } else if constexpr (std::is_same_v<Opt, prep::OrdinalEncoderOptions>) {
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
+          if (param == "include_unknown_bucket") return StatusOr<double>(opt.include_unknown_bucket ? 1.0 : 0.0);
+          if (param == "one_based") return StatusOr<double>(opt.one_based ? 1.0 : 0.0);
+        } else if constexpr (std::is_same_v<Opt, prep::LabelEncoderOptions>) {
+          if (param == "max_categories") return StatusOr<double>(static_cast<double>(opt.max_categories));
+          if (param == "overflow") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.overflow)));
+          if (param == "include_unknown_bucket") return StatusOr<double>(opt.include_unknown_bucket ? 1.0 : 0.0);
+          if (param == "one_based") return StatusOr<double>(opt.one_based ? 1.0 : 0.0);
+        } else if constexpr (std::is_same_v<Opt, prep::NeighborImputerOptions>) {
+          if (param == "neighbors") return StatusOr<double>(static_cast<double>(opt.neighbors));
+          if (param == "weighting") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.weighting)));
+          if (param == "distance_floor") return StatusOr<double>(opt.distance_floor);
+          if (param == "empty_feature_fallback") return StatusOr<double>(opt.empty_feature_fallback);
+        } else if constexpr (std::is_same_v<Opt, prep::IterativeImputerOptions>) {
+          if (param == "rounds") return StatusOr<double>(static_cast<double>(opt.rounds));
+          if (param == "ridge") return StatusOr<double>(opt.ridge);
+          if (param == "empty_feature_fallback") return StatusOr<double>(opt.empty_feature_fallback);
+        } else if constexpr (std::is_same_v<Opt, prep::VectorNormalizerOptions>) {
+          if (param == "norm") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.norm)));
+          if (param == "floor") return StatusOr<double>(opt.floor);
+        } else if constexpr (std::is_same_v<Opt, prep::MaxAbsScalerOptions>) {
+          if (param == "floor") return StatusOr<double>(opt.floor);
+        } else if constexpr (std::is_same_v<Opt, prep::QuantileMapOptions>) {
+          if (param == "output") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.output)));
+          if (param == "clip") return StatusOr<double>(opt.clip);
+        } else if constexpr (std::is_same_v<Opt, prep::PowerMapOptions>) {
+          if (param == "mode") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.mode)));
+          if (param == "standardize") return StatusOr<double>(opt.standardize ? 1.0 : 0.0);
+          if (param == "lambda") {
+            if (!opt.lambda.has_value()) return StatusOr<double>(Status::invalid_argument("lambda is not set."));
+            return StatusOr<double>(opt.lambda.value());
+          }
+          if (param == "lambda_is_set") return StatusOr<double>(opt.lambda.has_value() ? 1.0 : 0.0);
+          if (param == "lambda_min") return StatusOr<double>(opt.lambda_min);
+          if (param == "lambda_max") return StatusOr<double>(opt.lambda_max);
+          if (param == "lambda_grid") return StatusOr<double>(static_cast<double>(opt.lambda_grid));
+          if (param == "variance_floor") return StatusOr<double>(opt.variance_floor);
+        } else if constexpr (std::is_same_v<Opt, prep::ThresholdBinarizerOptions>) {
+          if (param == "threshold") return StatusOr<double>(opt.threshold);
+          if (param == "low_value") return StatusOr<double>(opt.low_value);
+          if (param == "high_value") return StatusOr<double>(opt.high_value);
+        } else if constexpr (std::is_same_v<Opt, prep::PolynomialLiftOptions>) {
+          if (param == "degree") return StatusOr<double>(static_cast<double>(opt.degree));
+          if (param == "interactions_only") return StatusOr<double>(opt.interactions_only ? 1.0 : 0.0);
+          if (param == "include_bias") return StatusOr<double>(opt.include_bias ? 1.0 : 0.0);
+        }
+        return StatusOr<double>(Status::invalid_argument("unsupported option parameter for this transform."));
+      },
+      options);
+}
+
+Status set_transform_option_param(TransformOptions& options, std::string_view param, double value) {
+  return std::visit(
+      [&](auto& opt) -> Status {
+        using Opt = std::decay_t<decltype(opt)>;
+        if constexpr (std::is_same_v<Opt, prep::StandardScalerOptions>) {
+          if (param == "with_centering") { opt.with_centering = to_flag(value); return Status::success(); }
+          if (param == "with_scaling") { opt.with_scaling = to_flag(value); return Status::success(); }
+          if (param == "variance_floor") { opt.variance_floor = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::MinMaxScalerOptions>) {
+          if (param == "lower") { opt.lower = value; return Status::success(); }
+          if (param == "upper") { opt.upper = value; return Status::success(); }
+          if (param == "clip") { opt.clip = to_flag(value); return Status::success(); }
+          if (param == "range_floor") { opt.range_floor = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::RobustScalerOptions>) {
+          if (param == "with_centering") { opt.with_centering = to_flag(value); return Status::success(); }
+          if (param == "with_scaling") { opt.with_scaling = to_flag(value); return Status::success(); }
+          if (param == "lower_quantile") { opt.lower_quantile = value; return Status::success(); }
+          if (param == "upper_quantile") { opt.upper_quantile = value; return Status::success(); }
+          if (param == "range_floor") { opt.range_floor = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::SimpleImputerOptions>) {
+          if (param == "strategy") { opt.strategy = static_cast<prep::SimpleImputerStrategy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "constant_value") { opt.constant_value = value; return Status::success(); }
+          if (param == "empty_feature_fallback") { opt.empty_feature_fallback = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::OneHotEncoderOptions>) {
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "include_unknown_bucket") { opt.include_unknown_bucket = to_flag(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::FrequencyEncoderOptions>) {
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "unknown_frequency") { opt.unknown_frequency = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::OrdinalEncoderOptions>) {
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "include_unknown_bucket") { opt.include_unknown_bucket = to_flag(value); return Status::success(); }
+          if (param == "one_based") { opt.one_based = to_flag(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::LabelEncoderOptions>) {
+          if (param == "max_categories") { opt.max_categories = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "overflow") { opt.overflow = static_cast<prep::CategoryOverflowPolicy>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "include_unknown_bucket") { opt.include_unknown_bucket = to_flag(value); return Status::success(); }
+          if (param == "one_based") { opt.one_based = to_flag(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::NeighborImputerOptions>) {
+          if (param == "neighbors") { opt.neighbors = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "weighting") { opt.weighting = static_cast<prep::NeighborImputerWeighting>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "distance_floor") { opt.distance_floor = value; return Status::success(); }
+          if (param == "empty_feature_fallback") { opt.empty_feature_fallback = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::IterativeImputerOptions>) {
+          if (param == "rounds") { opt.rounds = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "ridge") { opt.ridge = value; return Status::success(); }
+          if (param == "empty_feature_fallback") { opt.empty_feature_fallback = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::VectorNormalizerOptions>) {
+          if (param == "norm") { opt.norm = static_cast<prep::VectorNorm>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "floor") { opt.floor = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::MaxAbsScalerOptions>) {
+          if (param == "floor") { opt.floor = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::QuantileMapOptions>) {
+          if (param == "output") { opt.output = static_cast<prep::QuantileMapOutput>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "clip") { opt.clip = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::PowerMapOptions>) {
+          if (param == "mode") { opt.mode = static_cast<prep::PowerMapMode>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (param == "standardize") { opt.standardize = to_flag(value); return Status::success(); }
+          if (param == "lambda") { opt.lambda = value; return Status::success(); }
+          if (param == "lambda_is_set") { if (!to_flag(value)) opt.lambda.reset(); return Status::success(); }
+          if (param == "lambda_min") { opt.lambda_min = value; return Status::success(); }
+          if (param == "lambda_max") { opt.lambda_max = value; return Status::success(); }
+          if (param == "lambda_grid") { opt.lambda_grid = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "variance_floor") { opt.variance_floor = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::ThresholdBinarizerOptions>) {
+          if (param == "threshold") { opt.threshold = value; return Status::success(); }
+          if (param == "low_value") { opt.low_value = value; return Status::success(); }
+          if (param == "high_value") { opt.high_value = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, prep::PolynomialLiftOptions>) {
+          if (param == "degree") { opt.degree = static_cast<std::int64_t>(value); return Status::success(); }
+          if (param == "interactions_only") { opt.interactions_only = to_flag(value); return Status::success(); }
+          if (param == "include_bias") { opt.include_bias = to_flag(value); return Status::success(); }
+        }
+        return Status::invalid_argument("unsupported option parameter for this transform.");
+      },
+      options);
+}
+
+[[nodiscard]] std::string serialize_transform_options(const TransformOptions& options) {
+  std::vector<std::string> keys{};
+  append_transform_option_param_keys(options, "", keys);
+  std::ostringstream oss;
+  bool first = true;
+  for (const std::string& key : keys) {
+    StatusOr<double> value_or = transform_option_param(options, key);
+    if (!value_or.ok()) continue;
+    if (!first) oss << ';';
+    first = false;
+    oss << key << "=" << scalar_text(value_or.value());
+  }
+  return oss.str();
+}
+
+[[nodiscard]] StatusOr<TransformOptions> parse_transform_options(TransformKind kind, std::string_view text) {
+  TransformOptions options{};
+  switch (kind) {
+    case TransformKind::StandardScaler: options = prep::StandardScalerOptions{}; break;
+    case TransformKind::MinMaxScaler: options = prep::MinMaxScalerOptions{}; break;
+    case TransformKind::RobustScaler: options = prep::RobustScalerOptions{}; break;
+    case TransformKind::SimpleImputer: options = prep::SimpleImputerOptions{}; break;
+    case TransformKind::NeighborImputer: options = prep::NeighborImputerOptions{}; break;
+    case TransformKind::IterativeImputer: options = prep::IterativeImputerOptions{}; break;
+    case TransformKind::OneHotEncoder: options = prep::OneHotEncoderOptions{}; break;
+    case TransformKind::FrequencyEncoder: options = prep::FrequencyEncoderOptions{}; break;
+    case TransformKind::VectorNormalizer: options = prep::VectorNormalizerOptions{}; break;
+    case TransformKind::MaxAbsScaler: options = prep::MaxAbsScalerOptions{}; break;
+    case TransformKind::QuantileMap: options = prep::QuantileMapOptions{}; break;
+    case TransformKind::PowerMap: options = prep::PowerMapOptions{}; break;
+    case TransformKind::ThresholdBinarizer: options = prep::ThresholdBinarizerOptions{}; break;
+    case TransformKind::PolynomialLift: options = prep::PolynomialLiftOptions{}; break;
+    case TransformKind::OrdinalEncoder: options = prep::OrdinalEncoderOptions{}; break;
+    case TransformKind::LabelEncoder: options = prep::LabelEncoderOptions{}; break;
+  }
+  if (text.empty()) return StatusOr<TransformOptions>(options);
+  const std::map<std::string, std::string> kv = parse_option_map(text);
+  for (const auto& [k, v] : kv) {
+    const std::optional<double> parsed = parse_scalar<double>(v);
+    if (!parsed.has_value()) {
+      return StatusOr<TransformOptions>(Status::invalid_argument("Flow::load_blueprint option parse error for key '" + k + "'."));
+    }
+    Status status = set_transform_option_param(options, k, parsed.value());
+    if (!status.ok()) {
+      return StatusOr<TransformOptions>(Status::invalid_argument("Flow::load_blueprint unsupported option key '" + k + "'."));
+    }
+  }
+  return StatusOr<TransformOptions>(std::move(options));
+}
+
+void append_model_option_param_keys(const ModelSpec& spec, std::vector<std::string>& out) {
+  out.push_back("model::task");
+  out.push_back("model::family");
+  std::visit(
+      [&](const auto& opt) {
+        using Opt = std::decay_t<decltype(opt)>;
+        if constexpr (std::is_same_v<Opt, LinearFamilyOptions>) {
+          out.push_back("model::opt.objective");
+          out.push_back("model::opt.regularization");
+          out.push_back("model::opt.regularization_strength");
+          out.push_back("model::opt.elastic_l1_ratio");
+          out.push_back("model::opt.robust_transition");
+          out.push_back("model::opt.fit_intercept");
+        } else if constexpr (std::is_same_v<Opt, TreeFamilyOptions>) {
+          out.push_back("model::opt.criterion");
+          out.push_back("model::opt.max_depth");
+          out.push_back("model::opt.min_samples_leaf");
+          out.push_back("model::opt.min_samples_split");
+        } else if constexpr (std::is_same_v<Opt, EnsembleFamilyOptions>) {
+          out.push_back("model::opt.method");
+          out.push_back("model::opt.learners");
+          out.push_back("model::opt.subsample");
+          out.push_back("model::opt.learning_rate");
+        } else if constexpr (std::is_same_v<Opt, NeighborFamilyOptions>) {
+          out.push_back("model::opt.k");
+          out.push_back("model::opt.query_mode");
+          out.push_back("model::opt.radius");
+          out.push_back("model::opt.radius_fallback_k");
+          out.push_back("model::opt.distance_weighted");
+          out.push_back("model::opt.standardize");
+        } else if constexpr (std::is_same_v<Opt, KernelFamilyOptions>) {
+          out.push_back("model::opt.kernel");
+          out.push_back("model::opt.form");
+          out.push_back("model::opt.c");
+          out.push_back("model::opt.gamma");
+          out.push_back("model::opt.epsilon");
+          out.push_back("model::opt.nu");
+        } else if constexpr (std::is_same_v<Opt, BayesFamilyOptions>) {
+          out.push_back("model::opt.likelihood");
+          out.push_back("model::opt.use_gaussian");
+          out.push_back("model::opt.smoothing");
+        } else if constexpr (std::is_same_v<Opt, ClusterFamilyOptions>) {
+          out.push_back("model::opt.method");
+          out.push_back("model::opt.clusters");
+          out.push_back("model::opt.max_iterations");
+          out.push_back("model::opt.restarts");
+          out.push_back("model::opt.tolerance");
+        } else if constexpr (std::is_same_v<Opt, DecomposeFamilyOptions>) {
+          out.push_back("model::opt.method");
+          out.push_back("model::opt.components");
+          out.push_back("model::opt.whiten");
+          out.push_back("model::opt.max_iterations");
+          out.push_back("model::opt.tolerance");
+        }
+      },
+      spec.options);
+}
+
+[[nodiscard]] StatusOr<double> model_param(const ModelSpec& spec, std::string_view param) {
+  if (param == "task") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(spec.task)));
+  if (param == "family") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(spec.family)));
+  if (!param.starts_with("opt.")) return StatusOr<double>(Status::invalid_argument("unsupported model param key."));
+  const std::string key(param.substr(4));
+  return std::visit(
+      [&](const auto& opt) -> StatusOr<double> {
+        using Opt = std::decay_t<decltype(opt)>;
+        if constexpr (std::is_same_v<Opt, LinearFamilyOptions>) {
+          if (key == "objective") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.objective)));
+          if (key == "regularization") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.regularization)));
+          if (key == "regularization_strength") return StatusOr<double>(opt.regularization_strength);
+          if (key == "elastic_l1_ratio") return StatusOr<double>(opt.elastic_l1_ratio);
+          if (key == "robust_transition") return StatusOr<double>(opt.robust_transition);
+          if (key == "fit_intercept") return StatusOr<double>(opt.fit_intercept ? 1.0 : 0.0);
+        } else if constexpr (std::is_same_v<Opt, TreeFamilyOptions>) {
+          if (key == "criterion") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.criterion)));
+          if (key == "max_depth") return StatusOr<double>(static_cast<double>(opt.max_depth));
+          if (key == "min_samples_leaf") return StatusOr<double>(static_cast<double>(opt.min_samples_leaf));
+          if (key == "min_samples_split") return StatusOr<double>(static_cast<double>(opt.min_samples_split));
+        } else if constexpr (std::is_same_v<Opt, EnsembleFamilyOptions>) {
+          if (key == "method") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.method)));
+          if (key == "learners") return StatusOr<double>(static_cast<double>(opt.learners));
+          if (key == "subsample") return StatusOr<double>(opt.subsample);
+          if (key == "learning_rate") return StatusOr<double>(opt.learning_rate);
+        } else if constexpr (std::is_same_v<Opt, NeighborFamilyOptions>) {
+          if (key == "k") return StatusOr<double>(static_cast<double>(opt.k));
+          if (key == "query_mode") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.query_mode)));
+          if (key == "radius") return StatusOr<double>(opt.radius);
+          if (key == "radius_fallback_k") return StatusOr<double>(static_cast<double>(opt.radius_fallback_k));
+          if (key == "distance_weighted") return StatusOr<double>(opt.distance_weighted ? 1.0 : 0.0);
+          if (key == "standardize") return StatusOr<double>(opt.standardize ? 1.0 : 0.0);
+        } else if constexpr (std::is_same_v<Opt, KernelFamilyOptions>) {
+          if (key == "kernel") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.kernel)));
+          if (key == "form") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.form)));
+          if (key == "c") return StatusOr<double>(opt.c);
+          if (key == "gamma") return StatusOr<double>(opt.gamma);
+          if (key == "epsilon") return StatusOr<double>(opt.epsilon);
+          if (key == "nu") return StatusOr<double>(opt.nu);
+        } else if constexpr (std::is_same_v<Opt, BayesFamilyOptions>) {
+          if (key == "likelihood") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.likelihood)));
+          if (key == "use_gaussian") return StatusOr<double>(opt.use_gaussian ? 1.0 : 0.0);
+          if (key == "smoothing") return StatusOr<double>(opt.smoothing);
+        } else if constexpr (std::is_same_v<Opt, ClusterFamilyOptions>) {
+          if (key == "method") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.method)));
+          if (key == "clusters") return StatusOr<double>(static_cast<double>(opt.clusters));
+          if (key == "max_iterations") return StatusOr<double>(static_cast<double>(opt.max_iterations));
+          if (key == "restarts") return StatusOr<double>(static_cast<double>(opt.restarts));
+          if (key == "tolerance") return StatusOr<double>(opt.tolerance);
+        } else if constexpr (std::is_same_v<Opt, DecomposeFamilyOptions>) {
+          if (key == "method") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(opt.method)));
+          if (key == "components") return StatusOr<double>(static_cast<double>(opt.components));
+          if (key == "whiten") return StatusOr<double>(opt.whiten ? 1.0 : 0.0);
+          if (key == "max_iterations") return StatusOr<double>(static_cast<double>(opt.max_iterations));
+          if (key == "tolerance") return StatusOr<double>(opt.tolerance);
+        }
+        return StatusOr<double>(Status::invalid_argument("unsupported model option parameter."));
+      },
+      spec.options);
+}
+
+Status set_model_param(ModelSpec& spec, std::string_view param, double value) {
+  if (param == "task") {
+    spec.task = static_cast<TaskKind>(static_cast<std::uint8_t>(value));
+    return Status::success();
+  }
+  if (param == "family") {
+    spec.family = static_cast<ModelFamily>(static_cast<std::uint8_t>(value));
+    switch (spec.family) {
+      case ModelFamily::Linear: spec.options = LinearFamilyOptions{}; break;
+      case ModelFamily::Tree: spec.options = TreeFamilyOptions{}; break;
+      case ModelFamily::Ensemble: spec.options = EnsembleFamilyOptions{}; break;
+      case ModelFamily::Neighbor: spec.options = NeighborFamilyOptions{}; break;
+      case ModelFamily::Kernel: spec.options = KernelFamilyOptions{}; break;
+      case ModelFamily::Bayes: spec.options = BayesFamilyOptions{}; break;
+      case ModelFamily::Cluster: spec.options = ClusterFamilyOptions{}; break;
+      case ModelFamily::Decompose: spec.options = DecomposeFamilyOptions{}; break;
+    }
+    return Status::success();
+  }
+  if (!param.starts_with("opt.")) return Status::invalid_argument("unsupported model param key.");
+  const std::string key(param.substr(4));
+  return std::visit(
+      [&](auto& opt) -> Status {
+        using Opt = std::decay_t<decltype(opt)>;
+        if constexpr (std::is_same_v<Opt, LinearFamilyOptions>) {
+          if (key == "objective") { opt.objective = static_cast<LinearObjective>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "regularization") { opt.regularization = static_cast<RegularizationKind>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "regularization_strength") { opt.regularization_strength = value; return Status::success(); }
+          if (key == "elastic_l1_ratio") { opt.elastic_l1_ratio = value; return Status::success(); }
+          if (key == "robust_transition") { opt.robust_transition = value; return Status::success(); }
+          if (key == "fit_intercept") { opt.fit_intercept = to_flag(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, TreeFamilyOptions>) {
+          if (key == "criterion") { opt.criterion = static_cast<TreeCriterion>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "max_depth") { opt.max_depth = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "min_samples_leaf") { opt.min_samples_leaf = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "min_samples_split") { opt.min_samples_split = static_cast<std::int64_t>(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, EnsembleFamilyOptions>) {
+          if (key == "method") { opt.method = static_cast<EnsembleMethod>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "learners") { opt.learners = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "subsample") { opt.subsample = value; return Status::success(); }
+          if (key == "learning_rate") { opt.learning_rate = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, NeighborFamilyOptions>) {
+          if (key == "k") { opt.k = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "query_mode") { opt.query_mode = static_cast<NeighborQueryMode>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "radius") { opt.radius = value; return Status::success(); }
+          if (key == "radius_fallback_k") { opt.radius_fallback_k = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "distance_weighted") { opt.distance_weighted = to_flag(value); return Status::success(); }
+          if (key == "standardize") { opt.standardize = to_flag(value); return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, KernelFamilyOptions>) {
+          if (key == "kernel") { opt.kernel = static_cast<KernelKind>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "form") { opt.form = static_cast<KernelForm>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "c") { opt.c = value; return Status::success(); }
+          if (key == "gamma") { opt.gamma = value; return Status::success(); }
+          if (key == "epsilon") { opt.epsilon = value; return Status::success(); }
+          if (key == "nu") { opt.nu = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, BayesFamilyOptions>) {
+          if (key == "likelihood") { opt.likelihood = static_cast<BayesLikelihood>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "use_gaussian") { opt.use_gaussian = to_flag(value); return Status::success(); }
+          if (key == "smoothing") { opt.smoothing = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, ClusterFamilyOptions>) {
+          if (key == "method") { opt.method = static_cast<ClusterMethod>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "clusters") { opt.clusters = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "max_iterations") { opt.max_iterations = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "restarts") { opt.restarts = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "tolerance") { opt.tolerance = value; return Status::success(); }
+        } else if constexpr (std::is_same_v<Opt, DecomposeFamilyOptions>) {
+          if (key == "method") { opt.method = static_cast<DecomposeMethod>(static_cast<std::uint8_t>(value)); return Status::success(); }
+          if (key == "components") { opt.components = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "whiten") { opt.whiten = to_flag(value); return Status::success(); }
+          if (key == "max_iterations") { opt.max_iterations = static_cast<std::int64_t>(value); return Status::success(); }
+          if (key == "tolerance") { opt.tolerance = value; return Status::success(); }
+        }
+        return Status::invalid_argument("unsupported model option parameter.");
+      },
+      spec.options);
+}
+
 [[nodiscard]] StatusOr<std::vector<std::int64_t>> normalized_feature_route(const std::vector<std::int64_t>& route,
                                                                            std::int64_t feature_count,
                                                                            std::int64_t stage_index,
@@ -372,7 +896,7 @@ StatusOr<FlowGraphInfo> Flow::graph_info() const {
 
 std::vector<std::string> Flow::nested_param_keys() const {
   std::vector<std::string> out{};
-  out.reserve(transform_specs_.size() * 4);
+  out.reserve(transform_specs_.size() * 16 + 24);
   for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
     const TransformSpec& spec = transform_specs_[i];
     const std::string base = !spec.stage_key.empty() ? spec.stage_key : ("stage" + std::to_string(i));
@@ -380,6 +904,10 @@ std::vector<std::string> Flow::nested_param_keys() const {
     out.push_back(base + "::remainder");
     out.push_back(base + "::kind");
     out.push_back(base + "::stage_index");
+    append_transform_option_param_keys(spec.options, base + "::opt.", out);
+  }
+  if (model_spec_.has_value()) {
+    append_model_option_param_keys(model_spec_.value(), out);
   }
   return out;
 }
@@ -391,22 +919,27 @@ StatusOr<double> Flow::nested_param(std::string_view path) const {
   }
   const std::string stage = parts[0];
   const std::string param = parts[2];
-  std::int64_t stage_index = -1;
-  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
-    if (transform_specs_[i].stage_key == stage || ("stage" + std::to_string(i)) == stage) {
-      stage_index = static_cast<std::int64_t>(i);
-      break;
+  if (stage == "model") {
+    if (!model_spec_.has_value()) {
+      return StatusOr<double>(Status::precondition("nested_param model::* requires Flow configured via set_model(ModelSpec)."));
     }
+    return model_param(model_spec_.value(), param);
   }
-  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+
+  StatusOr<std::int64_t> stage_index_or = resolve_stage_index(transform_specs_, stage);
+  if (!stage_index_or.ok()) {
     return StatusOr<double>(Status::invalid_argument("nested_param could not resolve stage key."));
   }
+  const std::int64_t stage_index = stage_index_or.value();
   const TransformSpec& spec = transform_specs_[static_cast<std::size_t>(stage_index)];
   if (param == "route_size") return StatusOr<double>(static_cast<double>(spec.feature_route.size()));
   if (param == "remainder") return StatusOr<double>(spec.remainder == RouteRemainderPolicy::Drop ? 1.0 : 0.0);
   if (param == "kind") return StatusOr<double>(static_cast<double>(static_cast<std::uint8_t>(spec.kind)));
   if (param == "stage_index") return StatusOr<double>(static_cast<double>(stage_index));
-  return StatusOr<double>(Status::invalid_argument("nested_param currently supports route_size|remainder|kind|stage_index."));
+  if (param.size() > 4 && param.rfind("opt.", 0) == 0) {
+    return transform_option_param(spec.options, std::string_view(param).substr(4));
+  }
+  return StatusOr<double>(Status::invalid_argument("nested_param supports route metadata, model parameters, and stage opt.* parameters."));
 }
 
 Status Flow::set_nested_param(std::string_view path, double value) {
@@ -416,20 +949,51 @@ Status Flow::set_nested_param(std::string_view path, double value) {
   }
   const std::string stage = parts[0];
   const std::string param = parts[2];
-  std::int64_t stage_index = -1;
-  for (std::size_t i = 0; i < transform_specs_.size(); ++i) {
-    if (transform_specs_[i].stage_key == stage || ("stage" + std::to_string(i)) == stage) {
-      stage_index = static_cast<std::int64_t>(i);
-      break;
+  if (stage == "model") {
+    if (!model_spec_.has_value()) {
+      return Status::precondition("set_nested_param model::* requires Flow configured via set_model(ModelSpec).");
     }
+    ModelSpec spec = model_spec_.value();
+    Status status = set_model_param(spec, param, value);
+    if (!status.ok()) return status;
+    return set_model(spec);
   }
-  if (stage_index < 0 || stage_index >= static_cast<std::int64_t>(transform_specs_.size())) {
+
+  StatusOr<std::int64_t> stage_index_or = resolve_stage_index(transform_specs_, stage);
+  if (!stage_index_or.ok()) {
     return Status::invalid_argument("set_nested_param could not resolve stage key.");
   }
+  const std::int64_t stage_index = stage_index_or.value();
   if (param == "remainder") {
     return set_stage_remainder(stage_index, value >= 0.5 ? RouteRemainderPolicy::Drop : RouteRemainderPolicy::PassThrough);
   }
-  return Status::invalid_argument("set_nested_param currently supports '<stage>::remainder' only.");
+  if (param == "kind") {
+    const TransformKind next_kind = static_cast<TransformKind>(static_cast<std::uint8_t>(value));
+    TransformOptions next_options_or{};
+    StatusOr<TransformOptions> defaults_or = parse_transform_options(next_kind, "");
+    if (!defaults_or.ok()) return defaults_or.status();
+    next_options_or = defaults_or.move_value();
+    transform_specs_[static_cast<std::size_t>(stage_index)].kind = next_kind;
+    transform_specs_[static_cast<std::size_t>(stage_index)].options = std::move(next_options_or);
+    StatusOr<std::unique_ptr<TransformerBase>> stage_or = make_transformer_from_spec(
+        transform_specs_[static_cast<std::size_t>(stage_index)].kind,
+        transform_specs_[static_cast<std::size_t>(stage_index)].options);
+    if (!stage_or.ok()) return stage_or.status();
+    transforms_[static_cast<std::size_t>(stage_index)] = stage_or.move_value();
+    trained_ = false;
+    return Status::success();
+  }
+  if (param.size() > 4 && param.rfind("opt.", 0) == 0) {
+    TransformSpec& spec = transform_specs_[static_cast<std::size_t>(stage_index)];
+    Status status = set_transform_option_param(spec.options, std::string_view(param).substr(4), value);
+    if (!status.ok()) return status;
+    StatusOr<std::unique_ptr<TransformerBase>> stage_or = make_transformer_from_spec(spec.kind, spec.options);
+    if (!stage_or.ok()) return stage_or.status();
+    transforms_[static_cast<std::size_t>(stage_index)] = stage_or.move_value();
+    trained_ = false;
+    return Status::success();
+  }
+  return Status::invalid_argument("set_nested_param supports model::* and '<stage>::remainder|kind|opt.*'.");
 }
 
 std::string Flow::flow_summary() const {
@@ -455,7 +1019,7 @@ StatusOr<std::string> Flow::save_blueprint() const {
         Status::invalid_argument("Flow::save_blueprint does not support opaque append_transform stages."));
   }
   std::ostringstream oss;
-  oss << "pluss_flow_blueprint_v1\n";
+  oss << "pluss_flow_blueprint_v2\n";
   for (const auto& spec : transform_specs_) {
     oss << transform_kind_name(spec.kind) << "|"
         << (spec.stage_key.empty() ? "-" : spec.stage_key) << "|"
@@ -464,7 +1028,7 @@ StatusOr<std::string> Flow::save_blueprint() const {
       if (i != 0) oss << ",";
       oss << spec.feature_route[i];
     }
-    oss << "\n";
+    oss << "|" << serialize_transform_options(spec.options) << "\n";
   }
   return StatusOr<std::string>(oss.str());
 }
@@ -475,14 +1039,18 @@ Status Flow::load_blueprint(std::string_view text) {
   if (!std::getline(iss, line)) {
     return Status::invalid_argument("Flow::load_blueprint requires a non-empty blueprint.");
   }
-  if (line != "pluss_flow_blueprint_v1") {
+  const bool v1 = line == "pluss_flow_blueprint_v1";
+  const bool v2 = line == "pluss_flow_blueprint_v2";
+  if (!v1 && !v2) {
     return Status::invalid_argument("Flow::load_blueprint invalid blueprint header.");
   }
   clear_transforms();
   while (std::getline(iss, line)) {
     if (line.empty()) continue;
     const std::vector<std::string> fields = split_sv(line, '|');
-    if (fields.size() != 4) return Status::invalid_argument("Flow::load_blueprint malformed stage line.");
+    if ((!v1 && fields.size() != 5) || (v1 && fields.size() != 4)) {
+      return Status::invalid_argument("Flow::load_blueprint malformed stage line.");
+    }
     const std::optional<TransformKind> kind = parse_transform_kind(fields[0]);
     if (!kind.has_value()) return Status::invalid_argument("Flow::load_blueprint unknown stage kind.");
     const std::optional<RouteRemainderPolicy> remainder = parse_remainder(fields[2]);
@@ -497,27 +1065,11 @@ Status Flow::load_blueprint(std::string_view text) {
         route.push_back(parsed.value());
       }
     }
-    TransformOptions options{};
-    switch (kind.value()) {
-      case TransformKind::StandardScaler: options = prep::StandardScalerOptions{}; break;
-      case TransformKind::MinMaxScaler: options = prep::MinMaxScalerOptions{}; break;
-      case TransformKind::RobustScaler: options = prep::RobustScalerOptions{}; break;
-      case TransformKind::SimpleImputer: options = prep::SimpleImputerOptions{}; break;
-      case TransformKind::NeighborImputer: options = prep::NeighborImputerOptions{}; break;
-      case TransformKind::IterativeImputer: options = prep::IterativeImputerOptions{}; break;
-      case TransformKind::OneHotEncoder: options = prep::OneHotEncoderOptions{}; break;
-      case TransformKind::FrequencyEncoder: options = prep::FrequencyEncoderOptions{}; break;
-      case TransformKind::VectorNormalizer: options = prep::VectorNormalizerOptions{}; break;
-      case TransformKind::MaxAbsScaler: options = prep::MaxAbsScalerOptions{}; break;
-      case TransformKind::QuantileMap: options = prep::QuantileMapOptions{}; break;
-      case TransformKind::PowerMap: options = prep::PowerMapOptions{}; break;
-      case TransformKind::ThresholdBinarizer: options = prep::ThresholdBinarizerOptions{}; break;
-      case TransformKind::PolynomialLift: options = prep::PolynomialLiftOptions{}; break;
-      case TransformKind::OrdinalEncoder: options = prep::OrdinalEncoderOptions{}; break;
-      case TransformKind::LabelEncoder: options = prep::LabelEncoderOptions{}; break;
-    }
+    const std::string option_blob = v2 ? fields[4] : std::string{};
+    StatusOr<TransformOptions> options_or = parse_transform_options(kind.value(), option_blob);
+    if (!options_or.ok()) return options_or.status();
     Status status = add_named_transform(kind.value(),
-                                        options,
+                                        options_or.value(),
                                         fields[1] == "-" ? std::string{} : fields[1],
                                         pluss::msharp::RangeView::Int(route),
                                         remainder.value());
@@ -718,7 +1270,15 @@ Status Flow::set_model(const ModelSpec& spec) {
     trained_ = false;
     return Status::success();
   }
-  return Status::invalid_argument("Flow::set_model supports classification or regression ModelSpec tasks only.");
+  if (spec.task == TaskKind::Transform) {
+    StatusOr<std::unique_ptr<TransformerBase>> transformer_or = make_transformer(spec);
+    if (!transformer_or.ok()) return transformer_or.status();
+    transforms_.push_back(transformer_or.move_value());
+    model_spec_ = spec;
+    trained_ = false;
+    return Status::success();
+  }
+  return Status::invalid_argument("Flow::set_model supports classification, regression, or transform ModelSpec tasks.");
 }
 
 Status Flow::set_classifier(std::unique_ptr<ClassifierBase> model) {

@@ -787,6 +787,7 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch164_cuda_factory_contract.cpp
       tests/CodeM/test_patch165_cuda_stochastic_contract.cpp
       tests/CodeM/test_patch166_cuda_cublas_strict_route.cpp
+      tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp
     )
 
     add_executable(plussqit_codem_mps_selection_tests

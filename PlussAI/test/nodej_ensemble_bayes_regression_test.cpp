@@ -547,8 +547,8 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       return false;
     }
     const auto bad_bayes_status = bad_bayes.value()->learn(LabeledBatch{.features = features, .y = y_reg});
-    if (bad_bayes_status.ok() || bad_bayes_status.code != StatusCode::NotImplemented) {
-      if (err) *err << "bayes regressor should reject unsupported non-gaussian mode\n";
+    if (bad_bayes_status.ok() || bad_bayes_status.code != StatusCode::InvalidArgument) {
+      if (err) *err << "bayes regressor should reject Bernoulli mode labels outside [0,1]\n";
       return false;
     }
   }

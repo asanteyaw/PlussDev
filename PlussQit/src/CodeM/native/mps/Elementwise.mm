@@ -132,6 +132,77 @@ kernel void binary_cmp_f32(
   out[gid] = v ? uchar(1) : uchar(0);
 }
 
+kernel void binary_c64(
+    const device float2* a [[buffer(0)]],
+    const device float2* b [[buffer(1)]],
+    device float2* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const float2 av = a[ao];
+  const float2 bv = b[bo];
+  float2 v = float2(0.0f, 0.0f);
+  switch (meta.op) {
+    case 0: v = av + bv; break;
+    case 1: v = av - bv; break;
+    case 2: v = float2(av.x * bv.x - av.y * bv.y, av.x * bv.y + av.y * bv.x); break;
+    case 3: {
+      const float denom = bv.x * bv.x + bv.y * bv.y;
+      v = float2((av.x * bv.x + av.y * bv.y) / denom, (av.y * bv.x - av.x * bv.y) / denom);
+      break;
+    }
+    default: v = float2(0.0f, 0.0f); break;
+  }
+  out[gid] = v;
+}
+
+kernel void binary_cmp_c64(
+    const device float2* a [[buffer(0)]],
+    const device float2* b [[buffer(1)]],
+    device uchar* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const float2 av = a[ao];
+  const float2 bv = b[bo];
+  const bool eq = (av.x == bv.x) && (av.y == bv.y);
+  bool v = false;
+  switch (meta.op) {
+    case 0: v = eq; break;
+    case 1: v = !eq; break;
+    default: v = false; break;
+  }
+  out[gid] = v ? uchar(1) : uchar(0);
+}
+
 kernel void maximum_f32(
     const device float* a [[buffer(0)]],
     const device float* b [[buffer(1)]],
@@ -202,6 +273,28 @@ kernel void where_f32(
   out[gid] = (cond[co] != 0) ? a[ao] : b[bo];
 }
 
+kernel void where_c64(
+    const device uchar* cond [[buffer(0)]],
+    const device float2* a [[buffer(1)]],
+    const device float2* b [[buffer(2)]],
+    device float2* out [[buffer(3)]],
+    constant TernaryMeta& meta [[buffer(4)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong co = 0;
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    co = static_cast<ulong>(gid);
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else {
+    co = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.cond_strides);
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  out[gid] = (cond[co] != 0) ? a[ao] : b[bo];
+}
+
 struct UnaryMeta {
   uint op;
 };
@@ -240,6 +333,43 @@ kernel void unary_f32(
     default: v = 0.0f; break;
   }
   out[gid] = v;
+}
+
+kernel void complex_conj_c64(
+    const device float2* in [[buffer(0)]],
+    device float2* out [[buffer(1)]],
+    constant UnaryMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  (void)meta;
+  const float2 x = in[gid];
+  out[gid] = float2(x.x, -x.y);
+}
+
+kernel void complex_component_c64(
+    const device float2* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    constant UnaryMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  const float2 x = in[gid];
+  float v = 0.0f;
+  switch (meta.op) {
+    case 0: v = x.x; break;
+    case 1: v = x.y; break;
+    case 2: v = length(x); break;
+    case 3: v = atan2(x.y, x.x); break;
+    default: v = 0.0f; break;
+  }
+  out[gid] = v;
+}
+
+kernel void complex_from_parts_c64(
+    const device float* real [[buffer(0)]],
+    const device float* imag [[buffer(1)]],
+    device float2* out [[buffer(2)]],
+    constant UnaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  (void)meta;
+  out[gid] = float2(real[gid], imag[gid]);
 }
 
 kernel void unary_pred_f32(
@@ -288,10 +418,16 @@ struct Context {
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> binary_f32{nil};
   id<MTLComputePipelineState> binary_cmp_f32{nil};
+  id<MTLComputePipelineState> binary_c64{nil};
+  id<MTLComputePipelineState> binary_cmp_c64{nil};
   id<MTLComputePipelineState> maximum_f32{nil};
   id<MTLComputePipelineState> minimum_f32{nil};
   id<MTLComputePipelineState> where_f32{nil};
+  id<MTLComputePipelineState> where_c64{nil};
   id<MTLComputePipelineState> unary_f32{nil};
+  id<MTLComputePipelineState> complex_conj_c64{nil};
+  id<MTLComputePipelineState> complex_component_c64{nil};
+  id<MTLComputePipelineState> complex_from_parts_c64{nil};
   id<MTLComputePipelineState> unary_pred_f32{nil};
   std::string error{};
 };
@@ -349,10 +485,16 @@ Context& ctx_() {
 
       if (!make_pipeline("binary_f32", &ctx.binary_f32)) return;
       if (!make_pipeline("binary_cmp_f32", &ctx.binary_cmp_f32)) return;
+      if (!make_pipeline("binary_c64", &ctx.binary_c64)) return;
+      if (!make_pipeline("binary_cmp_c64", &ctx.binary_cmp_c64)) return;
       if (!make_pipeline("maximum_f32", &ctx.maximum_f32)) return;
       if (!make_pipeline("minimum_f32", &ctx.minimum_f32)) return;
       if (!make_pipeline("where_f32", &ctx.where_f32)) return;
+      if (!make_pipeline("where_c64", &ctx.where_c64)) return;
       if (!make_pipeline("unary_f32", &ctx.unary_f32)) return;
+      if (!make_pipeline("complex_conj_c64", &ctx.complex_conj_c64)) return;
+      if (!make_pipeline("complex_component_c64", &ctx.complex_component_c64)) return;
+      if (!make_pipeline("complex_from_parts_c64", &ctx.complex_from_parts_c64)) return;
       if (!make_pipeline("unary_pred_f32", &ctx.unary_pred_f32)) return;
       ctx.ready = true;
     }
@@ -377,7 +519,8 @@ void validate_mps_tensor_(const Series& s, const char* op) {
   if (s.platform() != Platform::MPS) {
     fail_(std::string(op) + ": expected MPS Series");
   }
-  if (s.scalar_type() != ScalarType::Float32 && s.scalar_type() != ScalarType::Bool) {
+  if (s.scalar_type() != ScalarType::Float32 && s.scalar_type() != ScalarType::Bool &&
+      s.scalar_type() != ScalarType::Complex64) {
     fail_(std::string(op) + ": unsupported dtype on current MPS path");
   }
   require_contiguous_(s, op);
@@ -635,10 +778,23 @@ bool is_available() noexcept {
 }
 
 bool supports_binary(cpu::BinaryOpId op, ScalarType dt) noexcept {
+  using B = cpu::BinaryOpId;
+  if (dt == ScalarType::Complex64) {
+    switch (op) {
+      case B::Add:
+      case B::Sub:
+      case B::Mul:
+      case B::Div:
+      case B::Eq:
+      case B::Ne:
+        return true;
+      default:
+        return false;
+    }
+  }
   if (dt != ScalarType::Float32) {
     return false;
   }
-  using B = cpu::BinaryOpId;
   switch (op) {
     case B::Add:
     case B::Sub:
@@ -670,22 +826,33 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
   // Typed scalar invocations (e.g., Series::mul(double)) may supply a host
   // 1-element tensor. Promote those scalars to MPS to keep the op native.
   if (lhs.platform() != Platform::MPS && lhs.defined() && lhs.numel() == 1) {
-    lhs = lhs.to(Platform::MPS, ScalarType::Float32);
+    lhs = lhs.to(Platform::MPS, out.scalar_type() == ScalarType::Complex64 ? ScalarType::Complex64 : ScalarType::Float32);
   }
   if (rhs.platform() != Platform::MPS && rhs.defined() && rhs.numel() == 1) {
-    rhs = rhs.to(Platform::MPS, ScalarType::Float32);
+    rhs = rhs.to(Platform::MPS, out.scalar_type() == ScalarType::Complex64 ? ScalarType::Complex64 : ScalarType::Float32);
   }
   validate_mps_tensor_(lhs, "binary");
   validate_mps_tensor_(rhs, "binary");
   validate_mps_tensor_(out, "binary");
-  if (lhs.scalar_type() != ScalarType::Float32 || rhs.scalar_type() != ScalarType::Float32) {
-    fail_("binary: only float32 inputs are supported on current MPS path");
+  const ScalarType compute_dt = lhs.scalar_type();
+  if (compute_dt != rhs.scalar_type()) {
+    fail_("binary: dtype mismatch on current MPS path");
+  }
+  if (compute_dt != ScalarType::Float32 && compute_dt != ScalarType::Complex64) {
+    fail_("binary: only float32 and complex64 inputs are supported on current MPS path");
   }
 
   const bool is_cmp = (op == cpu::BinaryOpId::Eq || op == cpu::BinaryOpId::Ne || op == cpu::BinaryOpId::Lt ||
                        op == cpu::BinaryOpId::Le || op == cpu::BinaryOpId::Gt || op == cpu::BinaryOpId::Ge);
-  if (!supports_binary(op, ScalarType::Float32)) {
+  if (!supports_binary(op, compute_dt)) {
     fail_("binary: unsupported op on current MPS path");
+  }
+  if (is_cmp) {
+    if (out.scalar_type() != ScalarType::Bool) {
+      fail_("binary: comparison output must be bool");
+    }
+  } else if (out.scalar_type() != compute_dt) {
+    fail_("binary: arithmetic output dtype mismatch");
   }
   if (out.numel() < 0) {
     fail_("binary: invalid output numel");
@@ -693,9 +860,10 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
 
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t a_bytes = static_cast<std::size_t>(lhs.numel()) * sizeof(float);
-    const std::size_t b_bytes = static_cast<std::size_t>(rhs.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * (is_cmp ? sizeof(std::uint8_t) : sizeof(float));
+    const std::size_t elem_bytes = compute_dt == ScalarType::Complex64 ? sizeof(float) * 2 : sizeof(float);
+    const std::size_t a_bytes = static_cast<std::size_t>(lhs.numel()) * elem_bytes;
+    const std::size_t b_bytes = static_cast<std::size_t>(rhs.numel()) * elem_bytes;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * (is_cmp ? sizeof(std::uint8_t) : elem_bytes);
     id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(lhs, c.device, a_bytes);
     id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(rhs, c.device, b_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
@@ -710,8 +878,9 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
     const std::uint32_t mode = binary_mode_(lhs, rhs, out);
     const auto aux = make_binary_cache_aux_(op_code, mode, lhs, rhs, out);
     const GraphCacheKeyView cache_key{
-        is_cmp ? "elementwise.binary_cmp" : "elementwise.binary",
-        ScalarType::Float32,
+        is_cmp ? (compute_dt == ScalarType::Complex64 ? "elementwise.binary_cmp_c64" : "elementwise.binary_cmp")
+               : (compute_dt == ScalarType::Complex64 ? "elementwise.binary_c64" : "elementwise.binary"),
+        compute_dt,
         out.sizes(),
         aux};
     if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
@@ -727,7 +896,8 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
     }
 
     id<MTLCommandBuffer> cb = encode_op_(
-        is_cmp ? c.binary_cmp_f32 : c.binary_f32,
+        is_cmp ? (compute_dt == ScalarType::Complex64 ? c.binary_cmp_c64 : c.binary_cmp_f32)
+               : (compute_dt == ScalarType::Complex64 ? c.binary_c64 : c.binary_f32),
         a_buf,
         b_buf,
         out_buf,
@@ -737,6 +907,146 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
         3,
         out.numel(),
         "binary");
+    if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
+      mark_device_data_dirty_mm(out, cb);
+    }
+  }
+}
+
+bool supports_complex_conj(ScalarType dt) noexcept {
+  return dt == ScalarType::Complex64;
+}
+
+void complex_conj(const Series& a, Series& out) {
+  if (!is_available()) {
+    fail_("complex_conj: MPS backend unavailable (" + ctx_().error + ")");
+  }
+  validate_mps_tensor_(a, "complex_conj");
+  validate_mps_tensor_(out, "complex_conj");
+  if (!supports_complex_conj(a.scalar_type()) || out.scalar_type() != a.scalar_type()) {
+    fail_("complex_conj: expected complex64 input/output");
+  }
+  if (a.numel() != out.numel()) {
+    fail_("complex_conj: shape mismatch");
+  }
+
+  auto& c = ctx_();
+  @autoreleasepool {
+    const std::size_t bytes = static_cast<std::size_t>(a.numel()) * sizeof(float) * 2;
+    id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(a, c.device, bytes);
+    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, bytes);
+    if (in_buf == nil || out_buf == nil) {
+      fail_("complex_conj: failed to allocate Metal buffers");
+    }
+    UnaryMetaHost meta{0};
+    id<MTLCommandBuffer> cb =
+        encode_op_(c.complex_conj_c64, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "complex_conj");
+    if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
+      mark_device_data_dirty_mm(out, cb);
+    }
+  }
+}
+
+std::uint32_t complex_component_code_(ComplexComponentOp op) {
+  switch (op) {
+    case ComplexComponentOp::Real: return 0;
+    case ComplexComponentOp::Imag: return 1;
+    case ComplexComponentOp::Abs: return 2;
+    case ComplexComponentOp::Angle: return 3;
+    default: return 999;
+  }
+}
+
+bool supports_complex_component(ScalarType in_dt, ScalarType out_dt) noexcept {
+  return in_dt == ScalarType::Complex64 && out_dt == ScalarType::Float32;
+}
+
+void complex_component(ComplexComponentOp op, const Series& a, Series& out) {
+  if (!is_available()) {
+    fail_("complex_component: MPS backend unavailable (" + ctx_().error + ")");
+  }
+  validate_mps_tensor_(a, "complex_component");
+  validate_mps_tensor_(out, "complex_component");
+  if (!supports_complex_component(a.scalar_type(), out.scalar_type())) {
+    fail_("complex_component: expected complex64 input and float32 output");
+  }
+  if (a.numel() != out.numel()) {
+    fail_("complex_component: shape mismatch");
+  }
+
+  auto& c = ctx_();
+  @autoreleasepool {
+    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float) * 2;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(a, c.device, in_bytes);
+    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
+    if (in_buf == nil || out_buf == nil) {
+      fail_("complex_component: failed to allocate Metal buffers");
+    }
+    UnaryMetaHost meta{complex_component_code_(op)};
+    if (meta.op == 999) {
+      fail_("complex_component: unsupported component op");
+    }
+    id<MTLCommandBuffer> cb = encode_op_(
+        c.complex_component_c64,
+        in_buf,
+        out_buf,
+        nil,
+        nil,
+        &meta,
+        sizeof(meta),
+        2,
+        out.numel(),
+        "complex_component");
+    if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
+      mark_device_data_dirty_mm(out, cb);
+    }
+  }
+}
+
+bool supports_complex_from_parts(ScalarType real_dt, ScalarType imag_dt, ScalarType out_dt) noexcept {
+  return real_dt == ScalarType::Float32 && imag_dt == ScalarType::Float32 && out_dt == ScalarType::Complex64;
+}
+
+void complex_from_parts(const Series& real, const Series& imag, Series& out) {
+  if (!is_available()) {
+    fail_("complex_from_parts: MPS backend unavailable (" + ctx_().error + ")");
+  }
+  validate_mps_tensor_(real, "complex_from_parts");
+  validate_mps_tensor_(imag, "complex_from_parts");
+  validate_mps_tensor_(out, "complex_from_parts");
+  if (!supports_complex_from_parts(real.scalar_type(), imag.scalar_type(), out.scalar_type())) {
+    fail_("complex_from_parts: expected float32 real/imag inputs and complex64 output");
+  }
+  if (real.numel() != imag.numel() || real.numel() != out.numel()) {
+    fail_("complex_from_parts: shape mismatch");
+  }
+
+  auto& c = ctx_();
+  @autoreleasepool {
+    const std::size_t in_bytes = static_cast<std::size_t>(real.numel()) * sizeof(float);
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float) * 2u;
+    id<MTLBuffer> real_buf = ensure_device_buffer_for_read_mm(real, c.device, in_bytes);
+    id<MTLBuffer> imag_buf = ensure_device_buffer_for_read_mm(imag, c.device, in_bytes);
+    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
+    if (real_buf == nil || imag_buf == nil || out_buf == nil) {
+      fail_("complex_from_parts: failed to allocate Metal buffers");
+    }
+    UnaryMetaHost meta{0};
+    id<MTLCommandBuffer> cb = encode_op_(
+        c.complex_from_parts_c64,
+        real_buf,
+        imag_buf,
+        out_buf,
+        nil,
+        &meta,
+        sizeof(meta),
+        3,
+        out.numel(),
+        "complex_from_parts");
     if (cb != nil) {
       submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
@@ -815,7 +1125,7 @@ void minimum(const Series& a, const Series& b, Series& out) {
 }
 
 bool supports_where(ScalarType cond_dt, ScalarType data_dt) noexcept {
-  return cond_dt == ScalarType::Bool && data_dt == ScalarType::Float32;
+  return cond_dt == ScalarType::Bool && (data_dt == ScalarType::Float32 || data_dt == ScalarType::Complex64);
 }
 
 void where(const Series& cond, const Series& a, const Series& b, Series& out) {
@@ -833,10 +1143,12 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
 
   auto& c = ctx_();
   @autoreleasepool {
+    const bool complex_data = a.scalar_type() == ScalarType::Complex64;
+    const std::size_t elem_bytes = complex_data ? sizeof(float) * 2u : sizeof(float);
     const std::size_t cond_bytes = static_cast<std::size_t>(cond.numel()) * sizeof(std::uint8_t);
-    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
-    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
+    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * elem_bytes;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     id<MTLBuffer> cond_buf = ensure_device_buffer_for_read_mm(cond, c.device, cond_bytes);
     id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(a, c.device, a_bytes);
     id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(b, c.device, b_bytes);
@@ -847,7 +1159,7 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
     TernaryMetaHost meta{};
     const std::uint32_t mode = ternary_mode_(cond, a, b, out);
     const auto aux = make_where_cache_aux_(mode, cond, a, b, out);
-    const GraphCacheKeyView cache_key{"elementwise.where", ScalarType::Float32, out.sizes(), aux};
+    const GraphCacheKeyView cache_key{complex_data ? "elementwise.where_c64" : "elementwise.where", a.scalar_type(), out.sizes(), aux};
     if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
       meta.mode = mode;
       meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
@@ -861,7 +1173,7 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
     }
 
     id<MTLCommandBuffer> cb = encode_op_(
-        c.where_f32,
+        complex_data ? c.where_c64 : c.where_f32,
         cond_buf,
         a_buf,
         b_buf,

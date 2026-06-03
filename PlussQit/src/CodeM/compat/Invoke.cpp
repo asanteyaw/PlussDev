@@ -294,7 +294,9 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     if (mps_matmul_cpu_bridge_enabled &&
         aa.dim() == 2 &&
         bb.dim() == 2 &&
-        bb.sizes()[1] == 1) {
+        bb.sizes()[1] == 1 &&
+        aa.scalar_type() != ScalarType::Complex64 &&
+        aa.scalar_type() != ScalarType::Complex128) {
       return native::cpu::matmul(
                  aa.to(Platform::CPU, aa.scalar_type()),
                  bb.to(Platform::CPU, bb.scalar_type()))
@@ -313,6 +315,9 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     const bool native_strict = native::cuda::native_matmul_strict();
     const bool route_supported = native::cuda::supports_matmul(a, b);
     if (native_enabled && route_supported) {
+      if (!native::cuda::cpu_bridge_enabled()) {
+        throw_error("matmul: CUDA native matmul route declared but kernel is not implemented yet");
+      }
       return cuda_native_matmul_reference_(a, b);
     }
     if (native_strict) {
@@ -394,6 +399,15 @@ static std::pair<Series, bool> promote_rhs_matmul_operand_(const Series& b) {
   return {b, false};
 }
 
+static bool complex_matmul_dtype_(ScalarType st) noexcept {
+  return st == ScalarType::Complex64 || st == ScalarType::Complex128;
+}
+
+static Series matmul_adjoint_(const Series& x) {
+  Series xt = x.transpose(-2, -1);
+  return complex_matmul_dtype_(x.scalar_type()) ? ops_internal::conj(xt) : xt;
+}
+
 static Series promote_out_sensitivity_for_matmul_(
     const Series& out_sens,
     bool lhs_was_vec,
@@ -457,7 +471,7 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
     const Series g_promoted = promote_out_sensitivity_for_matmul_(out_sens, a_was_vec, b_was_vec);
 
     if (ta) {
-      const Series bt = b_promoted.transpose(-2, -1);
+      const Series bt = matmul_adjoint_(b_promoted);
       Series ga = matmul_backprop_dispatch_(
           g_promoted,
           bt,
@@ -470,7 +484,7 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
       series_tape::accumulate_sensitivity(a, ga);
     }
     if (tb) {
-      const Series at = a_promoted.transpose(-2, -1);
+      const Series at = matmul_adjoint_(a_promoted);
       Series gb = matmul_backprop_dispatch_(
           at,
           g_promoted,
@@ -1720,7 +1734,10 @@ Series cuda_stochastic_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return cpu_route();
+    if (native::cuda::cpu_bridge_enabled()) {
+      return cpu_route();
+    }
+    throw_cuda_stochastic_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     throw_error(
@@ -3420,6 +3437,9 @@ static Series sort_values_only(const Series& self, std::int64_t dim, bool descen
     const bool route_supported = native::cuda::supports_sort_selection(self, dim, stable);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
     if (native_enabled && route_supported) {
+      if (!bridge_enabled) {
+        throw_error("sort: CUDA native selection route declared but kernel is not implemented yet");
+      }
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       auto pair = native::cpu::sort(cpu, dim, descending, stable);
       auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
@@ -3490,6 +3510,9 @@ static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t 
     const bool route_supported = native::cuda::supports_topk_selection(self, k, dim, sorted);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
     if (native_enabled && route_supported) {
+      if (!bridge_enabled) {
+        throw_error("topk: CUDA native selection route declared but kernel is not implemented yet");
+      }
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       auto pair = native::cpu::topk(cpu, k, dim, largest, sorted);
       auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
@@ -3564,6 +3587,9 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
     const bool route_supported = native::cuda::supports_kthvalue_selection(self, k, dim);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
     if (native_enabled && route_supported) {
+      if (!bridge_enabled) {
+        throw_error("kthvalue: CUDA native selection route declared but kernel is not implemented yet");
+      }
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       auto pair = native::cpu::topk(cpu, k, dim, /*largest=*/false, /*sorted=*/true);
       Series value = pair.first.select(dim, k - 1);
@@ -3638,6 +3664,9 @@ static Series argsort_values_only(const Series& self, std::int64_t dim, bool des
     const bool route_supported = native::cuda::supports_argsort_selection(self, dim, stable);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
     if (native_enabled && route_supported) {
+      if (!bridge_enabled) {
+        throw_error("argsort: CUDA native selection route declared but kernel is not implemented yet");
+      }
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       (void)casted_for_sorting;
       return native::cpu::argsort(cpu, dim, descending, stable).to(Platform::CUDA);

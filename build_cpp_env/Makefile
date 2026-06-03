@@ -1311,6 +1311,19 @@ fusion_route_test/fast:
 .PHONY : fusion_route_test/fast
 
 #=============================================================================
+# Target rules for targets named lymph_metrics_test
+
+# Build rule for target.
+lymph_metrics_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lymph_metrics_test
+.PHONY : lymph_metrics_test
+
+# fast build rule for target.
+lymph_metrics_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build
+.PHONY : lymph_metrics_test/fast
+
+#=============================================================================
 # Target rules for targets named module_snapshot_test
 
 # Build rule for target.
@@ -1322,6 +1335,19 @@ module_snapshot_test: cmake_check_build_system
 module_snapshot_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/build
 .PHONY : module_snapshot_test/fast
+
+#=============================================================================
+# Target rules for targets named nn_dropout_parity_test
+
+# Build rule for target.
+nn_dropout_parity_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_dropout_parity_test
+.PHONY : nn_dropout_parity_test
+
+# fast build rule for target.
+nn_dropout_parity_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build
+.PHONY : nn_dropout_parity_test/fast
 
 #=============================================================================
 # Target rules for targets named nn_loss_test
@@ -1491,6 +1517,19 @@ nodej_flow_test: cmake_check_build_system
 nodej_flow_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/build
 .PHONY : nodej_flow_test/fast
+
+#=============================================================================
+# Target rules for targets named nodej_metrics_test
+
+# Build rule for target.
+nodej_metrics_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_metrics_test
+.PHONY : nodej_metrics_test
+
+# fast build rule for target.
+nodej_metrics_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build.make PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build
+.PHONY : nodej_metrics_test/fast
 
 #=============================================================================
 # Target rules for targets named nodej_multiclass_test
@@ -5223,6 +5262,30 @@ PlussAI/NodeJ/split/split.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/split/split.cpp.s
 .PHONY : PlussAI/NodeJ/split/split.cpp.s
 
+PlussAI/NodeJ/text/sparse_runtime.o: PlussAI/NodeJ/text/sparse_runtime.cpp.o
+.PHONY : PlussAI/NodeJ/text/sparse_runtime.o
+
+# target to build an object file
+PlussAI/NodeJ/text/sparse_runtime.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/text/sparse_runtime.cpp.o
+.PHONY : PlussAI/NodeJ/text/sparse_runtime.cpp.o
+
+PlussAI/NodeJ/text/sparse_runtime.i: PlussAI/NodeJ/text/sparse_runtime.cpp.i
+.PHONY : PlussAI/NodeJ/text/sparse_runtime.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/text/sparse_runtime.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/text/sparse_runtime.cpp.i
+.PHONY : PlussAI/NodeJ/text/sparse_runtime.cpp.i
+
+PlussAI/NodeJ/text/sparse_runtime.s: PlussAI/NodeJ/text/sparse_runtime.cpp.s
+.PHONY : PlussAI/NodeJ/text/sparse_runtime.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/text/sparse_runtime.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/text/sparse_runtime.cpp.s
+.PHONY : PlussAI/NodeJ/text/sparse_runtime.cpp.s
+
 PlussAI/NodeJ/text/text.o: PlussAI/NodeJ/text/text.cpp.o
 .PHONY : PlussAI/NodeJ/text/text.o
 
@@ -7574,12 +7637,14 @@ help:
 	@echo "... lag_features_test"
 	@echo "... life_contingencies_foundation_test"
 	@echo "... loss_models_foundation_test"
+	@echo "... lymph_metrics_test"
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... mechanics_test"
 	@echo "... module_snapshot_test"
 	@echo "... mv_vol_test"
+	@echo "... nn_dropout_parity_test"
 	@echo "... nn_loss_test"
 	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
@@ -7593,6 +7658,7 @@ help:
 	@echo "... nodej_ensemble_bayes_regression_test"
 	@echo "... nodej_feature_inspect_text_test"
 	@echo "... nodej_flow_test"
+	@echo "... nodej_metrics_test"
 	@echo "... nodej_multiclass_test"
 	@echo "... nodej_neighbor_test"
 	@echo "... nodej_online_test"
@@ -7888,6 +7954,9 @@ help:
 	@echo "... PlussAI/NodeJ/split/split.o"
 	@echo "... PlussAI/NodeJ/split/split.i"
 	@echo "... PlussAI/NodeJ/split/split.s"
+	@echo "... PlussAI/NodeJ/text/sparse_runtime.o"
+	@echo "... PlussAI/NodeJ/text/sparse_runtime.i"
+	@echo "... PlussAI/NodeJ/text/sparse_runtime.s"
 	@echo "... PlussAI/NodeJ/text/text.o"
 	@echo "... PlussAI/NodeJ/text/text.i"
 	@echo "... PlussAI/NodeJ/text/text.s"

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/ai/nodej/nodej.h"
+#include "pluss/ai/nodej/sparse_runtime.h"
 #include "pluss/codem/series_factory.h"
 #include "table/DataFrame.h"
 
@@ -788,6 +789,127 @@ struct CrossValidationReport {
   MetricReport stdev{};
 };
 
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  SplitOptions split{};
+  split.plan = cv.plan;
+  split.holdout_fraction = cv.holdout_fraction;
+  split.folds = cv.folds;
+  split.stratified = cv.stratified;
+  split.groups = cv.groups;
+  split.reliability_defaults = cv.reliability_defaults;
+  split.shuffle = cv.shuffle;
+  split.random.seed = cv.random_state;
+  split.random.deterministic = cv.deterministic;
+  return resolve(::pluss::ai::nodej::cross_scores(spec, batch, metric, split, train_options, assess_options),
+                 "cross_validate_scores");
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  SplitOptions split{};
+  split.plan = cv.plan;
+  split.holdout_fraction = cv.holdout_fraction;
+  split.folds = cv.folds;
+  split.stratified = cv.stratified;
+  split.groups = cv.groups;
+  split.reliability_defaults = cv.reliability_defaults;
+  split.shuffle = cv.shuffle;
+  split.random.seed = cv.random_state;
+  split.random.deterministic = cv.deterministic;
+  return resolve(::pluss::ai::nodej::cross_score(spec, batch, metric, split, train_options, assess_options),
+                 "cross_validate_score");
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& frame,
+                                                  const DataFrameBatchOptions& data_options,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_scores.labeled_batch_from_dataframe");
+  return cross_validate_scores(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& frame,
+                                                 const DataFrameBatchOptions& data_options,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_score.labeled_batch_from_dataframe");
+  return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
+                                                     const Series& predicted_labels,
+                                                     const ConfusionOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options), "confusion_matrix");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
+                                                     const Series& predicted_labels,
+                                                     pluss::msharp::RangeView::Of<double> label_order,
+                                                     ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, label_order, normalize),
+                 "confusion_matrix");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
+                                                     const Series& predicted_labels,
+                                                     std::initializer_list<double> label_order,
+                                                     ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return confusion_matrix(truth_labels,
+                          predicted_labels,
+                          pluss::msharp::RangeView::Of<double>(label_order),
+                          normalize);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_report(truth_labels, predicted_labels, options),
+                 "classification_summary");
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        pluss::msharp::RangeView::Of<double> label_order,
+                                                        double zero_division = 0.0) {
+  return resolve(::pluss::ai::nodej::classification_report(truth_labels, predicted_labels, label_order, zero_division),
+                 "classification_summary");
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        std::initializer_list<double> label_order,
+                                                        double zero_division = 0.0) {
+  return classification_summary(truth_labels,
+                                predicted_labels,
+                                pluss::msharp::RangeView::Of<double>(label_order),
+                                zero_division);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const Series& truth_labels,
+                                                         const Series& predicted_labels,
+                                                         const std::vector<MetricKind>& metrics = {},
+                                                         const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_metrics(truth_labels, predicted_labels, metrics, options),
+                 "classification_metric_series");
+}
+
 [[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
   SplitOptions split{};
   split.holdout_fraction = options.test_size;
@@ -809,6 +931,34 @@ struct CrossValidationReport {
   split.random.seed = options.random_state;
   split.random.deterministic = options.deterministic;
   return split;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_platt(TrainOptions options = {},
+                                                       std::int64_t calibration_iterations = 400,
+                                                       double calibration_tolerance = 1e-6) {
+  options.calibration = ScoreCalibration::Platt;
+  options.calibration_iterations = calibration_iterations;
+  options.calibration_tolerance = calibration_tolerance;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_isotonic(TrainOptions options = {}) {
+  options.calibration = ScoreCalibration::Isotonic;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_temperature(TrainOptions options = {},
+                                                             std::int64_t calibration_iterations = 400,
+                                                             double calibration_tolerance = 1e-6) {
+  options.calibration = ScoreCalibration::Temperature;
+  options.calibration_iterations = calibration_iterations;
+  options.calibration_tolerance = calibration_tolerance;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions without_calibration(TrainOptions options = {}) {
+  options.calibration = ScoreCalibration::None;
+  return options;
 }
 
 [[nodiscard]] inline Series metric_scalar_(double value) {
@@ -930,6 +1080,50 @@ struct CrossValidationReport {
   return cross_validate(spec, x, as_stratify_series(y), cv, train_options, assess_options);
 }
 
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate_scores(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate_scores(x,y)");
+  return cross_validate_scores(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate_score(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate_score(x,y)");
+  return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& x,
+                                                  const pluss::table::Thread& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  return cross_validate_scores(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& x,
+                                                 const pluss::table::Thread& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  return cross_validate_score(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
   if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
   return thread.cast(pluss::table::ThreadCastTarget::Series, ScalarType::Float64).as_series();
@@ -984,6 +1178,601 @@ struct CrossValidationReport {
   return std::pair<pluss::table::DataFrame, pluss::table::DataFrame>(std::move(split.train_set), std::move(split.test_set));
 }
 
+namespace sparse {
+
+using Triplet = ::pluss::ai::nodej::SparseTripletMatrix;
+using Csr = ::pluss::ai::nodej::SparseCsrMatrix;
+using FoldReport = ::pluss::ai::nodej::SparseFoldReport;
+using CrossReport = ::pluss::ai::nodej::SparseCrossReport;
+using ObjectivePolicy = ::pluss::ai::nodej::SparseObjectivePolicy;
+using TuneTrial = ::pluss::ai::nodej::SparseTuneTrial;
+using TuneReport = ::pluss::ai::nodej::SparseTuneReport;
+
+[[nodiscard]] inline Triplet make_triplet(std::int64_t rows,
+                                          std::int64_t cols,
+                                          pluss::msharp::RangeView::Int row_indices,
+                                          pluss::msharp::RangeView::Int column_indices,
+                                          pluss::msharp::RangeView::Of<double> values) {
+  return resolve(::pluss::ai::nodej::make_sparse_triplet(rows, cols, row_indices, column_indices, values),
+                 "sparse::make_triplet");
+}
+
+[[nodiscard]] inline Triplet make_triplet(std::int64_t rows,
+                                          std::int64_t cols,
+                                          std::initializer_list<std::int64_t> row_indices,
+                                          std::initializer_list<std::int64_t> column_indices,
+                                          std::initializer_list<double> values) {
+  return make_triplet(rows,
+                      cols,
+                      pluss::msharp::RangeView::Int(row_indices),
+                      pluss::msharp::RangeView::Int(column_indices),
+                      pluss::msharp::RangeView::Of<double>(values));
+}
+
+[[nodiscard]] inline Csr to_csr(const Triplet& sparse) {
+  return resolve(::pluss::ai::nodej::sparse_triplet_to_csr(sparse), "sparse::to_csr");
+}
+
+class BinaryLinearModel final {
+public:
+  [[nodiscard]] bool trained() const noexcept { return core_.trained(); }
+  [[nodiscard]] std::int64_t feature_count() const noexcept { return core_.feature_count(); }
+
+  BinaryLinearModel& learn_(const Triplet& x,
+                            const Series& y,
+                            const TrainOptions& options = {},
+                            const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::BinaryLinearModel.learn_");
+    return *this;
+  }
+
+  BinaryLinearModel& learn_(const Csr& x,
+                            const Series& y,
+                            const TrainOptions& options = {},
+                            const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::BinaryLinearModel.learn_");
+    return *this;
+  }
+
+  [[nodiscard]] Series infer_scores(const Triplet& x) const {
+    return resolve(core_.infer_scores(x), "sparse::BinaryLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer_scores(const Csr& x) const {
+    return resolve(core_.infer_scores(x), "sparse::BinaryLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer(const Triplet& x, const InferOptions& options = {}) const {
+    return resolve(core_.infer(x, options), "sparse::BinaryLinearModel.infer");
+  }
+  [[nodiscard]] Series infer(const Csr& x, const InferOptions& options = {}) const {
+    return resolve(core_.infer(x, options), "sparse::BinaryLinearModel.infer");
+  }
+  [[nodiscard]] Series assess_series(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::BinaryLinearModel.assess_series");
+  }
+  [[nodiscard]] Series assess_series(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::BinaryLinearModel.assess_series");
+  }
+  [[nodiscard]] MetricReport assess(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+  [[nodiscard]] MetricReport assess(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+
+  [[nodiscard]] std::vector<Series> dump_state() const { return resolve(core_.dump_state(), "sparse::BinaryLinearModel.dump_state"); }
+  BinaryLinearModel& load_state_(pluss::msharp::RangeView::Series state) {
+    resolve(core_.load_state(state), "sparse::BinaryLinearModel.load_state_");
+    return *this;
+  }
+
+private:
+  ::pluss::ai::nodej::SparseLinearBinaryClassifier core_{};
+};
+
+class LinearRegressorModel final {
+public:
+  [[nodiscard]] bool trained() const noexcept { return core_.trained(); }
+  [[nodiscard]] std::int64_t feature_count() const noexcept { return core_.feature_count(); }
+
+  LinearRegressorModel& learn_(const Triplet& x,
+                               const Series& y,
+                               const TrainOptions& options = {},
+                               const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::LinearRegressorModel.learn_");
+    return *this;
+  }
+
+  LinearRegressorModel& learn_(const Csr& x,
+                               const Series& y,
+                               const TrainOptions& options = {},
+                               const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::LinearRegressorModel.learn_");
+    return *this;
+  }
+
+  [[nodiscard]] Series infer(const Triplet& x) const {
+    return resolve(core_.infer(x), "sparse::LinearRegressorModel.infer");
+  }
+  [[nodiscard]] Series infer(const Csr& x) const {
+    return resolve(core_.infer(x), "sparse::LinearRegressorModel.infer");
+  }
+  [[nodiscard]] Series assess_series(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::LinearRegressorModel.assess_series");
+  }
+  [[nodiscard]] Series assess_series(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::LinearRegressorModel.assess_series");
+  }
+  [[nodiscard]] MetricReport assess(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Regression, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+  [[nodiscard]] MetricReport assess(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Regression, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+
+  [[nodiscard]] std::vector<Series> dump_state() const {
+    return resolve(core_.dump_state(), "sparse::LinearRegressorModel.dump_state");
+  }
+  LinearRegressorModel& load_state_(pluss::msharp::RangeView::Series state) {
+    resolve(core_.load_state(state), "sparse::LinearRegressorModel.load_state_");
+    return *this;
+  }
+
+private:
+  ::pluss::ai::nodej::SparseLinearRegressor core_{};
+};
+
+class MultiLinearModel final {
+public:
+  [[nodiscard]] bool trained() const noexcept { return core_.trained(); }
+  [[nodiscard]] std::int64_t feature_count() const noexcept { return core_.feature_count(); }
+  [[nodiscard]] std::int64_t class_count() const noexcept { return core_.class_count(); }
+
+  MultiLinearModel& learn_(const Triplet& x,
+                           const Series& y,
+                           const TrainOptions& options = {},
+                           const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::MultiLinearModel.learn_");
+    return *this;
+  }
+
+  MultiLinearModel& learn_(const Csr& x,
+                           const Series& y,
+                           const TrainOptions& options = {},
+                           const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::MultiLinearModel.learn_");
+    return *this;
+  }
+
+  [[nodiscard]] Series infer_scores(const Triplet& x) const {
+    return resolve(core_.infer_scores(x), "sparse::MultiLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer_scores(const Csr& x) const {
+    return resolve(core_.infer_scores(x), "sparse::MultiLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer(const Triplet& x) const {
+    return resolve(core_.infer(x), "sparse::MultiLinearModel.infer");
+  }
+  [[nodiscard]] Series infer(const Csr& x) const {
+    return resolve(core_.infer(x), "sparse::MultiLinearModel.infer");
+  }
+  [[nodiscard]] Series assess_series(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::MultiLinearModel.assess_series");
+  }
+  [[nodiscard]] Series assess_series(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::MultiLinearModel.assess_series");
+  }
+  [[nodiscard]] MetricReport assess(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+  [[nodiscard]] MetricReport assess(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+
+  [[nodiscard]] std::vector<Series> dump_state() const {
+    return resolve(core_.dump_state(), "sparse::MultiLinearModel.dump_state");
+  }
+  MultiLinearModel& load_state_(pluss::msharp::RangeView::Series state) {
+    resolve(core_.load_state(state), "sparse::MultiLinearModel.load_state_");
+    return *this;
+  }
+
+private:
+  ::pluss::ai::nodej::SparseLinearMultiClassifier core_{};
+};
+
+[[nodiscard]] inline CrossReport cross_assess_binary(const Triplet& x,
+                                                     const Series& y,
+                                                     const SplitOptions& split = {},
+                                                     const TrainOptions& train_options = {},
+                                                     const AssessOptions& assess_options = {},
+                                                     const LinearFamilyOptions& linear_options = {}) {
+  return resolve(::pluss::ai::nodej::cross_assess_sparse_binary(x, y, split, train_options, assess_options, linear_options),
+                 "sparse::cross_assess_binary");
+}
+
+[[nodiscard]] inline CrossReport cross_assess_regression(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::cross_assess_sparse_regression(x, y, split, train_options, assess_options, linear_options),
+      "sparse::cross_assess_regression");
+}
+
+[[nodiscard]] inline CrossReport cross_assess_multiclass(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::cross_assess_sparse_multiclass(x, y, split, train_options, assess_options, linear_options),
+                 "sparse::cross_assess_multiclass");
+}
+
+[[nodiscard]] inline CrossReport assess_binary_folds(const Triplet& x,
+                                                     const Series& y,
+                                                     const SplitOptions& split = {},
+                                                     const TrainOptions& train_options = {},
+                                                     const AssessOptions& assess_options = {},
+                                                     const LinearFamilyOptions& linear_options = {}) {
+  return resolve(::pluss::ai::nodej::assess_sparse_binary_folds(x, y, split, train_options, assess_options, linear_options),
+                 "sparse::assess_binary_folds");
+}
+
+[[nodiscard]] inline CrossReport assess_regression_folds(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::assess_sparse_regression_folds(x, y, split, train_options, assess_options, linear_options),
+      "sparse::assess_regression_folds");
+}
+
+[[nodiscard]] inline CrossReport assess_multiclass_folds(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::assess_sparse_multiclass_folds(x, y, split, train_options, assess_options, linear_options),
+      "sparse::assess_multiclass_folds");
+}
+
+[[nodiscard]] inline TuneReport sweep_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                             const Triplet& x,
+                                             const Series& y,
+                                             const SplitOptions& split = {},
+                                             const TrainOptions& train_options = {},
+                                             const AssessOptions& assess_options = {},
+                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::sweep_sparse_binary(candidates,
+                                                         x,
+                                                         y,
+                                                         split,
+                                                         train_options,
+                                                         assess_options,
+                                                         objective_metric,
+                                                         objective_policy),
+                 "sparse::sweep_binary");
+}
+
+[[nodiscard]] inline TuneReport sweep_binary(std::initializer_list<LinearFamilyOptions> candidates,
+                                             const Triplet& x,
+                                             const Series& y,
+                                             const SplitOptions& split = {},
+                                             const TrainOptions& train_options = {},
+                                             const AssessOptions& assess_options = {},
+                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return sweep_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                      x,
+                      y,
+                      split,
+                      train_options,
+                      assess_options,
+                      objective_metric,
+                      objective_policy);
+}
+
+[[nodiscard]] inline TuneReport sweep_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Mse,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::sweep_sparse_regression(candidates,
+                                                             x,
+                                                             y,
+                                                             split,
+                                                             train_options,
+                                                             assess_options,
+                                                             objective_metric,
+                                                             objective_policy),
+                 "sparse::sweep_regression");
+}
+
+[[nodiscard]] inline TuneReport sweep_regression(std::initializer_list<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Mse,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return sweep_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                          x,
+                          y,
+                          split,
+                          train_options,
+                          assess_options,
+                          objective_metric,
+                          objective_policy);
+}
+
+[[nodiscard]] inline TuneReport sweep_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::sweep_sparse_multiclass(candidates,
+                                                             x,
+                                                             y,
+                                                             split,
+                                                             train_options,
+                                                             assess_options,
+                                                             objective_metric,
+                                                             objective_policy),
+                 "sparse::sweep_multiclass");
+}
+
+[[nodiscard]] inline TuneReport sweep_multiclass(std::initializer_list<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return sweep_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                          x,
+                          y,
+                          split,
+                          train_options,
+                          assess_options,
+                          objective_metric,
+                          objective_policy);
+}
+
+[[nodiscard]] inline TuneReport tune_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                            const Triplet& x,
+                                            const Series& y,
+                                            const SplitOptions& split = {},
+                                            const TrainOptions& train_options = {},
+                                            const AssessOptions& assess_options = {},
+                                            MetricKind objective_metric = MetricKind::Accuracy,
+                                            ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::tune_sparse_binary(candidates,
+                                                        x,
+                                                        y,
+                                                        split,
+                                                        train_options,
+                                                        assess_options,
+                                                        objective_metric,
+                                                        objective_policy),
+                 "sparse::tune_binary");
+}
+
+[[nodiscard]] inline TuneReport tune_binary(std::initializer_list<LinearFamilyOptions> candidates,
+                                            const Triplet& x,
+                                            const Series& y,
+                                            const SplitOptions& split = {},
+                                            const TrainOptions& train_options = {},
+                                            const AssessOptions& assess_options = {},
+                                            MetricKind objective_metric = MetricKind::Accuracy,
+                                            ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return tune_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                     x,
+                     y,
+                     split,
+                     train_options,
+                     assess_options,
+                     objective_metric,
+                     objective_policy);
+}
+
+[[nodiscard]] inline TuneReport tune_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Mse,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::tune_sparse_regression(candidates,
+                                                            x,
+                                                            y,
+                                                            split,
+                                                            train_options,
+                                                            assess_options,
+                                                            objective_metric,
+                                                            objective_policy),
+                 "sparse::tune_regression");
+}
+
+[[nodiscard]] inline TuneReport tune_regression(std::initializer_list<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Mse,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return tune_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                         x,
+                         y,
+                         split,
+                         train_options,
+                         assess_options,
+                         objective_metric,
+                         objective_policy);
+}
+
+[[nodiscard]] inline TuneReport tune_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::tune_sparse_multiclass(candidates,
+                                                            x,
+                                                            y,
+                                                            split,
+                                                            train_options,
+                                                            assess_options,
+                                                            objective_metric,
+                                                            objective_policy),
+                 "sparse::tune_multiclass");
+}
+
+[[nodiscard]] inline TuneReport tune_multiclass(std::initializer_list<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return tune_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                         x,
+                         y,
+                         split,
+                         train_options,
+                         assess_options,
+                         objective_metric,
+                         objective_policy);
+}
+
+[[nodiscard]] inline bool has_best_trial(const TuneReport& report) {
+  return report.best_index >= 0 && report.best_index < static_cast<std::int64_t>(report.trials.size());
+}
+
+[[nodiscard]] inline const TuneTrial& best_trial(const TuneReport& report) {
+  if (!has_best_trial(report)) {
+    ::pluss::throw_error("sparse::best_trial requested but report has no best trial.");
+  }
+  return report.trials[static_cast<std::size_t>(report.best_index)];
+}
+
+[[nodiscard]] inline Series objective_series(const TuneReport& report) {
+  std::vector<double> values{};
+  values.reserve(report.trials.size());
+  for (const auto& trial : report.trials) values.push_back(trial.objective);
+  return pluss::make_series(std::move(values),
+                            {static_cast<std::int64_t>(report.trials.size())},
+                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+}
+
+[[nodiscard]] inline Series objective_rank_series(const TuneReport& report) {
+  std::vector<double> values{};
+  values.reserve(report.objective_rank.size());
+  for (const auto rank : report.objective_rank) values.push_back(static_cast<double>(rank));
+  return pluss::make_series(std::move(values),
+                            {static_cast<std::int64_t>(report.objective_rank.size())},
+                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+}
+
+} // namespace sparse
+
+namespace inspection {
+
+[[nodiscard]] inline PermuteImpactReport permutation_impact(const ModelSpec& spec,
+                                                            const LabeledBatch& train,
+                                                            const LabeledBatch& eval,
+                                                            MetricKind metric = MetricKind::Accuracy,
+                                                            std::int64_t repeats = 5,
+                                                            RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::permutation_impact(spec, train, eval, metric, repeats, random),
+                 "inspection::permutation_impact");
+}
+
+[[nodiscard]] inline DependenceCurve dependence_curve(const ModelSpec& spec,
+                                                      const LabeledBatch& train,
+                                                      const FeatureBatch& eval,
+                                                      std::int64_t feature_index,
+                                                      std::int64_t grid_points = 32) {
+  return resolve(::pluss::ai::nodej::dependence_curve(spec, train, eval, feature_index, grid_points),
+                 "inspection::dependence_curve");
+}
+
+[[nodiscard]] inline DependenceSurface dependence_surface(const ModelSpec& spec,
+                                                          const LabeledBatch& train,
+                                                          const FeatureBatch& eval,
+                                                          std::int64_t feature_a,
+                                                          std::int64_t feature_b,
+                                                          std::int64_t grid_points_a = 16,
+                                                          std::int64_t grid_points_b = 16) {
+  return resolve(::pluss::ai::nodej::dependence_surface(spec,
+                                                        train,
+                                                        eval,
+                                                        feature_a,
+                                                        feature_b,
+                                                        grid_points_a,
+                                                        grid_points_b),
+                 "inspection::dependence_surface");
+}
+
+} // namespace inspection
+
+namespace feature {
+
+using VariancePrune = ::pluss::ai::nodej::VariancePruneResult;
+using ScoreRankOptions = ::pluss::ai::nodej::ScoreRankOptions;
+
+[[nodiscard]] inline FeatureBatch take_features(const FeatureBatch& batch,
+                                                pluss::msharp::RangeView::Int feature_indices) {
+  return resolve(::pluss::ai::nodej::take_features(batch, feature_indices), "feature::take_features");
+}
+
+[[nodiscard]] inline FeatureBatch take_features(const FeatureBatch& batch,
+                                                std::initializer_list<std::int64_t> feature_indices) {
+  return resolve(::pluss::ai::nodej::take_features(batch, pluss::msharp::RangeView::Int(feature_indices)),
+                 "feature::take_features");
+}
+
+[[nodiscard]] inline VariancePrune variance_prune(const FeatureBatch& batch, double variance_floor = 1e-12) {
+  return resolve(::pluss::ai::nodej::variance_prune(batch, variance_floor), "feature::variance_prune");
+}
+
+[[nodiscard]] inline Series f_score_rank(const LabeledBatch& batch, const ScoreRankOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::f_score_rank(batch, options), "feature::f_score_rank");
+}
+
+[[nodiscard]] inline Series f_regression_rank(const LabeledBatch& batch, const ScoreRankOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::f_regression_rank(batch, options), "feature::f_regression_rank");
+}
+
+} // namespace feature
+
 class WorkflowModel final {
 public:
   explicit WorkflowModel(const ModelSpec& spec)
@@ -1008,6 +1797,36 @@ public:
   [[nodiscard]] TaskKind task_kind() const noexcept { return workflow_.task_kind(); }
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept { return workflow_.model_spec(); }
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept { return workflow_.transform_specs(); }
+  [[nodiscard]] FlowGraphInfo graph_info() const { return resolve(workflow_.graph_info(), "graph_info"); }
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const { return workflow_.nested_param_keys(); }
+  [[nodiscard]] double nested_param(std::string_view path) const {
+    return resolve(workflow_.nested_param(path), "nested_param");
+  }
+  WorkflowModel& set_nested_param_(std::string_view path, double value) {
+    resolve(workflow_.set_nested_param(path, value), "set_nested_param_");
+    return *this;
+  }
+  [[nodiscard]] std::string flow_summary() const { return workflow_.flow_summary(); }
+  [[nodiscard]] std::string save_blueprint() const {
+    return resolve(workflow_.save_blueprint(), "save_blueprint");
+  }
+  WorkflowModel& load_blueprint_(std::string_view text) {
+    resolve(workflow_.load_blueprint(text), "load_blueprint_");
+    refresh_linear_summary_();
+    return *this;
+  }
+  WorkflowModel& set_stage_key_(std::int64_t stage_index, std::string stage_key) {
+    resolve(workflow_.set_stage_key(stage_index, std::move(stage_key)), "set_stage_key_");
+    return *this;
+  }
+  WorkflowModel& set_stage_route_(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route) {
+    resolve(workflow_.set_stage_route(stage_index, feature_route), "set_stage_route_");
+    return *this;
+  }
+  WorkflowModel& set_stage_remainder_(std::int64_t stage_index, RouteRemainderPolicy remainder) {
+    resolve(workflow_.set_stage_remainder(stage_index, remainder), "set_stage_remainder_");
+    return *this;
+  }
 
   WorkflowModel& standard_scaler(prep::StandardScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
     resolve(workflow_.add_standard_scaler(options, feature_route), "standard_scaler");
@@ -1278,6 +2097,54 @@ public:
                                     const pluss::table::Thread& y,
                                     const AssessOptions& options = {}) const {
     return as_metric_report_(assess_series(x, y, options), resolved_metrics_(options));
+  }
+
+  [[nodiscard]] PermuteImpactReport permutation_impact(const LabeledBatch& train,
+                                                        const LabeledBatch& eval,
+                                                        MetricKind metric = MetricKind::Accuracy,
+                                                        std::int64_t repeats = 5,
+                                                        RandomState random = {}) const {
+    if (!workflow_.model_spec().has_value()) {
+      ::pluss::throw_error("WorkflowModel::permutation_impact requires a model specification.");
+    }
+    return ::pluss::ai::lymph::inspection::permutation_impact(*workflow_.model_spec(),
+                                                               train,
+                                                               eval,
+                                                               metric,
+                                                               repeats,
+                                                               random);
+  }
+
+  [[nodiscard]] DependenceCurve dependence_curve(const LabeledBatch& train,
+                                                 const FeatureBatch& eval,
+                                                 std::int64_t feature_index,
+                                                 std::int64_t grid_points = 32) const {
+    if (!workflow_.model_spec().has_value()) {
+      ::pluss::throw_error("WorkflowModel::dependence_curve requires a model specification.");
+    }
+    return ::pluss::ai::lymph::inspection::dependence_curve(*workflow_.model_spec(),
+                                                             train,
+                                                             eval,
+                                                             feature_index,
+                                                             grid_points);
+  }
+
+  [[nodiscard]] DependenceSurface dependence_surface(const LabeledBatch& train,
+                                                     const FeatureBatch& eval,
+                                                     std::int64_t feature_a,
+                                                     std::int64_t feature_b,
+                                                     std::int64_t grid_points_a = 16,
+                                                     std::int64_t grid_points_b = 16) const {
+    if (!workflow_.model_spec().has_value()) {
+      ::pluss::throw_error("WorkflowModel::dependence_surface requires a model specification.");
+    }
+    return ::pluss::ai::lymph::inspection::dependence_surface(*workflow_.model_spec(),
+                                                               train,
+                                                               eval,
+                                                               feature_a,
+                                                               feature_b,
+                                                               grid_points_a,
+                                                               grid_points_b);
   }
 
   [[nodiscard]] LinearParameters linear_parameters() const {
@@ -1701,6 +2568,114 @@ private:
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   return cross_validate(model, x, as_stratify_series(y), cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const WorkflowModel& model,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_scores(model,...): workflow model has no model specification.");
+  }
+  return cross_validate_scores(*model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const WorkflowModel& model,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_score(model,...): workflow model has no model specification.");
+  }
+  return cross_validate_score(*model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const WorkflowModel& model,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_scores(model,x,y): workflow model has no model specification.");
+  }
+  return cross_validate_scores(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const WorkflowModel& model,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_score(model,x,y): workflow model has no model specification.");
+  }
+  return cross_validate_score(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const WorkflowModel& model,
+                                                     const LabeledBatch& batch,
+                                                     const InferOptions& infer_options = {},
+                                                     const ConfusionOptions& options = {}) {
+  const Series predicted = model.infer(batch.features, infer_options);
+  return confusion_matrix(batch.y, predicted, options);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
+                                                        const LabeledBatch& batch,
+                                                        const InferOptions& infer_options = {},
+                                                        const ClassReportOptions& options = {}) {
+  const Series predicted = model.infer(batch.features, infer_options);
+  return classification_summary(batch.y, predicted, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
+                                                         const LabeledBatch& batch,
+                                                         const AssessOptions& options = {}) {
+  return model.assess_series(batch, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
+                                                         const pluss::table::DataFrame& x,
+                                                         const Series& y,
+                                                         const AssessOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "classification_metric_series(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "classification_metric_series(model,x,y)");
+  return classification_metric_series(model, batch, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
+                                                         const pluss::table::DataFrame& x,
+                                                         const pluss::table::Thread& y,
+                                                         const AssessOptions& options = {}) {
+  return classification_metric_series(model, x, as_stratify_series(y), options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const WorkflowModel& model,
+                                                     const pluss::table::DataFrame& x,
+                                                     const Series& y,
+                                                     const InferOptions& infer_options = {},
+                                                     const ConfusionOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "confusion_matrix(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "confusion_matrix(model,x,y)");
+  return confusion_matrix(model, batch, infer_options, options);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
+                                                        const pluss::table::DataFrame& x,
+                                                        const Series& y,
+                                                        const InferOptions& infer_options = {},
+                                                        const ClassReportOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "classification_summary(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "classification_summary(model,x,y)");
+  return classification_summary(model, batch, infer_options, options);
 }
 
 struct FeatureSelectorOptions {
@@ -2157,6 +3132,55 @@ public:
     ensure_model_("transform_specs");
     return model->transform_specs();
   }
+  [[nodiscard]] FlowGraphInfo graph_info() const {
+    ensure_model_("graph_info");
+    return model->graph_info();
+  }
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const {
+    ensure_model_("nested_param_keys");
+    return model->nested_param_keys();
+  }
+  [[nodiscard]] double nested_param(std::string_view path) const {
+    ensure_model_("nested_param");
+    return model->nested_param(path);
+  }
+  Workflow& set_nested_param_(std::string_view path, double value) {
+    ensure_model_("set_nested_param_");
+    model->set_nested_param_(path, value);
+    return *this;
+  }
+  [[nodiscard]] std::string flow_summary() const {
+    ensure_model_("flow_summary");
+    return model->flow_summary();
+  }
+  [[nodiscard]] std::string save_blueprint() const {
+    ensure_model_("save_blueprint");
+    return model->save_blueprint();
+  }
+  Workflow& load_blueprint_(std::string_view text) {
+    ensure_model_("load_blueprint_");
+    model->load_blueprint_(text);
+    stages = model->transform_specs();
+    return *this;
+  }
+  Workflow& set_stage_key_(std::int64_t stage_index, std::string stage_key) {
+    ensure_model_("set_stage_key_");
+    model->set_stage_key_(stage_index, std::move(stage_key));
+    stages = model->transform_specs();
+    return *this;
+  }
+  Workflow& set_stage_route_(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route) {
+    ensure_model_("set_stage_route_");
+    model->set_stage_route_(stage_index, feature_route);
+    stages = model->transform_specs();
+    return *this;
+  }
+  Workflow& set_stage_remainder_(std::int64_t stage_index, RouteRemainderPolicy remainder) {
+    ensure_model_("set_stage_remainder_");
+    model->set_stage_remainder_(stage_index, remainder);
+    stages = model->transform_specs();
+    return *this;
+  }
 
   [[nodiscard]] const WorkflowModel& workflow_model() const {
     ensure_model_("workflow_model");
@@ -2369,6 +3393,99 @@ public:
                                     const AssessOptions& options = {}) const {
     ensure_model_("assess");
     return model->assess(frame, data_options, options);
+  }
+
+  [[nodiscard]] ConfusionTable confusion_matrix(const LabeledBatch& batch,
+                                                const InferOptions& infer_options = {},
+                                                const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_matrix");
+    return ::pluss::ai::lymph::confusion_matrix(*model, batch, infer_options, options);
+  }
+
+  [[nodiscard]] ConfusionTable confusion_matrix(const pluss::table::DataFrame& x,
+                                                const Series& y,
+                                                const InferOptions& infer_options = {},
+                                                const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_matrix");
+    return ::pluss::ai::lymph::confusion_matrix(*model, x, y, infer_options, options);
+  }
+
+  [[nodiscard]] ConfusionTable confusion_matrix(const pluss::table::DataFrame& x,
+                                                const pluss::table::Thread& y,
+                                                const InferOptions& infer_options = {},
+                                                const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_matrix");
+    return ::pluss::ai::lymph::confusion_matrix(*model, x, as_stratify_series(y), infer_options, options);
+  }
+
+  [[nodiscard]] ClassReport classification_summary(const LabeledBatch& batch,
+                                                   const InferOptions& infer_options = {},
+                                                   const ClassReportOptions& options = {}) const {
+    ensure_model_("classification_summary");
+    return ::pluss::ai::lymph::classification_summary(*model, batch, infer_options, options);
+  }
+
+  [[nodiscard]] ClassReport classification_summary(const pluss::table::DataFrame& x,
+                                                   const Series& y,
+                                                   const InferOptions& infer_options = {},
+                                                   const ClassReportOptions& options = {}) const {
+    ensure_model_("classification_summary");
+    return ::pluss::ai::lymph::classification_summary(*model, x, y, infer_options, options);
+  }
+
+  [[nodiscard]] ClassReport classification_summary(const pluss::table::DataFrame& x,
+                                                   const pluss::table::Thread& y,
+                                                   const InferOptions& infer_options = {},
+                                                   const ClassReportOptions& options = {}) const {
+    ensure_model_("classification_summary");
+    return ::pluss::ai::lymph::classification_summary(*model, x, as_stratify_series(y), infer_options, options);
+  }
+
+  [[nodiscard]] Series classification_metric_series(const LabeledBatch& batch,
+                                                    const AssessOptions& options = {}) const {
+    ensure_model_("classification_metric_series");
+    return ::pluss::ai::lymph::classification_metric_series(*model, batch, options);
+  }
+
+  [[nodiscard]] Series classification_metric_series(const pluss::table::DataFrame& x,
+                                                    const Series& y,
+                                                    const AssessOptions& options = {}) const {
+    ensure_model_("classification_metric_series");
+    return ::pluss::ai::lymph::classification_metric_series(*model, x, y, options);
+  }
+
+  [[nodiscard]] Series classification_metric_series(const pluss::table::DataFrame& x,
+                                                    const pluss::table::Thread& y,
+                                                    const AssessOptions& options = {}) const {
+    ensure_model_("classification_metric_series");
+    return ::pluss::ai::lymph::classification_metric_series(*model, x, as_stratify_series(y), options);
+  }
+
+  [[nodiscard]] PermuteImpactReport permutation_impact(const LabeledBatch& train,
+                                                        const LabeledBatch& eval,
+                                                        MetricKind metric = MetricKind::Accuracy,
+                                                        std::int64_t repeats = 5,
+                                                        RandomState random = {}) const {
+    ensure_model_("permutation_impact");
+    return model->permutation_impact(train, eval, metric, repeats, random);
+  }
+
+  [[nodiscard]] DependenceCurve dependence_curve(const LabeledBatch& train,
+                                                 const FeatureBatch& eval,
+                                                 std::int64_t feature_index,
+                                                 std::int64_t grid_points = 32) const {
+    ensure_model_("dependence_curve");
+    return model->dependence_curve(train, eval, feature_index, grid_points);
+  }
+
+  [[nodiscard]] DependenceSurface dependence_surface(const LabeledBatch& train,
+                                                     const FeatureBatch& eval,
+                                                     std::int64_t feature_a,
+                                                     std::int64_t feature_b,
+                                                     std::int64_t grid_points_a = 16,
+                                                     std::int64_t grid_points_b = 16) const {
+    ensure_model_("dependence_surface");
+    return model->dependence_surface(train, eval, feature_a, feature_b, grid_points_a, grid_points_b);
   }
 
   [[nodiscard]] std::vector<std::vector<Series>> dump_transform_states() const {
@@ -2584,6 +3701,80 @@ private:
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
   return cross_validate(workflow.workflow_model(), x, y, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const Workflow& workflow,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_scores(workflow,...): workflow has no model specification.");
+  }
+  return cross_validate_scores(*spec_opt, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const Workflow& workflow,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_score(workflow,...): workflow has no model specification.");
+  }
+  return cross_validate_score(*spec_opt, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const Workflow& workflow,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_scores(workflow,x,y): workflow has no model specification.");
+  }
+  return cross_validate_scores(*spec_opt, x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const Workflow& workflow,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_score(workflow,x,y): workflow has no model specification.");
+  }
+  return cross_validate_score(*spec_opt, x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const Workflow& workflow,
+                                                  const pluss::table::DataFrame& x,
+                                                  const pluss::table::Thread& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  return cross_validate_scores(workflow, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const Workflow& workflow,
+                                                 const pluss::table::DataFrame& x,
+                                                 const pluss::table::Thread& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  return cross_validate_score(workflow, x, as_stratify_series(y), metric, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline std::vector<std::string> prep_resolve_series_feature_names_(
@@ -3649,11 +4840,28 @@ struct neighbor_factory {
 
 struct kernel_factory {
   [[nodiscard]] static WorkflowModel svm_regressor(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::C;
     return regressor(options);
   }
 
   [[nodiscard]] static WorkflowModel svm_classifier(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::C;
     return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel nu_svm_regressor(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::Nu;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel nu_svm_classifier(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::Nu;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel one_class_svm(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::OneClass;
+    return transformer(options);
   }
 
   [[nodiscard]] static WorkflowModel linear_kernel_regressor(KernelFamilyOptions options = {}) {
@@ -3711,16 +4919,50 @@ struct kernel_factory {
         .options = options,
     });
   }
+
+  [[nodiscard]] static WorkflowModel transformer(KernelFamilyOptions options = {}) {
+    return WorkflowModel(ModelSpec{
+        .task = TaskKind::Transform,
+        .family = ModelFamily::Kernel,
+        .options = options,
+    });
+  }
 };
 
 struct bayes_factory {
   [[nodiscard]] static WorkflowModel gaussian_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Gaussian;
     options.use_gaussian = true;
     return classifier(options);
   }
 
   [[nodiscard]] static WorkflowModel gaussian_nb_regressor(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Gaussian;
     options.use_gaussian = true;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel bernoulli_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Bernoulli;
+    options.use_gaussian = false;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel bernoulli_nb_regressor(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Bernoulli;
+    options.use_gaussian = false;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel multinomial_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Multinomial;
+    options.use_gaussian = false;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel multinomial_nb_regressor(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Multinomial;
+    options.use_gaussian = false;
     return regressor(options);
   }
 
@@ -4115,6 +5357,29 @@ struct SpecTuneResult {
   ::pluss::ai::nodej::TuneReport report{};
   ModelSpec best_spec{};
 };
+
+[[nodiscard]] inline bool has_ledger(const SpecTuneResult& result) {
+  return result.report.ledger.objective.defined();
+}
+
+[[nodiscard]] inline const ::pluss::ai::nodej::TuneLedger& tune_ledger(const SpecTuneResult& result) {
+  if (!has_ledger(result)) {
+    ::pluss::throw_error("selection::tune_ledger: tune report does not include ledger artifacts.");
+  }
+  return result.report.ledger;
+}
+
+[[nodiscard]] inline Series objective_series(const SpecTuneResult& result) {
+  return tune_ledger(result).objective;
+}
+
+[[nodiscard]] inline Series objective_rank_series(const SpecTuneResult& result) {
+  return tune_ledger(result).objective_rank;
+}
+
+[[nodiscard]] inline Series encoded_param_table(const SpecTuneResult& result) {
+  return tune_ledger(result).encoded_params;
+}
 
 [[nodiscard]] inline bool minimize_metric_(MetricKind metric, TuneObjectivePolicy policy) {
   if (policy == TuneObjectivePolicy::Minimize) return true;

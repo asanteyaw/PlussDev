@@ -1,6 +1,7 @@
 #include "pluss/ai/nodej/tune.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -16,6 +17,16 @@
 
 namespace pluss::ai::nodej {
 namespace {
+
+[[nodiscard]] Config f64_cpu() {
+  return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+}
+
+[[nodiscard]] Config i64_cpu() {
+  return Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
+}
+
+void populate_tune_ledger(TuneReport& report);
 
 [[nodiscard]] bool metric_prefers_max(MetricKind metric) {
   switch (metric) {
@@ -279,6 +290,7 @@ void assign_objective_ranks(TuneReport& report) {
   }
 
   assign_objective_ranks(aggregate);
+  populate_tune_ledger(aggregate);
   return StatusOr<TuneReport>(std::move(aggregate));
 }
 
@@ -365,6 +377,116 @@ void assign_objective_ranks(TuneReport& report) {
       },
       spec.options);
   return x;
+}
+
+[[nodiscard]] std::vector<std::string> encoded_feature_names() {
+  return {
+      "task", "family",
+      "linear.objective", "linear.regularization", "linear.regularization_strength_slog", "linear.fit_intercept",
+      "tree.criterion", "tree.max_depth", "tree.min_samples_leaf_slog", "tree.min_samples_split_slog",
+      "ensemble.method", "ensemble.learners_slog", "ensemble.subsample",
+      "neighbor.k_slog", "neighbor.distance_weighted", "neighbor.standardize",
+      "kernel.kind", "kernel.c_slog", "kernel.gamma_slog", "kernel.epsilon_slog",
+      "bayes.use_gaussian", "bayes.smoothing_slog",
+      "cluster.method", "cluster.clusters_slog", "cluster.max_iterations_slog", "cluster.restarts_slog", "cluster.tolerance_slog",
+      "decompose.method", "decompose.components_slog", "decompose.whiten", "decompose.max_iterations_slog", "decompose.tolerance_slog",
+      "linear.elastic_l1_ratio", "linear.robust_transition_slog",
+      "neighbor.query_mode", "neighbor.radius_slog", "neighbor.radius_fallback_k_slog",
+      "kernel.form", "kernel.nu", "bayes.likelihood"};
+}
+
+void populate_tune_ledger(TuneReport& report) {
+  const std::size_t trial_count = report.trials.size();
+  report.ledger = TuneLedger{};
+  if (trial_count == 0) return;
+
+  std::size_t metric_count = 0;
+  std::size_t max_folds = 0;
+  for (const TuneTrialResult& trial : report.trials) {
+    if (!trial.status.ok()) continue;
+    if (metric_count == 0 && !trial.assess.metrics.empty()) {
+      metric_count = trial.assess.metrics.size();
+      report.ledger.metrics = trial.assess.metrics;
+    }
+    max_folds = std::max<std::size_t>(max_folds, trial.assess.folds.size());
+  }
+  report.ledger.encoded_param_feature_names = encoded_feature_names();
+
+  std::vector<double> objective(trial_count, std::numeric_limits<double>::quiet_NaN());
+  std::vector<std::int64_t> objective_rank(trial_count, 0);
+  std::vector<std::int64_t> stage(trial_count, 0);
+  std::vector<std::int64_t> status_code(trial_count, 0);
+  std::vector<double> is_success(trial_count, 0.0);
+  std::vector<double> mean_test(metric_count == 0 ? 0 : trial_count * metric_count, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> std_test(metric_count == 0 ? 0 : trial_count * metric_count, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> split_test(metric_count == 0 || max_folds == 0 ? 0 : trial_count * max_folds * metric_count,
+                                 std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> fit_time(max_folds == 0 ? 0 : trial_count * max_folds, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> score_time(max_folds == 0 ? 0 : trial_count * max_folds, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> encoded(trial_count * 40, 0.0);
+
+  for (std::size_t i = 0; i < trial_count; ++i) {
+    const TuneTrialResult& trial = report.trials[i];
+    objective[i] = trial.objective;
+    if (i < report.objective_rank.size()) objective_rank[i] = report.objective_rank[i];
+    stage[i] = trial.stage;
+    status_code[i] = static_cast<std::int64_t>(trial.status.code);
+    is_success[i] = trial.status.ok() ? 1.0 : 0.0;
+
+    const std::vector<double> emb = encode_model_spec(trial.spec);
+    for (std::size_t j = 0; j < emb.size(); ++j) {
+      encoded[i * emb.size() + j] = emb[j];
+    }
+
+    if (!trial.status.ok() || metric_count == 0) continue;
+    const std::vector<double> mean_vec = trial.assess.mean_metrics.to(pluss::pCPU, ScalarType::Float64)
+                                             .reshape({static_cast<std::int64_t>(metric_count)})
+                                             .to_vec<double>();
+    const std::vector<double> std_vec = trial.assess.std_metrics.to(pluss::pCPU, ScalarType::Float64)
+                                            .reshape({static_cast<std::int64_t>(metric_count)})
+                                            .to_vec<double>();
+    for (std::size_t m = 0; m < metric_count; ++m) {
+      mean_test[i * metric_count + m] = mean_vec[m];
+      std_test[i * metric_count + m] = std_vec[m];
+    }
+    for (std::size_t f = 0; f < trial.assess.folds.size(); ++f) {
+      const std::vector<double> fold_vec = trial.assess.folds[f].metrics.to(pluss::pCPU, ScalarType::Float64)
+                                               .reshape({static_cast<std::int64_t>(metric_count)})
+                                               .to_vec<double>();
+      for (std::size_t m = 0; m < metric_count; ++m) {
+        split_test[i * (max_folds * metric_count) + f * metric_count + m] = fold_vec[m];
+      }
+    }
+  }
+
+  report.ledger.objective = pluss::make_series(std::move(objective), {static_cast<std::int64_t>(trial_count)}, f64_cpu());
+  report.ledger.objective_rank = pluss::make_series(std::move(objective_rank), {static_cast<std::int64_t>(trial_count)}, i64_cpu());
+  report.ledger.stage = pluss::make_series(std::move(stage), {static_cast<std::int64_t>(trial_count)}, i64_cpu());
+  report.ledger.status_code = pluss::make_series(std::move(status_code), {static_cast<std::int64_t>(trial_count)}, i64_cpu());
+  report.ledger.is_success = pluss::make_series(std::move(is_success), {static_cast<std::int64_t>(trial_count)}, f64_cpu());
+  report.ledger.encoded_params =
+      pluss::make_series(std::move(encoded), {static_cast<std::int64_t>(trial_count), 40}, f64_cpu());
+  if (metric_count > 0) {
+    report.ledger.mean_test_metrics =
+        pluss::make_series(std::move(mean_test), {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(metric_count)}, f64_cpu());
+    report.ledger.std_test_metrics =
+        pluss::make_series(std::move(std_test), {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(metric_count)}, f64_cpu());
+  }
+  if (metric_count > 0 && max_folds > 0) {
+    report.ledger.split_test_metrics = pluss::make_series(std::move(split_test),
+                                                          {static_cast<std::int64_t>(trial_count),
+                                                           static_cast<std::int64_t>(max_folds),
+                                                           static_cast<std::int64_t>(metric_count)},
+                                                          f64_cpu());
+    report.ledger.fit_time_seconds = pluss::make_series(std::move(fit_time),
+                                                        {static_cast<std::int64_t>(trial_count),
+                                                         static_cast<std::int64_t>(max_folds)},
+                                                        f64_cpu());
+    report.ledger.score_time_seconds = pluss::make_series(std::move(score_time),
+                                                          {static_cast<std::int64_t>(trial_count),
+                                                           static_cast<std::int64_t>(max_folds)},
+                                                          f64_cpu());
+  }
 }
 
 void normalize_feature_matrix(std::vector<std::vector<double>>& features) {
@@ -634,6 +756,7 @@ void normalize_feature_matrix(std::vector<std::vector<double>>& features) {
   }
 
   assign_objective_ranks(report);
+  populate_tune_ledger(report);
   return StatusOr<TuneReport>(std::move(report));
 }
 
@@ -724,6 +847,7 @@ StatusOr<TuneReport> sweep(pluss::msharp::RangeView::Of<ModelSpec> candidates,
   }
 
   assign_objective_ranks(report);
+  populate_tune_ledger(report);
   return StatusOr<TuneReport>(std::move(report));
 }
 
@@ -972,6 +1096,7 @@ StatusOr<TuneReport> probe(const ProbeSpecSampler& sampler,
   }
 
   assign_objective_ranks(report);
+  populate_tune_ledger(report);
   return StatusOr<TuneReport>(std::move(report));
 }
 

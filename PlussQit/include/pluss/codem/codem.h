@@ -138,6 +138,7 @@ CODEM_API bool cuda_supports_geometric_stochastic_baseline(ScalarType dtype) noe
 CODEM_API bool cuda_supports_cauchy_stochastic_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_random_stochastic_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_poisson_stochastic_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_bernoulli_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_normal_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_log_normal_stochastic(const Series& a) noexcept;
@@ -147,6 +148,7 @@ CODEM_API bool cuda_supports_geometric_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_cauchy_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_random_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, bool replacement) noexcept;
+CODEM_API bool cuda_supports_poisson_stochastic(ScalarType dtype) noexcept;
 CODEM_API bool cuda_native_selection_enabled() noexcept;
 CODEM_API bool cuda_native_selection_strict() noexcept;
 CODEM_API bool cuda_supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept;
@@ -831,6 +833,10 @@ inline bool supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept 
   return codem::cuda_supports_multinomial_stochastic_baseline(dtype);
 }
 
+inline bool supports_poisson_stochastic_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_poisson_stochastic_baseline(dtype);
+}
+
 inline bool supports_bernoulli_stochastic(const Series& a) noexcept {
   return codem::cuda_supports_bernoulli_stochastic(a);
 }
@@ -865,6 +871,10 @@ inline bool supports_random_stochastic(const Series& a) noexcept {
 
 inline bool supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, bool replacement) noexcept {
   return codem::cuda_supports_multinomial_stochastic(a, num_samples, replacement);
+}
+
+inline bool supports_poisson_stochastic(ScalarType dtype) noexcept {
+  return codem::cuda_supports_poisson_stochastic(dtype);
 }
 
 inline bool native_selection_enabled() noexcept {

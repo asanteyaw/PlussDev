@@ -404,6 +404,18 @@ case "${BACKEND}" in
       PLUSS_CUDA_NATIVE_BASELINE=0 \
       PLUSS_CUDA_NATIVE_STOCHASTIC=1 \
       PLUSS_CUDA_NATIVE_STOCHASTIC_STRICT=1
+    run_gate gate71_cuda_no_bridge_materialization "[cuda][no_bridge][materialization]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=0 \
+      PLUSS_CUDA_FORBID_CPU_MATERIALIZATION=1
+    run_gate gate72_cuda_no_bridge_policy_and_provider "[cuda][no_bridge][policy],[cuda][no_bridge][provider]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=0 \
+      PLUSS_CUDA_FORBID_CPU_MATERIALIZATION=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUBLAS_MATMUL=1 \
+      PLUSS_CUBLAS_MATMUL_STRICT=1
+    run_gate gate73_cuda_device_storage_transfer "[cuda][device_storage]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=0 \
+      PLUSS_CUDA_DEVICE_STORAGE=1
     ;;
 esac
 

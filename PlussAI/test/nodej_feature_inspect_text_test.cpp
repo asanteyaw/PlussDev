@@ -1,4 +1,5 @@
 #include <pluss/ai/ml.h>
+#include <pluss/ai/nodej/sparse_runtime.h>
 
 #include <cmath>
 #include <iostream>
@@ -26,6 +27,10 @@ using pluss::ai::nodej::ModelFamily;
 using pluss::ai::nodej::ModelSpec;
 using pluss::ai::nodej::ObservationLayout;
 using pluss::ai::nodej::ScoreRankOptions;
+using pluss::ai::nodej::SparseLinearBinaryClassifier;
+using pluss::ai::nodej::SparseLinearMultiClassifier;
+using pluss::ai::nodej::SparseLinearRegressor;
+using pluss::ai::nodej::SparseObjectivePolicy;
 using pluss::ai::nodej::TaskKind;
 
 Config f64() {
@@ -164,6 +169,193 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     }
     if (tfidf_sparse_or.value().rows != 2 || tfidf_sparse_or.value().cols <= 0) {
       if (err) *err << "LexiconMapper map_tfidf_sparse should provide sparse shape metadata\n";
+      return false;
+    }
+  }
+
+  {
+    auto sparse_bin_or = pluss::ai::nodej::make_sparse_triplet(
+        6,
+        3,
+        {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5},
+        {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+        {-2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0});
+    if (!sparse_bin_or.ok()) {
+      if (err) *err << "make_sparse_triplet should build binary sparse matrix\n";
+      return false;
+    }
+    SparseLinearBinaryClassifier cls{};
+    const Series y_bin = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 1.0, 1.0, 1.0}, {6}, f64());
+    if (!cls.learn(sparse_bin_or.value(), y_bin).ok()) {
+      if (err) *err << "SparseLinearBinaryClassifier learn should succeed\n";
+      return false;
+    }
+    auto cls_metrics_or = cls.assess(sparse_bin_or.value(), y_bin, AssessOptions{.metrics = {MetricKind::Accuracy}});
+    if (!cls_metrics_or.ok() || cls_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).item<double>() < 0.8) {
+      if (err) *err << "SparseLinearBinaryClassifier should achieve reasonable training accuracy\n";
+      return false;
+    }
+
+    auto cv_or = pluss::ai::nodej::cross_assess_sparse_binary(sparse_bin_or.value(),
+                                                               y_bin,
+                                                               pluss::ai::nodej::SplitOptions{
+                                                                   .plan = pluss::ai::nodej::CVPlanKind::KFold,
+                                                                   .folds = 3,
+                                                                   .shuffle = true,
+                                                                   .random = pluss::ai::nodej::RandomState{.seed = 7, .deterministic = true},
+                                                               },
+                                                               pluss::ai::nodej::TrainOptions{.max_iterations = 400, .tolerance = 1e-7},
+                                                               AssessOptions{.metrics = {MetricKind::Accuracy}});
+    if (!cv_or.ok() || cv_or.value().folds.size() != 3) {
+      if (err) *err << "cross_assess_sparse_binary should produce 3 folds\n";
+      return false;
+    }
+    if (cv_or.value().mean_metrics.numel() != 1 || cv_or.value().fit_time_seconds.numel() != 3) {
+      if (err) *err << "cross_assess_sparse_binary should expose metrics and timing artifacts\n";
+      return false;
+    }
+    auto cv_native_or = pluss::ai::nodej::assess_sparse_binary_folds(
+        sparse_bin_or.value(),
+        y_bin,
+        pluss::ai::nodej::SplitOptions{
+            .plan = pluss::ai::nodej::CVPlanKind::KFold,
+            .folds = 3,
+            .shuffle = true,
+            .random = pluss::ai::nodej::RandomState{.seed = 7, .deterministic = true},
+        },
+        pluss::ai::nodej::TrainOptions{.max_iterations = 400, .tolerance = 1e-7},
+        AssessOptions{.metrics = {MetricKind::Accuracy}});
+    if (!cv_native_or.ok() || cv_native_or.value().folds.size() != 3) {
+      if (err) *err << "assess_sparse_binary_folds should match fold behavior\n";
+      return false;
+    }
+
+    const std::vector<LinearFamilyOptions> opts{
+        LinearFamilyOptions{.objective = LinearObjective::Logistic, .regularization = pluss::ai::nodej::RegularizationKind::L2, .regularization_strength = 1e-3},
+        LinearFamilyOptions{.objective = LinearObjective::Logistic, .regularization = pluss::ai::nodej::RegularizationKind::L2, .regularization_strength = 1e-6},
+    };
+    auto sweep_or = pluss::ai::nodej::sweep_sparse_binary(opts,
+                                                           sparse_bin_or.value(),
+                                                           y_bin,
+                                                           pluss::ai::nodej::SplitOptions{
+                                                               .plan = pluss::ai::nodej::CVPlanKind::KFold,
+                                                               .folds = 3,
+                                                               .shuffle = true,
+                                                               .random = pluss::ai::nodej::RandomState{.seed = 11, .deterministic = true},
+                                                           },
+                                                           pluss::ai::nodej::TrainOptions{.max_iterations = 300, .tolerance = 1e-7},
+                                                           AssessOptions{.metrics = {MetricKind::Accuracy}},
+                                                           MetricKind::Accuracy,
+                                                           SparseObjectivePolicy::Maximize);
+    if (!sweep_or.ok() || sweep_or.value().trials.size() != opts.size() || sweep_or.value().best_index < 0) {
+      if (err) *err << "sweep_sparse_binary should evaluate options and choose best\n";
+      return false;
+    }
+    auto tune_native_or = pluss::ai::nodej::tune_sparse_binary(
+        {LinearFamilyOptions{.objective = LinearObjective::Logistic, .regularization = pluss::ai::nodej::RegularizationKind::L2, .regularization_strength = 1e-3},
+         LinearFamilyOptions{.objective = LinearObjective::Logistic, .regularization = pluss::ai::nodej::RegularizationKind::L2, .regularization_strength = 1e-6}},
+        sparse_bin_or.value(),
+        y_bin,
+        pluss::ai::nodej::SplitOptions{
+            .plan = pluss::ai::nodej::CVPlanKind::KFold,
+            .folds = 3,
+            .shuffle = true,
+            .random = pluss::ai::nodej::RandomState{.seed = 11, .deterministic = true},
+        },
+        pluss::ai::nodej::TrainOptions{.max_iterations = 300, .tolerance = 1e-7},
+        AssessOptions{.metrics = {MetricKind::Accuracy}},
+        MetricKind::Accuracy,
+        SparseObjectivePolicy::Maximize);
+    if (!tune_native_or.ok() || tune_native_or.value().trials.size() != 2 || tune_native_or.value().best_index < 0) {
+      if (err) *err << "tune_sparse_binary should evaluate candidates and choose best\n";
+      return false;
+    }
+  }
+
+  {
+    auto sparse_reg_or = pluss::ai::nodej::make_sparse_triplet(
+        6,
+        3,
+        {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5},
+        {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+        {-2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0});
+    if (!sparse_reg_or.ok()) {
+      if (err) *err << "make_sparse_triplet should build reg sparse matrix\n";
+      return false;
+    }
+    SparseLinearRegressor reg{};
+    const Series y_reg = pluss::make_series(std::vector<double>{-1.0, -0.5, 0.0, 0.5, 1.0, 1.5}, {6}, f64());
+    if (!reg.learn(sparse_reg_or.value(), y_reg).ok()) {
+      if (err) *err << "SparseLinearRegressor learn should succeed\n";
+      return false;
+    }
+    auto reg_metrics_or = reg.assess(sparse_reg_or.value(), y_reg, AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});
+    if (!reg_metrics_or.ok()) {
+      if (err) *err << "SparseLinearRegressor assess should succeed\n";
+      return false;
+    }
+    const auto reg_metrics = reg_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (reg_metrics.size() != 2 || reg_metrics[0] > 0.2 || reg_metrics[1] < 0.7) {
+      if (err) *err << "SparseLinearRegressor should fit training signal reasonably\n";
+      return false;
+    }
+
+    auto cv_or = pluss::ai::nodej::cross_assess_sparse_regression(sparse_reg_or.value(),
+                                                                   y_reg,
+                                                                   pluss::ai::nodej::SplitOptions{
+                                                                       .plan = pluss::ai::nodej::CVPlanKind::KFold,
+                                                                       .folds = 3,
+                                                                       .shuffle = true,
+                                                                       .random = pluss::ai::nodej::RandomState{.seed = 13, .deterministic = true},
+                                                                   },
+                                                                   pluss::ai::nodej::TrainOptions{.max_iterations = 500, .tolerance = 1e-8},
+                                                                   AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});
+    if (!cv_or.ok() || cv_or.value().folds.size() != 3 || cv_or.value().mean_metrics.numel() != 2) {
+      if (err) *err << "cross_assess_sparse_regression should produce fold artifacts\n";
+      return false;
+    }
+  }
+
+  {
+    auto sparse_multi_or = pluss::ai::nodej::make_sparse_triplet(
+        9,
+        2,
+        {0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {-2.0, -1.5, -1.0, 0.0, 0.2, 0.1, 1.5, 2.0, 1.8, 0.1, 0.2, 0.1, 1.2, 1.1, 1.0, 2.2, 2.1, 2.0});
+    if (!sparse_multi_or.ok()) {
+      if (err) *err << "make_sparse_triplet should build multiclass sparse matrix\n";
+      return false;
+    }
+    SparseLinearMultiClassifier mcls{};
+    const Series y_mc = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0}, {9}, f64());
+    if (!mcls.learn(sparse_multi_or.value(), y_mc).ok()) {
+      if (err) *err << "SparseLinearMultiClassifier learn should succeed\n";
+      return false;
+    }
+    auto pred_or = mcls.infer(sparse_multi_or.value());
+    if (!pred_or.ok()) {
+      if (err) *err << "SparseLinearMultiClassifier infer should succeed\n";
+      return false;
+    }
+    auto multi_metrics_or = mcls.assess(sparse_multi_or.value(), y_mc, AssessOptions{.metrics = {MetricKind::Accuracy}});
+    if (!multi_metrics_or.ok() || multi_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).item<double>() < 0.85) {
+      if (err) *err << "SparseLinearMultiClassifier should classify training set accurately\n";
+      return false;
+    }
+
+    auto cv_or = pluss::ai::nodej::cross_assess_sparse_multiclass(sparse_multi_or.value(),
+                                                                   y_mc,
+                                                                   pluss::ai::nodej::SplitOptions{
+                                                                       .plan = pluss::ai::nodej::CVPlanKind::StratifiedKFold,
+                                                                       .folds = 3,
+                                                                       .shuffle = true,
+                                                                       .random = pluss::ai::nodej::RandomState{.seed = 17, .deterministic = true},
+                                                                   },
+                                                                   pluss::ai::nodej::TrainOptions{.max_iterations = 400, .tolerance = 1e-7},
+                                                                   AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::F1}});
+    if (!cv_or.ok() || cv_or.value().folds.size() != 3 || cv_or.value().mean_metrics.numel() != 2) {
+      if (err) *err << "cross_assess_sparse_multiclass should produce fold artifacts\n";
       return false;
     }
   }

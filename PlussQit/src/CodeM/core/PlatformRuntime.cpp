@@ -454,6 +454,10 @@ bool cuda_supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept {
   return native::cuda::supports_multinomial_stochastic_baseline(dtype);
 }
 
+bool cuda_supports_poisson_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_poisson_stochastic_baseline(dtype);
+}
+
 bool cuda_supports_bernoulli_stochastic(const Series& a) noexcept {
   return native::cuda::supports_bernoulli_stochastic(a);
 }
@@ -488,6 +492,10 @@ bool cuda_supports_random_stochastic(const Series& a) noexcept {
 
 bool cuda_supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, bool replacement) noexcept {
   return native::cuda::supports_multinomial_stochastic(a, num_samples, replacement);
+}
+
+bool cuda_supports_poisson_stochastic(ScalarType dtype) noexcept {
+  return native::cuda::supports_poisson_stochastic(dtype);
 }
 
 bool cuda_native_selection_enabled() noexcept {

@@ -479,6 +479,52 @@ Design signal taken from these files:
   - extend factory contracts with like-factory bridge + strict-policy rejection assertions;
   - extend stochastic contracts with stochastic-factory bridge + strict-policy rejection assertions.
 
+### Patch 167 (landed in this step)
+- CUDA poisson stochastic-factory parity tranche:
+  - add CPU oracle implementation for `poisson(sizes, lambda, dtype, seed)` with deterministic seeded sampling and fail-loud validation for invalid rates/shapes;
+  - add CUDA stochastic capability predicates and public `pluss::cuda::*` support surface for poisson;
+  - route `poisson(..., Config)` through the same CUDA stochastic bridge/strict policy path used by normal, bernoulli, randperm, and multinomial.
+- Expanded CUDA validation:
+  - add CPU deterministic/dtype factory coverage under `[factory][poisson]`;
+  - extend CUDA stochastic runtime, bridge parity, and strict-policy rejection contracts with poisson assertions.
+
+### Patch 176 (landed in this step)
+- CUDA no-bridge hardening tranche:
+  - require `PLUSS_CUDA_ALLOW_CPU_BRIDGE=1` for all CPU-reference CUDA helper routes, including routes previously marked native-supported in:
+    - indexing,
+    - scatter/gather,
+    - elementwise,
+    - reduction,
+    - scan,
+    - masking,
+    - bitwise,
+    - compose,
+    - counting,
+    - selection,
+    - linalg staging,
+    - stochastic,
+    - factory/stochastic-factory transfer,
+    - matmul CPU-reference fallback.
+  - add `PLUSS_CUDA_FORBID_CPU_MATERIALIZATION=1` hardware-test guard at `Series::platform(CPU)` to catch hidden CUDA-to-CPU materialization during op execution.
+  - keep true provider routes intact, including cuBLAS matmul and cuSOLVER det/inverse fast paths.
+- Expanded CUDA validation:
+  - add no-bridge contract coverage under `[cuda][no_bridge]`;
+  - add provider no-materialization coverage for cuBLAS matmul under `[cuda][no_bridge][provider]`;
+  - expand CUDA mega-gate matrix from `70` to `72` gates;
+  - extend CUDA cluster stress runner with repeated no-bridge sweeps.
+
+### Patch 177 (landed in this step)
+- CUDA device-storage foundation tranche:
+  - add CUDA runtime device allocation/free, D2D copy, and device memset primitives;
+  - add `StorageLocation::CudaDevice` and `Storage::cuda_device(...)`;
+  - add opt-in `PLUSS_CUDA_DEVICE_STORAGE=1` so `Series::empty(..., CUDA)` can allocate device-backed storage without breaking existing host-backed CUDA bridge/provider lanes;
+  - update `Series::platform(...)` transfer to use H2D/D2H/D2D paths when either side is CUDA-device storage;
+  - make CUDA-device `zeros` use device memset and keep non-zero fill/ones fail-loud until fill kernels land.
+- Expanded CUDA validation:
+  - add `[cuda][device_storage]` tests for device-backed storage location and H2D/D2H roundtrip;
+  - expand CUDA mega-gate matrix from `72` to `73` gates;
+  - extend CUDA cluster stress runner with repeated device-storage sweeps.
+
 ### Patch 150 (landed in this step)
 - MPS strict parity hardening:
   - promote native top-k selection policy to default-on for MPS (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1` default),
@@ -519,7 +565,8 @@ Latest sweep artifact:
 - `outputs/cuda_mega_gate_20260313_180935/summary.tsv`
 
 Status:
-- `66 / 66` gates passing on latest sweep.
+- local no-CUDA validation passes `plussqit_codem_cuda_gate_tests` (`2274` assertions / `111` cases);
+- CUDA hardware matrix is now `73` gates and needs cluster confirmation, including `[cuda][no_bridge]` and `[cuda][device_storage]`.
 
 ## CUDA Cluster Hardware Runner
 - New runner script:

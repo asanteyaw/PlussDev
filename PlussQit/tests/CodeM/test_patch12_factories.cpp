@@ -6,6 +6,7 @@ using pluss::codem::ScalarType;
 using pluss::arange;
 using pluss::eye;
 using pluss::linspace;
+using pluss::poisson;
 using pluss::rand;
 using pluss::randn;
 
@@ -62,4 +63,22 @@ TEST_CASE("rng_seed drives deterministic zero-seed factory stream", "[factory][r
   const auto explicit_seed_a = rand({8}, ScalarType::Float32, 7u);
   const auto explicit_seed_b = rand({8}, ScalarType::Float32, 7u);
   REQUIRE(explicit_seed_a.to_vec<float>() == explicit_seed_b.to_vec<float>());
+}
+
+TEST_CASE("poisson factory is deterministic and dtype-aware", "[factory][poisson]") {
+  const auto a = poisson({2, 4}, 3.25, ScalarType::Int64, 123u);
+  const auto b = poisson({2, 4}, 3.25, ScalarType::Int64, 123u);
+  REQUIRE(a.sizes()[0] == 2);
+  REQUIRE(a.sizes()[1] == 4);
+  REQUIRE(a.scalar_type() == ScalarType::Int64);
+  REQUIRE(a.to_vec<std::int64_t>() == b.to_vec<std::int64_t>());
+  for (const auto v : a.to_vec<std::int64_t>()) {
+    REQUIRE(v >= 0);
+  }
+
+  const auto f = poisson({3}, 0.0, ScalarType::Float32, 99u);
+  REQUIRE(f.scalar_type() == ScalarType::Float32);
+  for (const auto v : f.to_vec<float>()) {
+    REQUIRE(v == 0.0f);
+  }
 }

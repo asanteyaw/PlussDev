@@ -1,4 +1,5 @@
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/Complex.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesIterator.h"
@@ -42,6 +43,20 @@ static void naive_matmul_i32(const std::int32_t* A, const std::int32_t* B, std::
         acc += static_cast<std::int64_t>(A[i * K + k]) * static_cast<std::int64_t>(B[k * N + j]);
       }
       C[i * N + j] = static_cast<std::int32_t>(acc);
+    }
+  }
+}
+
+template <class T>
+static void naive_matmul_complex(const T* A, const T* B, T* C,
+                                 std::int64_t M, std::int64_t N, std::int64_t K) {
+  for (std::int64_t i = 0; i < M; ++i) {
+    for (std::int64_t j = 0; j < N; ++j) {
+      T acc{};
+      for (std::int64_t k = 0; k < K; ++k) {
+        acc += A[i * K + k] * B[k * N + j];
+      }
+      C[i * N + j] = acc;
     }
   }
 }
@@ -98,7 +113,23 @@ Series matmul_2d_core_(const Series& a, const Series& b) {
     return out;
   }
 
-  throw_error("matmul: dtype not implemented (only float16/bfloat16/float32/float64/int32)");
+  if (a.scalar_type() == ScalarType::Complex64) {
+    const auto* A = reinterpret_cast<const Complex64*>(a.raw_data());
+    const auto* B = reinterpret_cast<const Complex64*>(b.raw_data());
+    auto* C = reinterpret_cast<Complex64*>(out.raw_data());
+    naive_matmul_complex(A, B, C, M, N, K);
+    return out;
+  }
+
+  if (a.scalar_type() == ScalarType::Complex128) {
+    const auto* A = reinterpret_cast<const Complex128*>(a.raw_data());
+    const auto* B = reinterpret_cast<const Complex128*>(b.raw_data());
+    auto* C = reinterpret_cast<Complex128*>(out.raw_data());
+    naive_matmul_complex(A, B, C, M, N, K);
+    return out;
+  }
+
+  throw_error("matmul: dtype not implemented (only float16/bfloat16/float32/float64/int32/complex64/complex128)");
 }
 
 std::vector<std::int64_t> prefix_batch_shape_(const Series& x) {

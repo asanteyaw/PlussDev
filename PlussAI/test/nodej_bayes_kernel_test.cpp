@@ -29,6 +29,7 @@ using pluss::ai::nodej::ObservationLayout;
 using pluss::ai::nodej::StatusCode;
 using pluss::ai::nodej::TaskKind;
 using pluss::ai::nodej::TreeCriterion;
+using pluss::ai::nodej::TrainOptions;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -159,6 +160,38 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     if (labels.size() != 3 || !std::isfinite(labels[0]) || !std::isfinite(labels[1]) || !std::isfinite(labels[2])) {
       if (err) *err << "kernel one-class transformer should tag far sample as outlier\n";
       return false;
+    }
+    if (!(labels[2] < 0.0 && (labels[0] > 0.0 || labels[1] > 0.0))) {
+      if (err) *err << "kernel one-class transformer should reject far sample and retain a near sample\n";
+      return false;
+    }
+
+    auto state_or = tr->dump_state();
+    if (!state_or.ok()) {
+      if (err) *err << "kernel one-class transformer dump_state should succeed\n";
+      return false;
+    }
+    auto reload_or = pluss::ai::nodej::make_transformer(spec);
+    if (!reload_or.ok()) {
+      if (err) *err << "make_transformer should build one-class transformer for reload\n";
+      return false;
+    }
+    auto reloaded = reload_or.move_value();
+    if (!reloaded->load_state(state_or.value()).ok()) {
+      if (err) *err << "kernel one-class transformer load_state should succeed\n";
+      return false;
+    }
+    auto reload_map_or = reloaded->map(query);
+    if (!reload_map_or.ok()) {
+      if (err) *err << "reloaded kernel one-class transformer map should succeed\n";
+      return false;
+    }
+    const auto reload_labels = reload_map_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+    for (std::size_t i = 0; i < labels.size(); ++i) {
+      if (!approx(reload_labels[i], labels[i])) {
+        if (err) *err << "reloaded one-class transformer should reproduce labels\n";
+        return false;
+      }
     }
   }
 
@@ -371,6 +404,131 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const auto kernel_status = kernel->learn(batch);
     if (kernel_status.ok() || kernel_status.code != StatusCode::InvalidArgument) {
       if (err) *err << "kernel regressor should reject invalid c option\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -1.0, -1.0,
+                                            -0.8, -0.9,
+                                             0.9,  0.8,
+                                             1.1,  0.9},
+                                        {4, 2},
+                                        f64());
+    const Series y = pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}, {4}, f64());
+    const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
+    const LabeledBatch batch{.features = features, .y = y};
+
+    auto nu_model = pluss::ai::lymph::kernel_factory::nu_svm_classifier(KernelFamilyOptions{
+        .kernel = KernelKind::Rbf,
+        .c = 25.0,
+        .gamma = 1.0,
+        .nu = 0.5,
+    }).learn(batch);
+    const auto nu_pred = nu_model.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (nu_pred.size() != 4 || nu_pred.front() > 0.5 || nu_pred.back() < 0.5) {
+      if (err) *err << "lymph nu_svm_classifier factory should train and infer through NodeJ\n";
+      return false;
+    }
+
+    auto one_class = pluss::ai::lymph::kernel_factory::one_class_svm(KernelFamilyOptions{
+        .kernel = KernelKind::Rbf,
+        .gamma = 0.8,
+        .nu = 0.5,
+    });
+    const Series oc = one_class.learn_map(FeatureBatch{
+        .x = pluss::make_series(std::vector<double>{-1.0, -1.0, -0.9, -0.8, 1.0, 1.0, 7.0, 7.0}, {4, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    });
+    const auto oc_labels = oc.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    if (oc_labels.size() != 4 || oc_labels.back() >= 0.0) {
+      if (err) *err << "lymph one_class_svm factory should expose kernel one-class mapping\n";
+      return false;
+    }
+
+    auto bernoulli = pluss::ai::lymph::bayes_factory::bernoulli_nb_classifier(BayesFamilyOptions{
+        .smoothing = 1e-6,
+    }).learn(batch);
+    const auto bernoulli_pred = bernoulli.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (bernoulli_pred.size() != 4 || bernoulli_pred.front() > 0.5 || bernoulli_pred.back() < 0.5) {
+      if (err) *err << "lymph bernoulli_nb_classifier factory should train and infer through NodeJ\n";
+      return false;
+    }
+
+    auto multinomial = pluss::ai::lymph::bayes_factory::multinomial_nb_classifier(BayesFamilyOptions{
+        .smoothing = 1e-6,
+    }).learn(LabeledBatch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{3.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 2.0}, {4, 2}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = y,
+    });
+    const auto multinomial_pred = multinomial.infer(FeatureBatch{
+        .x = pluss::make_series(std::vector<double>{4.0, 0.0, 0.0, 4.0}, {2, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (multinomial_pred.size() != 2 || multinomial_pred[0] > 0.5 || multinomial_pred[1] < 0.5) {
+      if (err) *err << "lymph multinomial_nb_classifier factory should train and infer through NodeJ\n";
+      return false;
+    }
+
+    const Series xr = pluss::make_series(std::vector<double>{
+                                             -2.0, -1.0,
+                                             -1.0, -0.5,
+                                              0.0,  0.0,
+                                              1.0,  0.5,
+                                              2.0,  1.0},
+                                         {5, 2},
+                                         f64());
+    const Series yr = pluss::make_series(std::vector<double>{-1.0, -0.5, 0.0, 0.5, 1.0}, {5}, f64());
+    const FeatureBatch regression_features{.x = xr, .layout = ObservationLayout::Rows};
+    const LabeledBatch regression_batch{.features = regression_features, .y = yr};
+    auto nu_reg = pluss::ai::lymph::kernel_factory::nu_svm_regressor(KernelFamilyOptions{
+        .kernel = KernelKind::Rbf,
+        .c = 100.0,
+        .gamma = 0.7,
+        .epsilon = 0.0,
+        .nu = 0.6,
+    }).learn(regression_batch);
+    const auto nu_reg_pred = nu_reg.infer(regression_features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (nu_reg_pred.size() != 5 || std::abs(nu_reg_pred.front() - yr.to(pluss::pCPU, ScalarType::Float64).to_vec<double>().front()) > 0.1) {
+      if (err) *err << "lymph nu_svm_regressor factory should train and infer through NodeJ\n";
+      return false;
+    }
+
+    auto bernoulli_reg = pluss::ai::lymph::bayes_factory::bernoulli_nb_regressor(BayesFamilyOptions{
+        .smoothing = 1e-6,
+    }).learn(batch, TrainOptions{.max_iterations = 100, .tolerance = 1e-5});
+    const auto bernoulli_reg_pred = bernoulli_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (bernoulli_reg_pred.size() != 4) {
+      if (err) *err << "lymph bernoulli_nb_regressor prediction size mismatch\n";
+      return false;
+    }
+    for (double v : bernoulli_reg_pred) {
+      if (!(v >= -1e-9 && v <= 1.0 + 1e-9)) {
+        if (err) *err << "lymph bernoulli_nb_regressor should emit probabilities in [0,1]\n";
+        return false;
+      }
+    }
+
+    const LabeledBatch count_regression_batch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{3.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 2.0}, {4, 2}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = pluss::make_series(std::vector<double>{1.0, 2.0, 6.0, 7.0}, {4}, f64()),
+    };
+    auto multinomial_reg = pluss::ai::lymph::bayes_factory::multinomial_nb_regressor(BayesFamilyOptions{
+        .smoothing = 1e-6,
+    }).learn(count_regression_batch);
+    const auto multinomial_reg_pred = multinomial_reg.infer(FeatureBatch{
+        .x = pluss::make_series(std::vector<double>{4.0, 0.0, 0.0, 4.0}, {2, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (multinomial_reg_pred.size() != 2 || !(multinomial_reg_pred[0] < multinomial_reg_pred[1])) {
+      if (err) *err << "lymph multinomial_nb_regressor factory should preserve count-driven ordering\n";
       return false;
     }
   }

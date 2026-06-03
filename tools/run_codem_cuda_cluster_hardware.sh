@@ -168,6 +168,22 @@ for rep in $(seq 1 "${STRESS_REPS}"); do
 done
 
 for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_no_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=0 PLUSS_CUDA_FORBID_CPU_MATERIALIZATION=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUBLAS_MATMUL=1 PLUSS_CUBLAS_MATMUL_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][no_bridge]" --rng-seed "$((SEED + 140 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_device_storage_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=0 PLUSS_CUDA_DEVICE_STORAGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][device_storage]" --rng-seed "$((SEED + 150 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
   run_required "stress_elementwise_bridge_rep${rep}" \
     env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
     "${CONDA_BIN}" run -n "${CONDA_ENV}" \

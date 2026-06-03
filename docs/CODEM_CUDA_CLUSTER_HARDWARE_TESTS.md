@@ -14,8 +14,10 @@ Key behaviors:
 - configures/builds CodeM tests with `PLUSSQIT_ENABLE_CUDA=ON`,
 - builds/runs the CUDA-only gate binary `plussqit_codem_cuda_gate_tests` (no MPS test sources),
 - captures hardware/runtime inventory (`nvidia-smi`, `nvcc`, toolchain probes),
-- runs CUDA mega-gate matrix (`56` gates),
+- runs CUDA mega-gate matrix (`73` gates),
 - runs repeated stress loops for bridge + strict-policy families,
+- runs repeated no-bridge loops (`[cuda][no_bridge]`) with `PLUSS_CUDA_ALLOW_CPU_BRIDGE=0` and `PLUSS_CUDA_FORBID_CPU_MATERIALIZATION=1`,
+- runs repeated device-storage loops (`[cuda][device_storage]`) with `PLUSS_CUDA_DEVICE_STORAGE=1`,
 - runs repeated reduction bridge + strict-policy loops (`[cuda][bridge][reduction]`, `[cuda][bridge][policy][reduction]`),
 - runs repeated elementwise bridge + strict-policy loops (`[cuda][bridge][elementwise]`, `[cuda][bridge][policy][elementwise]`),
 - runs repeated scan bridge + strict-policy loops (`[cuda][bridge][scan]`, `[cuda][bridge][policy][scan]`),
@@ -40,6 +42,8 @@ Each run writes to:
 - `outputs/cuda_cluster_hardware_<timestamp>/cuda_gate_one_page.md`
 - `outputs/cuda_cluster_hardware_<timestamp>/cuda_gate_summary.tsv`
 - `outputs/cuda_cluster_hardware_<timestamp>/cuda_mega_gate.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_no_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_device_storage_rep*.log`
 - `outputs/cuda_cluster_hardware_<timestamp>/stress_reduction_bridge_rep*.log`
 - `outputs/cuda_cluster_hardware_<timestamp>/stress_reduction_policy_rep*.log`
 - `outputs/cuda_cluster_hardware_<timestamp>/stress_scan_bridge_rep*.log`

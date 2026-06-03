@@ -65,6 +65,34 @@ kernel void strict_matmul_i32(
   }
   out[row * meta.n + col] = acc;
 }
+
+struct c64 {
+  float re;
+  float im;
+};
+
+kernel void strict_matmul_c64(
+    const device c64* a [[buffer(0)]],
+    const device c64* b [[buffer(1)]],
+    device c64* out [[buffer(2)]],
+    constant MatmulMeta& meta [[buffer(3)]],
+    uint2 gid [[thread_position_in_grid]]) {
+  const uint col = gid.x;
+  const uint row = gid.y;
+  if (row >= meta.m || col >= meta.n) {
+    return;
+  }
+
+  float acc_re = 0.0f;
+  float acc_im = 0.0f;
+  for (uint t = 0; t < meta.k; ++t) {
+    const c64 av = a[row * meta.k + t];
+    const c64 bv = b[t * meta.n + col];
+    acc_re = fma(av.re, bv.re, fma(-av.im, bv.im, acc_re));
+    acc_im = fma(av.re, bv.im, fma(av.im, bv.re, acc_im));
+  }
+  out[row * meta.n + col] = c64{acc_re, acc_im};
+}
 )metal";
 
 enum class MatmulAlgo : std::uint8_t {
@@ -84,6 +112,7 @@ struct StrictContext {
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> strict_f32{nil};
   id<MTLComputePipelineState> strict_i32{nil};
+  id<MTLComputePipelineState> strict_c64{nil};
   std::string error{};
 };
 
@@ -198,6 +227,22 @@ StrictContext& strict_ctx_(id<MTLDevice> device) {
         }
         return;
       }
+
+      NSError* p_err_c64 = nil;
+      id<MTLFunction> fn_c64 = [ctx.library newFunctionWithName:@"strict_matmul_c64"];
+      if (fn_c64 == nil) {
+        ctx.error = "strict matmul init failed: missing kernel strict_matmul_c64";
+        return;
+      }
+      ctx.strict_c64 = [device newComputePipelineStateWithFunction:fn_c64 error:&p_err_c64];
+      if (ctx.strict_c64 == nil) {
+        ctx.error = "strict matmul init failed: pipeline creation error";
+        if (p_err_c64 != nil && p_err_c64.localizedDescription != nil) {
+          ctx.error += ": ";
+          ctx.error += std::string([p_err_c64.localizedDescription UTF8String]);
+        }
+        return;
+      }
       ctx.ready = true;
     }
   });
@@ -205,7 +250,7 @@ StrictContext& strict_ctx_(id<MTLDevice> device) {
 }
 
 bool matmul_dtype_supported_(ScalarType dt) noexcept {
-  return dt == ScalarType::Float32 || dt == ScalarType::Int32;
+  return dt == ScalarType::Float32 || dt == ScalarType::Int32 || dt == ScalarType::Complex64;
 }
 
 [[noreturn]] void fail_(const std::string& msg) {
@@ -268,7 +313,8 @@ Series matmul(const Series& a, const Series& b) {
 
   Series out = Series::empty({m64, n64}, dt, Platform::MPS);
   @autoreleasepool {
-    const std::size_t elem_bytes = (dt == ScalarType::Int32) ? sizeof(std::int32_t) : sizeof(float);
+    const std::size_t elem_bytes =
+        (dt == ScalarType::Int32) ? sizeof(std::int32_t) : (dt == ScalarType::Complex64 ? sizeof(float) * 2u : sizeof(float));
     const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
     const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * elem_bytes;
     const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
@@ -329,7 +375,7 @@ Series matmul(const Series& a, const Series& b) {
     }
 
     auto& sctx = strict_ctx_(c.device);
-    if (!sctx.ready || sctx.strict_f32 == nil || sctx.strict_i32 == nil) {
+    if (!sctx.ready || sctx.strict_f32 == nil || sctx.strict_i32 == nil || sctx.strict_c64 == nil) {
       fail_("mps::matmul(strict): backend unavailable (" + sctx.error + ")");
     }
 
@@ -341,7 +387,8 @@ Series matmul(const Series& a, const Series& b) {
     if (enc == nil) {
       fail_("mps::matmul(strict): failed to create compute encoder");
     }
-    id<MTLComputePipelineState> pso = (dt == ScalarType::Int32) ? sctx.strict_i32 : sctx.strict_f32;
+    id<MTLComputePipelineState> pso =
+        (dt == ScalarType::Int32) ? sctx.strict_i32 : (dt == ScalarType::Complex64 ? sctx.strict_c64 : sctx.strict_f32);
     [enc setComputePipelineState:pso];
     [enc setBuffer:a_buf offset:0 atIndex:0];
     [enc setBuffer:b_buf offset:0 atIndex:1];

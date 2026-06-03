@@ -22,6 +22,12 @@ Default behavior (new build directories):
 - `PLUSS_TRACE_FRIENDLY_RELEASE=ON` keeps frame pointers and minimal line tables in `Release` builds for better stack traces.
 - This is meant to give meaningful errors without requiring users to manually switch to full debug workflows.
 
+# Build the codebase
+From the root folder run:
+```bash
+rm -rf build && mkdir build && cmake --workflow --preset cpp_env_build 
+```
+
 ## Build A Torch-Enabled SDK
 
 If you want `pluss` <-> LibTorch interop (`PLUSS_ENABLE_TORCH=ON`), configure a separate build tree for Torch:

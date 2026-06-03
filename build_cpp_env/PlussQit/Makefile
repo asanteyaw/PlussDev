@@ -5605,6 +5605,7 @@ tests/CodeM/test_patch175_mps_stochastic_dropout_parity.o: tests/CodeM/test_patc
 # target to build an object file
 tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o
 .PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.o
 
 tests/CodeM/test_patch175_mps_stochastic_dropout_parity.i: tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
@@ -5613,6 +5614,7 @@ tests/CodeM/test_patch175_mps_stochastic_dropout_parity.i: tests/CodeM/test_patc
 # target to preprocess a source file
 tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
 .PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.i
 
 tests/CodeM/test_patch175_mps_stochastic_dropout_parity.s: tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
@@ -5621,7 +5623,35 @@ tests/CodeM/test_patch175_mps_stochastic_dropout_parity.s: tests/CodeM/test_patc
 # target to generate assembly for a file
 tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
 .PHONY : tests/CodeM/test_patch175_mps_stochastic_dropout_parity.cpp.s
+
+tests/CodeM/test_patch176_cuda_no_bridge_contract.o: tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.o
+.PHONY : tests/CodeM/test_patch176_cuda_no_bridge_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.o
+.PHONY : tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.o
+
+tests/CodeM/test_patch176_cuda_no_bridge_contract.i: tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.i
+.PHONY : tests/CodeM/test_patch176_cuda_no_bridge_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.i
+.PHONY : tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.i
+
+tests/CodeM/test_patch176_cuda_no_bridge_contract.s: tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.s
+.PHONY : tests/CodeM/test_patch176_cuda_no_bridge_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.s
+.PHONY : tests/CodeM/test_patch176_cuda_no_bridge_contract.cpp.s
 
 tests/CodeM/test_patch17_unary_cat_scatter.o: tests/CodeM/test_patch17_unary_cat_scatter.cpp.o
 .PHONY : tests/CodeM/test_patch17_unary_cat_scatter.o
@@ -8817,6 +8847,9 @@ help:
 	@echo "... tests/CodeM/test_patch175_mps_stochastic_dropout_parity.o"
 	@echo "... tests/CodeM/test_patch175_mps_stochastic_dropout_parity.i"
 	@echo "... tests/CodeM/test_patch175_mps_stochastic_dropout_parity.s"
+	@echo "... tests/CodeM/test_patch176_cuda_no_bridge_contract.o"
+	@echo "... tests/CodeM/test_patch176_cuda_no_bridge_contract.i"
+	@echo "... tests/CodeM/test_patch176_cuda_no_bridge_contract.s"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.o"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.i"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.s"

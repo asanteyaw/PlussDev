@@ -335,8 +335,8 @@ public:
         0,
         matrix.sample_count - 1);
     const Series qseries = pluss::make_series(std::vector<std::int64_t>{qidx}, {1}, i64_on(sorted.platform()));
-    offset_ = sorted.index_select(0, qseries).reshape({1}).item<double>();
-    trained_ = std::isfinite(offset_);
+    offset_ = sorted.index_select(0, qseries).reshape({1});
+    trained_ = all_finite(offset_);
     if (!trained_) {
       return Status::numerical_failure("KernelOneClassTransformer::learn failed to produce finite offset.");
     }
@@ -360,7 +360,7 @@ public:
     const Series k = kernel_similarity(matrix.x_rows, x_train_, options_.kernel, gamma_);
     const Series score = k.mean(1, false).reshape({matrix.sample_count});
     const Series ones = pluss::ones_like(score, ScalarType::Float64);
-    const Series labels = score.ge(offset_).where(ones, ones.mul(-1.0));
+    const Series labels = score.ge(offset_.reshape({1})).where(ones, ones.mul(-1.0));
     if (matrix.layout == ObservationLayout::Rows) {
       return StatusOr<Series>(labels.to(matrix.original_platform, ScalarType::Float64).reshape({matrix.sample_count, 1}));
     }
@@ -381,8 +381,9 @@ public:
                    static_cast<double>(feature_count_),
                    static_cast<double>(static_cast<std::int64_t>(layout_)),
                    gamma_,
-                   offset_}),
+                   0.0}),
         x_train_,
+        offset_,
     });
   }
 
@@ -394,8 +395,10 @@ public:
     feature_count_ = static_cast<std::int64_t>(meta[1]);
     layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[2]));
     gamma_ = meta[3];
-    offset_ = meta[4];
     x_train_ = state[1];
+    offset_ = state.size() > 2
+                  ? state[2].to(x_train_.platform(), ScalarType::Float64).reshape({1})
+                  : pluss::make_series(std::vector<double>{meta[4]}, {1}, f64_on(x_train_.platform()));
     return Status::success();
   }
 
@@ -405,7 +408,7 @@ private:
   std::int64_t feature_count_{0};
   ObservationLayout layout_{ObservationLayout::Rows};
   double gamma_{1.0};
-  double offset_{0.0};
+  Series offset_ = Series::undefined();
   Series x_train_ = Series::undefined();
 };
 

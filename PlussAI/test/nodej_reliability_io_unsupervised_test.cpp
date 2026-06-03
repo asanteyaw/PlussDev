@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -219,6 +220,72 @@ bool run_nodej_reliability_io_unsupervised_checks(std::ostream* err = nullptr) {
     for (std::size_t i = 0; i < before.size(); ++i) {
       if (std::abs(before[i] - after[i]) > 1e-9) {
         if (err) *err << "flow bundle roundtrip should preserve predictions\n";
+        return false;
+      }
+    }
+  }
+
+  {
+    ModelSpec spec{
+        .task = TaskKind::Transform,
+        .family = ModelFamily::Kernel,
+        .options = KernelFamilyOptions{
+            .kernel = KernelKind::Rbf,
+            .form = KernelForm::OneClass,
+            .gamma = 0.8,
+            .nu = 0.5,
+        },
+    };
+    auto flow_or = make_flow(spec);
+    if (!flow_or.ok()) {
+      if (err) *err << "make_flow(transform one-class) should succeed for io bundle roundtrip\n";
+      return false;
+    }
+    Flow flow = flow_or.move_value();
+    if (flow.has_opaque_transforms()) {
+      if (err) *err << "transform one-class flow should be serializable, not opaque\n";
+      return false;
+    }
+    FeatureBatch batch{
+        .x = pluss::make_series(std::vector<double>{
+                                    -1.0, -1.0,
+                                    -0.9, -0.8,
+                                     1.0,  1.0,
+                                     7.0,  7.0},
+                                {4, 2},
+                                f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    auto labels_before_or = flow.learn_map(batch);
+    if (!labels_before_or.ok()) {
+      if (err) *err << "transform one-class flow learn_map should succeed before persistence\n";
+      return false;
+    }
+    const std::string bundle_path = "/tmp/nodej_one_class_transform_flow.bundle";
+    auto save_status = pluss::ai::nodej::io::save(bundle_path, flow, LabeledBatch{}, TrainOptions{});
+    if (!save_status.ok()) {
+      if (err) *err << "transform one-class flow save should use fitted snapshot path\n";
+      return false;
+    }
+    auto restored_or = pluss::ai::nodej::io::load_and_restore(bundle_path);
+    if (!restored_or.ok()) {
+      if (err) *err << "transform one-class flow load_and_restore should succeed\n";
+      return false;
+    }
+    auto labels_after_or = restored_or.value().map(batch);
+    if (!labels_after_or.ok()) {
+      if (err) *err << "restored transform one-class flow map should succeed\n";
+      return false;
+    }
+    const auto before = as_f64(labels_before_or.value());
+    const auto after = as_f64(labels_after_or.value());
+    if (before.size() != after.size()) {
+      if (err) *err << "transform one-class flow roundtrip should preserve label size\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < before.size(); ++i) {
+      if (std::abs(before[i] - after[i]) > 1e-9) {
+        if (err) *err << "transform one-class flow roundtrip should preserve labels\n";
         return false;
       }
     }

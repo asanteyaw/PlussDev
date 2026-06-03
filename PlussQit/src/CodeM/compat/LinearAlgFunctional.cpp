@@ -1,6 +1,8 @@
 #include "pluss/subsp/linearalg/linearalg.h"
 
+#include "CodeM/core/SeriesTape.h"
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/OpsInternal.h"
 #include "CodeM/native/cpu/BlasGemm.h"
 #include "CodeM/native/mps/Linalg.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
@@ -14,6 +16,7 @@
 #include <cstdlib>
 #include <exception>
 #include <limits>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -177,6 +180,532 @@ inline void bump_mps_native_svd_device_success_() noexcept {
 
 inline void bump_mps_native_svd_device_fallback_() noexcept {
   dispatch_counters_().native_svd_device_fallback.fetch_add(1, std::memory_order_relaxed);
+}
+
+inline Series stack_dim0_(const std::vector<Series>& parts, const char* op);
+
+bool linalg_tracks_slope_(const Series& a) {
+  return pluss::codem::series_tape::recording_enabled() && pluss::codem::series_tape::tracks_slope(a);
+}
+
+bool is_complex_scalar_(ScalarType dtype) noexcept {
+  return dtype == ScalarType::Complex64 || dtype == ScalarType::Complex128;
+}
+
+Series matrix_adjoint_(const Series& x) {
+  PLUSS_CHECK(x.dim() >= 2, "subsp::linearalg: expected matrix input for reverse-mode rule");
+  Series xt = x.transpose(-2, -1);
+  return is_complex_scalar_(x.scalar_type()) ? pluss::codem::ops_internal::conj(xt) : xt;
+}
+
+Series scale_to_matrix_batch_(Series scale, const Series& matrix) {
+  while (scale.dim() < matrix.dim()) {
+    scale = scale.unsqueeze(static_cast<std::int64_t>(scale.dim()));
+  }
+  return scale;
+}
+
+Series linalg_sensitivity_like_(Series grad, const Series& like) {
+  if (grad.scalar_type() != like.scalar_type()) grad = grad.to(like.scalar_type());
+  if (grad.platform() != like.platform()) grad = grad.to(like.platform());
+  return grad;
+}
+
+Series mat_scalar_(const Series& a, std::int64_t r, std::int64_t c) {
+  return a.select(-2, r).select(-1, c);
+}
+
+bool complex_small_square_supported_(const Series& a) {
+  return is_complex_scalar_(a.scalar_type()) &&
+      a.dim() == 2 &&
+      a.sizes()[0] == a.sizes()[1] &&
+      a.sizes()[0] > 0 &&
+      a.sizes()[0] <= 2;
+}
+
+Series det_small_complex_(const Series& a) {
+  PLUSS_CHECK(complex_small_square_supported_(a), "subsp::linearalg::det: expected 1x1 or 2x2 complex matrix");
+  if (a.sizes()[0] == 1) {
+    return mat_scalar_(a, 0, 0).contiguous();
+  }
+  const Series a00 = mat_scalar_(a, 0, 0);
+  const Series a01 = mat_scalar_(a, 0, 1);
+  const Series a10 = mat_scalar_(a, 1, 0);
+  const Series a11 = mat_scalar_(a, 1, 1);
+  return a00.mul(a11).sub(a01.mul(a10)).contiguous();
+}
+
+Series inverse_small_complex_(const Series& a) {
+  PLUSS_CHECK(complex_small_square_supported_(a), "subsp::linearalg::inverse: expected 1x1 or 2x2 complex matrix");
+  if (a.sizes()[0] == 1) {
+    const Series a00 = mat_scalar_(a, 0, 0);
+    const Series one = a00.mul(0.0).add(1.0);
+    return one.div(a00).reshape({1, 1}).contiguous();
+  }
+  const Series a00 = mat_scalar_(a, 0, 0);
+  const Series a01 = mat_scalar_(a, 0, 1);
+  const Series a10 = mat_scalar_(a, 1, 0);
+  const Series a11 = mat_scalar_(a, 1, 1);
+  const Series d = a00.mul(a11).sub(a01.mul(a10));
+
+  std::vector<Series> row0_parts;
+  row0_parts.reserve(2);
+  row0_parts.push_back(a11.div(d));
+  row0_parts.push_back(a01.neg().div(d));
+  std::vector<Series> row1_parts;
+  row1_parts.reserve(2);
+  row1_parts.push_back(a10.neg().div(d));
+  row1_parts.push_back(a00.div(d));
+  std::vector<Series> rows;
+  rows.reserve(2);
+  rows.push_back(stack_dim0_(row0_parts, "inverse_complex_row0").reshape({2}).contiguous());
+  rows.push_back(stack_dim0_(row1_parts, "inverse_complex_row1").reshape({2}).contiguous());
+  return stack_dim0_(rows, "inverse_complex").contiguous();
+}
+
+bool complex_small_triangular_supported_(const Series& a, const Series& b) {
+  if (!is_complex_scalar_(a.scalar_type()) && !is_complex_scalar_(b.scalar_type())) {
+    return false;
+  }
+  if (a.scalar_type() != b.scalar_type()) {
+    return false;
+  }
+  if (a.dim() != 2 || a.sizes()[0] != a.sizes()[1] || a.sizes()[0] <= 0 || a.sizes()[0] > 2) {
+    return false;
+  }
+  if (b.dim() == 1) {
+    return b.sizes()[0] == a.sizes()[0];
+  }
+  return b.dim() == 2 && b.sizes()[0] == a.sizes()[0];
+}
+
+Series triangular_solve_small_complex_(const Series& a, const Series& b, bool upper, bool unitriangular) {
+  PLUSS_CHECK(
+      complex_small_triangular_supported_(a, b),
+      "subsp::linearalg::triangular_solve: expected 1x1 or 2x2 complex factor/rhs");
+  const std::int64_t n = a.sizes()[0];
+  const bool vector_rhs = b.dim() == 1;
+  const Series rhs = vector_rhs ? b.reshape({n, 1}).contiguous() : b.contiguous();
+  if (n == 1) {
+    Series x = rhs;
+    if (!unitriangular) {
+      x = x.div(mat_scalar_(a, 0, 0));
+    }
+    return vector_rhs ? x.reshape({1}).contiguous() : x.contiguous();
+  }
+
+  const Series a00 = mat_scalar_(a, 0, 0);
+  const Series a01 = mat_scalar_(a, 0, 1);
+  const Series a10 = mat_scalar_(a, 1, 0);
+  const Series a11 = mat_scalar_(a, 1, 1);
+  const Series b0 = rhs.select(0, 0).contiguous();
+  const Series b1 = rhs.select(0, 1).contiguous();
+  Series x0;
+  Series x1;
+  if (upper) {
+    x1 = unitriangular ? b1 : b1.div(a11);
+    x0 = b0.sub(a01.mul(x1));
+    if (!unitriangular) {
+      x0 = x0.div(a00);
+    }
+  } else {
+    x0 = unitriangular ? b0 : b0.div(a00);
+    x1 = b1.sub(a10.mul(x0));
+    if (!unitriangular) {
+      x1 = x1.div(a11);
+    }
+  }
+  std::vector<Series> rows;
+  rows.reserve(2);
+  rows.push_back(x0.contiguous());
+  rows.push_back(x1.contiguous());
+  Series out = stack_dim0_(rows, "triangular_solve_complex").contiguous();
+  return vector_rhs ? out.reshape({2}).contiguous() : out;
+}
+
+Series stack_scalars_as_row_(std::vector<Series> values, const char* op) {
+  return stack_dim0_(values, op).reshape({static_cast<std::int64_t>(values.size())});
+}
+
+Series det_small_real_backward_factor_(const Series& a) {
+  if (is_complex_scalar_(a.scalar_type()) || a.dim() != 2 || a.sizes()[0] != a.sizes()[1]) {
+    return Series::undefined();
+  }
+  const std::int64_t n = a.sizes()[0];
+  if (n == 1) {
+    return Series::ones({1, 1}, a.scalar_type()).to(a.platform());
+  }
+  if (n == 2) {
+    const Series a00 = mat_scalar_(a, 0, 0);
+    const Series a01 = mat_scalar_(a, 0, 1);
+    const Series a10 = mat_scalar_(a, 1, 0);
+    const Series a11 = mat_scalar_(a, 1, 1);
+    return stack_dim0_(
+        {stack_scalars_as_row_({a11, a10.neg()}, "det_backward_2x2_row0"),
+         stack_scalars_as_row_({a01.neg(), a00}, "det_backward_2x2_row1")},
+        "det_backward_2x2");
+  }
+  if (n == 3) {
+    const Series a00 = mat_scalar_(a, 0, 0);
+    const Series a01 = mat_scalar_(a, 0, 1);
+    const Series a02 = mat_scalar_(a, 0, 2);
+    const Series a10 = mat_scalar_(a, 1, 0);
+    const Series a11 = mat_scalar_(a, 1, 1);
+    const Series a12 = mat_scalar_(a, 1, 2);
+    const Series a20 = mat_scalar_(a, 2, 0);
+    const Series a21 = mat_scalar_(a, 2, 1);
+    const Series a22 = mat_scalar_(a, 2, 2);
+    return stack_dim0_(
+        {stack_scalars_as_row_(
+             {a11.mul(a22).sub(a12.mul(a21)),
+              a12.mul(a20).sub(a10.mul(a22)),
+              a10.mul(a21).sub(a11.mul(a20))},
+             "det_backward_3x3_row0"),
+         stack_scalars_as_row_(
+             {a02.mul(a21).sub(a01.mul(a22)),
+              a00.mul(a22).sub(a02.mul(a20)),
+              a01.mul(a20).sub(a00.mul(a21))},
+             "det_backward_3x3_row1"),
+         stack_scalars_as_row_(
+             {a01.mul(a12).sub(a02.mul(a11)),
+              a02.mul(a10).sub(a00.mul(a12)),
+              a00.mul(a11).sub(a01.mul(a10))},
+             "det_backward_3x3_row2")},
+        "det_backward_3x3");
+  }
+  return Series::undefined();
+}
+
+Series triangular_masked_like_(const Series& value, bool upper, bool unitriangular) {
+  PLUSS_CHECK(value.dim() >= 2, "subsp::linearalg: triangular mask expects matrix input");
+  if (complex_small_square_supported_(value)) {
+    const std::int64_t n = value.sizes()[0];
+    const Series z = mat_scalar_(value, 0, 0).mul(0.0);
+    if (n == 1) {
+      const Series v = unitriangular ? z : mat_scalar_(value, 0, 0);
+      return v.reshape({1, 1}).contiguous();
+    }
+
+    const Series v00 = mat_scalar_(value, 0, 0);
+    const Series v01 = mat_scalar_(value, 0, 1);
+    const Series v10 = mat_scalar_(value, 1, 0);
+    const Series v11 = mat_scalar_(value, 1, 1);
+    const auto cell = [](const Series& x) { return x.reshape({1}).contiguous(); };
+    std::vector<Series> row0_parts;
+    std::vector<Series> row1_parts;
+    row0_parts.reserve(2);
+    row1_parts.reserve(2);
+    if (upper) {
+      row0_parts.push_back(cell(unitriangular ? z : v00));
+      row0_parts.push_back(cell(v01));
+      row1_parts.push_back(cell(z));
+      row1_parts.push_back(cell(unitriangular ? z : v11));
+    } else {
+      row0_parts.push_back(cell(unitriangular ? z : v00));
+      row0_parts.push_back(cell(z));
+      row1_parts.push_back(cell(v10));
+      row1_parts.push_back(cell(unitriangular ? z : v11));
+    }
+    std::vector<Series> rows;
+    rows.reserve(2);
+    rows.push_back(stack_dim0_(row0_parts, "triangular_mask_complex_row0").reshape({2}).contiguous());
+    rows.push_back(stack_dim0_(row1_parts, "triangular_mask_complex_row1").reshape({2}).contiguous());
+    return stack_dim0_(rows, "triangular_mask_complex").contiguous();
+  }
+  const auto nd = value.dim();
+  const auto rows_n = value.sizes()[static_cast<std::size_t>(nd - 2)];
+  const auto cols_n = value.sizes()[static_cast<std::size_t>(nd - 1)];
+  Series rows = Series::arange(0.0, static_cast<double>(rows_n), 1.0, ScalarType::Int64)
+                    .reshape({rows_n, 1})
+                    .to(value.platform());
+  Series cols = Series::arange(0.0, static_cast<double>(cols_n), 1.0, ScalarType::Int64)
+                    .reshape({1, cols_n})
+                    .to(value.platform());
+  const std::int64_t offset = unitriangular ? 1 : 0;
+  Series mask = upper ? cols.ge(rows.add(static_cast<double>(offset)))
+                      : cols.le(rows.sub(static_cast<double>(offset)));
+  mask = mask.expand(value.sizes(), true).to(value.scalar_type());
+  if (mask.platform() != value.platform()) mask = mask.to(value.platform());
+  return value.mul(mask);
+}
+
+Series eye_matrix_like_(const Series& matrix) {
+  PLUSS_CHECK(matrix.dim() >= 2, "subsp::linearalg: identity helper expects matrix input");
+  const auto nd = matrix.dim();
+  const auto rows = matrix.sizes()[static_cast<std::size_t>(nd - 2)];
+  const auto cols = matrix.sizes()[static_cast<std::size_t>(nd - 1)];
+  Series eye = Series::eye(rows, cols, matrix.scalar_type()).to(matrix.platform());
+  while (eye.dim() < matrix.dim()) {
+    eye = eye.unsqueeze(0);
+  }
+  return eye.expand(matrix.sizes(), true).contiguous();
+}
+
+Series right_triangular_solve_(const Series& factor, const Series& rhs, bool upper, bool unitriangular) {
+  Series solved_h = triangular_solve(matrix_adjoint_(factor), matrix_adjoint_(rhs), !upper, unitriangular);
+  return matrix_adjoint_(solved_h);
+}
+
+Series qr_syminv_adjoint_real_(const Series& x) {
+  Series upper = triangular_masked_like_(x, /*upper=*/true, /*unitriangular=*/false);
+  const Series diag = upper.mul(eye_matrix_like_(upper));
+  return upper.add(matrix_adjoint_(upper)).sub(diag);
+}
+
+Series qr_backward_real_reduced_(const Series& q, const Series& r, const Series& grad, bool grad_is_q) {
+  PLUSS_CHECK(!is_complex_scalar_(q.scalar_type()), "subsp::linearalg::qr: complex reverse-mode is not implemented yet");
+  const auto m = q.sizes()[static_cast<std::size_t>(q.dim() - 2)];
+  const auto n = r.sizes()[static_cast<std::size_t>(r.dim() - 1)];
+
+  Series core;
+  if (grad_is_q) {
+    core = matrix_adjoint_(q).matmul(grad).neg();
+  } else {
+    core = grad.matmul(matrix_adjoint_(r));
+  }
+  if (m >= n) {
+    Series out = q.matmul(qr_syminv_adjoint_real_(core));
+    if (grad_is_q) {
+      out = out.add(grad);
+    }
+    return right_triangular_solve_(matrix_adjoint_(r), out, /*upper=*/false, /*unitriangular=*/false);
+  }
+
+  const Series skew_arg = core.neg();
+  Series lower_skew =
+      triangular_masked_like_(skew_arg.sub(matrix_adjoint_(skew_arg)), /*upper=*/false, /*unitriangular=*/false);
+  Series wide_out = q.matmul(lower_skew);
+  Series r_lead = r.slice(static_cast<std::int64_t>(r.dim()) - 1, 0, m).contiguous();
+  r_lead = linalg_sensitivity_like_(r_lead, wide_out);
+  wide_out = right_triangular_solve_(matrix_adjoint_(r_lead), wide_out, /*upper=*/false, /*unitriangular=*/false);
+  std::vector<std::int64_t> tail_shape(wide_out.sizes().begin(), wide_out.sizes().end());
+  tail_shape.back() = n - m;
+  Series zeros_tail = Series::zeros(tail_shape, wide_out.scalar_type()).to(wide_out.platform());
+  std::vector<Series> tail_parts;
+  tail_parts.push_back(zeros_tail);
+  wide_out = wide_out.unite(tail_parts, static_cast<std::int64_t>(wide_out.dim()) - 1);
+  if (!grad_is_q) {
+    wide_out = wide_out.add(q.matmul(grad));
+  }
+  return wide_out;
+}
+
+Series svd_gap_matrix_(const Series& s) {
+  const Series s2 = s.mul(s);
+  Series gap = s2.unsqueeze(static_cast<std::int64_t>(s2.dim()) - 1)
+                   .sub(s2.unsqueeze(static_cast<std::int64_t>(s2.dim())));
+  return gap.add(eye_matrix_like_(gap));
+}
+
+Series svd_values_backward_real_(const Series& u, const Series& s, const Series& vh, const Series& grad_s) {
+  (void)s;
+  const auto m = u.sizes()[static_cast<std::size_t>(u.dim() - 2)];
+  const auto n = vh.sizes()[static_cast<std::size_t>(vh.dim() - 1)];
+  return (m >= n) ? u.matmul(grad_s.unsqueeze(static_cast<std::int64_t>(grad_s.dim())).mul(vh))
+                  : u.mul(grad_s.unsqueeze(static_cast<std::int64_t>(grad_s.dim()) - 1)).matmul(vh);
+}
+
+Series svd_vector_backward_real_(
+    const Series& u,
+    const Series& s,
+    const Series& vh,
+    const Series& grad,
+    bool grad_is_u) {
+  PLUSS_CHECK(!is_complex_scalar_(u.scalar_type()), "subsp::linearalg::svd: complex reverse-mode is not implemented yet");
+  const auto m = u.sizes()[static_cast<std::size_t>(u.dim() - 2)];
+  const auto n = vh.sizes()[static_cast<std::size_t>(vh.dim() - 1)];
+  const Series gap = svd_gap_matrix_(s);
+  Series core = Series::zeros(gap.sizes(), gap.scalar_type()).to(gap.platform());
+
+  if (grad_is_u) {
+    const Series skew = matrix_adjoint_(u).matmul(grad);
+    core = skew.sub(matrix_adjoint_(skew)).div(gap).mul(s.unsqueeze(static_cast<std::int64_t>(s.dim()) - 1));
+  } else {
+    const Series skew = vh.matmul(matrix_adjoint_(grad));
+    core = s.unsqueeze(static_cast<std::int64_t>(s.dim())).mul(skew.sub(matrix_adjoint_(skew)).div(gap));
+  }
+
+  if (m > n && grad_is_u) {
+    Series out = u.matmul(core);
+    const Series scaled = grad.div(s.unsqueeze(static_cast<std::int64_t>(s.dim()) - 1));
+    out = out.add(scaled).sub(u.matmul(matrix_adjoint_(u).matmul(scaled)));
+    return out.matmul(vh);
+  }
+  if (m < n && !grad_is_u) {
+    Series out = core.matmul(vh);
+    const Series scaled = grad.div(s.unsqueeze(static_cast<std::int64_t>(s.dim())));
+    out = out.add(scaled).sub(scaled.matmul(matrix_adjoint_(vh)).matmul(vh));
+    return u.matmul(out);
+  }
+  return (m >= n) ? u.matmul(core).matmul(vh) : u.matmul(core.matmul(vh));
+}
+
+void bind_qr_backward_(const Series& out, const Series& a, const Series& q, const Series& r, bool grad_is_q, bool reduced) {
+  if (!linalg_tracks_slope_(a)) return;
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = grad_is_q ? "subsp::linearalg::qr_q" : "subsp::linearalg::qr_r";
+  link->parents = {a};
+  link->propagate = [a, q, r, grad_is_q, reduced](const Series& out_sens) {
+    PLUSS_CHECK(reduced, "subsp::linearalg::qr: reverse-mode currently requires reduced=true");
+    Series grad = qr_backward_real_reduced_(q, r, linalg_sensitivity_like_(out_sens, q), grad_is_q);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_svd_backward_(const Series& out, const Series& a, const Series& u, const Series& s, const Series& vh, int slot, bool full_matrices) {
+  if (!linalg_tracks_slope_(a)) return;
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = slot == 0 ? "subsp::linearalg::svd_u" : (slot == 1 ? "subsp::linearalg::svd_s" : "subsp::linearalg::svd_vh");
+  link->parents = {a};
+  link->propagate = [a, u, s, vh, slot, full_matrices](const Series& out_sens) {
+    PLUSS_CHECK(!full_matrices, "subsp::linearalg::svd: reverse-mode currently requires full_matrices=false");
+    Series grad = slot == 1 ? svd_values_backward_real_(u, s, vh, linalg_sensitivity_like_(out_sens, s))
+                            : svd_vector_backward_real_(u, s, vh, linalg_sensitivity_like_(out_sens, slot == 0 ? u : vh), slot == 0);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_inverse_backward_(const Series& out, const Series& a, const Series& inverse_out) {
+  if (!linalg_tracks_slope_(a)) return;
+  PLUSS_CHECK(a.dim() >= 2, "subsp::linearalg::inverse: reverse-mode expects matrix input");
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::inverse";
+  link->parents = {a};
+  link->propagate = [a, inverse_out](const Series& out_sens) {
+    const Series inv_h = matrix_adjoint_(inverse_out);
+    Series grad = inv_h.matmul(out_sens).matmul(inv_h).neg();
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_det_backward_(const Series& out, const Series& a, const Series& det_out) {
+  if (!linalg_tracks_slope_(a)) return;
+  PLUSS_CHECK(a.dim() >= 2, "subsp::linearalg::det: reverse-mode expects matrix input");
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::det";
+  link->parents = {a};
+  link->propagate = [a, det_out](const Series& out_sens) {
+    Series inv_h = det_small_real_backward_factor_(a);
+    if (!inv_h.defined()) {
+      inv_h = matrix_adjoint_(inverse(a));
+    }
+    const Series det_scale =
+        is_complex_scalar_(det_out.scalar_type()) ? pluss::codem::ops_internal::conj(det_out) : det_out;
+    Series scale = inv_h.defined() && inv_h.dim() == 2 && a.dim() == 2 && !is_complex_scalar_(a.scalar_type()) &&
+                           a.sizes()[0] <= 3
+                       ? out_sens
+                       : out_sens.mul(det_scale);
+    scale = scale_to_matrix_batch_(scale, inv_h);
+    Series grad = inv_h.mul(scale);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_logdet_backward_(const Series& out, const Series& a) {
+  if (!linalg_tracks_slope_(a)) return;
+  PLUSS_CHECK(a.dim() >= 2, "subsp::linearalg::logdet: reverse-mode expects matrix input");
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::logdet";
+  link->parents = {a};
+  link->propagate = [a](const Series& out_sens) {
+    const Series inv_h = matrix_adjoint_(inverse(a));
+    Series scale = scale_to_matrix_batch_(out_sens, inv_h);
+    Series grad = inv_h.mul(scale);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_slogdet_backward_(const Series& out, const Series& a) {
+  if (!linalg_tracks_slope_(a)) return;
+  PLUSS_CHECK(a.dim() >= 2, "subsp::linearalg::slogdet: reverse-mode expects matrix input");
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::slogdet";
+  link->parents = {a};
+  link->propagate = [a](const Series& out_sens) {
+    const std::int64_t last = static_cast<std::int64_t>(out_sens.dim()) - 1;
+    Series logabs_sens = out_sens.select(last, 1);
+    const Series inv_h = matrix_adjoint_(inverse(a));
+    Series scale = scale_to_matrix_batch_(logabs_sens, inv_h);
+    Series grad = inv_h.mul(scale);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_triangular_solve_backward_(
+    const Series& out,
+    const Series& a,
+    const Series& b,
+    bool upper,
+    bool unitriangular) {
+  if (!pluss::codem::series_tape::recording_enabled()) return;
+  const bool ta = pluss::codem::series_tape::tracks_slope(a);
+  const bool tb = pluss::codem::series_tape::tracks_slope(b);
+  if (!ta && !tb) return;
+  PLUSS_CHECK(a.dim() >= 2, "subsp::linearalg::triangular_solve: reverse-mode expects matrix factor");
+
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::triangular_solve";
+  link->parents = {a, b};
+  link->propagate = [a, b, out, upper, unitriangular, ta, tb](const Series& out_sens) {
+    const Series grad_b_raw = triangular_solve(matrix_adjoint_(a), out_sens, !upper, unitriangular);
+    if (tb) {
+      Series grad_b = grad_b_raw;
+      if (b.dim() == 1 && grad_b.dim() == 2 && grad_b.sizes()[1] == 1) {
+        grad_b = grad_b.reshape({b.sizes()[0]});
+      }
+      grad_b = linalg_sensitivity_like_(grad_b, b);
+      pluss::codem::series_tape::accumulate_sensitivity(b, grad_b);
+    }
+    if (ta) {
+      Series grad_a = grad_b_raw.matmul(matrix_adjoint_(out)).neg();
+      grad_a = triangular_masked_like_(grad_a, upper, unitriangular);
+      grad_a = linalg_sensitivity_like_(grad_a, a);
+      pluss::codem::series_tape::accumulate_sensitivity(a, grad_a);
+    }
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
+}
+
+void bind_cholesky_solve_backward_(const Series& out, const Series& factor, const Series& b, bool upper) {
+  if (!pluss::codem::series_tape::recording_enabled()) return;
+  const bool tf = pluss::codem::series_tape::tracks_slope(factor);
+  const bool tb = pluss::codem::series_tape::tracks_slope(b);
+  if (!tf && !tb) return;
+
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::cholesky_solve";
+  link->parents = {factor, b};
+  link->propagate = [factor, b, out, upper, tf, tb](const Series& out_sens) {
+    const Series grad_b_raw = cholesky_solve(factor, out_sens, upper);
+    if (tb) {
+      Series grad_b = grad_b_raw;
+      if (b.dim() == 1 && grad_b.dim() == 2 && grad_b.sizes()[1] == 1) {
+        grad_b = grad_b.reshape({b.sizes()[0]});
+      }
+      grad_b = linalg_sensitivity_like_(grad_b, b);
+      pluss::codem::series_tape::accumulate_sensitivity(b, grad_b);
+    }
+    if (tf) {
+      Series common = grad_b_raw.matmul(matrix_adjoint_(out));
+      common = common.add(matrix_adjoint_(common));
+      Series grad_factor = upper ? factor.matmul(common).neg() : common.matmul(factor).neg();
+      grad_factor = linalg_sensitivity_like_(grad_factor, factor);
+      pluss::codem::series_tape::accumulate_sensitivity(factor, grad_factor);
+    }
+  };
+  pluss::codem::series_tape::bind_source_link(out, std::move(link));
 }
 
 LinearAlgDenseProvider dense_provider_from_cpu_blas_(pluss::codem::native::cpu::blas::Provider provider) noexcept {
@@ -444,7 +973,10 @@ inline Series cuda_linalg_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    return bridge_cpu_result_to_cuda_(cpu_route(), op_name, /*allow_strict_native=*/true);
+    if (pluss::codem::cuda_cpu_bridge_enabled()) {
+      return bridge_cpu_result_to_cuda_(cpu_route(), op_name, /*allow_strict_native=*/true);
+    }
+    throw_cuda_linalg_unavailable_(op_name, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
     pluss::codem::throw_error(
@@ -512,6 +1044,9 @@ inline bool mps_native_cholesky_supported_(const Series& a) {
   if (a.platform() != Platform::MPS || a.dim() != 2 || a.sizes()[0] != a.sizes()[1]) {
     return false;
   }
+  if (is_complex_scalar_(a.scalar_type())) {
+    return false;
+  }
   return pluss::codem::native::mps::supports_cholesky_factor(canonical_mps_native_f32_(a));
 }
 
@@ -526,14 +1061,16 @@ inline bool mps_native_inverse_supported_(const Series& a) {
   return mps_experimental_native_enabled_() &&
       a.platform() == Platform::MPS &&
       a.dim() == 2 &&
-      a.sizes()[0] == a.sizes()[1];
+      a.sizes()[0] == a.sizes()[1] &&
+      !is_complex_scalar_(a.scalar_type());
 }
 
 inline bool mps_native_det_supported_(const Series& a) {
   return mps_experimental_native_enabled_() &&
       a.platform() == Platform::MPS &&
       a.dim() == 2 &&
-      a.sizes()[0] == a.sizes()[1];
+      a.sizes()[0] == a.sizes()[1] &&
+      !is_complex_scalar_(a.scalar_type());
 }
 
 struct DetStats {
@@ -1443,18 +1980,35 @@ Series det(const Series& a) {
     if (a.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
+    bind_det_backward_(out, a, out);
+    return out;
+  }
+  if (complex_small_square_supported_(a)) {
+    Series out = det_small_complex_(a);
+    bind_det_backward_(out, a, out);
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::det(a);
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::det: complex det currently supports only 1x1 and 2x2 matrices");
+    Series out = pluss::subsp::math::linalg::det(a);
+    bind_det_backward_(out, a, out);
+    return out;
   }
   if (a.platform() == Platform::MPS) {
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::det: complex MPS det currently supports only 1x1 and 2x2 matrices");
     if (mps_native_det_supported_(a)) {
       const auto stats = det_stats_mps_native_(a);
       const double value = stats.singular ? 0.0 : static_cast<double>(stats.sign) * std::exp(stats.logabs);
-      return Series::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
+      Series out = Series::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
+      bind_det_backward_(out, a, out);
+      return out;
     }
-    return bridge_cpu_result_to_mps_(pluss::subsp::math::linalg::det(a.to(Platform::CPU)), MpsBridgeOp::Det, "det");
+    Series out =
+        bridge_cpu_result_to_mps_(pluss::subsp::math::linalg::det(a.to(Platform::CPU)), MpsBridgeOp::Det, "det");
+    bind_det_backward_(out, a, out);
+    return out;
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
@@ -1463,6 +2017,7 @@ Series det(const Series& a) {
     if (native_enabled && route_supported) {
       std::string why{};
       if (auto out = pluss::codem::native::cuda::try_det(a, &why); out.has_value()) {
+        bind_det_backward_(*out, a, *out);
         return std::move(*out);
       }
       if (native_strict) {
@@ -1470,12 +2025,14 @@ Series det(const Series& a) {
             std::string("subsp::linearalg::det: strict native CUDA route failed: ") + why);
       }
     }
-    return cuda_linalg_route_or_bridge_(
+    Series out = cuda_linalg_route_or_bridge_(
         "det",
         native_enabled,
         native_strict,
         route_supported,
         [&]() { return pluss::subsp::math::linalg::det(a.to(Platform::CPU)); });
+    bind_det_backward_(out, a, out);
+    return out;
   }
   throw_platform_not_ready_("det", a.platform());
 }
@@ -1513,17 +2070,33 @@ Series inverse(const Series& a) {
     if (a.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
+    bind_inverse_backward_(out, a, out);
+    return out;
+  }
+  if (complex_small_square_supported_(a)) {
+    Series out = inverse_small_complex_(a);
+    bind_inverse_backward_(out, a, out);
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::inverse(a);
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::inverse: complex inverse currently supports only 1x1 and 2x2 matrices");
+    Series out = pluss::subsp::math::linalg::inverse(a);
+    bind_inverse_backward_(out, a, out);
+    return out;
   }
   if (a.platform() == Platform::MPS) {
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::inverse: complex MPS inverse currently supports only 1x1 and 2x2 matrices");
     if (mps_native_inverse_supported_(a)) {
-      return inverse_mps_native_(a);
+      Series out = inverse_mps_native_(a);
+      bind_inverse_backward_(out, a, out);
+      return out;
     }
-    return bridge_cpu_result_to_mps_(
+    Series out = bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::inverse(a.to(Platform::CPU)), MpsBridgeOp::Inverse, "inverse");
+    bind_inverse_backward_(out, a, out);
+    return out;
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
@@ -1532,6 +2105,7 @@ Series inverse(const Series& a) {
     if (native_enabled && route_supported) {
       std::string why{};
       if (auto out = pluss::codem::native::cuda::try_inverse(a, &why); out.has_value()) {
+        bind_inverse_backward_(*out, a, *out);
         return std::move(*out);
       }
       if (native_strict) {
@@ -1539,12 +2113,14 @@ Series inverse(const Series& a) {
             std::string("subsp::linearalg::inverse: strict native CUDA route failed: ") + why);
       }
     }
-    return cuda_linalg_route_or_bridge_(
+    Series out = cuda_linalg_route_or_bridge_(
         "inverse",
         native_enabled,
         native_strict,
         route_supported,
         [&]() { return pluss::subsp::math::linalg::inverse(a.to(Platform::CPU)); });
+    bind_inverse_backward_(out, a, out);
+    return out;
   }
   throw_platform_not_ready_("inverse", a.platform());
 }
@@ -1639,31 +2215,44 @@ Series logdet(const Series& a) {
     if (a.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
+    bind_logdet_backward_(out, a);
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::logdet(a);
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::logdet: complex logdet is not implemented yet");
+    Series out = pluss::subsp::math::linalg::logdet(a);
+    bind_logdet_backward_(out, a);
+    return out;
   }
   if (a.platform() == Platform::MPS) {
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::logdet: complex MPS logdet is not implemented yet");
     if (mps_native_det_supported_(a)) {
       const auto stats = det_stats_mps_native_(a);
       const double value =
           stats.singular ? -std::numeric_limits<float>::infinity() : static_cast<double>(stats.logabs);
-      return Series::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
+      Series out = Series::full({}, value, ScalarType::Float32).to(Platform::MPS).contiguous();
+      bind_logdet_backward_(out, a);
+      return out;
     }
-    return bridge_cpu_result_to_mps_(
+    Series out = bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::logdet(a.to(Platform::CPU)), MpsBridgeOp::Logdet, "logdet");
+    bind_logdet_backward_(out, a);
+    return out;
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
     const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
     const bool route_supported = pluss::codem::native::cuda::supports_logdet(a);
-    return cuda_linalg_route_or_bridge_(
+    Series out = cuda_linalg_route_or_bridge_(
         "logdet",
         native_enabled,
         native_strict,
         route_supported,
         [&]() { return pluss::subsp::math::linalg::logdet(a.to(Platform::CPU)); });
+    bind_logdet_backward_(out, a);
+    return out;
   }
   throw_platform_not_ready_("logdet", a.platform());
 }
@@ -1701,32 +2290,45 @@ Series slogdet(const Series& a) {
     if (a.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
+    bind_slogdet_backward_(out, a);
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::slogdet(a);
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::slogdet: complex slogdet is not implemented yet");
+    Series out = pluss::subsp::math::linalg::slogdet(a);
+    bind_slogdet_backward_(out, a);
+    return out;
   }
   if (a.platform() == Platform::MPS) {
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()),
+                "subsp::linearalg::slogdet: complex MPS slogdet is not implemented yet");
     if (mps_native_det_supported_(a)) {
       const auto stats = det_stats_mps_native_(a);
-      std::vector<float> out = {
+      std::vector<float> values = {
           stats.singular ? 0.0f : stats.sign,
           stats.singular ? -std::numeric_limits<float>::infinity() : stats.logabs};
-      return pluss::make_series(out, {2}).to(Platform::MPS);
+      Series out = pluss::make_series(values, {2}).to(Platform::MPS);
+      bind_slogdet_backward_(out, a);
+      return out;
     }
-    return bridge_cpu_result_to_mps_(
+    Series out = bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::slogdet(a.to(Platform::CPU)), MpsBridgeOp::Slogdet, "slogdet");
+    bind_slogdet_backward_(out, a);
+    return out;
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
     const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
     const bool route_supported = pluss::codem::native::cuda::supports_slogdet(a);
-    return cuda_linalg_route_or_bridge_(
+    Series out = cuda_linalg_route_or_bridge_(
         "slogdet",
         native_enabled,
         native_strict,
         route_supported,
         [&]() { return pluss::subsp::math::linalg::slogdet(a.to(Platform::CPU)); });
+    bind_slogdet_backward_(out, a);
+    return out;
   }
   throw_platform_not_ready_("slogdet", a.platform());
 }
@@ -1936,13 +2538,16 @@ Series qr_q(const Series& a, bool reduced) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::qr(a, reduced).Q;
+    auto qr = pluss::subsp::math::linalg::qr(a, reduced);
+    bind_qr_backward_(qr.Q, a, qr.Q, qr.R, /*grad_is_q=*/true, reduced);
+    return qr.Q;
   }
   if (a.platform() == Platform::MPS) {
     const auto& dispatch = cached_mps_qr_dispatch_(a, reduced);
     if (dispatch.bridged) {
       bump_mps_bridge_counter_(MpsBridgeOp::Qr);
     }
+    bind_qr_backward_(dispatch.qr.q, a, dispatch.qr.q, dispatch.qr.r, /*grad_is_q=*/true, reduced);
     return dispatch.qr.q;
   }
   if (a.platform() == Platform::CUDA) {
@@ -1995,13 +2600,16 @@ Series qr_r(const Series& a, bool reduced) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::qr(a, reduced).R;
+    auto qr = pluss::subsp::math::linalg::qr(a, reduced);
+    bind_qr_backward_(qr.R, a, qr.Q, qr.R, /*grad_is_q=*/false, reduced);
+    return qr.R;
   }
   if (a.platform() == Platform::MPS) {
     const auto& dispatch = cached_mps_qr_dispatch_(a, reduced);
     if (dispatch.bridged) {
       bump_mps_bridge_counter_(MpsBridgeOp::Qr);
     }
+    bind_qr_backward_(dispatch.qr.r, a, dispatch.qr.q, dispatch.qr.r, /*grad_is_q=*/false, reduced);
     return dispatch.qr.r;
   }
   if (a.platform() == Platform::CUDA) {
@@ -2016,6 +2624,119 @@ Series qr_r(const Series& a, bool reduced) {
         [&]() { return pluss::subsp::math::linalg::qr(a.to(Platform::CPU), reduced).R; });
   }
   throw_platform_not_ready_("qr_r", a.platform());
+}
+
+SvdDecomposition svd(const Series& a, bool full_matrices) {
+  if (a.dim() > 2) {
+    require_defined_(a, "svd");
+    const auto tail = tail_shape_(a, 2, "svd");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
+    const std::int64_t k = std::min(m, n);
+    const auto batch = batch_shape_(a, 2, "svd");
+    const std::vector<std::int64_t> u_tail{m, full_matrices ? m : k};
+    const std::vector<std::int64_t> s_tail{k};
+    const std::vector<std::int64_t> vh_tail{full_matrices ? n : k, n};
+    if (has_zero_extent_(batch)) {
+      const auto dtype = decomp_fallback_dtype_(a.platform());
+      return {
+          Series::zeros(concat_shape_(batch, u_tail), dtype).to(a.platform()).contiguous(),
+          Series::zeros(concat_shape_(batch, s_tail), dtype).to(a.platform()).contiguous(),
+          Series::zeros(concat_shape_(batch, vh_tail), dtype).to(a.platform()).contiguous(),
+      };
+    }
+
+    Series batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = flatten_expanded_batch_(batch_src_base, batch, tail, "svd");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
+    std::vector<Series> u_parts;
+    std::vector<Series> s_parts;
+    std::vector<Series> vh_parts;
+    u_parts.reserve(static_cast<std::size_t>(flat_batch));
+    s_parts.reserve(static_cast<std::size_t>(flat_batch));
+    vh_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      SvdDecomposition part = svd(mat, full_matrices);
+      if (a.platform() == Platform::MPS && part.u.platform() == Platform::MPS) {
+        part.u = part.u.to(Platform::CPU).contiguous();
+        part.s = part.s.to(Platform::CPU).contiguous();
+        part.vh = part.vh.to(Platform::CPU).contiguous();
+      }
+      u_parts.push_back(std::move(part.u));
+      s_parts.push_back(std::move(part.s));
+      vh_parts.push_back(std::move(part.vh));
+    }
+
+    SvdDecomposition out{
+        restore_flat_batch_shape_(stack_dim0_(u_parts, "svd"), batch, u_tail),
+        restore_flat_batch_shape_(stack_dim0_(s_parts, "svd"), batch, s_tail),
+        restore_flat_batch_shape_(stack_dim0_(vh_parts, "svd"), batch, vh_tail),
+    };
+    if (a.platform() == Platform::MPS) {
+      out.u = out.u.to(Platform::MPS).contiguous();
+      out.s = out.s.to(Platform::MPS).contiguous();
+      out.vh = out.vh.to(Platform::MPS).contiguous();
+    }
+    return out;
+  }
+
+  if (a.platform() == Platform::CPU) {
+    auto raw = pluss::subsp::math::linalg::svd(a, full_matrices);
+    SvdDecomposition out{raw.U, raw.S, raw.Vh};
+    bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
+    bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
+    bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+    return out;
+  }
+
+  if (a.platform() == Platform::MPS) {
+    const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
+    if (dispatch.bridged) {
+      bump_mps_bridge_counter_(MpsBridgeOp::Svd);
+    }
+    SvdDecomposition out{dispatch.svd.u, dispatch.svd.s, dispatch.svd.vh};
+    bind_svd_backward_(out.u, a, out.u, out.s, out.vh, /*slot=*/0, full_matrices);
+    bind_svd_backward_(out.s, a, out.u, out.s, out.vh, /*slot=*/1, full_matrices);
+    bind_svd_backward_(out.vh, a, out.u, out.s, out.vh, /*slot=*/2, full_matrices);
+    return out;
+  }
+
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_svd(a, full_matrices);
+    auto cpu_route = [&]() { return pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices); };
+    if (native_enabled && route_supported) {
+      if (!pluss::codem::cuda_cpu_bridge_enabled()) {
+        throw_cuda_linalg_unavailable_("svd", native_enabled, native_strict, route_supported);
+      }
+      auto raw = cpu_route();
+      return {
+          bridge_cpu_result_to_cuda_(raw.U, "svd", /*allow_strict_native=*/true),
+          bridge_cpu_result_to_cuda_(raw.S, "svd", /*allow_strict_native=*/true),
+          bridge_cpu_result_to_cuda_(raw.Vh, "svd", /*allow_strict_native=*/true),
+      };
+    }
+    if (native_strict) {
+      pluss::codem::throw_error(
+          "subsp::linearalg::svd: strict native CUDA route requested but kernel is unsupported");
+    }
+    if (pluss::codem::cuda_cpu_bridge_enabled()) {
+      auto raw = cpu_route();
+      return {
+          bridge_cpu_result_to_cuda_(raw.U, "svd"),
+          bridge_cpu_result_to_cuda_(raw.S, "svd"),
+          bridge_cpu_result_to_cuda_(raw.Vh, "svd"),
+      };
+    }
+    throw_cuda_linalg_unavailable_("svd", native_enabled, native_strict, route_supported);
+  }
+
+  throw_platform_not_ready_("svd", a.platform());
 }
 
 Series svd_u(const Series& a, bool full_matrices) {
@@ -2054,13 +2775,16 @@ Series svd_u(const Series& a, bool full_matrices) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::svd(a, full_matrices).U;
+    auto svd = pluss::subsp::math::linalg::svd(a, full_matrices);
+    bind_svd_backward_(svd.U, a, svd.U, svd.S, svd.Vh, /*slot=*/0, full_matrices);
+    return svd.U;
   }
   if (a.platform() == Platform::MPS) {
     const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
     if (dispatch.bridged) {
       bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
+    bind_svd_backward_(dispatch.svd.u, a, dispatch.svd.u, dispatch.svd.s, dispatch.svd.vh, /*slot=*/0, full_matrices);
     return dispatch.svd.u;
   }
   if (a.platform() == Platform::CUDA) {
@@ -2113,13 +2837,16 @@ Series svd_s(const Series& a, bool full_matrices) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::svd(a, full_matrices).S;
+    auto svd = pluss::subsp::math::linalg::svd(a, full_matrices);
+    bind_svd_backward_(svd.S, a, svd.U, svd.S, svd.Vh, /*slot=*/1, full_matrices);
+    return svd.S;
   }
   if (a.platform() == Platform::MPS) {
     const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
     if (dispatch.bridged) {
       bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
+    bind_svd_backward_(dispatch.svd.s, a, dispatch.svd.u, dispatch.svd.s, dispatch.svd.vh, /*slot=*/1, full_matrices);
     return dispatch.svd.s;
   }
   if (a.platform() == Platform::CUDA) {
@@ -2172,13 +2899,16 @@ Series svd_vh(const Series& a, bool full_matrices) {
     return out;
   }
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::svd(a, full_matrices).Vh;
+    auto svd = pluss::subsp::math::linalg::svd(a, full_matrices);
+    bind_svd_backward_(svd.Vh, a, svd.U, svd.S, svd.Vh, /*slot=*/2, full_matrices);
+    return svd.Vh;
   }
   if (a.platform() == Platform::MPS) {
     const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
     if (dispatch.bridged) {
       bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
+    bind_svd_backward_(dispatch.svd.vh, a, dispatch.svd.u, dispatch.svd.s, dispatch.svd.vh, /*slot=*/2, full_matrices);
     return dispatch.svd.vh;
   }
   if (a.platform() == Platform::CUDA) {
@@ -2260,26 +2990,47 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
     if (a.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
+    bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
     return out;
   }
 
   if (a.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::triangular_solve(b, a, upper, unitriangular);
+    if (complex_small_triangular_supported_(a, b)) {
+      Series out = triangular_solve_small_complex_(a, b, upper, unitriangular);
+      bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
+      return out;
+    }
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()) && !is_complex_scalar_(b.scalar_type()),
+                "subsp::linearalg::triangular_solve: complex solve currently supports only 1x1 and 2x2 matrices");
+    Series out = pluss::subsp::math::linalg::triangular_solve(b, a, upper, unitriangular);
+    bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
+    return out;
   }
   if (a.platform() == Platform::MPS) {
-    if (mps_native_triangular_solve_supported_(a, b)) {
-      return triangular_solve_mps_native_(a, b, upper, unitriangular);
+    if (complex_small_triangular_supported_(a, b)) {
+      Series out = triangular_solve_small_complex_(a, b, upper, unitriangular);
+      bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
+      return out;
     }
-    return bridge_cpu_result_to_mps_(
+    PLUSS_CHECK(!is_complex_scalar_(a.scalar_type()) && !is_complex_scalar_(b.scalar_type()),
+                "subsp::linearalg::triangular_solve: complex MPS solve currently supports only 1x1 and 2x2 matrices");
+    if (mps_native_triangular_solve_supported_(a, b)) {
+      Series out = triangular_solve_mps_native_(a, b, upper, unitriangular);
+      bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
+      return out;
+    }
+    Series out = bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::triangular_solve(b.to(Platform::CPU), a.to(Platform::CPU), upper, unitriangular),
         MpsBridgeOp::TriangularSolve,
         "triangular_solve");
+    bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
+    return out;
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
     const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
     const bool route_supported = pluss::codem::native::cuda::supports_triangular_solve(a, b);
-    return cuda_linalg_route_or_bridge_(
+    Series out = cuda_linalg_route_or_bridge_(
         "triangular_solve",
         native_enabled,
         native_strict,
@@ -2288,6 +3039,8 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
           return pluss::subsp::math::linalg::triangular_solve(
               b.to(Platform::CPU), a.to(Platform::CPU), upper, unitriangular);
         });
+    bind_triangular_solve_backward_(out, a, b, upper, unitriangular);
+    return out;
   }
   throw_platform_not_ready_("triangular_solve", a.platform());
 }
@@ -2297,6 +3050,14 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
   if (b.dim() == 1) {
     std::vector<std::int64_t> shape{b.sizes()[0], 1};
     return cholesky_solve(factor, b.reshape(shape), upper);
+  }
+  if (complex_small_triangular_supported_(factor, b)) {
+    const Series first_factor = upper ? matrix_adjoint_(factor) : factor;
+    const Series second_factor = upper ? factor : matrix_adjoint_(factor);
+    const Series y = triangular_solve(first_factor, b, /*upper=*/false, /*unitriangular=*/false);
+    Series out = triangular_solve(second_factor, y, /*upper=*/true, /*unitriangular=*/false);
+    bind_cholesky_solve_backward_(out, factor, b, upper);
+    return out;
   }
   if (factor.dim() > 2 || b.dim() > 2) {
     const char* op = "cholesky_solve";
@@ -2361,18 +3122,23 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
     if (factor.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
+    bind_cholesky_solve_backward_(out, factor, b, upper);
     return out;
   }
 
   if (factor.platform() == Platform::CPU) {
-    return pluss::subsp::math::linalg::cholesky_solve(b, factor, upper);
+    Series out = pluss::subsp::math::linalg::cholesky_solve(b, factor, upper);
+    bind_cholesky_solve_backward_(out, factor, b, upper);
+    return out;
   }
   if (factor.platform() == Platform::MPS) {
     if (mps_experimental_native_enabled_()) {
       const Series native_factor = canonical_mps_native_f32_(factor);
       const Series native_b = canonical_mps_native_f32_(b);
       if (pluss::codem::native::mps::supports_cholesky_solve(native_factor, native_b)) {
-        return pluss::codem::native::mps::cholesky_solve(native_factor, native_b, upper);
+        Series out = pluss::codem::native::mps::cholesky_solve(native_factor, native_b, upper);
+        bind_cholesky_solve_backward_(out, factor, b, upper);
+        return out;
       }
     }
     if (mps_native_triangular_solve_supported_(factor, b)) {
@@ -2381,18 +3147,23 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
         l = l.transpose(0, 1).contiguous();
       }
       const Series y = triangular_solve_mps_native_(l, b, /*upper=*/false, /*unitriangular=*/false);
-      return triangular_solve_mps_native_(l.transpose(0, 1).contiguous(), y, /*upper=*/true, /*unitriangular=*/false);
+      Series out =
+          triangular_solve_mps_native_(matrix_adjoint_(l).contiguous(), y, /*upper=*/true, /*unitriangular=*/false);
+      bind_cholesky_solve_backward_(out, factor, b, upper);
+      return out;
     }
-    return bridge_cpu_result_to_mps_(
+    Series out = bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::cholesky_solve(b.to(Platform::CPU), factor.to(Platform::CPU), upper),
         MpsBridgeOp::CholeskySolve,
         "cholesky_solve");
+    bind_cholesky_solve_backward_(out, factor, b, upper);
+    return out;
   }
   if (factor.platform() == Platform::CUDA) {
     const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
     const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
     const bool route_supported = pluss::codem::native::cuda::supports_cholesky_solve(factor, b);
-    return cuda_linalg_route_or_bridge_(
+    Series out = cuda_linalg_route_or_bridge_(
         "cholesky_solve",
         native_enabled,
         native_strict,
@@ -2401,6 +3172,8 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
           return pluss::subsp::math::linalg::cholesky_solve(
               b.to(Platform::CPU), factor.to(Platform::CPU), upper);
         });
+    bind_cholesky_solve_backward_(out, factor, b, upper);
+    return out;
   }
   throw_platform_not_ready_("cholesky_solve", factor.platform());
 }

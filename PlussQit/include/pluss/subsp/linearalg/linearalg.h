@@ -10,6 +10,12 @@
 
 namespace pluss::subsp::linearalg {
 
+struct SvdDecomposition {
+  Series u;
+  Series s;
+  Series vh;
+};
+
 inline Series call(
     std::string_view op,
     const Series& x,
@@ -28,3 +34,15 @@ inline Series call(std::string_view op, const Series& x, Args&&... args) {
 }
 
 } // namespace pluss::subsp::linearalg
+
+namespace pluss::codem {
+
+inline pluss::subsp::linearalg::SvdDecomposition Series::SeriesLinearAlgProxy::svd(bool full_matrices) const {
+  return pluss::subsp::linearalg::svd(self(), full_matrices);
+}
+
+inline pluss::subsp::linearalg::SvdDecomposition Series::SeriesLinearAlgAccessor::svd(bool full_matrices) const {
+  return (*this)().svd(full_matrices);
+}
+
+} // namespace pluss::codem

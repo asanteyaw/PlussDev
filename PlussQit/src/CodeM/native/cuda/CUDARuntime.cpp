@@ -318,6 +318,14 @@ bool cpu_bridge_enabled() noexcept {
   return transfer_policy() == TransferPolicy::AllowCpuBridge;
 }
 
+bool cpu_materialization_forbidden() noexcept {
+  return parse_bool_env_("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", false);
+}
+
+bool device_storage_enabled() noexcept {
+  return parse_bool_env_("PLUSS_CUDA_DEVICE_STORAGE", false);
+}
+
 const char* transfer_policy_name(TransferPolicy policy) noexcept {
   switch (policy) {
     case TransferPolicy::AllowCpuBridge:
@@ -357,6 +365,73 @@ bool copy_device_to_host(void* dst, const void* src, std::size_t nbytes) noexcep
   }
 #if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && defined(PLUSSQIT_HAS_CUDA_RUNTIME_API) && PLUSSQIT_HAS_CUDA_RUNTIME_API
   return cudaMemcpy(dst, src, nbytes, cudaMemcpyDeviceToHost) == cudaSuccess;
+#else
+  return false;
+#endif
+}
+
+bool copy_device_to_device(void* dst, const void* src, std::size_t nbytes) noexcept {
+  if (nbytes == 0) {
+    return true;
+  }
+  if (dst == nullptr || src == nullptr) {
+    return false;
+  }
+  if (!runtime_available()) {
+    return false;
+  }
+#if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && defined(PLUSSQIT_HAS_CUDA_RUNTIME_API) && PLUSSQIT_HAS_CUDA_RUNTIME_API
+  return cudaMemcpy(dst, src, nbytes, cudaMemcpyDeviceToDevice) == cudaSuccess;
+#else
+  return false;
+#endif
+}
+
+bool memset_device(void* dst, int value, std::size_t nbytes) noexcept {
+  (void)value;
+  if (nbytes == 0) {
+    return true;
+  }
+  if (dst == nullptr) {
+    return false;
+  }
+  if (!runtime_available()) {
+    return false;
+  }
+#if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && defined(PLUSSQIT_HAS_CUDA_RUNTIME_API) && PLUSSQIT_HAS_CUDA_RUNTIME_API
+  return cudaMemset(dst, value, nbytes) == cudaSuccess;
+#else
+  return false;
+#endif
+}
+
+bool allocate_device(void** ptr, std::size_t nbytes) noexcept {
+  if (ptr == nullptr) {
+    return false;
+  }
+  *ptr = nullptr;
+  if (nbytes == 0) {
+    return true;
+  }
+  if (!runtime_available()) {
+    return false;
+  }
+#if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && defined(PLUSSQIT_HAS_CUDA_RUNTIME_API) && PLUSSQIT_HAS_CUDA_RUNTIME_API
+  return cudaMalloc(ptr, nbytes) == cudaSuccess;
+#else
+  return false;
+#endif
+}
+
+bool free_device(void* ptr) noexcept {
+  if (ptr == nullptr) {
+    return true;
+  }
+  if (!runtime_available()) {
+    return false;
+  }
+#if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && defined(PLUSSQIT_HAS_CUDA_RUNTIME_API) && PLUSSQIT_HAS_CUDA_RUNTIME_API
+  return cudaFree(ptr) == cudaSuccess;
 #else
   return false;
 #endif

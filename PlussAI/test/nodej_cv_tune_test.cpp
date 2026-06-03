@@ -218,6 +218,23 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
       if (err) *err << "sweep should populate objective ranks with best trial rank=1\n";
       return false;
     }
+    if (report.ledger.objective.numel() != static_cast<std::int64_t>(report.trials.size())
+        || report.ledger.objective_rank.numel() != static_cast<std::int64_t>(report.trials.size())
+        || report.ledger.stage.numel() != static_cast<std::int64_t>(report.trials.size())
+        || report.ledger.status_code.numel() != static_cast<std::int64_t>(report.trials.size())
+        || report.ledger.encoded_params.sizes() != std::vector<std::int64_t>{static_cast<std::int64_t>(report.trials.size()), 40}) {
+      if (err) *err << "sweep should populate tune ledger vectors and encoded params table\n";
+      return false;
+    }
+    if (report.ledger.mean_test_metrics.sizes() != std::vector<std::int64_t>{static_cast<std::int64_t>(report.trials.size()), 1}
+        || report.ledger.split_test_metrics.sizes().size() != 3) {
+      if (err) *err << "sweep tune ledger should include mean/split test metric tables\n";
+      return false;
+    }
+    if (report.ledger.encoded_param_feature_names.size() != 40) {
+      if (err) *err << "sweep tune ledger should expose encoded feature names\n";
+      return false;
+    }
     if (!(report.best_index == 1)) {
       if (err) *err << "kernel candidate should win on XOR with accuracy objective\n";
       return false;
@@ -259,6 +276,21 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     }
     if (report.objective_rank.size() != report.trials.size()) {
       if (err) *err << "probe should populate objective ranks for all trials\n";
+      return false;
+    }
+    if (report.ledger.is_success.numel() != static_cast<std::int64_t>(report.trials.size())
+        || report.ledger.split_test_metrics.sizes().size() != 3) {
+      if (err) *err << "probe should populate tune ledger success/split tables\n";
+      return false;
+    }
+    const auto success_flags = as_f64(report.ledger.is_success);
+    if (success_flags.size() != 3 || success_flags[1] != 0.0) {
+      if (err) *err << "probe ledger should mark failed trial as unsuccessful\n";
+      return false;
+    }
+    const auto status_codes = as_i64(report.ledger.status_code);
+    if (status_codes.size() != 3 || status_codes[1] != static_cast<std::int64_t>(StatusCode::InvalidArgument)) {
+      if (err) *err << "probe ledger should keep failure status code per trial\n";
       return false;
     }
     if (report.trials[1].status.code != StatusCode::InvalidArgument) {
@@ -453,6 +485,10 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
       if (err) *err << "tune successive-halving should return rank metadata\n";
       return false;
     }
+    if (report.ledger.stage.numel() != static_cast<std::int64_t>(report.trials.size())) {
+      if (err) *err << "tune successive-halving should include stage column in tune ledger\n";
+      return false;
+    }
     std::int64_t max_stage = 0;
     for (const auto& trial : report.trials) {
       max_stage = std::max<std::int64_t>(max_stage, trial.stage);
@@ -536,6 +572,10 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     }
     if (report.objective_rank.size() != report.trials.size()) {
       if (err) *err << "sampler bayesian should return rank metadata\n";
+      return false;
+    }
+    if (report.ledger.objective_rank.numel() != static_cast<std::int64_t>(report.trials.size())) {
+      if (err) *err << "sampler bayesian should populate ledger objective ranks\n";
       return false;
     }
   }

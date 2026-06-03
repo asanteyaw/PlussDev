@@ -111,6 +111,10 @@ bool supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept {
   return supports_stochastic_common_(dtype);
 }
 
+bool supports_poisson_stochastic_baseline(ScalarType dtype) noexcept {
+  return supports_stochastic_common_(dtype);
+}
+
 bool supports_bernoulli_stochastic(const Series& a) noexcept {
   return a.platform() == Platform::CUDA &&
       supports_bernoulli_stochastic_baseline(a.scalar_type());
@@ -165,5 +169,8 @@ bool supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, 
   return true;
 }
 
-} // namespace pluss::codem::native::cuda
+bool supports_poisson_stochastic(ScalarType dtype) noexcept {
+  return supports_poisson_stochastic_baseline(dtype);
+}
 
+} // namespace pluss::codem::native::cuda

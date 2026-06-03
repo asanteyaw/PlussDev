@@ -3,6 +3,8 @@
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/native/cpu/KernelTable.h"
 
+#include <cstdint>
+
 namespace pluss::codem::native::mps {
 
 bool is_available() noexcept;
@@ -15,8 +17,24 @@ void minimum(const Series& a, const Series& b, Series& out);
 bool supports_where(ScalarType cond_dt, ScalarType data_dt) noexcept;
 void where(const Series& cond, const Series& a, const Series& b, Series& out);
 
+bool supports_complex_from_parts(ScalarType real_dt, ScalarType imag_dt, ScalarType out_dt) noexcept;
+void complex_from_parts(const Series& real, const Series& imag, Series& out);
+
 bool supports_unary(cpu::UnaryOpId op, ScalarType dt) noexcept;
 void unary(cpu::UnaryOpId op, const Series& a, Series& out);
+
+bool supports_complex_conj(ScalarType dt) noexcept;
+void complex_conj(const Series& a, Series& out);
+
+enum class ComplexComponentOp : std::uint8_t {
+  Real,
+  Imag,
+  Abs,
+  Angle,
+};
+
+bool supports_complex_component(ScalarType in_dt, ScalarType out_dt) noexcept;
+void complex_component(ComplexComponentOp op, const Series& a, Series& out);
 
 enum class UnaryMathOp : std::uint8_t {
   Exp,

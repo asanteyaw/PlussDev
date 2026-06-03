@@ -18,3 +18,4 @@
 #include "pluss/ai/nodej/feature_select.h"
 #include "pluss/ai/nodej/inspection.h"
 #include "pluss/ai/nodej/text.h"
+#include "pluss/ai/nodej/sparse_runtime.h"

@@ -347,6 +347,20 @@ fusion_route_test/fast:
 .PHONY : fusion_route_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
+
+# Convenience name for target.
+lymph_metrics_test: PlussAI/test/CMakeFiles/lymph_metrics_test.dir/rule
+.PHONY : lymph_metrics_test
+
+# fast build rule for target.
+lymph_metrics_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build
+.PHONY : lymph_metrics_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
@@ -359,6 +373,20 @@ module_snapshot_test: PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
 module_snapshot_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/build
 .PHONY : module_snapshot_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/rule
+
+# Convenience name for target.
+nn_dropout_parity_test: PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/rule
+.PHONY : nn_dropout_parity_test
+
+# fast build rule for target.
+nn_dropout_parity_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build
+.PHONY : nn_dropout_parity_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nn_loss_test.dir/rule:
@@ -541,6 +569,20 @@ nodej_flow_test: PlussAI/test/CMakeFiles/nodej_flow_test.dir/rule
 nodej_flow_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/build
 .PHONY : nodej_flow_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_metrics_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_metrics_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_metrics_test.dir/rule
+
+# Convenience name for target.
+nodej_metrics_test: PlussAI/test/CMakeFiles/nodej_metrics_test.dir/rule
+.PHONY : nodej_metrics_test
+
+# fast build rule for target.
+nodej_metrics_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build.make PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build
+.PHONY : nodej_metrics_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/rule:
@@ -960,6 +1002,30 @@ fusion_route_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/fusion_route_test.cpp.s
 .PHONY : fusion_route_test.cpp.s
 
+lymph_metrics_test.o: lymph_metrics_test.cpp.o
+.PHONY : lymph_metrics_test.o
+
+# target to build an object file
+lymph_metrics_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/lymph_metrics_test.cpp.o
+.PHONY : lymph_metrics_test.cpp.o
+
+lymph_metrics_test.i: lymph_metrics_test.cpp.i
+.PHONY : lymph_metrics_test.i
+
+# target to preprocess a source file
+lymph_metrics_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/lymph_metrics_test.cpp.i
+.PHONY : lymph_metrics_test.cpp.i
+
+lymph_metrics_test.s: lymph_metrics_test.cpp.s
+.PHONY : lymph_metrics_test.s
+
+# target to generate assembly for a file
+lymph_metrics_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_metrics_test.dir/build.make PlussAI/test/CMakeFiles/lymph_metrics_test.dir/lymph_metrics_test.cpp.s
+.PHONY : lymph_metrics_test.cpp.s
+
 module_snapshot_test.o: module_snapshot_test.cpp.o
 .PHONY : module_snapshot_test.o
 
@@ -983,6 +1049,30 @@ module_snapshot_test.s: module_snapshot_test.cpp.s
 module_snapshot_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/module_snapshot_test.cpp.s
 .PHONY : module_snapshot_test.cpp.s
+
+nn_dropout_parity_test.o: nn_dropout_parity_test.cpp.o
+.PHONY : nn_dropout_parity_test.o
+
+# target to build an object file
+nn_dropout_parity_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/nn_dropout_parity_test.cpp.o
+.PHONY : nn_dropout_parity_test.cpp.o
+
+nn_dropout_parity_test.i: nn_dropout_parity_test.cpp.i
+.PHONY : nn_dropout_parity_test.i
+
+# target to preprocess a source file
+nn_dropout_parity_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/nn_dropout_parity_test.cpp.i
+.PHONY : nn_dropout_parity_test.cpp.i
+
+nn_dropout_parity_test.s: nn_dropout_parity_test.cpp.s
+.PHONY : nn_dropout_parity_test.s
+
+# target to generate assembly for a file
+nn_dropout_parity_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_dropout_parity_test.dir/nn_dropout_parity_test.cpp.s
+.PHONY : nn_dropout_parity_test.cpp.s
 
 nn_loss_test.o: nn_loss_test.cpp.o
 .PHONY : nn_loss_test.o
@@ -1296,6 +1386,30 @@ nodej_flow_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/nodej_flow_test.cpp.s
 .PHONY : nodej_flow_test.cpp.s
 
+nodej_metrics_test.o: nodej_metrics_test.cpp.o
+.PHONY : nodej_metrics_test.o
+
+# target to build an object file
+nodej_metrics_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build.make PlussAI/test/CMakeFiles/nodej_metrics_test.dir/nodej_metrics_test.cpp.o
+.PHONY : nodej_metrics_test.cpp.o
+
+nodej_metrics_test.i: nodej_metrics_test.cpp.i
+.PHONY : nodej_metrics_test.i
+
+# target to preprocess a source file
+nodej_metrics_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build.make PlussAI/test/CMakeFiles/nodej_metrics_test.dir/nodej_metrics_test.cpp.i
+.PHONY : nodej_metrics_test.cpp.i
+
+nodej_metrics_test.s: nodej_metrics_test.cpp.s
+.PHONY : nodej_metrics_test.s
+
+# target to generate assembly for a file
+nodej_metrics_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_metrics_test.dir/build.make PlussAI/test/CMakeFiles/nodej_metrics_test.dir/nodej_metrics_test.cpp.s
+.PHONY : nodej_metrics_test.cpp.s
+
 nodej_multiclass_test.o: nodej_multiclass_test.cpp.o
 .PHONY : nodej_multiclass_test.o
 
@@ -1586,7 +1700,9 @@ help:
 	@echo "... cudnn_strict_route_test"
 	@echo "... cudnn_transformer_rigorous_test"
 	@echo "... fusion_route_test"
+	@echo "... lymph_metrics_test"
 	@echo "... module_snapshot_test"
+	@echo "... nn_dropout_parity_test"
 	@echo "... nn_loss_test"
 	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
@@ -1600,6 +1716,7 @@ help:
 	@echo "... nodej_ensemble_bayes_regression_test"
 	@echo "... nodej_feature_inspect_text_test"
 	@echo "... nodej_flow_test"
+	@echo "... nodej_metrics_test"
 	@echo "... nodej_multiclass_test"
 	@echo "... nodej_neighbor_test"
 	@echo "... nodej_online_test"
@@ -1644,9 +1761,15 @@ help:
 	@echo "... fusion_route_test.o"
 	@echo "... fusion_route_test.i"
 	@echo "... fusion_route_test.s"
+	@echo "... lymph_metrics_test.o"
+	@echo "... lymph_metrics_test.i"
+	@echo "... lymph_metrics_test.s"
 	@echo "... module_snapshot_test.o"
 	@echo "... module_snapshot_test.i"
 	@echo "... module_snapshot_test.s"
+	@echo "... nn_dropout_parity_test.o"
+	@echo "... nn_dropout_parity_test.i"
+	@echo "... nn_dropout_parity_test.s"
 	@echo "... nn_loss_test.o"
 	@echo "... nn_loss_test.i"
 	@echo "... nn_loss_test.s"
@@ -1686,6 +1809,9 @@ help:
 	@echo "... nodej_flow_test.o"
 	@echo "... nodej_flow_test.i"
 	@echo "... nodej_flow_test.s"
+	@echo "... nodej_metrics_test.o"
+	@echo "... nodej_metrics_test.i"
+	@echo "... nodej_metrics_test.s"
 	@echo "... nodej_multiclass_test.o"
 	@echo "... nodej_multiclass_test.i"
 	@echo "... nodej_multiclass_test.s"

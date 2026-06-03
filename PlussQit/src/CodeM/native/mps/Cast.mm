@@ -75,6 +75,13 @@ kernel void cast_f32_to_f16(
   out[gid] = half(in[gid]);
 }
 
+kernel void cast_f16_to_i64(
+    const device half* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = long(in[gid]);
+}
+
 kernel void cast_bf16_to_f32(
     const device ushort* in [[buffer(0)]],
     device float* out [[buffer(1)]],
@@ -90,6 +97,14 @@ kernel void cast_f32_to_bf16(
   const uint bits = as_type<uint>(in[gid]);
   const uint lsb = (bits >> 16) & 1u;
   out[gid] = ushort((bits + 0x7FFFu + lsb) >> 16);
+}
+
+kernel void cast_bf16_to_i64(
+    const device ushort* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  const uint bits = uint(in[gid]) << 16;
+  out[gid] = long(as_type<float>(bits));
 }
 
 kernel void cast_i8_to_f32(
@@ -260,8 +275,10 @@ struct Context {
   id<MTLComputePipelineState> cast_i64_to_u8{nil};
   id<MTLComputePipelineState> cast_f16_to_f32{nil};
   id<MTLComputePipelineState> cast_f32_to_f16{nil};
+  id<MTLComputePipelineState> cast_f16_to_i64{nil};
   id<MTLComputePipelineState> cast_bf16_to_f32{nil};
   id<MTLComputePipelineState> cast_f32_to_bf16{nil};
+  id<MTLComputePipelineState> cast_bf16_to_i64{nil};
   id<MTLComputePipelineState> cast_i8_to_f32{nil};
   id<MTLComputePipelineState> cast_f32_to_i8{nil};
   id<MTLComputePipelineState> cast_u8_raw_to_f32{nil};
@@ -350,8 +367,10 @@ Context& ctx_() {
       if (!make_pipeline("cast_i64_to_u8", &ctx.cast_i64_to_u8)) return;
       if (!make_pipeline("cast_f16_to_f32", &ctx.cast_f16_to_f32)) return;
       if (!make_pipeline("cast_f32_to_f16", &ctx.cast_f32_to_f16)) return;
+      if (!make_pipeline("cast_f16_to_i64", &ctx.cast_f16_to_i64)) return;
       if (!make_pipeline("cast_bf16_to_f32", &ctx.cast_bf16_to_f32)) return;
       if (!make_pipeline("cast_f32_to_bf16", &ctx.cast_f32_to_bf16)) return;
+      if (!make_pipeline("cast_bf16_to_i64", &ctx.cast_bf16_to_i64)) return;
       if (!make_pipeline("cast_i8_to_f32", &ctx.cast_i8_to_f32)) return;
       if (!make_pipeline("cast_f32_to_i8", &ctx.cast_f32_to_i8)) return;
       if (!make_pipeline("cast_u8_raw_to_f32", &ctx.cast_u8_raw_to_f32)) return;
@@ -423,11 +442,17 @@ id<MTLComputePipelineState> choose_pso_(Context& c, ScalarType src, ScalarType d
   if (src == ScalarType::Float32 && dst == ScalarType::Float16) {
     return c.cast_f32_to_f16;
   }
+  if (src == ScalarType::Float16 && dst == ScalarType::Int64) {
+    return c.cast_f16_to_i64;
+  }
   if (src == ScalarType::BFloat16 && dst == ScalarType::Float32) {
     return c.cast_bf16_to_f32;
   }
   if (src == ScalarType::Float32 && dst == ScalarType::BFloat16) {
     return c.cast_f32_to_bf16;
+  }
+  if (src == ScalarType::BFloat16 && dst == ScalarType::Int64) {
+    return c.cast_bf16_to_i64;
   }
   if (src == ScalarType::Int8 && dst == ScalarType::Float32) {
     return c.cast_i8_to_f32;
@@ -525,8 +550,10 @@ bool supports_cast(ScalarType src, ScalarType dst) noexcept {
          (src == ScalarType::Bool && dst == ScalarType::Int64) ||
          (src == ScalarType::Int64 && dst == ScalarType::Bool) ||
          (src == ScalarType::Float16 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Float16 && dst == ScalarType::Int64) ||
          (src == ScalarType::Float32 && dst == ScalarType::Float16) ||
          (src == ScalarType::BFloat16 && dst == ScalarType::Float32) ||
+         (src == ScalarType::BFloat16 && dst == ScalarType::Int64) ||
          (src == ScalarType::Float32 && dst == ScalarType::BFloat16) ||
          (src == ScalarType::Int8 && dst == ScalarType::Float32) ||
          (src == ScalarType::Float32 && dst == ScalarType::Int8) ||
