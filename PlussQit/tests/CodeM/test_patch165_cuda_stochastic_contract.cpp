@@ -95,15 +95,16 @@ TEST_CASE("CUDA stochastic baseline capability is runtime-dynamic", "[cuda][stoc
     const ScopedEnvVar stochastic_on("PLUSS_CUDA_NATIVE_STOCHASTIC", "1");
     REQUIRE(pluss::cuda::native_stochastic_enabled());
     REQUIRE(pluss::cuda::supports_bernoulli_stochastic_baseline(pluss::ScalarType::Float32) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_normal_stochastic_baseline(pluss::ScalarType::Float16) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_log_normal_stochastic_baseline(pluss::ScalarType::BFloat16) == cuda_ready);
+    REQUIRE(pluss::cuda::supports_normal_stochastic_baseline(pluss::ScalarType::Float32) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_normal_stochastic_baseline(pluss::ScalarType::Float16));
+    REQUIRE_FALSE(pluss::cuda::supports_log_normal_stochastic_baseline(pluss::ScalarType::BFloat16));
     REQUIRE(pluss::cuda::supports_uniform_stochastic_baseline(pluss::ScalarType::Float64) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_exponential_stochastic_baseline(pluss::ScalarType::Float32) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_geometric_stochastic_baseline(pluss::ScalarType::Int64) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_cauchy_stochastic_baseline(pluss::ScalarType::Float32) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_exponential_stochastic_baseline(pluss::ScalarType::Float32));
+    REQUIRE_FALSE(pluss::cuda::supports_geometric_stochastic_baseline(pluss::ScalarType::Int64));
+    REQUIRE_FALSE(pluss::cuda::supports_cauchy_stochastic_baseline(pluss::ScalarType::Float32));
     REQUIRE(pluss::cuda::supports_random_stochastic_baseline(pluss::ScalarType::Int64) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_multinomial_stochastic_baseline(pluss::ScalarType::Float32) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_poisson_stochastic_baseline(pluss::ScalarType::Int64) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_multinomial_stochastic_baseline(pluss::ScalarType::Float32));
+    REQUIRE_FALSE(pluss::cuda::supports_poisson_stochastic_baseline(pluss::ScalarType::Int64));
     REQUIRE_FALSE(pluss::cuda::supports_random_stochastic_baseline(pluss::ScalarType::Complex64));
     REQUIRE_FALSE(pluss::cuda::supports_poisson_stochastic_baseline(pluss::ScalarType::Complex64));
   }
@@ -191,8 +192,9 @@ TEST_CASE("CUDA bridge enables stochastic fallback when strict native is off", "
       probs_cpu.flatten(0, -1).multinomial(3));
 }
 
-TEST_CASE("CUDA strict stochastic executes supported lanes", "[cuda][bridge][policy][stochastic]") {
-  const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
+TEST_CASE("CUDA strict stochastic factories execute supported lanes without CPU bridge", "[cuda][bridge][policy][stochastic][no_bridge]") {
+  const ScopedEnvVar bridge_off("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "0");
+  const ScopedEnvVar forbid_materialize("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "1");
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar stochastic_on("PLUSS_CUDA_NATIVE_STOCHASTIC", "1");
   const ScopedEnvVar strict_on("PLUSS_CUDA_NATIVE_STOCHASTIC_STRICT", "1");
@@ -204,28 +206,28 @@ TEST_CASE("CUDA strict stochastic executes supported lanes", "[cuda][bridge][pol
 
   const auto gpu = pluss::ones({2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA));
   REQUIRE(pluss::cuda::supports_normal_stochastic(gpu));
-  REQUIRE(pluss::cuda::supports_log_normal_stochastic(gpu));
+  REQUIRE_FALSE(pluss::cuda::supports_log_normal_stochastic(gpu));
   REQUIRE(pluss::cuda::supports_uniform_stochastic(gpu));
-  REQUIRE(pluss::cuda::supports_multinomial_stochastic(gpu, 2, false));
-  REQUIRE(pluss::cuda::supports_poisson_stochastic(pluss::ScalarType::Int64));
+  REQUIRE_FALSE(pluss::cuda::supports_multinomial_stochastic(gpu, 2, false));
+  REQUIRE_FALSE(pluss::cuda::supports_poisson_stochastic(pluss::ScalarType::Int64));
 
-  auto y = gpu.clone();
-  y.normal_(0.0, 1.0);
+  const auto y = pluss::normal(0.0, 1.0, {2, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCUDA), /*seed=*/29);
+  const auto b = pluss::bernoulli({2, 3}, 0.4, pluss::Config{}.with_dtype(pluss::ScalarType::Bool).with_platform(pluss::pCUDA), /*seed=*/31);
+  const auto rp = pluss::randperm(8, pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA), /*seed=*/37);
+
   REQUIRE(y.platform() == pluss::pCUDA);
+  REQUIRE(b.platform() == pluss::pCUDA);
+  REQUIRE(rp.platform() == pluss::pCUDA);
+  REQUIRE(y.storage().location() == pluss::codem::StorageLocation::CudaDevice);
+  REQUIRE(b.storage().location() == pluss::codem::StorageLocation::CudaDevice);
+  REQUIRE(rp.storage().location() == pluss::codem::StorageLocation::CudaDevice);
 
-  auto z = gpu.clone();
-  z.log_normal_(0.0, 1.0);
-  REQUIRE(z.platform() == pluss::pCUDA);
-
-  const auto m = gpu.flatten(0, -1).multinomial(2);
-  REQUIRE(m.platform() == pluss::pCUDA);
-
-  const auto p = pluss::poisson(
+  REQUIRE_THROWS(gpu.flatten(0, -1).multinomial(2));
+  REQUIRE_THROWS(pluss::poisson(
       {2, 3},
       2.75,
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCUDA),
-      /*seed=*/29);
-  REQUIRE(p.platform() == pluss::pCUDA);
+      /*seed=*/29));
 }
 
 TEST_CASE("CUDA strict stochastic rejects unsupported policy lanes", "[cuda][bridge][policy][stochastic][reject]") {

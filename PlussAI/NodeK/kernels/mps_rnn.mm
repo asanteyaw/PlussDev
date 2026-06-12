@@ -40,6 +40,7 @@ struct RnnBackwardResult {
   Series grad_recurrent{};
   Series grad_input{};
   Series grad_bias{};
+  Series grad_secondary_bias{};
   Series grad_hx0{};
 };
 
@@ -98,7 +99,7 @@ Context& ctx_() {
       }
       ctx.has_single_gate_rnn = [MPSGraph instancesRespondToSelector:@selector(singleGateRNNWithSourceTensor:recurrentWeight:inputWeight:bias:initState:descriptor:name:)] &&
           [MPSGraph instancesRespondToSelector:@selector(singleGateRNNGradientsWithSourceTensor:recurrentWeight:sourceGradient:zState:stateGradient:inputWeight:bias:initState:mask:descriptor:name:)];
-      ctx.has_gru = [MPSGraph instancesRespondToSelector:@selector(GRUWithSourceTensor:recurrentWeight:inputWeight:bias:initState:descriptor:name:)] &&
+      ctx.has_gru = [MPSGraph instancesRespondToSelector:@selector(GRUWithSourceTensor:recurrentWeight:inputWeight:bias:initState:mask:secondaryBias:descriptor:name:)] &&
           [MPSGraph instancesRespondToSelector:@selector(GRUGradientsWithSourceTensor:recurrentWeight:sourceGradient:zState:outputFwd:stateGradient:inputWeight:bias:initState:mask:secondaryBias:descriptor:name:)];
       ctx.has_lstm = [MPSGraph instancesRespondToSelector:@selector(LSTMWithSourceTensor:recurrentWeight:inputWeight:bias:initState:initCell:descriptor:name:)] &&
           [MPSGraph instancesRespondToSelector:@selector(LSTMGradientsWithSourceTensor:recurrentWeight:sourceGradient:zState:cellOutputFwd:stateGradient:cellGradient:inputWeight:bias:initState:initCell:mask:peephole:descriptor:name:)];
@@ -238,10 +239,6 @@ bool validate_gru_(const Series& input,
     return false;
   }
   (void)require_backward;
-  if (cfg.split_bias) {
-    set_reason_(reason, "native MPS GRU route currently supports unified-bias layout only");
-    return false;
-  }
   const std::int64_t dirs = cfg.bidirectional ? 2 : 1;
   const std::int64_t total_layers = cfg.num_layers * dirs;
   if (params.size() != static_cast<std::size_t>(total_layers)) {
@@ -283,8 +280,18 @@ bool validate_gru_(const Series& input,
         return false;
       }
       if (cfg.use_bias) {
-        if (!is_zero_offset_contiguous_f32_mps_(p.bias) || p.bias.dim() != 1 || p.bias.sizes()[0] != gate) {
-          set_reason_(reason, "native MPS GRU route expects zero-offset contiguous float32 unified bias");
+        const bool bias_ok = cfg.split_bias
+            ? (is_zero_offset_contiguous_f32_mps_(p.bias_ih) &&
+               is_zero_offset_contiguous_f32_mps_(p.bias_hh) &&
+               p.bias_ih.dim() == 1 &&
+               p.bias_hh.dim() == 1 &&
+               p.bias_ih.sizes()[0] == gate &&
+               p.bias_hh.sizes()[0] == gate)
+            : (is_zero_offset_contiguous_f32_mps_(p.bias) && p.bias.dim() == 1 && p.bias.sizes()[0] == gate);
+        if (!bias_ok) {
+          set_reason_(reason, cfg.split_bias
+              ? "native MPS GRU route expects zero-offset contiguous float32 split biases"
+              : "native MPS GRU route expects zero-offset contiguous float32 unified bias");
           return false;
         }
       }
@@ -532,6 +539,7 @@ RnnBackwardResult run_gru_backward_(const Series& source,
                                     const Series& recurrent_weight,
                                     const Series& input_weight,
                                     const Series& bias,
+                                    const Series& secondary_bias,
                                     const Series& hx0,
                                     const Series& z_state,
                                     const Series& output_fwd,
@@ -549,6 +557,9 @@ RnnBackwardResult run_gru_backward_(const Series& source,
   if (bias.defined()) {
     result.grad_bias = Series::empty(bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
   }
+  if (secondary_bias.defined()) {
+    result.grad_secondary_bias = Series::empty(secondary_bias.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
+  }
   result.grad_hx0 = Series::empty(hx0.sizes(), ScalarType::Float32, Platform::MPS).contiguous();
 
   @autoreleasepool {
@@ -560,6 +571,7 @@ RnnBackwardResult run_gru_backward_(const Series& source,
     MPSShape* z_shape = mps_shape_(z_state.sizes());
     MPSShape* output_shape = mps_shape_(output_fwd.sizes());
     MPSShape* bias_shape = bias.defined() ? mps_shape_(bias.sizes()) : nil;
+    MPSShape* secondary_bias_shape = secondary_bias.defined() ? mps_shape_(secondary_bias.sizes()) : nil;
 
     MPSGraphTensor* source_t = [graph placeholderWithShape:source_shape dataType:MPSDataTypeFloat32 name:@"source"];
     MPSGraphTensor* recurrent_t =
@@ -575,13 +587,17 @@ RnnBackwardResult run_gru_backward_(const Series& source,
     if (bias.defined()) {
       bias_t = [graph placeholderWithShape:bias_shape dataType:MPSDataTypeFloat32 name:@"bias"];
     }
+    MPSGraphTensor* secondary_bias_t = nil;
+    if (secondary_bias.defined()) {
+      secondary_bias_t = [graph placeholderWithShape:secondary_bias_shape dataType:MPSDataTypeFloat32 name:@"secondary_bias"];
+    }
 
     MPSGraphGRUDescriptor* desc = [MPSGraphGRUDescriptor descriptor];
     desc.training = true;
     desc.bidirectional = false;
     desc.reverse = false;
     desc.resetGateFirst = true;
-    desc.resetAfter = false;
+    desc.resetAfter = secondary_bias.defined();
     desc.flipZ = false;
 
     NSArray<MPSGraphTensor*>* grads = [graph GRUGradientsWithSourceTensor:source_t
@@ -594,10 +610,11 @@ RnnBackwardResult run_gru_backward_(const Series& source,
                                                                       bias:bias_t
                                                                  initState:hx_t
                                                                       mask:nil
-                                                             secondaryBias:nil
+                                                             secondaryBias:secondary_bias_t
                                                                 descriptor:desc
                                                                       name:@"pluss_gru_backward"];
-    if (grads == nil || [grads count] < (bias.defined() ? 5u : 4u)) {
+    const NSUInteger expected_count = 4u + (bias.defined() ? 1u : 0u) + (secondary_bias.defined() ? 1u : 0u);
+    if (grads == nil || [grads count] < expected_count) {
       ::pluss::throw_error("mps::gru_backward: MPSGraph returned an unexpected gradient set");
     }
     NSUInteger idx = 0;
@@ -609,6 +626,10 @@ RnnBackwardResult run_gru_backward_(const Series& source,
       grad_bias_t = [grads objectAtIndex:idx++];
     }
     MPSGraphTensor* grad_hx_t = [grads objectAtIndex:idx++];
+    MPSGraphTensor* grad_secondary_bias_t = nil;
+    if (secondary_bias.defined()) {
+      grad_secondary_bias_t = [grads objectAtIndex:idx++];
+    }
 
     NSMutableDictionary<MPSGraphTensor*, MPSGraphTensorData*>* feeds = [@{
       source_t : tensor_data_for_read_(source, source_shape, c.device),
@@ -623,6 +644,9 @@ RnnBackwardResult run_gru_backward_(const Series& source,
     if (bias.defined()) {
       [feeds setObject:tensor_data_for_read_(bias, bias_shape, c.device) forKey:bias_t];
     }
+    if (secondary_bias.defined()) {
+      [feeds setObject:tensor_data_for_read_(secondary_bias, secondary_bias_shape, c.device) forKey:secondary_bias_t];
+    }
 
     NSMutableDictionary<MPSGraphTensor*, MPSGraphTensorData*>* outputs = [@{
       grad_source_t : tensor_data_for_write_(result.grad_source, source_shape, c.device),
@@ -633,6 +657,10 @@ RnnBackwardResult run_gru_backward_(const Series& source,
     if (bias.defined()) {
       [outputs setObject:tensor_data_for_write_(result.grad_bias, bias_shape, c.device) forKey:grad_bias_t];
     }
+    if (secondary_bias.defined()) {
+      [outputs setObject:tensor_data_for_write_(result.grad_secondary_bias, secondary_bias_shape, c.device)
+                  forKey:grad_secondary_bias_t];
+    }
 
     [graph runWithMTLCommandQueue:c.queue feeds:feeds targetOperations:nil resultsDictionary:outputs];
   }
@@ -641,6 +669,7 @@ RnnBackwardResult run_gru_backward_(const Series& source,
   ::pluss::codem::native::mps::mark_device_data_dirty(result.grad_recurrent, nullptr);
   ::pluss::codem::native::mps::mark_device_data_dirty(result.grad_input, nullptr);
   if (result.grad_bias.defined()) ::pluss::codem::native::mps::mark_device_data_dirty(result.grad_bias, nullptr);
+  if (result.grad_secondary_bias.defined()) ::pluss::codem::native::mps::mark_device_data_dirty(result.grad_secondary_bias, nullptr);
   ::pluss::codem::native::mps::mark_device_data_dirty(result.grad_hx0, nullptr);
   return result;
 }
@@ -900,8 +929,18 @@ RnnLayerResult run_single_gate_rnn_layer_(const Series& input,
 RnnLayerResult run_gru_layer_(const Series& input,
                               const Series& hx0,
                               const ::pluss::ai::rnn::NetWeight& p,
-                              bool use_bias) {
-  Series bias = use_bias ? p.bias : Series::undefined();
+                              bool use_bias,
+                              bool split_bias) {
+  Series bias = Series::undefined();
+  Series secondary_bias = Series::undefined();
+  if (use_bias) {
+    if (split_bias) {
+      bias = p.bias_ih;
+      secondary_bias = p.bias_hh;
+    } else {
+      bias = p.bias;
+    }
+  }
 
   const std::int64_t hidden_size = p.weight_hh.sizes()[1];
   Series out = Series::empty({input.sizes()[0], input.sizes()[1], hidden_size}, ScalarType::Float32, Platform::MPS)
@@ -931,13 +970,19 @@ RnnLayerResult run_gru_layer_(const Series& input,
       bias_shape = mps_shape_(bias.sizes());
       bias_t = [graph placeholderWithShape:bias_shape dataType:MPSDataTypeFloat32 name:@"bias"];
     }
+    MPSGraphTensor* secondary_bias_t = nil;
+    MPSShape* secondary_bias_shape = nil;
+    if (secondary_bias.defined()) {
+      secondary_bias_shape = mps_shape_(secondary_bias.sizes());
+      secondary_bias_t = [graph placeholderWithShape:secondary_bias_shape dataType:MPSDataTypeFloat32 name:@"secondary_bias"];
+    }
 
     MPSGraphGRUDescriptor* desc = [MPSGraphGRUDescriptor descriptor];
     desc.training = true;
     desc.bidirectional = false;
     desc.reverse = false;
     desc.resetGateFirst = true;
-    desc.resetAfter = false;
+    desc.resetAfter = secondary_bias.defined();
     desc.flipZ = false;
 
     NSArray<MPSGraphTensor*>* outputs = [graph GRUWithSourceTensor:input_t
@@ -945,6 +990,8 @@ RnnLayerResult run_gru_layer_(const Series& input,
                                                        inputWeight:wih_t
                                                               bias:bias_t
                                                          initState:hx_t
+                                                              mask:nil
+                                                     secondaryBias:secondary_bias_t
                                                         descriptor:desc
                                                               name:@"pluss_gru"];
     if (outputs == nil || [outputs count] < 2) {
@@ -962,6 +1009,9 @@ RnnLayerResult run_gru_layer_(const Series& input,
     } mutableCopy];
     if (bias.defined()) {
       [feeds setObject:tensor_data_for_read_(bias, bias_shape, c.device) forKey:bias_t];
+    }
+    if (secondary_bias.defined()) {
+      [feeds setObject:tensor_data_for_read_(secondary_bias, secondary_bias_shape, c.device) forKey:secondary_bias_t];
     }
 
     NSDictionary<MPSGraphTensor*, MPSGraphTensorData*>* results = @{
@@ -982,6 +1032,7 @@ RnnLayerResult run_gru_layer_(const Series& input,
        ::pluss::codem::series_tape::tracks_slope(p.weight_ih) ||
        ::pluss::codem::series_tape::tracks_slope(p.weight_hh) ||
        (bias.defined() && ::pluss::codem::series_tape::tracks_slope(bias)) ||
+       (secondary_bias.defined() && ::pluss::codem::series_tape::tracks_slope(secondary_bias)) ||
        ::pluss::codem::series_tape::tracks_slope(hx0));
   if (should_link) {
     auto bind = [&](const Series& target, const char* op_name, int lane) {
@@ -989,8 +1040,16 @@ RnnLayerResult run_gru_layer_(const Series& input,
       link->op_name = op_name;
       link->parents = {input, p.weight_hh, p.weight_ih, hx0};
       if (bias.defined()) link->parents.push_back(bias);
-      link->propagate = [input, recurrent = p.weight_hh, input_weight = p.weight_ih, bias, hx0, z_state, out, lane](
-                            const Series& sens) {
+      if (secondary_bias.defined()) link->parents.push_back(secondary_bias);
+      link->propagate = [input,
+                         recurrent = p.weight_hh,
+                         input_weight = p.weight_ih,
+                         bias,
+                         secondary_bias,
+                         hx0,
+                         z_state,
+                         out,
+                         lane](const Series& sens) {
         Series grad_y = zeros_like_(out);
         Series grad_hy = zeros_like_(hx0);
         if (lane == 0) {
@@ -999,12 +1058,15 @@ RnnLayerResult run_gru_layer_(const Series& input,
           grad_hy = sens.select(0, 0).contiguous();
         }
         const RnnBackwardResult grads =
-            run_gru_backward_(input, recurrent, input_weight, bias, hx0, z_state, out, grad_y, grad_hy);
+            run_gru_backward_(input, recurrent, input_weight, bias, secondary_bias, hx0, z_state, out, grad_y, grad_hy);
         ::pluss::codem::series_tape::accumulate_sensitivity(input, grads.grad_source);
         ::pluss::codem::series_tape::accumulate_sensitivity(recurrent, grads.grad_recurrent);
         ::pluss::codem::series_tape::accumulate_sensitivity(input_weight, grads.grad_input);
         if (bias.defined() && grads.grad_bias.defined()) {
           ::pluss::codem::series_tape::accumulate_sensitivity(bias, grads.grad_bias);
+        }
+        if (secondary_bias.defined() && grads.grad_secondary_bias.defined()) {
+          ::pluss::codem::series_tape::accumulate_sensitivity(secondary_bias, grads.grad_secondary_bias);
         }
         ::pluss::codem::series_tape::accumulate_sensitivity(hx0, grads.grad_hx0);
       };
@@ -1302,19 +1364,20 @@ std::optional<std::tuple<Series, Series>> try_gru(
       const Series hx_fwd = hx.select(0, base).contiguous();
       const Series hx_bwd = hx.select(0, base + 1).contiguous();
       const RnnLayerResult fwd =
-          run_gru_layer_(layer_input, hx_fwd, params[static_cast<std::size_t>(base)], cfg.use_bias);
+          run_gru_layer_(layer_input, hx_fwd, params[static_cast<std::size_t>(base)], cfg.use_bias, cfg.split_bias);
       const RnnLayerResult bwd = run_gru_layer_(
           ::pluss::detail::nn::reverse_time_(layer_input),
           hx_bwd,
           params[static_cast<std::size_t>(base + 1)],
-          cfg.use_bias);
+          cfg.use_bias,
+          cfg.split_bias);
       hidden_layers.push_back(fwd.hidden);
       hidden_layers.push_back(bwd.hidden);
       layer_input = fwd.output.unite(std::vector<Series>{::pluss::detail::nn::reverse_time_(bwd.output)}, 2);
     } else {
       const Series hx0 = hx.select(0, layer).contiguous();
       RnnLayerResult layer_out =
-          run_gru_layer_(layer_input, hx0, params[static_cast<std::size_t>(layer)], cfg.use_bias);
+          run_gru_layer_(layer_input, hx0, params[static_cast<std::size_t>(layer)], cfg.use_bias, cfg.split_bias);
       layer_input = layer_out.output;
       hidden_layers.push_back(layer_out.hidden);
     }

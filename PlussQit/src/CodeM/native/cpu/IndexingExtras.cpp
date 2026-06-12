@@ -1,4 +1,5 @@
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/Complex.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesIterator.h"
@@ -274,6 +275,10 @@ Series put(const Series& a, const Series& index, const Series& src, bool accumul
         reinterpret_cast<std::int32_t*>(op)[k] += reinterpret_cast<const std::int32_t*>(sp)[s_off];
       } else if (out.scalar_type() == ScalarType::Int64) {
         reinterpret_cast<std::int64_t*>(op)[k] += reinterpret_cast<const std::int64_t*>(sp)[s_off];
+      } else if (out.scalar_type() == ScalarType::Complex64) {
+        reinterpret_cast<Complex64*>(op)[k] += reinterpret_cast<const Complex64*>(sp)[s_off];
+      } else if (out.scalar_type() == ScalarType::Complex128) {
+        reinterpret_cast<Complex128*>(op)[k] += reinterpret_cast<const Complex128*>(sp)[s_off];
       } else {
         throw_error("put: accumulate dtype not implemented");
       }

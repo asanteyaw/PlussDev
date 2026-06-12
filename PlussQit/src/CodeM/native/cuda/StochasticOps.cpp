@@ -65,6 +65,13 @@ bool supports_stochastic_common_(ScalarType dtype) noexcept {
       supports_non_complex_numeric_dtype_(dtype);
 }
 
+bool supports_float_stochastic_common_(ScalarType dtype) noexcept {
+  return runtime_available() &&
+      native_baseline_enabled() &&
+      native_stochastic_enabled() &&
+      (dtype == ScalarType::Float32 || dtype == ScalarType::Float64);
+}
+
 } // namespace
 
 bool native_stochastic_enabled() noexcept {
@@ -80,27 +87,31 @@ bool supports_bernoulli_stochastic_baseline(ScalarType dtype) noexcept {
 }
 
 bool supports_normal_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  return supports_float_stochastic_common_(dtype);
 }
 
 bool supports_log_normal_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  (void)dtype;
+  return false;
 }
 
 bool supports_uniform_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  return supports_float_stochastic_common_(dtype);
 }
 
 bool supports_exponential_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  (void)dtype;
+  return false;
 }
 
 bool supports_geometric_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  (void)dtype;
+  return false;
 }
 
 bool supports_cauchy_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  (void)dtype;
+  return false;
 }
 
 bool supports_random_stochastic_baseline(ScalarType dtype) noexcept {
@@ -108,11 +119,13 @@ bool supports_random_stochastic_baseline(ScalarType dtype) noexcept {
 }
 
 bool supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  (void)dtype;
+  return false;
 }
 
 bool supports_poisson_stochastic_baseline(ScalarType dtype) noexcept {
-  return supports_stochastic_common_(dtype);
+  (void)dtype;
+  return false;
 }
 
 bool supports_bernoulli_stochastic(const Series& a) noexcept {

@@ -37,8 +37,6 @@ bool supports_baseline_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
       return true;
     default:
       return false;

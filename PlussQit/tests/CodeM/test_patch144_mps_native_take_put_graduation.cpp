@@ -124,10 +124,10 @@ TEST_CASE("MPS strict take rejects unsupported dtype when native lane is unavail
   }
   const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
   const ScopedEnvVar native_take_put("PLUSS_MPS_NATIVE_TAKE_PUT", "1");
-  const auto x_i64 = pluss::Series::ones({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
+  const auto x_u64 = pluss::make_series(std::vector<std::uint64_t>{1, 2, 3, 4}, {4}).to(pluss::pMPS);
   const auto idx = pluss::make_series(std::vector<std::int64_t>{1, 3}, {2}).to(pluss::pMPS);
   try {
-    (void)x_i64.take(idx);
+    (void)x_u64.take(idx);
     FAIL("strict native take should fail for unsupported dtype");
   } catch (const std::exception& e) {
     REQUIRE(std::string(e.what()).find("no native MPS kernel yet") != std::string::npos);

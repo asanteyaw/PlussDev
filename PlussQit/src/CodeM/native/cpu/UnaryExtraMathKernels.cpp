@@ -33,7 +33,7 @@ static void unary_half(const Series& a, const Series& out_, F fn,
   });
 }
 
-void rsqrt(const Series& a, const Series& out) {
+void rsqrt(const Series& a, Series& out) {
   switch (a.scalar_type()) {
     case ScalarType::Float64: unary_apply<double>(a, out, [](double x){ return 1.0/std::sqrt(x); }); return;
     case ScalarType::Float32: unary_apply<float>(a, out, [](float x){ return 1.0f/std::sqrt(x); }); return;

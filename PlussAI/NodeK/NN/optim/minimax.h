@@ -262,7 +262,13 @@ private:
   }
 
   static bool finite_series_(const Series& x) {
-    return x.isfinite().all().item<bool>();
+    const Series finite = x.isfinite().all();
+    if (finite.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
+      ::pluss::throw_error(
+          "pluss::ai::nn::optim::Minimax: CUDA finite recovery checks require explicit CPU scalar "
+          "materialization; enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 or disable nan recovery");
+    }
+    return finite.platform() == pluss::pCUDA ? finite.to(pluss::pCPU).item<bool>() : finite.item<bool>();
   }
 
   static void validate_options_(const MinimaxOptions& options) {
@@ -621,11 +627,23 @@ private:
   }
 
   static double reduction_max_abs_(const Series& x) {
-    return x.abs().max().item<double>();
+    const Series reduced = x.abs().max();
+    if (reduced.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
+      ::pluss::throw_error(
+          "pluss::ai::nn::optim::Minimax: CUDA violation scheduling requires explicit CPU scalar "
+          "materialization; enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 or use a constant schedule");
+    }
+    return reduced.platform() == pluss::pCUDA ? reduced.to(pluss::pCPU).item<double>() : reduced.item<double>();
   }
 
   static double reduction_max_violation_(const Series& x) {
-    return x.relu().max().item<double>();
+    const Series reduced = x.relu().max();
+    if (reduced.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
+      ::pluss::throw_error(
+          "pluss::ai::nn::optim::Minimax: CUDA violation scheduling requires explicit CPU scalar "
+          "materialization; enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 or use a constant schedule");
+    }
+    return reduced.platform() == pluss::pCUDA ? reduced.to(pluss::pCPU).item<double>() : reduced.item<double>();
   }
 
   double schedule_scale_(MinimaxSchedule schedule, const MinimaxOptions& options) const {

@@ -23,6 +23,8 @@ Public fields on this type:
 - `TransformKind kind = TransformKind::StandardScaler`
 - `TransformOptions options = prep::StandardScalerOptions{}`
 - `std::vector<std::int64_t> feature_route{}`
+- `RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough`
+- `std::string stage_key{}`
 
 ## Examples
 

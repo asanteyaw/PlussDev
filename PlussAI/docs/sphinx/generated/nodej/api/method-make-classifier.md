@@ -126,7 +126,7 @@ void run_regressor_family(const std::string& name, const ModelSpec& spec, const 
 NodeJ model families demo
 Classification families:
   linear (acc, logloss): 1 4.47877e-06
-  linear_hinge (acc, logloss): 1 0.0886185
+  linear_hinge (acc, logloss): 1 0.208572
   tree (acc, logloss): 1 9.99978e-13
   ensemble (acc, logloss): 1 1.00003e-12
   neighbor (acc, logloss): 1 9.99978e-13

@@ -44,6 +44,7 @@
 #include "CodeM/native/mps/BufferCache.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
 #include "CodeM/native/cuda/ElementwiseOps.h"
+#include "CodeM/native/cuda/FactoryOps.h"
 #include "CodeM/native/cuda/ReductionOps.h"
 #include "CodeM/native/cuda/ScanOps.h"
 #include "CodeM/native/cuda/MaskingOps.h"
@@ -364,9 +365,6 @@ Series cuda_indexing_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_indexing_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -409,9 +407,6 @@ Series cuda_scatter_gather_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_scatter_gather_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -454,9 +449,6 @@ Series cuda_elementwise_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_elementwise_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -499,9 +491,6 @@ Series cuda_reduction_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_reduction_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -544,9 +533,6 @@ Series cuda_scan_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_scan_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -589,9 +575,6 @@ Series cuda_masking_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_masking_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -634,9 +617,6 @@ Series cuda_bitwise_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_bitwise_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -679,9 +659,6 @@ Series cuda_compose_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_compose_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -724,9 +701,6 @@ Series cuda_counting_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (native::cuda::cpu_bridge_enabled()) {
-      return cpu_route();
-    }
     throw_cuda_counting_unavailable_(op, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {
@@ -842,16 +816,25 @@ static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Ser
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_binary_elementwise(a, b);
+    if (native_enabled && route_supported) {
+      if (native::cuda::run_binary_elementwise(op, a, b, out)) {
+        return out;
+      }
+      PLUSS_FAIL("binary op: native CUDA elementwise kernel launch failed");
+    }
     return cuda_elementwise_route_or_bridge_(
         "binary op",
         native_enabled,
         native_strict,
         route_supported,
         [&]() {
+          const Series a_cpu = a.to(Platform::CPU).contiguous();
+          const Series b_cpu = b.to(Platform::CPU).contiguous();
+          Series out_cpu = Series::empty(out_shape, dt, Platform::CPU);
           auto fn = native::cpu::lookup_binary(op, dt);
           PLUSS_CHECK(fn != nullptr, "binary kernel missing");
-          fn(a, b, out);
-          return out;
+          fn(a_cpu, b_cpu, out_cpu);
+          return out_cpu.to(Platform::CUDA);
         });
   }
   require_backend_dispatch_supported_(a.platform(), "binary op");
@@ -888,16 +871,25 @@ static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_comparison_elementwise(a, b);
+    if (native_enabled && route_supported) {
+      if (native::cuda::run_binary_elementwise(op, a, b, out)) {
+        return out;
+      }
+      PLUSS_FAIL("comparison op: native CUDA elementwise kernel launch failed");
+    }
     return cuda_elementwise_route_or_bridge_(
         "comparison op",
         native_enabled,
         native_strict,
         route_supported,
         [&]() {
+          const Series a_cpu = a.to(Platform::CPU).contiguous();
+          const Series b_cpu = b.to(Platform::CPU).contiguous();
+          Series out_cpu = Series::empty(out_shape, ScalarType::Bool, Platform::CPU);
           auto fn = native::cpu::lookup_binary(op, dt);
           PLUSS_CHECK(fn != nullptr, "compare kernel missing");
-          fn(a, b, out);
-          return out;
+          fn(a_cpu, b_cpu, out_cpu);
+          return out_cpu.to(Platform::CUDA);
         });
   }
   require_backend_dispatch_supported_(a.platform(), "comparison op");
@@ -928,16 +920,24 @@ static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    if (native_enabled && route_supported) {
+      if (native::cuda::run_unary_elementwise(op, a, out)) {
+        return out;
+      }
+      PLUSS_FAIL("unary op: native CUDA elementwise kernel launch failed");
+    }
     return cuda_elementwise_route_or_bridge_(
         "unary op",
         native_enabled,
         native_strict,
         route_supported,
         [&]() {
+          const Series a_cpu = a.to(Platform::CPU).contiguous();
+          Series out_cpu = Series::empty(a.sizes(), a.scalar_type(), Platform::CPU);
           auto fn = native::cpu::lookup_unary(op, a.scalar_type());
           PLUSS_CHECK(fn != nullptr, "unary kernel missing");
-          fn(a, out);
-          return out;
+          fn(a_cpu, out_cpu);
+          return out_cpu.to(Platform::CUDA);
         });
   }
   require_backend_dispatch_supported_(a.platform(), "unary op");
@@ -945,6 +945,28 @@ static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
   PLUSS_CHECK(fn != nullptr, "unary kernel missing");
   fn(a, out);
   return out;
+}
+
+bool cuda_unary_op_id_(std::string_view op_name, native::cpu::UnaryOpId& out) noexcept {
+  if (op_name == "sqrt") out = native::cpu::UnaryOpId::Sqrt;
+  else if (op_name == "exp") out = native::cpu::UnaryOpId::Exp;
+  else if (op_name == "log") out = native::cpu::UnaryOpId::Log;
+  else if (op_name == "sin") out = native::cpu::UnaryOpId::Sin;
+  else if (op_name == "cos") out = native::cpu::UnaryOpId::Cos;
+  else if (op_name == "tanh") out = native::cpu::UnaryOpId::Tanh;
+  else if (op_name == "tan") out = native::cpu::UnaryOpId::Tan;
+  else if (op_name == "asin") out = native::cpu::UnaryOpId::Asin;
+  else if (op_name == "acos") out = native::cpu::UnaryOpId::Acos;
+  else if (op_name == "atan") out = native::cpu::UnaryOpId::Atan;
+  else if (op_name == "sinh") out = native::cpu::UnaryOpId::Sinh;
+  else if (op_name == "cosh") out = native::cpu::UnaryOpId::Cosh;
+  else if (op_name == "floor") out = native::cpu::UnaryOpId::Floor;
+  else if (op_name == "ceil") out = native::cpu::UnaryOpId::Ceil;
+  else if (op_name == "round") out = native::cpu::UnaryOpId::Round;
+  else if (op_name == "trunc") out = native::cpu::UnaryOpId::Trunc;
+  else if (op_name == "reciprocal") out = native::cpu::UnaryOpId::Reciprocal;
+  else return false;
+  return true;
 }
 
 template <typename CpuUnaryFn>
@@ -957,15 +979,27 @@ Series unary_cpu_with_platform_dispatch_policy_(
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
-    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    native::cpu::UnaryOpId cuda_op{};
+    const bool has_cuda_op = out_scalar_type == a.scalar_type() && cuda_unary_op_id_(op_name, cuda_op);
+    const bool route_supported = has_cuda_op && native::cuda::supports_unary_elementwise(a);
+    if (native_enabled && route_supported) {
+      const Series aa = a.contiguous();
+      Series native_out = Series::empty(aa.sizes(), out_scalar_type, Platform::CUDA);
+      if (native::cuda::run_unary_elementwise(cuda_op, aa, native_out)) {
+        return native_out;
+      }
+      PLUSS_FAIL(std::string(op_name) + ": native CUDA unary kernel launch failed");
+    }
     return cuda_elementwise_route_or_bridge_(
         op_name,
         native_enabled,
         native_strict,
         route_supported,
         [&]() {
-          cpu_fn(a, out);
-          return out;
+          const Series cpu = a.to(Platform::CPU).contiguous();
+          Series out_cpu = Series::empty(cpu.sizes(), out_scalar_type, Platform::CPU);
+          cpu_fn(cpu, out_cpu);
+          return out_cpu.to(Platform::CUDA);
         });
   }
   require_backend_dispatch_supported_(a.platform(), op_name);
@@ -1315,8 +1349,11 @@ Series pow(const Series& a, const Series& b) {
 
 static Series scalar_like_(const Series& a, double s) {
   const std::array<std::int64_t, 1> one{{1}};
-  return Series::full(std::span<const std::int64_t>(one.data(), one.size()), s, a.scalar_type())
-      .to(a.platform());
+  return Series::full(
+      std::span<const std::int64_t>(one.data(), one.size()),
+      s,
+      a.scalar_type(),
+      a.platform());
 }
 
 Series add(const Series& a, double s) { return add(a, scalar_like_(a, s)); }
@@ -2335,6 +2372,23 @@ Series sum(const Series& a) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_sum_reduction(aa);
+      if (native_enabled && route_supported) {
+        Series out = Series::empty({}, aa.scalar_type(), aa.platform());
+        if (!native::cuda::run_sum_reduction(aa, out)) {
+          PLUSS_FAIL("sum: native CUDA reduction kernel launch failed");
+        }
+        if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+          auto link = std::make_shared<series_tape::SourceLink>();
+          link->op_name = "sum";
+          link->parents = {a};
+          link->propagate = [a](const Series& out_sens) {
+            const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens);
+            series_tape::accumulate_sensitivity(a, ga);
+          };
+          series_tape::bind_source_link(out, std::move(link));
+        }
+        return out;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "sum",
           native_enabled,
@@ -2432,6 +2486,29 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_sum_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_sum_reduction(aa, dim, out)) {
+          PLUSS_FAIL("sum(dim): native CUDA reduction kernel launch failed");
+        }
+        auto reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+          const auto norm_dim = dim;
+          auto link = std::make_shared<series_tape::SourceLink>();
+          link->op_name = "sum(dim)";
+          link->parents = {a};
+          link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
+            Series shaped = out_sens;
+            if (!keepdim) {
+              shaped = shaped.unsqueeze(norm_dim);
+            }
+            shaped = shaped.expand(a.sizes(), true);
+            const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(shaped);
+            series_tape::accumulate_sensitivity(a, ga);
+          };
+          series_tape::bind_source_link(reduced, std::move(link));
+        }
+        return reduced;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "sum(dim)",
           native_enabled,
@@ -2482,6 +2559,13 @@ Series prod(const Series& a) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_prod_reduction(cur);
+      if (native_enabled && route_supported) {
+        Series out = Series::empty({}, cur.scalar_type(), cur.platform());
+        if (!native::cuda::run_prod_reduction(cur, out)) {
+          PLUSS_FAIL("prod: native CUDA reduction kernel launch failed");
+        }
+        return out;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "prod",
           native_enabled,
@@ -2531,6 +2615,12 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_prod_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_prod_reduction(aa, dim, out)) {
+          PLUSS_FAIL("prod(dim): native CUDA reduction kernel launch failed");
+        }
+        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      }
       (void)cuda_reduction_route_or_bridge_(
           "prod(dim)",
           native_enabled,
@@ -2566,6 +2656,24 @@ Series mean(const Series& a) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_mean_reduction(aa);
+      if (native_enabled && route_supported) {
+        Series out = Series::empty({}, aa.scalar_type(), aa.platform());
+        if (!native::cuda::run_mean_reduction(aa, out)) {
+          PLUSS_FAIL("mean: native CUDA reduction kernel launch failed");
+        }
+        if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+          const double inv_n = 1.0 / static_cast<double>(a.numel());
+          auto link = std::make_shared<series_tape::SourceLink>();
+          link->op_name = "mean";
+          link->parents = {a};
+          link->propagate = [a, inv_n](const Series& out_sens) {
+            const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens).mul(inv_n);
+            series_tape::accumulate_sensitivity(a, ga);
+          };
+          series_tape::bind_source_link(out, std::move(link));
+        }
+        return out;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "mean",
           native_enabled,
@@ -2623,6 +2731,32 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_mean_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+        Series out = Series::empty(out_sizes, aa.scalar_type(), aa.platform());
+        if (!native::cuda::run_mean_reduction(aa, dim, out)) {
+          PLUSS_FAIL("mean(dim): native CUDA reduction kernel launch failed");
+        }
+        Series reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+          const auto norm_dim = dim;
+          const double inv_n = 1.0 / static_cast<double>(reduce_n);
+          auto link = std::make_shared<series_tape::SourceLink>();
+          link->op_name = "mean(dim)";
+          link->parents = {a};
+          link->propagate = [a, norm_dim, keepdim, inv_n](const Series& out_sens) {
+            Series shaped = out_sens;
+            if (!keepdim) {
+              shaped = shaped.unsqueeze(norm_dim);
+            }
+            shaped = shaped.expand(a.sizes(), true);
+            const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(shaped).mul(inv_n);
+            series_tape::accumulate_sensitivity(a, ga);
+          };
+          series_tape::bind_source_link(reduced, std::move(link));
+        }
+        return reduced;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "mean(dim)",
           native_enabled,
@@ -2690,6 +2824,13 @@ Series amax(const Series& a) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
+      if (native_enabled && route_supported) {
+        Series out = Series::empty({}, a.scalar_type(), a.platform());
+        if (!native::cuda::run_amax_reduction(a.contiguous(), out)) {
+          PLUSS_FAIL("amax: native CUDA reduction kernel launch failed");
+        }
+        return out;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "amax",
           native_enabled,
@@ -2743,6 +2884,14 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_ordered_extrema_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_amax_reduction(aa, dim, out)) {
+          PLUSS_FAIL("amax(dim): native CUDA reduction kernel launch failed");
+        }
+        Series reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        maybe_link_extrema_reduce_(reduced, a, reduced, dim, keepdim, "amax(dim)");
+        return reduced;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "amax(dim)",
           native_enabled,
@@ -2768,6 +2917,13 @@ Series amin(const Series& a) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
+      if (native_enabled && route_supported) {
+        Series out = Series::empty({}, a.scalar_type(), a.platform());
+        if (!native::cuda::run_amin_reduction(a.contiguous(), out)) {
+          PLUSS_FAIL("amin: native CUDA reduction kernel launch failed");
+        }
+        return out;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "amin",
           native_enabled,
@@ -2820,6 +2976,14 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_ordered_extrema_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_amin_reduction(aa, dim, out)) {
+          PLUSS_FAIL("amin(dim): native CUDA reduction kernel launch failed");
+        }
+        Series reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+        maybe_link_extrema_reduce_(reduced, a, reduced, dim, keepdim, "amin(dim)");
+        return reduced;
+      }
       (void)cuda_reduction_route_or_bridge_(
           "amin(dim)",
           native_enabled,
@@ -2860,6 +3024,12 @@ Series all(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_logical_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_all_reduction(aa, dim, out)) {
+          PLUSS_FAIL("all(dim): native CUDA reduction kernel launch failed");
+        }
+        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      }
       (void)cuda_reduction_route_or_bridge_(
           "all(dim)",
           native_enabled,
@@ -2898,6 +3068,12 @@ Series any(const Series& a, std::int64_t dim, bool keepdim) {
       const bool native_enabled = native::cuda::native_reduction_enabled();
       const bool native_strict = native::cuda::native_reduction_strict();
       const bool route_supported = native::cuda::supports_logical_reduction(aa, dim);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_any_reduction(aa, dim, out)) {
+          PLUSS_FAIL("any(dim): native CUDA reduction kernel launch failed");
+        }
+        return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      }
       (void)cuda_reduction_route_or_bridge_(
           "any(dim)",
           native_enabled,
@@ -2939,6 +3115,20 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
     const bool native_enabled = native::cuda::native_reduction_enabled();
     const bool native_strict = native::cuda::native_reduction_strict();
     const bool route_supported = native::cuda::supports_arg_extrema_reduction(a, dim);
+    if (native_enabled && route_supported) {
+      if (a.dim() == 0) {
+        return Series::full({}, 0.0, ScalarType::Int64, a.platform());
+      }
+      auto aa = a.contiguous();
+      const auto nd = aa.dim();
+      if (dim < 0) dim += nd;
+      auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+      Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
+      if (!native::cuda::run_argmax_reduction(aa, dim, out)) {
+        PLUSS_FAIL("argmax: native CUDA reduction kernel launch failed");
+      }
+      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    }
     (void)cuda_reduction_route_or_bridge_(
         "argmax",
         native_enabled,
@@ -2977,6 +3167,20 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
     const bool native_enabled = native::cuda::native_reduction_enabled();
     const bool native_strict = native::cuda::native_reduction_strict();
     const bool route_supported = native::cuda::supports_arg_extrema_reduction(a, dim);
+    if (native_enabled && route_supported) {
+      if (a.dim() == 0) {
+        return Series::full({}, 0.0, ScalarType::Int64, a.platform());
+      }
+      auto aa = a.contiguous();
+      const auto nd = aa.dim();
+      if (dim < 0) dim += nd;
+      auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+      Series out = Series::empty(out_sizes, ScalarType::Int64, aa.platform());
+      if (!native::cuda::run_argmin_reduction(aa, dim, out)) {
+        PLUSS_FAIL("argmin: native CUDA reduction kernel launch failed");
+      }
+      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+    }
     (void)cuda_reduction_route_or_bridge_(
         "argmin",
         native_enabled,
@@ -3007,6 +3211,33 @@ Series where(const Series& cond, const Series& a, const Series& b) {
       native::mps::where(cc.contiguous(), aa.contiguous(), bb.contiguous(), out);
       maybe_link_where_op_(out, cond, a, b);
       return out;
+    }
+    if (a.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_elementwise_enabled();
+      const bool native_strict = native::cuda::native_elementwise_strict();
+      const bool route_supported = native::cuda::supports_where_elementwise(cc, aa, bb);
+      if (native_enabled && route_supported) {
+        if (!native::cuda::run_where_elementwise(cc.contiguous(), aa.contiguous(), bb.contiguous(), out)) {
+          PLUSS_FAIL("where: native CUDA elementwise kernel launch failed");
+        }
+        maybe_link_where_op_(out, cond, a, b);
+        return out;
+      }
+      return cuda_elementwise_route_or_bridge_(
+          "where",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() {
+            const Series cc_cpu = cc.to(Platform::CPU).contiguous();
+            const Series aa_cpu = aa.to(Platform::CPU).contiguous();
+            const Series bb_cpu = bb.to(Platform::CPU).contiguous();
+            Series out_cpu = Series::empty(shape, dt, Platform::CPU);
+            native::cpu::where(cc_cpu, aa_cpu, bb_cpu, out_cpu);
+            Series out_cuda = out_cpu.to(Platform::CUDA);
+            maybe_link_where_op_(out_cuda, cond, a, b);
+            return out_cuda;
+          });
     }
   }
   const auto cc_exp = cc.expand(shape, true);
@@ -3907,6 +4138,12 @@ Series maximum(const Series& a, const Series& b) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    if (native_enabled && route_supported) {
+      if (!native::cuda::run_binary_elementwise(native::cpu::BinaryOpId::Maximum, aa, bb, out)) {
+        PLUSS_FAIL("maximum: native CUDA elementwise kernel launch failed");
+      }
+      return out;
+    }
     return cuda_elementwise_route_or_bridge_(
         "maximum",
         native_enabled,
@@ -3935,6 +4172,12 @@ Series minimum(const Series& a, const Series& b) {
     const bool native_enabled = native::cuda::native_elementwise_enabled();
     const bool native_strict = native::cuda::native_elementwise_strict();
     const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    if (native_enabled && route_supported) {
+      if (!native::cuda::run_binary_elementwise(native::cpu::BinaryOpId::Minimum, aa, bb, out)) {
+        PLUSS_FAIL("minimum: native CUDA elementwise kernel launch failed");
+      }
+      return out;
+    }
     return cuda_elementwise_route_or_bridge_(
         "minimum",
         native_enabled,
@@ -4063,16 +4306,23 @@ Series rsqrt(const Series& a) {
       const bool native_enabled = native::cuda::native_elementwise_enabled();
       const bool native_strict = native::cuda::native_elementwise_strict();
       const bool route_supported = native::cuda::supports_unary_elementwise(a);
-      out = cuda_elementwise_route_or_bridge_(
-          "rsqrt",
-          native_enabled,
-          native_strict,
-          route_supported,
-          [&]() {
-            const Series aa = a.contiguous().to(out.scalar_type());
-            native::cpu::rsqrt(aa, out);
-            return out;
-          });
+      if (native_enabled && route_supported) {
+        const Series aa = a.contiguous().to(out.scalar_type());
+        if (!native::cuda::run_unary_elementwise(native::cpu::UnaryOpId::Rsqrt, aa, out)) {
+          PLUSS_FAIL("rsqrt: native CUDA elementwise kernel launch failed");
+        }
+      } else {
+        out = cuda_elementwise_route_or_bridge_(
+            "rsqrt",
+            native_enabled,
+            native_strict,
+            route_supported,
+            [&]() {
+              const Series aa = a.contiguous().to(out.scalar_type());
+              native::cpu::rsqrt(aa, out);
+              return out;
+            });
+      }
     } else {
       require_backend_dispatch_supported_(a.platform(), "rsqrt");
       auto aa = a.contiguous().to(out.scalar_type());
@@ -5943,7 +6193,14 @@ Series Series::empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platfor
   const auto n = compute_numel(sizes);
   const auto bytes = std::max<std::size_t>(
       1, static_cast<std::size_t>(n) * dt.itemsize);
-  Storage storage = (platform == Platform::CUDA && native::cuda::device_storage_enabled())
+  const bool cuda_device_storage =
+      platform == Platform::CUDA &&
+      (native::cuda::device_storage_enabled() ||
+       !native::cuda::cpu_bridge_enabled() ||
+       native::cuda::native_elementwise_enabled() ||
+       native::cuda::native_reduction_enabled() ||
+       native::cuda::native_factory_enabled());
+  Storage storage = cuda_device_storage
       ? Storage::cuda_device(bytes)
       : Storage(bytes);
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
@@ -5971,11 +6228,19 @@ Series Series::zeros(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   return t;
 }
 
+Series Series::zeros(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform) {
+  ops_internal::PlatformScope platform_scope{platform};
+  return zeros(sizes, st);
+}
+
 Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   auto t = empty(sizes, st);
   if (t.platform() == Platform::CUDA &&
       t.storage().location() == StorageLocation::CudaDevice) {
-    PLUSS_FAIL("Series::ones(..., CUDA): native CUDA fill kernel is not implemented yet");
+    if (!native::cuda::run_fill_factory(t, 1.0)) {
+      PLUSS_FAIL("Series::ones(..., CUDA): native CUDA fill kernel is unsupported for dtype");
+    }
+    return t;
   }
   const auto n = t.numel();
   switch (st) {
@@ -6047,6 +6312,11 @@ Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st) {
   PLUSS_FAIL("ones: dtype not implemented");
 }
 
+Series Series::ones(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform) {
+  ops_internal::PlatformScope platform_scope{platform};
+  return ones(sizes, st);
+}
+
 Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st) {
   auto t = empty(sizes, st);
   if (t.platform() == Platform::CUDA &&
@@ -6058,7 +6328,10 @@ Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarTyp
       }
       return t;
     }
-    PLUSS_FAIL("Series::full(..., CUDA): native CUDA fill kernel is not implemented yet");
+    if (!native::cuda::run_fill_factory(t, value)) {
+      PLUSS_FAIL("Series::full(..., CUDA): native CUDA fill kernel is unsupported for dtype");
+    }
+    return t;
   }
   const auto n = t.numel();
   switch (st) {
@@ -6161,6 +6434,11 @@ Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarTyp
       break;
   }
   PLUSS_FAIL("full: dtype not implemented");
+}
+
+Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st, Platform platform) {
+  ops_internal::PlatformScope platform_scope{platform};
+  return full(sizes, value, st);
 }
 
 Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
@@ -6500,10 +6778,10 @@ Series Series::platform(Platform target) const {
   switch (target) {
     case Platform::CPU:
       if (src_platform == Platform::CUDA &&
-          native::cuda::cpu_materialization_forbidden()) {
+          (!native::cuda::cpu_bridge_enabled() || native::cuda::cpu_materialization_forbidden())) {
         PLUSS_FAIL(
             "Series::platform(CPU): CUDA CPU materialization is forbidden by "
-            "PLUSS_CUDA_FORBID_CPU_MATERIALIZATION");
+            "PLUSS_CUDA_ALLOW_CPU_BRIDGE=0 or PLUSS_CUDA_FORBID_CPU_MATERIALIZATION=1");
       }
       break;
     case Platform::CUDA:
@@ -6934,6 +7212,13 @@ Series Series::arange(double start, double end, double step, ScalarType dtype) {
   std::int64_t n = (std::int64_t)std::ceil(nreal);
   if (n < 0) n = 0;
   Series out = Series::empty({n}, dtype);
+  if (out.platform() == Platform::CUDA &&
+      out.storage().location() == StorageLocation::CudaDevice) {
+    if (!native::cuda::run_arange_factory(out, start, step)) {
+      PLUSS_FAIL("Series::arange(..., CUDA): native CUDA arange kernel is unsupported for dtype");
+    }
+    return out;
+  }
   for (std::int64_t i=0;i<n;++i) {
     const double v = start + (double)i * step;
     // reuse to() storage helper via scalar temporary
@@ -6958,12 +7243,24 @@ Series Series::arange(double start, double end, double step, ScalarType dtype) {
   return out;
 }
 
+Series Series::arange(double start, double end, double step, ScalarType dtype, Platform platform) {
+  ops_internal::PlatformScope platform_scope{platform};
+  return arange(start, end, step, dtype);
+}
+
 Series Series::linspace(double start, double end, std::int64_t steps, ScalarType dtype) {
   if (steps < 0) PLUSS_FAIL("linspace: steps must be >= 0");
   Series out = Series::empty({steps}, dtype);
   if (steps == 0) return out;
   if (steps == 1) {
-    return Series::full({1}, start, dtype);
+    return Series::full({1}, start, dtype, out.platform());
+  }
+  if (out.platform() == Platform::CUDA &&
+      out.storage().location() == StorageLocation::CudaDevice) {
+    if (!native::cuda::run_linspace_factory(out, start, end)) {
+      PLUSS_FAIL("Series::linspace(..., CUDA): native CUDA linspace kernel is unsupported for dtype");
+    }
+    return out;
   }
   const double denom = (double)(steps - 1);
   for (std::int64_t i=0;i<steps;++i) {
@@ -6980,12 +7277,24 @@ Series Series::linspace(double start, double end, std::int64_t steps, ScalarType
   return out;
 }
 
+Series Series::linspace(double start, double end, std::int64_t steps, ScalarType dtype, Platform platform) {
+  ops_internal::PlatformScope platform_scope{platform};
+  return linspace(start, end, steps, dtype);
+}
+
 Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
   if (m < 0) {
     m = n;
   }
   if (n < 0 || m < 0) PLUSS_FAIL("eye: sizes must be >= 0");
   Series out = Series::zeros({n,m}, dtype);
+  if (out.platform() == Platform::CUDA &&
+      out.storage().location() == StorageLocation::CudaDevice) {
+    if (!native::cuda::run_eye_factory(out, n, m)) {
+      PLUSS_FAIL("Series::eye(..., CUDA): native CUDA eye kernel is unsupported for dtype");
+    }
+    return out;
+  }
   const std::int64_t k = (n < m) ? n : m;
   for (std::int64_t i=0;i<k;++i) {
     const std::int64_t idx = i * out.strides()[0] + i * out.strides()[1];
@@ -7007,6 +7316,11 @@ Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
     }
   }
   return out;
+}
+
+Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype, Platform platform) {
+  ops_internal::PlatformScope platform_scope{platform};
+  return eye(n, m, dtype);
 }
 
 Series Series::rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed) {
@@ -7046,6 +7360,34 @@ Series Series::randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std:
     };
     store(i, z0);
     if (i+1 < n) store(i+1, z1);
+  }
+  return out;
+}
+
+Series Series::rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform) {
+  if (platform != Platform::CUDA) {
+    ops_internal::PlatformScope platform_scope{platform};
+    return rand(sizes, dtype, seed);
+  }
+  PLUSS_CHECK(dtype == ScalarType::Float32 || dtype == ScalarType::Float64,
+              "rand(..., CUDA): native CUDA rand supports float32/float64 in this tranche");
+  Series out = Series::empty(sizes, dtype, Platform::CUDA);
+  if (!native::cuda::run_uniform_factory(out, seed, 0.0, 1.0)) {
+    PLUSS_FAIL("Series::rand(..., CUDA): native CUDA uniform kernel failed");
+  }
+  return out;
+}
+
+Series Series::randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform) {
+  if (platform != Platform::CUDA) {
+    ops_internal::PlatformScope platform_scope{platform};
+    return randn(sizes, dtype, seed);
+  }
+  PLUSS_CHECK(dtype == ScalarType::Float32 || dtype == ScalarType::Float64,
+              "randn(..., CUDA): native CUDA randn supports float32/float64 in this tranche");
+  Series out = Series::empty(sizes, dtype, Platform::CUDA);
+  if (!native::cuda::run_normal_factory(out, seed, 0.0, 1.0)) {
+    PLUSS_FAIL("Series::randn(..., CUDA): native CUDA normal kernel failed");
   }
   return out;
 }
@@ -7127,9 +7469,7 @@ static bool mps_take_fast_path_supported_(const Series& self, const Series& inde
   if (!self.defined() || !index.defined()) return false;
   if (self.platform() != Platform::MPS || index.platform() != Platform::MPS) return false;
   if (index.scalar_type() != ScalarType::Int64) return false;
-  const bool direct_lane_dtype =
-      self.scalar_type() == ScalarType::Float32 || self.scalar_type() == ScalarType::Int32;
-  if (direct_lane_dtype && native::mps::supports_gather(self.scalar_type(), ScalarType::Int64)) return true;
+  if (native::mps::supports_gather(self.scalar_type(), ScalarType::Int64)) return true;
   const bool supports_f32 = native::mps::supports_gather(ScalarType::Float32, ScalarType::Int64);
   const bool cast_lane =
       supports_f32 &&

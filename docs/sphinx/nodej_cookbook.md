@@ -511,7 +511,155 @@ if (!z_test_or.ok()) throw std::runtime_error(z_test_or.status().message);
 
 - reduced-dimension transformed matrices for train/test features.
 
-## Recipe 11: Online Linear Updates
+## Recipe 11: One-Class Kernel Transform Flow
+
+### API Signature
+
+- `ModelSpec(task: Transform, family: Kernel, options: KernelFamilyOptions{.form = OneClass}) -> ModelSpec`
+- `Flow::learn_map(batch: FeatureBatch, learn_options: TrainOptions = {}, infer_options: InferOptions = {}) -> StatusOr<Series>`
+- `Flow::map(batch: FeatureBatch, options: InferOptions = {}) -> StatusOr<Series>`
+- `io::save(path: string, flow: Flow, train_batch: LabeledBatch = {}, train_options: TrainOptions = {}) -> Status`
+- `io::load_and_restore(path: string) -> StatusOr<Flow>`
+
+### Notes
+
+One-class kernel workflows are transform tasks. They store learned transform state in the flow, so a fitted flow can be saved and restored without needing to retrain from a fallback batch.
+
+### Inputs
+
+- feature-only training batch
+- kernel options with `form = KernelForm::OneClass`
+
+### Output
+
+- one label per sample
+- restored flow that maps the same features to the same labels
+
+### Options
+
+- `KernelKind::Rbf` is the default kernel
+- `gamma` controls kernel width
+- `nu` controls the one-class acceptance fraction
+
+### Examples
+
+```cpp
+namespace nje = pluss::ai::nodej;
+
+nje::ModelSpec spec{
+  .task = nje::TaskKind::Transform,
+  .family = nje::ModelFamily::Kernel,
+  .options = nje::KernelFamilyOptions{
+      .kernel = nje::KernelKind::Rbf,
+      .form = nje::KernelForm::OneClass,
+      .gamma = 0.8,
+      .nu = 0.5,
+  },
+};
+
+auto flow_or = nje::make_flow(spec);
+if (!flow_or.ok()) return flow_or.status();
+auto flow = flow_or.move_value();
+
+auto labels_or = flow.learn_map(train_features);
+if (!labels_or.ok()) return labels_or.status();
+
+auto save_status = nje::io::save("one_class_flow.bin", flow, nje::LabeledBatch{}, {});
+if (!save_status.ok()) return save_status;
+
+auto restored_or = nje::io::load_and_restore("one_class_flow.bin");
+if (!restored_or.ok()) return restored_or.status();
+
+auto restored_labels_or = restored_or.value().map(train_features);
+if (!restored_labels_or.ok()) return restored_labels_or.status();
+```
+
+### Expected output
+
+- `labels_or` and `restored_labels_or` have the same length and labels for the same input batch.
+- inlier samples receive positive labels and outlier samples receive negative labels.
+
+## Recipe 12: Multinomial And Complement Bayes Count Inputs
+
+### API Signature
+
+- `ModelSpec(task: Classification|Regression, family: Bayes, options: BayesFamilyOptions{.likelihood = Multinomial}) -> ModelSpec`
+- `ModelSpec(task: Classification, family: Bayes, options: BayesFamilyOptions{.likelihood = Complement}) -> ModelSpec`
+- `make_classifier(spec: ModelSpec) -> StatusOr<unique_ptr<ClassifierBase>>`
+- `make_regressor(spec: ModelSpec) -> StatusOr<unique_ptr<RegressorBase>>`
+
+### Notes
+
+Multinomial and Complement Bayes treat features as counts. Negative feature values are rejected during learning and inference. For multinomial Bayes regression, labels must also be finite and non-negative. Complement Bayes is classifier-only.
+
+### Inputs
+
+- count-like feature matrix
+- classification labels or non-negative regression labels
+
+### Output
+
+- predictions for valid non-negative count inputs
+- `InvalidArgument` status for negative counts
+- `NotImplemented` status when Complement likelihood is requested for Bayes regression
+
+### Options
+
+- `BayesLikelihood::Multinomial`
+- `BayesLikelihood::Complement`
+- `smoothing`
+
+### Examples
+
+```cpp
+nje::ModelSpec spec{
+  .task = nje::TaskKind::Classification,
+  .family = nje::ModelFamily::Bayes,
+  .options = nje::BayesFamilyOptions{
+      .likelihood = nje::BayesLikelihood::Multinomial,
+      .smoothing = 1e-6,
+  },
+};
+
+auto model_or = nje::make_classifier(spec);
+if (!model_or.ok()) return model_or.status();
+auto model = model_or.move_value();
+
+nje::Status status = model->learn(count_batch);
+if (!status.ok()) return status;
+
+auto pred_or = model->infer(count_features);
+if (!pred_or.ok()) return pred_or.status();
+```
+
+```cpp
+nje::ModelSpec complement_spec{
+  .task = nje::TaskKind::Classification,
+  .family = nje::ModelFamily::Bayes,
+  .options = nje::BayesFamilyOptions{
+      .likelihood = nje::BayesLikelihood::Complement,
+      .smoothing = 1e-6,
+  },
+};
+
+auto complement_or = nje::make_classifier(complement_spec);
+if (!complement_or.ok()) return complement_or.status();
+auto complement = complement_or.move_value();
+
+auto complement_status = complement->learn(count_batch);
+if (!complement_status.ok()) return complement_status;
+
+auto complement_pred_or = complement->infer(count_features);
+if (!complement_pred_or.ok()) return complement_pred_or.status();
+```
+
+### Expected output
+
+- valid non-negative counts train and infer successfully.
+- negative counts return `InvalidArgument`; they are not silently clamped to zero.
+- Complement Bayes uses complement-count weights and is intended for classification.
+
+## Recipe 13: Online Linear Updates
 
 ### API Signature
 
@@ -555,7 +703,7 @@ if (!online.advance(chunk2, {}).ok()) throw std::runtime_error("advance failed")
 
 - online model tracks stream updates and remains inferable.
 
-## Recipe 12: Fail-Loud Status Pattern
+## Recipe 14: Fail-Loud Status Pattern
 
 ### API Signature
 

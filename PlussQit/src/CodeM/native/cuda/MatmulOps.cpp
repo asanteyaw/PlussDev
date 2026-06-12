@@ -197,6 +197,19 @@ struct DeviceBuffer {
   }
 };
 
+struct DeviceInputRef {
+  const void* ptr{nullptr};
+  DeviceBuffer staging{};
+};
+
+struct DeviceOutputRef {
+  void* ptr{nullptr};
+  DeviceBuffer staging{};
+};
+
+bool copy_h2d_(void* dst, const void* src, std::size_t bytes, std::string* reason);
+bool copy_d2h_(void* dst, const void* src, std::size_t bytes, std::string* reason);
+
 bool alloc_device_buffer_(DeviceBuffer* buf, std::size_t bytes, std::string* reason) {
   if (buf == nullptr) {
     if (reason != nullptr) *reason = "internal: null device buffer";
@@ -210,6 +223,59 @@ bool alloc_device_buffer_(DeviceBuffer* buf, std::size_t bytes, std::string* rea
     *reason = std::string("cudaMalloc failed: ") + cudaGetErrorString(st);
   }
   return false;
+}
+
+bool ensure_device_input_(
+    const Series& src,
+    DeviceInputRef* ref,
+    std::string* reason) {
+  if (ref == nullptr) {
+    if (reason != nullptr) *reason = "internal: null device input";
+    return false;
+  }
+  const std::size_t bytes = bytes_of_(src);
+  if (src.storage().location() == StorageLocation::CudaDevice) {
+    ref->ptr = src.raw_data();
+    return true;
+  }
+  if (!alloc_device_buffer_(&ref->staging, bytes, reason)) {
+    return false;
+  }
+  if (!copy_h2d_(ref->staging.ptr, src.raw_data(), bytes, reason)) {
+    return false;
+  }
+  ref->ptr = ref->staging.ptr;
+  return true;
+}
+
+bool ensure_device_output_(
+    Series& dst,
+    DeviceOutputRef* ref,
+    std::string* reason) {
+  if (ref == nullptr) {
+    if (reason != nullptr) *reason = "internal: null device output";
+    return false;
+  }
+  const std::size_t bytes = bytes_of_(dst);
+  if (dst.storage().location() == StorageLocation::CudaDevice) {
+    ref->ptr = dst.raw_mutable_data();
+    return true;
+  }
+  if (!alloc_device_buffer_(&ref->staging, bytes, reason)) {
+    return false;
+  }
+  ref->ptr = ref->staging.ptr;
+  return true;
+}
+
+bool finish_device_output_(
+    const DeviceOutputRef& ref,
+    Series& dst,
+    std::string* reason) {
+  if (dst.storage().location() == StorageLocation::CudaDevice) {
+    return true;
+  }
+  return copy_d2h_(dst.raw_mutable_data(), ref.ptr, bytes_of_(dst), reason);
 }
 
 bool copy_h2d_(void* dst, const void* src, std::size_t bytes, std::string* reason) {
@@ -260,14 +326,12 @@ bool run_cublas_2d_gemm_(
   const int k = static_cast<int>(k64);
   Series y = Series::empty({m64, n64}, a.scalar_type(), Platform::CUDA);
 
-  DeviceBuffer d_a{};
-  DeviceBuffer d_b{};
-  DeviceBuffer d_c{};
-  if (!alloc_device_buffer_(&d_a, bytes_of_(a), reason)) return false;
-  if (!alloc_device_buffer_(&d_b, bytes_of_(b), reason)) return false;
-  if (!alloc_device_buffer_(&d_c, bytes_of_(y), reason)) return false;
-  if (!copy_h2d_(d_a.ptr, a.raw_data(), d_a.bytes, reason)) return false;
-  if (!copy_h2d_(d_b.ptr, b.raw_data(), d_b.bytes, reason)) return false;
+  DeviceInputRef d_a{};
+  DeviceInputRef d_b{};
+  DeviceOutputRef d_c{};
+  if (!ensure_device_input_(a, &d_a, reason)) return false;
+  if (!ensure_device_input_(b, &d_b, reason)) return false;
+  if (!ensure_device_output_(y, &d_c, reason)) return false;
 
   cublasHandle_t handle = nullptr;
   cublasStatus_t st = ctx.api.create(&handle);
@@ -329,7 +393,7 @@ bool run_cublas_2d_gemm_(
     if (reason != nullptr) *reason = std::string("cublasGemm failed: ") + cublas_status_string_(ctx.api, st);
     return false;
   }
-  if (!copy_d2h_(y.raw_mutable_data(), d_c.ptr, d_c.bytes, reason)) return false;
+  if (!finish_device_output_(d_c, y, reason)) return false;
 
   *out = std::move(y);
   return true;

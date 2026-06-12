@@ -404,7 +404,7 @@ protected:
   }
 
   static Series scalar_on_(double value, const Series& like) {
-    return Series::full({}, value, like.scalar_type()).to(like.platform());
+    return Series::full({}, value, like.scalar_type(), like.platform());
   }
 
   static Series state_zeros_like_(const Series& like) {
@@ -507,6 +507,11 @@ private:
 
   static bool has_non_finite_(const Series& x) {
     const Series finite_all = x.isfinite().all();
+    if (finite_all.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
+      ::pluss::throw_error(
+          "pluss::ai::nn::optim::Optimizer: non-finite CUDA diagnostics require explicit CPU scalar "
+          "materialization; enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 or disable the diagnostic option");
+    }
     return !finite_all.to(pluss::pCPU).item<bool>();
   }
 

@@ -144,13 +144,6 @@ static Series as_strided_impl(
     std::span<const std::int64_t> sizes,
     std::span<const std::int64_t> strides);
 
-static Series cuda_native_matmul_reference_(const Series& a, const Series& b) {
-  if (a.scalar_type() == ScalarType::Float16 || a.scalar_type() == ScalarType::BFloat16) {
-    return native::cpu::matmul(a.to(ScalarType::Float32), b.to(ScalarType::Float32)).to(a.scalar_type());
-  }
-  return native::cpu::matmul(a, b);
-}
-
 static std::vector<std::int64_t> leading_batch_dims_(const Series& s) {
   PLUSS_CHECK(s.dim() >= 2, "matmul: expected rank >= 2 for batched path");
   return std::vector<std::int64_t>(s.sizes().begin(), s.sizes().end() - 2);
@@ -315,10 +308,7 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     const bool native_strict = native::cuda::native_matmul_strict();
     const bool route_supported = native::cuda::supports_matmul(a, b);
     if (native_enabled && route_supported) {
-      if (!native::cuda::cpu_bridge_enabled()) {
-        throw_error("matmul: CUDA native matmul route declared but kernel is not implemented yet");
-      }
-      return cuda_native_matmul_reference_(a, b);
+      throw_error("matmul: CUDA native matmul route declared but kernel is not implemented yet");
     }
     if (native_strict) {
       throw_error("matmul: strict native CUDA route requested but kernel is unsupported");

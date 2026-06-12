@@ -3,7 +3,7 @@
 
 namespace pluss::codem::native::cpu {
 
-void rsqrt(const Series& a, const Series& out);
+void rsqrt(const Series& a, Series& out);
 void log2(const Series& a, const Series& out);
 void log10(const Series& a, const Series& out);
 void exp2(const Series& a, const Series& out);

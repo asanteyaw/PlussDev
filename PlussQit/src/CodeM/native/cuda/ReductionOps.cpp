@@ -57,18 +57,6 @@ bool supports_sum_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Int64:
-    case ScalarType::Int32:
-    case ScalarType::Int16:
-    case ScalarType::Int8:
-    case ScalarType::UInt64:
-    case ScalarType::UInt32:
-    case ScalarType::UInt16:
-    case ScalarType::UInt8:
-    case ScalarType::Complex64:
-    case ScalarType::Complex128:
       return true;
     default:
       return false;
@@ -79,12 +67,6 @@ bool supports_prod_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Int64:
-    case ScalarType::Int32:
-    case ScalarType::Complex64:
-    case ScalarType::Complex128:
       return true;
     default:
       return false;
@@ -93,21 +75,8 @@ bool supports_prod_dtype_(ScalarType dtype) noexcept {
 
 bool supports_mean_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
-    case ScalarType::Bool:
-    case ScalarType::UInt8:
-    case ScalarType::UInt16:
-    case ScalarType::UInt32:
-    case ScalarType::UInt64:
-    case ScalarType::Int8:
-    case ScalarType::Int16:
-    case ScalarType::Int32:
-    case ScalarType::Int64:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
     case ScalarType::Float32:
     case ScalarType::Float64:
-    case ScalarType::Complex64:
-    case ScalarType::Complex128:
       return true;
     default:
       return false;
@@ -118,11 +87,6 @@ bool supports_ordered_extrema_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Int64:
-    case ScalarType::Int32:
-    case ScalarType::UInt8:
       return true;
     default:
       return false;
@@ -130,24 +94,7 @@ bool supports_ordered_extrema_dtype_(ScalarType dtype) noexcept {
 }
 
 bool supports_logical_dtype_(ScalarType dtype) noexcept {
-  switch (dtype) {
-    case ScalarType::Bool:
-    case ScalarType::UInt8:
-    case ScalarType::UInt16:
-    case ScalarType::UInt32:
-    case ScalarType::UInt64:
-    case ScalarType::Int8:
-    case ScalarType::Int16:
-    case ScalarType::Int32:
-    case ScalarType::Int64:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Float32:
-    case ScalarType::Float64:
-      return true;
-    default:
-      return false;
-  }
+  return dtype == ScalarType::Bool;
 }
 
 bool supports_arg_extrema_dtype_(ScalarType dtype) noexcept {
@@ -163,7 +110,10 @@ bool supports_dim_(const Series& a, std::int64_t dim) noexcept {
 
 template <class BaselineFn>
 bool supports_common_(const Series& a, BaselineFn&& baseline_fn) noexcept {
-  return is_cuda_series_(a) && baseline_fn(a.scalar_type());
+  return is_cuda_series_(a) &&
+      a.is_contiguous() &&
+      a.storage().location() == StorageLocation::CudaDevice &&
+      baseline_fn(a.scalar_type());
 }
 
 } // namespace
@@ -247,5 +197,24 @@ bool supports_arg_extrema_reduction(const Series& a) noexcept {
 bool supports_arg_extrema_reduction(const Series& a, std::int64_t dim) noexcept {
   return supports_arg_extrema_reduction(a) && supports_dim_(a, dim);
 }
+
+#if !(defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA)
+bool run_sum_reduction(const Series&, Series&) noexcept { return false; }
+bool run_sum_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_prod_reduction(const Series&, Series&) noexcept { return false; }
+bool run_prod_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_mean_reduction(const Series&, Series&) noexcept { return false; }
+bool run_mean_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_amax_reduction(const Series&, Series&) noexcept { return false; }
+bool run_amax_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_amin_reduction(const Series&, Series&) noexcept { return false; }
+bool run_amin_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_all_reduction(const Series&, Series&) noexcept { return false; }
+bool run_all_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_any_reduction(const Series&, Series&) noexcept { return false; }
+bool run_any_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_argmax_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+bool run_argmin_reduction(const Series&, std::int64_t, Series&) noexcept { return false; }
+#endif
 
 } // namespace pluss::codem::native::cuda

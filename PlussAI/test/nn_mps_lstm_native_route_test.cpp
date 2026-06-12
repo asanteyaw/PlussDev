@@ -210,6 +210,27 @@ pluss::ai::rnn::NetWeight make_gru_weight(const Config& cfg, std::int64_t input_
   };
 }
 
+pluss::ai::rnn::NetWeight make_gru_split_weight(const Config& cfg, std::int64_t input_size, std::int64_t hidden_size, int salt) {
+  return pluss::ai::rnn::NetWeight{
+      .weight_ih = pluss::make_series(
+                       patterned_values(static_cast<std::size_t>(3 * hidden_size * input_size), 0.011f, salt),
+                       {3 * hidden_size, input_size},
+                       cfg)
+                       .contiguous(),
+      .weight_hh = pluss::make_series(
+                       patterned_values(static_cast<std::size_t>(3 * hidden_size * hidden_size), 0.009f, salt + 5),
+                       {3 * hidden_size, hidden_size},
+                       cfg)
+                       .contiguous(),
+      .bias_ih =
+          pluss::make_series(patterned_values(static_cast<std::size_t>(3 * hidden_size), 0.007f, salt + 9), {3 * hidden_size}, cfg)
+              .contiguous(),
+      .bias_hh =
+          pluss::make_series(patterned_values(static_cast<std::size_t>(3 * hidden_size), 0.006f, salt + 13), {3 * hidden_size}, cfg)
+              .contiguous(),
+  };
+}
+
 template <class MakeParams>
 bool run_case(const Series& x,
               const Series& hx,
@@ -604,7 +625,79 @@ bool run_native_gru_route_check(std::ostream* err = nullptr) {
     }
     return grads;
   };
-  return compare_gradient_traces("bidirectional native MPS GRU", gradient_trace, 4e-3, 4e-3, err);
+  if (!compare_gradient_traces("bidirectional native MPS GRU", gradient_trace, 4e-3, 4e-3, err)) {
+    return false;
+  }
+
+  pluss::ai::rnn::NetConfig split_cfg = cfg;
+  split_cfg.split_bias = true;
+  auto make_split_params = [&]() {
+    return std::vector<pluss::ai::rnn::NetWeight>{
+        make_gru_split_weight(mps, 2, 3, 14),
+        make_gru_split_weight(mps, 2, 3, 24),
+        make_gru_split_weight(mps, 6, 3, 34),
+        make_gru_split_weight(mps, 6, 3, 44),
+    };
+  };
+
+  Series split_ref_y;
+  Series split_ref_h;
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "0");
+    auto params = make_split_params();
+    std::tie(split_ref_y, split_ref_h) =
+        pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
+  }
+
+  Series split_got_y;
+  Series split_got_h;
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "1");
+    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", "1");
+    auto params = make_split_params();
+    std::tie(split_got_y, split_got_h) =
+        pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
+  }
+
+  if (split_got_y.platform() != pluss::pMPS ||
+      split_got_h.platform() != pluss::pMPS ||
+      !close_vec(vec_f64(split_got_y), vec_f64(split_ref_y), 4e-3, 4e-3) ||
+      !close_vec(vec_f64(split_got_h), vec_f64(split_ref_h), 4e-3, 4e-3)) {
+    if (err) *err << "bidirectional split-bias native MPS GRU route mismatch against Series fallback\n";
+    return false;
+  }
+
+  auto split_gradient_trace = [&](const char* route_enabled) {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", route_enabled);
+    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", route_enabled);
+    Series xg = x.clone();
+    Series hxg = hx.clone();
+    xg.tracks_slope_(true);
+    hxg.tracks_slope_(true);
+    auto params = make_split_params();
+    for (auto& p : params) {
+      p.weight_ih.tracks_slope_(true);
+      p.weight_hh.tracks_slope_(true);
+      p.bias_ih.tracks_slope_(true);
+      p.bias_hh.tracks_slope_(true);
+    }
+    auto [y, h] = pluss::ai::rnn::gru(xg, hxg, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
+    y.square().sum().add(h.square().sum()).reverse();
+    std::vector<std::vector<double>> grads;
+    grads.push_back(vec_f64(xg.sensitivity()));
+    grads.push_back(vec_f64(hxg.sensitivity()));
+    for (const auto& p : params) {
+      grads.push_back(vec_f64(p.weight_ih.sensitivity()));
+      grads.push_back(vec_f64(p.weight_hh.sensitivity()));
+      grads.push_back(vec_f64(p.bias_ih.sensitivity()));
+      grads.push_back(vec_f64(p.bias_hh.sensitivity()));
+    }
+    return grads;
+  };
+  return compare_gradient_traces("bidirectional split-bias native MPS GRU", split_gradient_trace, 5e-3, 5e-3, err);
 }
 
 } // namespace

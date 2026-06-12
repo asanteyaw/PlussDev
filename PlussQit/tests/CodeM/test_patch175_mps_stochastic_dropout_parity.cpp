@@ -6,6 +6,7 @@
 #include "CodeM/native/mps/Stochastic.h"
 #include "pluss/subsp/linearalg/linearalg.h"
 
+#include <array>
 #include <cstdlib>
 #include <cmath>
 #include <complex>
@@ -815,4 +816,32 @@ TEST_CASE("MPS complex64 small linalg keeps complex lanes and reverse-mode", "[m
       chol_rhs_mps.sensitivity().to(pluss::pCPU).to_vec<C>(),
       chol_rhs_cpu.sensitivity().to_vec<C>(),
       5.0e-5f);
+}
+
+TEST_CASE("MPS complex64 index put accumulate stays native under strict fallback", "[mps][complex][indexing][accumulate]") {
+  if (!pluss::mps::is_ready()) {
+    SUCCEED("MPS runtime unavailable");
+    return;
+  }
+
+  using C = pluss::codem::Complex64;
+  const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+  const pluss::Config c64_mps = pluss::Config{}.with_dtype(pluss::ScalarType::Complex64).with_platform(pluss::pMPS);
+  const pluss::Config i64_mps = pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pMPS);
+
+  pluss::Series x = pluss::make_series(std::vector<C>{C{0.0f, 0.0f}, C{0.0f, 0.0f}, C{0.0f, 0.0f}}, {3}, c64_mps);
+  const pluss::Series idx = pluss::make_series(std::vector<std::int64_t>{1, 1}, {2}, i64_mps);
+  const pluss::Series values = pluss::make_series(std::vector<C>{C{1.0f, 2.0f}, C{3.0f, 4.0f}}, {2}, c64_mps);
+  const std::array<pluss::Series, 1> indices{{idx}};
+  x.index_put_(pluss::msharp::RangeView::Of<pluss::Series>(indices), values, /*accumulate=*/true);
+  REQUIRE(x.platform() == pluss::pMPS);
+  require_close_complex64(x.to(pluss::pCPU).to_vec<C>(), {C{0.0f, 0.0f}, C{4.0f, 6.0f}, C{0.0f, 0.0f}});
+
+  pluss::Series y = pluss::make_series(std::vector<C>{C{0.0f, 0.0f}, C{0.0f, 0.0f}, C{0.0f, 0.0f}}, {3}, c64_mps);
+  const pluss::Series scalar = pluss::make_series(std::vector<C>{C{1.0f, -1.0f}}, {1}, c64_mps);
+  const pluss::Series idx_scalar = pluss::make_series(std::vector<std::int64_t>{0, 0, 2}, {3}, i64_mps);
+  const std::array<pluss::Series, 1> scalar_indices{{idx_scalar}};
+  y.index_put_(pluss::msharp::RangeView::Of<pluss::Series>(scalar_indices), scalar, /*accumulate=*/true);
+  REQUIRE(y.platform() == pluss::pMPS);
+  require_close_complex64(y.to(pluss::pCPU).to_vec<C>(), {C{2.0f, -2.0f}, C{0.0f, 0.0f}, C{1.0f, -1.0f}});
 }

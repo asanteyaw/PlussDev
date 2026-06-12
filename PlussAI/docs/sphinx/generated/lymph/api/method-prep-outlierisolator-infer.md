@@ -68,8 +68,16 @@ infer returned pluss::table::Thread
 **Expected output**
 
 ```text
-libc++abi: terminating due to uncaught exception of type pluss::codem::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
+libc++abi: terminating due to uncaught exception of type pluss::Error: DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs
 Triggered at: <path> (DataReader &pluss::detail::DataReader::with_sizes(std::span<const std::int64_t>))
+Native stack trace:
+  0  pluss::detail::DataReader::with_sizes(std::__1::span<long long const, 18446744073709551615ul>)(data_reader.h:250)
+  1  pluss::codem::Series pluss::detail::DataReader::to_series<pluss::codem::Config const&>(pluss::detail::DataReader::Option, pluss::codem::Config const&) const(data_reader.h:295)
+  2  pluss::codem::Series pluss::codem::value<pluss::codem::Config const&>(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&)(series_value.h:13)
+  3  pluss::codem::Series pluss::make_series<pluss::codem::Config const&>(pluss::detail::DataReader, pluss::detail::DataReader::Option, pluss::codem::Config const&)(series_factory.h:780)
+  4  main(nodej_flow_bundle_demo.cpp:13)
+  5  start + 6992 [dyld]
+
 
 [exit_code] -6
 ```
@@ -105,7 +113,7 @@ void run_regressor_family(const std::string& name, const ModelSpec& spec, const 
 NodeJ model families demo
 Classification families:
   linear (acc, logloss): 1 4.47877e-06
-  linear_hinge (acc, logloss): 1 0.0886185
+  linear_hinge (acc, logloss): 1 0.208572
   tree (acc, logloss): 1 9.99978e-13
   ensemble (acc, logloss): 1 1.00003e-12
   neighbor (acc, logloss): 1 9.99978e-13

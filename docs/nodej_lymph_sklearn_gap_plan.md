@@ -46,18 +46,18 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 
 | Area | sklearn capability | NodeJ today | Gap |
 |---|---|---|---|
-| Linear models | `LogisticRegressionCV`, `RidgeCV`, `Lasso`, `ElasticNet`, `SGD*`, `Huber`, `RANSAC`, `TheilSen`, GLMs (`Poisson/Gamma/Tweedie`) | Linear classifier/regressor exist; options enum includes `L1/Elastic` but implementation is `None/L2` only in many paths | Large |
-| SVM/kernel | `SVC/SVR`, `LinearSVC/SVR`, `NuSVC/NuSVR`, `OneClassSVM` | Kernel family exists but limited; no one-class path | Medium/Large |
-| Trees/ensembles | RF + ExtraTrees + AdaBoost + GradientBoosting + HistGB + Stacking/Voting | Tree/ensemble present, but options enforce subset (e.g., no gradient boost despite enum) | Large |
-| Naive Bayes | `GaussianNB`, `BernoulliNB`, `MultinomialNB`, `ComplementNB`, `CategoricalNB` | Bayes family is gaussian-only | Medium |
-| Neighbors | KNN + Radius* + NearestNeighbors + graph/transformers | KNN-style classifier/regressor only | Medium |
+| Linear models | `LogisticRegressionCV`, `RidgeCV`, `Lasso`, `ElasticNet`, `SGD*`, `Huber`, `RANSAC`, `TheilSen`, GLMs (`Poisson/Gamma/Tweedie`) | Linear classifier/regressor support L1/L2/Elastic options and robust least-squares; CV estimator variants, SGD-style estimators, RANSAC/TheilSen, and GLMs remain | Medium/Large |
+| SVM/kernel | `SVC/SVR`, `LinearSVC/SVR`, `NuSVC/NuSVR`, `OneClassSVM` | C-style, Nu-style, and one-class kernel workflows exist; dedicated linear-SVM estimator variants and deeper sklearn solver parity remain | Medium |
+| Trees/ensembles | RF + ExtraTrees + AdaBoost + GradientBoosting + HistGB + Stacking/Voting | Tree/ensemble present with Bagging, RandomForest, AdaBoost, and GradientBoost paths; ExtraTrees, HistGB, Stacking, and Voting remain | Medium/Large |
+| Naive Bayes | `GaussianNB`, `BernoulliNB`, `MultinomialNB`, `ComplementNB`, `CategoricalNB` | Bayes family covers Gaussian, Bernoulli, Multinomial, and binary Complement classifier paths; CategoricalNB and broader multiclass Complement parity remain | Small/Medium |
+| Neighbors | KNN + Radius* + NearestNeighbors + graph/transformers | KNN and radius-neighbor classifier/regressor paths exist, including Lymph radius-neighbor factories; graph/transformer APIs remain | Small/Medium |
 | Unsupervised | richer clustering/decomposition/outlier set | only KMeans + PCA transformer family, plus custom OutlierIsolator | Medium |
 
 ## 2) Multiclass, calibration, probabilistic quality
 
 | Area | sklearn capability | NodeJ today | Gap |
 |---|---|---|---|
-| Multiclass metrics | multiclass ROC-AUC + broad averaging modes | OvR multiclass works, but multiclass ROC-AUC explicitly not implemented | Medium |
+| Multiclass metrics | multiclass ROC-AUC + broad averaging modes | OvR multiclass metrics include macro ROC-AUC; broader averaging/label-routing modes remain | Small/Medium |
 | Probability calibration | `CalibratedClassifierCV` + calibration curve utilities | `ScoreCalibration` enum only; no dedicated calibrator estimator stack | Medium/Large |
 | Decision threshold tooling | threshold tuning helper APIs | no tuned-threshold equivalent | Medium |
 
@@ -81,8 +81,8 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 
 | Area | sklearn capability | NodeJ today | Gap |
 |---|---|---|---|
-| Search engines | `GridSearchCV`, `RandomizedSearchCV`, Halving search CV | `sweep` (candidate list) + `probe` (sampler callback) only; no native grid/random/halving engine objects | Large |
-| CV splitter breadth | broad cross-validator set including grouped strategies | `SplitOptions` enum includes `GroupKFold`, but `cross_assess` returns not-implemented for it | Medium |
+| Search engines | `GridSearchCV`, `RandomizedSearchCV`, Halving search CV | Grid, random, Bayesian-style sampler, and successive-halving search paths exist; sklearn-style estimator wrapper/results-table ergonomics remain | Medium |
+| CV splitter breadth | broad cross-validator set including grouped strategies | Holdout, KFold, StratifiedKFold, and GroupKFold execution paths exist; richer splitters remain | Small/Medium |
 | Search artifacts | rich `cv_results_`, ranking, refit pipelines | Tune report is lighter; no sklearn-style results table | Medium |
 
 ## 6) Metrics, inspection, feature selection
@@ -149,9 +149,10 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 2. Ensemble family:
    - implement `GradientBoost` path (currently enum-level but missing runtime support).
 3. Bayes family:
-   - add `Multinomial` and `Bernoulli` variants.
+   - add `Multinomial`, `Bernoulli`, and `Complement` variants.
+   - extend categorical/multiclass parity after the binary count-likelihood paths.
 4. Neighbor family:
-   - add radius-neighbor modes.
+   - radius-neighbor modes are present; add graph/transformer-style neighbor APIs next.
 
 ### Files to extend
 
@@ -288,4 +289,3 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
   - https://scikit-learn.org/stable/api/sklearn.metrics.html
   - https://scikit-learn.org/stable/api/sklearn.calibration.html
   - https://scikit-learn.org/stable/api/sklearn.inspection.html
-

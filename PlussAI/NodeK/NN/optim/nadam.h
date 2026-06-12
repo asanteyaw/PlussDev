@@ -96,10 +96,7 @@ public:
     state.mu_products.reserve(groups_.size());
     for (const auto& group : groups_) {
       state.group_options.push_back(group.options);
-      const double mu = (group.options.execution.capturable && group.mu_product_scalar.defined())
-                            ? group.mu_product_scalar.to(pluss::pCPU, ScalarType::Float64).item<double>()
-                            : group.mu_product;
-      state.mu_products.push_back(mu);
+      state.mu_products.push_back(group.mu_product);
       state.mu_product_scalar.push_back(group.mu_product_scalar);
       state.beta2_power.push_back(group.beta2_power);
       state.decay_power.push_back(group.decay_power);

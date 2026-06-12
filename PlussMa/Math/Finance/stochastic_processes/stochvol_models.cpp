@@ -160,35 +160,6 @@ Series Heston::price_mc(pricing::OptionType type,
   return mc.price(inst, mdl, mkt, pricer::RiskSpec::PriceOnly, out_cfg).price;
 }
 
-double Heston::sse(const std::vector<calibration::OptionQuote>& quotes,
-                   double spot,
-                   double rate,
-                   double dividend_yield,
-                   const calibration::HestonCalibOptions& options,
-                   pluss::codem::Config cfg) const {
-  return calibration::heston_sse(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::HestonCalibResult Heston::calibrate(const std::vector<calibration::OptionQuote>& quotes,
-                                                 double spot,
-                                                 double rate,
-                                                 double dividend_yield,
-                                                 const calibration::HestonCalibOptions& options,
-                                                 pluss::codem::Config cfg) const {
-  return calibration::calibrate_heston(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::HestonCalibResult Heston::calibrate_inplace(const std::vector<calibration::OptionQuote>& quotes,
-                                                         double spot,
-                                                         double rate,
-                                                         double dividend_yield,
-                                                         const calibration::HestonCalibOptions& options,
-                                                         pluss::codem::Config cfg) {
-  auto out = calibration::calibrate_heston(quotes, spot, rate, dividend_yield, params_, options, cfg);
-  params_ = out.params;
-  return out;
-}
-
 Bates::Bates(volatility::BatesParams params) : params_(params) {}
 
 const volatility::BatesParams& Bates::params() const noexcept {
@@ -302,35 +273,6 @@ Series Bates::price_fft(pricing::OptionType type,
   return fft.price(inst, mdl, mkt, pricer::RiskSpec::PriceOnly, out_cfg).price;
 }
 
-double Bates::sse(const std::vector<calibration::OptionQuote>& quotes,
-                  double spot,
-                  double rate,
-                  double dividend_yield,
-                  const calibration::BatesCalibOptions& options,
-                  pluss::codem::Config cfg) const {
-  return calibration::bates_sse(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::BatesCalibResult Bates::calibrate(const std::vector<calibration::OptionQuote>& quotes,
-                                               double spot,
-                                               double rate,
-                                               double dividend_yield,
-                                               const calibration::BatesCalibOptions& options,
-                                               pluss::codem::Config cfg) const {
-  return calibration::calibrate_bates(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::BatesCalibResult Bates::calibrate_inplace(const std::vector<calibration::OptionQuote>& quotes,
-                                                       double spot,
-                                                       double rate,
-                                                       double dividend_yield,
-                                                       const calibration::BatesCalibOptions& options,
-                                                       pluss::codem::Config cfg) {
-  auto out = calibration::calibrate_bates(quotes, spot, rate, dividend_yield, params_, options, cfg);
-  params_ = out.params;
-  return out;
-}
-
 Sv::Sv(volatility::SvParams params) : params_(params) {}
 
 const volatility::SvParams& Sv::params() const noexcept {
@@ -373,35 +315,6 @@ double Sv::price_mc(pricing::OptionType type,
   return pricing::sv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
-double Sv::sse(const std::vector<calibration::OptionQuote>& quotes,
-               double spot,
-               double rate,
-               double dividend_yield,
-               const calibration::SvCalibOptions& options,
-               pluss::codem::Config cfg) const {
-  return calibration::sv_sse(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::SvCalibResult Sv::calibrate(const std::vector<calibration::OptionQuote>& quotes,
-                                         double spot,
-                                         double rate,
-                                         double dividend_yield,
-                                         const calibration::SvCalibOptions& options,
-                                         pluss::codem::Config cfg) const {
-  return calibration::calibrate_sv(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::SvCalibResult Sv::calibrate_inplace(const std::vector<calibration::OptionQuote>& quotes,
-                                                 double spot,
-                                                 double rate,
-                                                 double dividend_yield,
-                                                 const calibration::SvCalibOptions& options,
-                                                 pluss::codem::Config cfg) {
-  auto out = calibration::calibrate_sv(quotes, spot, rate, dividend_yield, params_, options, cfg);
-  params_ = out.params;
-  return out;
-}
-
 HestonNandi::HestonNandi(volatility::HestonNandiParams params) : params_(params) {}
 
 const volatility::HestonNandiParams& HestonNandi::params() const noexcept {
@@ -441,41 +354,6 @@ double HestonNandi::price(pricing::OptionType type,
                           double maturity,
                           const pricing::HestonNandiIntegrationOptions& options) const {
   return pricing::heston_nandi_price(type, spot, strike, rate, dividend_yield, maturity, params_, options);
-}
-
-double HestonNandi::returns_nll(const pluss::codem::Series& returns, pluss::codem::Config cfg) const {
-  return calibration::heston_nandi_returns_nll(returns, params_, cfg);
-}
-
-double HestonNandi::sse(const std::vector<calibration::OptionQuote>& quotes,
-                        double spot,
-                        double rate,
-                        double dividend_yield,
-                        const calibration::HestonNandiCalibOptions& options,
-                        pluss::codem::Config cfg) const {
-  return calibration::heston_nandi_sse(quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::HestonNandiCalibResult HestonNandi::calibrate(const pluss::codem::Series& returns,
-                                                           const std::vector<calibration::OptionQuote>& quotes,
-                                                           double spot,
-                                                           double rate,
-                                                           double dividend_yield,
-                                                           const calibration::HestonNandiCalibOptions& options,
-                                                           pluss::codem::Config cfg) const {
-  return calibration::calibrate_heston_nandi(returns, quotes, spot, rate, dividend_yield, params_, options, cfg);
-}
-
-calibration::HestonNandiCalibResult HestonNandi::calibrate_inplace(const pluss::codem::Series& returns,
-                                                                   const std::vector<calibration::OptionQuote>& quotes,
-                                                                   double spot,
-                                                                   double rate,
-                                                                   double dividend_yield,
-                                                                   const calibration::HestonNandiCalibOptions& options,
-                                                                   pluss::codem::Config cfg) {
-  auto out = calibration::calibrate_heston_nandi(returns, quotes, spot, rate, dividend_yield, params_, options, cfg);
-  params_ = out.params;
-  return out;
 }
 
 Sabr::Sabr(volatility::SabrParams params) : params_(params) {}
@@ -626,23 +504,6 @@ double VasicekRate::zcb(double maturity, double short_rate) const {
   return rates::vasicek_zcb(maturity, short_rate, params_);
 }
 
-double VasicekRate::sse(const std::vector<calibration::RateQuote>& quotes,
-                        const calibration::VasicekCalibOptions& options) const {
-  return calibration::vasicek_sse(quotes, params_, options);
-}
-
-calibration::VasicekCalibResult VasicekRate::calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                                       const calibration::VasicekCalibOptions& options) const {
-  return calibration::calibrate_vasicek(quotes, params_, options);
-}
-
-calibration::VasicekCalibResult VasicekRate::calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                               const calibration::VasicekCalibOptions& options) {
-  auto out = calibration::calibrate_vasicek(quotes, params_, options);
-  params_ = out.params;
-  return out;
-}
-
 CirRate::CirRate(rates::CirParams params) : params_(params) {}
 
 const rates::CirParams& CirRate::params() const noexcept {
@@ -666,22 +527,6 @@ double CirRate::zcb(double maturity, double short_rate) const {
   return rates::cir_zcb(maturity, short_rate, params_);
 }
 
-double CirRate::sse(const std::vector<calibration::RateQuote>& quotes, const calibration::CirCalibOptions& options) const {
-  return calibration::cir_sse(quotes, params_, options);
-}
-
-calibration::CirCalibResult CirRate::calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                               const calibration::CirCalibOptions& options) const {
-  return calibration::calibrate_cir(quotes, params_, options);
-}
-
-calibration::CirCalibResult CirRate::calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                       const calibration::CirCalibOptions& options) {
-  auto out = calibration::calibrate_cir(quotes, params_, options);
-  params_ = out.params;
-  return out;
-}
-
 HullWhiteRate::HullWhiteRate(rates::HullWhiteParams params) : params_(params) {}
 
 const rates::HullWhiteParams& HullWhiteRate::params() const noexcept {
@@ -703,23 +548,6 @@ rates::RatePaths HullWhiteRate::paths(std::int64_t steps,
 
 double HullWhiteRate::zcb(double maturity, double short_rate) const {
   return rates::hull_white_zcb(maturity, short_rate, params_);
-}
-
-double HullWhiteRate::sse(const std::vector<calibration::RateQuote>& quotes,
-                          const calibration::HullWhiteCalibOptions& options) const {
-  return calibration::hull_white_sse(quotes, params_, options);
-}
-
-calibration::HullWhiteCalibResult HullWhiteRate::calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                                           const calibration::HullWhiteCalibOptions& options) const {
-  return calibration::calibrate_hull_white(quotes, params_, options);
-}
-
-calibration::HullWhiteCalibResult HullWhiteRate::calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                                   const calibration::HullWhiteCalibOptions& options) {
-  auto out = calibration::calibrate_hull_white(quotes, params_, options);
-  params_ = out.params;
-  return out;
 }
 
 HjmRate::HjmRate(rates::HjmParams params) : params_(std::move(params)) {}
@@ -747,22 +575,6 @@ double HjmRate::zcb_mc(double maturity,
                        rates::SimOptions options,
                        pluss::codem::Config cfg) const {
   return rates::hjm_zcb_mc(maturity, params_, paths, steps, options, cfg);
-}
-
-double HjmRate::sse(const std::vector<calibration::RateQuote>& quotes, const calibration::HjmCalibOptions& options) const {
-  return calibration::hjm_sse(quotes, params_, options);
-}
-
-calibration::HjmCalibResult HjmRate::calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                               const calibration::HjmCalibOptions& options) const {
-  return calibration::calibrate_hjm(quotes, params_, options);
-}
-
-calibration::HjmCalibResult HjmRate::calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                       const calibration::HjmCalibOptions& options) {
-  auto out = calibration::calibrate_hjm(quotes, params_, options);
-  params_ = out.params;
-  return out;
 }
 
 } // namespace pluss::subsp::math::finance::models

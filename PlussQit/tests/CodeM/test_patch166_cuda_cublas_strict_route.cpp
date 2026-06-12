@@ -83,6 +83,20 @@ TEST_CASE("CUDA cuBLAS strict matmul route executes without CPU fallback", "[cud
       {3, 2});
 
   const auto ref = a_cpu.matmul(b_cpu).to_vec<float>();
-  const auto got = a_cpu.to(pluss::pCUDA).matmul(b_cpu.to(pluss::pCUDA)).to(pluss::pCPU).to_vec<float>();
+  const auto a_cuda = a_cpu.to(pluss::pCUDA);
+  const auto b_cuda = b_cpu.to(pluss::pCUDA);
+  REQUIRE(a_cuda.storage().location() == pluss::codem::StorageLocation::CudaDevice);
+  REQUIRE(b_cuda.storage().location() == pluss::codem::StorageLocation::CudaDevice);
+
+  pluss::Series got_cuda;
+  {
+    const ScopedEnvVar no_materialize("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "1");
+    got_cuda = a_cuda.matmul(b_cuda);
+    REQUIRE(got_cuda.platform() == pluss::pCUDA);
+    REQUIRE(got_cuda.storage().location() == pluss::codem::StorageLocation::CudaDevice);
+  }
+
+  const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
+  const auto got = got_cuda.to(pluss::pCPU).to_vec<float>();
   require_close_(got, ref);
 }

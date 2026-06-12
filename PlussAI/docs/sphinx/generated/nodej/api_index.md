@@ -1,29 +1,44 @@
 # NodeJ Full API Reference: Method Index
 
-Total method pages: **127**
-Total data-type pages: **16**
+Total method pages: **169**
+Total data-type pages: **31**
 
 ## Data Types
 
 ```{toctree}
 :maxdepth: 1
 
+api/type-classreport
+api/type-confusiontable
 api/type-crossassessreport
+api/type-dependencecurve
+api/type-dependencesurface
 api/type-featurebatch
 api/type-flowbundle
 api/type-flowbundlemetadata
+api/type-flowgraphinfo
+api/type-flowstageinfo
 api/type-foldassessresult
 api/type-indexsplit
 api/type-isolationtree
 api/type-labeledbatch
 api/type-modelspec
+api/type-permuteimpactreport
 api/type-randomstate
+api/type-sparsecrossreport
+api/type-sparsecsrmatrix
+api/type-sparsefoldreport
+api/type-sparsetripletmatrix
+api/type-sparsetunereport
+api/type-sparsetunetrial
 api/type-splitplan
 api/type-stage
 api/type-status
 api/type-transformspec
+api/type-tuneledger
 api/type-tunereport
 api/type-tunetrialresult
+api/type-variancepruneresult
 ```
 
 ## Methods
@@ -34,7 +49,11 @@ api/type-tunetrialresult
 api/method-apply-learn-map
 api/method-apply-map
 api/method-check-ready-for-infer
+api/method-classification-report
 api/method-classifierbase-task-kind
+api/method-confusion-table
+api/method-dependence-curve
+api/method-dependence-surface
 api/method-estimatorbase-dump-state
 api/method-estimatorbase-load-state
 api/method-estimatorbase-task-kind
@@ -54,6 +73,7 @@ api/method-featuretransformer-remainder-policy
 api/method-featuretransformer-set-remainder-policy
 api/method-featuretransformer-stage-count
 api/method-featuretransformer-trained
+api/method-flow-add-column-stage
 api/method-flow-add-feature-transformer
 api/method-flow-add-function-transformer
 api/method-flow-append-transform
@@ -61,16 +81,26 @@ api/method-flow-clear-model
 api/method-flow-clear-transforms
 api/method-flow-dump-model-state
 api/method-flow-dump-transform-states
+api/method-flow-flow-summary
+api/method-flow-graph-info
 api/method-flow-has-model
 api/method-flow-has-model-spec
 api/method-flow-has-opaque-transforms
+api/method-flow-load-blueprint
 api/method-flow-load-model-state
 api/method-flow-load-transform-states
 api/method-flow-mark-trained
 api/method-flow-model-spec
+api/method-flow-nested-param
+api/method-flow-nested-param-keys
+api/method-flow-save-blueprint
 api/method-flow-set-classifier
 api/method-flow-set-model
+api/method-flow-set-nested-param
 api/method-flow-set-regressor
+api/method-flow-set-stage-key
+api/method-flow-set-stage-remainder
+api/method-flow-set-stage-route
 api/method-flow-stage-count
 api/method-flow-task-kind
 api/method-flow-trained
@@ -90,11 +120,18 @@ api/method-labeledbatch-has-weights
 api/method-labelencoder-dump-state
 api/method-labelencoder-load-state
 api/method-labelencoder-trained
+api/method-lexiconmapper-feature-count
+api/method-lexiconmapper-learn
+api/method-lexiconmapper-learned
+api/method-lexiconmapper-map-dense
+api/method-lexiconmapper-map-sparse
+api/method-lexiconmapper-vocabulary
 api/method-load
 api/method-load-and-restore
 api/method-make-classifier
 api/method-make-flow
 api/method-make-regressor
+api/method-make-sparse-triplet
 api/method-make-transformer
 api/method-make-workflow
 api/method-maxabsscaler-dump-state
@@ -139,6 +176,24 @@ api/method-simpleimputer-load-state
 api/method-simpleimputer-trained
 api/method-slice-feature-batch
 api/method-slice-labeled-batch
+api/method-sparse-triplet-to-csr
+api/method-sparselinearbinaryclassifier-dump-state
+api/method-sparselinearbinaryclassifier-feature-count
+api/method-sparselinearbinaryclassifier-infer-scores
+api/method-sparselinearbinaryclassifier-load-state
+api/method-sparselinearbinaryclassifier-trained
+api/method-sparselinearmulticlassifier-class-count
+api/method-sparselinearmulticlassifier-dump-state
+api/method-sparselinearmulticlassifier-feature-count
+api/method-sparselinearmulticlassifier-infer
+api/method-sparselinearmulticlassifier-infer-scores
+api/method-sparselinearmulticlassifier-load-state
+api/method-sparselinearmulticlassifier-trained
+api/method-sparselinearregressor-dump-state
+api/method-sparselinearregressor-feature-count
+api/method-sparselinearregressor-infer
+api/method-sparselinearregressor-load-state
+api/method-sparselinearregressor-trained
 api/method-standardscaler-dump-state
 api/method-standardscaler-load-state
 api/method-standardscaler-trained
@@ -149,12 +204,14 @@ api/method-statusor-ok
 api/method-statusor-status
 api/method-statusor-statusor
 api/method-statusor-value
+api/method-take-features
 api/method-thresholdbinarizer-dump-state
 api/method-thresholdbinarizer-load-state
 api/method-thresholdbinarizer-trained
 api/method-transformerbase-dump-state
 api/method-transformerbase-load-state
 api/method-transformerbase-trained
+api/method-variance-prune
 api/method-vectornormalizer-dump-state
 api/method-vectornormalizer-load-state
 api/method-vectornormalizer-trained

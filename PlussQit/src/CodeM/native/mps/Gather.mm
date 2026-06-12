@@ -33,6 +33,11 @@ struct GatherMeta {
   ulong idx_strides[kMaxRank];
 };
 
+struct Complex64 {
+  float re;
+  float im;
+};
+
 kernel void gather_f32_i64(
     const device float* in [[buffer(0)]],
     const device long* index [[buffer(1)]],
@@ -59,6 +64,38 @@ kernel void gather_f32_i64(
   }
   if (pick < 0 || pick >= dim_sz) {
     out[gid] = 0.0f;
+    return;
+  }
+  in_off += static_cast<ulong>(pick) * meta.in_strides[meta.dim];
+  out[gid] = in[in_off];
+}
+
+kernel void gather_c64_i64(
+    const device Complex64* in [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device Complex64* out [[buffer(2)]],
+    constant GatherMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong in_off = 0;
+  ulong idx_off = 0;
+  for (int d = static_cast<int>(meta.ndim) - 1; d >= 0; --d) {
+    const ulong sz = meta.out_sizes[d];
+    const ulong i = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    idx_off += i * meta.idx_strides[d];
+    if (static_cast<uint>(d) != meta.dim) {
+      in_off += i * meta.in_strides[d];
+    }
+  }
+
+  long pick = index[idx_off];
+  const long dim_sz = static_cast<long>(meta.in_sizes[meta.dim]);
+  if (pick < 0) {
+    pick += dim_sz;
+  }
+  if (pick < 0 || pick >= dim_sz) {
+    out[gid] = Complex64{0.0f, 0.0f};
     return;
   }
   in_off += static_cast<ulong>(pick) * meta.in_strides[meta.dim];
@@ -145,6 +182,7 @@ struct Context {
   id<MTLCommandQueue> queue{nil};
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> gather_f32_i64{nil};
+  id<MTLComputePipelineState> gather_c64_i64{nil};
   id<MTLComputePipelineState> gather_i64_i64{nil};
   id<MTLComputePipelineState> gather_i32_i64{nil};
   std::string error{};
@@ -206,6 +244,21 @@ Context& ctx_() {
         }
         return;
       }
+      NSError* p_err_c64 = nil;
+      id<MTLFunction> fn_c64 = [ctx.library newFunctionWithName:@"gather_c64_i64"];
+      if (fn_c64 == nil) {
+        ctx.error = "MPS gather init failed: missing kernel gather_c64_i64";
+        return;
+      }
+      ctx.gather_c64_i64 = [ctx.device newComputePipelineStateWithFunction:fn_c64 error:&p_err_c64];
+      if (ctx.gather_c64_i64 == nil) {
+        ctx.error = "MPS gather init failed: pipeline creation error";
+        if (p_err_c64 != nil && p_err_c64.localizedDescription != nil) {
+          ctx.error += ": ";
+          ctx.error += std::string([p_err_c64.localizedDescription UTF8String]);
+        }
+        return;
+      }
       NSError* p_err_i64 = nil;
       id<MTLFunction> fn_i64 = [ctx.library newFunctionWithName:@"gather_i64_i64"];
       if (fn_i64 == nil) {
@@ -256,9 +309,10 @@ void validate_inputs_(const Series& input, const Series& index, const Series& ou
     fail_("mps::gather: input/output dtype mismatch");
   }
   if (input.scalar_type() != ScalarType::Float32 &&
+      input.scalar_type() != ScalarType::Complex64 &&
       input.scalar_type() != ScalarType::Int64 &&
       input.scalar_type() != ScalarType::Int32) {
-    fail_("mps::gather: only float32/int32/int64 input/output supported on current MPS path");
+    fail_("mps::gather: only float32/complex64/int32/int64 input/output supported on current MPS path");
   }
   if (index.scalar_type() != ScalarType::Int64) {
     fail_("mps::gather: index must be int64");
@@ -320,7 +374,8 @@ void validate_inputs_(const Series& input, const Series& index, const Series& ou
 } // namespace
 
 bool supports_gather(ScalarType input_dt, ScalarType index_dt) noexcept {
-  return (input_dt == ScalarType::Float32 || input_dt == ScalarType::Int64 || input_dt == ScalarType::Int32) &&
+  return (input_dt == ScalarType::Float32 || input_dt == ScalarType::Complex64 ||
+          input_dt == ScalarType::Int64 || input_dt == ScalarType::Int32) &&
       index_dt == ScalarType::Int64;
 }
 
@@ -338,10 +393,14 @@ void gather(const Series& input, std::int64_t dim, const Series& index, Series& 
 
   @autoreleasepool {
     const ScalarType input_dt = input.scalar_type();
-    const std::size_t elem_bytes =
-        (input_dt == ScalarType::Float32)
-            ? sizeof(float)
-            : (input_dt == ScalarType::Int32 ? sizeof(std::int32_t) : sizeof(std::int64_t));
+    std::size_t elem_bytes = sizeof(std::int64_t);
+    if (input_dt == ScalarType::Float32) {
+      elem_bytes = sizeof(float);
+    } else if (input_dt == ScalarType::Complex64) {
+      elem_bytes = sizeof(float) * 2;
+    } else if (input_dt == ScalarType::Int32) {
+      elem_bytes = sizeof(std::int32_t);
+    }
     const std::size_t in_bytes = static_cast<std::size_t>(input.numel()) * elem_bytes;
     const std::size_t idx_bytes = static_cast<std::size_t>(index.numel()) * sizeof(std::int64_t);
     const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
@@ -363,6 +422,8 @@ void gather(const Series& input, std::int64_t dim, const Series& index, Series& 
     id<MTLComputePipelineState> pipeline = c.gather_i64_i64;
     if (input_dt == ScalarType::Float32) {
       pipeline = c.gather_f32_i64;
+    } else if (input_dt == ScalarType::Complex64) {
+      pipeline = c.gather_c64_i64;
     } else if (input_dt == ScalarType::Int32) {
       pipeline = c.gather_i32_i64;
     }

@@ -828,8 +828,16 @@ public:
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
   static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st);
+  static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
   static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st);
+  static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
   static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st);
+  static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st, Platform platform);
+  static Series arange(double start, double end, double step, ScalarType dtype, Platform platform);
+  static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype, Platform platform);
+  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype, Platform platform);
+  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
+  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
 
   // Core view/cast helpers used across the library.
   Series contiguous() const;

@@ -35,41 +35,21 @@ bool parse_bool_env_(const char* name, bool default_value) noexcept {
   return default_value;
 }
 
-bool supports_ones_dtype_(ScalarType dtype) noexcept {
+bool supports_zeros_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
-    case ScalarType::Float64:
-    case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Int64:
-    case ScalarType::Int32:
-    case ScalarType::Int16:
-    case ScalarType::Int8:
-    case ScalarType::UInt8:
     case ScalarType::Bool:
-    case ScalarType::Complex64:
-    case ScalarType::Complex128:
-      return true;
-    default:
-      return false;
-  }
-}
-
-bool supports_full_dtype_(ScalarType dtype) noexcept {
-  switch (dtype) {
-    case ScalarType::Float64:
-    case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Int64:
-    case ScalarType::Int32:
-    case ScalarType::Int16:
-    case ScalarType::Int8:
-    case ScalarType::UInt64:
-    case ScalarType::UInt32:
+    case ScalarType::UInt8:
     case ScalarType::UInt16:
-    case ScalarType::UInt8:
-    case ScalarType::Bool:
+    case ScalarType::UInt32:
+    case ScalarType::UInt64:
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Float32:
+    case ScalarType::Float64:
     case ScalarType::Float8E4M3FN:
     case ScalarType::Float8E5M2:
     case ScalarType::Complex64:
@@ -80,12 +60,48 @@ bool supports_full_dtype_(ScalarType dtype) noexcept {
   }
 }
 
+bool supports_ones_dtype_(ScalarType dtype) noexcept {
+  switch (dtype) {
+    case ScalarType::Float64:
+    case ScalarType::Float32:
+    case ScalarType::Int64:
+    case ScalarType::Int32:
+    case ScalarType::Int16:
+    case ScalarType::Int8:
+    case ScalarType::UInt64:
+    case ScalarType::UInt32:
+    case ScalarType::UInt16:
+    case ScalarType::UInt8:
+    case ScalarType::Bool:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool supports_full_dtype_(ScalarType dtype) noexcept {
+  switch (dtype) {
+    case ScalarType::Float64:
+    case ScalarType::Float32:
+    case ScalarType::Int64:
+    case ScalarType::Int32:
+    case ScalarType::Int16:
+    case ScalarType::Int8:
+    case ScalarType::UInt64:
+    case ScalarType::UInt32:
+    case ScalarType::UInt16:
+    case ScalarType::UInt8:
+    case ScalarType::Bool:
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool supports_arange_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
     case ScalarType::Int64:
     case ScalarType::Int32:
     case ScalarType::Int16:
@@ -105,8 +121,6 @@ bool supports_linspace_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
       return true;
     default:
       return false;
@@ -117,8 +131,6 @@ bool supports_eye_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
     case ScalarType::Int64:
     case ScalarType::Int32:
     case ScalarType::Int16:
@@ -135,15 +147,7 @@ bool supports_eye_dtype_(ScalarType dtype) noexcept {
 }
 
 bool supports_rand_dtype_(ScalarType dtype) noexcept {
-  switch (dtype) {
-    case ScalarType::Float64:
-    case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-      return true;
-    default:
-      return false;
-  }
+  return dtype == ScalarType::Float32 || dtype == ScalarType::Float64;
 }
 
 bool supports_factory_common_(ScalarType dtype, bool (*dtype_support)(ScalarType) noexcept) noexcept {
@@ -164,7 +168,7 @@ bool native_factory_strict() noexcept {
 }
 
 bool supports_zeros_factory_baseline(ScalarType dtype) noexcept {
-  return supports_factory_common_(dtype, supports_full_dtype_);
+  return supports_factory_common_(dtype, supports_zeros_dtype_);
 }
 
 bool supports_ones_factory_baseline(ScalarType dtype) noexcept {
@@ -195,5 +199,84 @@ bool supports_randn_factory_baseline(ScalarType dtype) noexcept {
   return supports_factory_common_(dtype, supports_rand_dtype_);
 }
 
-} // namespace pluss::codem::native::cuda
+#if !(defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA)
+bool run_fill_factory(Series& out, double value) noexcept {
+  (void)out;
+  (void)value;
+  return false;
+}
 
+bool run_arange_factory(Series& out, double start, double step) noexcept {
+  (void)out;
+  (void)start;
+  (void)step;
+  return false;
+}
+
+bool run_linspace_factory(Series& out, double start, double end) noexcept {
+  (void)out;
+  (void)start;
+  (void)end;
+  return false;
+}
+
+bool run_eye_factory(Series& out, std::int64_t n, std::int64_t m) noexcept {
+  (void)out;
+  (void)n;
+  (void)m;
+  return false;
+}
+
+bool run_uniform_factory(Series& out, std::uint64_t seed, double lo, double hi) noexcept {
+  (void)out;
+  (void)seed;
+  (void)lo;
+  (void)hi;
+  return false;
+}
+
+bool run_normal_factory(Series& out, std::uint64_t seed, double mean, double stddev) noexcept {
+  (void)out;
+  (void)seed;
+  (void)mean;
+  (void)stddev;
+  return false;
+}
+
+bool run_randint_factory(Series& out, std::uint64_t seed, std::int64_t lo, std::int64_t hi) noexcept {
+  (void)out;
+  (void)seed;
+  (void)lo;
+  (void)hi;
+  return false;
+}
+
+bool run_bernoulli_factory(Series& out, std::uint64_t seed, double p) noexcept {
+  (void)out;
+  (void)seed;
+  (void)p;
+  return false;
+}
+
+bool run_randperm_factory(Series& out, std::uint64_t seed) noexcept {
+  (void)out;
+  (void)seed;
+  return false;
+}
+
+bool run_complex_factory(const Series& real, const Series& imag, Series& out) noexcept {
+  (void)real;
+  (void)imag;
+  (void)out;
+  return false;
+}
+
+bool run_polar_factory(const Series& abs, const Series& angle, Series& out) noexcept {
+  (void)abs;
+  (void)angle;
+  (void)out;
+  return false;
+}
+#endif
+
+} // namespace pluss::codem::native::cuda

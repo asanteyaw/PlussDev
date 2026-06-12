@@ -10,8 +10,6 @@ namespace {
 
 using pluss::Config;
 using pluss::ScalarType;
-using pluss::subsp::math::finance::calibration::HestonCalibOptions;
-using pluss::subsp::math::finance::calibration::OptionQuote;
 using pluss::subsp::math::finance::models::Bates;
 using pluss::subsp::math::finance::models::Heston;
 using pluss::subsp::math::finance::models::HestonNandi;
@@ -85,27 +83,6 @@ void test_heston_object_lane() {
   const double p_mc_base = base.price_mc(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, mc, cfg);
   expect(std::isfinite(p_mc_base) && p_mc_base > 0.0, "stochvol base price_mc should be finite and positive");
 
-  std::vector<OptionQuote> quotes;
-  for (double k : {95.0, 100.0, 105.0}) {
-    OptionQuote q;
-    q.type = OptionType::Call;
-    q.strike = k;
-    q.maturity = 1.0;
-    q.market_price = model.price(OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, int_opt);
-    q.weight = 1.0;
-    quotes.push_back(q);
-  }
-
-  HestonCalibOptions copt;
-  copt.random_starts = 2;
-  copt.max_iterations = 8;
-  copt.integration = int_opt;
-  copt.seed = 20260413ULL;
-
-  const double sse0 = model.sse(quotes, 100.0, 0.02, 0.0, copt, cfg);
-  const auto fit = model.calibrate_inplace(quotes, 100.0, 0.02, 0.0, copt, cfg);
-  expect(std::isfinite(sse0), "heston object sse should be finite");
-  expect(std::isfinite(fit.objective), "heston object calibrate objective should be finite");
 }
 
 void test_sv_object_lane() {

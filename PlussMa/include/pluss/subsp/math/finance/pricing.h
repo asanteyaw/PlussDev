@@ -71,6 +71,13 @@ struct CosOptions {
 
 using CharacteristicFn = std::function<std::complex<double>(std::complex<double>)>;
 
+struct ComplexSeries {
+  pluss::codem::Series real = pluss::codem::Series::undefined();
+  pluss::codem::Series imag = pluss::codem::Series::undefined();
+};
+
+using CharacteristicSeriesFn = std::function<ComplexSeries(const pluss::codem::Series&)>;
+
 struct HestonNandiIntegrationOptions {
   std::int64_t integration_steps = 4096;
   double integration_u_max = 200.0;
@@ -296,6 +303,16 @@ CODEM_API double option_price_cos(OptionType type,
                                   const CosOptions& options = {},
                                   pluss::codem::Config cfg = {});
 
+CODEM_API pluss::codem::Series option_price_cos(OptionType type,
+                                                const pluss::codem::Series& spot,
+                                                const pluss::codem::Series& strike,
+                                                double rate,
+                                                double dividend_yield,
+                                                const pluss::codem::Series& maturity,
+                                                const CharacteristicSeriesFn& char_fn,
+                                                const CosOptions& options = {},
+                                                pluss::codem::Config cfg = {});
+
 CODEM_API double heston_price_mc(OptionType type,
                                  double spot,
                                  double strike,
@@ -344,6 +361,16 @@ CODEM_API double heston_price_cos(OptionType type,
                                   const volatility::HestonParams& params,
                                   const CosOptions& options = {},
                                   pluss::codem::Config cfg = {});
+
+CODEM_API pluss::codem::Series heston_price_cos(OptionType type,
+                                                const pluss::codem::Series& spot,
+                                                const pluss::codem::Series& strike,
+                                                double rate,
+                                                double dividend_yield,
+                                                const pluss::codem::Series& maturity,
+                                                const volatility::HestonParams& params,
+                                                const CosOptions& options = {},
+                                                pluss::codem::Config cfg = {});
 
 CODEM_API double bates_price_cos(OptionType type,
                                  double spot,

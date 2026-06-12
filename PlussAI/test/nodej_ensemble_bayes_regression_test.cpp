@@ -287,6 +287,68 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
         return false;
       }
     }
+    const auto bad_infer_or = reg->infer(FeatureBatch{
+        .x = pluss::make_series(std::vector<double>{1.0, -1.0}, {1, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    });
+    if (bad_infer_or.ok() || bad_infer_or.status().code != StatusCode::InvalidArgument) {
+      if (err) *err << "bayes multinomial regressor should reject negative inference features\n";
+      return false;
+    }
+
+    auto bad_feature_reg_or = pluss::ai::nodej::make_regressor(spec);
+    if (!bad_feature_reg_or.ok()) {
+      if (err) *err << "make_regressor should succeed for multinomial negative-feature check\n";
+      return false;
+    }
+    const LabeledBatch negative_feature_batch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{1.0, -1.0, 0.0, 2.0}, {2, 2}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, f64()),
+    };
+    const auto bad_feature_status = bad_feature_reg_or.value()->learn(negative_feature_batch);
+    if (bad_feature_status.ok() || bad_feature_status.code != StatusCode::InvalidArgument) {
+      if (err) *err << "bayes multinomial regressor should reject negative training features\n";
+      return false;
+    }
+
+    auto bad_label_reg_or = pluss::ai::nodej::make_regressor(spec);
+    if (!bad_label_reg_or.ok()) {
+      if (err) *err << "make_regressor should succeed for multinomial negative-label check\n";
+      return false;
+    }
+    const LabeledBatch negative_label_batch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{1.0, 0.0, 0.0, 2.0}, {2, 2}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = pluss::make_series(std::vector<double>{1.0, -1.0}, {2}, f64()),
+    };
+    const auto bad_label_status = bad_label_reg_or.value()->learn(negative_label_batch);
+    if (bad_label_status.ok() || bad_label_status.code != StatusCode::InvalidArgument) {
+      if (err) *err << "bayes multinomial regressor should reject negative training labels\n";
+      return false;
+    }
+
+    auto complement_reg_or = pluss::ai::nodej::make_regressor(ModelSpec{
+        .task = TaskKind::Regression,
+        .family = ModelFamily::Bayes,
+        .options = BayesFamilyOptions{
+            .likelihood = BayesLikelihood::Complement,
+            .smoothing = 1e-6,
+        },
+    });
+    if (!complement_reg_or.ok()) {
+      if (err) *err << "make_regressor should construct complement bayes regressor for rejection check\n";
+      return false;
+    }
+    const auto complement_status = complement_reg_or.value()->learn(batch);
+    if (complement_status.ok() || complement_status.code != StatusCode::NotImplemented) {
+      if (err) *err << "bayes complement regressor should fail with NotImplemented\n";
+      return false;
+    }
   }
 
   {

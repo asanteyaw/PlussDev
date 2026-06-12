@@ -56,6 +56,6 @@ Public fields on this type:
 ```text
 NodeJ DataFrame bridge demo
 adapted batch: samples=6 features=4 weighted=yes
-linear metrics [mse, r2]: 1.5165e-17 1
+linear metrics [mse, r2]: 1.51681e-17 1
 NodeJ DataFrame bridge demo completed.
 ```

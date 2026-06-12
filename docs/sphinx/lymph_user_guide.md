@@ -392,14 +392,26 @@ DataFrame x_fr_test = freq.map(test_df);
 - `tree_factory::decision_tree_classifier(options: TreeFamilyOptions = {}) -> WorkflowModel`
 - `ensemble_factory::{bagging,random_forest,gradient_boost}_{regressor|classifier}(options: EnsembleFamilyOptions = {}) -> WorkflowModel`
 - `neighbor_factory::knn_{regressor|classifier}(options: NeighborFamilyOptions = {}) -> WorkflowModel`
+- `neighbor_factory::radius_neighbors_{regressor|classifier}(options: NeighborFamilyOptions = {}) -> WorkflowModel`
 - `kernel_factory::svm_{regressor|classifier}(options: KernelFamilyOptions = {}) -> WorkflowModel`
+- `kernel_factory::nu_svm_{regressor|classifier}(options: KernelFamilyOptions = {}) -> WorkflowModel`
+- `kernel_factory::one_class_svm(options: KernelFamilyOptions = {}) -> WorkflowModel`
 - `bayes_factory::gaussian_nb_{regressor|classifier}(options: BayesFamilyOptions = {}) -> WorkflowModel`
+- `bayes_factory::bernoulli_nb_{regressor|classifier}(options: BayesFamilyOptions = {}) -> WorkflowModel`
+- `bayes_factory::multinomial_nb_{regressor|classifier}(options: BayesFamilyOptions = {}) -> WorkflowModel`
+- `bayes_factory::complement_nb_classifier(options: BayesFamilyOptions = {}) -> WorkflowModel`
 - `cluster_factory::kmeans(options: ClusterFamilyOptions = {}) -> WorkflowModel`
 - `decompose_factory::pca(options: DecomposeFamilyOptions = {}) -> WorkflowModel`
 
 ### Notes
 
-Factories create model instances with typed options. For unsupervised tasks, use cluster/decompose factories.
+Factories create model instances with typed options. For unsupervised tasks, use cluster/decompose factories or `kernel_factory::one_class_svm`.
+
+Radius-neighbor factories set neighbor query mode to radius while preserving radius, fallback, weighting, and standardization options. Radius mode uses all training samples within the configured radius, then falls back to nearest neighbors when a query has no radius hits.
+
+Nu SVM factories set the kernel form to Nu while preserving the rest of the supplied kernel options. `one_class_svm` creates a transform-style workflow model that maps feature batches to inlier/outlier labels.
+
+Bernoulli, Multinomial, and Complement Bayes factories set the Bayes likelihood explicitly. Multinomial and Complement Bayes expect non-negative count-like features and return an error for negative counts. Complement Bayes is classifier-only.
 
 ### Inputs
 
@@ -413,6 +425,9 @@ Factories create model instances with typed options. For unsupervised tasks, use
 
 - all NodeJ family options are accepted unchanged
 - objective/task-safe defaults are applied where necessary (for example logistic objective for logistic regression)
+- neighbor query modes include `KNearest` and `Radius`
+- kernel forms include `C`, `Nu`, and `OneClass`
+- Bayes likelihoods include `Gaussian`, `Bernoulli`, `Multinomial`, and classifier-only `Complement`
 
 ### Examples
 
@@ -422,11 +437,39 @@ auto lin = lym::linear_factory::linear_regression(
 
 auto tree = lym::tree_factory::decision_tree_regressor(
     pluss::ai::nodej::TreeFamilyOptions{.max_depth = 12, .min_samples_leaf = 8});
+
+auto nu_svm = lym::kernel_factory::nu_svm_classifier(
+    pluss::ai::nodej::KernelFamilyOptions{
+        .kernel = pluss::ai::nodej::KernelKind::Rbf,
+        .gamma = 1.0,
+        .nu = 0.5,
+    });
+
+auto one_class = lym::kernel_factory::one_class_svm(
+    pluss::ai::nodej::KernelFamilyOptions{
+        .kernel = pluss::ai::nodej::KernelKind::Rbf,
+        .gamma = 0.8,
+        .nu = 0.5,
+    });
+
+auto radius = lym::neighbor_factory::radius_neighbors_classifier(
+    pluss::ai::nodej::NeighborFamilyOptions{
+        .radius = 0.75,
+        .radius_fallback_k = 3,
+        .distance_weighted = true,
+    });
+
+auto multinomial = lym::bayes_factory::multinomial_nb_classifier(
+    pluss::ai::nodej::BayesFamilyOptions{.smoothing = 1e-6});
+
+auto complement = lym::bayes_factory::complement_nb_classifier(
+    pluss::ai::nodej::BayesFamilyOptions{.smoothing = 1e-6});
 ```
 
 ### Expected output
 
-- `lin` and `tree` can immediately `learn_`, `infer`, and `assess`.
+- `lin`, `tree`, `nu_svm`, `radius`, `multinomial`, and `complement` can immediately `learn`, `infer`, and `assess`.
+- `one_class` can immediately `learn_map` and `map`, returning one inlier/outlier label per sample.
 
 ## Workflow Patterns
 

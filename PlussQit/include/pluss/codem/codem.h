@@ -24,7 +24,7 @@ concept SeriesScalar =
     std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>;
 
 inline Series make_scalar_like(const Series& like, double value) {
-  return Series::full({}, value, like.scalar_type()).to(like.platform());
+  return Series::full({}, value, like.scalar_type(), like.platform());
 }
 
 enum class TernaryCompareOp : std::uint8_t { Eq, Ne, Lt, Le, Gt, Ge };

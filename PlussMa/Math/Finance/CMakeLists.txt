@@ -1,6 +1,3 @@
-if(PLUSSMA_MATH_FINANCE_ENABLE_CALIBRATION)
-    add_subdirectory(calibration)
-endif()
 if(PLUSSMA_MATH_FINANCE_ENABLE_PRICING)
     add_subdirectory(pricing)
 endif()

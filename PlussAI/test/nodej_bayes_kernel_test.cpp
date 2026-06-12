@@ -384,6 +384,105 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "multinomial bayes classifier metrics should be finite and reasonable\n";
       return false;
     }
+    const LabeledBatch negative_count_batch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{-1.0, 2.0}, {2, 1}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = pluss::make_series(std::vector<double>{0.0, 1.0}, {2}, f64()),
+    };
+    auto bad_multi_or = pluss::ai::nodej::make_classifier(multinomial_bayes);
+    if (!bad_multi_or.ok()) {
+      if (err) *err << "builder should construct multinomial bayes classifier for negative-count check\n";
+      return false;
+    }
+    const auto bad_multi_status = bad_multi_or.value()->learn(negative_count_batch);
+    if (bad_multi_status.ok() || bad_multi_status.code != StatusCode::InvalidArgument) {
+      if (err) *err << "multinomial bayes classifier should reject negative training counts\n";
+      return false;
+    }
+    const auto bad_multi_infer_or = multi->infer(negative_count_batch.features);
+    if (bad_multi_infer_or.ok() || bad_multi_infer_or.status().code != StatusCode::InvalidArgument) {
+      if (err) *err << "multinomial bayes classifier should reject negative inference counts\n";
+      return false;
+    }
+
+    const ModelSpec complement_bayes{
+        .task = TaskKind::Classification,
+        .family = ModelFamily::Bayes,
+        .options = BayesFamilyOptions{
+            .likelihood = BayesLikelihood::Complement,
+            .use_gaussian = true,
+            .smoothing = 1e-6,
+        },
+    };
+    const LabeledBatch complement_batch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{4.0, 0.0, 3.0, 0.0, 0.0, 4.0, 0.0, 3.0}, {4, 2}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = y,
+    };
+    auto complement_or = pluss::ai::nodej::make_classifier(complement_bayes);
+    if (!complement_or.ok()) {
+      if (err) *err << "builder should construct complement bayes classifier\n";
+      return false;
+    }
+    auto complement = complement_or.move_value();
+    if (!complement->learn(complement_batch).ok()) {
+      if (err) *err << "complement bayes classifier learn should succeed\n";
+      return false;
+    }
+    const FeatureBatch complement_query{
+        .x = pluss::make_series(std::vector<double>{5.0, 0.0, 0.0, 5.0}, {2, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    auto complement_pred_or = complement->infer(complement_query);
+    if (!complement_pred_or.ok()) {
+      if (err) *err << "complement bayes classifier infer should succeed\n";
+      return false;
+    }
+    const auto complement_pred = complement_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (complement_pred.size() != 2 || complement_pred[0] > 0.5 || complement_pred[1] < 0.5) {
+      if (err) *err << "complement bayes classifier should separate count complements\n";
+      return false;
+    }
+    auto complement_state_or = complement->dump_state();
+    auto complement_reload_or = pluss::ai::nodej::make_classifier(complement_bayes);
+    if (!complement_state_or.ok() || !complement_reload_or.ok()) {
+      if (err) *err << "complement bayes state dump/reload builders should succeed\n";
+      return false;
+    }
+    auto complement_reload = complement_reload_or.move_value();
+    if (!complement_reload->load_state(complement_state_or.value()).ok()) {
+      if (err) *err << "complement bayes classifier load_state should succeed\n";
+      return false;
+    }
+    auto complement_reload_pred_or = complement_reload->infer(complement_query);
+    if (!complement_reload_pred_or.ok()) {
+      if (err) *err << "reloaded complement bayes classifier infer should succeed\n";
+      return false;
+    }
+    const auto complement_reload_pred = complement_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (complement_reload_pred.size() != complement_pred.size()) {
+      if (err) *err << "reloaded complement bayes classifier prediction size mismatch\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < complement_pred.size(); ++i) {
+      if (!approx(complement_reload_pred[i], complement_pred[i], 1e-9)) {
+        if (err) *err << "reloaded complement bayes classifier should reproduce predictions\n";
+        return false;
+      }
+    }
+    const FeatureBatch negative_complement_query{
+        .x = pluss::make_series(std::vector<double>{1.0, -1.0}, {1, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    const auto bad_complement_infer_or = complement->infer(negative_complement_query);
+    if (bad_complement_infer_or.ok() || bad_complement_infer_or.status().code != StatusCode::InvalidArgument) {
+      if (err) *err << "complement bayes classifier should reject negative inference counts\n";
+      return false;
+    }
 
     const ModelSpec bad_kernel{
         .task = TaskKind::Regression,
@@ -471,6 +570,24 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
     if (multinomial_pred.size() != 2 || multinomial_pred[0] > 0.5 || multinomial_pred[1] < 0.5) {
       if (err) *err << "lymph multinomial_nb_classifier factory should train and infer through NodeJ\n";
+      return false;
+    }
+
+    auto complement = pluss::ai::lymph::bayes_factory::complement_nb_classifier(BayesFamilyOptions{
+        .smoothing = 1e-6,
+    }).learn(LabeledBatch{
+        .features = FeatureBatch{
+            .x = pluss::make_series(std::vector<double>{4.0, 0.0, 3.0, 0.0, 0.0, 4.0, 0.0, 3.0}, {4, 2}, f64()),
+            .layout = ObservationLayout::Rows,
+        },
+        .y = y,
+    });
+    const auto complement_pred = complement.infer(FeatureBatch{
+        .x = pluss::make_series(std::vector<double>{5.0, 0.0, 0.0, 5.0}, {2, 2}, f64()),
+        .layout = ObservationLayout::Rows,
+    }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (complement_pred.size() != 2 || complement_pred[0] > 0.5 || complement_pred[1] < 0.5) {
+      if (err) *err << "lymph complement_nb_classifier factory should train and infer through NodeJ\n";
       return false;
     }
 

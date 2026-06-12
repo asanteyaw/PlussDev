@@ -144,6 +144,132 @@ if (!flow.add_simple_imputer({.strategy = nje::prep::SimpleImputerStrategy::Medi
 
 - transform stack is registered in order of `add_*` calls.
 
+## Kernel And Bayes Family Coverage
+
+### API Signature
+
+- `ModelSpec(task: Classification|Regression, family: Kernel, options: KernelFamilyOptions) -> ModelSpec`
+- `ModelSpec(task: Transform, family: Kernel, options: KernelFamilyOptions{.form = OneClass}) -> ModelSpec`
+- `ModelSpec(task: Classification|Regression, family: Bayes, options: BayesFamilyOptions) -> ModelSpec`
+- `make_classifier(spec: ModelSpec) -> StatusOr<unique_ptr<ClassifierBase>>`
+- `make_regressor(spec: ModelSpec) -> StatusOr<unique_ptr<RegressorBase>>`
+- `make_flow(spec: ModelSpec) -> StatusOr<Flow>`
+
+### Notes
+
+Kernel models support C-style and Nu-style classifier/regressor forms. One-class kernel models are transform tasks: they map each sample to an inlier/outlier label and can be used through `Flow::learn_map` / `Flow::map`.
+
+Bayes models support Gaussian, Bernoulli, Multinomial, and Complement likelihoods for classification. Multinomial and Complement modes treat inputs as counts and reject negative feature values during learning and inference. Multinomial Bayes regression also rejects negative labels because it models a non-negative count-like target. Complement Bayes is classifier-only.
+
+### Inputs
+
+- `FeatureBatch` for inference or transform mapping
+- `LabeledBatch` for classifier/regressor learning
+- `KernelFamilyOptions` or `BayesFamilyOptions`
+
+### Output
+
+- classifier/regressor predictions for supervised tasks
+- one-class transform labels for `TaskKind::Transform`
+- `InvalidArgument` status when multinomial or complement Bayes receives negative counts
+- `NotImplemented` status when Complement likelihood is requested for Bayes regression
+
+### Options
+
+`KernelFamilyOptions`:
+
+- `kernel`: `Linear`, `Rbf`, `Polynomial`, `Sigmoid`
+- `form`: `C`, `Nu`, `OneClass`
+- `c`, `gamma`, `epsilon`, `nu`
+
+`BayesFamilyOptions`:
+
+- `likelihood`: `Gaussian`, `Bernoulli`, `Multinomial`, `Complement`
+- `use_gaussian`: compatibility switch; when false and `likelihood` is left as Gaussian, Bernoulli mode is selected
+- `smoothing`: additive smoothing value
+
+### Examples
+
+```cpp
+namespace nje = pluss::ai::nodej;
+
+nje::ModelSpec nu_classifier{
+  .task = nje::TaskKind::Classification,
+  .family = nje::ModelFamily::Kernel,
+  .options = nje::KernelFamilyOptions{
+      .kernel = nje::KernelKind::Rbf,
+      .form = nje::KernelForm::Nu,
+      .gamma = 1.0,
+      .nu = 0.5,
+  },
+};
+
+auto classifier_or = nje::make_classifier(nu_classifier);
+if (!classifier_or.ok()) return classifier_or.status();
+```
+
+```cpp
+nje::ModelSpec one_class{
+  .task = nje::TaskKind::Transform,
+  .family = nje::ModelFamily::Kernel,
+  .options = nje::KernelFamilyOptions{
+      .kernel = nje::KernelKind::Rbf,
+      .form = nje::KernelForm::OneClass,
+      .gamma = 0.8,
+      .nu = 0.5,
+  },
+};
+
+auto flow_or = nje::make_flow(one_class);
+if (!flow_or.ok()) return flow_or.status();
+auto flow = flow_or.move_value();
+
+auto labels_or = flow.learn_map(train_features);
+if (!labels_or.ok()) return labels_or.status();
+```
+
+```cpp
+nje::ModelSpec multinomial_bayes{
+  .task = nje::TaskKind::Classification,
+  .family = nje::ModelFamily::Bayes,
+  .options = nje::BayesFamilyOptions{
+      .likelihood = nje::BayesLikelihood::Multinomial,
+      .smoothing = 1e-6,
+  },
+};
+
+auto model_or = nje::make_classifier(multinomial_bayes);
+if (!model_or.ok()) return model_or.status();
+auto model = model_or.move_value();
+
+nje::Status status = model->learn(count_batch);
+if (!status.ok()) return status;
+```
+
+```cpp
+nje::ModelSpec complement_bayes{
+  .task = nje::TaskKind::Classification,
+  .family = nje::ModelFamily::Bayes,
+  .options = nje::BayesFamilyOptions{
+      .likelihood = nje::BayesLikelihood::Complement,
+      .smoothing = 1e-6,
+  },
+};
+
+auto complement_or = nje::make_classifier(complement_bayes);
+if (!complement_or.ok()) return complement_or.status();
+auto complement = complement_or.move_value();
+
+nje::Status complement_status = complement->learn(count_batch);
+if (!complement_status.ok()) return complement_status;
+```
+
+### Expected output
+
+- Nu kernel models train and infer through the standard classifier/regressor lifecycle.
+- One-class kernel flows return one label per input sample; positive labels represent inliers and negative labels represent outliers.
+- Multinomial and Complement Bayes classifiers accept finite non-negative count features and return `InvalidArgument` for negative count inputs.
+
 ## Data Contracts And DataFrame Bridge
 
 ### API Signature

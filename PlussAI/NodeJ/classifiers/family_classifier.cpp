@@ -436,6 +436,71 @@ struct DenseFeatureMatrix {
   return pluss::make_series(out, {nq}, f64_cpu());
 }
 
+[[nodiscard]] Series knn_probability_series(const Series& query_rows,
+                                            const Series& train_rows,
+                                            const Series& y_train,
+                                            std::int64_t k,
+                                            bool distance_weighted) {
+  const std::int64_t sample_count = train_rows.sizes()[0];
+  const std::int64_t query_count = query_rows.sizes()[0];
+  const std::int64_t neighbor_count = std::max<std::int64_t>(1, std::min<std::int64_t>(k, sample_count));
+  const Series dist2 = pairwise_distance2(query_rows, train_rows);
+  const Series sort_idx = dist2.argsort(1, false, true);
+  const Series k_cols =
+      pluss::arange(0, neighbor_count, Config{}.with_dtype(ScalarType::Int64).with_platform(sort_idx.platform()));
+  const Series knn_idx = sort_idx.index_select(1, k_cols);
+  const Series y_train_2d =
+      y_train.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
+  const Series y_knn = y_train_2d.gather(1, knn_idx);
+
+  if (!distance_weighted) {
+    return y_knn.mean(1, false).clamp(0.0, 1.0);
+  }
+
+  constexpr double eps = 1e-12;
+  const Series d2_knn = dist2.gather(1, knn_idx);
+  const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
+  const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
+  const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
+  const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
+  const Series wsum = weights.sum(1, false);
+  const Series ysum = weights.mul(y_knn).sum(1, false);
+  return wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
+}
+
+[[nodiscard]] Series radius_probability_series(const Series& query_rows,
+                                               const Series& train_rows,
+                                               const Series& y_train,
+                                               double radius,
+                                               std::int64_t fallback_k,
+                                               bool distance_weighted) {
+  const std::int64_t sample_count = train_rows.sizes()[0];
+  const std::int64_t query_count = query_rows.sizes()[0];
+  const Series dist2 = pairwise_distance2(query_rows, train_rows);
+  const Series mask = dist2.le(radius * radius).to(ScalarType::Float64);
+  const Series in_count = mask.sum(1, false).reshape({query_count});
+  const Series fallback = knn_probability_series(query_rows, train_rows, y_train, fallback_k, distance_weighted);
+  const Series y_train_2d =
+      y_train.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
+
+  Series radius_prob = Series::undefined();
+  if (distance_weighted) {
+    constexpr double eps = 1e-12;
+    const Series zero_mask = dist2.le(eps).to(ScalarType::Float64).mul(mask);
+    const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
+    const Series inv_dist = pluss::ones_like(dist2, ScalarType::Float64).div(dist2.sqrt().add(eps));
+    const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist).mul(mask));
+    const Series wsum = weights.sum(1, false);
+    const Series ysum = weights.mul(y_train_2d).sum(1, false);
+    radius_prob = wsum.gt(0.0).where(ysum.div(wsum), fallback);
+  } else {
+    const Series ysum = y_train_2d.mul(mask).sum(1, false);
+    radius_prob = in_count.gt(0.0).where(ysum.div(in_count.clamp_min(1.0)), fallback);
+  }
+
+  return in_count.gt(0.0).where(radius_prob, fallback).clamp(0.0, 1.0);
+}
+
 struct BinaryLabelEncoding {
   Series y01 = Series::undefined();
   double negative = 0.0;
@@ -989,12 +1054,12 @@ public:
 
     Series probs = Series::undefined();
     if (query_mode_ == NeighborQueryMode::Radius) {
-      probs = radius_probability_cpu(x_query.to(pluss::pCPU, ScalarType::Float64),
-                                     x_train_.to(pluss::pCPU, ScalarType::Float64),
-                                     y_train_.to(pluss::pCPU, ScalarType::Float64),
-                                     radius_,
-                                     radius_fallback_k_,
-                                     options_.distance_weighted);
+      probs = radius_probability_series(x_query,
+                                        x_train_,
+                                        y_train_,
+                                        radius_,
+                                        radius_fallback_k_,
+                                        options_.distance_weighted);
     } else {
       const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
       if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
@@ -2643,7 +2708,10 @@ public:
       log_inv_prob0_ = p0.mul(-1.0).add(1.0).log();
       log_inv_prob1_ = p1.mul(-1.0).add(1.0).log();
     } else if (likelihood_ == BayesLikelihood::Multinomial) {
-      const Series x_nonneg = x.clamp_min(0.0);
+      if (x.lt(0.0).any().item<bool>()) {
+        return Status::invalid_argument("BayesClassifier::learn Multinomial likelihood expects non-negative features.");
+      }
+      const Series x_nonneg = x;
       const Series alpha = pluss::ones({1}, f64_on(x.platform())).mul(options_.smoothing);
       const Series count0 = x_nonneg.mul(mask0).sum(0, false);
       const Series count1 = x_nonneg.mul(mask1).sum(0, false);
@@ -2653,6 +2721,20 @@ public:
       const Series p1 = count1.add(alpha).div(total1).reshape({feature_count_}).clamp_min(1e-12);
       log_prob0_ = p0.log();
       log_prob1_ = p1.log();
+    } else if (likelihood_ == BayesLikelihood::Complement) {
+      if (x.lt(0.0).any().item<bool>()) {
+        return Status::invalid_argument("BayesClassifier::learn Complement likelihood expects non-negative features.");
+      }
+      const Series x_nonneg = x;
+      const Series alpha = pluss::ones({1}, f64_on(x.platform())).mul(options_.smoothing);
+      const Series count0 = x_nonneg.mul(mask0).sum(0, false).reshape({feature_count_});
+      const Series count1 = x_nonneg.mul(mask1).sum(0, false).reshape({feature_count_});
+      const Series comp0 = count1.add(alpha);
+      const Series comp1 = count0.add(alpha);
+      const Series p0 = comp0.div(comp0.sum()).clamp_min(1e-12);
+      const Series p1 = comp1.div(comp1.sum()).clamp_min(1e-12);
+      log_prob0_ = p0.log().mul(-1.0);
+      log_prob1_ = p1.log().mul(-1.0);
     } else {
       return Status::invalid_argument("BayesClassifier::learn encountered unsupported BayesLikelihood.");
     }
@@ -2711,9 +2793,21 @@ public:
                   .sum(1, false)
                   .add(std::log(prior1_));
     } else if (likelihood_ == BayesLikelihood::Multinomial) {
-      const Series x_nonneg = x.clamp_min(0.0);
+      if (x.lt(0.0).any().item<bool>()) {
+        return StatusOr<Series>(
+            Status::invalid_argument("BayesClassifier::infer_scores Multinomial likelihood expects non-negative features."));
+      }
+      const Series x_nonneg = x;
       logp0 = x_nonneg.mul(log_prob0_.reshape({1, feature_count_})).sum(1, false).add(std::log(prior0_));
       logp1 = x_nonneg.mul(log_prob1_.reshape({1, feature_count_})).sum(1, false).add(std::log(prior1_));
+    } else if (likelihood_ == BayesLikelihood::Complement) {
+      if (x.lt(0.0).any().item<bool>()) {
+        return StatusOr<Series>(
+            Status::invalid_argument("BayesClassifier::infer_scores Complement likelihood expects non-negative features."));
+      }
+      const Series x_nonneg = x;
+      logp0 = x_nonneg.mul(log_prob0_.reshape({1, feature_count_})).sum(1, false);
+      logp1 = x_nonneg.mul(log_prob1_.reshape({1, feature_count_})).sum(1, false);
     } else {
       return StatusOr<Series>(Status::invalid_argument("BayesClassifier::infer_scores encountered unsupported BayesLikelihood."));
     }

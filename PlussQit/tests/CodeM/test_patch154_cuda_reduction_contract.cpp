@@ -96,10 +96,14 @@ TEST_CASE("CUDA reduction baseline capability is runtime-dynamic", "[cuda][reduc
     const ScopedEnvVar reduction_on("PLUSS_CUDA_NATIVE_REDUCTION", "1");
     REQUIRE(pluss::cuda::native_reduction_enabled());
     REQUIRE(pluss::cuda::supports_sum_reduction_baseline(pluss::ScalarType::Float32) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_prod_reduction_baseline(pluss::ScalarType::Float16) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_mean_reduction_baseline(pluss::ScalarType::Bool) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_ordered_extrema_reduction_baseline(pluss::ScalarType::Int64) == cuda_ready);
-    REQUIRE(pluss::cuda::supports_logical_reduction_baseline(pluss::ScalarType::UInt16) == cuda_ready);
+    REQUIRE(pluss::cuda::supports_prod_reduction_baseline(pluss::ScalarType::Float64) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_prod_reduction_baseline(pluss::ScalarType::Float16));
+    REQUIRE(pluss::cuda::supports_mean_reduction_baseline(pluss::ScalarType::Float32) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_mean_reduction_baseline(pluss::ScalarType::Bool));
+    REQUIRE(pluss::cuda::supports_ordered_extrema_reduction_baseline(pluss::ScalarType::Float64) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_ordered_extrema_reduction_baseline(pluss::ScalarType::Int64));
+    REQUIRE(pluss::cuda::supports_logical_reduction_baseline(pluss::ScalarType::Bool) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_logical_reduction_baseline(pluss::ScalarType::UInt16));
     REQUIRE(pluss::cuda::supports_arg_extrema_reduction_baseline(pluss::ScalarType::Float64) == cuda_ready);
     REQUIRE_FALSE(pluss::cuda::supports_ordered_extrema_reduction_baseline(pluss::ScalarType::Complex64));
     REQUIRE_FALSE(pluss::cuda::supports_arg_extrema_reduction_baseline(pluss::ScalarType::Int32));

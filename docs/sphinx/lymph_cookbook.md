@@ -732,18 +732,24 @@ Lymph factories are thin wrappers over NodeJ specs. Every family option is avail
 `NeighborFamilyOptions`:
 
 - `k`
+- `query_mode`: `KNearest`, `Radius`
+- `radius`
+- `radius_fallback_k`
 - `distance_weighted`
 - `standardize`
 
 `KernelFamilyOptions`:
 
 - `kernel`: `Linear`, `Rbf`, `Polynomial`, `Sigmoid`
+- `form`: `C`, `Nu`, `OneClass`
 - `c`
 - `gamma`
 - `epsilon`
+- `nu`
 
 `BayesFamilyOptions`:
 
+- `likelihood`: `Gaussian`, `Bernoulli`, `Multinomial`, `Complement`
 - `use_gaussian`
 - `smoothing`
 

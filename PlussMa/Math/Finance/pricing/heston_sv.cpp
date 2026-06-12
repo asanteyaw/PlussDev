@@ -223,6 +223,147 @@ Config f64_cfg_(Config cfg) {
   return Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
 }
 
+Series as_f64_series_(const Series& x, Config cfg) {
+  return x.to(cfg.platform, pluss::ScalarType::Float64).contiguous();
+}
+
+Series scalar_series_(double value, Config cfg) {
+  return pluss::full({}, value, f64_cfg_(cfg));
+}
+
+struct ComplexSeries_ {
+  Series re;
+  Series im;
+};
+
+ComplexSeries_ c_make_(const Series& re, const Series& im) {
+  return ComplexSeries_{re, im};
+}
+
+ComplexSeries_ c_scalar_(double re, Config cfg) {
+  return c_make_(scalar_series_(re, cfg), scalar_series_(0.0, cfg));
+}
+
+ComplexSeries_ c_add_(const ComplexSeries_& a, const ComplexSeries_& b) {
+  return c_make_(a.re.add(b.re), a.im.add(b.im));
+}
+
+ComplexSeries_ c_sub_(const ComplexSeries_& a, const ComplexSeries_& b) {
+  return c_make_(a.re.sub(b.re), a.im.sub(b.im));
+}
+
+ComplexSeries_ c_mul_(const ComplexSeries_& a, const ComplexSeries_& b) {
+  return c_make_(a.re.mul(b.re).sub(a.im.mul(b.im)), a.re.mul(b.im).add(a.im.mul(b.re)));
+}
+
+ComplexSeries_ c_mul_(const ComplexSeries_& a, double b) {
+  return c_make_(a.re.mul(b), a.im.mul(b));
+}
+
+ComplexSeries_ c_mul_real_(const ComplexSeries_& a, const Series& b) {
+  return c_make_(a.re.mul(b), a.im.mul(b));
+}
+
+ComplexSeries_ c_div_(const ComplexSeries_& a, const ComplexSeries_& b) {
+  const Series denom = b.re.square().add(b.im.square()).clamp_min(kEps);
+  return c_make_(a.re.mul(b.re).add(a.im.mul(b.im)).div(denom),
+                 a.im.mul(b.re).sub(a.re.mul(b.im)).div(denom));
+}
+
+ComplexSeries_ c_div_(const ComplexSeries_& a, double b) {
+  return c_make_(a.re.div(b), a.im.div(b));
+}
+
+ComplexSeries_ c_exp_(const ComplexSeries_& z) {
+  const Series er = z.re.exp();
+  return c_make_(er.mul(z.im.cos()), er.mul(z.im.sin()));
+}
+
+ComplexSeries_ c_log_(const ComplexSeries_& z) {
+  return c_make_(z.re.hypot(z.im).clamp_min(kEps).log(), z.im.atan2(z.re));
+}
+
+ComplexSeries_ c_sqrt_(const ComplexSeries_& z) {
+  const Series radius = z.re.hypot(z.im).sqrt();
+  const Series half_angle = z.im.atan2(z.re).mul(0.5);
+  return c_make_(radius.mul(half_angle.cos()), radius.mul(half_angle.sin()));
+}
+
+ComplexSeries_ heston_logspot_cf_series_(const Series& u,
+                                          const Series& spot,
+                                          const Series& maturity,
+                                          double rate,
+                                          double dividend_yield,
+                                          const HestonParams& p,
+                                          Config cfg) {
+  const Series spot2 = as_f64_series_(spot, cfg).flatten(0, -1).reshape({1, spot.numel()});
+  const Series tau = as_f64_series_(maturity, cfg).flatten(0, -1).reshape({1, maturity.numel()});
+  const Series uu = as_f64_series_(u, cfg);
+  const double sigma = std::max(p.sigma, p.variance_floor);
+  const double sigma2 = sigma * sigma;
+  const double rho = std::clamp(p.rho, -0.999999, 0.999999);
+
+  const ComplexSeries_ alpha = c_make_(uu.square().mul(-0.5), uu.mul(-0.5));
+  const ComplexSeries_ beta = c_make_(scalar_series_(p.kappa, cfg), uu.mul(-rho * sigma));
+  const ComplexSeries_ disc = c_sub_(c_mul_(beta, beta), c_mul_(alpha, 2.0 * sigma2));
+  const ComplexSeries_ d = c_sqrt_(disc);
+  const ComplexSeries_ beta_minus_d = c_sub_(beta, d);
+  const ComplexSeries_ g = c_div_(beta_minus_d, c_add_(beta, d));
+  const ComplexSeries_ exp_md = c_exp_(c_mul_real_(c_mul_(d, -1.0), tau));
+  const ComplexSeries_ one = c_scalar_(1.0, cfg);
+  const ComplexSeries_ psi = c_div_(c_sub_(one, c_mul_(g, exp_md)), c_sub_(one, g));
+  const ComplexSeries_ a_term = c_mul_(
+      c_sub_(c_mul_real_(beta_minus_d, tau), c_mul_(c_log_(psi), 2.0)),
+      p.kappa * p.theta / sigma2);
+  const ComplexSeries_ b_term = c_mul_(
+      c_div_(beta_minus_d, sigma2),
+      c_div_(c_sub_(one, exp_md), c_sub_(one, c_mul_(g, exp_md))));
+  const ComplexSeries_ drift = c_make_(
+      scalar_series_(0.0, cfg),
+      uu.mul(spot2.log()).add(uu.mul(rate - dividend_yield).mul(tau)));
+  return c_exp_(c_add_(c_add_(a_term, c_mul_(b_term, p.v0)), drift));
+}
+
+struct CosSeriesInterval_ {
+  Series a;
+  Series b;
+};
+
+CosSeriesInterval_ heston_cos_interval_series_(const Series& spot,
+                                               const Series& maturity,
+                                               double rate,
+                                               double dividend_yield,
+                                               const HestonParams& p,
+                                               const CosOptions& options,
+                                               Config cfg) {
+  const double h = std::max(options.cumulant_step, 1.0e-6);
+  const Series um2 = pluss::full({1, 1}, -2.0 * h, f64_cfg_(cfg));
+  const Series um1 = pluss::full({1, 1}, -h, f64_cfg_(cfg));
+  const Series u0 = pluss::full({1, 1}, 0.0, f64_cfg_(cfg));
+  const Series up1 = pluss::full({1, 1}, h, f64_cfg_(cfg));
+  const Series up2 = pluss::full({1, 1}, 2.0 * h, f64_cfg_(cfg));
+
+  const ComplexSeries_ fm2 = c_log_(heston_logspot_cf_series_(um2, spot, maturity, rate, dividend_yield, p, cfg));
+  const ComplexSeries_ fm1 = c_log_(heston_logspot_cf_series_(um1, spot, maturity, rate, dividend_yield, p, cfg));
+  const ComplexSeries_ f0 = c_log_(heston_logspot_cf_series_(u0, spot, maturity, rate, dividend_yield, p, cfg));
+  const ComplexSeries_ fp1 = c_log_(heston_logspot_cf_series_(up1, spot, maturity, rate, dividend_yield, p, cfg));
+  const ComplexSeries_ fp2 = c_log_(heston_logspot_cf_series_(up2, spot, maturity, rate, dividend_yield, p, cfg));
+
+  const ComplexSeries_ d1 = c_div_(c_sub_(c_add_(fm2, c_mul_(fp1, 8.0)), c_add_(c_mul_(fm1, 8.0), fp2)), 12.0 * h);
+  const ComplexSeries_ d2 = c_div_(
+      c_add_(c_add_(c_mul_(fm2, -1.0), c_mul_(fm1, 16.0)), c_add_(c_mul_(f0, -30.0), c_add_(c_mul_(fp1, 16.0), c_mul_(fp2, -1.0)))),
+      12.0 * h * h);
+  const ComplexSeries_ d4 = c_div_(
+      c_add_(c_add_(fm2, c_mul_(fm1, -4.0)), c_add_(c_mul_(f0, 6.0), c_add_(c_mul_(fp1, -4.0), fp2))),
+      h * h * h * h);
+
+  const Series c1 = d1.im;
+  const Series c2 = d2.re.mul(-1.0).clamp_min(kEps);
+  const Series c4 = d4.re.clamp_min(0.0);
+  const Series width = c2.add(c4.add(kEps).sqrt()).sqrt().mul(options.truncation);
+  return CosSeriesInterval_{c1.sub(width), c1.add(width)};
+}
+
 std::complex<double> heston_cf_(std::complex<double> phi,
                                 double spot,
                                 double rate,
@@ -944,11 +1085,31 @@ double heston_price_cos(OptionType type,
   validate_common_(spot, strike, rate, dividend_yield, maturity, "heston_price_cos");
   validate_heston_(params, "heston_price_cos");
   validate_cos_options_(options, "heston_price_cos");
-  const CharacteristicFn cf = [&](std::complex<double> phi) {
-    return std::exp(-rate * maturity) *
-           heston_cf_(phi, spot, rate, dividend_yield, maturity, params, HestonCfMode::LittleTrap, 2, 0.0);
+  const Config out_cfg = f64_cfg_(cfg);
+  const Series s = pluss::full({1}, spot, out_cfg);
+  const Series k = pluss::full({1}, strike, out_cfg);
+  const Series t = pluss::full({1}, maturity, out_cfg);
+  return heston_price_cos(type, s, k, rate, dividend_yield, t, params, options, out_cfg).reshape({1}).item<double>();
+}
+
+Series heston_price_cos(OptionType type,
+                        const Series& spot,
+                        const Series& strike,
+                        double rate,
+                        double dividend_yield,
+                        const Series& maturity,
+                        const HestonParams& params,
+                        const CosOptions& options,
+                        Config cfg) {
+  validate_option_(type, "heston_price_cos");
+  validate_heston_(params, "heston_price_cos");
+  validate_cos_options_(options, "heston_price_cos");
+  const Config out_cfg = f64_cfg_(cfg);
+  const CharacteristicSeriesFn cf = [&](const Series& u) {
+    const ComplexSeries_ z = heston_logspot_cf_series_(u, spot, maturity, rate, dividend_yield, params, out_cfg);
+    return ComplexSeries{z.re, z.im};
   };
-  return option_price_cos(type, spot, strike, rate, dividend_yield, maturity, cf, options, cfg);
+  return option_price_cos(type, spot, strike, rate, dividend_yield, maturity, cf, options, out_cfg);
 }
 
 double bates_price_cos(OptionType type,

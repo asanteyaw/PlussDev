@@ -570,32 +570,6 @@ pluss/fast:
 .PHONY : pluss/fast
 
 #=============================================================================
-# Target rules for targets named plussma_math_finance_calibrate_heston_demo
-
-# Build rule for target.
-plussma_math_finance_calibrate_heston_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_finance_calibrate_heston_demo
-.PHONY : plussma_math_finance_calibrate_heston_demo
-
-# fast build rule for target.
-plussma_math_finance_calibrate_heston_demo/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/build
-.PHONY : plussma_math_finance_calibrate_heston_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_finance_calibrate_bates_demo
-
-# Build rule for target.
-plussma_math_finance_calibrate_bates_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_finance_calibrate_bates_demo
-.PHONY : plussma_math_finance_calibrate_bates_demo
-
-# fast build rule for target.
-plussma_math_finance_calibrate_bates_demo/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/build
-.PHONY : plussma_math_finance_calibrate_bates_demo/fast
-
-#=============================================================================
 # Target rules for targets named pluss_sdk_stage
 
 # Build rule for target.
@@ -2689,71 +2663,6 @@ plusspl_gallery_outputs/fast:
 .PHONY : plusspl_gallery_outputs/fast
 
 #=============================================================================
-# Target rules for targets named bates_calibration_test
-
-# Build rule for target.
-bates_calibration_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bates_calibration_test
-.PHONY : bates_calibration_test
-
-# fast build rule for target.
-bates_calibration_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build
-.PHONY : bates_calibration_test/fast
-
-#=============================================================================
-# Target rules for targets named heston_nandi_calibration_test
-
-# Build rule for target.
-heston_nandi_calibration_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_nandi_calibration_test
-.PHONY : heston_nandi_calibration_test
-
-# fast build rule for target.
-heston_nandi_calibration_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build
-.PHONY : heston_nandi_calibration_test/fast
-
-#=============================================================================
-# Target rules for targets named heston_sv_calibration_test
-
-# Build rule for target.
-heston_sv_calibration_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_sv_calibration_test
-.PHONY : heston_sv_calibration_test
-
-# fast build rule for target.
-heston_sv_calibration_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build
-.PHONY : heston_sv_calibration_test/fast
-
-#=============================================================================
-# Target rules for targets named vol_bridge_test
-
-# Build rule for target.
-vol_bridge_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vol_bridge_test
-.PHONY : vol_bridge_test
-
-# fast build rule for target.
-vol_bridge_test/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/build
-.PHONY : vol_bridge_test/fast
-
-#=============================================================================
-# Target rules for targets named heston_nandi_calibration_catch2
-
-# Build rule for target.
-heston_nandi_calibration_catch2: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_nandi_calibration_catch2
-.PHONY : heston_nandi_calibration_catch2
-
-# fast build rule for target.
-heston_nandi_calibration_catch2/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build
-.PHONY : heston_nandi_calibration_catch2/fast
-
-#=============================================================================
 # Target rules for targets named bates_pricing_test
 
 # Build rule for target.
@@ -3469,19 +3378,6 @@ plussma_simple_septima_functional_multiblock_demo/fast:
 .PHONY : plussma_simple_septima_functional_multiblock_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussma_math_finance_finance_bates_demo
-
-# Build rule for target.
-plussma_math_finance_finance_bates_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_finance_finance_bates_demo
-.PHONY : plussma_math_finance_finance_bates_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_bates_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build
-.PHONY : plussma_math_finance_finance_bates_demo/fast
-
-#=============================================================================
 # Target rules for targets named plussma_math_finance_finance_filtering_demo
 
 # Build rule for target.
@@ -3519,19 +3415,6 @@ plussma_math_finance_finance_heston_objective_mse_demo: cmake_check_build_system
 plussma_math_finance_finance_heston_objective_mse_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_objective_mse_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_objective_mse_demo.dir/build
 .PHONY : plussma_math_finance_finance_heston_objective_mse_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_finance_finance_heston_sv_demo
-
-# Build rule for target.
-plussma_math_finance_finance_heston_sv_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_finance_finance_heston_sv_demo
-.PHONY : plussma_math_finance_finance_heston_sv_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_heston_sv_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build
-.PHONY : plussma_math_finance_finance_heston_sv_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussma_math_finance_finance_objects_bates_mc_demo
@@ -3612,19 +3495,6 @@ plussma_math_finance_finance_pipeline_demo/fast:
 .PHONY : plussma_math_finance_finance_pipeline_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussma_math_finance_finance_rates_objects_demo
-
-# Build rule for target.
-plussma_math_finance_finance_rates_objects_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_finance_finance_rates_objects_demo
-.PHONY : plussma_math_finance_finance_rates_objects_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_rates_objects_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build
-.PHONY : plussma_math_finance_finance_rates_objects_demo/fast
-
-#=============================================================================
 # Target rules for targets named plussma_math_finance_finance_roughvol_fft_demo
 
 # Build rule for target.
@@ -3636,19 +3506,6 @@ plussma_math_finance_finance_roughvol_fft_demo: cmake_check_build_system
 plussma_math_finance_finance_roughvol_fft_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/build
 .PHONY : plussma_math_finance_finance_roughvol_fft_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_finance_finance_stochvol_objects_demo
-
-# Build rule for target.
-plussma_math_finance_finance_stochvol_objects_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_finance_finance_stochvol_objects_demo
-.PHONY : plussma_math_finance_finance_stochvol_objects_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_stochvol_objects_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build
-.PHONY : plussma_math_finance_finance_stochvol_objects_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussma_math_finance_finance_stochvol_schemes_demo
@@ -3688,6 +3545,97 @@ plussma_math_finance_roughvol_fft_demo: cmake_check_build_system
 plussma_math_finance_roughvol_fft_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_roughvol_fft_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_roughvol_fft_demo.dir/build
 .PHONY : plussma_math_finance_roughvol_fft_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston
+
+# Build rule for target.
+plussma_math_mini_heston: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston
+.PHONY : plussma_math_mini_heston
+
+# fast build rule for target.
+plussma_math_mini_heston/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston.dir/build
+.PHONY : plussma_math_mini_heston/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston_panel_calibration
+
+# Build rule for target.
+plussma_math_mini_heston_panel_calibration: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_panel_calibration
+.PHONY : plussma_math_mini_heston_panel_calibration
+
+# fast build rule for target.
+plussma_math_mini_heston_panel_calibration/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_panel_calibration.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_panel_calibration.dir/build
+.PHONY : plussma_math_mini_heston_panel_calibration/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston_multi_measure_simulation
+
+# Build rule for target.
+plussma_math_mini_heston_multi_measure_simulation: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_multi_measure_simulation
+.PHONY : plussma_math_mini_heston_multi_measure_simulation
+
+# fast build rule for target.
+plussma_math_mini_heston_multi_measure_simulation/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_multi_measure_simulation.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_multi_measure_simulation.dir/build
+.PHONY : plussma_math_mini_heston_multi_measure_simulation/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston_demo_pricing
+
+# Build rule for target.
+plussma_math_mini_heston_demo_pricing: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_pricing
+.PHONY : plussma_math_mini_heston_demo_pricing
+
+# fast build rule for target.
+plussma_math_mini_heston_demo_pricing/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_pricing.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_pricing.dir/build
+.PHONY : plussma_math_mini_heston_demo_pricing/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston_demo_simulation
+
+# Build rule for target.
+plussma_math_mini_heston_demo_simulation: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_simulation
+.PHONY : plussma_math_mini_heston_demo_simulation
+
+# fast build rule for target.
+plussma_math_mini_heston_demo_simulation/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_simulation.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_simulation.dir/build
+.PHONY : plussma_math_mini_heston_demo_simulation/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston_demo_bates_opportunity
+
+# Build rule for target.
+plussma_math_mini_heston_demo_bates_opportunity: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_bates_opportunity
+.PHONY : plussma_math_mini_heston_demo_bates_opportunity
+
+# fast build rule for target.
+plussma_math_mini_heston_demo_bates_opportunity/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_bates_opportunity.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_bates_opportunity.dir/build
+.PHONY : plussma_math_mini_heston_demo_bates_opportunity/fast
+
+#=============================================================================
+# Target rules for targets named plussma_math_mini_heston_demo_joint_estimation
+
+# Build rule for target.
+plussma_math_mini_heston_demo_joint_estimation: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_joint_estimation
+.PHONY : plussma_math_mini_heston_demo_joint_estimation
+
+# fast build rule for target.
+plussma_math_mini_heston_demo_joint_estimation/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_joint_estimation.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_joint_estimation.dir/build
+.PHONY : plussma_math_mini_heston_demo_joint_estimation/fast
 
 #=============================================================================
 # Target rules for targets named astro_test
@@ -5974,126 +5922,6 @@ PlussMa/Math/Economics/growth_models/econ.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Economics/growth_models/econ.cpp.s
 .PHONY : PlussMa/Math/Economics/growth_models/econ.cpp.s
 
-PlussMa/Math/Finance/calibration/bates_calibration.o: PlussMa/Math/Finance/calibration/bates_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.o
-
-# target to build an object file
-PlussMa/Math/Finance/calibration/bates_calibration.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/bates_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.cpp.o
-
-PlussMa/Math/Finance/calibration/bates_calibration.i: PlussMa/Math/Finance/calibration/bates_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.i
-
-# target to preprocess a source file
-PlussMa/Math/Finance/calibration/bates_calibration.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/bates_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.cpp.i
-
-PlussMa/Math/Finance/calibration/bates_calibration.s: PlussMa/Math/Finance/calibration/bates_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.s
-
-# target to generate assembly for a file
-PlussMa/Math/Finance/calibration/bates_calibration.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/bates_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.cpp.s
-
-PlussMa/Math/Finance/calibration/heston_nandi_calibration.o: PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.o
-
-# target to build an object file
-PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o
-
-PlussMa/Math/Finance/calibration/heston_nandi_calibration.i: PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.i
-
-# target to preprocess a source file
-PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i
-
-PlussMa/Math/Finance/calibration/heston_nandi_calibration.s: PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.s
-
-# target to generate assembly for a file
-PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s
-
-PlussMa/Math/Finance/calibration/heston_sv_calibration.o: PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.o
-
-# target to build an object file
-PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o
-
-PlussMa/Math/Finance/calibration/heston_sv_calibration.i: PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.i
-
-# target to preprocess a source file
-PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i
-
-PlussMa/Math/Finance/calibration/heston_sv_calibration.s: PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.s
-
-# target to generate assembly for a file
-PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s
-
-PlussMa/Math/Finance/calibration/rate_calibration.o: PlussMa/Math/Finance/calibration/rate_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.o
-
-# target to build an object file
-PlussMa/Math/Finance/calibration/rate_calibration.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/rate_calibration.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.cpp.o
-
-PlussMa/Math/Finance/calibration/rate_calibration.i: PlussMa/Math/Finance/calibration/rate_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.i
-
-# target to preprocess a source file
-PlussMa/Math/Finance/calibration/rate_calibration.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/rate_calibration.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.cpp.i
-
-PlussMa/Math/Finance/calibration/rate_calibration.s: PlussMa/Math/Finance/calibration/rate_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.s
-
-# target to generate assembly for a file
-PlussMa/Math/Finance/calibration/rate_calibration.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/rate_calibration.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.cpp.s
-
-PlussMa/Math/Finance/calibration/vol_bridge.o: PlussMa/Math/Finance/calibration/vol_bridge.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/vol_bridge.o
-
-# target to build an object file
-PlussMa/Math/Finance/calibration/vol_bridge.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/vol_bridge.cpp.o
-.PHONY : PlussMa/Math/Finance/calibration/vol_bridge.cpp.o
-
-PlussMa/Math/Finance/calibration/vol_bridge.i: PlussMa/Math/Finance/calibration/vol_bridge.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/vol_bridge.i
-
-# target to preprocess a source file
-PlussMa/Math/Finance/calibration/vol_bridge.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/vol_bridge.cpp.i
-.PHONY : PlussMa/Math/Finance/calibration/vol_bridge.cpp.i
-
-PlussMa/Math/Finance/calibration/vol_bridge.s: PlussMa/Math/Finance/calibration/vol_bridge.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/vol_bridge.s
-
-# target to generate assembly for a file
-PlussMa/Math/Finance/calibration/vol_bridge.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/vol_bridge.cpp.s
-.PHONY : PlussMa/Math/Finance/calibration/vol_bridge.cpp.s
-
 PlussMa/Math/Finance/filtering/filtering.o: PlussMa/Math/Finance/filtering/filtering.cpp.o
 .PHONY : PlussMa/Math/Finance/filtering/filtering.o
 
@@ -6310,6 +6138,30 @@ PlussMa/Math/Finance/pricing/sabr_analytic.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/sabr_analytic.cpp.s
 .PHONY : PlussMa/Math/Finance/pricing/sabr_analytic.cpp.s
 
+PlussMa/Math/Finance/pricing/vol_bridge.o: PlussMa/Math/Finance/pricing/vol_bridge.cpp.o
+.PHONY : PlussMa/Math/Finance/pricing/vol_bridge.o
+
+# target to build an object file
+PlussMa/Math/Finance/pricing/vol_bridge.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/vol_bridge.cpp.o
+.PHONY : PlussMa/Math/Finance/pricing/vol_bridge.cpp.o
+
+PlussMa/Math/Finance/pricing/vol_bridge.i: PlussMa/Math/Finance/pricing/vol_bridge.cpp.i
+.PHONY : PlussMa/Math/Finance/pricing/vol_bridge.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/pricing/vol_bridge.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/vol_bridge.cpp.i
+.PHONY : PlussMa/Math/Finance/pricing/vol_bridge.cpp.i
+
+PlussMa/Math/Finance/pricing/vol_bridge.s: PlussMa/Math/Finance/pricing/vol_bridge.cpp.s
+.PHONY : PlussMa/Math/Finance/pricing/vol_bridge.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/pricing/vol_bridge.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/vol_bridge.cpp.s
+.PHONY : PlussMa/Math/Finance/pricing/vol_bridge.cpp.s
+
 PlussMa/Math/Finance/stochastic_processes/econ.o: PlussMa/Math/Finance/stochastic_processes/econ.cpp.o
 .PHONY : PlussMa/Math/Finance/stochastic_processes/econ.o
 
@@ -6525,54 +6377,6 @@ PlussMa/Math/Numerical/optimization/pattern_search_minimizer.s: PlussMa/Math/Num
 PlussMa/Math/Numerical/optimization/pattern_search_minimizer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Numerical/optimization/pattern_search_minimizer.cpp.s
 .PHONY : PlussMa/Math/Numerical/optimization/pattern_search_minimizer.cpp.s
-
-PlussMa/Math/examples/Finance/calibrate_bates_demo.o: PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.o
-.PHONY : PlussMa/Math/examples/Finance/calibrate_bates_demo.o
-
-# target to build an object file
-PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.o
-.PHONY : PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.o
-
-PlussMa/Math/examples/Finance/calibrate_bates_demo.i: PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.i
-.PHONY : PlussMa/Math/examples/Finance/calibrate_bates_demo.i
-
-# target to preprocess a source file
-PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.i
-.PHONY : PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.i
-
-PlussMa/Math/examples/Finance/calibrate_bates_demo.s: PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.s
-.PHONY : PlussMa/Math/examples/Finance/calibrate_bates_demo.s
-
-# target to generate assembly for a file
-PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_bates_demo.dir/PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.s
-.PHONY : PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp.s
-
-PlussMa/Math/examples/Finance/calibrate_heston_demo.o: PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.o
-.PHONY : PlussMa/Math/examples/Finance/calibrate_heston_demo.o
-
-# target to build an object file
-PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.o
-.PHONY : PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.o
-
-PlussMa/Math/examples/Finance/calibrate_heston_demo.i: PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.i
-.PHONY : PlussMa/Math/examples/Finance/calibrate_heston_demo.i
-
-# target to preprocess a source file
-PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.i
-.PHONY : PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.i
-
-PlussMa/Math/examples/Finance/calibrate_heston_demo.s: PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.s
-.PHONY : PlussMa/Math/examples/Finance/calibrate_heston_demo.s
-
-# target to generate assembly for a file
-PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/build.make CMakeFiles/plussma_math_finance_calibrate_heston_demo.dir/PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.s
-.PHONY : PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp.s
 
 PlussMa/NatSci/biology/biophysics/diffusion.o: PlussMa/NatSci/biology/biophysics/diffusion.cpp.o
 .PHONY : PlussMa/NatSci/biology/biophysics/diffusion.o
@@ -7597,7 +7401,6 @@ help:
 	@echo "... astro_test"
 	@echo "... attention_transformer_test"
 	@echo "... autodiff_audit_bridge_test"
-	@echo "... bates_calibration_test"
 	@echo "... bates_pricing_test"
 	@echo "... biophysics_test"
 	@echo "... black_scholes_test"
@@ -7628,9 +7431,6 @@ help:
 	@echo "... garch11_test"
 	@echo "... glm_regression_test"
 	@echo "... gof_hypothesis_test"
-	@echo "... heston_nandi_calibration_catch2"
-	@echo "... heston_nandi_calibration_test"
-	@echo "... heston_sv_calibration_test"
 	@echo "... heston_sv_pricing_test"
 	@echo "... hypothesis_test"
 	@echo "... kinetics_test"
@@ -7734,25 +7534,26 @@ help:
 	@echo "... plussma_hypothesis_tests_demo"
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
-	@echo "... plussma_math_finance_calibrate_bates_demo"
-	@echo "... plussma_math_finance_calibrate_heston_demo"
-	@echo "... plussma_math_finance_finance_bates_demo"
 	@echo "... plussma_math_finance_finance_filtering_demo"
 	@echo "... plussma_math_finance_finance_heston_filter_sp500_demo"
 	@echo "... plussma_math_finance_finance_heston_objective_mse_demo"
-	@echo "... plussma_math_finance_finance_heston_sv_demo"
 	@echo "... plussma_math_finance_finance_objects_bates_mc_demo"
 	@echo "... plussma_math_finance_finance_objects_bs_analytic_demo"
 	@echo "... plussma_math_finance_finance_objects_bs_mc_demo"
 	@echo "... plussma_math_finance_finance_objects_heston_fft_mc_demo"
 	@echo "... plussma_math_finance_finance_objects_sabr_demo"
 	@echo "... plussma_math_finance_finance_pipeline_demo"
-	@echo "... plussma_math_finance_finance_rates_objects_demo"
 	@echo "... plussma_math_finance_finance_roughvol_fft_demo"
-	@echo "... plussma_math_finance_finance_stochvol_objects_demo"
 	@echo "... plussma_math_finance_finance_stochvol_schemes_demo"
 	@echo "... plussma_math_finance_pricing_models_demo"
 	@echo "... plussma_math_finance_roughvol_fft_demo"
+	@echo "... plussma_math_mini_heston"
+	@echo "... plussma_math_mini_heston_demo_bates_opportunity"
+	@echo "... plussma_math_mini_heston_demo_joint_estimation"
+	@echo "... plussma_math_mini_heston_demo_pricing"
+	@echo "... plussma_math_mini_heston_demo_simulation"
+	@echo "... plussma_math_mini_heston_multi_measure_simulation"
+	@echo "... plussma_math_mini_heston_panel_calibration"
 	@echo "... plussma_matlab_parity_probe"
 	@echo "... plussma_ols_summary_demo"
 	@echo "... plussma_optima_clone_parity_bench"
@@ -7914,7 +7715,6 @@ help:
 	@echo "... ts_vecm_catch2"
 	@echo "... ts_vecm_test"
 	@echo "... ts_vol_catch2"
-	@echo "... vol_bridge_test"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.o"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.i"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.s"
@@ -8043,21 +7843,6 @@ help:
 	@echo "... PlussMa/Math/Economics/growth_models/econ.o"
 	@echo "... PlussMa/Math/Economics/growth_models/econ.i"
 	@echo "... PlussMa/Math/Economics/growth_models/econ.s"
-	@echo "... PlussMa/Math/Finance/calibration/bates_calibration.o"
-	@echo "... PlussMa/Math/Finance/calibration/bates_calibration.i"
-	@echo "... PlussMa/Math/Finance/calibration/bates_calibration.s"
-	@echo "... PlussMa/Math/Finance/calibration/heston_nandi_calibration.o"
-	@echo "... PlussMa/Math/Finance/calibration/heston_nandi_calibration.i"
-	@echo "... PlussMa/Math/Finance/calibration/heston_nandi_calibration.s"
-	@echo "... PlussMa/Math/Finance/calibration/heston_sv_calibration.o"
-	@echo "... PlussMa/Math/Finance/calibration/heston_sv_calibration.i"
-	@echo "... PlussMa/Math/Finance/calibration/heston_sv_calibration.s"
-	@echo "... PlussMa/Math/Finance/calibration/rate_calibration.o"
-	@echo "... PlussMa/Math/Finance/calibration/rate_calibration.i"
-	@echo "... PlussMa/Math/Finance/calibration/rate_calibration.s"
-	@echo "... PlussMa/Math/Finance/calibration/vol_bridge.o"
-	@echo "... PlussMa/Math/Finance/calibration/vol_bridge.i"
-	@echo "... PlussMa/Math/Finance/calibration/vol_bridge.s"
 	@echo "... PlussMa/Math/Finance/filtering/filtering.o"
 	@echo "... PlussMa/Math/Finance/filtering/filtering.i"
 	@echo "... PlussMa/Math/Finance/filtering/filtering.s"
@@ -8085,6 +7870,9 @@ help:
 	@echo "... PlussMa/Math/Finance/pricing/sabr_analytic.o"
 	@echo "... PlussMa/Math/Finance/pricing/sabr_analytic.i"
 	@echo "... PlussMa/Math/Finance/pricing/sabr_analytic.s"
+	@echo "... PlussMa/Math/Finance/pricing/vol_bridge.o"
+	@echo "... PlussMa/Math/Finance/pricing/vol_bridge.i"
+	@echo "... PlussMa/Math/Finance/pricing/vol_bridge.s"
 	@echo "... PlussMa/Math/Finance/stochastic_processes/econ.o"
 	@echo "... PlussMa/Math/Finance/stochastic_processes/econ.i"
 	@echo "... PlussMa/Math/Finance/stochastic_processes/econ.s"
@@ -8112,12 +7900,6 @@ help:
 	@echo "... PlussMa/Math/Numerical/optimization/pattern_search_minimizer.o"
 	@echo "... PlussMa/Math/Numerical/optimization/pattern_search_minimizer.i"
 	@echo "... PlussMa/Math/Numerical/optimization/pattern_search_minimizer.s"
-	@echo "... PlussMa/Math/examples/Finance/calibrate_bates_demo.o"
-	@echo "... PlussMa/Math/examples/Finance/calibrate_bates_demo.i"
-	@echo "... PlussMa/Math/examples/Finance/calibrate_bates_demo.s"
-	@echo "... PlussMa/Math/examples/Finance/calibrate_heston_demo.o"
-	@echo "... PlussMa/Math/examples/Finance/calibrate_heston_demo.i"
-	@echo "... PlussMa/Math/examples/Finance/calibrate_heston_demo.s"
 	@echo "... PlussMa/NatSci/biology/biophysics/diffusion.o"
 	@echo "... PlussMa/NatSci/biology/biophysics/diffusion.i"
 	@echo "... PlussMa/NatSci/biology/biophysics/diffusion.s"

@@ -289,6 +289,21 @@ else()
   )
 endif()
 
+set(PLUSSQIT_CODEM_CUDA_KERNEL_SRC)
+set(PLUSSQIT_CODEM_CUDA_KERNELS_ENABLED OFF)
+if(PLUSSQIT_ENABLE_CUDA)
+  find_package(CUDAToolkit QUIET)
+  if(CUDAToolkit_FOUND)
+    enable_language(CUDA)
+    set(PLUSSQIT_CODEM_CUDA_KERNEL_SRC
+      src/CodeM/native/cuda/ElementwiseKernels.cu
+      src/CodeM/native/cuda/FactoryKernels.cu
+      src/CodeM/native/cuda/ReductionKernels.cu
+    )
+    set(PLUSSQIT_CODEM_CUDA_KERNELS_ENABLED ON)
+  endif()
+endif()
+
 add_library(plussqit_codem
   src/MSharp/core/MSharpMacros.h
   src/CodeM/core/Errors.h
@@ -310,6 +325,7 @@ add_library(plussqit_codem
   ${SERIES_METHODS_GEN_HEADER}
   ${PLUSSQIT_CODEM_CORE_CPP}
   ${PLUSSQIT_CODEM_MPS_SRC}
+  ${PLUSSQIT_CODEM_CUDA_KERNEL_SRC}
   ${PLUSSQIT_GEN_DIR}/CodeM/ops/ops_generated.cpp
 )
 
@@ -317,6 +333,14 @@ add_library(PlussQit::CodeM ALIAS plussqit_codem)
 add_library(pluss::plussqit_codem ALIAS plussqit_codem)
 
 target_compile_definitions(plussqit_codem PRIVATE PLUSS_CODEM_GEN_AVAILABLE)
+
+if(PLUSSQIT_CODEM_CUDA_KERNELS_ENABLED)
+  set_target_properties(plussqit_codem PROPERTIES
+    CUDA_STANDARD 20
+    CUDA_STANDARD_REQUIRED ON
+    CUDA_SEPARABLE_COMPILATION OFF
+  )
+endif()
 
 target_include_directories(plussqit_codem
   PUBLIC
@@ -935,6 +959,15 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/Indexing/
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/Traverse/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/Traverse
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/native
   FILES_MATCHING
   PATTERN "*.h"
   PATTERN "*.hpp"

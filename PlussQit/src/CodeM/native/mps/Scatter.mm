@@ -194,6 +194,21 @@ kernel void scatter_set_c64_i64(
   out[off] = src[gid];
 }
 
+kernel void scatter_add_c64_i64(
+    const device Complex64* src [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device Complex64* out [[buffer(2)]],
+    constant ScatterMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  const ulong off = out_offset_from_src_gid(static_cast<ulong>(gid), meta, index);
+  if (off == kBadOffset) return;
+  const Complex64 v = src[gid];
+  device atomic_uint* out_bits = reinterpret_cast<device atomic_uint*>(out);
+  const ulong base = off * 2ul;
+  atomic_add_f32(out_bits + base, v.re);
+  atomic_add_f32(out_bits + base + 1ul, v.im);
+}
+
 kernel void scatter_add_i32_i64(
     const device int* src [[buffer(0)]],
     const device long* index [[buffer(1)]],
@@ -253,6 +268,7 @@ struct Context {
   id<MTLComputePipelineState> scatter_amax_i32_i64{nil};
   id<MTLComputePipelineState> scatter_amin_i32_i64{nil};
   id<MTLComputePipelineState> scatter_set_c64_i64{nil};
+  id<MTLComputePipelineState> scatter_add_c64_i64{nil};
   std::string error{};
 };
 
@@ -328,6 +344,7 @@ Context& ctx_() {
       if (!make_pipeline("scatter_amax_i32_i64", &ctx.scatter_amax_i32_i64)) return;
       if (!make_pipeline("scatter_amin_i32_i64", &ctx.scatter_amin_i32_i64)) return;
       if (!make_pipeline("scatter_set_c64_i64", &ctx.scatter_set_c64_i64)) return;
+      if (!make_pipeline("scatter_add_c64_i64", &ctx.scatter_add_c64_i64)) return;
       ctx.ready = true;
     }
   });
@@ -468,8 +485,8 @@ bool supports_scatter(ScalarType out_dt, ScalarType index_dt, ScalarType src_dt)
 
 bool supports_scatter_reduce(ScalarType out_dt, ScalarType index_dt, ScalarType src_dt) noexcept {
   const bool dt_ok =
-      (out_dt == ScalarType::Float32 || out_dt == ScalarType::Int32) &&
-      (src_dt == ScalarType::Float32 || src_dt == ScalarType::Int32);
+      (out_dt == ScalarType::Float32 || out_dt == ScalarType::Int32 || out_dt == ScalarType::Complex64) &&
+      (src_dt == ScalarType::Float32 || src_dt == ScalarType::Int32 || src_dt == ScalarType::Complex64);
   return dt_ok && out_dt == src_dt && index_dt == ScalarType::Int64;
 }
 
@@ -503,16 +520,19 @@ void scatter_reduce_(Series& out, std::int64_t dim, const Series& index, const S
   id<MTLComputePipelineState> pso = nil;
   const char* name = "mps::scatter_reduce_";
   const bool i32 = out.scalar_type() == ScalarType::Int32;
+  const bool c64 = out.scalar_type() == ScalarType::Complex64;
   switch (op) {
     case ScatterReduceOp::Sum:
-      pso = i32 ? c.scatter_add_i32_i64 : c.scatter_add_f32_i64;
+      pso = c64 ? c.scatter_add_c64_i64 : (i32 ? c.scatter_add_i32_i64 : c.scatter_add_f32_i64);
       name = "mps::scatter_reduce_sum_";
       break;
     case ScatterReduceOp::AMax:
+      if (c64) fail_("mps::scatter_reduce_amax_: complex64 is unsupported");
       pso = i32 ? c.scatter_amax_i32_i64 : c.scatter_amax_f32_i64;
       name = "mps::scatter_reduce_amax_";
       break;
     case ScatterReduceOp::AMin:
+      if (c64) fail_("mps::scatter_reduce_amin_: complex64 is unsupported");
       pso = i32 ? c.scatter_amin_i32_i64 : c.scatter_amin_f32_i64;
       name = "mps::scatter_reduce_amin_";
       break;

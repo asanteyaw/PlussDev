@@ -1,4 +1,5 @@
 #include <pluss/ai/ml.h>
+#include <pluss/ai/lymph.h>
 
 #include <cmath>
 #include <iostream>
@@ -141,6 +142,21 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       }
     }
 
+    auto lymph_radius_cls = pluss::ai::lymph::neighbor_factory::radius_neighbors_classifier(NeighborFamilyOptions{
+        .k = 3,
+        .radius = 0.05,
+        .radius_fallback_k = 1,
+        .distance_weighted = true,
+        .standardize = true,
+    }).learn(batch);
+    const auto lymph_radius_pred = lymph_radius_cls.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::size_t i = 0; i < lymph_radius_pred.size(); ++i) {
+      if (!approx(lymph_radius_pred[i], truth[i])) {
+        if (err) *err << "lymph radius_neighbors_classifier should train and infer through NodeJ radius mode\n";
+        return false;
+      }
+    }
+
     const Series x_bad = pluss::make_series(std::vector<double>{
                                                 1.0, 2.0, 3.0,
                                                 4.0, 5.0, 6.0},
@@ -236,6 +252,21 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
     for (std::size_t i = 0; i < rreg_pred.size(); ++i) {
       if (!approx(rreg_pred[i], truth[i], 1e-8)) {
         if (err) *err << "radius neighbor regressor should fit training targets with fallback\n";
+        return false;
+      }
+    }
+
+    auto lymph_radius_reg = pluss::ai::lymph::neighbor_factory::radius_neighbors_regressor(NeighborFamilyOptions{
+        .k = 1,
+        .radius = 0.01,
+        .radius_fallback_k = 1,
+        .distance_weighted = false,
+        .standardize = true,
+    }).learn(batch);
+    const auto lymph_radius_reg_pred = lymph_radius_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::size_t i = 0; i < lymph_radius_reg_pred.size(); ++i) {
+      if (!approx(lymph_radius_reg_pred[i], truth[i], 1e-8)) {
+        if (err) *err << "lymph radius_neighbors_regressor should train and infer through NodeJ radius mode\n";
         return false;
       }
     }

@@ -47,18 +47,6 @@ bool supports_numeric_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
     case ScalarType::Float64:
     case ScalarType::Float32:
-    case ScalarType::Float16:
-    case ScalarType::BFloat16:
-    case ScalarType::Int64:
-    case ScalarType::Int32:
-    case ScalarType::Int16:
-    case ScalarType::Int8:
-    case ScalarType::UInt64:
-    case ScalarType::UInt32:
-    case ScalarType::UInt16:
-    case ScalarType::UInt8:
-    case ScalarType::Complex64:
-    case ScalarType::Complex128:
       return true;
     default:
       return false;
@@ -96,14 +84,22 @@ bool supports_binary_elementwise_baseline(ScalarType lhs_dtype, ScalarType rhs_d
 }
 
 bool supports_unary_elementwise(const Series& a) noexcept {
-  return is_cuda_series_(a) && supports_unary_elementwise_baseline(a.scalar_type());
+  return is_cuda_series_(a) &&
+      a.is_contiguous() &&
+      a.storage().location() == StorageLocation::CudaDevice &&
+      supports_unary_elementwise_baseline(a.scalar_type());
 }
 
 bool supports_binary_elementwise(const Series& a, const Series& b) noexcept {
   if (!is_cuda_series_(a) || !is_cuda_series_(b)) {
     return false;
   }
-  return supports_binary_elementwise_baseline(a.scalar_type(), b.scalar_type());
+  return a.is_contiguous() &&
+      b.is_contiguous() &&
+      a.storage().location() == StorageLocation::CudaDevice &&
+      b.storage().location() == StorageLocation::CudaDevice &&
+      (a.numel() == b.numel() || a.numel() == 1 || b.numel() == 1) &&
+      supports_binary_elementwise_baseline(a.scalar_type(), b.scalar_type());
 }
 
 bool supports_comparison_elementwise(const Series& a, const Series& b) noexcept {
@@ -113,7 +109,46 @@ bool supports_comparison_elementwise(const Series& a, const Series& b) noexcept 
   if (!baseline_ready_()) {
     return false;
   }
-  return a.scalar_type() == b.scalar_type() && supports_compare_dtype_(a.scalar_type());
+  return a.is_contiguous() &&
+      b.is_contiguous() &&
+      a.storage().location() == StorageLocation::CudaDevice &&
+      b.storage().location() == StorageLocation::CudaDevice &&
+      (a.numel() == b.numel() || a.numel() == 1 || b.numel() == 1) &&
+      a.scalar_type() == b.scalar_type() &&
+      supports_compare_dtype_(a.scalar_type());
 }
+
+bool supports_where_elementwise(const Series& cond, const Series& a, const Series& b) noexcept {
+  if (!is_cuda_series_(cond) || !is_cuda_series_(a) || !is_cuda_series_(b) || !baseline_ready_()) {
+    return false;
+  }
+  const auto n = std::max(cond.numel(), std::max(a.numel(), b.numel()));
+  return cond.scalar_type() == ScalarType::Bool &&
+      a.scalar_type() == b.scalar_type() &&
+      supports_numeric_dtype_(a.scalar_type()) &&
+      cond.is_contiguous() &&
+      a.is_contiguous() &&
+      b.is_contiguous() &&
+      cond.storage().location() == StorageLocation::CudaDevice &&
+      a.storage().location() == StorageLocation::CudaDevice &&
+      b.storage().location() == StorageLocation::CudaDevice &&
+      (cond.numel() == n || cond.numel() == 1) &&
+      (a.numel() == n || a.numel() == 1) &&
+      (b.numel() == n || b.numel() == 1);
+}
+
+#if !(defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA)
+bool run_unary_elementwise(native::cpu::UnaryOpId, const Series&, Series&) noexcept {
+  return false;
+}
+
+bool run_binary_elementwise(native::cpu::BinaryOpId, const Series&, const Series&, Series&) noexcept {
+  return false;
+}
+
+bool run_where_elementwise(const Series&, const Series&, const Series&, Series&) noexcept {
+  return false;
+}
+#endif
 
 } // namespace pluss::codem::native::cuda

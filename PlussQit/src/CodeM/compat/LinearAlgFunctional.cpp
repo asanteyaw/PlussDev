@@ -973,9 +973,6 @@ inline Series cuda_linalg_route_or_bridge_(
     bool route_supported,
     CpuRouteFn&& cpu_route) {
   if (native_enabled && route_supported) {
-    if (pluss::codem::cuda_cpu_bridge_enabled()) {
-      return bridge_cpu_result_to_cuda_(cpu_route(), op_name, /*allow_strict_native=*/true);
-    }
     throw_cuda_linalg_unavailable_(op_name, native_enabled, native_strict, route_supported);
   }
   if (native_strict) {

@@ -24,6 +24,7 @@ Public fields on this type:
 - `Status status = Status::success()`
 - `CrossAssessReport assess{}`
 - `double objective = std::numeric_limits<double>::quiet_NaN()`
+- `std::int64_t stage = 0`
 
 ## Examples
 

@@ -24,8 +24,6 @@ option(PLUSSMA_MATH_NUMERICAL_ENABLE_LINEAR_ALGEBRA "Build PlussMa Math::Numeric
 option(PLUSSMA_MATH_NUMERICAL_ENABLE_OPTIMIZATION "Build PlussMa Math::Numerical::optimization" ON)
 option(PLUSSMA_MATH_NUMERICAL_ENABLE_SPECTRAL_METHODS "Build PlussMa Math::Numerical::spectral_methods" ON)
 
-# Math::Finance modules
-option(PLUSSMA_MATH_FINANCE_ENABLE_CALIBRATION "Build PlussMa Math::Finance::calibration" ON)
 option(PLUSSMA_MATH_FINANCE_ENABLE_PRICING "Build PlussMa Math::Finance::pricing" ON)
 option(PLUSSMA_MATH_FINANCE_ENABLE_HEDGING "Build PlussMa Math::Finance::hedging" ON)
 option(PLUSSMA_MATH_FINANCE_ENABLE_FILTERING "Build PlussMa Math::Finance::filtering" ON)
@@ -61,11 +59,6 @@ target_include_directories(pluss PUBLIC
 
 if(PLUSSMA_ENABLE_STATS AND PLUSSMA_STATS_ENABLE_TIME_SERIES AND NOT PLUSSMA_STATS_ENABLE_DISTRIBUTIONS)
     message(FATAL_ERROR "PlussMa config invalid: Stats::time_series requires Stats::distributions")
-endif()
-if(PLUSSMA_ENABLE_MATH AND PLUSSMA_MATH_ENABLE_FINANCE AND PLUSSMA_MATH_FINANCE_ENABLE_CALIBRATION)
-    if(NOT PLUSSMA_ENABLE_STATS OR NOT PLUSSMA_STATS_ENABLE_TIME_SERIES)
-        message(FATAL_ERROR "PlussMa config invalid: Math::Finance::calibration requires Stats::time_series")
-    endif()
 endif()
 if(PLUSSMA_ENABLE_MATH AND PLUSSMA_MATH_ENABLE_FINANCE AND PLUSSMA_MATH_FINANCE_ENABLE_HEDGING AND NOT PLUSSMA_MATH_FINANCE_ENABLE_PRICING)
     message(FATAL_ERROR "PlussMa config invalid: Math::Finance::hedging requires Math::Finance::pricing")

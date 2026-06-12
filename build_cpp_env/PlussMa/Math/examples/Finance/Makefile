@@ -193,20 +193,6 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/rule
-
-# Convenience name for target.
-plussma_math_finance_finance_bates_demo: PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/rule
-.PHONY : plussma_math_finance_finance_bates_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_bates_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build
-.PHONY : plussma_math_finance_finance_bates_demo/fast
-
-# Convenience name for target.
 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_filtering_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_filtering_demo.dir/rule
 .PHONY : PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_filtering_demo.dir/rule
@@ -247,20 +233,6 @@ plussma_math_finance_finance_heston_objective_mse_demo: PlussMa/Math/examples/Fi
 plussma_math_finance_finance_heston_objective_mse_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_objective_mse_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_objective_mse_demo.dir/build
 .PHONY : plussma_math_finance_finance_heston_objective_mse_demo/fast
-
-# Convenience name for target.
-PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/rule
-
-# Convenience name for target.
-plussma_math_finance_finance_heston_sv_demo: PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/rule
-.PHONY : plussma_math_finance_finance_heston_sv_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_heston_sv_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build
-.PHONY : plussma_math_finance_finance_heston_sv_demo/fast
 
 # Convenience name for target.
 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_objects_bates_mc_demo.dir/rule:
@@ -347,20 +319,6 @@ plussma_math_finance_finance_pipeline_demo/fast:
 .PHONY : plussma_math_finance_finance_pipeline_demo/fast
 
 # Convenience name for target.
-PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/rule
-
-# Convenience name for target.
-plussma_math_finance_finance_rates_objects_demo: PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/rule
-.PHONY : plussma_math_finance_finance_rates_objects_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_rates_objects_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build
-.PHONY : plussma_math_finance_finance_rates_objects_demo/fast
-
-# Convenience name for target.
 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/rule
 .PHONY : PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/rule
@@ -373,20 +331,6 @@ plussma_math_finance_finance_roughvol_fft_demo: PlussMa/Math/examples/Finance/CM
 plussma_math_finance_finance_roughvol_fft_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/build
 .PHONY : plussma_math_finance_finance_roughvol_fft_demo/fast
-
-# Convenience name for target.
-PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/rule
-.PHONY : PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/rule
-
-# Convenience name for target.
-plussma_math_finance_finance_stochvol_objects_demo: PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/rule
-.PHONY : plussma_math_finance_finance_stochvol_objects_demo
-
-# fast build rule for target.
-plussma_math_finance_finance_stochvol_objects_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build
-.PHONY : plussma_math_finance_finance_stochvol_objects_demo/fast
 
 # Convenience name for target.
 PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_schemes_demo.dir/rule:
@@ -429,30 +373,6 @@ plussma_math_finance_roughvol_fft_demo: PlussMa/Math/examples/Finance/CMakeFiles
 plussma_math_finance_roughvol_fft_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_roughvol_fft_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_roughvol_fft_demo.dir/build
 .PHONY : plussma_math_finance_roughvol_fft_demo/fast
-
-finance_bates_demo.o: finance_bates_demo.cpp.o
-.PHONY : finance_bates_demo.o
-
-# target to build an object file
-finance_bates_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/finance_bates_demo.cpp.o
-.PHONY : finance_bates_demo.cpp.o
-
-finance_bates_demo.i: finance_bates_demo.cpp.i
-.PHONY : finance_bates_demo.i
-
-# target to preprocess a source file
-finance_bates_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/finance_bates_demo.cpp.i
-.PHONY : finance_bates_demo.cpp.i
-
-finance_bates_demo.s: finance_bates_demo.cpp.s
-.PHONY : finance_bates_demo.s
-
-# target to generate assembly for a file
-finance_bates_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_bates_demo.dir/finance_bates_demo.cpp.s
-.PHONY : finance_bates_demo.cpp.s
 
 finance_filtering_demo.o: finance_filtering_demo.cpp.o
 .PHONY : finance_filtering_demo.o
@@ -525,30 +445,6 @@ finance_heston_objective_mse_demo.s: finance_heston_objective_mse_demo.cpp.s
 finance_heston_objective_mse_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_objective_mse_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_objective_mse_demo.dir/finance_heston_objective_mse_demo.cpp.s
 .PHONY : finance_heston_objective_mse_demo.cpp.s
-
-finance_heston_sv_demo.o: finance_heston_sv_demo.cpp.o
-.PHONY : finance_heston_sv_demo.o
-
-# target to build an object file
-finance_heston_sv_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/finance_heston_sv_demo.cpp.o
-.PHONY : finance_heston_sv_demo.cpp.o
-
-finance_heston_sv_demo.i: finance_heston_sv_demo.cpp.i
-.PHONY : finance_heston_sv_demo.i
-
-# target to preprocess a source file
-finance_heston_sv_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/finance_heston_sv_demo.cpp.i
-.PHONY : finance_heston_sv_demo.cpp.i
-
-finance_heston_sv_demo.s: finance_heston_sv_demo.cpp.s
-.PHONY : finance_heston_sv_demo.s
-
-# target to generate assembly for a file
-finance_heston_sv_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_heston_sv_demo.dir/finance_heston_sv_demo.cpp.s
-.PHONY : finance_heston_sv_demo.cpp.s
 
 finance_objects_bates_mc_demo.o: finance_objects_bates_mc_demo.cpp.o
 .PHONY : finance_objects_bates_mc_demo.o
@@ -694,30 +590,6 @@ finance_pipeline_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_pipeline_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_pipeline_demo.dir/finance_pipeline_demo.cpp.s
 .PHONY : finance_pipeline_demo.cpp.s
 
-finance_rates_objects_demo.o: finance_rates_objects_demo.cpp.o
-.PHONY : finance_rates_objects_demo.o
-
-# target to build an object file
-finance_rates_objects_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/finance_rates_objects_demo.cpp.o
-.PHONY : finance_rates_objects_demo.cpp.o
-
-finance_rates_objects_demo.i: finance_rates_objects_demo.cpp.i
-.PHONY : finance_rates_objects_demo.i
-
-# target to preprocess a source file
-finance_rates_objects_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/finance_rates_objects_demo.cpp.i
-.PHONY : finance_rates_objects_demo.cpp.i
-
-finance_rates_objects_demo.s: finance_rates_objects_demo.cpp.s
-.PHONY : finance_rates_objects_demo.s
-
-# target to generate assembly for a file
-finance_rates_objects_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_rates_objects_demo.dir/finance_rates_objects_demo.cpp.s
-.PHONY : finance_rates_objects_demo.cpp.s
-
 finance_roughvol_fft_demo.o: finance_roughvol_fft_demo.cpp.o
 .PHONY : finance_roughvol_fft_demo.o
 
@@ -741,30 +613,6 @@ finance_roughvol_fft_demo.s: finance_roughvol_fft_demo.cpp.s
 finance_roughvol_fft_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_roughvol_fft_demo.dir/finance_roughvol_fft_demo.cpp.s
 .PHONY : finance_roughvol_fft_demo.cpp.s
-
-finance_stochvol_objects_demo.o: finance_stochvol_objects_demo.cpp.o
-.PHONY : finance_stochvol_objects_demo.o
-
-# target to build an object file
-finance_stochvol_objects_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/finance_stochvol_objects_demo.cpp.o
-.PHONY : finance_stochvol_objects_demo.cpp.o
-
-finance_stochvol_objects_demo.i: finance_stochvol_objects_demo.cpp.i
-.PHONY : finance_stochvol_objects_demo.i
-
-# target to preprocess a source file
-finance_stochvol_objects_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/finance_stochvol_objects_demo.cpp.i
-.PHONY : finance_stochvol_objects_demo.cpp.i
-
-finance_stochvol_objects_demo.s: finance_stochvol_objects_demo.cpp.s
-.PHONY : finance_stochvol_objects_demo.s
-
-# target to generate assembly for a file
-finance_stochvol_objects_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_finance_stochvol_objects_demo.dir/finance_stochvol_objects_demo.cpp.s
-.PHONY : finance_stochvol_objects_demo.cpp.s
 
 finance_stochvol_schemes_demo.o: finance_stochvol_schemes_demo.cpp.o
 .PHONY : finance_stochvol_schemes_demo.o
@@ -853,26 +701,19 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... plussma_math_finance_finance_bates_demo"
 	@echo "... plussma_math_finance_finance_filtering_demo"
 	@echo "... plussma_math_finance_finance_heston_filter_sp500_demo"
 	@echo "... plussma_math_finance_finance_heston_objective_mse_demo"
-	@echo "... plussma_math_finance_finance_heston_sv_demo"
 	@echo "... plussma_math_finance_finance_objects_bates_mc_demo"
 	@echo "... plussma_math_finance_finance_objects_bs_analytic_demo"
 	@echo "... plussma_math_finance_finance_objects_bs_mc_demo"
 	@echo "... plussma_math_finance_finance_objects_heston_fft_mc_demo"
 	@echo "... plussma_math_finance_finance_objects_sabr_demo"
 	@echo "... plussma_math_finance_finance_pipeline_demo"
-	@echo "... plussma_math_finance_finance_rates_objects_demo"
 	@echo "... plussma_math_finance_finance_roughvol_fft_demo"
-	@echo "... plussma_math_finance_finance_stochvol_objects_demo"
 	@echo "... plussma_math_finance_finance_stochvol_schemes_demo"
 	@echo "... plussma_math_finance_pricing_models_demo"
 	@echo "... plussma_math_finance_roughvol_fft_demo"
-	@echo "... finance_bates_demo.o"
-	@echo "... finance_bates_demo.i"
-	@echo "... finance_bates_demo.s"
 	@echo "... finance_filtering_demo.o"
 	@echo "... finance_filtering_demo.i"
 	@echo "... finance_filtering_demo.s"
@@ -882,9 +723,6 @@ help:
 	@echo "... finance_heston_objective_mse_demo.o"
 	@echo "... finance_heston_objective_mse_demo.i"
 	@echo "... finance_heston_objective_mse_demo.s"
-	@echo "... finance_heston_sv_demo.o"
-	@echo "... finance_heston_sv_demo.i"
-	@echo "... finance_heston_sv_demo.s"
 	@echo "... finance_objects_bates_mc_demo.o"
 	@echo "... finance_objects_bates_mc_demo.i"
 	@echo "... finance_objects_bates_mc_demo.s"
@@ -903,15 +741,9 @@ help:
 	@echo "... finance_pipeline_demo.o"
 	@echo "... finance_pipeline_demo.i"
 	@echo "... finance_pipeline_demo.s"
-	@echo "... finance_rates_objects_demo.o"
-	@echo "... finance_rates_objects_demo.i"
-	@echo "... finance_rates_objects_demo.s"
 	@echo "... finance_roughvol_fft_demo.o"
 	@echo "... finance_roughvol_fft_demo.i"
 	@echo "... finance_roughvol_fft_demo.s"
-	@echo "... finance_stochvol_objects_demo.o"
-	@echo "... finance_stochvol_objects_demo.i"
-	@echo "... finance_stochvol_objects_demo.s"
 	@echo "... finance_stochvol_schemes_demo.o"
 	@echo "... finance_stochvol_schemes_demo.i"
 	@echo "... finance_stochvol_schemes_demo.s"

@@ -42,7 +42,7 @@ CODEM_API Ngarch11Params to_pricing_params(const pluss::subsp::stats::ts::Garch1
 
 } // namespace volatility
 
-namespace calibration {
+namespace bridge {
 
 struct JointLikelihoodWeights {
   double returns_weight = 1.0;
@@ -90,7 +90,7 @@ CODEM_API double weighted_joint_nll(double returns_loglik,
                                     double options_loglik,
                                     const JointLikelihoodWeights& weights = {});
 
-} // namespace calibration
+} // namespace bridge
 
 namespace pricing {
 
@@ -123,7 +123,7 @@ CODEM_API pluss::codem::Series pricing_variance_forecast(std::int64_t horizon,
 } // namespace pricing
 
 namespace vol = volatility;
-namespace cal = calibration;
+namespace brg = bridge;
 namespace prc = pricing;
 
 } // namespace pluss::subsp::math::finance

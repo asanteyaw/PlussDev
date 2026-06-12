@@ -24,6 +24,10 @@ STATIC_METHODS = {
     "eye",
     "rand",
     "randn",
+    "randint",
+    "bernoulli",
+    "normal",
+    "randperm",
     "from_storage",
 }
 

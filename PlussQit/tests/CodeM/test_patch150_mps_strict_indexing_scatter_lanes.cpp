@@ -64,6 +64,18 @@ void require_equal_(const std::vector<T>& got, const std::vector<T>& want) {
   }
 }
 
+void require_complex64_close_(
+    const std::vector<pluss::codem::Complex64>& got,
+    const std::vector<pluss::codem::Complex64>& want,
+    float tol = 1e-5f) {
+  REQUIRE(got.size() == want.size());
+  for (std::size_t i = 0; i < got.size(); ++i) {
+    INFO("i=" << i << " got=" << got[i] << " want=" << want[i] << " tol=" << tol);
+    REQUIRE(std::fabs(got[i].real() - want[i].real()) <= tol);
+    REQUIRE(std::fabs(got[i].imag() - want[i].imag()) <= tol);
+  }
+}
+
 } // namespace
 
 TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps][parity][torch][strict][indexing][scatter]") {
@@ -158,10 +170,16 @@ TEST_CASE("MPS strict gather/scatter rejects unsupported non-exact lane", "[mps]
 
   const auto idx = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 3}, {4}).to(pluss::pMPS);
 
-  // complex data is intentionally outside the currently supported gather native lane.
-  const auto x_c64 = pluss::Series::ones({4}, pluss::ScalarType::Complex64).to(pluss::pMPS);
+  const auto x_c64_cpu = pluss::make_series(
+      std::vector<pluss::codem::Complex64>{{1.0f, 2.0f}, {3.0f, -4.0f}, {-5.0f, 6.0f}, {7.0f, 8.0f}},
+      {4});
+  const auto got_c64 = x_c64_cpu.to(pluss::pMPS).gather(0, idx).to(pluss::pCPU).to_vec<pluss::codem::Complex64>();
+  require_complex64_close_(got_c64, x_c64_cpu.to_vec<pluss::codem::Complex64>());
+
+  // UInt64 is intentionally outside the currently supported gather native lane.
+  const auto x_u64 = pluss::make_series(std::vector<std::uint64_t>{1, 2, 3, 4}, {4}).to(pluss::pMPS);
   try {
-    (void)x_c64.gather(0, idx);
+    (void)x_u64.gather(0, idx);
     FAIL("strict gather should fail for unsupported non-exact dtype lane");
   } catch (const std::exception& e) {
     REQUIRE(std::string(e.what()).find("no native MPS kernel yet") != std::string::npos);

@@ -14,23 +14,18 @@ if(PLUSSMA_ENABLE_MATH
    AND PLUSSMA_MATH_ENABLE_NUMERICAL
    AND PLUSSMA_MATH_NUMERICAL_ENABLE_OPTIMIZATION
    AND PLUSSMA_MATH_FINANCE_ENABLE_PRICING
-   AND PLUSSMA_MATH_FINANCE_ENABLE_CALIBRATION
    AND PLUSSMA_MATH_FINANCE_ENABLE_FILTERING
    AND PLUSSMA_MATH_FINANCE_ENABLE_STOCHASTIC_PROCESSES)
-  plussma_add_math_finance_example(finance_bates_demo.cpp)
   plussma_add_math_finance_example(finance_filtering_demo.cpp)
   plussma_add_math_finance_example(finance_heston_filter_sp500_demo.cpp)
   plussma_add_math_finance_example(finance_heston_objective_mse_demo.cpp)
-  plussma_add_math_finance_example(finance_heston_sv_demo.cpp)
   plussma_add_math_finance_example(finance_objects_bates_mc_demo.cpp)
   plussma_add_math_finance_example(finance_objects_bs_analytic_demo.cpp)
   plussma_add_math_finance_example(finance_objects_bs_mc_demo.cpp)
   plussma_add_math_finance_example(finance_objects_heston_fft_mc_demo.cpp)
   plussma_add_math_finance_example(finance_objects_sabr_demo.cpp)
   plussma_add_math_finance_example(finance_pipeline_demo.cpp)
-  plussma_add_math_finance_example(finance_rates_objects_demo.cpp)
   plussma_add_math_finance_example(finance_roughvol_fft_demo.cpp)
-  plussma_add_math_finance_example(finance_stochvol_objects_demo.cpp)
   plussma_add_math_finance_example(finance_stochvol_schemes_demo.cpp)
   plussma_add_math_finance_example(pricing_models_demo.cpp)
   plussma_add_math_finance_example(roughvol_fft_demo.cpp)

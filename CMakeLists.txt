@@ -257,32 +257,6 @@ if(TARGET plussqit_codem AND PLUSS_CUDNN_LIBRARY)
     target_compile_definitions(plussqit_codem PRIVATE PLUSS_CUDNN_LIBRARY_DEFAULT="${PLUSS_CUDNN_LIBRARY}")
 endif()
 
-if(TARGET pluss AND TARGET PlussMic AND TARGET plussqit_codem)
-    add_executable(plussma_math_finance_calibrate_heston_demo
-        ${CMAKE_SOURCE_DIR}/PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp
-    )
-    target_compile_features(plussma_math_finance_calibrate_heston_demo PRIVATE cxx_std_20)
-    target_link_libraries(plussma_math_finance_calibrate_heston_demo PRIVATE pluss plussqit_codem PlussMic)
-    target_compile_definitions(plussma_math_finance_calibrate_heston_demo PRIVATE
-        PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
-    )
-    set_target_properties(plussma_math_finance_calibrate_heston_demo PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/PlussMa/Math/examples/Finance"
-    )
-
-    add_executable(plussma_math_finance_calibrate_bates_demo
-        ${CMAKE_SOURCE_DIR}/PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp
-    )
-    target_compile_features(plussma_math_finance_calibrate_bates_demo PRIVATE cxx_std_20)
-    target_link_libraries(plussma_math_finance_calibrate_bates_demo PRIVATE pluss plussqit_codem PlussMic)
-    target_compile_definitions(plussma_math_finance_calibrate_bates_demo PRIVATE
-        PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
-    )
-    set_target_properties(plussma_math_finance_calibrate_bates_demo PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/PlussMa/Math/examples/Finance"
-    )
-endif()
-
 if(TARGET plusstils_view_window_registry_demo AND TARGET PlussMic)
     target_link_libraries(plusstils_view_window_registry_demo PRIVATE PlussMic)
     target_compile_definitions(plusstils_view_window_registry_demo PRIVATE

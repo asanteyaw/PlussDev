@@ -30,4 +30,21 @@ bool supports_logical_reduction(const Series& a, std::int64_t dim) noexcept;
 bool supports_arg_extrema_reduction(const Series& a) noexcept;
 bool supports_arg_extrema_reduction(const Series& a, std::int64_t dim) noexcept;
 
+bool run_sum_reduction(const Series& a, Series& out) noexcept;
+bool run_sum_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_prod_reduction(const Series& a, Series& out) noexcept;
+bool run_prod_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_mean_reduction(const Series& a, Series& out) noexcept;
+bool run_mean_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_amax_reduction(const Series& a, Series& out) noexcept;
+bool run_amax_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_amin_reduction(const Series& a, Series& out) noexcept;
+bool run_amin_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_all_reduction(const Series& a, Series& out) noexcept;
+bool run_all_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_any_reduction(const Series& a, Series& out) noexcept;
+bool run_any_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_argmax_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+bool run_argmin_reduction(const Series& a, std::int64_t dim, Series& out) noexcept;
+
 } // namespace pluss::codem::native::cuda

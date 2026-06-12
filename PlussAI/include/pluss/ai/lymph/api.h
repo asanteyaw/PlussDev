@@ -4821,6 +4821,16 @@ struct neighbor_factory {
     return classifier(options);
   }
 
+  [[nodiscard]] static WorkflowModel radius_neighbors_regressor(NeighborFamilyOptions options = {}) {
+    options.query_mode = NeighborQueryMode::Radius;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel radius_neighbors_classifier(NeighborFamilyOptions options = {}) {
+    options.query_mode = NeighborQueryMode::Radius;
+    return classifier(options);
+  }
+
   [[nodiscard]] static WorkflowModel regressor(NeighborFamilyOptions options = {}) {
     return WorkflowModel(ModelSpec{
         .task = TaskKind::Regression,
@@ -4956,6 +4966,12 @@ struct bayes_factory {
 
   [[nodiscard]] static WorkflowModel multinomial_nb_classifier(BayesFamilyOptions options = {}) {
     options.likelihood = BayesLikelihood::Multinomial;
+    options.use_gaussian = false;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel complement_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Complement;
     options.use_gaussian = false;
     return classifier(options);
   }

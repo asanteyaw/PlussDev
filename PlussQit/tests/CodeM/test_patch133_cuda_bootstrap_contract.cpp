@@ -137,7 +137,8 @@ TEST_CASE("CUDA native baseline capability is runtime-dynamic", "[cuda][baseline
     REQUIRE(
         pluss::cuda::supports_elementwise_baseline(pluss::ScalarType::Float32) == cuda_ready);
     REQUIRE(
-        pluss::cuda::supports_reduction_baseline(pluss::ScalarType::Float16) == cuda_ready);
+        pluss::cuda::supports_reduction_baseline(pluss::ScalarType::Float64) == cuda_ready);
+    REQUIRE_FALSE(pluss::cuda::supports_reduction_baseline(pluss::ScalarType::Float16));
     REQUIRE(
         pluss::cuda::supports_matmul_baseline(pluss::ScalarType::Float32, pluss::ScalarType::Float32) ==
         cuda_ready);

@@ -73,6 +73,18 @@ TEST_CASE("COS pricing tracks Heston NI and FFT across strikes", "[finance][pric
   const double pput = prc::heston_price_cos(prc::OptionType::Put, s, k, r, q, t, p, cos_opt, cfg);
   const double parity = s * std::exp(-q * t) - k * std::exp(-r * t);
   REQUIRE(std::abs((c - pput) - parity) < 0.2);
+
+  const auto spot_s = pluss::full({static_cast<std::int64_t>(strikes.size())}, s, cfg);
+  const auto strike_s = pluss::make_series(strikes, {static_cast<std::int64_t>(strikes.size())}, cfg);
+  const auto maturity_s = pluss::full({static_cast<std::int64_t>(strikes.size())}, t, cfg);
+  const auto series_px = prc::heston_price_cos(prc::OptionType::Call, spot_s, strike_s, r, q, maturity_s, p, cos_opt, cfg);
+  REQUIRE(series_px.numel() == static_cast<std::int64_t>(strikes.size()));
+  REQUIRE(all_finite(series_px));
+  for (std::int64_t i = 0; i < series_px.numel(); ++i) {
+    const double scalar_px = prc::heston_price_cos(
+        prc::OptionType::Call, s, strikes[static_cast<std::size_t>(i)], r, q, t, p, cos_opt, cfg);
+    REQUIRE(std::abs(series_px.select(0, i).item<double>() - scalar_px) < 1.0e-10);
+  }
 }
 
 TEST_CASE("COS pricing tracks Bates FFT", "[finance][pricing][cos][bates]") {

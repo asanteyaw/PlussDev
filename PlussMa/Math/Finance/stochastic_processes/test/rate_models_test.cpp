@@ -18,7 +18,6 @@ void expect(bool condition, const std::string& message) {
 
 int main() {
   try {
-    namespace cal = pluss::subsp::math::finance::calibration;
     namespace mdl = pluss::subsp::math::finance::models;
     namespace rate = pluss::subsp::math::finance::rates;
 
@@ -39,21 +38,6 @@ int main() {
     expect(vpaths.rate.isfinite().all().item<double>() == 1.0, "vasicek model paths must be finite");
     expect(std::isfinite(vmod.zcb(1.0, vp.r0)) && vmod.zcb(1.0, vp.r0) > 0.0, "vasicek zcb invalid");
 
-    std::vector<cal::RateQuote> curve_v;
-    for (double t : {0.5, 1.0, 2.0, 3.0}) {
-      cal::RateQuote q;
-      q.maturity = t;
-      q.zcb_price = rate::vasicek_zcb(t, vp.r0, vp);
-      q.weight = 1.0;
-      curve_v.push_back(q);
-    }
-    cal::VasicekCalibOptions vopt;
-    vopt.random_starts = 2;
-    vopt.max_iterations = 30;
-    vopt.seed = 20260624ULL;
-    const auto vfit = vmod.calibrate_inplace(curve_v, vopt);
-    expect(std::isfinite(vfit.objective), "vasicek calibration objective invalid");
-
     rate::CirParams cp;
     cp.kappa = 1.1;
     cp.theta = 0.035;
@@ -71,21 +55,6 @@ int main() {
     expect(cpaths.rate.min().item<double>() > 0.0, "cir model rates must stay positive");
     expect(std::isfinite(cmod.zcb(1.0, cp.r0)) && cmod.zcb(1.0, cp.r0) > 0.0, "cir zcb invalid");
 
-    std::vector<cal::RateQuote> curve_c;
-    for (double t : {0.5, 1.0, 2.0, 3.0}) {
-      cal::RateQuote q;
-      q.maturity = t;
-      q.zcb_price = rate::cir_zcb(t, cp.r0, cp);
-      q.weight = 1.0;
-      curve_c.push_back(q);
-    }
-    cal::CirCalibOptions copt;
-    copt.random_starts = 2;
-    copt.max_iterations = 30;
-    copt.seed = 20260626ULL;
-    const auto cfit = cmod.calibrate_inplace(curve_c, copt);
-    expect(std::isfinite(cfit.objective), "cir calibration objective invalid");
-
     rate::HullWhiteParams hp;
     hp.kappa = 0.7;
     hp.sigma = 0.012;
@@ -99,21 +68,6 @@ int main() {
     const auto hpaths = hmod.paths(100, 128, 1.0 / 252.0, ropt, cfg, ropt.seed);
     expect(hpaths.rate.isfinite().all().item<double>() == 1.0, "hull-white model paths must be finite");
     expect(std::isfinite(hmod.zcb(1.0, hp.r0)) && hmod.zcb(1.0, hp.r0) > 0.0, "hull-white zcb invalid");
-
-    std::vector<cal::RateQuote> curve_h;
-    for (double t : {0.5, 1.0, 2.0, 3.0}) {
-      cal::RateQuote q;
-      q.maturity = t;
-      q.zcb_price = rate::hull_white_zcb(t, hp.r0, hp);
-      q.weight = 1.0;
-      curve_h.push_back(q);
-    }
-    cal::HullWhiteCalibOptions hopt;
-    hopt.random_starts = 2;
-    hopt.max_iterations = 25;
-    hopt.seed = 20260732ULL;
-    const auto hfit = hmod.calibrate_inplace(curve_h, hopt);
-    expect(std::isfinite(hfit.objective), "hull-white calibration objective invalid");
 
     rate::HjmParams hjm;
     hjm.r0 = 0.03;
@@ -129,21 +83,6 @@ int main() {
     expect(hjm_paths.forward.isfinite().all().item<double>() == 1.0, "hjm model forward must be finite");
     const double hjm_zcb = hjm_mod.zcb_mc(1.0, 3000, 64, ropt, cfg);
     expect(std::isfinite(hjm_zcb) && hjm_zcb > 0.0, "hjm model zcb_mc invalid");
-
-    std::vector<cal::RateQuote> curve_j;
-    for (double t : {0.5, 1.0, 2.0}) {
-      cal::RateQuote q;
-      q.maturity = t;
-      q.zcb_price = rate::hjm_zcb_mc(t, hjm, 3000, 64, ropt, cfg);
-      q.weight = 1.0;
-      curve_j.push_back(q);
-    }
-    cal::HjmCalibOptions jopt;
-    jopt.random_starts = 1;
-    jopt.max_iterations = 5;
-    jopt.seed = 20260734ULL;
-    const auto jfit = hjm_mod.calibrate_inplace(curve_j, jopt);
-    expect(std::isfinite(jfit.objective), "hjm calibration objective invalid");
 
     std::cout << "rate_models_test passed\n";
     return 0;

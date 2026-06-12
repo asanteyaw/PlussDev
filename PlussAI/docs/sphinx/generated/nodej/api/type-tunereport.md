@@ -24,6 +24,8 @@ Public fields on this type:
 - `std::int64_t best_index = -1`
 - `MetricKind objective_metric = MetricKind::Accuracy`
 - `TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto`
+- `std::vector<std::int64_t> objective_rank{}`
+- `TuneLedger ledger{}`
 
 ## Examples
 

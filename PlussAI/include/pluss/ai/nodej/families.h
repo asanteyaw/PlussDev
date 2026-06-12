@@ -69,6 +69,7 @@ enum class BayesLikelihood : std::uint8_t {
   Gaussian = 0,
   Bernoulli = 1,
   Multinomial = 2,
+  Complement = 3,
 };
 
 enum class ClusterMethod : std::uint8_t {
