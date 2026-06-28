@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pluss/subsp/math/finance/calibration.h"
 #include "pluss/subsp/math/finance/filtering.h"
 #include "pluss/subsp/math/finance/hedging.h"
 #include "pluss/subsp/math/finance/module.h"
@@ -16,7 +15,6 @@ namespace pluss::ma {
 namespace finance = ::pluss::subsp::math::finance;
 namespace vol = ::pluss::subsp::math::finance::volatility;
 namespace rate = ::pluss::subsp::math::finance::rates;
-namespace cal = ::pluss::subsp::math::finance::calibration;
 namespace mdl = ::pluss::subsp::math::finance::models;
 namespace mod = ::pluss::subsp::math::finance::module;
 namespace obj = ::pluss::subsp::math::finance::object;

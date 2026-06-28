@@ -18,7 +18,7 @@ namespace pluss {
 // Public factories (preferred): construct a 1D TimeIndex.
 // Users MUST NOT construct TimeIndex directly.
 inline pluss::codeh::TimeIndex make_timeindex(const pluss::codeh::Timeline& t, bool require_sorted = true) {
-  return ::pluss::codeh::_compat::invoke<pluss::codeh::TimeIndex>("make_timeindex", t, require_sorted);
+  return ::pluss::codeh::_compat::invoke<pluss::codeh::TimeIndex>("make_timeindex", t, {require_sorted});
 }
 
 inline pluss::codeh::TimeIndex make_timeindex(std::string_view scalar, bool require_sorted = true) {

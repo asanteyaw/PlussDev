@@ -174,6 +174,332 @@ DataFrame DataFrame::compare(const DataFrame& other) const {
   return ne(other);
 }
 
+namespace {
+
+template <class Compatible, class Apply>
+std::optional<std::vector<Thread>> dataframe_replace_selected_impl(
+    const detail::DataFrameImpl& src,
+    pluss::msharp::RangeView::Of<std::string_view> features,
+    Compatible&& compatible,
+    Apply&& apply,
+    std::string_view where) {
+  std::unordered_set<std::size_t> target_indices;
+
+  if (features.size() == 0) {
+    for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+      if (compatible(src.columns_[i])) {
+        target_indices.insert(i);
+      }
+    }
+  } else {
+    for (const auto& name : normalize_name_list(features)) {
+      const auto it = src.name_to_idx_.find(name);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'");
+      target_indices.insert(it->second);
+    }
+  }
+
+  if (target_indices.empty()) {
+    return std::nullopt;
+  }
+
+  auto out_cols = src.columns_;
+  bool changed = false;
+  for (const auto idx : target_indices) {
+    if (!compatible(out_cols[idx])) {
+      continue;
+    }
+    out_cols[idx] = apply(out_cols[idx]);
+    changed = true;
+  }
+
+  if (!changed) {
+    return std::nullopt;
+  }
+
+  return out_cols;
+}
+
+} // namespace
+
+DataFrame DataFrame::replace(double from, double to, pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
+      [from, to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(double, double)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(double from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
+      [from, to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(double, null)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(pluss::null_t from, double to, pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return fillna(to, features);
+}
+
+DataFrame DataFrame::replace(
+    std::string_view from,
+    std::string_view to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  const auto from_note = pluss::make_note(from);
+  const auto to_note = pluss::make_note(to);
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
+      [&from_note, &to_note](const Thread& col) { return col.replace(from_note, to_note); },
+      "DataFrame::replace(string, string)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    std::string_view from,
+    pluss::null_t to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  const auto from_note = pluss::make_note(from);
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
+      [&from_note, to](const Thread& col) { return col.replace(from_note, to); },
+      "DataFrame::replace(string, null)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    pluss::null_t from,
+    std::string_view to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return fillna(to, features);
+}
+
+DataFrame DataFrame::replace(
+    const pluss::Series& from,
+    const pluss::Series& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
+      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(Series, Series)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    const pluss::Series& from,
+    pluss::null_t to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
+      [&from, to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(Series, null)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    pluss::null_t from,
+    const pluss::Series& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
+      [&to, from](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(null, Series)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    const pluss::Note& from,
+    const pluss::Note& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
+      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(Note, Note)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    const pluss::Note& from,
+    pluss::null_t to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
+      [&from, to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(Note, null)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    pluss::null_t from,
+    const pluss::Note& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
+      [&to, from](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(null, Note)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    const pluss::Timeline& from,
+    const pluss::Timeline& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) {
+        return col.kind() == ThreadKind::Timeline || col.kind() == ThreadKind::TimeIndex;
+      },
+      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(Timeline, Timeline)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    const pluss::Timeline& from,
+    pluss::null_t to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) {
+        return col.kind() == ThreadKind::Timeline || col.kind() == ThreadKind::TimeIndex;
+      },
+      [&from, to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(Timeline, null)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    pluss::null_t from,
+    const pluss::Timeline& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return fillna(to, features);
+}
+
+DataFrame DataFrame::replace(
+    const pluss::TimeIndex& from,
+    const pluss::TimeIndex& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::TimeIndex; },
+      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(TimeIndex, TimeIndex)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    const pluss::TimeIndex& from,
+    pluss::null_t to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  auto out_cols = dataframe_replace_selected_impl(
+      src,
+      features,
+      [](const Thread& col) { return col.kind() == ThreadKind::TimeIndex; },
+      [&from, to](const Thread& col) { return col.replace(from, to); },
+      "DataFrame::replace(TimeIndex, null)");
+  if (!out_cols.has_value()) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(*out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::replace(
+    pluss::null_t from,
+    const pluss::TimeIndex& to,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return fillna(to, features);
+}
+
 DataFrameView DataFrame::sum(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
@@ -283,15 +609,51 @@ DataFrameView DataFrame::count(bool render) const {
   return DataFrameView(summarize_specs(specs, false), render, "count", title());
 }
 
+DataFrameView DataFrame::prod(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Prod});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::prod: no numeric features");
+  return DataFrameView(summarize_specs(specs, false), render, "prod", title());
+}
+
 namespace {
 
-std::int64_t normalize_bool_reduce_axis_(std::int64_t axis, std::string_view where) {
+std::int64_t normalize_reduce_axis_(std::int64_t axis, std::string_view where) {
   auto out = axis;
   if (out < 0) {
     out += 2;
   }
   PLUSS_CHECK(out == 0 || out == 1, std::string(where) + ": axis must be 0 (features) or 1 (cases)");
   return out;
+}
+
+struct ReduceMatrix_ {
+  pluss::Series values;
+  pluss::Series valid;
+  std::vector<std::string> names;
+  std::int64_t ncases{0};
+};
+
+std::vector<std::size_t> resolve_numeric_reduce_indices_(
+    const detail::DataFrameImpl& src,
+    std::string_view where) {
+  std::vector<std::size_t> indices;
+  indices.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      indices.push_back(i);
+    }
+  }
+  PLUSS_CHECK(!indices.empty(), std::string(where) + ": no numeric features");
+  return indices;
 }
 
 std::vector<std::size_t> resolve_bool_reduce_indices_(
@@ -329,96 +691,317 @@ std::vector<std::size_t> resolve_bool_reduce_indices_(
   return indices;
 }
 
-Thread prepare_bool_feature_for_reduce_(
-    const Thread& col,
+std::vector<std::string> reduce_names_(
+    const detail::DataFrameImpl& src,
+    std::span<const std::size_t> indices) {
+  std::vector<std::string> names;
+  names.reserve(indices.size());
+  std::transform(indices.begin(), indices.end(), std::back_inserter(names),
+                 [&](const auto idx) { return src.names_[idx]; });
+  return names;
+}
+
+pluss::Series validity_matrix_(
+    const detail::DataFrameImpl& src,
+    std::span<const std::size_t> indices,
+    std::string_view where) {
+  std::vector<pluss::Series> masks;
+  masks.reserve(indices.size());
+  std::transform(indices.begin(), indices.end(), std::back_inserter(masks), [&](const auto idx) {
+    const auto& col = src.columns_[idx];
+    return col.notnull().as_series().reshape({src.nrows_});
+  });
+  return pack_series_columns(masks, where, true);
+}
+
+ReduceMatrix_ numeric_reduce_matrix_(
+    const detail::DataFrameImpl& src,
+    std::string_view where) {
+  const auto indices = resolve_numeric_reduce_indices_(src, where);
+  std::vector<pluss::Series> columns;
+  columns.reserve(indices.size());
+  std::transform(indices.begin(), indices.end(), std::back_inserter(columns), [&](const auto idx) {
+    return src.columns_[idx].as_series().reshape({src.nrows_}).to(pluss::codem::ScalarType::Float64);
+  });
+  return ReduceMatrix_{
+      pack_series_columns(columns, where, true),
+      validity_matrix_(src, indices, where),
+      reduce_names_(src, indices),
+      src.nrows_,
+  };
+}
+
+ReduceMatrix_ bool_reduce_matrix_(
+    const detail::DataFrameImpl& src,
+    pluss::msharp::RangeView::Of<std::string_view> features,
+    std::string_view where) {
+  const auto indices = resolve_bool_reduce_indices_(src, features, where);
+  std::vector<pluss::Series> columns;
+  columns.reserve(indices.size());
+  std::transform(indices.begin(), indices.end(), std::back_inserter(columns), [&](const auto idx) {
+    return src.columns_[idx].as_series().reshape({src.nrows_});
+  });
+  return ReduceMatrix_{
+      pack_series_columns(columns, where, true),
+      validity_matrix_(src, indices, where),
+      reduce_names_(src, indices),
+      src.nrows_,
+  };
+}
+
+Thread with_reduce_labels_(
+    Thread out,
+    const detail::DataFrameImpl& src,
+    const std::vector<std::string>& names,
+    std::int64_t axis) {
+  if (axis == 0) {
+    return out.with_display_labels(make_note_thread(names));
+  }
+  return out.with_display_labels(src.cases_);
+}
+
+pluss::Series reduced_validity_(
+    const ReduceMatrix_& matrix,
+    std::int64_t axis,
+    bool skipna,
+    bool identity_defined_for_empty) {
+  const auto counts = matrix.valid.to(pluss::codem::ScalarType::Int64).sum(axis);
+  if (!skipna) {
+    const auto reduced_size =
+        axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
+    return counts.eq(static_cast<double>(reduced_size));
+  }
+  if (identity_defined_for_empty) {
+    return pluss::Series::ones(counts.sizes(), pluss::codem::ScalarType::Bool);
+  }
+  return counts.gt(0.0);
+}
+
+enum class NumericAxisOp_ : std::uint8_t {
+  Sum,
+  Min,
+  Max,
+  Mean,
+  Median,
+  Std,
+  Var,
+  Prod,
+};
+
+Thread reduce_numeric_(
+    const detail::DataFrameImpl& src,
+    std::int64_t axis,
+    bool skipna,
+    NumericAxisOp_ op,
+    std::string_view where) {
+  const auto matrix = numeric_reduce_matrix_(src, where);
+  const auto output_size =
+      axis == 0 ? static_cast<std::int64_t>(matrix.names.size()) : matrix.ncases;
+  const auto reduced_size =
+      axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
+  const bool identity_defined =
+      op == NumericAxisOp_::Sum || op == NumericAxisOp_::Prod;
+
+  if (reduced_size == 0) {
+    const auto fill = op == NumericAxisOp_::Sum
+                          ? 0.0
+                          : op == NumericAxisOp_::Prod
+                                ? 1.0
+                                : std::numeric_limits<double>::quiet_NaN();
+    auto values = pluss::Series::full(
+        {output_size}, fill, pluss::codem::ScalarType::Float64);
+    auto valid = identity_defined
+                     ? pluss::Series::ones({output_size}, pluss::codem::ScalarType::Bool)
+                     : pluss::Series::zeros({output_size}, pluss::codem::ScalarType::Bool);
+    return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
+  }
+
+  const auto invalid = matrix.valid.logical_not();
+  const auto counts = matrix.valid.to(pluss::codem::ScalarType::Int64).sum(axis);
+  pluss::Series values;
+  switch (op) {
+    case NumericAxisOp_::Sum:
+      values = matrix.values.where(invalid, 0.0).sum(axis);
+      break;
+    case NumericAxisOp_::Prod:
+      values = matrix.values.where(invalid, 1.0).prod(axis);
+      break;
+    case NumericAxisOp_::Min:
+      values = matrix.values
+                   .where(invalid, std::numeric_limits<double>::infinity())
+                   .min(axis);
+      break;
+    case NumericAxisOp_::Max:
+      values = matrix.values
+                   .where(invalid, -std::numeric_limits<double>::infinity())
+                   .max(axis);
+      break;
+    case NumericAxisOp_::Mean:
+      values = matrix.values.where(invalid, 0.0).sum(axis)
+               / counts.to(pluss::codem::ScalarType::Float64);
+      break;
+    case NumericAxisOp_::Median:
+      values = matrix.values
+                   .where(invalid, std::numeric_limits<double>::quiet_NaN())
+                   .nanmedian(axis);
+      break;
+    case NumericAxisOp_::Std:
+    case NumericAxisOp_::Var: {
+      const auto count_values = counts.to(pluss::codem::ScalarType::Float64);
+      const auto means = matrix.values.where(invalid, 0.0).sum(axis) / count_values;
+      const auto means_2d =
+          axis == 0
+              ? means.reshape({1, static_cast<std::int64_t>(matrix.names.size())})
+              : means.reshape({matrix.ncases, 1});
+      const auto centered = matrix.values - means_2d;
+      const auto sum_squares = (centered * centered).where(invalid, 0.0).sum(axis);
+      values = sum_squares / (count_values - 1.0);
+      if (op == NumericAxisOp_::Std) {
+        values = values.sqrt();
+      }
+      break;
+    }
+  }
+
+  const auto valid = reduced_validity_(matrix, axis, skipna, identity_defined);
+  return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
+}
+
+Thread reduce_bool_(
+    const detail::DataFrameImpl& src,
+    std::int64_t axis,
+    pluss::msharp::RangeView::Of<std::string_view> features,
     bool use_all,
     bool skipna,
     std::string_view where) {
-  PLUSS_CHECK(col.kind() == ThreadKind::Series, std::string(where) + ": feature must be a Bool Series");
-  PLUSS_CHECK(col.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
-              std::string(where) + ": feature must be a Bool Series");
-  if (!col.has_validity_mask()) {
-    return col;
-  }
-  PLUSS_CHECK(skipna,
-              std::string(where)
-                  + ": skipna=false is not supported for nullable bool features (use skipna=true)");
-  const auto valid = col.notnull().as_series();
+  const auto matrix = bool_reduce_matrix_(src, features, where);
   const auto prepared =
-      use_all ? col.as_series().logical_or(valid.logical_not()) : col.as_series().logical_and(valid);
-  return Thread(prepared);
-}
-
-Thread reduce_bool_rows_(
-    const detail::DataFrameImpl& src,
-    pluss::msharp::RangeView::Of<std::string_view> features,
-    bool use_all,
-    bool skipna,
-    std::string_view where) {
-  const auto indices = resolve_bool_reduce_indices_(src, features, where);
-  auto mask = prepare_bool_feature_for_reduce_(src.columns_[indices.front()], use_all, skipna, where);
-  for (std::size_t i = 1; i < indices.size(); ++i) {
-    const auto col = prepare_bool_feature_for_reduce_(src.columns_[indices[i]], use_all, skipna, where);
-    mask = use_all ? (mask & col) : (mask | col);
-  }
-  return mask;
-}
-
-Thread reduce_bool_features_(
-    const detail::DataFrameImpl& src,
-    pluss::msharp::RangeView::Of<std::string_view> features,
-    bool use_all,
-    bool skipna,
-    std::string_view where) {
-  const auto indices = resolve_bool_reduce_indices_(src, features, where);
-
-  std::vector<bool> reduced;
-  reduced.reserve(indices.size());
-  std::vector<std::string> labels;
-  labels.reserve(indices.size());
-
-  for (const auto idx : indices) {
-    const auto prepared = prepare_bool_feature_for_reduce_(src.columns_[idx], use_all, skipna, where);
-    const bool value = use_all ? prepared.all(skipna).item<bool>() : prepared.any(skipna).item<bool>();
-    reduced.push_back(value);
-    labels.push_back(src.names_[idx]);
-  }
-
-  auto out = Thread(bool_series_from_keep(reduced));
-  if (!labels.empty()) {
-    out = out.with_display_labels(make_note_thread(labels));
-  }
-  return out;
+      use_all ? matrix.values.logical_or(matrix.valid.logical_not())
+              : matrix.values.logical_and(matrix.valid);
+  const auto values = use_all ? prepared.all(axis) : prepared.any(axis);
+  const auto valid =
+      skipna ? pluss::Series::ones(values.sizes(), pluss::codem::ScalarType::Bool)
+             : matrix.valid.all(axis);
+  return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
 }
 
 } // namespace
 
+Thread DataFrame::sum(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::sum");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Sum, "DataFrame::sum");
+}
+
+Thread DataFrame::mean(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::mean");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Mean, "DataFrame::mean");
+}
+
+Thread DataFrame::median(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::median");
+  return reduce_numeric_(
+      impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Median, "DataFrame::median");
+}
+
+Thread DataFrame::min(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::min");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Min, "DataFrame::min");
+}
+
+Thread DataFrame::max(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::max");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Max, "DataFrame::max");
+}
+
+Thread DataFrame::std(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::std");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Std, "DataFrame::std");
+}
+
+Thread DataFrame::var(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::var");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Var, "DataFrame::var");
+}
+
+Thread DataFrame::prod(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::prod");
+  return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Prod, "DataFrame::prod");
+}
+
+Thread DataFrame::count(std::int64_t axis) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::count");
+  const auto& src = impl_ref_();
+  PLUSS_CHECK(!src.columns_.empty(), "DataFrame::count: no features");
+  std::vector<std::size_t> indices(src.columns_.size());
+  std::iota(indices.begin(), indices.end(), std::size_t{0});
+  const auto names = reduce_names_(src, indices);
+  const auto valid = validity_matrix_(src, indices, "DataFrame::count");
+  auto out = Thread(valid.to(pluss::codem::ScalarType::Int64).sum(normalized_axis));
+  return with_reduce_labels_(std::move(out), src, names, normalized_axis);
+}
+
 Thread DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipna) const {
-  return any(1, features, skipna);
+  return any(0, features, skipna);
 }
 
 Thread DataFrame::any(std::int64_t axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
                       bool skipna) const {
-  const auto normalized_axis = normalize_bool_reduce_axis_(axis, "DataFrame::any");
-  if (normalized_axis == 0) {
-    return reduce_bool_features_(impl_ref_(), features, false, skipna, "DataFrame::any");
-  }
-  return reduce_bool_rows_(impl_ref_(), features, false, skipna, "DataFrame::any");
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::any");
+  return reduce_bool_(
+      impl_ref_(), normalized_axis, features, false, skipna, "DataFrame::any");
 }
 
 Thread DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipna) const {
-  return all(1, features, skipna);
+  return all(0, features, skipna);
 }
 
 Thread DataFrame::all(std::int64_t axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
                       bool skipna) const {
-  const auto normalized_axis = normalize_bool_reduce_axis_(axis, "DataFrame::all");
-  if (normalized_axis == 0) {
-    return reduce_bool_features_(impl_ref_(), features, true, skipna, "DataFrame::all");
-  }
-  return reduce_bool_rows_(impl_ref_(), features, true, skipna, "DataFrame::all");
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::all");
+  return reduce_bool_(
+      impl_ref_(), normalized_axis, features, true, skipna, "DataFrame::all");
+}
+
+Thread DataFrame::idxmin(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::idxmin");
+  const auto& src = impl_ref_();
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::idxmin");
+  const auto reduced_size =
+      normalized_axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
+  PLUSS_CHECK(reduced_size > 0, "DataFrame::idxmin: cannot reduce an empty axis");
+  const auto indices = matrix.values
+                           .where(matrix.valid.logical_not(),
+                                  std::numeric_limits<double>::infinity())
+                           .argmin(normalized_axis)
+                           .to_vec<std::int64_t>();
+  auto out = normalized_axis == 0
+                 ? src.cases_.take(indices)
+                 : make_note_thread(matrix.names).take(indices);
+  out = out.with_validity_mask(
+      reduced_validity_(matrix, normalized_axis, skipna, false));
+  return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
+}
+
+Thread DataFrame::idxmax(std::int64_t axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::idxmax");
+  const auto& src = impl_ref_();
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::idxmax");
+  const auto reduced_size =
+      normalized_axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
+  PLUSS_CHECK(reduced_size > 0, "DataFrame::idxmax: cannot reduce an empty axis");
+  const auto indices = matrix.values
+                           .where(matrix.valid.logical_not(),
+                                  -std::numeric_limits<double>::infinity())
+                           .argmax(normalized_axis)
+                           .to_vec<std::int64_t>();
+  auto out = normalized_axis == 0
+                 ? src.cases_.take(indices)
+                 : make_note_thread(matrix.names).take(indices);
+  out = out.with_validity_mask(
+      reduced_validity_(matrix, normalized_axis, skipna, false));
+  return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
 DataFrameView DataFrame::count_distinct(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -597,17 +1180,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
 
     std::optional<pluss::Series> keep = std::nullopt;
     for (const auto idx : target_indices) {
-      const auto& col = src.columns_[idx];
-      if (!col.has_validity_mask()) {
-        if (spec.op == MissingOp::DropAll) {
-          // DropAll keeps a row when any selected feature is non-null.
-          // If one selected feature has no validity mask, all rows are valid there.
-          return *this;
-        }
-        continue;
-      }
-
-      const auto& valid = *col.validity_mask();
+      const auto valid = src.columns_[idx].notnull().as_series();
       if (!keep.has_value()) {
         keep = valid;
         continue;
@@ -636,7 +1209,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
 
     switch (spec.op) {
       case MissingOp::Fill:
-        if (col.kind() == ThreadKind::Series && col.has_validity_mask()) {
+        if (col.kind() == ThreadKind::Series) {
           out_cols.push_back(col.fillna(*spec.value));
         } else {
           out_cols.push_back(col);
@@ -654,7 +1227,8 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
     }
   }
 
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame DataFrame::missing(
@@ -704,7 +1278,8 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
     out_cols[it->second] = src.columns_[it->second].cast(spec.target, spec.series_dtype);
   }
 
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame DataFrame::cast(
@@ -723,7 +1298,8 @@ DataFrame DataFrame::cast(
     }
     out_cols[it->second] = src.columns_[it->second].astype(dtype);
   }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame DataFrame::astype(
@@ -847,7 +1423,8 @@ DataFrame DataFrame::fillna(std::string_view value, pluss::msharp::RangeView::Of
   if (!changed) {
     return *this;
   }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame DataFrame::fillna(const pluss::Timeline& value) const {
@@ -893,7 +1470,8 @@ DataFrame DataFrame::fillna(
   if (!changed) {
     return *this;
   }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame DataFrame::fillna(const pluss::TimeIndex& value) const {
@@ -937,7 +1515,8 @@ DataFrame DataFrame::fillna(
   if (!changed) {
     return *this;
   }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame& DataFrame::fillna_(double value) {

@@ -3,10 +3,14 @@
 #include "pluss/ai/nodej/builders.h"
 #include "pluss/ai/nodej/data.h"
 #include "pluss/ai/nodej/prep.h"
+#include "MSharp/RangeView.h"
 
 #include <cstdint>
+#include <initializer_list>
 #include <memory>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -31,6 +35,11 @@ enum class TransformKind : std::uint8_t {
   LabelEncoder = 15,
 };
 
+enum class RouteRemainderPolicy : std::uint8_t {
+  PassThrough = 0,
+  Drop = 1,
+};
+
 using TransformOptions = std::variant<prep::StandardScalerOptions,
                                       prep::MinMaxScalerOptions,
                                       prep::RobustScalerOptions,
@@ -52,6 +61,25 @@ struct TransformSpec {
   TransformKind kind = TransformKind::StandardScaler;
   TransformOptions options = prep::StandardScalerOptions{};
   std::vector<std::int64_t> feature_route{};
+  RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough;
+  std::string stage_key{};
+};
+
+struct FlowStageInfo {
+  std::int64_t index = 0;
+  std::string stage_key{};
+  TransformKind kind = TransformKind::StandardScaler;
+  std::int64_t routed_feature_count = 0;
+  RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough;
+  bool route_active = false;
+};
+
+struct FlowGraphInfo {
+  TaskKind task = TaskKind::Transform;
+  bool trained = false;
+  bool has_model = false;
+  bool has_opaque_transforms = false;
+  std::vector<FlowStageInfo> stages{};
 };
 
 class Flow final {
@@ -70,26 +98,57 @@ public:
   [[nodiscard]] bool has_opaque_transforms() const noexcept;
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept;
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept;
+  [[nodiscard]] StatusOr<FlowGraphInfo> graph_info() const;
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const;
+  [[nodiscard]] StatusOr<double> nested_param(std::string_view path) const;
+  Status set_nested_param(std::string_view path, double value);
+  [[nodiscard]] std::string flow_summary() const;
+  [[nodiscard]] StatusOr<std::string> save_blueprint() const;
+  Status load_blueprint(std::string_view text);
+
+  Status add_named_transform(TransformKind kind,
+                             const TransformOptions& options,
+                             std::string stage_key = {},
+                             pluss::msharp::RangeView::Int feature_route = {},
+                             RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough);
+  Status add_column_stage(std::string stage_key,
+                          TransformKind kind,
+                          const TransformOptions& options,
+                          pluss::msharp::RangeView::Int feature_route = {},
+                          RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough);
+  Status add_column_stage(std::string stage_key,
+                          TransformKind kind,
+                          const TransformOptions& options,
+                          std::initializer_list<std::int64_t> feature_route,
+                          RouteRemainderPolicy remainder = RouteRemainderPolicy::PassThrough) {
+    return add_column_stage(std::move(stage_key), kind, options, pluss::msharp::RangeView::Int(feature_route), remainder);
+  }
+  Status set_stage_key(std::int64_t stage_index, std::string stage_key);
+  Status set_stage_route(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route);
+  Status set_stage_route(std::int64_t stage_index, std::initializer_list<std::int64_t> feature_route) {
+    return set_stage_route(stage_index, pluss::msharp::RangeView::Int(feature_route));
+  }
+  Status set_stage_remainder(std::int64_t stage_index, RouteRemainderPolicy remainder);
 
   Status append_transform(std::unique_ptr<TransformerBase> transformer);
   void clear_transforms() noexcept;
 
-  Status add_standard_scaler(prep::StandardScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_minmax_scaler(prep::MinMaxScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_robust_scaler(prep::RobustScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_simple_imputer(prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_neighbor_imputer(prep::NeighborImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_iterative_imputer(prep::IterativeImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_one_hot_encoder(prep::OneHotEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_frequency_encoder(prep::FrequencyEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_vector_normalizer(prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_maxabs_scaler(prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_quantile_map(prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_power_map(prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_ordinal_encoder(prep::OrdinalEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
-  Status add_label_encoder(prep::LabelEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {});
+  Status add_standard_scaler(prep::StandardScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_minmax_scaler(prep::MinMaxScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_robust_scaler(prep::RobustScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_simple_imputer(prep::SimpleImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_neighbor_imputer(prep::NeighborImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_iterative_imputer(prep::IterativeImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_one_hot_encoder(prep::OneHotEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_frequency_encoder(prep::FrequencyEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_vector_normalizer(prep::VectorNormalizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_maxabs_scaler(prep::MaxAbsScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_quantile_map(prep::QuantileMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_power_map(prep::PowerMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_polynomial_lift(prep::PolynomialLiftOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_ordinal_encoder(prep::OrdinalEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
+  Status add_label_encoder(prep::LabelEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {});
   Status add_function_transformer(prep::FunctionTransformer transformer);
   Status add_feature_transformer(prep::FeatureTransformer transformer);
 
@@ -123,8 +182,8 @@ public:
 
   [[nodiscard]] StatusOr<std::vector<std::vector<Series>>> dump_transform_states() const;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_model_state() const;
-  Status load_transform_states(const std::vector<std::vector<Series>>& states);
-  Status load_model_state(const std::vector<Series>& state);
+  Status load_transform_states(pluss::msharp::RangeView::Of<std::vector<Series>> states);
+  Status load_model_state(pluss::msharp::RangeView::Series state);
   void mark_trained(bool trained) noexcept;
 
 private:

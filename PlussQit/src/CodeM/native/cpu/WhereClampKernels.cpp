@@ -5,6 +5,7 @@
 #include "CodeM/core/TypePromotion.h"
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 namespace pluss::codem::native::cpu {
 
@@ -143,37 +144,19 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
   Series cond_bool = (cond.scalar_type() == ScalarType::Bool) ? cond : cond.to(ScalarType::Bool);
   SeriesIterator it = SeriesIterator::ternary(cond_bool, a, b, out);
   const auto* mp = reinterpret_cast<const std::uint8_t*>(cond_bool.raw_data());
-  switch (out.scalar_type()) {
-    case ScalarType::Float64: {
-      auto* op = reinterpret_cast<double*>(out.raw_data());
-      auto* ap = reinterpret_cast<const double*>(a.raw_data());
-      auto* bp = reinterpret_cast<const double*>(b.raw_data());
-      it.for_each_index_ternary([&](std::int64_t /*lin*/, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
-        op[oo] = mp[mo] ? ap[ao] : bp[bo];
+  const auto itemsize = dtype_of(out.scalar_type()).itemsize;
+  auto* op = out.raw_data();
+  const auto* ap = a.raw_data();
+  const auto* bp = b.raw_data();
+  it.for_each_index_ternary(
+      [&](std::int64_t /*lin*/,
+          std::int64_t mo,
+          std::int64_t ao,
+          std::int64_t bo,
+          std::int64_t oo) {
+        const auto* src = mp[mo] ? ap + ao * itemsize : bp + bo * itemsize;
+        std::memcpy(op + oo * itemsize, src, itemsize);
       });
-      return;
-    }
-    case ScalarType::Float32: {
-      auto* op = reinterpret_cast<float*>(out.raw_data());
-      auto* ap = reinterpret_cast<const float*>(a.raw_data());
-      auto* bp = reinterpret_cast<const float*>(b.raw_data());
-      it.for_each_index_ternary([&](std::int64_t /*lin*/, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
-        op[oo] = mp[mo] ? ap[ao] : bp[bo];
-      });
-      return;
-    }
-    case ScalarType::Int64: {
-      auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
-      auto* ap = reinterpret_cast<const std::int64_t*>(a.raw_data());
-      auto* bp = reinterpret_cast<const std::int64_t*>(b.raw_data());
-      it.for_each_index_ternary([&](std::int64_t /*lin*/, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
-        op[oo] = mp[mo] ? ap[ao] : bp[bo];
-      });
-      return;
-    }
-    default: break;
-  }
-  throw_error("where: dtype not implemented");
 }
 
 template <class T>

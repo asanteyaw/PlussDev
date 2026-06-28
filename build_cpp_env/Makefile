@@ -2286,6 +2286,58 @@ plusstils_view_inhouse_html_render_demo/fast:
 .PHONY : plusstils_view_inhouse_html_render_demo/fast
 
 #=============================================================================
+# Target rules for targets named plusstils_view_inhouse_scroll_showcase
+
+# Build rule for target.
+plusstils_view_inhouse_scroll_showcase: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_inhouse_scroll_showcase
+.PHONY : plusstils_view_inhouse_scroll_showcase
+
+# fast build rule for target.
+plusstils_view_inhouse_scroll_showcase/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build
+.PHONY : plusstils_view_inhouse_scroll_showcase/fast
+
+#=============================================================================
+# Target rules for targets named plusstils_view_plussmic_inhouse_showcase
+
+# Build rule for target.
+plusstils_view_plussmic_inhouse_showcase: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_view_plussmic_inhouse_showcase
+.PHONY : plusstils_view_plussmic_inhouse_showcase
+
+# fast build rule for target.
+plusstils_view_plussmic_inhouse_showcase/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build
+.PHONY : plusstils_view_plussmic_inhouse_showcase/fast
+
+#=============================================================================
+# Target rules for targets named plussview_html_scroll_tests
+
+# Build rule for target.
+plussview_html_scroll_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_html_scroll_tests
+.PHONY : plussview_html_scroll_tests
+
+# fast build rule for target.
+plussview_html_scroll_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build
+.PHONY : plussview_html_scroll_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussview_macos_input_driver
+
+# Build rule for target.
+plussview_macos_input_driver: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_macos_input_driver
+.PHONY : plussview_macos_input_driver
+
+# fast build rule for target.
+plussview_macos_input_driver/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build.make PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build
+.PHONY : plussview_macos_input_driver/fast
+
+#=============================================================================
 # Target rules for targets named PlussPl
 
 # Build rule for target.
@@ -3545,97 +3597,6 @@ plussma_math_finance_roughvol_fft_demo: cmake_check_build_system
 plussma_math_finance_roughvol_fft_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_roughvol_fft_demo.dir/build.make PlussMa/Math/examples/Finance/CMakeFiles/plussma_math_finance_roughvol_fft_demo.dir/build
 .PHONY : plussma_math_finance_roughvol_fft_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston
-
-# Build rule for target.
-plussma_math_mini_heston: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston
-.PHONY : plussma_math_mini_heston
-
-# fast build rule for target.
-plussma_math_mini_heston/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston.dir/build
-.PHONY : plussma_math_mini_heston/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston_panel_calibration
-
-# Build rule for target.
-plussma_math_mini_heston_panel_calibration: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_panel_calibration
-.PHONY : plussma_math_mini_heston_panel_calibration
-
-# fast build rule for target.
-plussma_math_mini_heston_panel_calibration/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_panel_calibration.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_panel_calibration.dir/build
-.PHONY : plussma_math_mini_heston_panel_calibration/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston_multi_measure_simulation
-
-# Build rule for target.
-plussma_math_mini_heston_multi_measure_simulation: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_multi_measure_simulation
-.PHONY : plussma_math_mini_heston_multi_measure_simulation
-
-# fast build rule for target.
-plussma_math_mini_heston_multi_measure_simulation/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_multi_measure_simulation.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_multi_measure_simulation.dir/build
-.PHONY : plussma_math_mini_heston_multi_measure_simulation/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston_demo_pricing
-
-# Build rule for target.
-plussma_math_mini_heston_demo_pricing: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_pricing
-.PHONY : plussma_math_mini_heston_demo_pricing
-
-# fast build rule for target.
-plussma_math_mini_heston_demo_pricing/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_pricing.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_pricing.dir/build
-.PHONY : plussma_math_mini_heston_demo_pricing/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston_demo_simulation
-
-# Build rule for target.
-plussma_math_mini_heston_demo_simulation: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_simulation
-.PHONY : plussma_math_mini_heston_demo_simulation
-
-# fast build rule for target.
-plussma_math_mini_heston_demo_simulation/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_simulation.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_simulation.dir/build
-.PHONY : plussma_math_mini_heston_demo_simulation/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston_demo_bates_opportunity
-
-# Build rule for target.
-plussma_math_mini_heston_demo_bates_opportunity: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_bates_opportunity
-.PHONY : plussma_math_mini_heston_demo_bates_opportunity
-
-# fast build rule for target.
-plussma_math_mini_heston_demo_bates_opportunity/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_bates_opportunity.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_bates_opportunity.dir/build
-.PHONY : plussma_math_mini_heston_demo_bates_opportunity/fast
-
-#=============================================================================
-# Target rules for targets named plussma_math_mini_heston_demo_joint_estimation
-
-# Build rule for target.
-plussma_math_mini_heston_demo_joint_estimation: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_math_mini_heston_demo_joint_estimation
-.PHONY : plussma_math_mini_heston_demo_joint_estimation
-
-# fast build rule for target.
-plussma_math_mini_heston_demo_joint_estimation/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_joint_estimation.dir/build.make PlussMa/Math/examples/mini_heston/CMakeFiles/plussma_math_mini_heston_demo_joint_estimation.dir/build
-.PHONY : plussma_math_mini_heston_demo_joint_estimation/fast
 
 #=============================================================================
 # Target rules for targets named astro_test
@@ -7547,13 +7508,6 @@ help:
 	@echo "... plussma_math_finance_finance_stochvol_schemes_demo"
 	@echo "... plussma_math_finance_pricing_models_demo"
 	@echo "... plussma_math_finance_roughvol_fft_demo"
-	@echo "... plussma_math_mini_heston"
-	@echo "... plussma_math_mini_heston_demo_bates_opportunity"
-	@echo "... plussma_math_mini_heston_demo_joint_estimation"
-	@echo "... plussma_math_mini_heston_demo_pricing"
-	@echo "... plussma_math_mini_heston_demo_simulation"
-	@echo "... plussma_math_mini_heston_multi_measure_simulation"
-	@echo "... plussma_math_mini_heston_panel_calibration"
 	@echo "... plussma_matlab_parity_probe"
 	@echo "... plussma_ols_summary_demo"
 	@echo "... plussma_optima_clone_parity_bench"
@@ -7678,6 +7632,8 @@ help:
 	@echo "... plussqit_tests"
 	@echo "... plussqit_translate_demo"
 	@echo "... plusstils_view_inhouse_html_render_demo"
+	@echo "... plusstils_view_inhouse_scroll_showcase"
+	@echo "... plusstils_view_plussmic_inhouse_showcase"
 	@echo "... plusstils_view_window_export_smoke_demo"
 	@echo "... plusstils_view_window_first_plot_demo"
 	@echo "... plusstils_view_window_interaction_core_demo"
@@ -7686,6 +7642,8 @@ help:
 	@echo "... plusstils_view_window_session_demo"
 	@echo "... plusstils_view_window_shell_backend_demo"
 	@echo "... plusstils_view_window_table_demo"
+	@echo "... plussview_html_scroll_tests"
+	@echo "... plussview_macos_input_driver"
 	@echo "... poly_regression_test"
 	@echo "... population_test"
 	@echo "... quantile_regression_test"

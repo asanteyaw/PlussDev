@@ -58,6 +58,67 @@ Notes:
 - `cases()` is the row axis, not just a display index
 - `describe()` is the fastest way to check whether numeric casts and missing values look right
 
+## Common Everyday Tasks
+
+These are the patterns most people look for first when learning the day-to-day
+table workflow.
+
+### Select one column vs many columns
+
+```cpp
+auto one = df.features("sales");                // Thread
+auto many = df.features({"city", "sales"});     // DataFrame
+```
+
+Rule of thumb:
+
+- `features("name")` returns one `Thread`
+- `features({"a", "b"})` returns a smaller `DataFrame`
+
+### Rename one column vs many columns
+
+```cpp
+auto renamed_one = df.rename("sales", "revenue");
+
+auto renamed_many = df.rename_features({
+    {"sales", "revenue"},
+    {"city", "location"},
+});
+```
+
+Use `rename(...)` for one feature. Use `rename_features(...)` when you have a
+mapping of old names to new names.
+
+### Replace or create a column
+
+```cpp
+df.set("profit") = df.features("sales") - 60.0;
+
+auto out = df.set_features(
+    "profit",
+    df.features("sales") - 60.0
+);
+```
+
+Use `set(...) = ...` when you want assignment-style syntax. Use
+`set_features(...)` when you prefer expression-style chaining.
+
+### Clean a text column
+
+```cpp
+gradebook.set("OrgDefinedId") =
+    gradebook.features("OrgDefinedId").as_note().strip().lstrip("#");
+```
+
+This is the direct table-cleaning pattern:
+
+```python
+df["OrgDefinedId"] = df["OrgDefinedId"].astype(str).str.strip().str.lstrip("#")
+```
+
+Use `.as_note()` when you want Note-specific text methods such as `strip`,
+`lstrip`, and `rstrip`.
+
 ### Display Views
 
 The table-style preview verbs return a `DataFrameView`, not a plain `DataFrame`.
@@ -121,6 +182,14 @@ Notes:
 - use `query("...")` when the filter is easier to read as a table expression
 - `top` and `bottom` are good for ranking tasks without writing extra sort/slice steps
 
+Direct literal comparison is also supported for note-backed columns:
+
+```cpp
+auto laurels = df.filter(df.features("First Name") == "Laurel");
+```
+
+That matches every row whose `First Name` equals `"Laurel"`.
+
 ## Grouping, Pivoting, And Summaries
 
 ```cpp
@@ -172,6 +241,60 @@ auto right = pluss::table::DataFrame({
 auto joined = left.stitch_on({"city"}, right, {"city"}, "_r");
 auto updated = left.update(right, true);
 ```
+
+`stitch_on(...)` is the inner-match join helper. For general key-based merge/join
+workflows, prefer `unify(...)`.
+
+### Same-key merge
+
+```cpp
+auto df_ready = gradebook.unify(
+    "OrgDefinedId",
+    finals.features({"OrgDefinedId", "Final Points Grade"}),
+    "",
+    "left"
+);
+```
+
+Use `right_on=""` when both frames use the same key name.
+
+### Different-key merge
+
+```cpp
+auto df_ready = gradebook.unify(
+    "OrgDefinedId",
+    finals.features({"Username", "Final Points Grade"}),
+    "Username",
+    "left"
+);
+```
+
+### Cardinality validation
+
+```cpp
+auto df_ready = gradebook.unify(
+    "OrgDefinedId",
+    finals.features({"Username", "Final Points Grade"}),
+    "Username",
+    "left",
+    "_right",
+    "many_to_one"
+);
+```
+
+`validate` options:
+
+- `"many_to_many"`: default; duplicates are allowed on both sides
+- `"one_to_one"`: both sides must have unique keys
+- `"one_to_many"`: left must be unique; right may repeat
+- `"many_to_one"`: right must be unique; left may repeat
+
+Important behavior:
+
+- matching is by key value, not by row position
+- `how="left"` preserves left-row order
+- if a non-key right-hand feature name collides with a left-hand name,
+  `right_suffix` is appended to the right-hand feature name
 
 ## Time-Aware Table Verbs
 

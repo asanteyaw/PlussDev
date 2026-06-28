@@ -48,15 +48,19 @@ auto out = ct.add_text_features("text");
 
 ```text
 ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+text -> Note(["heavy rain on road", "clear weather downtown", "storm warning issued"])
 
 out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+text            -> Note(["heavy rain on road", "clear weather downtown", "storm warning issued"])
+text_char_len   -> Series([18, 22, 20])
+text_word_count -> Series([4, 3, 3])
 ```
+
+#### Practical Behavior
+
+- `add_text_features(field)` adds `<field>_char_len` and `<field>_word_count` streams.
+- The source field is coerced through note/text handling before the text statistics are computed.
+
 
 ### `aggregate_text_stats`
 
@@ -102,16 +106,14 @@ auto out = ct.aggregate_text_stats("text", "mean");
 #### Output
 
 ```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+text_mean_char_len -> Series([20.0])
 ```
+
+#### Practical Behavior
+
+- `aggregate_text_stats(field, stat_type)` collapses one text field into a one-value summary stream.
+- Supported statistics include common length-based summaries such as mean/min/max/count, along with vocabulary size.
+
 
 ### `apply`
 
@@ -165,6 +167,13 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+
+#### Practical Behavior
+
+- `apply(...)` rewrites one named stream; `apply_all(...)` rewrites every stream.
+- The transform must return a defined stream with the same length as the input stream.
+- Use the underscore form when you want the mutation in place.
+
 
 ### `apply_`
 
@@ -255,6 +264,13 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Practical Behavior
+
+- `apply(...)` rewrites one named stream; `apply_all(...)` rewrites every stream.
+- The transform must return a defined stream with the same length as the input stream.
+- Use the underscore form when you want the mutation in place.
+
+
 ### `apply_all_`
 
 #### Signature
@@ -344,6 +360,12 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Conversion Rules
+
+- `astype(keys, dtype)` is the catalog-level numeric-series conversion helper.
+- It delegates to stream/thread conversion on the selected keys only.
+
+
 ### `at`
 
 #### Signature
@@ -385,6 +407,12 @@ auto out = ct.at("metric");
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+
+#### Practical Behavior
+
+- `at(key)` fetches one named stream from the catalog.
+- Use it when you want stream access without routing through table conversion first.
+
 
 ### `begin`
 
@@ -449,29 +477,41 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-
 auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, 0.0, 88.0, 0.0})).with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool)),
+    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, 0.0, 75.0, 91.0})).with_validity_mask(pluss::make_series({true, false, true, true}, pluss::codem::ScalarType::Bool)),
+    "Name"_k = pluss::kindle::Stream(pluss::make_note({"A", "B", "C", "D"})),
 });
 
-auto out = ct.bfill();
+auto out = ct.bfill({"Final Points Grade", "Midterm 3"});
 ```
 
 #### Output
 
 ```text
 ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+Final Points Grade -> Series([71.0, null, 88.0, null])
+Midterm 3          -> Series([60.0, null, 75.0, 91.0])
+Name               -> Note(["A", "B", "C", "D"])
 
 out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+Final Points Grade -> Series([71.0, 88.0, 88.0, null])
+Midterm 3          -> Series([60.0, 75.0, 75.0, 91.0])
+Name               -> Note(["A", "B", "C", "D"])
 ```
+
+#### Practical Behavior
+
+- With no keys supplied, `bfill()` is applied to every stream in the catalog.
+- If you pass keys, only those streams are backward-filled; all other streams are left unchanged.
+- Unknown keys throw immediately instead of silently skipping.
+
+#### Common Pattern
+
+```cpp
+auto cleaned = catalog.bfill({"Final Points Grade", "Midterm 3"});
+```
+
 
 ### `cast_note`
 
@@ -523,6 +563,12 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Conversion Rules
+
+- These helpers rewrite only the selected keys and leave all other streams unchanged.
+- Unknown keys throw immediately.
+
+
 ### `cast_series`
 
 #### Signature
@@ -570,6 +616,12 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+
+#### Conversion Rules
+
+- Catalog cast helpers rewrite only the selected keys.
+- Unknown keys throw immediately.
+
 
 ### `cast_timeindex`
 
@@ -621,6 +673,12 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Conversion Rules
+
+- These helpers rewrite only the selected keys and leave all other streams unchanged.
+- Unknown keys throw immediately.
+
+
 ### `cast_timeline`
 
 #### Signature
@@ -671,6 +729,107 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Conversion Rules
+
+- These helpers rewrite only the selected keys and leave all other streams unchanged.
+- Unknown keys throw immediately.
+
+
+### `cloc`
+
+#### Signature
+
+```cpp
+Catalog cloc(self, std::int64_t row) const
+```
+
+#### Parameters
+
+`row` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+#### Notes
+
+Applies `cloc` to the current `Catalog` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Catalog cloc(self, std::int64_t start, std::int64_t stop) const`
+
+#### Examples
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.cloc();
+```
+
+#### Practical Behavior
+
+- `cloc(...)` slices aligned row positions across every stream in the catalog.
+- Use it when you want row-wise positional access while keeping stream alignment intact.
+
+
+### `cloc`
+
+#### Signature
+
+```cpp
+Catalog cloc(self, std::int64_t start, std::int64_t stop) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    Inclusive starting position of the slice.
+
+`stop` : `std::int64_t`
+    Exclusive ending position of the slice.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+#### Notes
+
+Applies `cloc` to the current `Catalog` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Catalog cloc(self, std::int64_t row) const`
+
+#### Examples
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.cloc();
+```
+
+#### Practical Behavior
+
+- `cloc(...)` slices aligned row positions across every stream in the catalog.
+- Use it when you want row-wise positional access while keeping stream alignment intact.
+
+
 ### `compute_similarity`
 
 #### Signature
@@ -718,16 +877,15 @@ auto out = ct.compute_similarity("text", "text", "cosine");
 #### Output
 
 ```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+text__text_similarity -> Series([1.0, 1.0, 1.0])
 ```
+
+#### Practical Behavior
+
+- `compute_similarity(field1, field2, "cosine")` computes row-wise text similarity and appends the result as a numeric stream.
+- At the moment the supported similarity method is cosine.
+- Both fields must have the same length.
+
 
 ### `count`
 
@@ -769,6 +927,12 @@ auto out = ct.count();
 ```text
 3
 ```
+
+#### Practical Behavior
+
+- `count()` returns the catalog row count after alignment through `tabelize()`.
+- This is the quick “how many aligned rows do I have?” answer.
+
 
 ### `defined`
 
@@ -855,6 +1019,12 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Practical Behavior
+
+- `display()` renders a human-readable catalog view for inspection.
+- Use it for inspection and debugging rather than transformation.
+
+
 ### `drop`
 
 #### Signature
@@ -908,8 +1078,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+
+#### Practical Behavior
+
+- `drop(...)` removes named streams, not rows.
+- The remaining streams keep their alignment.
+
 
 ### `drop`
 
@@ -963,8 +1138,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+
+#### Practical Behavior
+
+- `drop(...)` removes named streams, not rows.
+- The remaining streams keep their alignment.
+
 
 ### `drop`
 
@@ -1018,8 +1198,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+
+#### Practical Behavior
+
+- `drop(...)` removes named streams, not rows.
+- The remaining streams keep their alignment.
+
 
 ### `dropna`
 
@@ -1047,29 +1232,34 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-
+auto metric = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}))
+                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
 auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "metric"_k = metric,
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.dropna();
+auto out = ct.dropna({"metric"});
 ```
 
 #### Output
 
 ```text
 ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
+metric -> Series([10.0, null, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 
 out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+metric -> Series([10.0, 30.0])
+city   -> Note(["Accra", "Kumasi"])
 ```
+
+#### Practical Behavior
+
+- `dropna(keys)` applies stream-level `dropna()` to the selected keys.
+- With no keys supplied, every stream is processed.
+- Unknown keys throw immediately.
+
 
 ### `empty`
 
@@ -1193,16 +1383,15 @@ auto out = ct.extract_keywords("text", 5);
 #### Output
 
 ```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+keyword -> Note(["clear", "downtown", "heavy", "issued", "on"])
+count   -> Series([1, 1, 1, 1, 1])
 ```
+
+#### Practical Behavior
+
+- `extract_keywords(field, top_n)` tokenizes the text field, counts tokens, sorts by frequency descending then alphabetically, and returns a small keyword/count catalog.
+- Use it for quick corpus-level keyword previews rather than row-wise text features.
+
 
 ### `ffill`
 
@@ -1916,117 +2105,6 @@ auto ct = pluss::kindle::Catalog({
 });
 
 auto out = ct.head(2);
-```
-
-#### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-Catalog iloc(self, std::int64_t row) const
-```
-
-#### Parameters
-
-`row` : `std::int64_t`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### See also
-
-- `Catalog iloc(self, std::int64_t start, std::int64_t stop) const`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.iloc(1);
-```
-
-#### Output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-Catalog iloc(self, std::int64_t start, std::int64_t stop) const
-```
-
-#### Parameters
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::int64_t`
-    Exclusive ending position of the slice.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### See also
-
-- `Catalog iloc(self, std::int64_t row) const`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.iloc(0, 2);
 ```
 
 #### Output
@@ -2937,7 +3015,7 @@ Catalog merge(self, const Catalog& other, std::string_view on, std::string_view 
     See the signature for the supported argument form.
 
 `how` : `std::string_view`
-    See the signature for the supported argument form.
+    Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.
 
 #### Returns
 

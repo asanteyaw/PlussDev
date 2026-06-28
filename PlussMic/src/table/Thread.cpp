@@ -22,6 +22,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/ScalarType.h"
+#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "table/DataFrame.h"
 #include "table/display/Display.h"

@@ -50,6 +50,12 @@ sales
 20.0
 ```
 
+#### Practical Behavior
+
+- `aggregate_over_frames(...)` hands the full frame vector to your reducer and expects one output object back.
+- Use it when the aggregation depends on multiple frames together rather than frame-by-frame mapping.
+
+
 ### `align_depth`
 
 #### Signature
@@ -100,6 +106,12 @@ sales
 30.0
 40.0
 ```
+
+#### Practical Behavior
+
+- `align_depth(labels)` reorders frames to match the requested depth label order.
+- Use it when two atlases should share the same depth layout before comparison or combination.
+
 
 ### `axis0_labels`
 
@@ -264,6 +276,56 @@ auto out = atlas.depth();
 ```text
 2
 ```
+
+### `dloc`
+
+#### Signature
+
+```cpp
+DataFrame dloc(self, std::int64_t index) const
+```
+
+#### Parameters
+
+`index` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `dloc` to the current `Atlas` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.dloc(1);
+```
+
+#### Output
+
+```text
+sales
+30.0
+40.0
+```
+
+#### Practical Behavior
+
+- `dloc(i)` is the positional depth-access alias for `frame(i)`.
+- Use it when you want the depth-axis wording to be explicit.
+
 
 ### `empty`
 
@@ -439,50 +501,6 @@ frame1:
 sales
 30.0
 40.0
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-DataFrame iloc(self, std::int64_t index) const
-```
-
-#### Parameters
-
-`index` : `std::int64_t`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Examples
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.iloc(0);
-```
-
-#### Output
-
-```text
-sales
-10.0
-20.0
 ```
 
 ### `kindelize`

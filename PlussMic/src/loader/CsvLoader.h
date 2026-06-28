@@ -118,7 +118,7 @@ struct WriteCsvOptions {
   bool add_cases{false};
   bool cases{false}; // legacy alias
   std::optional<std::string> case_label{};
-  std::string na_rep{"NA"};
+  std::string na_rep{};
   std::optional<std::string> float_format{};
   char quotechar{'"'};
   bool doublequote{true};

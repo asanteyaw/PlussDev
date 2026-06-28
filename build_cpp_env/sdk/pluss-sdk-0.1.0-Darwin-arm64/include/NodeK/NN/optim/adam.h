@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <unordered_set>
@@ -31,8 +34,8 @@ struct AdamGroup {
 
 class PLUSS_API Adam final : public Optimizer {
 public:
-  explicit Adam(std::vector<Series*> parameters, AdamOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit Adam(pluss::msharp::RangeView::Of<Series*> parameters, AdamOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -42,7 +45,7 @@ public:
     initialize_state_();
   }
 
-  explicit Adam(std::vector<AdamGroup> groups)
+  explicit Adam(pluss::msharp::RangeView::Of<AdamGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -65,7 +68,7 @@ public:
 
   void set_group_options(std::size_t group_index, const AdamOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -100,10 +103,10 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam::restore_state: group count mismatch");
     }
     if (state.beta1_power.size() != groups_.size() || state.beta2_power.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam::restore_state: capture scalar state mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam::restore_state: capture scalar state mismatch");
     }
     validate_state_vector_(state.first_moment, "pluss::ai::nn::optim::Adam::restore_state[first_moment]");
     validate_state_vector_(state.second_moment, "pluss::ai::nn::optim::Adam::restore_state[second_moment]");
@@ -129,7 +132,7 @@ private:
     Series beta2_power{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
 
     auto& params = mutable_parameters_();
@@ -173,35 +176,35 @@ private:
 
   static void validate_options_(const AdamOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam: learning_rate must be positive and finite");
     }
     if (!(options.beta1 >= 0.0 && options.beta1 < 1.0) || !std::isfinite(options.beta1)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam: beta1 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam: beta1 must be in [0, 1)");
     }
     if (!(options.beta2 >= 0.0 && options.beta2 < 1.0) || !std::isfinite(options.beta2)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam: beta2 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam: beta2 must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam: epsilon must be positive and finite");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam: weight_decay must be finite and non-negative");
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<AdamGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<AdamGroup> groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Adam: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::Adam: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Adam: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::Adam: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::Adam: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::Adam: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -209,7 +212,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<AdamGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<AdamGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -239,17 +242,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::Adam: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::Adam: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::Adam: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::Adam: capturable mode requires same dtype across each group");
         }
       }
@@ -265,8 +268,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -296,8 +299,8 @@ private:
   }
 
   void apply_group_loop_(GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const AdamOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -330,22 +333,29 @@ private:
       Series m1_value = first_moment_[i];
       Series m2_value = second_moment_[i];
       Series mmax_value = max_second_hat_[i];
+      const Series m1_before = m1_value;
+      const Series m2_before = m2_value;
 
-      const Series one = scalar_on_(1.0, parameter_value);
-      const Series beta1 = scalar_on_(options.beta1, parameter_value);
-      const Series beta2 = scalar_on_(options.beta2, parameter_value);
-      const Series one_minus_beta1 = one.sub(beta1);
-      const Series one_minus_beta2 = one.sub(beta2);
       if (options.weight_decay != 0.0) {
-        sensitivity = sensitivity.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
+        sensitivity = sensitivity.add(parameter_value.mul(options.weight_decay));
       }
 
-      m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
-      m2_value = m2_value.mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      if (use_capturable) {
+        const Series one = scalar_on_(1.0, parameter_value);
+        const Series beta1 = scalar_on_(options.beta1, parameter_value);
+        const Series beta2 = scalar_on_(options.beta2, parameter_value);
+        const Series one_minus_beta1 = one.sub(beta1);
+        const Series one_minus_beta2 = one.sub(beta2);
+        m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
+        m2_value = m2_value.mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      } else {
+        m1_value = m1_value.mul(options.beta1).add(sensitivity.mul(1.0 - options.beta1));
+        m2_value = m2_value.mul(options.beta2).add(sensitivity.square().mul(1.0 - options.beta2));
+      }
 
       Series second_hat = use_capturable
                               ? m2_value.div(b2_corr_series)
-                              : m2_value.div(scalar_on_(b2_correction, parameter_value));
+                              : m2_value.div(b2_correction);
       if (options.amsgrad) {
         mmax_value = mmax_value.maximum(second_hat);
         second_hat = mmax_value;
@@ -353,10 +363,42 @@ private:
 
       const Series first_hat = use_capturable
                                    ? m1_value.div(b1_corr_series)
-                                   : m1_value.div(scalar_on_(b1_correction, parameter_value));
-      const Series denominator = second_hat.sqrt().add(scalar_on_(options.epsilon, parameter_value));
-      const Series delta = first_hat.div(denominator).mul(scalar_on_(options.learning_rate, parameter_value));
+                                   : m1_value.div(b1_correction);
+      const Series denominator = second_hat.sqrt().add(options.epsilon);
+      const Series delta = first_hat.div(denominator).mul(options.learning_rate);
       Series next_value = parameter_value.sub(delta);
+
+      const bool debug_adam_update = []() {
+        const char* raw = std::getenv("PLUSS_DEBUG_ADAM_UPDATE");
+        if (!raw) return false;
+        return std::strcmp(raw, "1") == 0 || std::strcmp(raw, "true") == 0 || std::strcmp(raw, "TRUE") == 0;
+      }();
+      if (debug_adam_update && parameter_value.platform() == pluss::pMPS && step_ <= 3) {
+        auto print_vec = [&](const char* label, const Series& s) {
+          const auto v = s.reshape({s.numel()}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+          std::cerr << " " << label << "=";
+          for (std::size_t k = 0; k < v.size(); ++k) {
+            if (k) std::cerr << ",";
+            std::cerr << v[k];
+          }
+        };
+        std::cerr << "[adam-loop-debug] step=" << step_ << " param_index=" << i;
+        std::cerr << " p_contig=" << (parameter_value.is_contiguous() ? 1 : 0)
+                  << " g_contig=" << (sensitivity.is_contiguous() ? 1 : 0)
+                  << " m1_contig=" << (m1_before.is_contiguous() ? 1 : 0)
+                  << " m2_contig=" << (m2_before.is_contiguous() ? 1 : 0);
+        print_vec("p", parameter_value);
+        print_vec("g", sensitivity);
+        print_vec("m1_before", m1_before);
+        print_vec("m2_before", m2_before);
+        print_vec("m1", m1_value);
+        print_vec("m2", m2_value);
+        print_vec("fh", first_hat);
+        print_vec("den", denominator);
+        print_vec("delta", delta);
+        print_vec("next", next_value);
+        std::cerr << "\n";
+      }
 
       first_moment_[i] = m1_value;
       second_moment_[i] = m2_value;
@@ -366,8 +408,8 @@ private:
   }
 
   void apply_group_batched_(GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const AdamOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -442,8 +484,8 @@ private:
   }
 
   void apply_group_fused_(GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const AdamOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -532,9 +574,9 @@ private:
     max_second_hat_.reserve(params.size());
 
     for (const Series* p : params) {
-      first_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      second_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      max_second_hat_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      first_moment_.push_back(state_zeros_like_(*p));
+      second_moment_.push_back(state_zeros_like_(*p));
+      max_second_hat_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

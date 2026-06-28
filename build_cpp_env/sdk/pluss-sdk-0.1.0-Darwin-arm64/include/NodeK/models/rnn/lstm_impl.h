@@ -15,6 +15,7 @@ inline std::tuple<Series, Series> lstm_impl(const Series& input,
   detail::require_rank_at_least_(input, 2, "lstm_impl");
   detail::require_rank_at_least_(hidden, 2, "lstm_impl");
   detail::require_rank_at_least_(cell, 2, "lstm_impl");
+  detail::validate_impl_bias_layout(params, split_bias, "lstm_impl");
   const Series gi = split_bias
                         ? pluss::ai::ff(input, params.weight_ih, params.bias_ih)
                         : pluss::ai::ff(input, params.weight_ih, unified_bias(params, input));

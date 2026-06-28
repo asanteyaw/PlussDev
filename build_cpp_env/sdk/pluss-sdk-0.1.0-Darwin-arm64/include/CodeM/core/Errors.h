@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <source_location>
 #include <stdexcept>
@@ -13,11 +15,17 @@
 
 #include "CodeM/core/StackTrace.h"
 
-namespace pluss::codem {
+namespace pluss {
 
 struct Error : std::runtime_error {
   using std::runtime_error::runtime_error;
 };
+
+} // namespace pluss
+
+namespace pluss::codem {
+
+using Error = ::pluss::Error;
 
 namespace detail {
 
@@ -33,6 +41,28 @@ inline void oss_args(std::ostringstream& oss, First&& first, Rest&&... rest) {
 }
 
 } // namespace detail
+
+inline bool native_trace_enabled_() {
+  const char* raw = std::getenv("PLUSS_ERROR_NATIVE_TRACE");
+  if (!raw || *raw == '\0') return true; // default enabled
+  return !(std::strcmp(raw, "0") == 0 ||
+           std::strcmp(raw, "off") == 0 ||
+           std::strcmp(raw, "false") == 0 ||
+           std::strcmp(raw, "FALSE") == 0);
+}
+
+inline bool native_trace_full_() {
+  const char* raw = std::getenv("PLUSS_ERROR_NATIVE_TRACE");
+  if (!raw || *raw == '\0') return true; // default to full native trace
+  if (std::strcmp(raw, "focused") == 0 || std::strcmp(raw, "FOCUSED") == 0) return false;
+  return std::strcmp(raw, "full") == 0 ||
+         std::strcmp(raw, "FULL") == 0 ||
+         std::strcmp(raw, "1") == 0 ||
+         std::strcmp(raw, "on") == 0 ||
+         std::strcmp(raw, "ON") == 0 ||
+         std::strcmp(raw, "true") == 0 ||
+         std::strcmp(raw, "TRUE") == 0;
+}
 
 [[noreturn]] inline void throw_error(
     const std::string& msg,
@@ -53,6 +83,18 @@ inline void oss_args(std::ostringstream& oss, First&& first, Rest&&... rest) {
   if (!st.empty()) {
     full += "\nStack trace (most recent call first):\n";
     full += st;
+  }
+
+  if (native_trace_enabled_()) {
+    const auto native = native_trace_full_()
+                            ? StackTrace::format_native(256)
+                            : StackTrace::format_user_to_trigger(256, 14);
+    if (!native.empty()) {
+      full += native_trace_full_()
+                  ? "\nNative stack trace:\n"
+                  : "\nCall trace (file -> pluss trigger):\n";
+      full += native;
+    }
   }
 
   throw Error(full);
@@ -77,6 +119,18 @@ inline void warn(
   if (!st.empty()) {
     full += "\nStack trace (most recent call first):\n";
     full += st;
+  }
+
+  if (native_trace_enabled_()) {
+    const auto native = native_trace_full_()
+                            ? StackTrace::format_native(256)
+                            : StackTrace::format_user_to_trigger(256, 14);
+    if (!native.empty()) {
+      full += native_trace_full_()
+                  ? "\nNative stack trace:\n"
+                  : "\nCall trace (file -> pluss trigger):\n";
+      full += native;
+    }
   }
 
   std::fwrite(full.data(), 1, full.size(), stderr);
@@ -140,5 +194,21 @@ template <class... Args>
   } while (false)
 
 } // namespace pluss::codem
+
+namespace pluss {
+
+[[noreturn]] inline void throw_error(
+    const std::string& msg,
+    const std::source_location& loc = std::source_location::current()) {
+  ::pluss::codem::throw_error(msg, loc);
+}
+
+inline void warn(
+    const std::string& msg,
+    const std::source_location& loc = std::source_location::current()) {
+  ::pluss::codem::warn(msg, loc);
+}
+
+} // namespace pluss
 
 #define PLUSS_CALL_GUARD() ::pluss::codem::CallGuard PLUSS__call_guard_{}

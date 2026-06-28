@@ -1,11 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include <initializer_list>
 #include <optional>
 #include <string_view>
 #include <vector>
 
+#include "MSharp/RangeView.h"
 #include "table/DataFrame.h"
 #include "pluss/pl.h"
 
@@ -99,10 +99,10 @@ public:
                     AtlasPlotOptions options = {});
 
   DataFramePlotAccessor frames(std::int64_t frame_index = 0) const;
-  pluss::pl::Studio frames(std::initializer_list<std::int64_t> frame_indices,
+  pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
                            std::string_view y_feature,
                            std::optional<std::string_view> x_feature = std::nullopt) const;
-  pluss::pl::Studio frames(std::initializer_list<std::int64_t> frame_indices,
+  pluss::pl::Studio frames(pluss::msharp::RangeView::Int frame_indices,
                            std::string_view y_feature,
                            std::optional<std::string_view> x_feature,
                            const AtlasFramesPlotOptions& options) const;
@@ -118,18 +118,18 @@ public:
                            const Scatter3DPlotOptions& options) const;
   pluss::pl::Studio depth(std::string_view feature) const;
   pluss::pl::Studio depth(std::string_view feature, const AtlasDepthPlotOptions& options) const;
-  pluss::pl::Studio depth_compare(std::initializer_list<std::string_view> features = {}) const;
-  pluss::pl::Studio depth_compare(std::initializer_list<std::string_view> features,
+  pluss::pl::Studio depth_compare(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  pluss::pl::Studio depth_compare(pluss::msharp::RangeView::Of<std::string_view> features,
                                   const AtlasDepthComparePlotOptions& options) const;
-  pluss::pl::Studio depth_facet(std::initializer_list<std::string_view> features = {}) const;
-  pluss::pl::Studio depth_facet(std::initializer_list<std::string_view> features,
+  pluss::pl::Studio depth_facet(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  pluss::pl::Studio depth_facet(pluss::msharp::RangeView::Of<std::string_view> features,
                                 const AtlasDepthFacetPlotOptions& options) const;
   pluss::pl::Studio depth_rolling(std::string_view feature) const;
   pluss::pl::Studio depth_rolling(std::string_view feature, const AtlasDepthRollingPlotOptions& options) const;
   pluss::pl::Studio triplot() const;
   pluss::pl::Studio triplot(const pluss::pl::flash::TriplotOptions& options) const;
-  pluss::pl::Studio triplot(std::initializer_list<std::string_view> features) const;
-  pluss::pl::Studio triplot(std::initializer_list<std::string_view> features,
+  pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  pluss::pl::Studio triplot(pluss::msharp::RangeView::Of<std::string_view> features,
                             const pluss::pl::flash::TriplotOptions& options) const;
 
 private:

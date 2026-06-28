@@ -202,6 +202,24 @@ DataFrame DataFrame::features(std::initializer_list<std::string_view> names) con
   return select(names);
 }
 
+DataFrame DataFrame::features(std::initializer_list<const char*> names) {
+  std::vector<std::string_view> views;
+  views.reserve(names.size());
+  for (const auto* name : names) {
+    views.emplace_back(name != nullptr ? name : "");
+  }
+  return select(pluss::msharp::RangeView::Of<std::string_view>(views));
+}
+
+DataFrame DataFrame::features(std::initializer_list<const char*> names) const {
+  std::vector<std::string_view> views;
+  views.reserve(names.size());
+  for (const auto* name : names) {
+    views.emplace_back(name != nullptr ? name : "");
+  }
+  return select(pluss::msharp::RangeView::Of<std::string_view>(views));
+}
+
 DataFrame DataFrame::features(pluss::msharp::RangeView::Of<std::string_view> names) {
   return select(names);
 }
@@ -447,6 +465,66 @@ DataFrame DataFrame::insert(std::int64_t feature_index, std::string name, const 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
+DataFrame DataFrame::place(std::string name,
+                           const Thread& feature_value,
+                           std::string_view anchor_feature,
+                           bool after) const {
+  const auto& src = impl_ref_();
+  PLUSS_CHECK(!name.empty(), "DataFrame::place: feature name cannot be empty");
+  PLUSS_CHECK(feature_value.defined(), "DataFrame::place: feature is undefined");
+  if (!src.columns_.empty()) {
+    PLUSS_CHECK(feature_value.size() == src.nrows_, "DataFrame::place: case count mismatch");
+  }
+
+  const auto anchor = owned_name(anchor_feature);
+  PLUSS_CHECK(!anchor.empty(), "DataFrame::place: anchor feature cannot be empty");
+  const auto anchor_it = src.name_to_idx_.find(anchor);
+  PLUSS_CHECK(anchor_it != src.name_to_idx_.end(),
+              "DataFrame::place: unknown anchor feature '" + anchor + "'");
+
+  const auto existing_it = src.name_to_idx_.find(name);
+  if (existing_it == src.name_to_idx_.end()) {
+    const auto pos = static_cast<std::int64_t>(anchor_it->second + (after ? 1 : 0));
+    return insert(pos, std::move(name), feature_value);
+  }
+
+  auto out_names = src.names_;
+  auto out_cols = src.columns_;
+  auto existing = existing_it->second;
+  out_cols[existing] = feature_value;
+  if (existing == anchor_it->second) {
+    return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+        std::move(out_names), std::move(out_cols), src.cases_));
+  }
+
+  auto moved_name = out_names[existing];
+  auto moved_col = out_cols[existing];
+  out_names.erase(out_names.begin() + static_cast<std::ptrdiff_t>(existing));
+  out_cols.erase(out_cols.begin() + static_cast<std::ptrdiff_t>(existing));
+
+  auto anchor_pos = anchor_it->second;
+  if (existing < anchor_pos) {
+    --anchor_pos;
+  }
+  const auto insert_pos = anchor_pos + (after ? 1 : 0);
+  out_names.insert(out_names.begin() + static_cast<std::ptrdiff_t>(insert_pos), std::move(moved_name));
+  out_cols.insert(out_cols.begin() + static_cast<std::ptrdiff_t>(insert_pos), std::move(moved_col));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::place(std::string_view name,
+                           std::string_view anchor_feature,
+                           bool after) const {
+  const auto& src = impl_ref_();
+  const auto feature_name = owned_name(name);
+  PLUSS_CHECK(!feature_name.empty(), "DataFrame::place: feature name cannot be empty");
+  const auto existing_it = src.name_to_idx_.find(feature_name);
+  PLUSS_CHECK(existing_it != src.name_to_idx_.end(),
+              "DataFrame::place: unknown feature '" + feature_name + "'");
+  return place(feature_name, src.columns_[existing_it->second], anchor_feature, after);
+}
+
 DataFrame DataFrame::drop(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto drop_names = normalize_name_list(names);
   const auto& src = impl_ref_();
@@ -651,12 +729,175 @@ DataFrame DataFrame::update(const DataFrame& other, bool overwrite) const {
   return combine(other, spec);
 }
 
+namespace {
+
+enum class UnifyHow : std::uint8_t {
+  Inner = 0,
+  Left = 1,
+};
+
+enum class UnifyValidate : std::uint8_t {
+  ManyToMany = 0,
+  OneToOne = 1,
+  OneToMany = 2,
+  ManyToOne = 3,
+};
+
+std::string lowercase_ascii_copy(std::string_view text) {
+  std::string out(text);
+  std::transform(out.begin(), out.end(), out.begin(), [](char ch) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  });
+  return out;
+}
+
+UnifyHow parse_unify_how(std::string_view how) {
+  const auto mode = lowercase_ascii_copy(how);
+  if (mode.empty() || mode == "inner") {
+    return UnifyHow::Inner;
+  }
+  if (mode == "left") {
+    return UnifyHow::Left;
+  }
+  PLUSS_FAIL("DataFrame::unify: supported `how` values are 'inner' and 'left'");
+}
+
+UnifyValidate parse_unify_validate(std::string_view validate) {
+  const auto mode = lowercase_ascii_copy(validate);
+  if (mode.empty() || mode == "many_to_many" || mode == "many-to-many" || mode == "m:m") {
+    return UnifyValidate::ManyToMany;
+  }
+  if (mode == "one_to_one" || mode == "one-to-one" || mode == "1:1") {
+    return UnifyValidate::OneToOne;
+  }
+  if (mode == "one_to_many" || mode == "one-to-many" || mode == "1:m") {
+    return UnifyValidate::OneToMany;
+  }
+  if (mode == "many_to_one" || mode == "many-to-one" || mode == "m:1") {
+    return UnifyValidate::ManyToOne;
+  }
+  PLUSS_FAIL(
+      "DataFrame::unify: supported `validate` values are 'many_to_many', 'one_to_one', "
+      "'one_to_many', and 'many_to_one'");
+}
+
+std::string make_unify_key(const std::vector<Thread>& key_cols, std::int64_t row) {
+  std::string k;
+  k.reserve(key_cols.size() * 16);
+  for (const auto& c : key_cols) {
+    k += thread_scalar_string_at(c, row);
+    k.push_back('\x1F');
+  }
+  return k;
+}
+
+[[noreturn]] void fail_unify_validate(std::string_view validate, std::string_view side) {
+  PLUSS_FAIL(fmt::format(
+      "DataFrame::unify: validate='{}' requires unique {} keys",
+      validate.empty() ? "many_to_many" : std::string(validate),
+      side));
+}
+
+void validate_unify_unique_side(const std::vector<Thread>& key_cols,
+                                std::int64_t nrows,
+                                std::string_view validate,
+                                std::string_view side) {
+  std::unordered_set<std::string> seen;
+  seen.reserve(static_cast<std::size_t>(nrows));
+  for (std::int64_t row = 0; row < nrows; ++row) {
+    if (!seen.insert(make_unify_key(key_cols, row)).second) {
+      fail_unify_validate(validate, side);
+    }
+  }
+}
+
+pluss::Series bool_mask_from_values(const std::vector<bool>& values) {
+  auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
+  auto* p = reinterpret_cast<bool*>(out.raw_data());
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    p[i] = values[i];
+  }
+  return out;
+}
+
+Thread make_unify_null_thread(const Thread& reference, std::int64_t size) {
+  auto invalid = pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool);
+  switch (reference.kind()) {
+    case ThreadKind::Series:
+      return Thread(pluss::Series::zeros({size}, reference.as_series().scalar_type()), invalid);
+    case ThreadKind::Note:
+      return Thread(pluss::make_note(std::vector<std::string>(static_cast<std::size_t>(size))), invalid);
+    case ThreadKind::Timeline:
+      return Thread(
+          pluss::make_timeline(
+              std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")),
+          invalid);
+    case ThreadKind::TimeIndex:
+      return Thread(
+          pluss::make_timeindex(
+              std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z"),
+              false),
+          invalid);
+  }
+  PLUSS_FAIL("DataFrame::unify: unsupported Thread kind");
+}
+
+Thread take_rows_for_unify(const Thread& source, const std::vector<std::int64_t>& rows) {
+  if (rows.empty()) {
+    return source.take(std::span<const std::int64_t>(rows.data(), rows.size()));
+  }
+  if (source.size() == 0) {
+    return make_unify_null_thread(source, static_cast<std::int64_t>(rows.size()));
+  }
+
+  std::vector<std::int64_t> safe_rows;
+  safe_rows.reserve(rows.size());
+  std::vector<bool> out_valid(rows.size(), true);
+  std::optional<std::vector<bool>> src_valid = std::nullopt;
+  if (source.has_validity_mask()) {
+    src_valid = source.validity_mask()->to_vec<bool>();
+  }
+
+  bool all_valid = !src_valid.has_value();
+  for (std::size_t i = 0; i < rows.size(); ++i) {
+    const auto row = rows[i];
+    if (row < 0) {
+      safe_rows.push_back(0);
+      out_valid[i] = false;
+      all_valid = false;
+      continue;
+    }
+    PLUSS_CHECK(row < source.size(), "DataFrame::unify: matched row index out of bounds");
+    safe_rows.push_back(row);
+    const bool valid = src_valid.has_value() ? (*src_valid)[static_cast<std::size_t>(row)] : true;
+    out_valid[i] = valid;
+    all_valid = all_valid && valid;
+  }
+
+  auto out = source.take(safe_rows);
+  if (all_valid) {
+    return out.has_validity_mask() ? out.clear_validity_mask() : out;
+  }
+  return out.with_validity_mask(bool_mask_from_values(out_valid));
+}
+
+} // namespace
+
 DataFrame::LetSlot DataFrame::set(std::string_view name) {
   return LetSlot(*this, owned_name(name));
 }
 
 DataFrame::LetSlots DataFrame::set(pluss::msharp::RangeView::Of<std::string_view> names) {
   return LetSlots(*this, normalize_name_list(names));
+}
+
+DataFrame::LetSlots DataFrame::set(std::initializer_list<const char*> names) {
+  std::vector<std::string_view> views;
+  views.reserve(names.size());
+  for (const auto* name : names) {
+    views.emplace_back(name != nullptr ? name : "");
+  }
+  return set(pluss::msharp::RangeView::Of<std::string_view>(views));
 }
 
 DataFrame DataFrame::set_features(std::string_view name, const Thread& value) const {
@@ -816,34 +1057,81 @@ DataFrame DataFrame::reindex_cases(const Thread& new_cases) const {
   return align_cases(new_cases);
 }
 
-DataFrame DataFrame::stitch_on(std::string_view left_feature,
-                               const DataFrame& right,
-                               std::string_view right_feature,
-                               std::string right_suffix) const {
-  const auto left_key = owned_name(left_feature);
-  const auto right_key = right_feature.empty() ? left_key : owned_name(right_feature);
-  PLUSS_CHECK(!left_key.empty(), "DataFrame::stitch_on: left feature cannot be empty");
-  PLUSS_CHECK(!right_key.empty(), "DataFrame::stitch_on: right feature cannot be empty");
-  PLUSS_CHECK(has_feature(left_key), "DataFrame::stitch_on: left feature not found '" + left_key + "'");
-  PLUSS_CHECK(right.has_feature(right_key), "DataFrame::stitch_on: right feature not found '" + right_key + "'");
+DataFrame DataFrame::unify(std::string_view left_on,
+                           const DataFrame& right,
+                           std::string_view right_on,
+                           std::string_view how,
+                           std::string right_suffix,
+                           std::string_view validate) const {
+  std::vector<std::string_view> left_keys{left_on};
+  std::vector<std::string_view> right_keys;
+  if (!right_on.empty()) {
+    right_keys.push_back(right_on);
+  }
+  return unify(pluss::msharp::RangeView::Of<std::string_view>(left_keys),
+               right,
+               pluss::msharp::RangeView::Of<std::string_view>(right_keys),
+               how,
+               std::move(right_suffix),
+               validate);
+}
+
+DataFrame DataFrame::unify(pluss::msharp::RangeView::Of<std::string_view> left_on,
+                           const DataFrame& right,
+                           pluss::msharp::RangeView::Of<std::string_view> right_on,
+                           std::string_view how,
+                           std::string right_suffix,
+                           std::string_view validate) const {
+  PLUSS_CHECK(left_on.size() > 0, "DataFrame::unify: at least one left key feature is required");
+  const auto join_how = parse_unify_how(how);
+  const auto relationship = parse_unify_validate(validate);
+  std::vector<std::string> left_keys = normalize_name_list(left_on);
+  std::vector<std::string> right_keys =
+      (right_on.size() == 0) ? left_keys : normalize_name_list(right_on);
+  PLUSS_CHECK(left_keys.size() == right_keys.size(),
+              "DataFrame::unify: left/right key feature counts must match");
 
   const auto& left_src = impl_ref_();
   const auto& right_src = right.impl_ref_();
-  const auto left_col = features(left_key);
-  const auto right_col = right.features(right_key);
+
+  std::vector<Thread> left_key_cols;
+  std::vector<Thread> right_key_cols;
+  left_key_cols.reserve(left_keys.size());
+  right_key_cols.reserve(right_keys.size());
+  for (std::size_t i = 0; i < left_keys.size(); ++i) {
+    PLUSS_CHECK(has_feature(left_keys[i]),
+                "DataFrame::unify: left key feature not found '" + left_keys[i] + "'");
+    PLUSS_CHECK(right.has_feature(right_keys[i]),
+                "DataFrame::unify: right key feature not found '" + right_keys[i] + "'");
+    left_key_cols.push_back(features(left_keys[i]));
+    right_key_cols.push_back(right.features(right_keys[i]));
+  }
+
+  if (relationship == UnifyValidate::OneToOne || relationship == UnifyValidate::OneToMany) {
+    validate_unify_unique_side(left_key_cols, ncases(), validate, "left");
+  }
 
   std::unordered_map<std::string, std::vector<std::int64_t>> right_lookup;
   right_lookup.reserve(static_cast<std::size_t>(right.ncases()));
   for (std::int64_t r = 0; r < right.ncases(); ++r) {
-    right_lookup[thread_scalar_string_at(right_col, r)].push_back(r);
+    auto& matches = right_lookup[make_unify_key(right_key_cols, r)];
+    if ((relationship == UnifyValidate::OneToOne || relationship == UnifyValidate::ManyToOne)
+        && !matches.empty()) {
+      fail_unify_validate(validate, "right");
+    }
+    matches.push_back(r);
   }
 
   std::vector<std::int64_t> left_rows;
   std::vector<std::int64_t> right_rows;
   for (std::int64_t l = 0; l < ncases(); ++l) {
-    const auto key = thread_scalar_string_at(left_col, l);
+    const auto key = make_unify_key(left_key_cols, l);
     const auto it = right_lookup.find(key);
     if (it == right_lookup.end()) {
+      if (join_how == UnifyHow::Left) {
+        left_rows.push_back(l);
+        right_rows.push_back(-1);
+      }
       continue;
     }
     for (const auto rr : it->second) {
@@ -854,9 +1142,15 @@ DataFrame DataFrame::stitch_on(std::string_view left_feature,
 
   std::vector<std::pair<std::string, Thread>> out_cols;
   out_cols.reserve(left_src.names_.size() + right_src.names_.size());
-
   for (std::size_t i = 0; i < left_src.names_.size(); ++i) {
     out_cols.emplace_back(left_src.names_[i], left_src.columns_[i].take(left_rows));
+  }
+
+  std::unordered_set<std::string> skip_right_keys;
+  for (std::size_t i = 0; i < left_keys.size(); ++i) {
+    if (left_keys[i] == right_keys[i]) {
+      skip_right_keys.insert(right_keys[i]);
+    }
   }
 
   std::unordered_set<std::string> used_names;
@@ -867,7 +1161,7 @@ DataFrame DataFrame::stitch_on(std::string_view left_feature,
 
   for (std::size_t i = 0; i < right_src.names_.size(); ++i) {
     const auto& base = right_src.names_[i];
-    if (base == right_key && left_key == right_key) {
+    if (skip_right_keys.find(base) != skip_right_keys.end()) {
       continue;
     }
     std::string out_name = base;
@@ -879,104 +1173,38 @@ DataFrame DataFrame::stitch_on(std::string_view left_feature,
       }
     }
     used_names.insert(out_name);
-    out_cols.emplace_back(std::move(out_name), right_src.columns_[i].take(right_rows));
+    out_cols.emplace_back(std::move(out_name), take_rows_for_unify(right_src.columns_[i], right_rows));
   }
 
   return DataFrame(std::move(out_cols));
+}
+
+DataFrame DataFrame::unify(std::initializer_list<std::string_view> left_on,
+                           const DataFrame& right,
+                           std::initializer_list<std::string_view> right_on,
+                           std::string_view how,
+                           std::string right_suffix,
+                           std::string_view validate) const {
+  return unify(pluss::msharp::RangeView::Of<std::string_view>(left_on),
+               right,
+               pluss::msharp::RangeView::Of<std::string_view>(right_on),
+               how,
+               std::move(right_suffix),
+               validate);
+}
+
+DataFrame DataFrame::stitch_on(std::string_view left_feature,
+                               const DataFrame& right,
+                               std::string_view right_feature,
+                               std::string right_suffix) const {
+  return unify(left_feature, right, right_feature, "inner", std::move(right_suffix));
 }
 
 DataFrame DataFrame::stitch_on(pluss::msharp::RangeView::Of<std::string_view> left_features,
                                const DataFrame& right,
                                pluss::msharp::RangeView::Of<std::string_view> right_features,
                                std::string right_suffix) const {
-  PLUSS_CHECK(left_features.size() > 0, "DataFrame::stitch_on: at least one left key feature is required");
-  std::vector<std::string> left_keys = normalize_name_list(left_features);
-  std::vector<std::string> right_keys;
-  if (right_features.size() == 0) {
-    right_keys = left_keys;
-  } else {
-    right_keys = normalize_name_list(right_features);
-  }
-  PLUSS_CHECK(left_keys.size() == right_keys.size(),
-              "DataFrame::stitch_on: left/right key feature counts must match");
-
-  const auto& left_src = impl_ref_();
-  const auto& right_src = right.impl_ref_();
-
-  std::vector<Thread> left_cols;
-  std::vector<Thread> right_cols;
-  left_cols.reserve(left_keys.size());
-  right_cols.reserve(right_keys.size());
-  for (std::size_t i = 0; i < left_keys.size(); ++i) {
-    PLUSS_CHECK(has_feature(left_keys[i]),
-                "DataFrame::stitch_on: left key feature not found '" + left_keys[i] + "'");
-    PLUSS_CHECK(right.has_feature(right_keys[i]),
-                "DataFrame::stitch_on: right key feature not found '" + right_keys[i] + "'");
-    left_cols.push_back(features(left_keys[i]));
-    right_cols.push_back(right.features(right_keys[i]));
-  }
-
-  auto make_key = [](const std::vector<Thread>& key_cols, std::int64_t row) {
-    std::string k;
-    k.reserve(key_cols.size() * 16);
-    for (const auto& c : key_cols) {
-      k += thread_scalar_string_at(c, row);
-      k.push_back('\x1F');
-    }
-    return k;
-  };
-
-  std::unordered_map<std::string, std::vector<std::int64_t>> right_lookup;
-  right_lookup.reserve(static_cast<std::size_t>(right.ncases()));
-  for (std::int64_t r = 0; r < right.ncases(); ++r) {
-    right_lookup[make_key(right_cols, r)].push_back(r);
-  }
-
-  std::vector<std::int64_t> left_rows;
-  std::vector<std::int64_t> right_rows;
-  for (std::int64_t l = 0; l < ncases(); ++l) {
-    const auto key = make_key(left_cols, l);
-    const auto it = right_lookup.find(key);
-    if (it == right_lookup.end()) {
-      continue;
-    }
-    for (const auto rr : it->second) {
-      left_rows.push_back(l);
-      right_rows.push_back(rr);
-    }
-  }
-
-  std::vector<std::pair<std::string, Thread>> out_cols;
-  out_cols.reserve(left_src.names_.size() + right_src.names_.size());
-  for (std::size_t i = 0; i < left_src.names_.size(); ++i) {
-    out_cols.emplace_back(left_src.names_[i], left_src.columns_[i].take(left_rows));
-  }
-
-  std::unordered_set<std::string> right_key_set(right_keys.begin(), right_keys.end());
-  std::unordered_set<std::string> used_names;
-  used_names.reserve(out_cols.size() + right_src.names_.size());
-  for (const auto& [name, _] : out_cols) {
-    used_names.insert(name);
-  }
-
-  for (std::size_t i = 0; i < right_src.names_.size(); ++i) {
-    const auto& base = right_src.names_[i];
-    if (right_key_set.find(base) != right_key_set.end()) {
-      continue;
-    }
-    std::string out_name = base;
-    if (used_names.find(out_name) != used_names.end()) {
-      out_name = base + right_suffix;
-      std::size_t k = 2;
-      while (used_names.find(out_name) != used_names.end()) {
-        out_name = fmt::format("{}{}_{}", base, right_suffix, k++);
-      }
-    }
-    used_names.insert(out_name);
-    out_cols.emplace_back(std::move(out_name), right_src.columns_[i].take(right_rows));
-  }
-
-  return DataFrame(std::move(out_cols));
+  return unify(left_features, right, right_features, "inner", std::move(right_suffix));
 }
 
 DataFrame DataFrame::stitch_on(std::initializer_list<std::string_view> left_features,

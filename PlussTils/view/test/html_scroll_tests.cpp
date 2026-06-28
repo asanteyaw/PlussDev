@@ -1,0 +1,446 @@
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "pluss/tils/view/window.h"
+
+namespace {
+
+using pluss::view::window::HtmlRenderConfig;
+using pluss::view::window::HtmlRenderStats;
+using pluss::view::window::HtmlScrollModel;
+using pluss::view::window::PointI;
+using pluss::view::window::RectI;
+using pluss::view::window::SizeI;
+
+[[noreturn]] void fail(const std::string& message) {
+  throw std::runtime_error(message);
+}
+
+void expect(const bool condition, const std::string& message) {
+  if (!condition) {
+    fail(message);
+  }
+}
+
+[[nodiscard]] PointI center(const RectI rect) {
+  return PointI{rect.x + rect.width / 2, rect.y + rect.height / 2};
+}
+
+[[nodiscard]] std::string stress_html() {
+  std::string html = R"HTML(
+<!doctype html>
+<html>
+<head>
+  <title>PlussView Scroll Validation</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    .wide { width: 1500px; white-space: nowrap; padding: 8px; }
+    table { height: 220px; border: 1px solid #cbd5e1; }
+    th, td { padding: 8px 12px; white-space: nowrap; }
+    p { margin: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wide">A deliberately wide document region for horizontal document scrolling.</div>
+  <table id="ledger">
+    <thead><tr>
+)HTML";
+  for (int col = 0; col < 10; ++col) {
+    html += col == 0 ? "<th class=\"sticky-left\">case</th>"
+                     : "<th>Column " + std::to_string(col) + " with detail</th>";
+  }
+  html += "</tr></thead><tbody>";
+  for (int row = 0; row < 48; ++row) {
+    html += "<tr>";
+    for (int col = 0; col < 10; ++col) {
+      html += col == 0 ? "<td class=\"sticky-left\">case-" + std::to_string(row) + "</td>"
+                       : "<td>r" + std::to_string(row) + " c" + std::to_string(col) + " value</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody></table>";
+  for (int row = 0; row < 36; ++row) {
+    html += "<p>Document paragraph " + std::to_string(row) +
+            " keeps the page tall enough to validate vertical chaining.</p>";
+  }
+  html += "</body></html>";
+  return html;
+}
+
+void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
+                          HtmlScrollModel& model,
+                          const SizeI viewport,
+                          HtmlRenderStats& stats) {
+  using namespace pluss::view::window;
+
+  ViewerRuntime runtime(RuntimeConfig{viewport, Color::rgba(245, 248, 252, 255)});
+  HtmlRenderConfig config{};
+  config.render_stats = &stats;
+  auto scene = build_html_document_scene(document, viewport, config);
+  const auto text_x = [](const auto& rendered_scene, const std::string_view needle) {
+    for (const auto& command : rendered_scene.commands()) {
+      if (const auto* text = std::get_if<TextCommand>(&command);
+          text != nullptr && text->text.find(needle) != std::string::npos) {
+        return text->anchor.x;
+      }
+    }
+    return -1;
+  };
+  const int initial_case_x = text_x(scene, "case");
+  expect(initial_case_x >= 0, "sticky case header should be present in the initial frame");
+  expect(runtime.submit(scene), "initial scroll validation frame should render");
+  const std::vector<std::uint8_t> initial_pixels(
+      runtime.canvas().bytes().begin(), runtime.canvas().bytes().end());
+  expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_initial.png"),
+         "initial scroll validation frame should save");
+
+  model.update_metrics(stats);
+  expect(!stats.table_scroll_regions.empty(), "scroll validation table region should exist");
+  const PointI table_point = center(stats.table_scroll_regions.front().viewport_rect);
+  expect(model.scroll_wheel(-90.0, -120.0, table_point, true, false),
+         "scroll validation model should move from the origin");
+
+  const auto document_offset = model.document_offset_px();
+  const auto table_offsets = model.table_offsets_px();
+  config.document_scroll_x_px = document_offset.x;
+  config.document_scroll_y_px = document_offset.y;
+  config.table_scroll_offsets = &table_offsets;
+  scene = build_html_document_scene(document, viewport, config);
+  expect(text_x(scene, "case") == initial_case_x,
+         "the case column must remain fixed during horizontal table scrolling");
+  expect(runtime.submit(scene), "scrolled validation frame should render");
+  expect(!std::equal(initial_pixels.begin(),
+                     initial_pixels.end(),
+                     runtime.canvas().bytes().begin(),
+                     runtime.canvas().bytes().end()),
+         "scrolling should produce a visibly different rendered frame");
+  expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_scrolled.png"),
+         "scrolled validation frame should save");
+
+  const std::vector<std::uint8_t> table_scrolled_pixels(
+      runtime.canvas().bytes().begin(), runtime.canvas().bytes().end());
+  model.reset();
+  model.update_metrics(stats);
+  const PointI document_point{
+      stats.document_viewport_rect.x + 4,
+      stats.document_viewport_rect.y + 4,
+  };
+  expect(model.scroll_wheel(-100.0, -160.0, document_point, true, false),
+         "document validation input should move both outer axes");
+  const auto outer_offset = model.document_offset_px();
+  config.document_scroll_x_px = outer_offset.x;
+  config.document_scroll_y_px = outer_offset.y;
+  const auto reset_table_offsets = model.table_offsets_px();
+  config.table_scroll_offsets = &reset_table_offsets;
+  std::vector<HtmlHitRegion> document_scrolled_hits;
+  config.hit_regions = &document_scrolled_hits;
+  scene = build_html_document_scene(document, viewport, config);
+  for (const auto& region : stats.table_scroll_regions) {
+    if (!region.viewport_rect.empty()) {
+      expect(region.viewport_rect.y >= stats.document_viewport_rect.y,
+             "off-screen table geometry must not capture input over the fixed title bar");
+    }
+  }
+  expect(std::all_of(document_scrolled_hits.begin(),
+                     document_scrolled_hits.end(),
+                     [&](const HtmlHitRegion& region) {
+                       return region.rect.y >= stats.document_viewport_rect.y;
+                     }),
+         "off-screen HTML controls must not capture clicks over the fixed title bar");
+  expect(runtime.submit(scene), "document-scrolled validation frame should render");
+  const std::size_t fixed_header_bytes =
+      static_cast<std::size_t>(viewport.width) * 54U * 4U;
+  expect(std::equal(initial_pixels.begin(),
+                    initial_pixels.begin() + static_cast<std::ptrdiff_t>(fixed_header_bytes),
+                    runtime.canvas().bytes().begin()),
+         "nested off-screen clips must not paint over the fixed document title bar");
+  expect(!std::equal(table_scrolled_pixels.begin(),
+                     table_scrolled_pixels.end(),
+                     runtime.canvas().bytes().begin(),
+                     runtime.canvas().bytes().end()),
+         "document scrolling should visibly differ from nested table scrolling");
+  expect(save_canvas(runtime.canvas(), "/tmp/plussview_scroll_document.png"),
+         "document-scrolled validation frame should save");
+}
+
+void test_automatic_table_identity() {
+  using namespace pluss::view::window;
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html>
+<head>
+  <style>
+    body { margin: 0; }
+    table { height: 180px; margin: 6px; }
+    th, td { padding: 7px 12px; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <table>
+    <tr><th>First table heading with width</th><th>Another wide heading</th><th>Final heading</th></tr>
+    <tr><td>first 0</td><td>value</td><td>detail</td></tr>
+    <tr><td>first 1</td><td>value</td><td>detail</td></tr>
+    <tr><td>first 2</td><td>value</td><td>detail</td></tr>
+    <tr><td>first 3</td><td>value</td><td>detail</td></tr>
+    <tr><td>first 4</td><td>value</td><td>detail</td></tr>
+    <tr><td>first 5</td><td>value</td><td>detail</td></tr>
+    <tr><td>first 6</td><td>value</td><td>detail</td></tr>
+  </table>
+  <table>
+    <tr><th>Second table heading with width</th><th>Another wide heading</th><th>Final heading</th></tr>
+    <tr><td>second 0</td><td>value</td><td>detail</td></tr>
+    <tr><td>second 1</td><td>value</td><td>detail</td></tr>
+    <tr><td>second 2</td><td>value</td><td>detail</td></tr>
+    <tr><td>second 3</td><td>value</td><td>detail</td></tr>
+    <tr><td>second 4</td><td>value</td><td>detail</td></tr>
+    <tr><td>second 5</td><td>value</td><td>detail</td></tr>
+    <tr><td>second 6</td><td>value</td><td>detail</td></tr>
+  </table>
+</body>
+</html>
+)HTML");
+
+  HtmlRenderStats stats{};
+  HtmlRenderConfig config{};
+  config.render_stats = &stats;
+  (void)build_html_document_scene(document, SizeI{500, 620}, config);
+
+  expect(stats.table_scroll_regions.size() == 2,
+         "two visible anonymous tables should publish two scroll regions");
+  expect(stats.table_scroll_regions[0].target != stats.table_scroll_regions[1].target,
+         "anonymous tables should receive independent stable targets");
+
+  HtmlRenderStats rerendered_stats{};
+  config.render_stats = &rerendered_stats;
+  (void)build_html_document_scene(document, SizeI{500, 620}, config);
+  expect(rerendered_stats.table_scroll_regions.size() == 2,
+         "anonymous table targets should survive a rerender");
+  expect(stats.table_scroll_regions[0].target == rerendered_stats.table_scroll_regions[0].target &&
+             stats.table_scroll_regions[1].target == rerendered_stats.table_scroll_regions[1].target,
+         "anonymous table targets should remain stable for the document lifetime");
+}
+
+void test_layout_metrics_and_scroll_model() {
+  using namespace pluss::view::window;
+
+  const SizeI viewport{720, 480};
+  const auto document = parse_html_document(stress_html());
+  HtmlRenderStats stats{};
+  HtmlRenderConfig config{};
+  config.render_stats = &stats;
+  (void)build_html_document_scene(document, viewport, config);
+
+  expect(stats.document_max_scroll_x > 0,
+         "wide document content should produce horizontal document overflow");
+  expect(stats.document_max_scroll_y > 0,
+         "tall document content should produce vertical document overflow");
+  expect(!stats.document_horizontal_track_rect.empty() &&
+             !stats.document_horizontal_thumb_rect.empty(),
+         "horizontal document scrollbar geometry should be published");
+  expect(!stats.document_vertical_track_rect.empty() &&
+             !stats.document_vertical_thumb_rect.empty(),
+         "vertical document scrollbar geometry should be published");
+  expect(stats.table_scroll_regions.size() == 1,
+         "one table should publish one independent scroll region");
+
+  const auto& table = stats.table_scroll_regions.front();
+  expect(table.target == "ledger", "table scroll region should retain its HTML target");
+  expect(table.max_scroll_x > 0, "wide table should support horizontal scrolling");
+  expect(table.max_scroll_y > 0, "fixed-height table should support vertical scrolling");
+  expect(!table.horizontal_track_rect.empty() && !table.horizontal_thumb_rect.empty(),
+         "table horizontal scrollbar should be interactive");
+  expect(!table.vertical_track_rect.empty() && !table.vertical_thumb_rect.empty(),
+         "table vertical scrollbar should be interactive");
+
+  HtmlScrollModel model;
+  model.update_metrics(stats);
+  const PointI table_point = center(table.viewport_rect);
+  const PointI document_point{
+      stats.document_viewport_rect.x + 8,
+      stats.document_viewport_rect.y + stats.document_viewport_rect.height - 24,
+  };
+
+  expect(model.scroll_wheel(0.0, -12.5, table_point, true, false),
+         "precise vertical trackpad input should scroll the table under the pointer");
+  auto snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").y >= 21 && snapshot.tables.at("ledger").y <= 23,
+         "precise trackpad deltas should use responsive bounded acceleration");
+  expect(snapshot.document.y == 0,
+         "table scrolling should not move the document before reaching a table edge");
+
+  expect(model.scroll_wheel(-9.0, 0.0, table_point, true, false),
+         "precise horizontal trackpad input should scroll a wide table");
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").x >= 14 && snapshot.tables.at("ledger").x <= 16,
+         "horizontal table scrolling should use the same bounded acceleration");
+
+  expect(model.scroll_wheel(0.0, -1.0, table_point, false, true),
+         "Shift+wheel should map vertical wheel input to horizontal scrolling");
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").x >= 86,
+         "non-precise wheel input should use a stable line-sized step");
+
+  const int document_before_chain = snapshot.document.y;
+  expect(model.scroll_wheel(0.0, -100000.0, table_point, true, false),
+         "large table scroll should reach its boundary and chain to the document");
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").y == table.max_scroll_y,
+         "table scrolling should clamp at its exact vertical boundary");
+  expect(snapshot.document.y > document_before_chain,
+         "unused table delta should chain into document scrolling");
+
+  model.reset();
+  model.update_metrics(stats);
+  expect(model.scroll_wheel(0.0, -1.0, document_point, false, false),
+         "wheel input outside a table should scroll the document");
+  snapshot = model.snapshot();
+  expect(snapshot.document.y == 72 && snapshot.tables.at("ledger").y == 0,
+         "document routing should leave independent table offsets unchanged");
+
+  model.reset();
+  model.update_metrics(stats);
+  const PointI track_after_thumb{
+      table.vertical_track_rect.x + table.vertical_track_rect.width / 2,
+      std::min(table.vertical_track_rect.y + table.vertical_track_rect.height - 1,
+               table.vertical_thumb_rect.y + table.vertical_thumb_rect.height + 8),
+  };
+  expect(model.pointer_down(track_after_thumb),
+         "clicking a table scrollbar track should be consumed");
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").y > 0,
+         "clicking after a scrollbar thumb should page forward");
+  const int track_click_offset = snapshot.tables.at("ledger").y;
+  expect(!model.pointer_drag(
+             0.0, -20.0, PointI{track_after_thumb.x, track_after_thumb.y - 20}),
+         "moving after a scrollbar track click should not begin content panning");
+  expect(model.snapshot().tables.at("ledger").y == track_click_offset,
+         "scrollbar track capture should remain stable until pointer release");
+  model.pointer_up();
+
+  model.reset();
+  model.update_metrics(stats);
+  const PointI thumb_center = center(table.horizontal_thumb_rect);
+  expect(model.pointer_down(thumb_center),
+         "pressing a table scrollbar thumb should begin dragging");
+  expect(model.pointer_drag(30.0, 0.0, PointI{thumb_center.x + 30, thumb_center.y}),
+         "dragging a horizontal scrollbar thumb should update its offset");
+  model.pointer_up();
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").x > 0,
+         "scrollbar thumb drag should move the corresponding table only");
+
+  model.reset();
+  model.update_metrics(stats);
+  const PointI content_drag_start{
+      table.viewport_rect.x + table.viewport_rect.width / 2,
+      table.viewport_rect.y + table.viewport_rect.height / 2,
+  };
+  expect(!model.pointer_down(content_drag_start),
+         "pressing table content should not be mistaken for a scrollbar");
+  expect(model.pointer_drag(
+             -24.0,
+             -30.0,
+             PointI{content_drag_start.x - 24, content_drag_start.y - 30}),
+         "dragging table content up and left should pan it down and right");
+  model.pointer_up();
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").x == 48 && snapshot.tables.at("ledger").y == 60,
+         "content drag should use responsive movement on both axes");
+
+  model.reset();
+  HtmlRenderStats multiple_metrics = stats;
+  HtmlScrollRegion second_table = table;
+  second_table.target = "ledger-secondary";
+  second_table.viewport_rect.y += table.viewport_rect.height + 20;
+  second_table.horizontal_track_rect.y += table.viewport_rect.height + 20;
+  second_table.horizontal_thumb_rect.y += table.viewport_rect.height + 20;
+  second_table.vertical_track_rect.y += table.viewport_rect.height + 20;
+  second_table.vertical_thumb_rect.y += table.viewport_rect.height + 20;
+  multiple_metrics.table_scroll_regions.push_back(second_table);
+  model.update_metrics(multiple_metrics);
+  const PointI second_table_point = center(second_table.viewport_rect);
+  expect(model.scroll_wheel(-11.0, -17.0, second_table_point, true, false),
+         "scroll input should route to the second independent table");
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").x == 0 && snapshot.tables.at("ledger").y == 0,
+         "scrolling the second table should not alter the first table");
+  expect(snapshot.tables.at("ledger-secondary").x >= 19 &&
+             snapshot.tables.at("ledger-secondary").y >= 32,
+         "the second table should retain its own two-axis offset");
+
+  model.update_metrics(stats);
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger-secondary").x >= 19 &&
+             snapshot.tables.at("ledger-secondary").y >= 32,
+         "an off-screen table offset should remain available to the next render");
+  model.update_metrics(multiple_metrics);
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger-secondary").x >= 19 &&
+             snapshot.tables.at("ledger-secondary").y >= 32,
+         "a temporarily off-screen table should retain its scroll position");
+
+  HtmlRenderStats reduced_metrics = multiple_metrics;
+  reduced_metrics.document_max_scroll_x = 7;
+  reduced_metrics.document_max_scroll_y = 9;
+  for (auto& region : reduced_metrics.table_scroll_regions) {
+    region.max_scroll_x = 5;
+    region.max_scroll_y = 6;
+  }
+  expect(model.command("end"),
+         "End should move the active table before resize clamping");
+  (void)model.scroll_wheel(-1000.0, 0.0, second_table_point, true, false);
+  model.update_metrics(reduced_metrics);
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger-secondary").x <= 5 &&
+             snapshot.tables.at("ledger-secondary").y <= 6,
+         "table offsets should clamp when resize reduces overflow");
+  expect(snapshot.document.x <= 7 && snapshot.document.y <= 9,
+         "document offsets should clamp when resize reduces overflow");
+
+  model.reset();
+  model.update_metrics(stats);
+  expect(model.scroll_wheel(
+             0.0, -static_cast<double>(table.max_scroll_y), table_point, true, false),
+         "table should scroll exactly to its lower boundary");
+  expect(model.command("pan_down"),
+         "keyboard movement at a table edge should propagate to the document");
+  snapshot = model.snapshot();
+  expect(snapshot.tables.at("ledger").y == table.max_scroll_y && snapshot.document.y > 0,
+         "keyboard edge propagation should preserve the table boundary and move the document");
+
+  model.reset();
+  model.update_metrics(stats);
+  (void)model.scroll_wheel(0.0, 0.0, document_point, true, false);
+  expect(model.command("page_down"), "Page Down should scroll by a viewport-sized step");
+  const int page_offset = model.document_offset_px().y;
+  expect(page_offset >= static_cast<int>(stats.document_viewport_rect.height * 0.8),
+         "Page Down should move close to one visible page");
+  expect(model.command("end"), "End should jump to the document boundary");
+  expect(model.document_offset_px().y == stats.document_max_scroll_y,
+         "End should land exactly at the maximum document offset");
+  expect(model.command("home"), "Home should return to the document origin");
+  expect(model.document_offset_px().y == 0,
+         "Home should land exactly at the document origin");
+
+  render_scroll_frames(document, model, viewport, stats);
+}
+
+} // namespace
+
+int main() {
+  try {
+    test_automatic_table_identity();
+    test_layout_metrics_and_scroll_model();
+    std::cout << "[PASS] automatic_table_identity\n";
+    std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";
+    return 0;
+  } catch (const std::exception& error) {
+    std::cerr << "[FAIL] " << error.what() << '\n';
+    return 1;
+  }
+}

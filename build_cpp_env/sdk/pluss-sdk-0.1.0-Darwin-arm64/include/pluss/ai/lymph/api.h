@@ -1,12 +1,14 @@
 #pragma once
 
 #include "pluss/ai/nodej/nodej.h"
+#include "pluss/ai/nodej/sparse_runtime.h"
 #include "pluss/codem/series_factory.h"
 #include "table/DataFrame.h"
 
 #include <algorithm>
 #include <bit>
 #include <cstdint>
+#include <initializer_list>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -29,7 +31,7 @@ template <class T>
 T resolve(StatusOr<T> value_or, std::string_view where = {}) {
   if (!value_or.ok()) {
     const std::string prefix = where.empty() ? std::string{} : (std::string(where) + ": ");
-    throw std::runtime_error(prefix + value_or.status().message);
+    ::pluss::throw_error(prefix + value_or.status().message);
   }
   return value_or.move_value();
 }
@@ -37,7 +39,22 @@ T resolve(StatusOr<T> value_or, std::string_view where = {}) {
 inline void resolve(Status status, std::string_view where = {}) {
   if (status.ok()) return;
   const std::string prefix = where.empty() ? std::string{} : (std::string(where) + ": ");
-  throw std::runtime_error(prefix + status.message);
+  ::pluss::throw_error(prefix + status.message);
+}
+
+[[nodiscard]] inline std::vector<std::int64_t> copy_feature_route(pluss::msharp::RangeView::Int feature_route) {
+  std::vector<std::int64_t> out{};
+  out.reserve(feature_route.size());
+  out.insert(out.end(), feature_route.begin(), feature_route.end());
+  return out;
+}
+
+template <class T>
+[[nodiscard]] inline std::vector<T> copy_range_values(pluss::msharp::RangeView::Of<T> values) {
+  std::vector<T> out{};
+  out.reserve(values.size());
+  out.insert(out.end(), values.begin(), values.end());
+  return out;
 }
 
 class WorkflowModel;
@@ -286,7 +303,7 @@ public:
   explicit SimpleImputer(SimpleImputerOptions options = {})
       : options_(options), core_(options) {}
 
-  SimpleImputer& features(std::initializer_list<std::string_view> names) {
+  SimpleImputer& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -295,6 +312,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  SimpleImputer& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   SimpleImputer& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -322,9 +342,9 @@ public:
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
-  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names);
   [[nodiscard]] static pluss::table::DataFrame merge_mapped_(const pluss::table::DataFrame& frame,
-                                                             const std::vector<std::string>& names,
+                                                             pluss::msharp::RangeView::Of<std::string> names,
                                                              const Series& mapped,
                                                              const char* where);
   void refresh_statistics_();
@@ -338,7 +358,7 @@ public:
   explicit StandardScaler(StandardScalerOptions options = {})
       : options_(options), core_(options) {}
 
-  StandardScaler& features(std::initializer_list<std::string_view> names) {
+  StandardScaler& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -347,6 +367,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  StandardScaler& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   StandardScaler& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -371,9 +394,9 @@ public:
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
-  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names);
   [[nodiscard]] static pluss::table::DataFrame merge_mapped_(const pluss::table::DataFrame& frame,
-                                                             const std::vector<std::string>& names,
+                                                             pluss::msharp::RangeView::Of<std::string> names,
                                                              const Series& mapped,
                                                              const char* where);
   void refresh_statistics_();
@@ -387,7 +410,7 @@ public:
   explicit OutlierIsolator(OutlierIsolatorOptions options = {})
       : options_(options), core_(options) {}
 
-  OutlierIsolator& features(std::initializer_list<std::string_view> names) {
+  OutlierIsolator& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -396,6 +419,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  OutlierIsolator& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   OutlierIsolator& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -429,7 +455,7 @@ public:
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
-  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names);
+  [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names);
   ::pluss::ai::nodej::prep::OutlierIsolator core_{};
   bool feature_names_pinned_{false};
   bool learned_{false};
@@ -441,7 +467,7 @@ private:
     explicit WrapperName(OptionsType options = {})                                               \
         : options_(options), core_(options) {}                                                   \
                                                                                                  \
-    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+    WrapperName& features(pluss::msharp::RangeView::Of<std::string_view> names) {               \
       feature_names_.clear();                                                                    \
       feature_names_.reserve(names.size());                                                      \
       for (auto name : names) {                                                                  \
@@ -450,6 +476,9 @@ private:
       }                                                                                          \
       feature_names_pinned_ = !feature_names_.empty();                                           \
       return *this;                                                                              \
+    }                                                                                            \
+    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+      return features(pluss::msharp::RangeView::Of<std::string_view>(names));                   \
     }                                                                                            \
                                                                                                  \
     WrapperName& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {}); \
@@ -475,10 +504,10 @@ private:
     [[nodiscard]] std::vector<std::string> resolved_feature_names_(                              \
         const pluss::table::DataFrame& frame,                                                    \
         const char* where) const;                                                                \
-    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names); \
+    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names); \
     [[nodiscard]] static pluss::table::DataFrame merge_mapped_(                                  \
         const pluss::table::DataFrame& frame,                                                    \
-        const std::vector<std::string>& names,                                                   \
+        pluss::msharp::RangeView::Of<std::string> names,                                                   \
         const Series& mapped,                                                                    \
         const char* where);                                                                      \
     void refresh_state_();                                                                       \
@@ -493,7 +522,7 @@ private:
     explicit WrapperName(OptionsType options = {})                                               \
         : options_(options), core_(options) {}                                                   \
                                                                                                  \
-    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+    WrapperName& features(pluss::msharp::RangeView::Of<std::string_view> names) {               \
       feature_names_.clear();                                                                    \
       feature_names_.reserve(names.size());                                                      \
       for (auto name : names) {                                                                  \
@@ -502,6 +531,9 @@ private:
       }                                                                                          \
       feature_names_pinned_ = !feature_names_.empty();                                           \
       return *this;                                                                              \
+    }                                                                                            \
+    WrapperName& features(std::initializer_list<std::string_view> names) {                      \
+      return features(pluss::msharp::RangeView::Of<std::string_view>(names));                   \
     }                                                                                            \
                                                                                                  \
     WrapperName& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {}); \
@@ -538,10 +570,10 @@ private:
     [[nodiscard]] std::vector<std::string> resolved_feature_names_(                              \
         const pluss::table::DataFrame& frame,                                                    \
         const char* where) const;                                                                \
-    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(const std::vector<std::string>& names); \
+    [[nodiscard]] static DataFrameBatchOptions batch_options_for_(pluss::msharp::RangeView::Of<std::string> names); \
     [[nodiscard]] static pluss::table::DataFrame merge_mapped_(                                  \
         const pluss::table::DataFrame& frame,                                                    \
-        const std::vector<std::string>& names,                                                   \
+        pluss::msharp::RangeView::Of<std::string> names,                                                   \
         const Series& mapped,                                                                    \
         const char* where);                                                                      \
     void refresh_state_();                                                                       \
@@ -585,7 +617,7 @@ public:
   explicit CategoryIndexer(CategoryIndexerOptions options = {})
       : options_(options) {}
 
-  CategoryIndexer& features(std::initializer_list<std::string_view> names) {
+  CategoryIndexer& features(pluss::msharp::RangeView::Of<std::string_view> names) {
     feature_names_.clear();
     feature_names_.reserve(names.size());
     for (auto name : names) {
@@ -594,6 +626,9 @@ public:
     }
     feature_names_pinned_ = !feature_names_.empty();
     return *this;
+  }
+  CategoryIndexer& features(std::initializer_list<std::string_view> names) {
+    return features(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
 
   CategoryIndexer& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
@@ -693,7 +728,7 @@ struct SeriesCompareReport {
   const Series a = lhs.to(pluss::pCPU, ScalarType::Float64).reshape({lhs.numel()});
   const Series b = rhs.to(pluss::pCPU, ScalarType::Float64).reshape({rhs.numel()});
   if (a.numel() != b.numel()) {
-    throw std::runtime_error("compare_series: shape mismatch.");
+    ::pluss::throw_error("compare_series: shape mismatch.");
   }
   const Series abs = a.sub(b).abs();
   return SeriesCompareReport{
@@ -741,6 +776,7 @@ struct CrossValidationOptions {
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
   bool stratified = false;
+  Series groups = Series::undefined();
   bool reliability_defaults = true;
   bool shuffle = true;
   std::uint64_t random_state = 0;
@@ -752,6 +788,127 @@ struct CrossValidationReport {
   MetricReport mean{};
   MetricReport stdev{};
 };
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  SplitOptions split{};
+  split.plan = cv.plan;
+  split.holdout_fraction = cv.holdout_fraction;
+  split.folds = cv.folds;
+  split.stratified = cv.stratified;
+  split.groups = cv.groups;
+  split.reliability_defaults = cv.reliability_defaults;
+  split.shuffle = cv.shuffle;
+  split.random.seed = cv.random_state;
+  split.random.deterministic = cv.deterministic;
+  return resolve(::pluss::ai::nodej::cross_scores(spec, batch, metric, split, train_options, assess_options),
+                 "cross_validate_scores");
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  SplitOptions split{};
+  split.plan = cv.plan;
+  split.holdout_fraction = cv.holdout_fraction;
+  split.folds = cv.folds;
+  split.stratified = cv.stratified;
+  split.groups = cv.groups;
+  split.reliability_defaults = cv.reliability_defaults;
+  split.shuffle = cv.shuffle;
+  split.random.seed = cv.random_state;
+  split.random.deterministic = cv.deterministic;
+  return resolve(::pluss::ai::nodej::cross_score(spec, batch, metric, split, train_options, assess_options),
+                 "cross_validate_score");
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& frame,
+                                                  const DataFrameBatchOptions& data_options,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_scores.labeled_batch_from_dataframe");
+  return cross_validate_scores(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& frame,
+                                                 const DataFrameBatchOptions& data_options,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const LabeledBatch batch =
+      resolve(labeled_batch_from_dataframe(frame, data_options), "cross_validate_score.labeled_batch_from_dataframe");
+  return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
+                                                     const Series& predicted_labels,
+                                                     const ConfusionOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options), "confusion_matrix");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
+                                                     const Series& predicted_labels,
+                                                     pluss::msharp::RangeView::Of<double> label_order,
+                                                     ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, label_order, normalize),
+                 "confusion_matrix");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
+                                                     const Series& predicted_labels,
+                                                     std::initializer_list<double> label_order,
+                                                     ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return confusion_matrix(truth_labels,
+                          predicted_labels,
+                          pluss::msharp::RangeView::Of<double>(label_order),
+                          normalize);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_report(truth_labels, predicted_labels, options),
+                 "classification_summary");
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        pluss::msharp::RangeView::Of<double> label_order,
+                                                        double zero_division = 0.0) {
+  return resolve(::pluss::ai::nodej::classification_report(truth_labels, predicted_labels, label_order, zero_division),
+                 "classification_summary");
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
+                                                        const Series& predicted_labels,
+                                                        std::initializer_list<double> label_order,
+                                                        double zero_division = 0.0) {
+  return classification_summary(truth_labels,
+                                predicted_labels,
+                                pluss::msharp::RangeView::Of<double>(label_order),
+                                zero_division);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const Series& truth_labels,
+                                                         const Series& predicted_labels,
+                                                         const std::vector<MetricKind>& metrics = {},
+                                                         const ClassReportOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::classification_metrics(truth_labels, predicted_labels, metrics, options),
+                 "classification_metric_series");
+}
 
 [[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
   SplitOptions split{};
@@ -768,6 +925,7 @@ struct CrossValidationReport {
   split.holdout_fraction = options.holdout_fraction;
   split.folds = options.folds;
   split.stratified = options.stratified;
+  split.groups = options.groups;
   split.reliability_defaults = options.reliability_defaults;
   split.shuffle = options.shuffle;
   split.random.seed = options.random_state;
@@ -775,13 +933,41 @@ struct CrossValidationReport {
   return split;
 }
 
+[[nodiscard]] inline TrainOptions calibrate_with_platt(TrainOptions options = {},
+                                                       std::int64_t calibration_iterations = 400,
+                                                       double calibration_tolerance = 1e-6) {
+  options.calibration = ScoreCalibration::Platt;
+  options.calibration_iterations = calibration_iterations;
+  options.calibration_tolerance = calibration_tolerance;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_isotonic(TrainOptions options = {}) {
+  options.calibration = ScoreCalibration::Isotonic;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions calibrate_with_temperature(TrainOptions options = {},
+                                                             std::int64_t calibration_iterations = 400,
+                                                             double calibration_tolerance = 1e-6) {
+  options.calibration = ScoreCalibration::Temperature;
+  options.calibration_iterations = calibration_iterations;
+  options.calibration_tolerance = calibration_tolerance;
+  return options;
+}
+
+[[nodiscard]] inline TrainOptions without_calibration(TrainOptions options = {}) {
+  options.calibration = ScoreCalibration::None;
+  return options;
+}
+
 [[nodiscard]] inline Series metric_scalar_(double value) {
   return pluss::make_series(std::vector<double>{value}, {1}, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
 }
 
-[[nodiscard]] inline MetricReport metric_report_from_series_(const Series& metrics, const std::vector<MetricKind>& requested) {
+[[nodiscard]] inline MetricReport metric_report_from_series_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
   MetricReport report{};
-  report.requested = requested;
+  report.requested = copy_range_values(requested);
   report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
   const std::vector<double> values = report.values.to_vec<double>();
 
@@ -818,14 +1004,14 @@ struct CrossValidationReport {
     const char* where) {
   const auto names = frame.series_features().feature_names();
   if (names.empty()) {
-    throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+    ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
   }
   return names;
 }
 
-[[nodiscard]] inline DataFrameBatchOptions cross_validate_default_data_options_(const std::vector<std::string>& names) {
+[[nodiscard]] inline DataFrameBatchOptions cross_validate_default_data_options_(pluss::msharp::RangeView::Of<std::string> names) {
   DataFrameBatchOptions options{};
-  options.feature_names = names;
+  options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
   options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
@@ -834,7 +1020,7 @@ struct CrossValidationReport {
 
 [[nodiscard]] inline LabeledBatch cross_validate_labeled_from_xy_(const pluss::table::DataFrame& x,
                                                                   const Series& y,
-                                                                  const std::vector<std::string>& feature_names,
+                                                                  pluss::msharp::RangeView::Of<std::string> feature_names,
                                                                   const char* where) {
   const auto x_batch = resolve(feature_batch_from_dataframe(x, cross_validate_default_data_options_(feature_names)),
                                std::string(where) + ".feature_batch_from_dataframe");
@@ -894,6 +1080,50 @@ struct CrossValidationReport {
   return cross_validate(spec, x, as_stratify_series(y), cv, train_options, assess_options);
 }
 
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate_scores(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate_scores(x,y)");
+  return cross_validate_scores(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "cross_validate_score(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "cross_validate_score(x,y)");
+  return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
+                                                  const pluss::table::DataFrame& x,
+                                                  const pluss::table::Thread& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  return cross_validate_scores(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
+                                                 const pluss::table::DataFrame& x,
+                                                 const pluss::table::Thread& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  return cross_validate_score(spec, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
   if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
   return thread.cast(pluss::table::ThreadCastTarget::Series, ScalarType::Float64).as_series();
@@ -948,6 +1178,601 @@ struct CrossValidationReport {
   return std::pair<pluss::table::DataFrame, pluss::table::DataFrame>(std::move(split.train_set), std::move(split.test_set));
 }
 
+namespace sparse {
+
+using Triplet = ::pluss::ai::nodej::SparseTripletMatrix;
+using Csr = ::pluss::ai::nodej::SparseCsrMatrix;
+using FoldReport = ::pluss::ai::nodej::SparseFoldReport;
+using CrossReport = ::pluss::ai::nodej::SparseCrossReport;
+using ObjectivePolicy = ::pluss::ai::nodej::SparseObjectivePolicy;
+using TuneTrial = ::pluss::ai::nodej::SparseTuneTrial;
+using TuneReport = ::pluss::ai::nodej::SparseTuneReport;
+
+[[nodiscard]] inline Triplet make_triplet(std::int64_t rows,
+                                          std::int64_t cols,
+                                          pluss::msharp::RangeView::Int row_indices,
+                                          pluss::msharp::RangeView::Int column_indices,
+                                          pluss::msharp::RangeView::Of<double> values) {
+  return resolve(::pluss::ai::nodej::make_sparse_triplet(rows, cols, row_indices, column_indices, values),
+                 "sparse::make_triplet");
+}
+
+[[nodiscard]] inline Triplet make_triplet(std::int64_t rows,
+                                          std::int64_t cols,
+                                          std::initializer_list<std::int64_t> row_indices,
+                                          std::initializer_list<std::int64_t> column_indices,
+                                          std::initializer_list<double> values) {
+  return make_triplet(rows,
+                      cols,
+                      pluss::msharp::RangeView::Int(row_indices),
+                      pluss::msharp::RangeView::Int(column_indices),
+                      pluss::msharp::RangeView::Of<double>(values));
+}
+
+[[nodiscard]] inline Csr to_csr(const Triplet& sparse) {
+  return resolve(::pluss::ai::nodej::sparse_triplet_to_csr(sparse), "sparse::to_csr");
+}
+
+class BinaryLinearModel final {
+public:
+  [[nodiscard]] bool trained() const noexcept { return core_.trained(); }
+  [[nodiscard]] std::int64_t feature_count() const noexcept { return core_.feature_count(); }
+
+  BinaryLinearModel& learn_(const Triplet& x,
+                            const Series& y,
+                            const TrainOptions& options = {},
+                            const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::BinaryLinearModel.learn_");
+    return *this;
+  }
+
+  BinaryLinearModel& learn_(const Csr& x,
+                            const Series& y,
+                            const TrainOptions& options = {},
+                            const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::BinaryLinearModel.learn_");
+    return *this;
+  }
+
+  [[nodiscard]] Series infer_scores(const Triplet& x) const {
+    return resolve(core_.infer_scores(x), "sparse::BinaryLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer_scores(const Csr& x) const {
+    return resolve(core_.infer_scores(x), "sparse::BinaryLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer(const Triplet& x, const InferOptions& options = {}) const {
+    return resolve(core_.infer(x, options), "sparse::BinaryLinearModel.infer");
+  }
+  [[nodiscard]] Series infer(const Csr& x, const InferOptions& options = {}) const {
+    return resolve(core_.infer(x, options), "sparse::BinaryLinearModel.infer");
+  }
+  [[nodiscard]] Series assess_series(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::BinaryLinearModel.assess_series");
+  }
+  [[nodiscard]] Series assess_series(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::BinaryLinearModel.assess_series");
+  }
+  [[nodiscard]] MetricReport assess(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+  [[nodiscard]] MetricReport assess(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+
+  [[nodiscard]] std::vector<Series> dump_state() const { return resolve(core_.dump_state(), "sparse::BinaryLinearModel.dump_state"); }
+  BinaryLinearModel& load_state_(pluss::msharp::RangeView::Series state) {
+    resolve(core_.load_state(state), "sparse::BinaryLinearModel.load_state_");
+    return *this;
+  }
+
+private:
+  ::pluss::ai::nodej::SparseLinearBinaryClassifier core_{};
+};
+
+class LinearRegressorModel final {
+public:
+  [[nodiscard]] bool trained() const noexcept { return core_.trained(); }
+  [[nodiscard]] std::int64_t feature_count() const noexcept { return core_.feature_count(); }
+
+  LinearRegressorModel& learn_(const Triplet& x,
+                               const Series& y,
+                               const TrainOptions& options = {},
+                               const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::LinearRegressorModel.learn_");
+    return *this;
+  }
+
+  LinearRegressorModel& learn_(const Csr& x,
+                               const Series& y,
+                               const TrainOptions& options = {},
+                               const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::LinearRegressorModel.learn_");
+    return *this;
+  }
+
+  [[nodiscard]] Series infer(const Triplet& x) const {
+    return resolve(core_.infer(x), "sparse::LinearRegressorModel.infer");
+  }
+  [[nodiscard]] Series infer(const Csr& x) const {
+    return resolve(core_.infer(x), "sparse::LinearRegressorModel.infer");
+  }
+  [[nodiscard]] Series assess_series(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::LinearRegressorModel.assess_series");
+  }
+  [[nodiscard]] Series assess_series(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::LinearRegressorModel.assess_series");
+  }
+  [[nodiscard]] MetricReport assess(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Regression, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+  [[nodiscard]] MetricReport assess(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Regression, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+
+  [[nodiscard]] std::vector<Series> dump_state() const {
+    return resolve(core_.dump_state(), "sparse::LinearRegressorModel.dump_state");
+  }
+  LinearRegressorModel& load_state_(pluss::msharp::RangeView::Series state) {
+    resolve(core_.load_state(state), "sparse::LinearRegressorModel.load_state_");
+    return *this;
+  }
+
+private:
+  ::pluss::ai::nodej::SparseLinearRegressor core_{};
+};
+
+class MultiLinearModel final {
+public:
+  [[nodiscard]] bool trained() const noexcept { return core_.trained(); }
+  [[nodiscard]] std::int64_t feature_count() const noexcept { return core_.feature_count(); }
+  [[nodiscard]] std::int64_t class_count() const noexcept { return core_.class_count(); }
+
+  MultiLinearModel& learn_(const Triplet& x,
+                           const Series& y,
+                           const TrainOptions& options = {},
+                           const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::MultiLinearModel.learn_");
+    return *this;
+  }
+
+  MultiLinearModel& learn_(const Csr& x,
+                           const Series& y,
+                           const TrainOptions& options = {},
+                           const LinearFamilyOptions& linear_options = {}) {
+    resolve(core_.learn(x, y, options, linear_options), "sparse::MultiLinearModel.learn_");
+    return *this;
+  }
+
+  [[nodiscard]] Series infer_scores(const Triplet& x) const {
+    return resolve(core_.infer_scores(x), "sparse::MultiLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer_scores(const Csr& x) const {
+    return resolve(core_.infer_scores(x), "sparse::MultiLinearModel.infer_scores");
+  }
+  [[nodiscard]] Series infer(const Triplet& x) const {
+    return resolve(core_.infer(x), "sparse::MultiLinearModel.infer");
+  }
+  [[nodiscard]] Series infer(const Csr& x) const {
+    return resolve(core_.infer(x), "sparse::MultiLinearModel.infer");
+  }
+  [[nodiscard]] Series assess_series(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::MultiLinearModel.assess_series");
+  }
+  [[nodiscard]] Series assess_series(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    return resolve(core_.assess(x, y, options), "sparse::MultiLinearModel.assess_series");
+  }
+  [[nodiscard]] MetricReport assess(const Triplet& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+  [[nodiscard]] MetricReport assess(const Csr& x, const Series& y, const AssessOptions& options = {}) const {
+    const auto metrics = default_assess_metrics_(TaskKind::Classification, options);
+    return metric_report_from_series_(assess_series(x, y, options), metrics);
+  }
+
+  [[nodiscard]] std::vector<Series> dump_state() const {
+    return resolve(core_.dump_state(), "sparse::MultiLinearModel.dump_state");
+  }
+  MultiLinearModel& load_state_(pluss::msharp::RangeView::Series state) {
+    resolve(core_.load_state(state), "sparse::MultiLinearModel.load_state_");
+    return *this;
+  }
+
+private:
+  ::pluss::ai::nodej::SparseLinearMultiClassifier core_{};
+};
+
+[[nodiscard]] inline CrossReport cross_assess_binary(const Triplet& x,
+                                                     const Series& y,
+                                                     const SplitOptions& split = {},
+                                                     const TrainOptions& train_options = {},
+                                                     const AssessOptions& assess_options = {},
+                                                     const LinearFamilyOptions& linear_options = {}) {
+  return resolve(::pluss::ai::nodej::cross_assess_sparse_binary(x, y, split, train_options, assess_options, linear_options),
+                 "sparse::cross_assess_binary");
+}
+
+[[nodiscard]] inline CrossReport cross_assess_regression(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::cross_assess_sparse_regression(x, y, split, train_options, assess_options, linear_options),
+      "sparse::cross_assess_regression");
+}
+
+[[nodiscard]] inline CrossReport cross_assess_multiclass(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::cross_assess_sparse_multiclass(x, y, split, train_options, assess_options, linear_options),
+                 "sparse::cross_assess_multiclass");
+}
+
+[[nodiscard]] inline CrossReport assess_binary_folds(const Triplet& x,
+                                                     const Series& y,
+                                                     const SplitOptions& split = {},
+                                                     const TrainOptions& train_options = {},
+                                                     const AssessOptions& assess_options = {},
+                                                     const LinearFamilyOptions& linear_options = {}) {
+  return resolve(::pluss::ai::nodej::assess_sparse_binary_folds(x, y, split, train_options, assess_options, linear_options),
+                 "sparse::assess_binary_folds");
+}
+
+[[nodiscard]] inline CrossReport assess_regression_folds(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::assess_sparse_regression_folds(x, y, split, train_options, assess_options, linear_options),
+      "sparse::assess_regression_folds");
+}
+
+[[nodiscard]] inline CrossReport assess_multiclass_folds(const Triplet& x,
+                                                         const Series& y,
+                                                         const SplitOptions& split = {},
+                                                         const TrainOptions& train_options = {},
+                                                         const AssessOptions& assess_options = {},
+                                                         const LinearFamilyOptions& linear_options = {}) {
+  return resolve(
+      ::pluss::ai::nodej::assess_sparse_multiclass_folds(x, y, split, train_options, assess_options, linear_options),
+      "sparse::assess_multiclass_folds");
+}
+
+[[nodiscard]] inline TuneReport sweep_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                             const Triplet& x,
+                                             const Series& y,
+                                             const SplitOptions& split = {},
+                                             const TrainOptions& train_options = {},
+                                             const AssessOptions& assess_options = {},
+                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::sweep_sparse_binary(candidates,
+                                                         x,
+                                                         y,
+                                                         split,
+                                                         train_options,
+                                                         assess_options,
+                                                         objective_metric,
+                                                         objective_policy),
+                 "sparse::sweep_binary");
+}
+
+[[nodiscard]] inline TuneReport sweep_binary(std::initializer_list<LinearFamilyOptions> candidates,
+                                             const Triplet& x,
+                                             const Series& y,
+                                             const SplitOptions& split = {},
+                                             const TrainOptions& train_options = {},
+                                             const AssessOptions& assess_options = {},
+                                             MetricKind objective_metric = MetricKind::Accuracy,
+                                             ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return sweep_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                      x,
+                      y,
+                      split,
+                      train_options,
+                      assess_options,
+                      objective_metric,
+                      objective_policy);
+}
+
+[[nodiscard]] inline TuneReport sweep_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Mse,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::sweep_sparse_regression(candidates,
+                                                             x,
+                                                             y,
+                                                             split,
+                                                             train_options,
+                                                             assess_options,
+                                                             objective_metric,
+                                                             objective_policy),
+                 "sparse::sweep_regression");
+}
+
+[[nodiscard]] inline TuneReport sweep_regression(std::initializer_list<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Mse,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return sweep_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                          x,
+                          y,
+                          split,
+                          train_options,
+                          assess_options,
+                          objective_metric,
+                          objective_policy);
+}
+
+[[nodiscard]] inline TuneReport sweep_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::sweep_sparse_multiclass(candidates,
+                                                             x,
+                                                             y,
+                                                             split,
+                                                             train_options,
+                                                             assess_options,
+                                                             objective_metric,
+                                                             objective_policy),
+                 "sparse::sweep_multiclass");
+}
+
+[[nodiscard]] inline TuneReport sweep_multiclass(std::initializer_list<LinearFamilyOptions> candidates,
+                                                 const Triplet& x,
+                                                 const Series& y,
+                                                 const SplitOptions& split = {},
+                                                 const TrainOptions& train_options = {},
+                                                 const AssessOptions& assess_options = {},
+                                                 MetricKind objective_metric = MetricKind::Accuracy,
+                                                 ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return sweep_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                          x,
+                          y,
+                          split,
+                          train_options,
+                          assess_options,
+                          objective_metric,
+                          objective_policy);
+}
+
+[[nodiscard]] inline TuneReport tune_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                            const Triplet& x,
+                                            const Series& y,
+                                            const SplitOptions& split = {},
+                                            const TrainOptions& train_options = {},
+                                            const AssessOptions& assess_options = {},
+                                            MetricKind objective_metric = MetricKind::Accuracy,
+                                            ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::tune_sparse_binary(candidates,
+                                                        x,
+                                                        y,
+                                                        split,
+                                                        train_options,
+                                                        assess_options,
+                                                        objective_metric,
+                                                        objective_policy),
+                 "sparse::tune_binary");
+}
+
+[[nodiscard]] inline TuneReport tune_binary(std::initializer_list<LinearFamilyOptions> candidates,
+                                            const Triplet& x,
+                                            const Series& y,
+                                            const SplitOptions& split = {},
+                                            const TrainOptions& train_options = {},
+                                            const AssessOptions& assess_options = {},
+                                            MetricKind objective_metric = MetricKind::Accuracy,
+                                            ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return tune_binary(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                     x,
+                     y,
+                     split,
+                     train_options,
+                     assess_options,
+                     objective_metric,
+                     objective_policy);
+}
+
+[[nodiscard]] inline TuneReport tune_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Mse,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::tune_sparse_regression(candidates,
+                                                            x,
+                                                            y,
+                                                            split,
+                                                            train_options,
+                                                            assess_options,
+                                                            objective_metric,
+                                                            objective_policy),
+                 "sparse::tune_regression");
+}
+
+[[nodiscard]] inline TuneReport tune_regression(std::initializer_list<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Mse,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return tune_regression(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                         x,
+                         y,
+                         split,
+                         train_options,
+                         assess_options,
+                         objective_metric,
+                         objective_policy);
+}
+
+[[nodiscard]] inline TuneReport tune_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return resolve(::pluss::ai::nodej::tune_sparse_multiclass(candidates,
+                                                            x,
+                                                            y,
+                                                            split,
+                                                            train_options,
+                                                            assess_options,
+                                                            objective_metric,
+                                                            objective_policy),
+                 "sparse::tune_multiclass");
+}
+
+[[nodiscard]] inline TuneReport tune_multiclass(std::initializer_list<LinearFamilyOptions> candidates,
+                                                const Triplet& x,
+                                                const Series& y,
+                                                const SplitOptions& split = {},
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                ObjectivePolicy objective_policy = ObjectivePolicy::Auto) {
+  return tune_multiclass(pluss::msharp::RangeView::Of<LinearFamilyOptions>(candidates),
+                         x,
+                         y,
+                         split,
+                         train_options,
+                         assess_options,
+                         objective_metric,
+                         objective_policy);
+}
+
+[[nodiscard]] inline bool has_best_trial(const TuneReport& report) {
+  return report.best_index >= 0 && report.best_index < static_cast<std::int64_t>(report.trials.size());
+}
+
+[[nodiscard]] inline const TuneTrial& best_trial(const TuneReport& report) {
+  if (!has_best_trial(report)) {
+    ::pluss::throw_error("sparse::best_trial requested but report has no best trial.");
+  }
+  return report.trials[static_cast<std::size_t>(report.best_index)];
+}
+
+[[nodiscard]] inline Series objective_series(const TuneReport& report) {
+  std::vector<double> values{};
+  values.reserve(report.trials.size());
+  for (const auto& trial : report.trials) values.push_back(trial.objective);
+  return pluss::make_series(std::move(values),
+                            {static_cast<std::int64_t>(report.trials.size())},
+                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+}
+
+[[nodiscard]] inline Series objective_rank_series(const TuneReport& report) {
+  std::vector<double> values{};
+  values.reserve(report.objective_rank.size());
+  for (const auto rank : report.objective_rank) values.push_back(static_cast<double>(rank));
+  return pluss::make_series(std::move(values),
+                            {static_cast<std::int64_t>(report.objective_rank.size())},
+                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+}
+
+} // namespace sparse
+
+namespace inspection {
+
+[[nodiscard]] inline PermuteImpactReport permutation_impact(const ModelSpec& spec,
+                                                            const LabeledBatch& train,
+                                                            const LabeledBatch& eval,
+                                                            MetricKind metric = MetricKind::Accuracy,
+                                                            std::int64_t repeats = 5,
+                                                            RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::permutation_impact(spec, train, eval, metric, repeats, random),
+                 "inspection::permutation_impact");
+}
+
+[[nodiscard]] inline DependenceCurve dependence_curve(const ModelSpec& spec,
+                                                      const LabeledBatch& train,
+                                                      const FeatureBatch& eval,
+                                                      std::int64_t feature_index,
+                                                      std::int64_t grid_points = 32) {
+  return resolve(::pluss::ai::nodej::dependence_curve(spec, train, eval, feature_index, grid_points),
+                 "inspection::dependence_curve");
+}
+
+[[nodiscard]] inline DependenceSurface dependence_surface(const ModelSpec& spec,
+                                                          const LabeledBatch& train,
+                                                          const FeatureBatch& eval,
+                                                          std::int64_t feature_a,
+                                                          std::int64_t feature_b,
+                                                          std::int64_t grid_points_a = 16,
+                                                          std::int64_t grid_points_b = 16) {
+  return resolve(::pluss::ai::nodej::dependence_surface(spec,
+                                                        train,
+                                                        eval,
+                                                        feature_a,
+                                                        feature_b,
+                                                        grid_points_a,
+                                                        grid_points_b),
+                 "inspection::dependence_surface");
+}
+
+} // namespace inspection
+
+namespace feature {
+
+using VariancePrune = ::pluss::ai::nodej::VariancePruneResult;
+using ScoreRankOptions = ::pluss::ai::nodej::ScoreRankOptions;
+
+[[nodiscard]] inline FeatureBatch take_features(const FeatureBatch& batch,
+                                                pluss::msharp::RangeView::Int feature_indices) {
+  return resolve(::pluss::ai::nodej::take_features(batch, feature_indices), "feature::take_features");
+}
+
+[[nodiscard]] inline FeatureBatch take_features(const FeatureBatch& batch,
+                                                std::initializer_list<std::int64_t> feature_indices) {
+  return resolve(::pluss::ai::nodej::take_features(batch, pluss::msharp::RangeView::Int(feature_indices)),
+                 "feature::take_features");
+}
+
+[[nodiscard]] inline VariancePrune variance_prune(const FeatureBatch& batch, double variance_floor = 1e-12) {
+  return resolve(::pluss::ai::nodej::variance_prune(batch, variance_floor), "feature::variance_prune");
+}
+
+[[nodiscard]] inline Series f_score_rank(const LabeledBatch& batch, const ScoreRankOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::f_score_rank(batch, options), "feature::f_score_rank");
+}
+
+[[nodiscard]] inline Series f_regression_rank(const LabeledBatch& batch, const ScoreRankOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::f_regression_rank(batch, options), "feature::f_regression_rank");
+}
+
+} // namespace feature
+
 class WorkflowModel final {
 public:
   explicit WorkflowModel(const ModelSpec& spec)
@@ -972,84 +1797,115 @@ public:
   [[nodiscard]] TaskKind task_kind() const noexcept { return workflow_.task_kind(); }
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const noexcept { return workflow_.model_spec(); }
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const noexcept { return workflow_.transform_specs(); }
-
-  WorkflowModel& standard_scaler(prep::StandardScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_standard_scaler(options, std::move(feature_route)), "standard_scaler");
+  [[nodiscard]] FlowGraphInfo graph_info() const { return resolve(workflow_.graph_info(), "graph_info"); }
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const { return workflow_.nested_param_keys(); }
+  [[nodiscard]] double nested_param(std::string_view path) const {
+    return resolve(workflow_.nested_param(path), "nested_param");
+  }
+  WorkflowModel& set_nested_param_(std::string_view path, double value) {
+    resolve(workflow_.set_nested_param(path, value), "set_nested_param_");
+    return *this;
+  }
+  [[nodiscard]] std::string flow_summary() const { return workflow_.flow_summary(); }
+  [[nodiscard]] std::string save_blueprint() const {
+    return resolve(workflow_.save_blueprint(), "save_blueprint");
+  }
+  WorkflowModel& load_blueprint_(std::string_view text) {
+    resolve(workflow_.load_blueprint(text), "load_blueprint_");
+    refresh_linear_summary_();
+    return *this;
+  }
+  WorkflowModel& set_stage_key_(std::int64_t stage_index, std::string stage_key) {
+    resolve(workflow_.set_stage_key(stage_index, std::move(stage_key)), "set_stage_key_");
+    return *this;
+  }
+  WorkflowModel& set_stage_route_(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route) {
+    resolve(workflow_.set_stage_route(stage_index, feature_route), "set_stage_route_");
+    return *this;
+  }
+  WorkflowModel& set_stage_remainder_(std::int64_t stage_index, RouteRemainderPolicy remainder) {
+    resolve(workflow_.set_stage_remainder(stage_index, remainder), "set_stage_remainder_");
     return *this;
   }
 
-  WorkflowModel& minmax_scaler(prep::MinMaxScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_minmax_scaler(options, std::move(feature_route)), "minmax_scaler");
+  WorkflowModel& standard_scaler(prep::StandardScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_standard_scaler(options, feature_route), "standard_scaler");
     return *this;
   }
 
-  WorkflowModel& robust_scaler(prep::RobustScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_robust_scaler(options, std::move(feature_route)), "robust_scaler");
+  WorkflowModel& minmax_scaler(prep::MinMaxScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_minmax_scaler(options, feature_route), "minmax_scaler");
     return *this;
   }
 
-  WorkflowModel& simple_imputer(prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_simple_imputer(options, std::move(feature_route)), "simple_imputer");
+  WorkflowModel& robust_scaler(prep::RobustScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_robust_scaler(options, feature_route), "robust_scaler");
     return *this;
   }
 
-  WorkflowModel& neighbor_imputer(prep::NeighborImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_neighbor_imputer(options, std::move(feature_route)), "neighbor_imputer");
+  WorkflowModel& simple_imputer(prep::SimpleImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_simple_imputer(options, feature_route), "simple_imputer");
     return *this;
   }
 
-  WorkflowModel& iterative_imputer(prep::IterativeImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_iterative_imputer(options, std::move(feature_route)), "iterative_imputer");
+  WorkflowModel& neighbor_imputer(prep::NeighborImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_neighbor_imputer(options, feature_route), "neighbor_imputer");
     return *this;
   }
 
-  WorkflowModel& one_hot_encoder(prep::OneHotEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_one_hot_encoder(options, std::move(feature_route)), "one_hot_encoder");
+  WorkflowModel& iterative_imputer(prep::IterativeImputerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_iterative_imputer(options, feature_route), "iterative_imputer");
     return *this;
   }
 
-  WorkflowModel& frequency_encoder(prep::FrequencyEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_frequency_encoder(options, std::move(feature_route)), "frequency_encoder");
+  WorkflowModel& one_hot_encoder(prep::OneHotEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_one_hot_encoder(options, feature_route), "one_hot_encoder");
     return *this;
   }
 
-  WorkflowModel& ordinal_encoder(prep::OrdinalEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_ordinal_encoder(options, std::move(feature_route)), "ordinal_encoder");
+  WorkflowModel& frequency_encoder(prep::FrequencyEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_frequency_encoder(options, feature_route), "frequency_encoder");
     return *this;
   }
 
-  WorkflowModel& label_encoder(prep::LabelEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_label_encoder(options, std::move(feature_route)), "label_encoder");
+  WorkflowModel& ordinal_encoder(prep::OrdinalEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_ordinal_encoder(options, feature_route), "ordinal_encoder");
     return *this;
   }
 
-  WorkflowModel& vector_normalizer(prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_vector_normalizer(options, std::move(feature_route)), "vector_normalizer");
+  WorkflowModel& label_encoder(prep::LabelEncoderOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_label_encoder(options, feature_route), "label_encoder");
     return *this;
   }
 
-  WorkflowModel& maxabs_scaler(prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_maxabs_scaler(options, std::move(feature_route)), "maxabs_scaler");
+  WorkflowModel& vector_normalizer(prep::VectorNormalizerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_vector_normalizer(options, feature_route), "vector_normalizer");
     return *this;
   }
 
-  WorkflowModel& quantile_map(prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_quantile_map(options, std::move(feature_route)), "quantile_map");
+  WorkflowModel& maxabs_scaler(prep::MaxAbsScalerOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_maxabs_scaler(options, feature_route), "maxabs_scaler");
     return *this;
   }
 
-  WorkflowModel& power_map(prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_power_map(options, std::move(feature_route)), "power_map");
+  WorkflowModel& quantile_map(prep::QuantileMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_quantile_map(options, feature_route), "quantile_map");
     return *this;
   }
 
-  WorkflowModel& threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_threshold_binarizer(options, std::move(feature_route)), "threshold_binarizer");
+  WorkflowModel& power_map(prep::PowerMapOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_power_map(options, feature_route), "power_map");
     return *this;
   }
 
-  WorkflowModel& polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    resolve(workflow_.add_polynomial_lift(options, std::move(feature_route)), "polynomial_lift");
+  WorkflowModel& threshold_binarizer(prep::ThresholdBinarizerOptions options = {},
+                                     pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_threshold_binarizer(options, feature_route), "threshold_binarizer");
+    return *this;
+  }
+
+  WorkflowModel& polynomial_lift(prep::PolynomialLiftOptions options = {}, pluss::msharp::RangeView::Int feature_route = {}) {
+    resolve(workflow_.add_polynomial_lift(options, feature_route), "polynomial_lift");
     return *this;
   }
 
@@ -1243,30 +2099,78 @@ public:
     return as_metric_report_(assess_series(x, y, options), resolved_metrics_(options));
   }
 
+  [[nodiscard]] PermuteImpactReport permutation_impact(const LabeledBatch& train,
+                                                        const LabeledBatch& eval,
+                                                        MetricKind metric = MetricKind::Accuracy,
+                                                        std::int64_t repeats = 5,
+                                                        RandomState random = {}) const {
+    if (!workflow_.model_spec().has_value()) {
+      ::pluss::throw_error("WorkflowModel::permutation_impact requires a model specification.");
+    }
+    return ::pluss::ai::lymph::inspection::permutation_impact(*workflow_.model_spec(),
+                                                               train,
+                                                               eval,
+                                                               metric,
+                                                               repeats,
+                                                               random);
+  }
+
+  [[nodiscard]] DependenceCurve dependence_curve(const LabeledBatch& train,
+                                                 const FeatureBatch& eval,
+                                                 std::int64_t feature_index,
+                                                 std::int64_t grid_points = 32) const {
+    if (!workflow_.model_spec().has_value()) {
+      ::pluss::throw_error("WorkflowModel::dependence_curve requires a model specification.");
+    }
+    return ::pluss::ai::lymph::inspection::dependence_curve(*workflow_.model_spec(),
+                                                             train,
+                                                             eval,
+                                                             feature_index,
+                                                             grid_points);
+  }
+
+  [[nodiscard]] DependenceSurface dependence_surface(const LabeledBatch& train,
+                                                     const FeatureBatch& eval,
+                                                     std::int64_t feature_a,
+                                                     std::int64_t feature_b,
+                                                     std::int64_t grid_points_a = 16,
+                                                     std::int64_t grid_points_b = 16) const {
+    if (!workflow_.model_spec().has_value()) {
+      ::pluss::throw_error("WorkflowModel::dependence_surface requires a model specification.");
+    }
+    return ::pluss::ai::lymph::inspection::dependence_surface(*workflow_.model_spec(),
+                                                               train,
+                                                               eval,
+                                                               feature_a,
+                                                               feature_b,
+                                                               grid_points_a,
+                                                               grid_points_b);
+  }
+
   [[nodiscard]] LinearParameters linear_parameters() const {
     const auto& spec_opt = workflow_.model_spec();
     if (!spec_opt.has_value()) {
-      throw std::runtime_error("linear_parameters: workflow has no model specification.");
+      ::pluss::throw_error("linear_parameters: workflow has no model specification.");
     }
     if (spec_opt->family != ModelFamily::Linear) {
-      throw std::runtime_error("linear_parameters: only available for linear models.");
+      ::pluss::throw_error("linear_parameters: only available for linear models.");
     }
 
     const auto* linear_options = std::get_if<LinearFamilyOptions>(&spec_opt->options);
     if (linear_options == nullptr) {
-      throw std::runtime_error("linear_parameters: model options do not contain LinearFamilyOptions.");
+      ::pluss::throw_error("linear_parameters: model options do not contain LinearFamilyOptions.");
     }
     const bool fit_intercept = linear_options->fit_intercept;
 
     const std::vector<Series> state = resolve(workflow_.dump_model_state(), "dump_model_state");
     if (state.size() < 2 || !state[1].defined()) {
-      throw std::runtime_error("linear_parameters: missing coefficient state.");
+      ::pluss::throw_error("linear_parameters: missing coefficient state.");
     }
 
     const std::vector<double> beta =
         state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).to_vec<double>();
     if (beta.empty()) {
-      throw std::runtime_error("linear_parameters: coefficient vector is empty.");
+      ::pluss::throw_error("linear_parameters: coefficient vector is empty.");
     }
 
     LinearParameters out{};
@@ -1332,13 +2236,13 @@ public:
     return resolve(workflow_.dump_model_state(), "dump_model_state");
   }
 
-  WorkflowModel& load_transform_states_(const std::vector<std::vector<Series>>& states) {
+  WorkflowModel& load_transform_states_(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
     resolve(workflow_.load_transform_states(states), "load_transform_states");
     refresh_linear_summary_();
     return *this;
   }
 
-  WorkflowModel& load_model_state_(const std::vector<Series>& state) {
+  WorkflowModel& load_model_state_(pluss::msharp::RangeView::Series state) {
     resolve(workflow_.load_model_state(state), "load_model_state");
     refresh_linear_summary_();
     return *this;
@@ -1359,9 +2263,9 @@ public:
   [[nodiscard]] Workflow& workflow() noexcept { return workflow_; }
 
 private:
-  [[nodiscard]] static DataFrameBatchOptions default_data_options_(const std::vector<std::string>& feature_names) {
+  [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
-    options.feature_names = feature_names;
+    options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
     options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
@@ -1372,7 +2276,7 @@ private:
                                                                                const char* where) {
     const auto names = frame.series_features().feature_names();
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+      ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
     return names;
   }
@@ -1389,14 +2293,14 @@ private:
       names.erase(std::remove(names.begin(), names.end(), *options.sample_weight_feature), names.end());
     }
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": resolved zero feature names.");
+      ::pluss::throw_error(std::string(where) + ": resolved zero feature names.");
     }
     return names;
   }
 
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
-                                                     const std::vector<std::string>& feature_names,
+                                                     pluss::msharp::RangeView::Of<std::string> feature_names,
                                                      const char* where) {
     const auto x_batch =
         resolve(feature_batch_from_dataframe(x, default_data_options_(feature_names)), std::string(where) + ".feature_batch_from_dataframe");
@@ -1450,10 +2354,10 @@ private:
 
   [[nodiscard]] WorkflowModel clone_for_out_of_place_() const {
     if (workflow_.has_opaque_transforms()) {
-      throw std::runtime_error("learn(out-of-place): workflow has opaque transforms that cannot be cloned.");
+      ::pluss::throw_error("learn(out-of-place): workflow has opaque transforms that cannot be cloned.");
     }
     if (!workflow_.model_spec().has_value() && workflow_.has_model()) {
-      throw std::runtime_error("learn(out-of-place): workflow model has no clonable ModelSpec.");
+      ::pluss::throw_error("learn(out-of-place): workflow model has no clonable ModelSpec.");
     }
 
     ::pluss::ai::nodej::Workflow cloned =
@@ -1496,9 +2400,9 @@ private:
     return {};
   }
 
-  [[nodiscard]] static MetricReport as_metric_report_(const Series& metrics, const std::vector<MetricKind>& requested) {
+  [[nodiscard]] static MetricReport as_metric_report_(const Series& metrics, pluss::msharp::RangeView::Of<MetricKind> requested) {
     MetricReport report{};
-    report.requested = requested;
+    report.requested = copy_range_values(requested);
     report.values = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()});
     const std::vector<double> values = report.values.to_vec<double>();
 
@@ -1544,14 +2448,14 @@ private:
                                                           AssessOptions assess_options = {}) {
   resolve(validate_labeled(batch), "cross_validate(model).validate_labeled");
   if (!model.workflow().has_model()) {
-    throw std::runtime_error("cross_validate(model,...): workflow has no model.");
+    ::pluss::throw_error("cross_validate(model,...): workflow has no model.");
   }
 
   const auto spec_opt = model.workflow().model_spec();
   const TaskKind task = spec_opt.has_value() ? spec_opt->task : model.workflow().task_kind();
   const std::vector<MetricKind> metrics = default_assess_metrics_(task, assess_options);
   if (metrics.empty()) {
-    throw std::runtime_error("cross_validate(model,...): no assessment metrics requested.");
+    ::pluss::throw_error("cross_validate(model,...): no assessment metrics requested.");
   }
 
   const auto make_plan = [&](const SplitOptions& split) -> SplitPlan {
@@ -1571,11 +2475,20 @@ private:
     }
     if (split.plan == CVPlanKind::StratifiedKFold) {
       if (task != TaskKind::Classification) {
-        throw std::runtime_error("cross_validate(model,...): StratifiedKFold requires classification task.");
+        ::pluss::throw_error("cross_validate(model,...): StratifiedKFold requires classification task.");
       }
       return resolve(pluss::ai::nodej::strat_fold_plan(batch.y, split), "strat_fold_plan");
     }
-    throw std::runtime_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold are currently supported.");
+    if (split.plan == CVPlanKind::GroupKFold) {
+      if (!split.groups.defined()) {
+        ::pluss::throw_error("cross_validate(model,...): GroupKFold requires CrossValidationOptions.groups.");
+      }
+      if (split.groups.numel() != batch.features.sample_count()) {
+        ::pluss::throw_error("cross_validate(model,...): GroupKFold requires groups length to match sample count.");
+      }
+      return resolve(pluss::ai::nodej::group_fold_plan(split.groups, split), "group_fold_plan");
+    }
+    ::pluss::throw_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold/GroupKFold are currently supported.");
   };
 
   SplitOptions split = make_cross_validation_split_options(cv);
@@ -1586,7 +2499,7 @@ private:
   }
   const SplitPlan plan = make_plan(split);
   if (plan.folds.empty()) {
-    throw std::runtime_error("cross_validate(model,...): empty fold plan.");
+    ::pluss::throw_error("cross_validate(model,...): empty fold plan.");
   }
 
   CrossAssessReport report{};
@@ -1657,6 +2570,114 @@ private:
   return cross_validate(model, x, as_stratify_series(y), cv, train_options, assess_options);
 }
 
+[[nodiscard]] inline Series cross_validate_scores(const WorkflowModel& model,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_scores(model,...): workflow model has no model specification.");
+  }
+  return cross_validate_scores(*model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const WorkflowModel& model,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_score(model,...): workflow model has no model specification.");
+  }
+  return cross_validate_score(*model.workflow().model_spec(), batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const WorkflowModel& model,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_scores(model,x,y): workflow model has no model specification.");
+  }
+  return cross_validate_scores(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const WorkflowModel& model,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  if (!model.workflow().model_spec().has_value()) {
+    ::pluss::throw_error("cross_validate_score(model,x,y): workflow model has no model specification.");
+  }
+  return cross_validate_score(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const WorkflowModel& model,
+                                                     const LabeledBatch& batch,
+                                                     const InferOptions& infer_options = {},
+                                                     const ConfusionOptions& options = {}) {
+  const Series predicted = model.infer(batch.features, infer_options);
+  return confusion_matrix(batch.y, predicted, options);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
+                                                        const LabeledBatch& batch,
+                                                        const InferOptions& infer_options = {},
+                                                        const ClassReportOptions& options = {}) {
+  const Series predicted = model.infer(batch.features, infer_options);
+  return classification_summary(batch.y, predicted, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
+                                                         const LabeledBatch& batch,
+                                                         const AssessOptions& options = {}) {
+  return model.assess_series(batch, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
+                                                         const pluss::table::DataFrame& x,
+                                                         const Series& y,
+                                                         const AssessOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "classification_metric_series(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "classification_metric_series(model,x,y)");
+  return classification_metric_series(model, batch, options);
+}
+
+[[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
+                                                         const pluss::table::DataFrame& x,
+                                                         const pluss::table::Thread& y,
+                                                         const AssessOptions& options = {}) {
+  return classification_metric_series(model, x, as_stratify_series(y), options);
+}
+
+[[nodiscard]] inline ConfusionTable confusion_matrix(const WorkflowModel& model,
+                                                     const pluss::table::DataFrame& x,
+                                                     const Series& y,
+                                                     const InferOptions& infer_options = {},
+                                                     const ConfusionOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "confusion_matrix(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "confusion_matrix(model,x,y)");
+  return confusion_matrix(model, batch, infer_options, options);
+}
+
+[[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
+                                                        const pluss::table::DataFrame& x,
+                                                        const Series& y,
+                                                        const InferOptions& infer_options = {},
+                                                        const ClassReportOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "classification_summary(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "classification_summary(model,x,y)");
+  return classification_summary(model, batch, infer_options, options);
+}
+
 struct FeatureSelectorOptions {
   std::vector<pluss::table::ThreadKind> include{};
   std::vector<pluss::table::ThreadKind> exclude{};
@@ -1668,7 +2689,7 @@ struct FeatureSelectorOptions {
   std::vector<std::string> selected{};
   selected.reserve(names.size());
 
-  const auto has_kind = [](const std::vector<pluss::table::ThreadKind>& kinds, pluss::table::ThreadKind kind) {
+  const auto has_kind = [](pluss::msharp::RangeView::Of<pluss::table::ThreadKind> kinds, pluss::table::ThreadKind kind) {
     return std::find(kinds.begin(), kinds.end(), kind) != kinds.end();
   };
 
@@ -1699,18 +2720,18 @@ struct Branch {
 
 [[nodiscard]] inline Branch compose(std::vector<TransformSpec> transforms,
                                     std::vector<std::string> feature_names = {},
-                                    std::vector<std::int64_t> feature_route = {}) {
+                                    pluss::msharp::RangeView::Int feature_route = {}) {
   return Branch{
       .transforms = std::move(transforms),
       .feature_names = std::move(feature_names),
-      .feature_route = std::move(feature_route),
+      .feature_route = copy_feature_route(feature_route),
   };
 }
 
 #define PLUSS_LYMPH_FEATURE_BRANCH_BUILDER(FuncName, KindName, OptionsType)                                 \
   [[nodiscard]] inline Branch FuncName(OptionsType options = {},                                             \
                                        std::vector<std::string> feature_names = {},                          \
-                                       std::vector<std::int64_t> feature_route = {}) {                       \
+                                       pluss::msharp::RangeView::Int feature_route = {}) {                   \
     return Branch{                                                                                            \
         .transforms = {TransformSpec{                                                                         \
             .kind = TransformKind::KindName,                                                                  \
@@ -1718,7 +2739,7 @@ struct Branch {
             .feature_route = {},                                                                              \
         }},                                                                                                   \
         .feature_names = std::move(feature_names),                                                            \
-        .feature_route = std::move(feature_route),                                                            \
+        .feature_route = copy_feature_route(feature_route),                                                   \
     };                                                                                                        \
   }
 
@@ -1748,11 +2769,11 @@ namespace stage {
 #define PLUSS_LYMPH_STAGE_BUILDER(FuncName, KindName, OptionsType)                                 \
   [[nodiscard]] inline TransformSpec FuncName(                                                      \
       OptionsType options = {},                                                                     \
-      std::vector<std::int64_t> feature_route = {}) {                                              \
+      pluss::msharp::RangeView::Int feature_route = {}) {                                           \
     return TransformSpec{                                                                           \
         .kind = TransformKind::KindName,                                                            \
         .options = options,                                                                         \
-        .feature_route = std::move(feature_route),                                                  \
+        .feature_route = copy_feature_route(feature_route),                                         \
     };                                                                                              \
   }
 
@@ -1789,7 +2810,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
     names.erase(std::remove(names.begin(), names.end(), *data_options.sample_weight_feature), names.end());
   }
   if (names.empty()) {
-    throw std::runtime_error("make_feature_transformer: resolved zero feature names.");
+    ::pluss::throw_error("make_feature_transformer: resolved zero feature names.");
   }
   return names;
 }
@@ -1845,7 +2866,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
       return std::make_unique<::pluss::ai::nodej::prep::PolynomialLift>(
           std::get<prep::PolynomialLiftOptions>(spec.options));
   }
-  throw std::runtime_error("make_feature_transformer: unsupported transform kind.");
+  ::pluss::throw_error("make_feature_transformer: unsupported transform kind.");
 }
 
 [[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
@@ -1853,10 +2874,10 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
     const std::vector<workflow::feature::Branch>& branches,
     prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
   if (feature_order.empty()) {
-    throw std::runtime_error("make_feature_transformer: feature_order cannot be empty.");
+    ::pluss::throw_error("make_feature_transformer: feature_order cannot be empty.");
   }
   if (branches.empty()) {
-    throw std::runtime_error("make_feature_transformer: requires at least one branch.");
+    ::pluss::throw_error("make_feature_transformer: requires at least one branch.");
   }
 
   std::unordered_map<std::string, std::int64_t> index_by_name{};
@@ -1869,12 +2890,12 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
   for (std::size_t i = 0; i < branches.size(); ++i) {
     const auto& branch = branches[i];
     if (branch.transforms.empty()) {
-      throw std::runtime_error("make_feature_transformer: branch requires at least one transform stage.");
+      ::pluss::throw_error("make_feature_transformer: branch requires at least one transform stage.");
     }
     std::vector<std::int64_t> route{};
     if (!branch.feature_names.empty() || !branch.feature_route.empty()) {
       if (!branch.feature_names.empty() && !branch.feature_route.empty()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "make_feature_transformer: branch cannot specify both feature_names and feature_route.");
       }
       if (!branch.feature_names.empty()) {
@@ -1882,7 +2903,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
         for (const auto& name : branch.feature_names) {
           auto it = index_by_name.find(name);
           if (it == index_by_name.end()) {
-            throw std::runtime_error(
+            ::pluss::throw_error(
                 "make_feature_transformer: feature '" + name + "' was not found in feature_order.");
           }
           route.push_back(it->second);
@@ -1892,7 +2913,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
       }
       for (const auto& stage : branch.transforms) {
         if (!stage.feature_route.empty()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "make_feature_transformer: when branch-level routing is set, per-stage feature_route must be empty.");
         }
       }
@@ -1905,7 +2926,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
           continue;
         }
         if (*inferred_route != stage.feature_route) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "make_feature_transformer: all per-stage feature_route values in a branch must match.");
         }
       }
@@ -1914,7 +2935,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
       }
     }
     if (route.empty()) {
-      throw std::runtime_error("make_feature_transformer: each branch must select at least one feature.");
+      ::pluss::throw_error("make_feature_transformer: each branch must select at least one feature.");
     }
 
     std::vector<std::unique_ptr<TransformerBase>> branch_chain{};
@@ -1926,6 +2947,23 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
             "make_feature_transformer.add_branch");
   }
   return feature_transformer;
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    pluss::msharp::RangeView::Of<std::string> feature_order,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(copy_range_values(feature_order), copy_range_values(branches), remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    std::initializer_list<std::string> feature_order,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      pluss::msharp::RangeView::Of<std::string>(feature_order),
+      pluss::msharp::RangeView::Of<workflow::feature::Branch>(branches),
+      remainder);
 }
 
 [[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
@@ -1941,11 +2979,138 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
 
 [[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
     const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, data_options, copy_range_values(branches), remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      frame,
+      data_options,
+      pluss::msharp::RangeView::Of<workflow::feature::Branch>(branches),
+      remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
     const std::vector<workflow::feature::Branch>& branches,
     prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
   DataFrameBatchOptions options{};
   options.feature_names = frame.feature_names();
   return make_feature_transformer(frame, options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  DataFrameBatchOptions options{};
+  options.feature_names = frame.feature_names();
+  return make_feature_transformer(frame, options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_feature_transformer(
+    const pluss::table::DataFrame& frame,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(
+      frame,
+      pluss::msharp::RangeView::Of<workflow::feature::Branch>(branches),
+      remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    pluss::msharp::RangeView::Of<std::string> feature_order,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    std::initializer_list<std::string> feature_order,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer make_branch_transformer(
+    const pluss::table::DataFrame& frame,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_feature_transformer(frame, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    pluss::msharp::RangeView::Of<std::string> feature_order,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    std::initializer_list<std::string> feature_order,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(feature_order, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    const DataFrameBatchOptions& data_options,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, data_options, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, branches, remainder);
+}
+
+[[nodiscard]] inline ::pluss::ai::nodej::prep::FeatureTransformer branch_transformer(
+    const pluss::table::DataFrame& frame,
+    std::initializer_list<workflow::feature::Branch> branches,
+    prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
+  return make_branch_transformer(frame, branches, remainder);
 }
 
 class Workflow final {
@@ -1966,6 +3131,55 @@ public:
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const {
     ensure_model_("transform_specs");
     return model->transform_specs();
+  }
+  [[nodiscard]] FlowGraphInfo graph_info() const {
+    ensure_model_("graph_info");
+    return model->graph_info();
+  }
+  [[nodiscard]] std::vector<std::string> nested_param_keys() const {
+    ensure_model_("nested_param_keys");
+    return model->nested_param_keys();
+  }
+  [[nodiscard]] double nested_param(std::string_view path) const {
+    ensure_model_("nested_param");
+    return model->nested_param(path);
+  }
+  Workflow& set_nested_param_(std::string_view path, double value) {
+    ensure_model_("set_nested_param_");
+    model->set_nested_param_(path, value);
+    return *this;
+  }
+  [[nodiscard]] std::string flow_summary() const {
+    ensure_model_("flow_summary");
+    return model->flow_summary();
+  }
+  [[nodiscard]] std::string save_blueprint() const {
+    ensure_model_("save_blueprint");
+    return model->save_blueprint();
+  }
+  Workflow& load_blueprint_(std::string_view text) {
+    ensure_model_("load_blueprint_");
+    model->load_blueprint_(text);
+    stages = model->transform_specs();
+    return *this;
+  }
+  Workflow& set_stage_key_(std::int64_t stage_index, std::string stage_key) {
+    ensure_model_("set_stage_key_");
+    model->set_stage_key_(stage_index, std::move(stage_key));
+    stages = model->transform_specs();
+    return *this;
+  }
+  Workflow& set_stage_route_(std::int64_t stage_index, pluss::msharp::RangeView::Int feature_route) {
+    ensure_model_("set_stage_route_");
+    model->set_stage_route_(stage_index, feature_route);
+    stages = model->transform_specs();
+    return *this;
+  }
+  Workflow& set_stage_remainder_(std::int64_t stage_index, RouteRemainderPolicy remainder) {
+    ensure_model_("set_stage_remainder_");
+    model->set_stage_remainder_(stage_index, remainder);
+    stages = model->transform_specs();
+    return *this;
   }
 
   [[nodiscard]] const WorkflowModel& workflow_model() const {
@@ -2181,6 +3395,99 @@ public:
     return model->assess(frame, data_options, options);
   }
 
+  [[nodiscard]] ConfusionTable confusion_matrix(const LabeledBatch& batch,
+                                                const InferOptions& infer_options = {},
+                                                const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_matrix");
+    return ::pluss::ai::lymph::confusion_matrix(*model, batch, infer_options, options);
+  }
+
+  [[nodiscard]] ConfusionTable confusion_matrix(const pluss::table::DataFrame& x,
+                                                const Series& y,
+                                                const InferOptions& infer_options = {},
+                                                const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_matrix");
+    return ::pluss::ai::lymph::confusion_matrix(*model, x, y, infer_options, options);
+  }
+
+  [[nodiscard]] ConfusionTable confusion_matrix(const pluss::table::DataFrame& x,
+                                                const pluss::table::Thread& y,
+                                                const InferOptions& infer_options = {},
+                                                const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_matrix");
+    return ::pluss::ai::lymph::confusion_matrix(*model, x, as_stratify_series(y), infer_options, options);
+  }
+
+  [[nodiscard]] ClassReport classification_summary(const LabeledBatch& batch,
+                                                   const InferOptions& infer_options = {},
+                                                   const ClassReportOptions& options = {}) const {
+    ensure_model_("classification_summary");
+    return ::pluss::ai::lymph::classification_summary(*model, batch, infer_options, options);
+  }
+
+  [[nodiscard]] ClassReport classification_summary(const pluss::table::DataFrame& x,
+                                                   const Series& y,
+                                                   const InferOptions& infer_options = {},
+                                                   const ClassReportOptions& options = {}) const {
+    ensure_model_("classification_summary");
+    return ::pluss::ai::lymph::classification_summary(*model, x, y, infer_options, options);
+  }
+
+  [[nodiscard]] ClassReport classification_summary(const pluss::table::DataFrame& x,
+                                                   const pluss::table::Thread& y,
+                                                   const InferOptions& infer_options = {},
+                                                   const ClassReportOptions& options = {}) const {
+    ensure_model_("classification_summary");
+    return ::pluss::ai::lymph::classification_summary(*model, x, as_stratify_series(y), infer_options, options);
+  }
+
+  [[nodiscard]] Series classification_metric_series(const LabeledBatch& batch,
+                                                    const AssessOptions& options = {}) const {
+    ensure_model_("classification_metric_series");
+    return ::pluss::ai::lymph::classification_metric_series(*model, batch, options);
+  }
+
+  [[nodiscard]] Series classification_metric_series(const pluss::table::DataFrame& x,
+                                                    const Series& y,
+                                                    const AssessOptions& options = {}) const {
+    ensure_model_("classification_metric_series");
+    return ::pluss::ai::lymph::classification_metric_series(*model, x, y, options);
+  }
+
+  [[nodiscard]] Series classification_metric_series(const pluss::table::DataFrame& x,
+                                                    const pluss::table::Thread& y,
+                                                    const AssessOptions& options = {}) const {
+    ensure_model_("classification_metric_series");
+    return ::pluss::ai::lymph::classification_metric_series(*model, x, as_stratify_series(y), options);
+  }
+
+  [[nodiscard]] PermuteImpactReport permutation_impact(const LabeledBatch& train,
+                                                        const LabeledBatch& eval,
+                                                        MetricKind metric = MetricKind::Accuracy,
+                                                        std::int64_t repeats = 5,
+                                                        RandomState random = {}) const {
+    ensure_model_("permutation_impact");
+    return model->permutation_impact(train, eval, metric, repeats, random);
+  }
+
+  [[nodiscard]] DependenceCurve dependence_curve(const LabeledBatch& train,
+                                                 const FeatureBatch& eval,
+                                                 std::int64_t feature_index,
+                                                 std::int64_t grid_points = 32) const {
+    ensure_model_("dependence_curve");
+    return model->dependence_curve(train, eval, feature_index, grid_points);
+  }
+
+  [[nodiscard]] DependenceSurface dependence_surface(const LabeledBatch& train,
+                                                     const FeatureBatch& eval,
+                                                     std::int64_t feature_a,
+                                                     std::int64_t feature_b,
+                                                     std::int64_t grid_points_a = 16,
+                                                     std::int64_t grid_points_b = 16) const {
+    ensure_model_("dependence_surface");
+    return model->dependence_surface(train, eval, feature_a, feature_b, grid_points_a, grid_points_b);
+  }
+
   [[nodiscard]] std::vector<std::vector<Series>> dump_transform_states() const {
     ensure_model_("dump_transform_states");
     return model->dump_transform_states();
@@ -2191,13 +3498,13 @@ public:
     return model->dump_model_state();
   }
 
-  Workflow& load_transform_states_(const std::vector<std::vector<Series>>& states) {
+  Workflow& load_transform_states_(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
     ensure_model_("load_transform_states_");
     model->load_transform_states_(states);
     return *this;
   }
 
-  Workflow& load_model_state_(const std::vector<Series>& state) {
+  Workflow& load_model_state_(pluss::msharp::RangeView::Series state) {
     ensure_model_("load_model_state_");
     model->load_model_state_(state);
     return *this;
@@ -2246,7 +3553,7 @@ public:
 private:
   void ensure_model_(const char* where) const {
     if (!model.has_value()) {
-      throw std::runtime_error(std::string("Workflow::") + where + ": construct as Workflow{ .model = ..., .stages = {...} }.");
+      ::pluss::throw_error(std::string("Workflow::") + where + ": construct as Workflow{ .model = ..., .stages = {...} }.");
     }
     const_cast<Workflow*>(this)->replay_transforms_();
   }
@@ -2327,6 +3634,49 @@ private:
 
 };
 
+[[nodiscard]] inline Workflow make_pipeline(WorkflowModel model,
+                                            pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  Workflow out{};
+  out.model.emplace(std::move(model));
+  out.stages = copy_range_values(stages);
+  return out;
+}
+
+[[nodiscard]] inline Workflow make_pipeline(const ModelSpec& spec,
+                                            pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  return make_pipeline(WorkflowModel(spec), stages);
+}
+
+[[nodiscard]] inline Workflow make_pipeline(WorkflowModel model,
+                                            std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(std::move(model), pluss::msharp::RangeView::Of<TransformSpec>(stages));
+}
+
+[[nodiscard]] inline Workflow make_pipeline(const ModelSpec& spec,
+                                            std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(spec, pluss::msharp::RangeView::Of<TransformSpec>(stages));
+}
+
+[[nodiscard]] inline Workflow pipeline(WorkflowModel model,
+                                       pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  return make_pipeline(std::move(model), stages);
+}
+
+[[nodiscard]] inline Workflow pipeline(const ModelSpec& spec,
+                                       pluss::msharp::RangeView::Of<TransformSpec> stages = {}) {
+  return make_pipeline(spec, stages);
+}
+
+[[nodiscard]] inline Workflow pipeline(WorkflowModel model,
+                                       std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(std::move(model), stages);
+}
+
+[[nodiscard]] inline Workflow pipeline(const ModelSpec& spec,
+                                       std::initializer_list<TransformSpec> stages) {
+  return make_pipeline(spec, stages);
+}
+
 [[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& workflow,
                                                           const LabeledBatch& batch,
                                                           CrossValidationOptions cv = {},
@@ -2353,6 +3703,80 @@ private:
   return cross_validate(workflow.workflow_model(), x, y, cv, train_options, assess_options);
 }
 
+[[nodiscard]] inline Series cross_validate_scores(const Workflow& workflow,
+                                                  const LabeledBatch& batch,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_scores(workflow,...): workflow has no model specification.");
+  }
+  return cross_validate_scores(*spec_opt, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const Workflow& workflow,
+                                                 const LabeledBatch& batch,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_score(workflow,...): workflow has no model specification.");
+  }
+  return cross_validate_score(*spec_opt, batch, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const Workflow& workflow,
+                                                  const pluss::table::DataFrame& x,
+                                                  const Series& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_scores(workflow,x,y): workflow has no model specification.");
+  }
+  return cross_validate_scores(*spec_opt, x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const Workflow& workflow,
+                                                 const pluss::table::DataFrame& x,
+                                                 const Series& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  const auto spec_opt = workflow.workflow_model().workflow().model_spec();
+  if (!spec_opt.has_value()) {
+    ::pluss::throw_error("cross_validate_score(workflow,x,y): workflow has no model specification.");
+  }
+  return cross_validate_score(*spec_opt, x, y, metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline Series cross_validate_scores(const Workflow& workflow,
+                                                  const pluss::table::DataFrame& x,
+                                                  const pluss::table::Thread& y,
+                                                  MetricKind metric,
+                                                  CrossValidationOptions cv = {},
+                                                  TrainOptions train_options = {},
+                                                  AssessOptions assess_options = {}) {
+  return cross_validate_scores(workflow, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
+[[nodiscard]] inline double cross_validate_score(const Workflow& workflow,
+                                                 const pluss::table::DataFrame& x,
+                                                 const pluss::table::Thread& y,
+                                                 MetricKind metric,
+                                                 CrossValidationOptions cv = {},
+                                                 TrainOptions train_options = {},
+                                                 AssessOptions assess_options = {}) {
+  return cross_validate_score(workflow, x, as_stratify_series(y), metric, cv, train_options, assess_options);
+}
+
 [[nodiscard]] inline std::vector<std::string> prep_resolve_series_feature_names_(
     const pluss::table::DataFrame& frame,
     const std::vector<std::string>& pinned_feature_names,
@@ -2361,21 +3785,21 @@ private:
   if (feature_names_pinned) {
     for (const auto& name : pinned_feature_names) {
       if (!frame.has_feature(name)) {
-        throw std::runtime_error(std::string(where) + ": missing feature '" + name + "' in input DataFrame.");
+        ::pluss::throw_error(std::string(where) + ": missing feature '" + name + "' in input DataFrame.");
       }
     }
     return pinned_feature_names;
   }
   const auto names = frame.series_features().feature_names();
   if (names.empty()) {
-    throw std::runtime_error(std::string(where) + ": no Series-backed features found in input DataFrame.");
+    ::pluss::throw_error(std::string(where) + ": no Series-backed features found in input DataFrame.");
   }
   return names;
 }
 
-[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_(const std::vector<std::string>& names) {
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   DataFrameBatchOptions options{};
-  options.feature_names = names;
+  options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
   options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
@@ -2399,7 +3823,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2414,7 +3838,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2429,7 +3853,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2444,7 +3868,7 @@ template <>
     const char* where) {
   (void)frame;
   if (!feature_names_pinned || pinned_feature_names.empty()) {
-    throw std::runtime_error(std::string(where) +
+    ::pluss::throw_error(std::string(where) +
                              ": explicit categorical feature selection is required; call .features({\"name\", ...}) "
                              "before learn()/map()/learn_map() on DataFrame.");
   }
@@ -2452,13 +3876,13 @@ template <>
 }
 
 template <class WrapperT>
-[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_(const std::vector<std::string>& names) {
+[[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::OneHotEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2466,7 +3890,7 @@ template <>
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::FrequencyEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2474,7 +3898,7 @@ template <>
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::OrdinalEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2482,7 +3906,7 @@ template <>
 
 template <>
 [[nodiscard]] inline DataFrameBatchOptions prep_batch_options_for_wrapper_<prep::LabelEncoder>(
-    const std::vector<std::string>& names) {
+    pluss::msharp::RangeView::Of<std::string> names) {
   auto options = prep_batch_options_for_(names);
   options.note_policy = DataNotePolicy::Hash;
   return options;
@@ -2490,20 +3914,20 @@ template <>
 
 [[nodiscard]] inline pluss::table::DataFrame prep_merge_mapped_(
     const pluss::table::DataFrame& frame,
-    const std::vector<std::string>& names,
+    pluss::msharp::RangeView::Of<std::string> names,
     const Series& mapped,
     const char* where) {
   if (mapped.dim() != 2) {
-    throw std::runtime_error(std::string(where) + ": mapped feature matrix must be rank-2.");
+    ::pluss::throw_error(std::string(where) + ": mapped feature matrix must be rank-2.");
   }
   const auto sizes = mapped.sizes();
   if (sizes.size() != 2) {
-    throw std::runtime_error(std::string(where) + ": mapped feature matrix must have two dimensions.");
+    ::pluss::throw_error(std::string(where) + ": mapped feature matrix must have two dimensions.");
   }
   const std::int64_t sample_count = sizes[0];
   const std::int64_t feature_count = sizes[1];
   if (sample_count != frame.ncases()) {
-    throw std::runtime_error(std::string(where) + ": mapped sample count mismatch.");
+    ::pluss::throw_error(std::string(where) + ": mapped sample count mismatch.");
   }
   if (feature_count != static_cast<std::int64_t>(names.size())) {
     std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
@@ -2542,12 +3966,12 @@ inline std::vector<std::string> prep::SimpleImputer::resolved_feature_names_(con
   return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
 }
 
-inline DataFrameBatchOptions prep::SimpleImputer::batch_options_for_(const std::vector<std::string>& names) {
+inline DataFrameBatchOptions prep::SimpleImputer::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
 inline pluss::table::DataFrame prep::SimpleImputer::merge_mapped_(const pluss::table::DataFrame& frame,
-                                                                   const std::vector<std::string>& names,
+                                                                   pluss::msharp::RangeView::Of<std::string> names,
                                                                    const Series& mapped,
                                                                    const char* where) {
   return prep_merge_mapped_(frame, names, mapped, where);
@@ -2567,12 +3991,12 @@ inline std::vector<std::string> prep::StandardScaler::resolved_feature_names_(co
   return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
 }
 
-inline DataFrameBatchOptions prep::StandardScaler::batch_options_for_(const std::vector<std::string>& names) {
+inline DataFrameBatchOptions prep::StandardScaler::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
 inline pluss::table::DataFrame prep::StandardScaler::merge_mapped_(const pluss::table::DataFrame& frame,
-                                                                    const std::vector<std::string>& names,
+                                                                    pluss::msharp::RangeView::Of<std::string> names,
                                                                     const Series& mapped,
                                                                     const char* where) {
   return prep_merge_mapped_(frame, names, mapped, where);
@@ -2603,7 +4027,7 @@ inline prep::SimpleImputer& prep::SimpleImputer::learn(const pluss::table::DataF
 
 inline pluss::table::DataFrame prep::SimpleImputer::map(const pluss::table::DataFrame& frame, const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::SimpleImputer.map: call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::SimpleImputer.map: call learn() or learn_map() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::SimpleImputer.map");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2640,7 +4064,7 @@ inline prep::StandardScaler& prep::StandardScaler::learn(const pluss::table::Dat
 
 inline pluss::table::DataFrame prep::StandardScaler::map(const pluss::table::DataFrame& frame, const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::StandardScaler.map: call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::StandardScaler.map: call learn() or learn_map() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::StandardScaler.map");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2668,7 +4092,7 @@ inline std::vector<std::string> prep::OutlierIsolator::resolved_feature_names_(c
   return prep_resolve_series_feature_names_(frame, feature_names_, feature_names_pinned_, where);
 }
 
-inline DataFrameBatchOptions prep::OutlierIsolator::batch_options_for_(const std::vector<std::string>& names) {
+inline DataFrameBatchOptions prep::OutlierIsolator::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) {
   return prep_batch_options_for_(names);
 }
 
@@ -2687,7 +4111,7 @@ inline prep::OutlierIsolator& prep::OutlierIsolator::learn(const pluss::table::D
 inline pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::DataFrame& frame,
                                                          const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::OutlierIsolator.infer: call learn() or learn_infer() first.");
+    ::pluss::throw_error("prep::OutlierIsolator.infer: call learn() or learn_infer() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.infer");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2698,7 +4122,7 @@ inline pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::Dat
 inline pluss::table::Thread prep::OutlierIsolator::score_samples(const pluss::table::DataFrame& frame,
                                                                  const InferOptions& options) const {
   if (!learned_) {
-    throw std::runtime_error("prep::OutlierIsolator.score_samples: call learn() or learn_infer() first.");
+    ::pluss::throw_error("prep::OutlierIsolator.score_samples: call learn() or learn_infer() first.");
   }
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.score_samples");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
@@ -2735,13 +4159,13 @@ inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss
         where);                                                                                   \
   }                                                                                               \
                                                                                                   \
-  inline DataFrameBatchOptions prep::WrapperName::batch_options_for_(const std::vector<std::string>& names) { \
+  inline DataFrameBatchOptions prep::WrapperName::batch_options_for_(pluss::msharp::RangeView::Of<std::string> names) { \
     return prep_batch_options_for_wrapper_<prep::WrapperName>(names);                             \
   }                                                                                               \
                                                                                                   \
   inline pluss::table::DataFrame prep::WrapperName::merge_mapped_(                                \
       const pluss::table::DataFrame& frame,                                                       \
-      const std::vector<std::string>& names,                                                      \
+      pluss::msharp::RangeView::Of<std::string> names,                                                      \
       const Series& mapped,                                                                       \
       const char* where) {                                                                        \
     return prep_merge_mapped_(frame, names, mapped, where);                                       \
@@ -2774,7 +4198,7 @@ inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss
   inline pluss::table::DataFrame prep::WrapperName::map(const pluss::table::DataFrame& frame,    \
                                                          const InferOptions& options) const {     \
     if (!learned_) {                                                                              \
-      throw std::runtime_error(std::string(Label) + ".map: call learn() or learn_map() first."); \
+      ::pluss::throw_error(std::string(Label) + ".map: call learn() or learn_map() first."); \
     }                                                                                             \
     const auto names = resolved_feature_names_(frame, Label ".map");                             \
     const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),   \
@@ -2816,7 +4240,7 @@ inline pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss
   inline Series prep::WrapperName::map(const pluss::table::Thread& feature,                      \
                                         const InferOptions& options) const {                      \
     if (!learned_) {                                                                              \
-      throw std::runtime_error(std::string(Label) + ".map(Thread): call learn() or learn_map() first."); \
+      ::pluss::throw_error(std::string(Label) + ".map(Thread): call learn() or learn_map() first."); \
     }                                                                                             \
     return resolve(core_.map(feature, options), Label ".map(Thread)");                           \
   }                                                                                               \
@@ -3147,11 +4571,11 @@ inline Series prep::CategoryIndexer::encode_feature_(const OneHotEncoder& encode
   (void)where;
   const Series hot = encoder.map(feature, options);
   if (!hot.defined() || hot.dim() != 2) {
-    throw std::runtime_error(std::string(where) + ": encoded feature matrix must be rank-2.");
+    ::pluss::throw_error(std::string(where) + ": encoded feature matrix must be rank-2.");
   }
   const auto sizes = hot.sizes();
   if (sizes.size() != 2 || sizes[1] <= 0) {
-    throw std::runtime_error(std::string(where) + ": encoded feature matrix must have nonzero width.");
+    ::pluss::throw_error(std::string(where) + ": encoded feature matrix must have nonzero width.");
   }
   const std::int64_t rows = sizes[0];
   const std::int64_t width = sizes[1];
@@ -3191,7 +4615,7 @@ inline void prep::CategoryIndexer::refresh_from_encoders_() {
 inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::Thread& feature,
                                                            const TrainOptions& options) {
   if (!feature.defined()) {
-    throw std::runtime_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
+    ::pluss::throw_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
   }
   if (feature.has_display_name()) {
     feature_names_ = {feature.display_name()};
@@ -3213,14 +4637,14 @@ inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::T
 inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::DataFrame& frame,
                                                            const TrainOptions& options) {
   if (!feature_names_pinned_ || feature_names_.empty()) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "prep::CategoryIndexer.learn(DataFrame): explicit feature selection is required; call .features({...}).");
   }
   encoders_.clear();
   encoders_.reserve(feature_names_.size());
   for (const auto& name : feature_names_) {
     if (!frame.has_feature(name)) {
-      throw std::runtime_error("prep::CategoryIndexer.learn(DataFrame): missing feature '" + name + "'.");
+      ::pluss::throw_error("prep::CategoryIndexer.learn(DataFrame): missing feature '" + name + "'.");
     }
     OneHotEncoder encoder(to_one_hot_options_(options_));
     encoder.learn(frame.features(name), options);
@@ -3233,10 +4657,10 @@ inline prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::D
 
 inline Series prep::CategoryIndexer::map(const pluss::table::Thread& feature, const InferOptions& options) const {
   if (!learned_ || encoders_.empty()) {
-    throw std::runtime_error("prep::CategoryIndexer.map(Thread): call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(Thread): call learn() or learn_map() first.");
   }
   if (encoders_.size() != 1) {
-    throw std::runtime_error(
+    ::pluss::throw_error(
         "prep::CategoryIndexer.map(Thread): encoder was trained for multiple features; map(DataFrame) is required.");
   }
   return encode_feature_(encoders_.front(), feature, options_.one_based, options, "prep::CategoryIndexer.map(Thread)");
@@ -3245,10 +4669,10 @@ inline Series prep::CategoryIndexer::map(const pluss::table::Thread& feature, co
 inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame& frame,
                                                           const InferOptions& options) const {
   if (!learned_ || encoders_.empty()) {
-    throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): call learn() or learn_map() first.");
   }
   if (encoders_.size() != feature_names_.size()) {
-    throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): internal encoder state is inconsistent.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): internal encoder state is inconsistent.");
   }
 
   std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
@@ -3256,7 +4680,7 @@ inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::Da
   for (std::size_t i = 0; i < feature_names_.size(); ++i) {
     const auto& name = feature_names_[i];
     if (!frame.has_feature(name)) {
-      throw std::runtime_error("prep::CategoryIndexer.map(DataFrame): missing feature '" + name + "'.");
+      ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): missing feature '" + name + "'.");
     }
     const auto& encoder = encoders_[i];
     const Series idx = encode_feature_(
@@ -3397,6 +4821,16 @@ struct neighbor_factory {
     return classifier(options);
   }
 
+  [[nodiscard]] static WorkflowModel radius_neighbors_regressor(NeighborFamilyOptions options = {}) {
+    options.query_mode = NeighborQueryMode::Radius;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel radius_neighbors_classifier(NeighborFamilyOptions options = {}) {
+    options.query_mode = NeighborQueryMode::Radius;
+    return classifier(options);
+  }
+
   [[nodiscard]] static WorkflowModel regressor(NeighborFamilyOptions options = {}) {
     return WorkflowModel(ModelSpec{
         .task = TaskKind::Regression,
@@ -3416,11 +4850,28 @@ struct neighbor_factory {
 
 struct kernel_factory {
   [[nodiscard]] static WorkflowModel svm_regressor(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::C;
     return regressor(options);
   }
 
   [[nodiscard]] static WorkflowModel svm_classifier(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::C;
     return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel nu_svm_regressor(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::Nu;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel nu_svm_classifier(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::Nu;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel one_class_svm(KernelFamilyOptions options = {}) {
+    options.form = KernelForm::OneClass;
+    return transformer(options);
   }
 
   [[nodiscard]] static WorkflowModel linear_kernel_regressor(KernelFamilyOptions options = {}) {
@@ -3478,16 +4929,56 @@ struct kernel_factory {
         .options = options,
     });
   }
+
+  [[nodiscard]] static WorkflowModel transformer(KernelFamilyOptions options = {}) {
+    return WorkflowModel(ModelSpec{
+        .task = TaskKind::Transform,
+        .family = ModelFamily::Kernel,
+        .options = options,
+    });
+  }
 };
 
 struct bayes_factory {
   [[nodiscard]] static WorkflowModel gaussian_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Gaussian;
     options.use_gaussian = true;
     return classifier(options);
   }
 
   [[nodiscard]] static WorkflowModel gaussian_nb_regressor(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Gaussian;
     options.use_gaussian = true;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel bernoulli_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Bernoulli;
+    options.use_gaussian = false;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel bernoulli_nb_regressor(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Bernoulli;
+    options.use_gaussian = false;
+    return regressor(options);
+  }
+
+  [[nodiscard]] static WorkflowModel multinomial_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Multinomial;
+    options.use_gaussian = false;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel complement_nb_classifier(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Complement;
+    options.use_gaussian = false;
+    return classifier(options);
+  }
+
+  [[nodiscard]] static WorkflowModel multinomial_nb_regressor(BayesFamilyOptions options = {}) {
+    options.likelihood = BayesLikelihood::Multinomial;
+    options.use_gaussian = false;
     return regressor(options);
   }
 
@@ -3651,9 +5142,9 @@ public:
   [[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearClassifier& core() noexcept { return core_; }
 
 private:
-  [[nodiscard]] static DataFrameBatchOptions default_data_options_(const std::vector<std::string>& feature_names) {
+  [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
-    options.feature_names = feature_names;
+    options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
     options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
@@ -3664,20 +5155,20 @@ private:
                                                                                const char* where) {
     const auto names = frame.series_features().feature_names();
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+      ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
     return names;
   }
 
   [[nodiscard]] static FeatureBatch feature_from_x_(const pluss::table::DataFrame& x,
-                                                    const std::vector<std::string>& names,
+                                                    pluss::msharp::RangeView::Of<std::string> names,
                                                     const char* where) {
     return resolve(feature_batch_from_dataframe(x, default_data_options_(names)), std::string(where) + ".feature_batch_from_dataframe");
   }
 
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
-                                                     const std::vector<std::string>& names,
+                                                     pluss::msharp::RangeView::Of<std::string> names,
                                                      const char* where) {
     const FeatureBatch x_batch = feature_from_x_(x, names, where);
     LabeledBatch batch{
@@ -3793,9 +5284,9 @@ public:
   [[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearRegressor& core() noexcept { return core_; }
 
 private:
-  [[nodiscard]] static DataFrameBatchOptions default_data_options_(const std::vector<std::string>& feature_names) {
+  [[nodiscard]] static DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> feature_names) {
     DataFrameBatchOptions options{};
-    options.feature_names = feature_names;
+    options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
     options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
@@ -3806,20 +5297,20 @@ private:
                                                                                const char* where) {
     const auto names = frame.series_features().feature_names();
     if (names.empty()) {
-      throw std::runtime_error(std::string(where) + ": input DataFrame has no Series features.");
+      ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
     return names;
   }
 
   [[nodiscard]] static FeatureBatch feature_from_x_(const pluss::table::DataFrame& x,
-                                                    const std::vector<std::string>& names,
+                                                    pluss::msharp::RangeView::Of<std::string> names,
                                                     const char* where) {
     return resolve(feature_batch_from_dataframe(x, default_data_options_(names)), std::string(where) + ".feature_batch_from_dataframe");
   }
 
   [[nodiscard]] static LabeledBatch labeled_from_xy_(const pluss::table::DataFrame& x,
                                                      const Series& y,
-                                                     const std::vector<std::string>& names,
+                                                     pluss::msharp::RangeView::Of<std::string> names,
                                                      const char* where) {
     const FeatureBatch x_batch = feature_from_x_(x, names, where);
     LabeledBatch batch{
@@ -3883,6 +5374,29 @@ struct SpecTuneResult {
   ModelSpec best_spec{};
 };
 
+[[nodiscard]] inline bool has_ledger(const SpecTuneResult& result) {
+  return result.report.ledger.objective.defined();
+}
+
+[[nodiscard]] inline const ::pluss::ai::nodej::TuneLedger& tune_ledger(const SpecTuneResult& result) {
+  if (!has_ledger(result)) {
+    ::pluss::throw_error("selection::tune_ledger: tune report does not include ledger artifacts.");
+  }
+  return result.report.ledger;
+}
+
+[[nodiscard]] inline Series objective_series(const SpecTuneResult& result) {
+  return tune_ledger(result).objective;
+}
+
+[[nodiscard]] inline Series objective_rank_series(const SpecTuneResult& result) {
+  return tune_ledger(result).objective_rank;
+}
+
+[[nodiscard]] inline Series encoded_param_table(const SpecTuneResult& result) {
+  return tune_ledger(result).encoded_params;
+}
+
 [[nodiscard]] inline bool minimize_metric_(MetricKind metric, TuneObjectivePolicy policy) {
   if (policy == TuneObjectivePolicy::Minimize) return true;
   if (policy == TuneObjectivePolicy::Maximize) return false;
@@ -3904,7 +5418,7 @@ struct SpecTuneResult {
   for (std::size_t i = 0; i < n && i < values.size(); ++i) {
     if (report.requested[i] == metric) return values[i];
   }
-  throw std::runtime_error("selection::tune: objective metric not present in assessment metrics.");
+  ::pluss::throw_error("selection::tune: objective metric not present in assessment metrics.");
 }
 
 [[nodiscard]] inline TuneResult tune(std::vector<Candidate> candidates,
@@ -3916,7 +5430,7 @@ struct SpecTuneResult {
                                      MetricKind objective_metric = MetricKind::Accuracy,
                                      TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
   if (candidates.empty()) {
-    throw std::runtime_error("selection::tune: at least one candidate is required.");
+    ::pluss::throw_error("selection::tune: at least one candidate is required.");
   }
   if (assess_options.metrics.empty()) {
     assess_options.metrics = {objective_metric};
@@ -3978,7 +5492,7 @@ struct SpecTuneResult {
               objective_policy);
 }
 
-[[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<ModelSpec>& candidates,
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const LabeledBatch& batch,
                                                const SplitOptions& split = {},
                                                const TrainOptions& train_options = {},
@@ -3994,7 +5508,7 @@ struct SpecTuneResult {
                                                   objective_policy),
                         "selection::tune_specs.sweep");
   if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
-    throw std::runtime_error("selection::tune_specs: best_index is out of range.");
+    ::pluss::throw_error("selection::tune_specs: best_index is out of range.");
   }
   return SpecTuneResult{
       .report = report,
@@ -4002,7 +5516,31 @@ struct SpecTuneResult {
   };
 }
 
-[[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<ModelSpec>& candidates,
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                                               const LabeledBatch& batch,
+                                               const TuneOptions& tune_options,
+                                               const TrainOptions& train_options = {},
+                                               const AssessOptions& assess_options = {},
+                                               MetricKind objective_metric = MetricKind::Accuracy,
+                                               TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  auto report = resolve(::pluss::ai::nodej::tune(candidates,
+                                                 batch,
+                                                 tune_options,
+                                                 train_options,
+                                                 assess_options,
+                                                 objective_metric,
+                                                 objective_policy),
+                        "selection::tune_specs.tune");
+  if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
+    ::pluss::throw_error("selection::tune_specs: best_index is out of range.");
+  }
+  return SpecTuneResult{
+      .report = report,
+      .best_spec = report.trials[static_cast<std::size_t>(report.best_index)].spec,
+  };
+}
+
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
                                                const Series& y,
                                                const SplitOptions& split = {},
@@ -4015,7 +5553,20 @@ struct SpecTuneResult {
   return tune_specs(candidates, batch, split, train_options, assess_options, objective_metric, objective_policy);
 }
 
-[[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<ModelSpec>& candidates,
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                                               const pluss::table::DataFrame& x,
+                                               const Series& y,
+                                               const TuneOptions& tune_options,
+                                               const TrainOptions& train_options = {},
+                                               const AssessOptions& assess_options = {},
+                                               MetricKind objective_metric = MetricKind::Accuracy,
+                                               TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const auto names = cross_validate_default_feature_names_(x, "selection::tune_specs(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "selection::tune_specs(x,y)");
+  return tune_specs(candidates, batch, tune_options, train_options, assess_options, objective_metric, objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
                                                const pluss::table::Thread& y,
                                                const SplitOptions& split = {},
@@ -4027,6 +5578,24 @@ struct SpecTuneResult {
                     x,
                     as_stratify_series(y),
                     split,
+                    train_options,
+                    assess_options,
+                    objective_metric,
+                    objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
+                                               const pluss::table::DataFrame& x,
+                                               const pluss::table::Thread& y,
+                                               const TuneOptions& tune_options,
+                                               const TrainOptions& train_options = {},
+                                               const AssessOptions& assess_options = {},
+                                               MetricKind objective_metric = MetricKind::Accuracy,
+                                               TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  return tune_specs(candidates,
+                    x,
+                    as_stratify_series(y),
+                    tune_options,
                     train_options,
                     assess_options,
                     objective_metric,
@@ -4053,7 +5622,31 @@ struct SpecTuneResult {
                                                   random),
                         "selection::probe_specs.probe");
   if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
-    throw std::runtime_error("selection::probe_specs: best_index is out of range.");
+    ::pluss::throw_error("selection::probe_specs: best_index is out of range.");
+  }
+  return SpecTuneResult{
+      .report = report,
+      .best_spec = report.trials[static_cast<std::size_t>(report.best_index)].spec,
+  };
+}
+
+[[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
+                                                const LabeledBatch& batch,
+                                                const TuneOptions& tune_options,
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  auto report = resolve(::pluss::ai::nodej::tune(sampler,
+                                                 batch,
+                                                 tune_options,
+                                                 train_options,
+                                                 assess_options,
+                                                 objective_metric,
+                                                 objective_policy),
+                        "selection::probe_specs.tune");
+  if (report.best_index < 0 || static_cast<std::size_t>(report.best_index) >= report.trials.size()) {
+    ::pluss::throw_error("selection::probe_specs: best_index is out of range.");
   }
   return SpecTuneResult{
       .report = report,
@@ -4085,6 +5678,25 @@ struct SpecTuneResult {
 }
 
 [[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
+                                                const pluss::table::DataFrame& x,
+                                                const Series& y,
+                                                const TuneOptions& tune_options,
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  const auto names = cross_validate_default_feature_names_(x, "selection::probe_specs(x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "selection::probe_specs(x,y)");
+  return probe_specs(sampler,
+                     batch,
+                     tune_options,
+                     train_options,
+                     assess_options,
+                     objective_metric,
+                     objective_policy);
+}
+
+[[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
                                                 std::int64_t trials,
                                                 const pluss::table::DataFrame& x,
                                                 const pluss::table::Thread& y,
@@ -4104,6 +5716,24 @@ struct SpecTuneResult {
                      objective_metric,
                      objective_policy,
                      random);
+}
+
+[[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
+                                                const pluss::table::DataFrame& x,
+                                                const pluss::table::Thread& y,
+                                                const TuneOptions& tune_options,
+                                                const TrainOptions& train_options = {},
+                                                const AssessOptions& assess_options = {},
+                                                MetricKind objective_metric = MetricKind::Accuracy,
+                                                TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto) {
+  return probe_specs(sampler,
+                     x,
+                     as_stratify_series(y),
+                     tune_options,
+                     train_options,
+                     assess_options,
+                     objective_metric,
+                     objective_policy);
 }
 
 } // namespace selection

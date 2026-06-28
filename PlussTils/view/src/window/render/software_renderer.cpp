@@ -42,11 +42,7 @@ namespace {
   if (!clip.has_value()) {
     return std::nullopt;
   }
-  const RectI clipped = intersect_rect(*clip, canvas_bounds(canvas));
-  if (clipped.empty()) {
-    return std::nullopt;
-  }
-  return clipped;
+  return intersect_rect(*clip, canvas_bounds(canvas));
 }
 
 inline void set_pixel(PixelCanvas& canvas,

@@ -3,6 +3,7 @@
 #include "pluss/msharp/msharp.h"
 #include "CodeM/CodeM.h"
 #include "CodeM/core/Printing.h"
+#include "pluss/error.h"
 #include "pluss/slicing.h"
 #include <cstddef>
 #include <cstdint>
@@ -23,7 +24,7 @@ concept SeriesScalar =
     std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>;
 
 inline Series make_scalar_like(const Series& like, double value) {
-  return Series::full({}, value, like.scalar_type()).to(like.platform());
+  return Series::full({}, value, like.scalar_type(), like.platform());
 }
 
 enum class TernaryCompareOp : std::uint8_t { Eq, Ne, Lt, Le, Gt, Ge };
@@ -106,8 +107,8 @@ CODEM_API bool cuda_supports_bitwise_binary(const Series& a, const Series& b) no
 CODEM_API bool cuda_native_compose_enabled() noexcept;
 CODEM_API bool cuda_native_compose_strict() noexcept;
 CODEM_API bool cuda_supports_compose_baseline(ScalarType dtype) noexcept;
-CODEM_API bool cuda_supports_unite_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept;
-CODEM_API bool cuda_supports_pile_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_unite_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_pile_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept;
 CODEM_API bool cuda_native_counting_enabled() noexcept;
 CODEM_API bool cuda_native_counting_strict() noexcept;
 CODEM_API bool cuda_supports_unique_counting_baseline(ScalarType dtype, bool sorted) noexcept;
@@ -137,6 +138,7 @@ CODEM_API bool cuda_supports_geometric_stochastic_baseline(ScalarType dtype) noe
 CODEM_API bool cuda_supports_cauchy_stochastic_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_random_stochastic_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_poisson_stochastic_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_bernoulli_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_normal_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_log_normal_stochastic(const Series& a) noexcept;
@@ -146,6 +148,7 @@ CODEM_API bool cuda_supports_geometric_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_cauchy_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_random_stochastic(const Series& a) noexcept;
 CODEM_API bool cuda_supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, bool replacement) noexcept;
+CODEM_API bool cuda_supports_poisson_stochastic(ScalarType dtype) noexcept;
 CODEM_API bool cuda_native_selection_enabled() noexcept;
 CODEM_API bool cuda_native_selection_strict() noexcept;
 CODEM_API bool cuda_supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept;
@@ -194,7 +197,7 @@ CODEM_API bool cuda_supports_index_indexing_baseline(ScalarType value_dtype, Sca
 CODEM_API bool cuda_supports_take_indexing(const Series& self, const Series& index) noexcept;
 CODEM_API bool cuda_supports_put_indexing(const Series& self, const Series& index, const Series& source, bool accumulate) noexcept;
 CODEM_API bool cuda_supports_nonzero_indexing(const Series& self) noexcept;
-CODEM_API bool cuda_supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept;
+CODEM_API bool cuda_supports_index_indexing(const Series& self, pluss::msharp::RangeView::Of<Series> indices) noexcept;
 CODEM_API bool cuda_native_matmul_enabled() noexcept;
 CODEM_API bool cuda_native_matmul_strict() noexcept;
 CODEM_API bool cuda_supports_matmul_native_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
@@ -390,12 +393,8 @@ namespace pluss {
   using codem::platform_available;
   using codem::operator<<;
 
-  inline Series index(const Series& self, const std::vector<Series>& indices) {
-    return self.index(indices);
-  }
-
-  inline Series index_put(const Series& self,
-                          const std::vector<Series>& indices,
+inline Series index_put(const Series& self,
+                          pluss::msharp::RangeView::Of<Series> indices,
                           const Series& values,
                           bool accumulate=false) {
     return self.index_put(indices, values, accumulate);
@@ -710,11 +709,11 @@ inline bool supports_compose_baseline(ScalarType dtype) noexcept {
   return codem::cuda_supports_compose_baseline(dtype);
 }
 
-inline bool supports_unite_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept {
+inline bool supports_unite_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept {
   return codem::cuda_supports_unite_compose(self, others, dim);
 }
 
-inline bool supports_pile_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept {
+inline bool supports_pile_compose(const Series& self, pluss::msharp::RangeView::Of<Series> others, std::int64_t dim) noexcept {
   return codem::cuda_supports_pile_compose(self, others, dim);
 }
 
@@ -834,6 +833,10 @@ inline bool supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept 
   return codem::cuda_supports_multinomial_stochastic_baseline(dtype);
 }
 
+inline bool supports_poisson_stochastic_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_poisson_stochastic_baseline(dtype);
+}
+
 inline bool supports_bernoulli_stochastic(const Series& a) noexcept {
   return codem::cuda_supports_bernoulli_stochastic(a);
 }
@@ -868,6 +871,10 @@ inline bool supports_random_stochastic(const Series& a) noexcept {
 
 inline bool supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, bool replacement) noexcept {
   return codem::cuda_supports_multinomial_stochastic(a, num_samples, replacement);
+}
+
+inline bool supports_poisson_stochastic(ScalarType dtype) noexcept {
+  return codem::cuda_supports_poisson_stochastic(dtype);
 }
 
 inline bool native_selection_enabled() noexcept {
@@ -1062,7 +1069,7 @@ inline bool supports_nonzero_indexing(const Series& self) noexcept {
   return codem::cuda_supports_nonzero_indexing(self);
 }
 
-inline bool supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept {
+inline bool supports_index_indexing(const Series& self, pluss::msharp::RangeView::Of<Series> indices) noexcept {
   return codem::cuda_supports_index_indexing(self, indices);
 }
 

@@ -208,12 +208,12 @@ id_2024  sales_2024  city_2024
 #### Signature
 
 ```cpp
-DataFrameView aggregate(self, std::initializer_list<SummarySpec> specs, bool render = true) const
+DataFrameView aggregate(self, pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = true) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<SummarySpec>`
+`specs` : `pluss::msharp::RangeView::Of<SummarySpec>`
     See the signature for the supported argument form.
 
 `render` : `bool`
@@ -246,6 +246,13 @@ auto out = df.aggregate({{"sales_mean", "sales", pluss::table::DataFrame::Summar
 metric       value
 sales_mean    115.0
 ```
+
+#### Practical Behavior
+
+- `aggregate(...)` builds a compact summary frame instead of returning grouped rows.
+- Each `SummarySpec` chooses an output name, a source feature, and a summary operation.
+- Use this when you want one-row summary output such as totals, means, mins, maxes, or counts.
+
 
 ### `align_cases`
 
@@ -299,17 +306,210 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Practical Behavior
+
+- `align_cases(new_cases)` reorders rows by matching the existing case labels against `new_cases`.
+- Every requested case label must already exist or the call throws.
+- The output case axis is rewritten to `new_cases`, so both the row order and the labels now follow that target order.
+
+
+### `all`
+
+#### Signature
+
+```cpp
+Thread all(self, pluss::msharp::RangeView::Of<std::string_view> features =
+```
+
+#### Parameters
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `all` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread all(self, std::int64_t axis, pluss::msharp::RangeView::Of<std::string_view> features =`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},
+});
+
+auto out = df.all(1, {"passed_math", "passed_lab"}, true);
+```
+
+#### Axis Rules
+
+- `axis=0` reduces down the selected boolean features and returns one result per feature.
+- `axis=1` reduces across features and returns one result per row.
+- These methods expect boolean features; they are not general numeric reducers.
+- Nullable boolean input requires `skipna=true`.
+
+
+### `all`
+
+#### Signature
+
+```cpp
+Thread all(self, std::int64_t axis, pluss::msharp::RangeView::Of<std::string_view> features =
+```
+
+#### Parameters
+
+`axis` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `all` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread all(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},
+});
+
+auto out = df.all(1, {"passed_math", "passed_lab"}, true);
+```
+
+#### Axis Rules
+
+- `axis=0` reduces down the selected boolean features and returns one result per feature.
+- `axis=1` reduces across features and returns one result per row.
+- These methods expect boolean features; they are not general numeric reducers.
+- Nullable boolean input requires `skipna=true`.
+
+
+### `any`
+
+#### Signature
+
+```cpp
+Thread any(self, pluss::msharp::RangeView::Of<std::string_view> features =
+```
+
+#### Parameters
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `any` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread any(self, std::int64_t axis, pluss::msharp::RangeView::Of<std::string_view> features =`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},
+});
+
+auto out = df.any(1, {"passed_math", "passed_lab"}, true);
+```
+
+#### Axis Rules
+
+- `axis=0` reduces down the selected boolean features and returns one result per feature.
+- `axis=1` reduces across features and returns one result per row.
+- These methods expect boolean features; they are not general numeric reducers.
+- Nullable boolean input requires `skipna=true`.
+
+
+### `any`
+
+#### Signature
+
+```cpp
+Thread any(self, std::int64_t axis, pluss::msharp::RangeView::Of<std::string_view> features =
+```
+
+#### Parameters
+
+`axis` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `any` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread any(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},
+});
+
+auto out = df.any(1, {"passed_math", "passed_lab"}, true);
+```
+
+#### Axis Rules
+
+- `axis=0` reduces down the selected boolean features and returns one result per feature.
+- `axis=1` reduces across features and returns one result per row.
+- These methods expect boolean features; they are not general numeric reducers.
+- Nullable boolean input requires `skipna=true`.
+
+
 ### `assign`
 
 #### Signature
 
 ```cpp
-DataFrame assign(self, std::initializer_list<DeriveSpec> specs) const
+DataFrame assign(self, pluss::msharp::RangeView::Of<DeriveSpec> specs) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<DeriveSpec>`
+`specs` : `pluss::msharp::RangeView::Of<DeriveSpec>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -323,7 +523,7 @@ Adds or replaces derived features computed from the current frame. Use this when
 
 #### See also
 
-- `DataFrame assign(self, std::initializer_list<std::pair<std::string, Thread>> assignments) const`
+- `DataFrame assign(self, pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const`
 
 #### Examples
 
@@ -346,17 +546,24 @@ id  sales  city    profit
 3    90.0  Kumasi  30.0
 ```
 
+#### Practical Behavior
+
+- `assign(...)` adds new derived features or replaces existing ones without mutating the source frame.
+- Each derived thread must match the frame case count.
+- Use the pair form when you already have the computed thread, and the spec form when the value should be computed from the current frame inside the call.
+
+
 ### `assign`
 
 #### Signature
 
 ```cpp
-DataFrame assign(self, std::initializer_list<std::pair<std::string, Thread>> assignments) const
+DataFrame assign(self, pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const
 ```
 
 #### Parameters
 
-`assignments` : `std::initializer_list<std::pair<std::string, Thread>>`
+`assignments` : `pluss::msharp::RangeView::Of<std::pair<std::string, Thread>>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -370,7 +577,7 @@ Adds or replaces derived features computed from the current frame. Use this when
 
 #### See also
 
-- `DataFrame assign(self, std::initializer_list<DeriveSpec> specs) const`
+- `DataFrame assign(self, pluss::msharp::RangeView::Of<DeriveSpec> specs) const`
 
 #### Examples
 
@@ -393,17 +600,24 @@ id  sales  city    profit
 3    90.0  Kumasi  30.0
 ```
 
+#### Practical Behavior
+
+- `assign(...)` adds new derived features or replaces existing ones without mutating the source frame.
+- Each derived thread must match the frame case count.
+- Use the pair form when you already have the computed thread, and the spec form when the value should be computed from the current frame inside the call.
+
+
 ### `astype`
 
 #### Signature
 
 ```cpp
-DataFrame astype(self,  std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const
+DataFrame astype(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const
 ```
 
 #### Parameters
 
-`feature_dtypes` : `std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>>`
+`feature_dtypes` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -417,7 +631,7 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### See also
 
-- `DataFrame astype(self, std::initializer_list<std::string_view> features, pluss::codem::ScalarType dtype) const`
+- `DataFrame astype(self, pluss::msharp::RangeView::Of<std::string_view> features, pluss::codem::ScalarType dtype) const`
 
 #### Examples
 
@@ -436,18 +650,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `astype`
 
 #### Signature
 
 ```cpp
-DataFrame astype(self, std::initializer_list<std::string_view> features, pluss::codem::ScalarType dtype) const
+DataFrame astype(self, pluss::msharp::RangeView::Of<std::string_view> features, pluss::codem::ScalarType dtype) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `dtype` : `pluss::codem::ScalarType`
     See the signature for the supported argument form.
@@ -463,18 +685,14 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### See also
 
-- `DataFrame astype(self,  std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const`
+- `DataFrame astype(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const`
 
 #### Examples
 
 ```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
+auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
 
-auto out = df.astype();
+auto out = df.astype({"sales"}, pluss::codem::ScalarType::Float64);
 ```
 
 #### Output
@@ -485,6 +703,14 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
 
 ### `at`
 
@@ -526,8 +752,15 @@ auto out = df.at(0, "city");
 #### Output
 
 ```text
-1
+Accra
 ```
+
+#### Practical Behavior
+
+- `at(row, feature)` returns one scalar value rendered as text.
+- The row is positional here; it does not look up by case label.
+- Use this for quick single-cell inspection, not for typed column work.
+
 
 ### `bfill`
 
@@ -553,10 +786,11 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### Examples
 
 ```cpp
+auto score = pluss::table::Thread(pluss::make_series({71.0, 0.0, 88.0, 0.0}))
+                 .with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"score", score},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
 });
 
 auto out = df.bfill();
@@ -565,11 +799,27 @@ auto out = df.bfill();
 #### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+score  city
+71.0   Accra
+71.0   Tema
+88.0   Kumasi
+88.0   Tamale
 ```
+
+#### Practical Behavior
+
+- `bfill()` runs backward fill feature-by-feature across the full frame.
+- A null value is replaced by the next valid value below it in the same feature.
+- Trailing null runs stay null because there is no later value to pull from.
+- If you want to backward-fill only one feature, apply it at the `Thread` level and assign it back with `set(...)` or `set_features(...)`.
+
+#### Common Pattern
+
+```cpp
+gradebook.set("Final Points Grade") =
+    gradebook.features("Final Points Grade").bfill();
+```
+
 
 ### `bottom`
 
@@ -612,10 +862,29 @@ auto out = df.bottom("sales", 2);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
 3    90.0  Kumasi
+1   100.0  Accra
 ```
+
+#### Practical Behavior
+
+- `bottom(feature, n)` sorts ascending by `feature`, keeps nulls last, then returns the first `n` rows.
+- Because nulls are sorted last, null rows are not chosen unless there are not enough non-null rows to satisfy `n`.
+- `n == 0` returns an empty frame with the same schema.
+- The output keeps the original row payloads and case labels of the selected rows.
+
+#### Argument Effects
+
+- Small `n` is useful for “lowest few rows” inspection.
+- Larger `n` gives you the full ascending slice without writing `sort_values(...).head(...)` yourself.
+
+#### Equivalent Expanded Form
+
+```cpp
+auto out = df.sort_values({pluss::table::DataFrame::ArrangeSpec{"sales", true, true}})
+             .head(5, false);
+```
+
 
 ### `cases`
 
@@ -654,8 +923,15 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.cases(0);
+auto out = df.cases();
 ```
+
+#### Overload Guide
+
+- `cases(row)` and `cases(start, stop)` return row slices.
+- `cases(row, feature)` returns one scalar value from a row/feature intersection.
+- Use `cases_series()` only when the case axis is actually Series-backed.
+
 
 ### `cases`
 
@@ -707,6 +983,13 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Overload Guide
+
+- `cases(row)` and `cases(start, stop)` return row slices.
+- `cases(row, feature)` returns one scalar value from a row/feature intersection.
+- Use `cases_series()` only when the case axis is actually Series-backed.
+
+
 ### `cases`
 
 #### Signature
@@ -756,6 +1039,13 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Overload Guide
+
+- `cases(row)` and `cases(start, stop)` return row slices.
+- `cases(row, feature)` returns one scalar value from a row/feature intersection.
+- Use `cases_series()` only when the case axis is actually Series-backed.
+
 
 ### `cases`
 
@@ -807,6 +1097,13 @@ auto out = df.cases(0, 0);
 1
 ```
 
+#### Overload Guide
+
+- `cases(row)` and `cases(start, stop)` return row slices.
+- `cases(row, feature)` returns one scalar value from a row/feature intersection.
+- Use `cases_series()` only when the case axis is actually Series-backed.
+
+
 ### `cases`
 
 #### Signature
@@ -854,8 +1151,15 @@ auto out = df.cases(0, "city");
 #### Output
 
 ```text
-1
+Accra
 ```
+
+#### Overload Guide
+
+- `cases(row)` and `cases(start, stop)` return row slices.
+- `cases(row, feature)` returns one scalar value from a row/feature intersection.
+- Use `cases_series()` only when the case axis is actually Series-backed.
+
 
 ### `cases_series`
 
@@ -901,12 +1205,12 @@ auto out = df.cases_series();
 #### Signature
 
 ```cpp
-DataFrame cast(self,  std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const
+DataFrame cast(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const
 ```
 
 #### Parameters
 
-`feature_dtypes` : `std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>>`
+`feature_dtypes` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -920,7 +1224,7 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### See also
 
-- `DataFrame cast(self, std::initializer_list<CastSpec> specs) const`
+- `DataFrame cast(self, pluss::msharp::RangeView::Of<CastSpec> specs) const`
 
 #### Examples
 
@@ -939,17 +1243,25 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `cast`
 
 #### Signature
 
 ```cpp
-DataFrame cast(self, std::initializer_list<CastSpec> specs) const
+DataFrame cast(self, pluss::msharp::RangeView::Of<CastSpec> specs) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<CastSpec>`
+`specs` : `pluss::msharp::RangeView::Of<CastSpec>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -963,7 +1275,7 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### See also
 
-- `DataFrame cast(self,  std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const`
+- `DataFrame cast(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const`
 
 #### Examples
 
@@ -982,18 +1294,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `cast_note`
 
 #### Signature
 
 ```cpp
-DataFrame cast_note(self, std::initializer_list<std::string_view> features) const
+DataFrame cast_note(self, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -1025,18 +1345,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `cast_series`
 
 #### Signature
 
 ```cpp
-DataFrame cast_series(self, std::initializer_list<std::string_view> features, std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const
+DataFrame cast_series(self, pluss::msharp::RangeView::Of<std::string_view> features, std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `dtype` : `std::optional<pluss::codem::ScalarType>`
     See the signature for the supported argument form.
@@ -1067,18 +1395,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `cast_timeindex`
 
 #### Signature
 
 ```cpp
-DataFrame cast_timeindex(self, std::initializer_list<std::string_view> features) const
+DataFrame cast_timeindex(self, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -1110,18 +1446,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `cast_timeline`
 
 #### Signature
 
 ```cpp
-DataFrame cast_timeline(self, std::initializer_list<std::string_view> features) const
+DataFrame cast_timeline(self, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -1149,18 +1493,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Conversion Rules
+
+- These methods rewrite only the selected features; unselected features are passed through unchanged.
+- Duplicate feature names in the request are ignored after the first occurrence.
+- Unknown or empty feature names throw immediately.
+- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
+
+
 ### `ceil_time`
 
 #### Signature
 
 ```cpp
-DataFrame ceil_time(self, std::initializer_list<std::string_view> features, std::string_view unit) const
+DataFrame ceil_time(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view unit) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
     See the signature for the supported argument form.
@@ -1196,6 +1548,124 @@ ts
 2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z
 ```
+
+#### Practical Behavior
+
+- `ceil_time(...)` rounds selected temporal features upward to the requested unit.
+- Only timeline/timeindex features are valid targets.
+- Use this when you want time-bucket labels that always round toward the next boundary.
+
+
+### `cloc`
+
+#### Signature
+
+```cpp
+DataFrame cloc(self, std::int64_t row) const
+```
+
+#### Parameters
+
+`row` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `cloc` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrame cloc(self, std::int64_t start, std::int64_t stop) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.cloc();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+#### Practical Behavior
+
+- `cloc(...)` is the case-axis row slice helper.
+- It is equivalent to slicing rows, not selecting by feature names.
+- Use it when you want row-position access in a method that reads like case-location.
+
+
+### `cloc`
+
+#### Signature
+
+```cpp
+DataFrame cloc(self, std::int64_t start, std::int64_t stop) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    Inclusive starting position of the slice.
+
+`stop` : `std::int64_t`
+    Exclusive ending position of the slice.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `cloc` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrame cloc(self, std::int64_t row) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.cloc();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+#### Practical Behavior
+
+- `cloc(...)` is the case-axis row slice helper.
+- It is equivalent to slicing rows, not selecting by feature names.
+- Use it when you want row-position access in a method that reads like case-location.
+
 
 ### `combine`
 
@@ -1246,6 +1716,13 @@ id  sales  cost
 2   120.0  80.0
 3    90.0  55.0
 ```
+
+#### Practical Behavior
+
+- `combine(...)` is the lower-level composition route behind feature-wise join/update behaviors.
+- Collision handling depends on the chosen `CombineSpec` and suffix settings.
+- Use the dedicated helpers such as `join(...)`, `update(...)`, or `unify(...)` when they fit; use `combine(...)` when you need explicit combine policy control.
+
 
 ### `combine`
 
@@ -1302,6 +1779,13 @@ id  sales  cost
 3    90.0  55.0
 ```
 
+#### Practical Behavior
+
+- `combine(...)` is the lower-level composition route behind feature-wise join/update behaviors.
+- Collision handling depends on the chosen `CombineSpec` and suffix settings.
+- Use the dedicated helpers such as `join(...)`, `update(...)`, or `unify(...)` when they fit; use `combine(...)` when you need explicit combine policy control.
+
+
 ### `compare`
 
 #### Signature
@@ -1352,6 +1836,13 @@ id  sales
 3   false
 ```
 
+#### Practical Behavior
+
+- `compare(...)` is the “not equal” comparison alias on `DataFrame`.
+- It returns a boolean-like frame you can inspect directly or reuse as a mask.
+- Use `eq/ne/lt/le/gt/ge` when you want the comparison intent spelled out directly.
+
+
 ### `compare`
 
 #### Signature
@@ -1399,6 +1890,13 @@ id  sales
 3   false
 ```
 
+#### Practical Behavior
+
+- `compare(...)` is the “not equal” comparison alias on `DataFrame`.
+- It returns a boolean-like frame you can inspect directly or reuse as a mask.
+- Use `eq/ne/lt/le/gt/ge` when you want the comparison intent spelled out directly.
+
+
 ### `conform_to`
 
 #### Signature
@@ -1445,6 +1943,13 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Practical Behavior
+
+- `conform_to(other)` first reorders features to match `other.feature_names()` and then aligns the case axis to `other.cases()`.
+- Both frames must have the same feature count and the same feature name set.
+- Use this before arithmetic or updates when structure compatibility matters more than preserving the current order.
+
+
 ### `copy`
 
 #### Signature
@@ -1487,12 +1992,18 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Practical Behavior
+
+- `copy()` gives you a detached frame value for downstream edits.
+- Use it when you want to make the independence of the result explicit in user code or examples.
+
+
 ### `corr`
 
 #### Signature
 
 ```cpp
-DataFrameView corr(self, bool render = true) const
+DataFrameView corr(self, bool render = false) const
 ```
 
 #### Parameters
@@ -1511,9 +2022,9 @@ Applies `corr` to the current `DataFrame` object. Use the example and output tog
 
 #### See also
 
-- `DataFrameView corr(self, CorrMethod method, bool render = true) const`
-- `DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const`
-- `DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const`
+- `DataFrameView corr(self, CorrMethod method, bool render = false) const`
+- `DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const`
+- `DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const`
 
 #### Examples
 
@@ -1524,24 +2035,30 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.corr();
+auto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);
 ```
 
 #### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
 ```
+
+#### Practical Behavior
+
+- `corr(...)` builds a correlation matrix across numeric features only.
+- If you do not pass a feature list, the method auto-selects numeric features from the frame.
+- Supported methods route through thread-level correlation kernels such as Pearson, Spearman, and Kendall Tau.
+
 
 ### `corr`
 
 #### Signature
 
 ```cpp
-DataFrameView corr(self, CorrMethod method, bool render = true) const
+DataFrameView corr(self, CorrMethod method, bool render = false) const
 ```
 
 #### Parameters
@@ -1563,9 +2080,9 @@ Applies `corr` to the current `DataFrame` object. Use the example and output tog
 
 #### See also
 
-- `DataFrameView corr(self, bool render = true) const`
-- `DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const`
-- `DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const`
+- `DataFrameView corr(self, bool render = false) const`
+- `DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const`
+- `DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const`
 
 #### Examples
 
@@ -1576,30 +2093,36 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.corr();
+auto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);
 ```
 
 #### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
 ```
+
+#### Practical Behavior
+
+- `corr(...)` builds a correlation matrix across numeric features only.
+- If you do not pass a feature list, the method auto-selects numeric features from the frame.
+- Supported methods route through thread-level correlation kernels such as Pearson, Spearman, and Kendall Tau.
+
 
 ### `corr`
 
 #### Signature
 
 ```cpp
-DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const
+DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `render` : `bool`
     See the signature for the supported argument form.
@@ -1615,9 +2138,9 @@ Applies `corr` to the current `DataFrame` object. Use the example and output tog
 
 #### See also
 
-- `DataFrameView corr(self, CorrMethod method, bool render = true) const`
-- `DataFrameView corr(self, bool render = true) const`
-- `DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const`
+- `DataFrameView corr(self, CorrMethod method, bool render = false) const`
+- `DataFrameView corr(self, bool render = false) const`
+- `DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const`
 
 #### Examples
 
@@ -1628,30 +2151,36 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.corr();
+auto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);
 ```
 
 #### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
 ```
+
+#### Practical Behavior
+
+- `corr(...)` builds a correlation matrix across numeric features only.
+- If you do not pass a feature list, the method auto-selects numeric features from the frame.
+- Supported methods route through thread-level correlation kernels such as Pearson, Spearman, and Kendall Tau.
+
 
 ### `corr`
 
 #### Signature
 
 ```cpp
-DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const
+DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `method` : `CorrMethod`
     See the signature for the supported argument form.
@@ -1670,9 +2199,9 @@ Applies `corr` to the current `DataFrame` object. Use the example and output tog
 
 #### See also
 
-- `DataFrameView corr(self, CorrMethod method, bool render = true) const`
-- `DataFrameView corr(self, bool render = true) const`
-- `DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const`
+- `DataFrameView corr(self, CorrMethod method, bool render = false) const`
+- `DataFrameView corr(self, bool render = false) const`
+- `DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const`
 
 #### Examples
 
@@ -1683,17 +2212,23 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.corr();
+auto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);
 ```
 
 #### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
 ```
+
+#### Practical Behavior
+
+- `corr(...)` builds a correlation matrix across numeric features only.
+- If you do not pass a feature list, the method auto-selects numeric features from the frame.
+- Supported methods route through thread-level correlation kernels such as Pearson, Spearman, and Kendall Tau.
+
 
 ### `count`
 
@@ -1733,8 +2268,16 @@ auto out = df.count(false);
 
 ```text
 feature  value
-sales    310.0
+id       3
+sales    3
+city     3
 ```
+
+#### Practical Behavior
+
+- `count()` returns per-feature non-null counts as a summary frame.
+- This is not row count; use `nrows()` when you want total case count.
+
 
 ### `count_by`
 
@@ -1787,6 +2330,60 @@ Accra   2
 Tema    2
 ```
 
+#### Practical Behavior
+
+- `count_by(feature, ...)` groups by one feature, counts rows per distinct value, sorts by count descending, then trims to `top_n` when requested.
+- Ties are broken by key name in ascending order.
+
+
+### `count_distinct`
+
+#### Signature
+
+```cpp
+DataFrameView count_distinct(self, pluss::msharp::RangeView::Of<std::string_view> features =
+```
+
+#### Parameters
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Applies `count_distinct` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.count_distinct({"id", "sales", "city"}, true, false);
+```
+
+#### Output
+
+```text
+case     id  sales  city
+summary  3   3      2
+```
+
+#### Practical Behavior
+
+- `count_distinct(...)` returns one summary row containing distinct-value counts for the selected features.
+- With no feature list, every feature is included.
+- `dropna` controls whether null should participate as its own distinct value.
+
+
 ### `count_null_rows`
 
 #### Signature
@@ -1825,6 +2422,12 @@ auto out = df.count_null_rows();
 ```text
 3
 ```
+
+#### Practical Behavior
+
+- `count_null_rows()` counts how many rows contain at least one null value anywhere in the frame.
+- Use this as a quick completeness check before grouping, joining, or export.
+
 
 ### `defined`
 
@@ -1905,6 +2508,13 @@ auto out = df.describe(false);
 feature  count  mean   min   max
 sales    3      103.3  90.0  120.0
 ```
+
+#### Practical Behavior
+
+- `describe()` summarizes numeric series features only.
+- Non-numeric and non-series features are skipped rather than coerced.
+- Null values are removed before the statistics are computed.
+
 
 ### `div`
 
@@ -2105,12 +2715,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame drop(self, std::initializer_list<std::string_view> names) const
+DataFrame drop(self, pluss::msharp::RangeView::Of<std::string_view> names) const
 ```
 
 #### Parameters
 
-`names` : `std::initializer_list<std::string_view>`
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
@@ -2143,6 +2753,12 @@ id  sales
 3    90.0
 ```
 
+#### Practical Behavior
+
+- `drop(...)` removes features, not rows.
+- The remaining features keep their existing row alignment and case axis.
+
+
 ### `dropna`
 
 #### Signature
@@ -2167,10 +2783,12 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### Examples
 
 ```cpp
+auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))
+                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::make_series({1, 2, 3})},
+    {"sales", sales},
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
 });
 
 auto out = df.dropna();
@@ -2181,22 +2799,27 @@ auto out = df.dropna();
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `dropna()` removes rows that contain at least one null value anywhere in the frame.
+- Use `dropna_all(features)` when the rule should apply only to selected features and only when all of them are null.
+
 
 ### `dropna_all`
 
 #### Signature
 
 ```cpp
-DataFrame dropna_all(self, std::initializer_list<std::string_view> features =
+DataFrame dropna_all(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -2222,11 +2845,16 @@ auto out = df.dropna_all({"sales"});
 #### Output
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+id  sales
+2   null
+3   90.0
 ```
+
+#### Practical Behavior
+
+- `dropna_all(features)` removes rows only when all selected features are null in that row.
+- Rows with at least one observed value among the selected features are kept.
+
 
 ### `eq`
 
@@ -2446,6 +3074,330 @@ auto out = df.feature_ref("sales");
 #### Signature
 
 ```cpp
+DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)
+```
+
+#### Parameters
+
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### See also
+
+- `std::vector<Thread> features(self) const`
+- `Thread features(self, std::string_view name)`
+- `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+#### Output
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+### `features`
+
+#### Signature
+
+```cpp
+DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const
+```
+
+#### Parameters
+
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### See also
+
+- `std::vector<Thread> features(self) const`
+- `Thread features(self, std::string_view name)`
+- `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+#### Output
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+### `features`
+
+#### Signature
+
+```cpp
+DataFrame features(self, StackArray<std::string_view> names)
+```
+
+#### Parameters
+
+`names` : `StackArray<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### See also
+
+- `std::vector<Thread> features(self) const`
+- `Thread features(self, std::string_view name)`
+- `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+#### Output
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+### `features`
+
+#### Signature
+
+```cpp
+DataFrame features(self, StackArray<std::string_view> names) const
+```
+
+#### Parameters
+
+`names` : `StackArray<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### See also
+
+- `std::vector<Thread> features(self) const`
+- `Thread features(self, std::string_view name)`
+- `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+#### Output
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+### `features`
+
+#### Signature
+
+```cpp
+DataFrame features(self, std::initializer_list<const char*> names)
+```
+
+#### Parameters
+
+`names` : `std::initializer_list<const char*>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### See also
+
+- `std::vector<Thread> features(self) const`
+- `Thread features(self, std::string_view name)`
+- `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features({"id", "sales"});
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `features`
+
+#### Signature
+
+```cpp
+DataFrame features(self, std::initializer_list<const char*> names) const
+```
+
+#### Parameters
+
+`names` : `std::initializer_list<const char*>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### See also
+
+- `std::vector<Thread> features(self) const`
+- `Thread features(self, std::string_view name)`
+- `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features({"id", "sales"});
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `features`
+
+#### Signature
+
+```cpp
 DataFrame features(self, std::initializer_list<std::string_view> names)
 ```
 
@@ -2468,7 +3420,13 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 - `std::vector<Thread> features(self) const`
 - `Thread features(self, std::string_view name)`
 - `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
 - `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
 
 #### Examples
 
@@ -2515,7 +3473,13 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 - `std::vector<Thread> features(self) const`
 - `Thread features(self, std::string_view name)`
 - `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
 - `DataFrame features(self, std::initializer_list<std::string_view> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
 
 #### Examples
 
@@ -2560,8 +3524,14 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 
 - `Thread features(self, std::string_view name)`
 - `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
 - `DataFrame features(self, std::initializer_list<std::string_view> names)`
 - `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
 
 #### Examples
 
@@ -2607,8 +3577,14 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 
 - `std::vector<Thread> features(self) const`
 - `Thread features(self, std::string_view name) const`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
 - `DataFrame features(self, std::initializer_list<std::string_view> names)`
 - `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
 
 #### Examples
 
@@ -2654,8 +3630,14 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 
 - `std::vector<Thread> features(self) const`
 - `Thread features(self, std::string_view name)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const`
+- `DataFrame features(self, StackArray<std::string_view> names)`
+- `DataFrame features(self, StackArray<std::string_view> names) const`
 - `DataFrame features(self, std::initializer_list<std::string_view> names)`
 - `DataFrame features(self, std::initializer_list<std::string_view> names) const`
+- `DataFrame features(self, std::initializer_list<const char*> names)`
+- `DataFrame features(self, std::initializer_list<const char*> names) const`
 
 #### Examples
 
@@ -2742,14 +3724,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -2773,7 +3755,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const
+DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
@@ -2781,8 +3763,8 @@ DataFrame fillna(self, const char* value, std::initializer_list<std::string_view
 `value` : `const char*`
     See the signature for the supported argument form.
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -2796,14 +3778,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -2847,14 +3829,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -2878,7 +3860,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const
+DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
@@ -2886,8 +3868,8 @@ DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std:
 `value` : `const pluss::TimeIndex&`
     See the signature for the supported argument form.
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -2901,13 +3883,13 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
 
 #### Examples
@@ -2952,14 +3934,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -2983,7 +3965,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const
+DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
@@ -2991,8 +3973,8 @@ DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::
 `value` : `const pluss::Timeline&`
     See the signature for the supported argument form.
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -3006,14 +3988,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -3056,15 +4038,15 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -3092,7 +4074,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const
+DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
@@ -3100,8 +4082,8 @@ DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> fea
 `value` : `scalar`
     See the signature for the supported argument form.
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -3116,13 +4098,13 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 - `DataFrame fillna(self, scalar value) const`
 - `DataFrame fillna(self, std::string_view value) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -3166,14 +4148,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
-- `DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
+- `DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -3197,7 +4179,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame fillna(self, std::string_view value, std::initializer_list<std::string_view> features) const
+DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
@@ -3205,8 +4187,8 @@ DataFrame fillna(self, std::string_view value, std::initializer_list<std::string
 `value` : `std::string_view`
     See the signature for the supported argument form.
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -3220,14 +4202,14 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### See also
 
 - `DataFrame fillna(self, scalar value) const`
-- `DataFrame fillna(self, scalar value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, std::string_view value) const`
 - `DataFrame fillna(self, const char* value) const`
-- `DataFrame fillna(self, const char* value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::Timeline& value) const`
-- `DataFrame fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 - `DataFrame fillna(self, const pluss::TimeIndex& value) const`
-- `DataFrame fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const`
+- `DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const`
 
 #### Examples
 
@@ -3579,13 +4561,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame floor_time(self, std::initializer_list<std::string_view> features, std::string_view unit) const
+DataFrame floor_time(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view unit) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
     See the signature for the supported argument form.
@@ -3861,15 +4843,15 @@ Thread([100.0, 120.0, 90.0])
 #### Signature
 
 ```cpp
-DataFrameView group_by(self, std::initializer_list<std::string_view> keys, std::initializer_list<GroupSpec> specs, bool dropna_keys = true, bool render = true) const
+DataFrameView group_by(self, pluss::msharp::RangeView::Of<std::string_view> keys, pluss::msharp::RangeView::Of<GroupSpec> specs, bool dropna_keys = true, bool render = true) const
 ```
 
 #### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+`keys` : `pluss::msharp::RangeView::Of<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-`specs` : `std::initializer_list<GroupSpec>`
+`specs` : `pluss::msharp::RangeView::Of<GroupSpec>`
     See the signature for the supported argument form.
 
 `dropna_keys` : `bool`
@@ -4090,6 +5072,39 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+### `height`
+
+#### Signature
+
+```cpp
+std::int64_t height(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+Applies `height` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.height();
+```
+
 ### `iat`
 
 #### Signature
@@ -4131,103 +5146,6 @@ auto out = df.iat(0, 0);
 
 ```text
 1
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-DataFrame iloc(self, std::int64_t row) const
-```
-
-#### Parameters
-
-`row` : `std::int64_t`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### See also
-
-- `DataFrame iloc(self, std::int64_t start, std::int64_t stop) const`
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.iloc(1);
-```
-
-#### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-DataFrame iloc(self, std::int64_t start, std::int64_t stop) const
-```
-
-#### Parameters
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::int64_t`
-    Exclusive ending position of the slice.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### See also
-
-- `DataFrame iloc(self, std::int64_t row) const`
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.iloc(0, 2);
-```
-
-#### Output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
 ```
 
 ### `info`
@@ -4424,13 +5342,13 @@ id  sales  city    profit
 #### Signature
 
 ```cpp
-DataFrame isna(self, std::initializer_list<std::string_view> features =
+DataFrame isna(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -4467,13 +5385,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame isnull(self, std::initializer_list<std::string_view> features =
+DataFrame isnull(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -4726,39 +5644,6 @@ id  sales
 3   false
 ```
 
-### `length`
-
-#### Signature
-
-```cpp
-std::int64_t height(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
-
-#### Notes
-
-Applies `height` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.height();
-```
-
 ### `load`
 
 #### Signature
@@ -4790,7 +5675,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -4847,7 +5732,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -4869,7 +5754,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 ```
 
 #### Parameters
@@ -4886,7 +5771,7 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 `ncases` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
 
-`usefeats` : `std::initializer_list<std::string_view>`
+`usefeats` : `pluss::msharp::RangeView::Of<std::string_view>`
     See the signature for the supported argument form.
 
 `case_col` : `std::optional<std::string>`
@@ -4961,7 +5846,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5012,7 +5897,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5064,7 +5949,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5111,7 +5996,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
 - `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5167,7 +6052,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5189,7 +6074,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 ```
 
 #### Parameters
@@ -5203,7 +6088,7 @@ static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std
 `ncases` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
 
-`usefeats` : `std::initializer_list<std::string_view>`
+`usefeats` : `pluss::msharp::RangeView::Of<std::string_view>`
     See the signature for the supported argument form.
 
 `case_col` : `std::optional<std::string>`
@@ -5279,7 +6164,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
 - `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5329,7 +6214,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
 - `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5380,7 +6265,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
 - `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5433,7 +6318,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5492,7 +6377,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
 - `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5541,8 +6426,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5594,8 +6481,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5647,8 +6536,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5701,8 +6592,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5757,8 +6650,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5813,8 +6708,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5870,7 +6767,9 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5916,8 +6815,108 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
+
+#### Examples
+
+```cpp
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet1", true);
+```
+
+### `load_excel`
+
+#### Signature
+
+```cpp
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)
+```
+
+#### Parameters
+
+`filepath` : `std::string_view`
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+
+`sheet_indices` : `pluss::msharp::RangeView::Int`
+    See the signature for the supported argument form.
+
+`header` : `bool`
+    Controls whether feature names are written to, or expected from, the file header row.
+
+#### Returns
+
+`pluss::loader::LoadResult`
+    Value produced by this call.
+
+#### Notes
+
+Loads the object from disk using the corresponding PlussMic loader route.
+
+#### See also
+
+- `static DataFrame load_excel(std::string_view filepath)`
+- `static DataFrame load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options)`
+- `static DataFrame load_excel(std::string_view filepath, const pluss::loader::Config& config)`
+- `static DataFrame load_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
+- `static DataFrame load_excel(std::string_view filepath, std::string_view sheet_name, bool header = true)`
+- `static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+
+#### Examples
+
+```cpp
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx");
+```
+
+### `load_excel`
+
+#### Signature
+
+```cpp
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)
+```
+
+#### Parameters
+
+`filepath` : `std::string_view`
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
+
+`sheet_names` : `pluss::msharp::RangeView::Of<std::string_view>`
+    See the signature for the supported argument form.
+
+`header` : `bool`
+    Controls whether feature names are written to, or expected from, the file header row.
+
+#### Returns
+
+`pluss::loader::LoadResult`
+    Value produced by this call.
+
+#### Notes
+
+Loads the object from disk using the corresponding PlussMic loader route.
+
+#### See also
+
+- `static DataFrame load_excel(std::string_view filepath)`
+- `static DataFrame load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options)`
+- `static DataFrame load_excel(std::string_view filepath, const pluss::loader::Config& config)`
+- `static DataFrame load_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
+- `static DataFrame load_excel(std::string_view filepath, std::string_view sheet_name, bool header = true)`
+- `static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -5964,7 +6963,9 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -6010,8 +7011,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -6057,8 +7060,10 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)`
 - `static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)`
+- `static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)`
 
 #### Examples
 
@@ -6731,6 +7736,49 @@ Accra   110.0
 Tema    120.0
 ```
 
+### `median`
+
+#### Signature
+
+```cpp
+DataFrameView median(self, bool render = true) const
+```
+
+#### Parameters
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Applies `median` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.median();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
 ### `min`
 
 #### Signature
@@ -7312,13 +8360,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame notna(self, std::initializer_list<std::string_view> features =
+DataFrame notna(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -7355,13 +8403,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame notnull(self, std::initializer_list<std::string_view> features =
+DataFrame notnull(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -8095,12 +9143,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame relabel_features(self, std::initializer_list<std::string_view> feature_names) const
+DataFrame relabel_features(self, pluss::msharp::RangeView::Of<std::string_view> feature_names) const
 ```
 
 #### Parameters
 
-`feature_names` : `std::initializer_list<std::string_view>`
+`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -8127,10 +9175,10 @@ auto out = df.relabel_features({"revenue", "location", "id_new"});
 #### Output
 
 ```text
-id  revenue  city
-1   100.0    Accra
-2   120.0    Tema
-3    90.0    Kumasi
+revenue  location  id_new
+100.0    Accra     1
+120.0    Tema      2
+90.0     Kumasi    3
 ```
 
 ### `rename`
@@ -8230,12 +9278,12 @@ id  revenue  city
 #### Signature
 
 ```cpp
-DataFrame rename_features(self,  std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const
+DataFrame rename_features(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> renames) const
 ```
 
 #### Parameters
 
-`renames` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
+`renames` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -8262,7 +9310,7 @@ auto out = df.rename_features({{"sales", "revenue"}, {"city", "location"}});
 #### Output
 
 ```text
-id  revenue  city
+id  revenue  location
 1   100.0    Accra
 2   120.0    Tema
 3    90.0    Kumasi
@@ -8273,12 +9321,12 @@ id  revenue  city
 #### Signature
 
 ```cpp
-DataFrame reorder(self, std::initializer_list<std::string_view> names) const
+DataFrame reorder(self, pluss::msharp::RangeView::Of<std::string_view> names) const
 ```
 
 #### Parameters
 
-`names` : `std::initializer_list<std::string_view>`
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
@@ -8316,13 +9364,13 @@ sales  id  city
 #### Signature
 
 ```cpp
-pluss::Series repeated_cases(self, std::initializer_list<std::string_view> features =
+pluss::Series repeated_cases(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -8345,12 +9393,88 @@ auto df = pluss::table::DataFrame({
 auto out = df.repeated_cases();
 ```
 
+### `requires`
+
+#### Signature
+
+```cpp
+template <class NameRange> requires(self, std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange& names)
+```
+
+#### Parameters
+
+`names` : `std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange&`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`template <class NameRange>`
+    Value produced by this call.
+
+#### Notes
+
+Applies `requires` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `template <class NameRange> requires(self, std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange& names) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.requires();
+```
+
+### `requires`
+
+#### Signature
+
+```cpp
+template <class NameRange> requires(self, std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange& names) const
+```
+
+#### Parameters
+
+`names` : `std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange&`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`template <class NameRange>`
+    Value produced by this call.
+
+#### Notes
+
+Applies `requires` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `template <class NameRange> requires(self, std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange& names)`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.requires();
+```
+
 ### `resample`
 
 #### Signature
 
 ```cpp
-DataFrameView resample(self, std::string_view time_feature, std::initializer_list<std::string_view> value_features, std::string_view freq, std::string_view op = "mean", std::int64_t step = 1, bool render = true) const
+DataFrameView resample(self, std::string_view time_feature, pluss::msharp::RangeView::Of<std::string_view> value_features, std::string_view freq, std::string_view op = "mean", std::int64_t step = 1, bool render = true) const
 ```
 
 #### Parameters
@@ -8358,7 +9482,7 @@ DataFrameView resample(self, std::string_view time_feature, std::initializer_lis
 `time_feature` : `std::string_view`
     See the signature for the supported argument form.
 
-`value_features` : `std::initializer_list<std::string_view>`
+`value_features` : `pluss::msharp::RangeView::Of<std::string_view>`
     See the signature for the supported argument form.
 
 `freq` : `std::string_view`
@@ -8590,12 +9714,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame rolling(self, std::initializer_list<WindowSpec> specs, bool keep_input = true) const
+DataFrame rolling(self, pluss::msharp::RangeView::Of<WindowSpec> specs, bool keep_input = true) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<WindowSpec>`
+`specs` : `pluss::msharp::RangeView::Of<WindowSpec>`
     See the signature for the supported argument form.
 
 `keep_input` : `bool`
@@ -8636,13 +9760,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame round_time(self, std::initializer_list<std::string_view> features, std::string_view unit) const
+DataFrame round_time(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view unit) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
     See the signature for the supported argument form.
@@ -9916,6 +11040,138 @@ df.save_txt("path/to/output.txt");
 saved: out.*
 ```
 
+### `select`
+
+#### Signature
+
+```cpp
+DataFrame select(self, pluss::msharp::RangeView::Of<std::string_view> names) const
+```
+
+#### Parameters
+
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.select();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `select_like`
+
+#### Signature
+
+```cpp
+DataFrame select_like(self, std::string_view needle, bool case_sensitive = true) const
+```
+
+#### Parameters
+
+`needle` : `std::string_view`
+    See the signature for the supported argument form.
+
+`case_sensitive` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `select_like` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.select_like();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `select_regex`
+
+#### Signature
+
+```cpp
+DataFrame select_regex(self, std::string_view pattern) const
+```
+
+#### Parameters
+
+`pattern` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `select_regex` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.select_regex();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
 ### `series_features`
 
 #### Signature
@@ -9982,7 +11238,9 @@ Opens an assignment helper so you can write `df.set(...) = ...` and replace or c
 
 #### See also
 
+- `LetSlots set(self, pluss::msharp::RangeView::Of<std::string_view> names)`
 - `LetSlots set(self, std::initializer_list<std::string_view> names)`
+- `LetSlots set(self, std::initializer_list<const char*> names)`
 
 #### Examples
 
@@ -9994,6 +11252,86 @@ auto df = pluss::table::DataFrame({
 });
 
 df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
+```
+
+### `set`
+
+#### Signature
+
+```cpp
+LetSlots set(self, pluss::msharp::RangeView::Of<std::string_view> names)
+```
+
+#### Parameters
+
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`LetSlots`
+    Value produced by this call.
+
+#### Notes
+
+Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.
+
+#### See also
+
+- `LetSlot set(self, std::string_view name)`
+- `LetSlots set(self, std::initializer_list<std::string_view> names)`
+- `LetSlots set(self, std::initializer_list<const char*> names)`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
+```
+
+### `set`
+
+#### Signature
+
+```cpp
+LetSlots set(self, std::initializer_list<const char*> names)
+```
+
+#### Parameters
+
+`names` : `std::initializer_list<const char*>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Returns
+
+`LetSlots`
+    Value produced by this call.
+
+#### Notes
+
+Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.
+
+#### See also
+
+- `LetSlot set(self, std::string_view name)`
+- `LetSlots set(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `LetSlots set(self, std::initializer_list<std::string_view> names)`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};
 ```
 
 ### `set`
@@ -10021,6 +11359,8 @@ Opens an assignment helper so you can write `df.set(...) = ...` and replace or c
 #### See also
 
 - `LetSlot set(self, std::string_view name)`
+- `LetSlots set(self, pluss::msharp::RangeView::Of<std::string_view> names)`
+- `LetSlots set(self, std::initializer_list<const char*> names)`
 
 #### Examples
 
@@ -10039,12 +11379,12 @@ df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.
 #### Signature
 
 ```cpp
-DataFrame set_axis(self, std::initializer_list<std::string_view> feature_names) const
+DataFrame set_axis(self, pluss::msharp::RangeView::Of<std::string_view> feature_names) const
 ```
 
 #### Parameters
 
-`feature_names` : `std::initializer_list<std::string_view>`
+`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -10071,10 +11411,10 @@ auto out = df.set_axis({"revenue", "location", "id_new"});
 #### Output
 
 ```text
-id  revenue  city
-1   100.0    Accra
-2   120.0    Tema
-3    90.0    Kumasi
+revenue  location  id_new
+100.0    Accra     1
+120.0    Tema      2
+90.0     Kumasi    3
 ```
 
 ### `set_cases`
@@ -10138,12 +11478,12 @@ id  sales
 #### Signature
 
 ```cpp
-DataFrame set_feature_axis(self, std::initializer_list<std::string_view> feature_names) const
+DataFrame set_feature_axis(self, pluss::msharp::RangeView::Of<std::string_view> feature_names) const
 ```
 
 #### Parameters
 
-`feature_names` : `std::initializer_list<std::string_view>`
+`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -10170,10 +11510,10 @@ auto out = df.set_feature_axis({"revenue", "location", "id_new"});
 #### Output
 
 ```text
-id  revenue  city
-1   100.0    Accra
-2   120.0    Tema
-3    90.0    Kumasi
+revenue  location  id_new
+100.0    Accra     1
+120.0    Tema      2
+90.0     Kumasi    3
 ```
 
 ### `set_features`
@@ -10181,15 +11521,15 @@ id  revenue  city
 #### Signature
 
 ```cpp
-DataFrame set_features(self, std::initializer_list<std::string_view> names, std::initializer_list<Thread> values) const
+DataFrame set_features(self, pluss::msharp::RangeView::Of<std::string_view> names, pluss::msharp::RangeView::Of<Thread> values) const
 ```
 
 #### Parameters
 
-`names` : `std::initializer_list<std::string_view>`
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
-`values` : `std::initializer_list<Thread>`
+`values` : `pluss::msharp::RangeView::Of<Thread>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -10253,7 +11593,7 @@ Returns a new frame with one added or replaced feature.
 
 #### See also
 
-- `DataFrame set_features(self, std::initializer_list<std::string_view> names, std::initializer_list<Thread> values) const`
+- `DataFrame set_features(self, pluss::msharp::RangeView::Of<std::string_view> names, pluss::msharp::RangeView::Of<Thread> values) const`
 
 #### Examples
 
@@ -10281,15 +11621,15 @@ id  sales  city    profit
 #### Signature
 
 ```cpp
-DataFrame& set_features_(self, std::initializer_list<std::string_view> names, std::initializer_list<Thread> values)
+DataFrame& set_features_(self, pluss::msharp::RangeView::Of<std::string_view> names, pluss::msharp::RangeView::Of<Thread> values)
 ```
 
 #### Parameters
 
-`names` : `std::initializer_list<std::string_view>`
+`names` : `pluss::msharp::RangeView::Of<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
-`values` : `std::initializer_list<Thread>`
+`values` : `pluss::msharp::RangeView::Of<Thread>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -10353,7 +11693,7 @@ Adds or replaces one feature in place.
 
 #### See also
 
-- `DataFrame& set_features_(self, std::initializer_list<std::string_view> names, std::initializer_list<Thread> values)`
+- `DataFrame& set_features_(self, pluss::msharp::RangeView::Of<std::string_view> names, pluss::msharp::RangeView::Of<Thread> values)`
 
 #### Examples
 
@@ -10381,13 +11721,13 @@ id  sales  city    profit
 #### Signature
 
 ```cpp
-DataFrame shift(self, std::initializer_list<std::string_view> features, std::int64_t periods = 1) const
+DataFrame shift(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods = 1) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `periods` : `std::int64_t`
     See the signature for the supported argument form.
@@ -10450,7 +11790,7 @@ Applies `shift` to the current `DataFrame` object. Use the example and output to
 
 #### See also
 
-- `DataFrame shift(self, std::initializer_list<std::string_view> features, std::int64_t periods = 1) const`
+- `DataFrame shift(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods = 1) const`
 
 #### Examples
 
@@ -10478,13 +11818,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame shift_time(self, std::initializer_list<std::string_view> features, int periods, std::string_view freq) const
+DataFrame shift_time(self, pluss::msharp::RangeView::Of<std::string_view> features, int periods, std::string_view freq) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `periods` : `int`
     See the signature for the supported argument form.
@@ -10701,12 +12041,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame sort_values(self, std::initializer_list<ArrangeSpec> specs) const
+DataFrame sort_values(self, pluss::msharp::RangeView::Of<ArrangeSpec> specs) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<ArrangeSpec>`
+`specs` : `pluss::msharp::RangeView::Of<ArrangeSpec>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -10720,7 +12060,7 @@ Reorders rows using one or more feature values as sort keys.
 
 #### See also
 
-- `DataFrame sort_values(self, std::initializer_list<std::string_view> features, bool ascending = true, bool nulls_last = true) const`
+- `DataFrame sort_values(self, pluss::msharp::RangeView::Of<std::string_view> features, bool ascending = true, bool nulls_last = true) const`
 
 #### Examples
 
@@ -10748,13 +12088,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame sort_values(self, std::initializer_list<std::string_view> features, bool ascending = true, bool nulls_last = true) const
+DataFrame sort_values(self, pluss::msharp::RangeView::Of<std::string_view> features, bool ascending = true, bool nulls_last = true) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `ascending` : `bool`
     See the signature for the supported argument form.
@@ -10773,7 +12113,7 @@ Reorders rows using one or more feature values as sort keys.
 
 #### See also
 
-- `DataFrame sort_values(self, std::initializer_list<ArrangeSpec> specs) const`
+- `DataFrame sort_values(self, pluss::msharp::RangeView::Of<ArrangeSpec> specs) const`
 
 #### Examples
 
@@ -10929,6 +12269,63 @@ sales    310.0
 #### Signature
 
 ```cpp
+DataFrame stitch_on(self, pluss::msharp::RangeView::Of<std::string_view> left_features, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_features =
+```
+
+#### Parameters
+
+`left_features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    See the signature for the supported argument form.
+
+`right` : `const DataFrame&`
+    See the signature for the supported argument form.
+
+`right_features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Matches rows from two frames using key features and appends the matched features from the right-hand frame.
+
+#### See also
+
+- `DataFrame stitch_on(self, std::string_view left_feature, const DataFrame& right, std::string_view right_feature = "", std::string right_suffix = "_right") const`
+- `DataFrame stitch_on(self, std::initializer_list<std::string_view> left_features, const DataFrame& right, std::initializer_list<std::string_view> right_features =`
+
+#### Examples
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
+});
+
+auto out = left.stitch_on("id", right, "id", "_right");
+```
+
+#### Output
+
+```text
+id  sales  cost
+1   100.0  60.0
+2   120.0  80.0
+3    90.0  55.0
+```
+
+### `stitch_on`
+
+#### Signature
+
+```cpp
 DataFrame stitch_on(self, std::initializer_list<std::string_view> left_features, const DataFrame& right, std::initializer_list<std::string_view> right_features =
 ```
 
@@ -10955,6 +12352,7 @@ Matches rows from two frames using key features and appends the matched features
 #### See also
 
 - `DataFrame stitch_on(self, std::string_view left_feature, const DataFrame& right, std::string_view right_feature = "", std::string right_suffix = "_right") const`
+- `DataFrame stitch_on(self, pluss::msharp::RangeView::Of<std::string_view> left_features, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_features =`
 
 #### Examples
 
@@ -11000,7 +12398,7 @@ DataFrame stitch_on(self, std::string_view left_feature, const DataFrame& right,
     See the signature for the supported argument form.
 
 `right_suffix` : `std::string`
-    See the signature for the supported argument form.
+    Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.
 
 #### Returns
 
@@ -11013,6 +12411,7 @@ Matches rows from two frames using key features and appends the matched features
 
 #### See also
 
+- `DataFrame stitch_on(self, pluss::msharp::RangeView::Of<std::string_view> left_features, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_features =`
 - `DataFrame stitch_on(self, std::initializer_list<std::string_view> left_features, const DataFrame& right, std::initializer_list<std::string_view> right_features =`
 
 #### Examples
@@ -11255,6 +12654,109 @@ DataFrameView sum(self, bool render = true) const
 
 Computes per-feature sums for the selected numeric features.
 
+#### See also
+
+- `Thread sum(self, std::int64_t axis, bool skipna = true) const`
+- `Thread sum(self, int axis, bool skipna = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.sum(false);
+```
+
+#### Output
+
+```text
+feature  value
+sales    310.0
+```
+
+### `sum`
+
+#### Signature
+
+```cpp
+Thread sum(self, int axis, bool skipna = true) const
+```
+
+#### Parameters
+
+`axis` : `int`
+    See the signature for the supported argument form.
+
+`skipna` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Computes per-feature sums for the selected numeric features.
+
+#### See also
+
+- `DataFrameView sum(self, bool render = true) const`
+- `Thread sum(self, std::int64_t axis, bool skipna = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.sum(false);
+```
+
+#### Output
+
+```text
+feature  value
+sales    310.0
+```
+
+### `sum`
+
+#### Signature
+
+```cpp
+Thread sum(self, std::int64_t axis, bool skipna = true) const
+```
+
+#### Parameters
+
+`axis` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`skipna` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Computes per-feature sums for the selected numeric features.
+
+#### See also
+
+- `DataFrameView sum(self, bool render = true) const`
+- `Thread sum(self, int axis, bool skipna = true) const`
+
 #### Examples
 
 ```cpp
@@ -11414,12 +12916,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame take(self, std::span<const std::int64_t> indices) const
+DataFrame take(self, pluss::msharp::RangeView::Int indices) const
 ```
 
 #### Parameters
 
-`indices` : `std::span<const std::int64_t>`
+`indices` : `pluss::msharp::RangeView::Int`
     See the signature for the supported argument form.
 
 #### Returns
@@ -11457,13 +12959,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrameView tally(self, std::initializer_list<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
+DataFrameView tally(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `top_n` : `std::int64_t`
     See the signature for the supported argument form.
@@ -11538,7 +13040,7 @@ Counts how many rows fall into each distinct value of the grouping feature.
 
 #### See also
 
-- `DataFrameView tally(self, std::initializer_list<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+- `DataFrameView tally(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
 - `DataFrameView tally(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
 
 #### Examples
@@ -11595,7 +13097,7 @@ Counts how many rows fall into each distinct value of the grouping feature.
 #### See also
 
 - `DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
-- `DataFrameView tally(self, std::initializer_list<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+- `DataFrameView tally(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
 
 #### Examples
 
@@ -11834,13 +13336,13 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame to_utc(self, std::initializer_list<std::string_view> features) const
+DataFrame to_utc(self, pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -11945,7 +13447,7 @@ Rewrites one feature, several features, or all features by applying a user funct
 #### See also
 
 - `DataFrame transform(self, std::string_view feature, const std::function<Thread(const Thread&)>& fn) const`
-- `DataFrame transform(self, std::initializer_list<TransformSpec> specs) const`
+- `DataFrame transform(self, pluss::msharp::RangeView::Of<TransformSpec> specs) const`
 
 #### Examples
 
@@ -11973,12 +13475,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame transform(self, std::initializer_list<TransformSpec> specs) const
+DataFrame transform(self, pluss::msharp::RangeView::Of<TransformSpec> specs) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<TransformSpec>`
+`specs` : `pluss::msharp::RangeView::Of<TransformSpec>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -12044,7 +13546,7 @@ Rewrites one feature, several features, or all features by applying a user funct
 #### See also
 
 - `DataFrame transform(self, const std::function<Thread(const Thread&)>& fn) const`
-- `DataFrame transform(self, std::initializer_list<TransformSpec> specs) const`
+- `DataFrame transform(self, pluss::msharp::RangeView::Of<TransformSpec> specs) const`
 
 #### Examples
 
@@ -12206,18 +13708,162 @@ id  sales  city
 13  100.0  Kumasi
 ```
 
-### `tz_convert`
+### `ts`
 
 #### Signature
 
 ```cpp
-DataFrame tz_convert(self, std::initializer_list<std::string_view> features, std::string_view tz_name) const
+DataFrameTsAccessor ts(self, pluss::msharp::RangeView::Of<std::string_view> features) const
+```
+
+#### Parameters
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`DataFrameTsAccessor`
+    Value produced by this call.
+
+#### Notes
+
+Applies `ts` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameTsAccessor ts(self, std::string_view feature) const`
+- `DataFrameTsAccessor ts(self, std::initializer_list<std::string_view> features) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.ts();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `ts`
+
+#### Signature
+
+```cpp
+DataFrameTsAccessor ts(self, std::initializer_list<std::string_view> features) const
 ```
 
 #### Parameters
 
 `features` : `std::initializer_list<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Returns
+
+`DataFrameTsAccessor`
+    Value produced by this call.
+
+#### Notes
+
+Applies `ts` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameTsAccessor ts(self, std::string_view feature) const`
+- `DataFrameTsAccessor ts(self, pluss::msharp::RangeView::Of<std::string_view> features) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.ts();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `ts`
+
+#### Signature
+
+```cpp
+DataFrameTsAccessor ts(self, std::string_view feature) const
+```
+
+#### Parameters
+
+`feature` : `std::string_view`
     See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameTsAccessor`
+    Value produced by this call.
+
+#### Notes
+
+Applies `ts` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameTsAccessor ts(self, std::initializer_list<std::string_view> features) const`
+- `DataFrameTsAccessor ts(self, pluss::msharp::RangeView::Of<std::string_view> features) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.ts();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `tz_convert`
+
+#### Signature
+
+```cpp
+DataFrame tz_convert(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name) const
+```
+
+#### Parameters
+
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `tz_name` : `std::string_view`
     See the signature for the supported argument form.
@@ -12259,13 +13905,13 @@ ts
 #### Signature
 
 ```cpp
-DataFrame tz_localize(self, std::initializer_list<std::string_view> features, std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") const
+DataFrame tz_localize(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") const
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 `tz_name` : `std::string_view`
     See the signature for the supported argument form.
@@ -12306,6 +13952,209 @@ auto out = df.tz_localize({"ts"}, "America/Edmonton", 0, "shift_forward");
 ts
 2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z
+```
+
+### `unify`
+
+#### Signature
+
+```cpp
+DataFrame unify(self, pluss::msharp::RangeView::Of<std::string_view> left_on, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_on =
+```
+
+#### Parameters
+
+`left_on` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Key feature name(s) on the left frame used to match rows during `unify(...)`.
+
+`right` : `const DataFrame&`
+    See the signature for the supported argument form.
+
+`right_on` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Joins two frames by key values. Use `right_on=""` when both frames use the same key name, `how="left"` to preserve left rows, and `validate` when you want duplicate-key checks such as `"many_to_one"`.
+
+#### See also
+
+- `DataFrame unify(self, std::string_view left_on, const DataFrame& right, std::string_view right_on = "", std::string_view how = "inner", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const`
+- `DataFrame unify(self, std::initializer_list<std::string_view> left_on, const DataFrame& right, std::initializer_list<std::string_view> right_on =`
+
+#### Examples
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"OrgDefinedId", pluss::make_note({"10", "20", "30"})},
+    {"midterm", pluss::make_series({71, 82, 93})},
+});
+auto right = pluss::table::DataFrame({
+    {"OrgDefinedId", pluss::make_note({"20", "30"})},
+    {"Final Points Grade", pluss::make_series({88, 99})},
+});
+
+auto out = left.unify(
+    "OrgDefinedId",
+    right,
+    "",
+    "left",
+    "_right",
+    "many_to_one"
+);
+```
+
+#### Output
+
+```text
+OrgDefinedId  midterm  Final Points Grade
+10            71       null
+20            82       88
+30            93       99
+```
+
+### `unify`
+
+#### Signature
+
+```cpp
+DataFrame unify(self, std::initializer_list<std::string_view> left_on, const DataFrame& right, std::initializer_list<std::string_view> right_on =
+```
+
+#### Parameters
+
+`left_on` : `std::initializer_list<std::string_view>`
+    Key feature name(s) on the left frame used to match rows during `unify(...)`.
+
+`right` : `const DataFrame&`
+    See the signature for the supported argument form.
+
+`right_on` : `std::initializer_list<std::string_view>`
+    Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Joins two frames by key values. Use `right_on=""` when both frames use the same key name, `how="left"` to preserve left rows, and `validate` when you want duplicate-key checks such as `"many_to_one"`.
+
+#### See also
+
+- `DataFrame unify(self, std::string_view left_on, const DataFrame& right, std::string_view right_on = "", std::string_view how = "inner", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const`
+- `DataFrame unify(self, pluss::msharp::RangeView::Of<std::string_view> left_on, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_on =`
+
+#### Examples
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"course", pluss::make_note({"STAT200", "STAT200", "STAT300"})},
+    {"OrgDefinedId", pluss::make_note({"10", "20", "30"})},
+    {"midterm", pluss::make_series({71, 82, 93})},
+});
+auto right = pluss::table::DataFrame({
+    {"course_code", pluss::make_note({"STAT200", "STAT300"})},
+    {"Username", pluss::make_note({"20", "30"})},
+    {"Final Points Grade", pluss::make_series({88, 99})},
+});
+
+auto out = left.unify(
+    {"course", "OrgDefinedId"},
+    right,
+    {"course_code", "Username"},
+    "inner",
+    "_right",
+    "one_to_one"
+);
+```
+
+#### Output
+
+```text
+OrgDefinedId  midterm  Final Points Grade
+10            71       null
+20            82       88
+30            93       99
+```
+
+### `unify`
+
+#### Signature
+
+```cpp
+DataFrame unify(self, std::string_view left_on, const DataFrame& right, std::string_view right_on = "", std::string_view how = "inner", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
+```
+
+#### Parameters
+
+`left_on` : `std::string_view`
+    Key feature name(s) on the left frame used to match rows during `unify(...)`.
+
+`right` : `const DataFrame&`
+    See the signature for the supported argument form.
+
+`right_on` : `std::string_view`
+    Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.
+
+`how` : `std::string_view`
+    Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.
+
+`right_suffix` : `std::string`
+    Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.
+
+`validate` : `std::string_view`
+    Optional key-cardinality check for `unify(...)`: `"many_to_many"` (default), `"one_to_one"`, `"one_to_many"`, or `"many_to_one"`.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Joins two frames by key values. Use `right_on=""` when both frames use the same key name, `how="left"` to preserve left rows, and `validate` when you want duplicate-key checks such as `"many_to_one"`.
+
+#### See also
+
+- `DataFrame unify(self, pluss::msharp::RangeView::Of<std::string_view> left_on, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_on =`
+- `DataFrame unify(self, std::initializer_list<std::string_view> left_on, const DataFrame& right, std::initializer_list<std::string_view> right_on =`
+
+#### Examples
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"OrgDefinedId", pluss::make_note({"10", "20", "30"})},
+    {"midterm", pluss::make_series({71, 82, 93})},
+});
+auto right = pluss::table::DataFrame({
+    {"OrgDefinedId", pluss::make_note({"20", "30"})},
+    {"Final Points Grade", pluss::make_series({88, 99})},
+});
+
+auto out = left.unify(
+    "OrgDefinedId",
+    right,
+    "",
+    "left",
+    "_right",
+    "many_to_one"
+);
+```
+
+#### Output
+
+```text
+OrgDefinedId  midterm  Final Points Grade
+10            71       null
+20            82       88
+30            93       99
 ```
 
 ### `unique`
@@ -12352,13 +14201,13 @@ true
 #### Signature
 
 ```cpp
-DataFrame unique_cases(self, std::initializer_list<std::string_view> features =
+DataFrame unique_cases(self, pluss::msharp::RangeView::Of<std::string_view> features =
 ```
 
 #### Parameters
 
-`features` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
 
@@ -12541,45 +14390,6 @@ id  sales  cost
 1   100.0  60.0
 2   120.0  80.0
 3    90.0  55.0
-```
-
-### `values`
-
-#### Signature
-
-```cpp
-std::vector<Thread> values(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::vector<Thread>`
-    Materialized collection of thread objects.
-
-#### Notes
-
-Materializes the current members as a collection you can inspect or reuse elsewhere.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.values();
-```
-
-#### Output
-
-```text
-[Thread(id), Thread(sales), Thread(city)]
 ```
 
 ### `var`
@@ -12771,12 +14581,12 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame window(self, std::initializer_list<WindowSpec> specs, bool keep_input = true) const
+DataFrame window(self, pluss::msharp::RangeView::Of<WindowSpec> specs, bool keep_input = true) const
 ```
 
 #### Parameters
 
-`specs` : `std::initializer_list<WindowSpec>`
+`specs` : `pluss::msharp::RangeView::Of<WindowSpec>`
     See the signature for the supported argument form.
 
 `keep_input` : `bool`

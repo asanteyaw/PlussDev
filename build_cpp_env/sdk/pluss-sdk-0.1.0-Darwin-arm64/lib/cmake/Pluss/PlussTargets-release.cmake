@@ -48,7 +48,7 @@ list(APPEND _cmake_import_check_files_for_Pluss::PlussMic "${_IMPORT_PREFIX}/lib
 # Import target "Pluss::pluss" for configuration "Release"
 set_property(TARGET Pluss::pluss APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(Pluss::pluss PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX;OBJCXX"
   IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libpluss.a"
   )
 

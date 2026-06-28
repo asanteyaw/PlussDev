@@ -31,8 +31,8 @@ struct AdamWGroup {
 
 class PLUSS_API AdamW final : public Optimizer {
 public:
-  explicit AdamW(std::vector<Series*> parameters, AdamWOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit AdamW(pluss::msharp::RangeView::Of<Series*> parameters, AdamWOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -42,7 +42,7 @@ public:
     initialize_state_();
   }
 
-  explicit AdamW(std::vector<AdamWGroup> groups)
+  explicit AdamW(pluss::msharp::RangeView::Of<AdamWGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -65,7 +65,7 @@ public:
 
   void set_group_options(std::size_t group_index, const AdamWOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -100,10 +100,10 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW::restore_state: group count mismatch");
     }
     if (state.beta1_power.size() != groups_.size() || state.beta2_power.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW::restore_state: capture scalar state mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW::restore_state: capture scalar state mismatch");
     }
     validate_state_vector_(state.first_moment, "pluss::ai::nn::optim::AdamW::restore_state[first_moment]");
     validate_state_vector_(state.second_moment, "pluss::ai::nn::optim::AdamW::restore_state[second_moment]");
@@ -129,7 +129,7 @@ private:
     Series beta2_power{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     ++step_;
 
     auto& params = mutable_parameters_();
@@ -173,35 +173,35 @@ private:
 
   static void validate_options_(const AdamWOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW: learning_rate must be positive and finite");
     }
     if (!(options.beta1 >= 0.0 && options.beta1 < 1.0) || !std::isfinite(options.beta1)) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW: beta1 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW: beta1 must be in [0, 1)");
     }
     if (!(options.beta2 >= 0.0 && options.beta2 < 1.0) || !std::isfinite(options.beta2)) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW: beta2 must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW: beta2 must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW: epsilon must be positive and finite");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW: weight_decay must be finite and non-negative");
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<AdamWGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<AdamWGroup> groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::AdamW: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::AdamW: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::AdamW: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::AdamW: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::AdamW: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::AdamW: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -209,7 +209,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<AdamWGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<AdamWGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -239,17 +239,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::AdamW: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::AdamW: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::AdamW: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::AdamW: capturable mode requires same dtype across each group");
         }
       }
@@ -265,8 +265,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -296,8 +296,8 @@ private:
   }
 
   void apply_group_loop_(GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const AdamWOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -355,8 +355,8 @@ private:
   }
 
   void apply_group_batched_(GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const AdamWOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -431,8 +431,8 @@ private:
   }
 
   void apply_group_fused_(GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const AdamWOptions& options = group.options;
     advance_capturable_scalars_(group);
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
@@ -521,9 +521,9 @@ private:
     max_second_hat_.reserve(params.size());
 
     for (const Series* p : params) {
-      first_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      second_moment_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      max_second_hat_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      first_moment_.push_back(state_zeros_like_(*p));
+      second_moment_.push_back(state_zeros_like_(*p));
+      max_second_hat_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

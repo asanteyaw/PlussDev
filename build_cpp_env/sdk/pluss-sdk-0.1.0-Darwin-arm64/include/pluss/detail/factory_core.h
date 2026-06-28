@@ -51,6 +51,40 @@ struct FactoryCore final {
     return (s.platform() == target) ? s : s.to(target);
   }
 
+  static bool should_construct_native_cuda_factory(Config cfg, bool route_supported) {
+    return resolve_config_platform(cfg) == Platform::CUDA &&
+        pluss::cuda::native_factory_enabled() &&
+        route_supported;
+  }
+
+  static void check_cuda_factory_host_staging_allowed(
+      Config cfg,
+      std::string_view op_name,
+      bool route_supported) {
+    const Platform target = resolve_config_platform(cfg);
+    if (target != Platform::CUDA) {
+      return;
+    }
+
+    const bool native_enabled = pluss::cuda::native_factory_enabled();
+    const bool native_strict = pluss::cuda::native_factory_strict();
+
+    if (native_enabled && route_supported) {
+      return;
+    }
+    if (native_strict) {
+      pluss::codem::throw_error(
+          std::string(op_name) +
+          ": strict native CUDA factory route requested but kernel is unsupported");
+    }
+    if (!pluss::cuda::cpu_bridge_enabled()) {
+      pluss::codem::throw_error(
+          std::string(op_name) +
+          ": CUDA factory path unavailable in this tranche; no CPU fallback allowed. "
+          "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+    }
+  }
+
   static Series move_factory_to_config_platform_with_cuda_policy(
       Series s,
       Config cfg,
@@ -96,6 +130,11 @@ struct FactoryCore final {
     const bool native_strict = pluss::cuda::native_stochastic_strict();
 
     if (native_enabled && route_supported) {
+      if (!pluss::cuda::cpu_bridge_enabled()) {
+        pluss::codem::throw_error(
+            std::string(op_name) +
+            ": CUDA native stochastic route declared but kernel is not implemented yet");
+      }
       return (s.platform() == target) ? s : s.to(target);
     }
     if (native_strict) {
@@ -111,6 +150,34 @@ struct FactoryCore final {
         ": CUDA stochastic path unavailable in this tranche; no CPU fallback allowed. "
         "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
     return s;
+  }
+
+  static void check_cuda_stochastic_host_staging_allowed(
+      Config cfg,
+      std::string_view op_name,
+      bool route_supported) {
+    const Platform target = resolve_config_platform(cfg);
+    if (target != Platform::CUDA) {
+      return;
+    }
+
+    const bool native_enabled = pluss::cuda::native_stochastic_enabled();
+    const bool native_strict = pluss::cuda::native_stochastic_strict();
+
+    if (native_enabled && route_supported) {
+      return;
+    }
+    if (native_strict) {
+      pluss::codem::throw_error(
+          std::string(op_name) +
+          ": strict native CUDA stochastic route requested but kernel is unsupported");
+    }
+    if (!pluss::cuda::cpu_bridge_enabled()) {
+      pluss::codem::throw_error(
+          std::string(op_name) +
+          ": CUDA stochastic path unavailable in this tranche; no CPU fallback allowed. "
+          "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+    }
   }
 
   static std::mt19937_64 make_rng(std::uint64_t seed) {

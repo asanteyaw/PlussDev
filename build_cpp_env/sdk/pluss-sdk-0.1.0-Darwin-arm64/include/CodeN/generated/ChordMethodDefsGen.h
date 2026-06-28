@@ -101,55 +101,55 @@ inline Chord Chord::to_nfkd() const {
 }
 
 inline Chord Chord::replace(::std::string_view from, ::std::string_view to) const {
-  return ::pluss::coden::_compat::invoke<Chord>("replace", *this, from, to);
+  return ::pluss::coden::_compat::invoke<Chord>("replace", *this, {from, to});
 }
 
 inline Chord Chord::replace_first(::std::string_view from, ::std::string_view to) const {
-  return ::pluss::coden::_compat::invoke<Chord>("replace_first", *this, from, to);
+  return ::pluss::coden::_compat::invoke<Chord>("replace_first", *this, {from, to});
 }
 
 inline Chord Chord::replace_last(::std::string_view from, ::std::string_view to) const {
-  return ::pluss::coden::_compat::invoke<Chord>("replace_last", *this, from, to);
+  return ::pluss::coden::_compat::invoke<Chord>("replace_last", *this, {from, to});
 }
 
 inline Chord Chord::replace_n(::std::string_view from, ::std::string_view to, ::std::int64_t n) const {
-  return ::pluss::coden::_compat::invoke<Chord>("replace_n", *this, from, to, n);
+  return ::pluss::coden::_compat::invoke<Chord>("replace_n", *this, {from, to, n});
 }
 
 inline Chord Chord::remove(::std::string_view needle) const {
-  return ::pluss::coden::_compat::invoke<Chord>("remove", *this, needle);
+  return ::pluss::coden::_compat::invoke<Chord>("remove", *this, {needle});
 }
 
 inline Chord Chord::remove_all(::std::string_view needle) const {
-  return ::pluss::coden::_compat::invoke<Chord>("remove_all", *this, needle);
+  return ::pluss::coden::_compat::invoke<Chord>("remove_all", *this, {needle});
 }
 
 inline Chord Chord::remove_prefix(::std::string_view prefix) const {
-  return ::pluss::coden::_compat::invoke<Chord>("remove_prefix", *this, prefix);
+  return ::pluss::coden::_compat::invoke<Chord>("remove_prefix", *this, {prefix});
 }
 
 inline Chord Chord::remove_suffix(::std::string_view suffix) const {
-  return ::pluss::coden::_compat::invoke<Chord>("remove_suffix", *this, suffix);
+  return ::pluss::coden::_compat::invoke<Chord>("remove_suffix", *this, {suffix});
 }
 
 inline bool Chord::contains(::std::string_view needle) const {
-  return ::pluss::coden::_compat::invoke<bool>("contains", *this, needle);
+  return ::pluss::coden::_compat::invoke<bool>("contains", *this, {needle});
 }
 
 inline bool Chord::starts_with(::std::string_view prefix) const {
-  return ::pluss::coden::_compat::invoke<bool>("starts_with", *this, prefix);
+  return ::pluss::coden::_compat::invoke<bool>("starts_with", *this, {prefix});
 }
 
 inline bool Chord::ends_with(::std::string_view suffix) const {
-  return ::pluss::coden::_compat::invoke<bool>("ends_with", *this, suffix);
+  return ::pluss::coden::_compat::invoke<bool>("ends_with", *this, {suffix});
 }
 
 inline bool Chord::regex_match(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<bool>("regex_match", *this, pattern);
+  return ::pluss::coden::_compat::invoke<bool>("regex_match", *this, {pattern});
 }
 
 inline bool Chord::regex_search(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<bool>("regex_search", *this, pattern);
+  return ::pluss::coden::_compat::invoke<bool>("regex_search", *this, {pattern});
 }
 
 inline bool Chord::is_ascii() const {
@@ -197,19 +197,19 @@ inline bool Chord::is_title() const {
 }
 
 inline Chord Chord::regex_replace(::std::string_view pattern, ::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("regex_replace", *this, pattern, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("regex_replace", *this, {pattern, repl});
 }
 
 inline TokenBatch Chord::regex_findall(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_findall", *this, pattern);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_findall", *this, {pattern});
 }
 
 inline TokenBatch Chord::regex_split(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_split", *this, pattern);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_split", *this, {pattern});
 }
 
 inline TokenBatch Chord::split(::std::string_view delim) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("split", *this, delim);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("split", *this, {delim});
 }
 
 inline TokenBatch Chord::split_whitespace() const {
@@ -245,15 +245,15 @@ inline TokenBatch Chord::tokenize_punct() const {
 }
 
 inline TokenBatch Chord::tokenize_regex(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tokenize_regex", *this, pattern);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tokenize_regex", *this, {pattern});
 }
 
 inline TokenBatch Chord::ngrams_char(::std::int64_t n) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("ngrams_char", *this, n);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("ngrams_char", *this, {n});
 }
 
 inline TokenBatch Chord::ngrams_word(::std::int64_t n) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("ngrams_word", *this, n);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("ngrams_word", *this, {n});
 }
 
 inline Chord Chord::base64_encode() const {
@@ -541,35 +541,35 @@ inline TokenBatch Chord::tex_tabular_blocks() const {
 }
 
 inline Chord Chord::tex_extract_environment(::std::string_view name) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_extract_environment", *this, name);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_extract_environment", *this, {name});
 }
 
 inline Chord Chord::tex_remove_environment(::std::string_view name) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_remove_environment", *this, name);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_remove_environment", *this, {name});
 }
 
 inline TokenBatch Chord::tex_extract_command_args(::std::string_view cmd) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_extract_command_args", *this, cmd);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_extract_command_args", *this, {cmd});
 }
 
 inline Chord Chord::tex_replace_command(::std::string_view cmd, ::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_command", *this, cmd, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_command", *this, {cmd, repl});
 }
 
 inline Chord Chord::tex_set_macro(::std::string_view name, ::std::string_view body) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_set_macro", *this, name, body);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_set_macro", *this, {name, body});
 }
 
 inline Chord Chord::tex_remove_macro(::std::string_view name) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_remove_macro", *this, name);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_remove_macro", *this, {name});
 }
 
 inline Chord Chord::tex_wrap_inline_math(::std::string_view delim) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_wrap_inline_math", *this, delim);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_wrap_inline_math", *this, {delim});
 }
 
 inline Chord Chord::tex_wrap_display_math(::std::string_view delim) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_wrap_display_math", *this, delim);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_wrap_display_math", *this, {delim});
 }
 
 inline TokenBatch Chord::nlp_tokens() const {
@@ -701,23 +701,23 @@ inline Chord Chord::nlp_sentencecase() const {
 }
 
 inline bool Chord::nlp_is_language(::std::string_view lang) const {
-  return ::pluss::coden::_compat::invoke<bool>("nlp_is_language", *this, lang);
+  return ::pluss::coden::_compat::invoke<bool>("nlp_is_language", *this, {lang});
 }
 
 inline TokenBatch Chord::tokenize_words(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tokenize_words", *this, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tokenize_words", *this, {flags});
 }
 
 inline TokenBatch Chord::tokenize_sentences(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tokenize_sentences", *this, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tokenize_sentences", *this, {flags});
 }
 
 inline Chord Chord::normalize(::std::int64_t form) const {
-  return ::pluss::coden::_compat::invoke<Chord>("normalize", *this, form);
+  return ::pluss::coden::_compat::invoke<Chord>("normalize", *this, {form});
 }
 
 inline Chord Chord::casefold(::std::string_view locale) const {
-  return ::pluss::coden::_compat::invoke<Chord>("casefold", *this, locale);
+  return ::pluss::coden::_compat::invoke<Chord>("casefold", *this, {locale});
 }
 
 inline Chord Chord::remove_punctuation() const {
@@ -805,15 +805,15 @@ inline Chord Chord::collapse_newlines() const {
 }
 
 inline Chord Chord::ensure_prefix(::std::string_view prefix) const {
-  return ::pluss::coden::_compat::invoke<Chord>("ensure_prefix", *this, prefix);
+  return ::pluss::coden::_compat::invoke<Chord>("ensure_prefix", *this, {prefix});
 }
 
 inline Chord Chord::ensure_suffix(::std::string_view suffix) const {
-  return ::pluss::coden::_compat::invoke<Chord>("ensure_suffix", *this, suffix);
+  return ::pluss::coden::_compat::invoke<Chord>("ensure_suffix", *this, {suffix});
 }
 
 inline Chord Chord::surround(::std::string_view left, ::std::string_view right) const {
-  return ::pluss::coden::_compat::invoke<Chord>("surround", *this, left, right);
+  return ::pluss::coden::_compat::invoke<Chord>("surround", *this, {left, right});
 }
 
 inline Chord Chord::quote() const {
@@ -861,75 +861,75 @@ inline TokenBatch Chord::sort_tokens() const {
 }
 
 inline TokenBatch Chord::filter_tokens(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("filter_tokens", *this, pattern);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("filter_tokens", *this, {pattern});
 }
 
 inline TokenBatch Chord::map_tokens(::std::string_view op) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("map_tokens", *this, op);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("map_tokens", *this, {op});
 }
 
 inline Chord Chord::strip(::std::string_view chars) const {
-  return ::pluss::coden::_compat::invoke<Chord>("strip", *this, chars);
+  return ::pluss::coden::_compat::invoke<Chord>("strip", *this, {chars});
 }
 
 inline Chord Chord::lstrip(::std::string_view chars) const {
-  return ::pluss::coden::_compat::invoke<Chord>("lstrip", *this, chars);
+  return ::pluss::coden::_compat::invoke<Chord>("lstrip", *this, {chars});
 }
 
 inline Chord Chord::rstrip(::std::string_view chars) const {
-  return ::pluss::coden::_compat::invoke<Chord>("rstrip", *this, chars);
+  return ::pluss::coden::_compat::invoke<Chord>("rstrip", *this, {chars});
 }
 
 inline Chord Chord::trim(::std::string_view chars) const {
-  return ::pluss::coden::_compat::invoke<Chord>("trim", *this, chars);
+  return ::pluss::coden::_compat::invoke<Chord>("trim", *this, {chars});
 }
 
 inline Chord Chord::trim_left(::std::string_view chars) const {
-  return ::pluss::coden::_compat::invoke<Chord>("trim_left", *this, chars);
+  return ::pluss::coden::_compat::invoke<Chord>("trim_left", *this, {chars});
 }
 
 inline Chord Chord::trim_right(::std::string_view chars) const {
-  return ::pluss::coden::_compat::invoke<Chord>("trim_right", *this, chars);
+  return ::pluss::coden::_compat::invoke<Chord>("trim_right", *this, {chars});
 }
 
 inline TokenBatch Chord::find_all(::std::string_view needle) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all", *this, needle);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all", *this, {needle});
 }
 
 inline TokenBatch Chord::find_all(::std::string_view needle, ::std::int64_t start) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all", *this, needle, start);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all", *this, {needle, start});
 }
 
 inline TokenBatch Chord::find_all_regex(::std::string_view pattern) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all_regex", *this, pattern);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all_regex", *this, {pattern});
 }
 
 inline TokenBatch Chord::find_all_regex(::std::string_view pattern, ::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all_regex", *this, pattern, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("find_all_regex", *this, {pattern, flags});
 }
 
 inline TokenBatch Chord::split(::std::string_view delim, ::std::int64_t limit) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("split", *this, delim, limit);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("split", *this, {delim, limit});
 }
 
 inline TokenBatch Chord::split_lines(bool keep_ends) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("split_lines", *this, keep_ends);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("split_lines", *this, {keep_ends});
 }
 
 inline TokenBatch Chord::split_whitespace(::std::int64_t limit) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("split_whitespace", *this, limit);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("split_whitespace", *this, {limit});
 }
 
 inline TokenBatch Chord::regex_split(::std::string_view pattern, ::std::int64_t limit) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_split", *this, pattern, limit);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_split", *this, {pattern, limit});
 }
 
 inline TokenBatch Chord::regex_findall(::std::string_view pattern, ::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_findall", *this, pattern, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("regex_findall", *this, {pattern, flags});
 }
 
 inline Chord Chord::regex_replace(::std::string_view pattern, ::std::string_view repl, ::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("regex_replace", *this, pattern, repl, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("regex_replace", *this, {pattern, repl, flags});
 }
 
 inline TokenBatch Chord::tex_extract_env_equation() const {
@@ -1033,75 +1033,75 @@ inline TokenBatch Chord::tex_headings() const {
 }
 
 inline TokenBatch Chord::tex_headings(::std::int64_t max_depth) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_headings", *this, max_depth);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_headings", *this, {max_depth});
 }
 
 inline TokenBatch Chord::tex_equations(::std::int64_t max_count) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_equations", *this, max_count);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_equations", *this, {max_count});
 }
 
 inline TokenBatch Chord::tex_math_blocks(::std::int64_t max_count) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_math_blocks", *this, max_count);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_math_blocks", *this, {max_count});
 }
 
 inline TokenBatch Chord::tex_commands(bool with_args) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_commands", *this, with_args);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_commands", *this, {with_args});
 }
 
 inline TokenBatch Chord::tex_environments(bool with_body) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_environments", *this, with_body);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("tex_environments", *this, {with_body});
 }
 
 inline Chord Chord::tex_expand_macros(::std::int64_t max_passes) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_expand_macros", *this, max_passes);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_expand_macros", *this, {max_passes});
 }
 
 inline Chord Chord::tex_sanitize(::std::int64_t level) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_sanitize", *this, level);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_sanitize", *this, {level});
 }
 
 inline Chord Chord::tex_to_text(::std::int64_t mode) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_to_text", *this, mode);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_to_text", *this, {mode});
 }
 
 inline Chord Chord::tex_to_markdown(::std::int64_t mode) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_to_markdown", *this, mode);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_to_markdown", *this, {mode});
 }
 
 inline Chord Chord::tex_to_html(::std::int64_t mode) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_to_html", *this, mode);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_to_html", *this, {mode});
 }
 
 inline TokenBatch Chord::nlp_tokens(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_tokens", *this, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_tokens", *this, {flags});
 }
 
 inline TokenBatch Chord::nlp_words(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_words", *this, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_words", *this, {flags});
 }
 
 inline TokenBatch Chord::nlp_sentences(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_sentences", *this, flags);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_sentences", *this, {flags});
 }
 
 inline Chord Chord::nlp_clean(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_clean", *this, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_clean", *this, {flags});
 }
 
 inline Chord Chord::nlp_remove_stopwords(::std::string_view lang) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_stopwords", *this, lang);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_stopwords", *this, {lang});
 }
 
 inline TokenBatch Chord::nlp_stopwords(::std::string_view lang) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_stopwords", *this, lang);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_stopwords", *this, {lang});
 }
 
 inline TokenBatch Chord::nlp_named_entities(::std::string_view scheme) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_named_entities", *this, scheme);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_named_entities", *this, {scheme});
 }
 
 inline TokenBatch Chord::nlp_pos_tags(::std::string_view tagset) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_pos_tags", *this, tagset);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_pos_tags", *this, {tagset});
 }
 
 inline Chord Chord::nlp_language_confidence() const {
@@ -1109,19 +1109,19 @@ inline Chord Chord::nlp_language_confidence() const {
 }
 
 inline Chord Chord::nlp_normalize_unicode(::std::int64_t form) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_normalize_unicode", *this, form);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_normalize_unicode", *this, {form});
 }
 
 inline Chord Chord::nlp_normalize_punct(bool ascii_only) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_normalize_punct", *this, ascii_only);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_normalize_punct", *this, {ascii_only});
 }
 
 inline TokenBatch Chord::nlp_keywords(::std::int64_t k) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_keywords", *this, k);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_keywords", *this, {k});
 }
 
 inline TokenBatch Chord::nlp_keyphrases(::std::int64_t k) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_keyphrases", *this, k);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_keyphrases", *this, {k});
 }
 
 inline TokenBatch Chord::nlp_bigrams() const {
@@ -1133,11 +1133,11 @@ inline TokenBatch Chord::nlp_trigrams() const {
 }
 
 inline TokenBatch Chord::nlp_char_ngrams(::std::int64_t n) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_char_ngrams", *this, n);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_char_ngrams", *this, {n});
 }
 
 inline TokenBatch Chord::nlp_word_ngrams(::std::int64_t n) const {
-  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_word_ngrams", *this, n);
+  return ::pluss::coden::_compat::invoke<TokenBatch>("nlp_word_ngrams", *this, {n});
 }
 
 inline Chord Chord::tex_strip_math() const {
@@ -1273,119 +1273,119 @@ inline Chord Chord::tex_standardize_dots() const {
 }
 
 inline Chord Chord::tex_replace_alpha(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_alpha", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_alpha", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_beta(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_beta", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_beta", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_gamma(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_gamma", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_gamma", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_delta(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_delta", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_delta", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_epsilon(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_epsilon", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_epsilon", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_varepsilon(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varepsilon", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varepsilon", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_zeta(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_zeta", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_zeta", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_eta(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_eta", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_eta", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_theta(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_theta", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_theta", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_vartheta(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_vartheta", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_vartheta", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_iota(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_iota", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_iota", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_kappa(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_kappa", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_kappa", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_lambda(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_lambda", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_lambda", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_mu(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_mu", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_mu", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_nu(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_nu", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_nu", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_xi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_xi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_xi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_pi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_pi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_pi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_varpi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varpi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varpi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_rho(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_rho", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_rho", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_varrho(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varrho", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varrho", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_sigma(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_sigma", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_sigma", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_varsigma(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varsigma", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varsigma", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_tau(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_tau", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_tau", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_upsilon(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_upsilon", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_upsilon", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_phi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_phi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_phi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_varphi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varphi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_varphi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_chi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_chi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_chi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_psi(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_psi", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_psi", *this, {repl});
 }
 
 inline Chord Chord::tex_replace_omega(::std::string_view repl) const {
-  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_omega", *this, repl);
+  return ::pluss::coden::_compat::invoke<Chord>("tex_replace_omega", *this, {repl});
 }
 
 inline Chord Chord::nlp_remove_html() const {
@@ -1501,23 +1501,23 @@ inline Chord Chord::nlp_mask_pii() const {
 }
 
 inline Chord Chord::nlp_remove_html(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_html", *this, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_html", *this, {flags});
 }
 
 inline Chord Chord::nlp_remove_markdown(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_markdown", *this, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_markdown", *this, {flags});
 }
 
 inline Chord Chord::nlp_remove_code(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_code", *this, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_code", *this, {flags});
 }
 
 inline Chord Chord::nlp_remove_math(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_math", *this, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_math", *this, {flags});
 }
 
 inline Chord Chord::nlp_remove_latex(::std::int64_t flags) const {
-  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_latex", *this, flags);
+  return ::pluss::coden::_compat::invoke<Chord>("nlp_remove_latex", *this, {flags});
 }
 
 inline TokenBatch Chord::nlp_extract_acronyms() const {

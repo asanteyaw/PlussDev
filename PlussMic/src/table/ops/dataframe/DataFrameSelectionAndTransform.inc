@@ -266,31 +266,23 @@ DataFrame DataFrame::query(std::string_view expression) const {
   return where(mask);
 }
 
-DataFrame DataFrame::derive(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const {
+DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const {
   DataFrame out = *this;
   for (const auto& assignment : assignments) {
-    PLUSS_CHECK(!assignment.first.empty(), "DataFrame::derive: feature name cannot be empty");
+    PLUSS_CHECK(!assignment.first.empty(), "DataFrame::assign: feature name cannot be empty");
     out = out.set_features(assignment.first, assignment.second);
   }
   return out;
 }
 
-DataFrame DataFrame::derive(pluss::msharp::RangeView::Of<DeriveSpec> specs) const {
+DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const {
   DataFrame out = *this;
   for (const auto& spec : specs) {
-    PLUSS_CHECK(!spec.feature.empty(), "DataFrame::derive: feature name cannot be empty");
-    PLUSS_CHECK(static_cast<bool>(spec.expr), "DataFrame::derive: derive expression is empty");
+    PLUSS_CHECK(!spec.feature.empty(), "DataFrame::assign: feature name cannot be empty");
+    PLUSS_CHECK(static_cast<bool>(spec.expr), "DataFrame::assign: assign expression is empty");
     out = out.set_features(spec.feature, spec.expr(out));
   }
   return out;
-}
-
-DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const {
-  return derive(assignments);
-}
-
-DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const {
-  return derive(specs);
 }
 
 DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) const {
@@ -306,6 +298,12 @@ DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) c
   }, src.columns_);
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::transform(std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn), "DataFrame::transform(feature): transform function is empty");
+  const std::array<DeriveSpec, 1> spec{{DeriveSpec{owned_name(feature), fn}}};
+  return assign(pluss::msharp::RangeView::Of<DeriveSpec>(spec));
 }
 
 DataFrame DataFrame::transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const {
@@ -339,6 +337,102 @@ DataFrame DataFrame::transform(pluss::msharp::RangeView::Of<TransformSpec> specs
   }
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::put(std::string_view feature, const Thread& bool_mask, const Thread& value) const {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put: feature name cannot be empty");
+  const auto& src = impl_ref_();
+  const auto it = src.name_to_idx_.find(name);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put: unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, src.nrows_, "DataFrame::put");
+  auto out_cols = src.columns_;
+  out_cols[it->second] = out_cols[it->second].put(mask, value);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::put(std::string_view feature, const Thread& bool_mask, double value) const {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put(double): feature name cannot be empty");
+  const auto& src = impl_ref_();
+  const auto it = src.name_to_idx_.find(name);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(double): unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, src.nrows_, "DataFrame::put(double)");
+  auto out_cols = src.columns_;
+  out_cols[it->second] = out_cols[it->second].put(mask, value);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::put(std::string_view feature, const Thread& bool_mask, std::string_view value) const {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put(string): feature name cannot be empty");
+  const auto& src = impl_ref_();
+  const auto it = src.name_to_idx_.find(name);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(string): unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, src.nrows_, "DataFrame::put(string)");
+  auto out_cols = src.columns_;
+  out_cols[it->second] = out_cols[it->second].put(mask, value);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::put(std::string_view feature, const Thread& bool_mask, pluss::null_t value) const {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put(null): feature name cannot be empty");
+  const auto& src = impl_ref_();
+  const auto it = src.name_to_idx_.find(name);
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(null): unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, src.nrows_, "DataFrame::put(null)");
+  auto out_cols = src.columns_;
+  out_cols[it->second] = out_cols[it->second].put(mask, value);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_));
+}
+
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, const Thread& value) {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put_: feature name cannot be empty");
+  auto& w = mut_impl_();
+  const auto it = w.name_to_idx_.find(name);
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_: unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, w.nrows_, "DataFrame::put_");
+  w.columns_[it->second] = w.columns_[it->second].put(mask, value);
+  return *this;
+}
+
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, double value) {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put_(double): feature name cannot be empty");
+  auto& w = mut_impl_();
+  const auto it = w.name_to_idx_.find(name);
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(double): unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, w.nrows_, "DataFrame::put_(double)");
+  w.columns_[it->second] = w.columns_[it->second].put(mask, value);
+  return *this;
+}
+
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, std::string_view value) {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put_(string): feature name cannot be empty");
+  auto& w = mut_impl_();
+  const auto it = w.name_to_idx_.find(name);
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(string): unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, w.nrows_, "DataFrame::put_(string)");
+  w.columns_[it->second] = w.columns_[it->second].put(mask, value);
+  return *this;
+}
+
+DataFrame& DataFrame::put_(std::string_view feature, const Thread& bool_mask, pluss::null_t value) {
+  const auto name = owned_name(feature);
+  PLUSS_CHECK(!name.empty(), "DataFrame::put_(null): feature name cannot be empty");
+  auto& w = mut_impl_();
+  const auto it = w.name_to_idx_.find(name);
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(null): unknown feature '" + name + "'");
+  const auto mask = bool_series_from_thread_mask_(bool_mask, w.nrows_, "DataFrame::put_(null)");
+  w.columns_[it->second] = w.columns_[it->second].put(mask, value);
+  return *this;
 }
 
 DataFrame DataFrame::tz_convert(pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name) const {

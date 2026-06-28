@@ -34,7 +34,7 @@ enum class OutputLevel : std::size_t {
 struct OutputOptions {
   std::string separator{" "};
   bool levels_enabled{true};
-  std::array<std::string, 5> level_prefixes{{"[TRACE]", "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]"}};
+  std::array<std::string, 5> level_prefixes{{"[TRACE]", "[DEBUG]", "[INFO]", "[WARNING]", "[ERROR]"}};
   OutputLevel min_level{OutputLevel::Trace};
   bool auto_flush{false};
 };
@@ -464,7 +464,7 @@ private:
   std::ostream* sink_{nullptr};
   mutable std::mutex mu_;
   std::string separator_{" "};
-  std::array<std::string, 5> prefixes_{{"[TRACE]", "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]"}};
+  std::array<std::string, 5> prefixes_{{"[TRACE]", "[DEBUG]", "[INFO]", "[WARNING]", "[ERROR]"}};
   bool levels_enabled_{true};
   OutputLevel min_level_{OutputLevel::Trace};
   bool auto_flush_{false};

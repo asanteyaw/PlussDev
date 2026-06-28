@@ -175,7 +175,7 @@ pluss::Series thread_to_plot_numeric_series(const Thread& t) {
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
-    values = values.where(*numeric_thread.validity_mask(), nan_fill);
+    values = values.where(numeric_thread.validity_mask()->logical_not(), nan_fill);
   }
   return values.reshape({values.numel()});
 }
@@ -493,7 +493,7 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
               {values.numel()},
               std::numeric_limits<double>::quiet_NaN(),
               pluss::codem::ScalarType::Float64);
-          values = values.where(*thread.validity_mask(), nan_fill);
+          values = values.where(thread.validity_mask()->logical_not(), nan_fill);
         }
         return values;
       });

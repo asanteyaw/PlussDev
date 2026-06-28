@@ -4,6 +4,7 @@
 // This header intentionally excludes higher-level libraries (Mic/Ma/Pl).
 
 #include "pluss/error.h"
+#include "pluss/null.h"
 #include "pluss/validate.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/codem/losses.h"

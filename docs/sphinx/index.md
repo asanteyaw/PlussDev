@@ -1,16 +1,62 @@
-# PlussQit User Documentation
+# Pluss User Documentation
 
-This Sphinx set is structured as:
+Pluss is a C++20 technical-computing ecosystem for arrays, tables, time
+series, plotting, statistics, optimization, and machine learning.
 
-- practical guides first
-- runnable examples mapped to source demos
-- exhaustive method usage pages for full API surfaces
-- architecture notes for major subsystems when the design must be explicit before implementation
+The most common user-facing include is:
+
+```cpp
+#include <pluss/pluss.h>
+```
+
+The most common CMake target for downstream projects is:
+
+```cmake
+find_package(Pluss CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE Pluss::SDK)
+```
+
+## What to read first
+
+If you are new to Pluss, read these pages in order:
+
+1. [Installation and CMake](installation.md) explains how to build the SDK and
+   consume it from another project.
+2. [Quickstart](quickstart.md) builds a first program and introduces the main
+   objects.
+3. [User Guide](user_guide.md) gives the conceptual map of the ecosystem.
+4. [Data Workflows](data_workflows.md) covers loading, inspecting, filtering,
+   deriving, grouping, plotting, and saving table data.
+5. [Numerical Workflows](numerical_workflows.md) covers `Series`, math,
+   distributions, optimization, and differentiable calculations.
+
+After that, use the topic guides and API pages below as reference material.
+
+## Core mental model
+
+Pluss is organized around a small set of composable data objects:
+
+```text
+Atlas -> DataFrame -> Thread -> Series / Note / Timeline / TimeIndex
+```
+
+- `Series` is the numeric and boolean tensor-style object.
+- `Note` is the vectorized text object.
+- `Timeline` and `TimeIndex` are time objects.
+- `Thread` is a typed table column over one of those core objects.
+- `DataFrame` is a 2D table of named `Thread` features over a case axis.
+- `Atlas` is a stack of related `DataFrame` objects.
+
+## Documentation map
 
 ```{toctree}
 :maxdepth: 2
 
+installation
 quickstart
+user_guide
+data_workflows
+numerical_workflows
 lymph_user_guide
 lymph_cookbook
 lymph_combination_atlas

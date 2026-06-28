@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <initializer_list>
 #include <numeric>
-#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -85,30 +84,34 @@ inline Series cast_like_(const Series& x, const Series& like) {
   return x.to(like.platform(), like.scalar_type());
 }
 
-inline Series zeros_state_(std::span<const std::int64_t> sizes, const Series& like) {
+inline Series zeros_state_(pluss::msharp::RangeView::Int sizes, const Series& like) {
   return pluss::zeros(sizes, Config{}.with_dtype(like.scalar_type()).with_platform(like.platform()));
 }
 
 inline Series zeros_state_(std::initializer_list<std::int64_t> sizes, const Series& like) {
-  return zeros_state_(std::span<const std::int64_t>(sizes.begin(), sizes.size()), like);
+  return zeros_state_(pluss::msharp::RangeView::Int(sizes), like);
 }
 
-inline Series uniform_(std::span<const std::int64_t> sizes, double lo, double hi, Config cfg, std::uint64_t seed) {
+inline Series uniform_(pluss::msharp::RangeView::Int sizes, double lo, double hi, Config cfg, std::uint64_t seed) {
   const Config fcfg = floating_cfg_(cfg);
   return pluss::rand(sizes, fcfg, seed).mul(hi - lo).add(lo);
 }
 
 inline Series uniform_(std::initializer_list<std::int64_t> sizes, double lo, double hi, Config cfg, std::uint64_t seed) {
-  return uniform_(std::span<const std::int64_t>(sizes.begin(), sizes.size()), lo, hi, cfg, seed);
+  return uniform_(pluss::msharp::RangeView::Int(sizes), lo, hi, cfg, seed);
 }
 
 inline Series dropout_(const Series& x, double p, bool training, std::uint64_t seed) {
   require_defined_(x, "dropout");
-  PLUSS_CHECK(p >= 0.0 && p < 1.0, "pluss::dropout: expected p in [0, 1)");
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "pluss::dropout: expected p in [0, 1]");
   if (!training || p == 0.0) return x;
+  if (p == 1.0) {
+    return pluss::zeros(x.sizes(), Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
+  }
+  const ScalarType mask_dtype = x.platform() == pMPS ? ScalarType::Float32 : ScalarType::Float64;
   const Series mask = pluss::rand(
                           x.sizes(),
-                          Config{}.with_dtype(ScalarType::Float64).with_platform(x.platform()),
+                          Config{}.with_dtype(mask_dtype).with_platform(x.platform()),
                           seed)
                           .ge(p)
                           .to(x.scalar_type());
@@ -152,7 +155,8 @@ inline Series apply_nonlinearity_(const Series& x, std::string_view nonlinearity
 
 inline std::vector<std::int64_t> reverse_indices_(std::int64_t n) {
   std::vector<std::int64_t> idx(static_cast<std::size_t>(n));
-  for (std::int64_t i = 0; i < n; ++i) idx[static_cast<std::size_t>(i)] = n - 1 - i;
+  std::iota(idx.begin(), idx.end(), std::int64_t{0});
+  std::reverse(idx.begin(), idx.end());
   return idx;
 }
 

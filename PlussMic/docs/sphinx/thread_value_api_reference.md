@@ -222,6 +222,36 @@ auto out = value.kind();
 Series
 ```
 
+### `payload`
+
+#### Signature
+
+```cpp
+Payload payload(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Payload`
+    Value produced by this call.
+
+#### Notes
+
+Applies `payload` to the current `ThreadValue` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0}));
+auto value = thread.value();
+
+auto out = value.payload();
+```
+
 ### `pluss::Note`
 
 #### Signature

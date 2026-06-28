@@ -13,9 +13,23 @@ This manual is organized the same way users usually approach the library:
 - use `Catalog` and `Archive` when streams/case-aligned data are a better fit
 - use `Registry` and `Aisle` when you want heterogeneous record bundles
 
+## Where To Start
+
+If you are trying to answer "how do I do the table/dataframe thing in PlussMic?", read
+these in order:
+
+1. [DataFrame Guide](dataframe.md)
+2. [Part V: DataFrame Workflows](manual/part05_dataframe_workflows.md)
+3. [DataFrame API Reference](dataframe_api_reference.md)
+4. [Thread API Reference](thread_api_reference.md)
+
+Use the guides for task-oriented examples and use the API reference for exact
+signatures, overloads, and parameter behavior.
+
 ```{toctree}
 :maxdepth: 2
 
+manual
 quickstart
 demo_catalog
 dataframe

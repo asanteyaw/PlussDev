@@ -839,12 +839,18 @@ std::string html_shell_(std::string_view title,
   const auto sortable = options.html_sortable ? "true" : "false";
   const auto search = options.html_search ? "true" : "false";
   const auto copy = options.html_copy_button ? "true" : "false";
+  const std::string inhouse_tools = options.html_desktop_table_viewport
+                                        ? R"HTML(
+          <button id="save-png" class="tool-button save" type="button">Save PNG</button>
+          <button id="toggle-theme" class="tool-button theme" type="button">Theme</button>
+)HTML"
+                                        : std::string{};
   const std::string desktop_overrides = options.html_desktop_table_viewport
                                             ? R"CSS(
-    .hero { flex-wrap: nowrap; }
-    .tools { flex-wrap: nowrap; }
-    .tools input { min-width: 280px; width: 280px; }
-    .summary-grid { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
+    .tools input { min-width: 190px; width: 190px; }
+    .summary-grid { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
+    .table-wrap table { height: 500px; }
+    .atlas-panel .table-wrap table { height: 430px; }
 )CSS"
                                             : std::string{};
   const std::string responsive_css = options.html_desktop_table_viewport
@@ -875,148 +881,164 @@ std::string html_shell_(std::string_view title,
   <title>{0}</title>
   <style>
     :root {{
-      --paper: #f7f3ea;
-      --ink: #17212b;
-      --muted: #56606d;
-      --grid: #d6cfc3;
-      --line: #c4b9a8;
-      --accent: #0f766e;
-      --accent-2: #c2410c;
-      --panel: rgba(255,255,255,0.82);
-      --shadow: 0 22px 70px rgba(23, 33, 43, 0.18);
+      --paper: #f4f7fb;
+      --ink: #102033;
+      --muted: #607086;
+      --grid: #dbe3ec;
+      --line: #c8d3df;
+      --accent: #007f86;
+      --accent-2: #ef5b3f;
+      --accent-3: #6757d9;
+      --success: #159a67;
+      --panel: #ffffff;
+      --shadow: 0 14px 38px rgba(16, 32, 51, 0.14);
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
       color: var(--ink);
-      font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(194, 65, 12, 0.10), transparent 26rem),
-        radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 28rem),
-        linear-gradient(180deg, #f4efe4 0%, #ece5d7 100%);
+      font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e8f6f6 0%, #f3f1ff 52%, #fff0ec 100%);
     }}
     .shell {{
       min-height: 100vh;
-      padding: 22px;
+      padding: 14px;
     }}
     .frame {{
-      max-width: 1440px;
+      max-width: 1560px;
       margin: 0 auto;
       background: var(--panel);
-      border: 1px solid rgba(196, 185, 168, 0.9);
-      border-radius: 20px;
+      border: 1px solid #cbd7e3;
+      border-radius: 8px;
       overflow: hidden;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
     }}
     .hero {{
-      padding: 22px 24px 16px;
-      border-bottom: 1px solid rgba(196, 185, 168, 0.7);
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(249,245,238,0.7)),
-        linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(194, 65, 12, 0.08));
+      padding: 14px 16px;
+      border-bottom: 1px solid #cbd7e3;
+      border-top: 5px solid var(--accent);
+      background: linear-gradient(90deg, #dff5f4 0%, #ffffff 52%, #fff0ec 100%);
       display: flex;
-      gap: 18px;
-      align-items: end;
+      gap: 14px;
+      align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
     }}
     .hero h1 {{
       margin: 0;
-      font-family: "IBM Plex Serif", Georgia, serif;
-      font-size: 1.65rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
+      font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #102f3b;
     }}
     .hero p {{
-      margin: 6px 0 0;
+      margin: 3px 0 0;
       color: var(--muted);
-      font-size: 0.96rem;
+      font-size: 0.84rem;
     }}
     .tools {{
       display: flex;
-      gap: 10px;
+      gap: 7px;
       align-items: center;
       flex-wrap: wrap;
     }}
     .tools input {{
-      min-width: 240px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(86, 96, 109, 0.22);
-      background: rgba(255,255,255,0.86);
+      min-width: 220px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid #b9c7d5;
+      background: #ffffff;
       color: var(--ink);
       font: inherit;
     }}
     .tools button {{
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 0;
-      background: linear-gradient(135deg, var(--accent), #155e75);
+      margin: 0;
+      padding: 8px 11px;
+      border-radius: 7px;
+      border: 1px solid #006c73;
+      background: var(--accent);
       color: white;
-      font: inherit;
+      font: 600 0.82rem/1 "Avenir Next", "Inter", "Segoe UI", sans-serif;
       cursor: pointer;
     }}
     .tools button.secondary {{
-      background: linear-gradient(135deg, var(--accent-2), #9a3412);
+      background: #0b7285;
+      border-color: #085d6c;
+    }}
+    .tools button.reset {{
+      background: #ffffff;
+      border-color: #aebdcb;
+      color: #314459;
+    }}
+    .tools button.save {{
+      background: #3b5bdb;
+      border-color: #2f4bc0;
+    }}
+    .tools button.theme {{
+      background: #7048e8;
+      border-color: #5f3dc4;
+    }}
+    .tools button,
+    .tools input {{
+      text-align: center;
     }}
     .content {{
-      padding: 0 18px 18px;
+      padding: 0 12px 12px;
     }}
     .summary-grid {{
       display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      padding: 18px 6px 8px;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      padding: 10px 2px 4px;
     }}
     .summary-card {{
-      padding: 14px 16px;
-      border-radius: 16px;
-      border: 1px solid rgba(196, 185, 168, 0.7);
-      background: rgba(255,255,255,0.76);
+      padding: 9px 11px;
+      border-radius: 7px;
+      border: 1px solid #cfdae5;
+      border-left: 4px solid var(--accent-3);
+      background: #ffffff;
     }}
     .summary-card .label {{
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
     }}
     .summary-card .value {{
-      margin-top: 6px;
-      font-size: 1.05rem;
-      font-weight: 600;
+      margin-top: 3px;
+      font-size: 0.98rem;
+      font-weight: 700;
     }}
     .table-wrap {{
       overflow: auto;
-      margin-top: 10px;
-      border: 1px solid rgba(196, 185, 168, 0.8);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.88);
+      margin-top: 7px;
+      border: 1px solid #c8d4df;
+      border-radius: 7px;
+      background: #ffffff;
     }}
     table {{
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.95rem;
+      font-size: 0.86rem;
     }}
     thead th {{
       position: sticky;
       top: 0;
       z-index: 2;
-      background: #f7efe2;
+      background: #dcefee;
       border-bottom: 1px solid var(--line);
       text-align: left;
       white-space: nowrap;
     }}
     th, td {{
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(214, 207, 195, 0.75);
+      padding: 8px 10px;
+      border-bottom: 1px solid #dde5ed;
       vertical-align: top;
     }}
     tbody tr:nth-child(even) {{
-      background: rgba(247, 243, 234, 0.55);
+      background: #f7f9fc;
     }}
     tbody tr:hover {{
-      background: rgba(15, 118, 110, 0.08);
+      background: #e8f7f5;
     }}
     th.sortable {{
       cursor: pointer;
@@ -1024,18 +1046,19 @@ std::string html_shell_(std::string_view title,
     }}
     th.sortable::after {{
       content: "  ↕";
-      color: rgba(86, 96, 109, 0.8);
+      color: #65758a;
       font-size: 0.85em;
     }}
     .sticky-left {{
       position: sticky;
       left: 0;
       z-index: 1;
-      background: inherit;
+      background: #edf6f7;
+      border-right: 2px solid #8bbfc0;
     }}
     thead .sticky-left {{
       z-index: 3;
-      background: #f7efe2;
+      background: #cce8e6;
     }}
     .num {{
       text-align: right;
@@ -1044,16 +1067,21 @@ std::string html_shell_(std::string_view title,
     .muted {{
       color: var(--muted);
     }}
+    .missing {{
+      color: #c9362b;
+      background: #fff0ee;
+      font-weight: 700;
+    }}
     .hidden {{
       display: none;
     }}
     .pill {{
       display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: rgba(15, 118, 110, 0.10);
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: #dff3f1;
       color: var(--accent);
-      font-size: 0.85rem;
+      font-size: 0.76rem;
       font-weight: 600;
     }}
     .section-label {{
@@ -1062,29 +1090,28 @@ std::string html_shell_(std::string_view title,
       color: var(--muted);
       font-size: 0.78rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
     }}
     .atlas-nav {{
       display: flex;
-      gap: 10px;
+      gap: 7px;
       overflow: auto;
       padding: 10px 6px 6px;
       margin-bottom: 8px;
     }}
     .atlas-tab {{
-      padding: 10px 14px;
-      border: 1px solid rgba(196, 185, 168, 0.85);
-      border-radius: 999px;
-      background: rgba(255,255,255,0.84);
+      padding: 7px 10px;
+      border: 1px solid #bac8d6;
+      border-radius: 7px;
+      background: #ffffff;
       color: var(--ink);
       cursor: pointer;
       white-space: nowrap;
       font: inherit;
     }}
     .atlas-tab.active {{
-      background: linear-gradient(135deg, rgba(15,118,110,0.16), rgba(194,65,12,0.12));
-      border-color: rgba(15, 118, 110, 0.38);
-      color: var(--ink);
+      background: var(--accent-3);
+      border-color: #5141bd;
+      color: #ffffff;
       font-weight: 600;
     }}
     .atlas-panel {{
@@ -1103,10 +1130,75 @@ std::string html_shell_(std::string_view title,
     }}
     .atlas-frame-title {{
       margin: 0;
-      font-family: "IBM Plex Serif", Georgia, serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }}
+    body.theme-midnight {{
+      --paper: #121a25;
+      --ink: #eaf2f8;
+      --muted: #9fb0c3;
+      --grid: #334356;
+      --line: #425269;
+      --panel: #182331;
+      background: #101720;
+    }}
+    body.theme-midnight .frame,
+    body.theme-midnight .summary-card,
+    body.theme-midnight .table-wrap,
+    body.theme-midnight .tools input {{
+      background: #182331;
+      border-color: #34465a;
+      color: #eaf2f8;
+    }}
+    body.theme-midnight .hero {{
+      background: #162b35;
+      border-color: #34465a;
+    }}
+    body.theme-midnight .hero h1 {{
+      color: #f2fbff;
+    }}
+    body.theme-midnight thead th,
+    body.theme-midnight thead .sticky-left {{
+      background: #174b50;
+      color: #f2fbff;
+    }}
+    body.theme-midnight tbody tr:nth-child(even) {{
+      background: #1d2a39;
+    }}
+    body.theme-midnight th,
+    body.theme-midnight td {{
+      border-color: #34465a;
+    }}
+    body.theme-ocean {{
+      --ink: #0a2f3a;
+      --muted: #426e79;
+      --accent: #007c91;
+      --accent-3: #176b87;
+      background: #dff5f7;
+    }}
+    body.theme-ocean .hero {{
+      background: linear-gradient(90deg, #bfeaec 0%, #eefbfc 58%, #dcecff 100%);
+      border-top-color: #007c91;
+    }}
+    body.theme-ocean thead th,
+    body.theme-ocean thead .sticky-left {{
+      background: #b9e2e4;
+    }}
+    body.theme-violet {{
+      --ink: #2d2448;
+      --muted: #706486;
+      --accent: #5f3dc4;
+      --accent-3: #7048e8;
+      background: #f0ecff;
+    }}
+    body.theme-violet .hero {{
+      background: linear-gradient(90deg, #e5ddff 0%, #ffffff 58%, #e8f7f5 100%);
+      border-top-color: #7048e8;
+    }}
+    body.theme-violet thead th,
+    body.theme-violet thead .sticky-left {{
+      background: #ddd5fb;
     }}
     {6}
     {7}
@@ -1122,7 +1214,9 @@ std::string html_shell_(std::string_view title,
         </div>
         <div class="tools">
           <input id="table-search" type="search" placeholder="Search visible rows" />
-          <button id="copy-visible" class="secondary" type="button">Copy visible</button>
+          <button id="reset-table-view" class="reset" type="button">Reset</button>
+          <button id="copy-visible" class="secondary" type="button">Copy TSV</button>
+          {8}
         </div>
       </header>
       <main class="content">
@@ -1138,6 +1232,8 @@ std::string html_shell_(std::string_view title,
     const detailTables = document.querySelectorAll('table[data-filterable="true"]');
     const searchInput = document.getElementById('table-search');
     const copyButton = document.getElementById('copy-visible');
+    const resetButton = document.getElementById('reset-table-view');
+    const themeButton = document.getElementById('toggle-theme');
 
     if (!enableSearch) {{
       searchInput.classList.add('hidden');
@@ -1226,9 +1322,40 @@ std::string html_shell_(std::string_view title,
     if (enableCopy) {{
       copyButton.addEventListener('click', copyVisibleTable);
     }}
+    resetButton.addEventListener('click', () => {{
+      searchInput.value = '';
+      filterTables('');
+      detailTables.forEach((tbl) => {{
+        const tbody = tbl.tBodies[0];
+        if (!tbody) return;
+        const rows = Array.from(tbody.rows);
+        rows.sort((a, b) => Number(a.dataset.rowIndex || '0') - Number(b.dataset.rowIndex || '0'));
+        rows.forEach((row) => tbody.appendChild(row));
+        delete tbl.dataset.sortDir;
+      }});
+    }});
+    if (themeButton) {{
+      const themes = ['', 'theme-midnight', 'theme-ocean', 'theme-violet'];
+      let themeIndex = 0;
+      themeButton.addEventListener('click', () => {{
+        themes.forEach((theme) => {{ if (theme) document.body.classList.remove(theme); }});
+        themeIndex = (themeIndex + 1) % themes.length;
+        if (themes[themeIndex]) document.body.classList.add(themes[themeIndex]);
+      }});
+    }}
 
     document.querySelectorAll('.atlas-tab').forEach((button) => {{
       button.addEventListener('click', () => {{
+        if (button.id === 'atlas-show-all') {{
+          document.querySelectorAll('.atlas-tab').forEach((candidate) => {{
+            candidate.classList.toggle('active', candidate === button);
+          }});
+          document.querySelectorAll('.atlas-panel').forEach((panel) => panel.classList.add('active'));
+          if (enableSearch) {{
+            filterTables(searchInput.value || '');
+          }}
+          return;
+        }}
         const index = button.dataset.frameIndex;
         document.querySelectorAll('.atlas-tab').forEach((candidate) => {{
           candidate.classList.toggle('active', candidate === button);
@@ -1251,7 +1378,8 @@ std::string html_shell_(std::string_view title,
                      search,
                      copy,
                      desktop_overrides,
-                     responsive_css);
+                     responsive_css,
+                     inhouse_tools);
 }
 
 std::string render_html_pre_(std::string_view title,
@@ -1312,20 +1440,22 @@ std::string render_html_table_body_(const DataFrame& frame,
   body += "</tr></thead><tbody>";
 
   for (std::int64_t row = 0; row < frame.ncases(); ++row) {
-    body += "<tr>";
+    body += fmt::format("<tr data-row-index=\"{}\">", row);
     if (options.show_case_index) {
       const auto case_value = thread_value_at(display_cases, row);
       const auto case_numeric = is_numeric_thread(frame.cases());
-      body += fmt::format("<td class=\"sticky-left{}\" data-sort-value=\"{}\">{}</td>",
+      body += fmt::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
+                          case_value == "NA" ? " missing" : "",
                           escape_html_(case_value),
                           escape_html_(case_value));
     }
     for (std::size_t col = 0; col < cols.size(); ++col) {
       const auto value = thread_value_at(display_cols[col], row);
       const auto numeric = is_numeric_thread(cols[col]);
-      body += fmt::format("<td class=\"{}\" data-sort-value=\"{}\">{}</td>",
+      body += fmt::format("<td class=\"{}{}\" data-sort-value=\"{}\">{}</td>",
                           numeric ? "num" : "",
+                          value == "NA" ? " missing" : "",
                           escape_html_(value),
                           escape_html_(value));
     }
@@ -1373,13 +1503,17 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
   body += "<div class=\"section-label\">Frames</div>";
   body += "<div class=\"atlas-nav\">";
+  const bool show_all_frames = options.html_desktop_table_viewport;
+  body += fmt::format("<button id=\"atlas-show-all\" type=\"button\" class=\"atlas-tab{}\">All frames</button>",
+                      show_all_frames ? " active" : "");
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
     std::string label = fmt::format("Frame {}", i);
     if (display_axis0.has_value()) {
       label = thread_value_at(*display_axis0, i);
     }
-    body += fmt::format("<button type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\">{}</button>",
-                        i == 0 ? " active" : "",
+    body += fmt::format("<button id=\"atlas-tab-{}\" type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\">{}</button>",
+                        i,
+                        (!show_all_frames && i == 0) ? " active" : "",
                         i,
                         escape_html_(label));
   }
@@ -1392,7 +1526,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
     }
     const auto frame = atlas.frame(i);
     body += fmt::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
-                        i == 0 ? " active" : "",
+                        (show_all_frames || i == 0) ? " active" : "",
                         i);
     body += "<div class=\"atlas-frame-head\">";
     body += fmt::format("<h2 class=\"atlas-frame-title\">{}</h2>", escape_html_(label));

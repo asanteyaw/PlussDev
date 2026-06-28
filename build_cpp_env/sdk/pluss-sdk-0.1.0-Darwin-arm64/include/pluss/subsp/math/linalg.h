@@ -35,14 +35,14 @@ inline Config cpu_f64_cfg_() {
 
 inline void require_2d_(const Series& a, const char* op) {
   if (!a.defined() || a.dim() != 2) {
-    throw std::runtime_error(std::string(op) + ": expected a defined 2D Series");
+    ::pluss::throw_error(std::string(op) + ": expected a defined 2D Series");
   }
 }
 
 inline void require_square_(const Series& a, const char* op) {
   require_2d_(a, op);
   if (a.sizes()[0] != a.sizes()[1]) {
-    throw std::runtime_error(std::string(op) + ": expected square matrix");
+    ::pluss::throw_error(std::string(op) + ": expected square matrix");
   }
 }
 
@@ -179,7 +179,7 @@ inline std::vector<double> inverse_gauss_(const std::vector<double>& in, std::in
       }
     }
     if (maxv <= 1e-18) {
-      throw std::runtime_error("subsp::math::linalg::inverse: singular matrix");
+      ::pluss::throw_error("subsp::math::linalg::inverse: singular matrix");
     }
     if (piv != k) {
       for (std::int64_t c = 0; c < 2 * n; ++c) {
@@ -211,7 +211,7 @@ inline std::vector<double> cholesky_lower_(const std::vector<double>& in, std::i
         s -= out[static_cast<std::size_t>(i * n + k)] * out[static_cast<std::size_t>(j * n + k)];
       }
       if (i == j) {
-        if (s <= 0.0) throw std::runtime_error("subsp::math::linalg::cholesky: matrix is not SPD");
+        if (s <= 0.0) ::pluss::throw_error("subsp::math::linalg::cholesky: matrix is not SPD");
         out[static_cast<std::size_t>(i * n + j)] = std::sqrt(s);
       } else {
         out[static_cast<std::size_t>(i * n + j)] = s / out[static_cast<std::size_t>(j * n + j)];
@@ -284,7 +284,7 @@ inline Series det(const Series& a) {
   std::vector<int> ipiv(static_cast<std::size_t>(n));
   int info = 0;
   dgetrf_(&n, &n, col.data(), &n, ipiv.data(), &info);
-  if (info < 0) throw std::runtime_error("subsp::math::linalg::det: invalid LAPACK arg");
+  if (info < 0) ::pluss::throw_error("subsp::math::linalg::det: invalid LAPACK arg");
   if (info > 0) return detail::scalar_from_value_(0.0);
   double d = 1.0;
   int sign = 1;
@@ -309,15 +309,15 @@ inline Series inverse(const Series& a) {
   std::vector<int> ipiv(static_cast<std::size_t>(n));
   int info = 0;
   dgetrf_(&n, &n, col.data(), &n, ipiv.data(), &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::inverse: LU factorization failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::inverse: LU factorization failed");
   int lwork = -1;
   double wkopt = 0.0;
   dgetri_(&n, col.data(), &n, ipiv.data(), &wkopt, &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::inverse: LAPACK workspace query failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::inverse: LAPACK workspace query failed");
   lwork = std::max(1, static_cast<int>(wkopt));
   std::vector<double> work(static_cast<std::size_t>(lwork), 0.0);
   dgetri_(&n, col.data(), &n, ipiv.data(), work.data(), &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::inverse: singular matrix");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::inverse: singular matrix");
   return detail::matrix_from_row_major_(detail::col_to_row_major_(col, n, n), n, n);
 #else
   const auto row = detail::to_row_major_f64_(a);
@@ -335,7 +335,7 @@ inline Series cholesky(const Series& a, bool upper = false) {
   char uplo = upper ? 'U' : 'L';
   int info = 0;
   dpotrf_(&uplo, &n, col.data(), &n, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::cholesky: matrix is not SPD");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::cholesky: matrix is not SPD");
   for (int c = 0; c < n; ++c) {
     for (int r = 0; r < n; ++r) {
       const bool keep = upper ? (r <= c) : (r >= c);
@@ -402,12 +402,12 @@ inline Series triangular_solve(const Series& b, const Series& a, bool upper = tr
   const auto n = aa.sizes()[0];
   std::int64_t nrhs = 1;
   if (bb.dim() == 1) {
-    if (bb.sizes()[0] != n) throw std::runtime_error("subsp::math::linalg::triangular_solve: rhs mismatch");
+    if (bb.sizes()[0] != n) ::pluss::throw_error("subsp::math::linalg::triangular_solve: rhs mismatch");
     const std::vector<std::int64_t> shape{n, 1};
     bb = bb.reshape(shape);
   } else {
     detail::require_2d_(bb, "subsp::math::linalg::triangular_solve");
-    if (bb.sizes()[0] != n) throw std::runtime_error("subsp::math::linalg::triangular_solve: rhs mismatch");
+    if (bb.sizes()[0] != n) ::pluss::throw_error("subsp::math::linalg::triangular_solve: rhs mismatch");
     nrhs = bb.sizes()[1];
   }
 #if defined(__APPLE__)
@@ -420,7 +420,7 @@ inline Series triangular_solve(const Series& b, const Series& a, bool upper = tr
   char diag = unitriangular ? 'U' : 'N';
   int info = 0;
   dtrtrs_(&uplo, &trans, &diag, &ni, &nrhsi, a_col.data(), &ni, b_col.data(), &ni, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::triangular_solve: LAPACK dtrtrs failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::triangular_solve: LAPACK dtrtrs failed");
   return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
 #else
   const auto xr = detail::triangular_solve_(bb.to_vec<double>(), aa.to_vec<double>(), n, nrhs, upper, unitriangular);
@@ -434,7 +434,7 @@ inline Series cholesky_solve(const Series& b, const Series& factor, bool upper =
   auto rhs = b.to(pluss::pCPU, ScalarType::Float64).contiguous();
   const auto n = l.sizes()[0];
   if (rhs.dim() != 2 || rhs.sizes()[0] != n) {
-    throw std::runtime_error("subsp::math::linalg::cholesky_solve: rhs must be 2D with matching first dim");
+    ::pluss::throw_error("subsp::math::linalg::cholesky_solve: rhs must be 2D with matching first dim");
   }
   const auto nrhs = rhs.sizes()[1];
 #if defined(__APPLE__)
@@ -445,7 +445,7 @@ inline Series cholesky_solve(const Series& b, const Series& factor, bool upper =
   char uplo = upper ? 'U' : 'L';
   int info = 0;
   dpotrs_(&uplo, &ni, &nrhsi, l_col.data(), &ni, rhs_col.data(), &ni, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::cholesky_solve: LAPACK dpotrs failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::cholesky_solve: LAPACK dpotrs failed");
   return detail::matrix_from_row_major_(detail::col_to_row_major_(rhs_col, n, nrhs), n, nrhs);
 #else
   if (upper) l = l.transpose(0, 1).contiguous();
@@ -466,7 +466,7 @@ inline Series cholesky_inverse(const Series& factor, bool upper = false) {
   char uplo = upper ? 'U' : 'L';
   int info = 0;
   dpotri_(&uplo, &ni, l_col.data(), &ni, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::cholesky_inverse: LAPACK dpotri failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::cholesky_inverse: LAPACK dpotri failed");
   for (std::int64_t c = 0; c < n; ++c) {
     for (std::int64_t r = 0; r < n; ++r) {
       if (upper) {
@@ -499,7 +499,7 @@ inline Series lu_solve(const Series& b, const Series& lu) {
     rhs = rhs.reshape(shape);
   }
   detail::require_2d_(rhs, "subsp::math::linalg::lu_solve");
-  if (rhs.sizes()[0] != lu.sizes()[0]) throw std::runtime_error("subsp::math::linalg::lu_solve: rhs mismatch");
+  if (rhs.sizes()[0] != lu.sizes()[0]) ::pluss::throw_error("subsp::math::linalg::lu_solve: rhs mismatch");
 #if defined(__APPLE__)
   const auto nrhs = rhs.sizes()[1];
   int ni = static_cast<int>(n);
@@ -509,8 +509,8 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   std::vector<int> ipiv(static_cast<std::size_t>(n), 0);
   int info = 0;
   dgesv_(&ni, &nrhsi, a_col.data(), &ni, ipiv.data(), b_col.data(), &ni, &info);
-  if (info < 0) throw std::runtime_error("subsp::math::linalg::lu_solve: invalid LAPACK arg");
-  if (info > 0) throw std::runtime_error("subsp::math::linalg::lu_solve: singular matrix");
+  if (info < 0) ::pluss::throw_error("subsp::math::linalg::lu_solve: invalid LAPACK arg");
+  if (info > 0) ::pluss::throw_error("subsp::math::linalg::lu_solve: singular matrix");
   return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
 #else
   const auto rr = rhs.to_vec<double>();
@@ -536,11 +536,11 @@ inline QRResult qr(const Series& a, bool reduced = true) {
   int lwork = -1;
   double wkopt = 0.0;
   dgeqrf_(&m, &n, col.data(), &m, tau.data(), &wkopt, &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::qr: geqrf workspace query failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::qr: geqrf workspace query failed");
   lwork = std::max(1, static_cast<int>(wkopt));
   std::vector<double> work(static_cast<std::size_t>(lwork), 0.0);
   dgeqrf_(&m, &n, col.data(), &m, tau.data(), work.data(), &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::qr: geqrf failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::qr: geqrf failed");
 
   int q_cols = reduced ? k : m;
   std::vector<double> qcol(static_cast<std::size_t>(m * q_cols), 0.0);
@@ -553,11 +553,11 @@ inline QRResult qr(const Series& a, bool reduced = true) {
   lwork = -1;
   wkopt = 0.0;
   dorgqr_(&m, &q_cols, &k, qcol.data(), &m, tau.data(), &wkopt, &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::qr: orgqr workspace query failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::qr: orgqr workspace query failed");
   lwork = std::max(1, static_cast<int>(wkopt));
   work.assign(static_cast<std::size_t>(lwork), 0.0);
   dorgqr_(&m, &q_cols, &k, qcol.data(), &m, tau.data(), work.data(), &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::qr: orgqr failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::qr: orgqr failed");
 
   int r_rows = reduced ? k : m;
   std::vector<double> rrow(static_cast<std::size_t>(r_rows * n), 0.0);
@@ -570,7 +570,7 @@ inline QRResult qr(const Series& a, bool reduced = true) {
       detail::matrix_from_row_major_(detail::col_to_row_major_(qcol, m, q_cols), m, q_cols),
       detail::matrix_from_row_major_(rrow, r_rows, n)};
 #else
-  throw std::runtime_error("subsp::math::linalg::qr: LAPACK path unavailable on this platform");
+  ::pluss::throw_error("subsp::math::linalg::qr: LAPACK path unavailable on this platform");
 #endif
 }
 
@@ -597,19 +597,19 @@ inline SVDResult svd(const Series& a, bool full_matrices = true) {
   double wkopt = 0.0;
   dgesvd_(
       &job, &job, &m, &n, col.data(), &m, s.data(), ucol.data(), &m, vtcol.data(), &ldvt, &wkopt, &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::svd: workspace query failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::svd: workspace query failed");
   lwork = std::max(1, static_cast<int>(wkopt));
   std::vector<double> work(static_cast<std::size_t>(lwork), 0.0);
   dgesvd_(
       &job, &job, &m, &n, col.data(), &m, s.data(), ucol.data(), &m, vtcol.data(), &ldvt, work.data(), &lwork, &info);
-  if (info != 0) throw std::runtime_error("subsp::math::linalg::svd: dgesvd failed");
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::svd: dgesvd failed");
 
   return SVDResult{
       detail::matrix_from_row_major_(detail::col_to_row_major_(ucol, m, u_cols), m, u_cols),
       detail::vector_from_values_(s),
       detail::matrix_from_row_major_(detail::col_to_row_major_(vtcol, vt_rows, n), vt_rows, n)};
 #else
-  throw std::runtime_error("subsp::math::linalg::svd: LAPACK path unavailable on this platform");
+  ::pluss::throw_error("subsp::math::linalg::svd: LAPACK path unavailable on this platform");
 #endif
 }
 

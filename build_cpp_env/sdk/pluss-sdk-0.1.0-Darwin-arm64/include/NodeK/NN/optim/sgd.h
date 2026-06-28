@@ -30,8 +30,8 @@ struct SGDGroup {
 
 class PLUSS_API SGD final : public Optimizer {
 public:
-  explicit SGD(std::vector<Series*> parameters, SGDOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit SGD(pluss::msharp::RangeView::Of<Series*> parameters, SGDOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -42,7 +42,7 @@ public:
     validate_group_options_();
   }
 
-  explicit SGD(std::vector<SGDGroup> groups)
+  explicit SGD(pluss::msharp::RangeView::Of<SGDGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -67,7 +67,7 @@ public:
 
   void set_group_options(std::size_t group_index, const SGDOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -94,7 +94,7 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD::restore_state: group count mismatch");
     }
     validate_state_vector_(state.velocity, "pluss::ai::nn::optim::SGD::restore_state");
     for (std::size_t i = 0; i < groups_.size(); ++i) {
@@ -125,7 +125,7 @@ private:
     Series weight_decay{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     auto& params = mutable_parameters_();
     reset_step_lane_telemetry_();
     for (std::size_t group_index = 0; group_index < groups_.size(); ++group_index) {
@@ -173,8 +173,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -219,8 +219,8 @@ private:
   }
 
   void apply_group_loop_(const GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const SGDOptions& options = group.options;
     for (std::size_t i : group.indices) {
       Series* param_ptr = params[i];
@@ -262,8 +262,8 @@ private:
   }
 
   void apply_group_batched_(const GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const SGDOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -320,8 +320,8 @@ private:
   }
 
   void apply_group_fused_(const GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const SGDOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -377,35 +377,35 @@ private:
 
   static void validate_options_(const SGDOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD: learning_rate must be positive and finite");
     }
     if (options.momentum < 0.0 || !std::isfinite(options.momentum)) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD: momentum must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD: momentum must be finite and non-negative");
     }
     if (options.dampening < 0.0 || !std::isfinite(options.dampening)) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD: dampening must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD: dampening must be finite and non-negative");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD: weight_decay must be finite and non-negative");
     }
     if (options.nesterov && options.momentum <= 0.0) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD: nesterov requires momentum > 0");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD: nesterov requires momentum > 0");
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<SGDGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<SGDGroup> groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::SGD: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::SGD: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::SGD: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::SGD: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::SGD: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::SGD: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -413,7 +413,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<SGDGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<SGDGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -443,17 +443,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::SGD: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::SGD: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::SGD: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::SGD: capturable mode requires same dtype across each group");
         }
       }
@@ -465,7 +465,7 @@ private:
     velocity_.clear();
     velocity_.reserve(params.size());
     for (const Series* p : params) {
-      velocity_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      velocity_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

@@ -3243,14 +3243,9 @@ Series where(const Series& cond, const Series& a, const Series& b) {
   const auto cc_exp = cc.expand(shape, true);
   const auto aa_exp = aa.expand(shape, true);
   const auto bb_exp = bb.expand(shape, true);
-  if (dt == ScalarType::Bool) {
-    const Series t = logical_and(cc_exp, aa_exp);
-    const Series f = logical_and(logical_not(cc_exp), bb_exp);
-    return logical_or(t, f);
-  }
-  const Series mask = cc_exp.to(dt);
-  const Series one = scalar_like_(mask, 1.0);
-  return add(mul(mask, aa_exp), mul(sub(one, mask), bb_exp));
+  native::cpu::where(cc_exp, aa_exp, bb_exp, out);
+  maybe_link_where_op_(out, cond, a, b);
+  return out;
 }
 
 Series clamp(const Series& a, double min, double max) {

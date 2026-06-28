@@ -31,8 +31,8 @@ struct RMSpropGroup {
 
 class PLUSS_API RMSprop final : public Optimizer {
 public:
-  explicit RMSprop(std::vector<Series*> parameters, RMSpropOptions options = {})
-      : Optimizer(std::move(parameters)), default_options_(options) {
+  explicit RMSprop(pluss::msharp::RangeView::Of<Series*> parameters, RMSpropOptions options = {})
+      : Optimizer(parameters), default_options_(options) {
     validate_options_(default_options_);
     GroupState group{};
     group.options = default_options_;
@@ -43,7 +43,7 @@ public:
     initialize_state_();
   }
 
-  explicit RMSprop(std::vector<RMSpropGroup> groups)
+  explicit RMSprop(pluss::msharp::RangeView::Of<RMSpropGroup> groups)
       : Optimizer(flatten_groups_(groups)),
         groups_(build_group_states_(groups)),
         default_options_(groups.front().options) {
@@ -68,7 +68,7 @@ public:
 
   void set_group_options(std::size_t group_index, const RMSpropOptions& options) {
     if (group_index >= groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop::set_group_options: group index out of range");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop::set_group_options: group index out of range");
     }
     validate_options_(options);
     groups_[group_index].options = options;
@@ -99,7 +99,7 @@ public:
 
   void restore_state(const State& state) {
     if (state.group_options.size() != groups_.size()) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop::restore_state: group count mismatch");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop::restore_state: group count mismatch");
     }
     validate_state_vector_(state.square_avg, "pluss::ai::nn::optim::RMSprop::restore_state[square_avg]");
     validate_state_vector_(state.momentum_buffer, "pluss::ai::nn::optim::RMSprop::restore_state[momentum_buffer]");
@@ -138,7 +138,7 @@ private:
     Series weight_decay{};
   };
 
-  void apply_step_(const std::vector<Series>& gradients) override {
+  void apply_step_(pluss::msharp::RangeView::Series gradients) override {
     auto& params = mutable_parameters_();
     reset_step_lane_telemetry_();
     for (std::size_t group_index = 0; group_index < groups_.size(); ++group_index) {
@@ -186,8 +186,8 @@ private:
   }
 
   bool can_batch_group_(const GroupState& group,
-                        const std::vector<Series*>& params,
-                        const std::vector<Series>& gradients) const {
+                        pluss::msharp::RangeView::Of<Series*> params,
+                        pluss::msharp::RangeView::Series gradients) const {
     const Series* anchor_param = nullptr;
     for (std::size_t i : group.indices) {
       const Series* p = params[i];
@@ -237,8 +237,8 @@ private:
   }
 
   void apply_group_loop_(const GroupState& group,
-                         const std::vector<Series*>& params,
-                         const std::vector<Series>& gradients) {
+                         pluss::msharp::RangeView::Of<Series*> params,
+                         pluss::msharp::RangeView::Series gradients) {
     const RMSpropOptions& options = group.options;
     for (std::size_t i : group.indices) {
       Series* param_ptr = params[i];
@@ -278,8 +278,8 @@ private:
   }
 
   void apply_group_batched_(const GroupState& group,
-                            const std::vector<Series*>& params,
-                            const std::vector<Series>& gradients) {
+                            pluss::msharp::RangeView::Of<Series*> params,
+                            pluss::msharp::RangeView::Series gradients) {
     const RMSpropOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -345,8 +345,8 @@ private:
   }
 
   void apply_group_fused_(const GroupState& group,
-                          const std::vector<Series*>& params,
-                          const std::vector<Series>& gradients) {
+                          pluss::msharp::RangeView::Of<Series*> params,
+                          pluss::msharp::RangeView::Series gradients) {
     const RMSpropOptions& options = group.options;
 
     std::vector<std::size_t> active{};
@@ -418,35 +418,35 @@ private:
 
   static void validate_options_(const RMSpropOptions& options) {
     if (!(options.learning_rate > 0.0) || !std::isfinite(options.learning_rate)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: learning_rate must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: learning_rate must be positive and finite");
     }
     if (!(options.alpha >= 0.0 && options.alpha < 1.0) || !std::isfinite(options.alpha)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: alpha must be in [0, 1)");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: alpha must be in [0, 1)");
     }
     if (!(options.epsilon > 0.0) || !std::isfinite(options.epsilon)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: epsilon must be positive and finite");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: epsilon must be positive and finite");
     }
     if (options.momentum < 0.0 || !std::isfinite(options.momentum)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: momentum must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: momentum must be finite and non-negative");
     }
     if (options.weight_decay < 0.0 || !std::isfinite(options.weight_decay)) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: weight_decay must be finite and non-negative");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: weight_decay must be finite and non-negative");
     }
   }
 
-  static std::vector<Series*> flatten_groups_(const std::vector<RMSpropGroup>& groups) {
+  static std::vector<Series*> flatten_groups_(pluss::msharp::RangeView::Of<RMSpropGroup> groups) {
     if (groups.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::RMSprop: expected non-empty parameter groups");
+      ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: expected non-empty parameter groups");
     }
     std::vector<Series*> flat{};
     std::unordered_set<Series*> seen{};
     for (const auto& group : groups) {
       if (group.parameters.empty()) {
-        throw std::runtime_error("pluss::ai::nn::optim::RMSprop: parameter group must not be empty");
+        ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: parameter group must not be empty");
       }
       for (Series* p : group.parameters) {
         if (p != nullptr && !seen.insert(p).second) {
-          throw std::runtime_error("pluss::ai::nn::optim::RMSprop: duplicate parameter across groups");
+          ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: duplicate parameter across groups");
         }
         flat.push_back(p);
       }
@@ -454,7 +454,7 @@ private:
     return flat;
   }
 
-  static std::vector<GroupState> build_group_states_(const std::vector<RMSpropGroup>& groups) {
+  static std::vector<GroupState> build_group_states_(pluss::msharp::RangeView::Of<RMSpropGroup> groups) {
     std::vector<GroupState> out{};
     out.reserve(groups.size());
     std::size_t next_index = 0;
@@ -484,17 +484,17 @@ private:
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
-        throw std::runtime_error("pluss::ai::nn::optim::RMSprop: capturable mode expects defined group parameters");
+        ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: capturable mode expects defined group parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
         if (p->platform() != anchor->platform()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::RMSprop: capturable mode requires same platform across each group");
         }
         if (p->scalar_type() != anchor->scalar_type()) {
-          throw std::runtime_error(
+          ::pluss::throw_error(
               "pluss::ai::nn::optim::RMSprop: capturable mode requires same dtype across each group");
         }
       }
@@ -512,9 +512,9 @@ private:
     grad_avg_.reserve(params.size());
 
     for (const Series* p : params) {
-      square_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      momentum_buffer_.push_back(pluss::zeros_like(*p, p->scalar_type()));
-      grad_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+      square_avg_.push_back(state_zeros_like_(*p));
+      momentum_buffer_.push_back(state_zeros_like_(*p));
+      grad_avg_.push_back(state_zeros_like_(*p));
     }
     initialize_group_capture_state_();
   }

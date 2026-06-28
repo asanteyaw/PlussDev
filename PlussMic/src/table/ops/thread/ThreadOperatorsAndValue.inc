@@ -90,6 +90,25 @@ const char* cmp_op_name(ThreadBinaryCompareOp op) {
   }
 }
 
+ThreadBinaryCompareOp reverse_cmp_op(ThreadBinaryCompareOp op) {
+  switch (op) {
+    case ThreadBinaryCompareOp::Eq:
+      return ThreadBinaryCompareOp::Eq;
+    case ThreadBinaryCompareOp::Ne:
+      return ThreadBinaryCompareOp::Ne;
+    case ThreadBinaryCompareOp::Lt:
+      return ThreadBinaryCompareOp::Gt;
+    case ThreadBinaryCompareOp::Le:
+      return ThreadBinaryCompareOp::Ge;
+    case ThreadBinaryCompareOp::Gt:
+      return ThreadBinaryCompareOp::Lt;
+    case ThreadBinaryCompareOp::Ge:
+      return ThreadBinaryCompareOp::Le;
+    default:
+      return op;
+  }
+}
+
 template <class Fn>
 Thread invoke_underlying(Fn&& fn, std::string_view where, std::string_view what) {
   try {
@@ -153,7 +172,8 @@ Thread compare_scalar(const Thread& lhs, double rhs, ThreadBinaryCompareOp op, s
 Thread compare_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryCompareOp op, std::string_view where) {
   ensure_defined_thread_for_compare(lhs, where);
   ensure_defined_thread_for_compare(rhs, where);
-  PLUSS_CHECK(lhs.size() == rhs.size(), std::string(where) + ": Thread size mismatch");
+  PLUSS_CHECK(lhs.size() == rhs.size() || lhs.size() == 1 || rhs.size() == 1,
+              std::string(where) + ": Thread size mismatch");
 
   const auto lk = lhs.kind();
   const auto rk = rhs.kind();
@@ -271,6 +291,38 @@ Thread operator==(double lhs, const Thread& rhs) {
   return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Eq, "Thread::operator==(double,Thread)");
 }
 
+Thread operator==(const Thread& lhs, std::string_view rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
+}
+
+Thread operator==(std::string_view lhs, const Thread& rhs) {
+  return rhs.compare(lhs, ThreadBinaryCompareOp::Eq);
+}
+
+Thread operator==(const Thread& lhs, const char* rhs) {
+  return lhs == std::string_view(rhs != nullptr ? rhs : "");
+}
+
+Thread operator==(const char* lhs, const Thread& rhs) {
+  return std::string_view(lhs != nullptr ? lhs : "") == rhs;
+}
+
+Thread operator==(const Thread& lhs, const pluss::Series& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
+}
+
+Thread operator==(const Thread& lhs, const pluss::Note& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
+}
+
+Thread operator==(const Thread& lhs, const pluss::Timeline& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
+}
+
+Thread operator==(const Thread& lhs, const pluss::TimeIndex& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
+}
+
 Thread operator==(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Eq, "Thread::operator==(Thread,Thread)");
 }
@@ -281,6 +333,38 @@ Thread operator!=(const Thread& lhs, double rhs) {
 
 Thread operator!=(double lhs, const Thread& rhs) {
   return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Ne, "Thread::operator!=(double,Thread)");
+}
+
+Thread operator!=(const Thread& lhs, std::string_view rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
+}
+
+Thread operator!=(std::string_view lhs, const Thread& rhs) {
+  return rhs.compare(lhs, ThreadBinaryCompareOp::Ne);
+}
+
+Thread operator!=(const Thread& lhs, const char* rhs) {
+  return lhs != std::string_view(rhs != nullptr ? rhs : "");
+}
+
+Thread operator!=(const char* lhs, const Thread& rhs) {
+  return std::string_view(lhs != nullptr ? lhs : "") != rhs;
+}
+
+Thread operator!=(const Thread& lhs, const pluss::Series& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
+}
+
+Thread operator!=(const Thread& lhs, const pluss::Note& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
+}
+
+Thread operator!=(const Thread& lhs, const pluss::Timeline& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
+}
+
+Thread operator!=(const Thread& lhs, const pluss::TimeIndex& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
 }
 
 Thread operator!=(const Thread& lhs, const Thread& rhs) {
@@ -295,6 +379,38 @@ Thread operator<(double lhs, const Thread& rhs) {
   return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Gt, "Thread::operator<(double,Thread)");
 }
 
+Thread operator<(const Thread& lhs, std::string_view rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
+}
+
+Thread operator<(std::string_view lhs, const Thread& rhs) {
+  return rhs.compare(lhs, reverse_cmp_op(ThreadBinaryCompareOp::Lt));
+}
+
+Thread operator<(const Thread& lhs, const char* rhs) {
+  return lhs < std::string_view(rhs != nullptr ? rhs : "");
+}
+
+Thread operator<(const char* lhs, const Thread& rhs) {
+  return std::string_view(lhs != nullptr ? lhs : "") < rhs;
+}
+
+Thread operator<(const Thread& lhs, const pluss::Series& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
+}
+
+Thread operator<(const Thread& lhs, const pluss::Note& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
+}
+
+Thread operator<(const Thread& lhs, const pluss::Timeline& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
+}
+
+Thread operator<(const Thread& lhs, const pluss::TimeIndex& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
+}
+
 Thread operator<(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Lt, "Thread::operator<(Thread,Thread)");
 }
@@ -305,6 +421,38 @@ Thread operator<=(const Thread& lhs, double rhs) {
 
 Thread operator<=(double lhs, const Thread& rhs) {
   return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Ge, "Thread::operator<=(double,Thread)");
+}
+
+Thread operator<=(const Thread& lhs, std::string_view rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
+}
+
+Thread operator<=(std::string_view lhs, const Thread& rhs) {
+  return rhs.compare(lhs, reverse_cmp_op(ThreadBinaryCompareOp::Le));
+}
+
+Thread operator<=(const Thread& lhs, const char* rhs) {
+  return lhs <= std::string_view(rhs != nullptr ? rhs : "");
+}
+
+Thread operator<=(const char* lhs, const Thread& rhs) {
+  return std::string_view(lhs != nullptr ? lhs : "") <= rhs;
+}
+
+Thread operator<=(const Thread& lhs, const pluss::Series& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
+}
+
+Thread operator<=(const Thread& lhs, const pluss::Note& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
+}
+
+Thread operator<=(const Thread& lhs, const pluss::Timeline& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
+}
+
+Thread operator<=(const Thread& lhs, const pluss::TimeIndex& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
 }
 
 Thread operator<=(const Thread& lhs, const Thread& rhs) {
@@ -319,6 +467,38 @@ Thread operator>(double lhs, const Thread& rhs) {
   return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Lt, "Thread::operator>(double,Thread)");
 }
 
+Thread operator>(const Thread& lhs, std::string_view rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
+}
+
+Thread operator>(std::string_view lhs, const Thread& rhs) {
+  return rhs.compare(lhs, reverse_cmp_op(ThreadBinaryCompareOp::Gt));
+}
+
+Thread operator>(const Thread& lhs, const char* rhs) {
+  return lhs > std::string_view(rhs != nullptr ? rhs : "");
+}
+
+Thread operator>(const char* lhs, const Thread& rhs) {
+  return std::string_view(lhs != nullptr ? lhs : "") > rhs;
+}
+
+Thread operator>(const Thread& lhs, const pluss::Series& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
+}
+
+Thread operator>(const Thread& lhs, const pluss::Note& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
+}
+
+Thread operator>(const Thread& lhs, const pluss::Timeline& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
+}
+
+Thread operator>(const Thread& lhs, const pluss::TimeIndex& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
+}
+
 Thread operator>(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Gt, "Thread::operator>(Thread,Thread)");
 }
@@ -329,6 +509,38 @@ Thread operator>=(const Thread& lhs, double rhs) {
 
 Thread operator>=(double lhs, const Thread& rhs) {
   return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Le, "Thread::operator>=(double,Thread)");
+}
+
+Thread operator>=(const Thread& lhs, std::string_view rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
+}
+
+Thread operator>=(std::string_view lhs, const Thread& rhs) {
+  return rhs.compare(lhs, reverse_cmp_op(ThreadBinaryCompareOp::Ge));
+}
+
+Thread operator>=(const Thread& lhs, const char* rhs) {
+  return lhs >= std::string_view(rhs != nullptr ? rhs : "");
+}
+
+Thread operator>=(const char* lhs, const Thread& rhs) {
+  return std::string_view(lhs != nullptr ? lhs : "") >= rhs;
+}
+
+Thread operator>=(const Thread& lhs, const pluss::Series& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
+}
+
+Thread operator>=(const Thread& lhs, const pluss::Note& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
+}
+
+Thread operator>=(const Thread& lhs, const pluss::Timeline& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
+}
+
+Thread operator>=(const Thread& lhs, const pluss::TimeIndex& rhs) {
+  return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
 }
 
 Thread operator>=(const Thread& lhs, const Thread& rhs) {

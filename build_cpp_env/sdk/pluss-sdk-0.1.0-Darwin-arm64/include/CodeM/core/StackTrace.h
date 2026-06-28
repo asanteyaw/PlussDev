@@ -17,6 +17,10 @@ public:
   static void push(const std::source_location& loc);
   static void pop();
   static std::string format(std::size_t max_frames = 64);
+  static std::string format_native(std::size_t max_frames = 64);
+  static std::string format_user_to_trigger(
+      std::size_t max_frames = 128,
+      std::size_t max_user_frames = 12);
 
 private:
   static thread_local std::vector<Frame> frames_;

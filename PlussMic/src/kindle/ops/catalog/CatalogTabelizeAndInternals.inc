@@ -90,8 +90,27 @@ pluss::table::DataFrame Catalog::tabelize(const TabelizePolicy& policy) const {
     for (std::int64_t i = 0; i < target_len; ++i) idx[static_cast<std::size_t>(i)] = i;
     case_axis = pluss::table::Thread(pluss::make_series(idx, {target_len}));
   } else {
-    const std::array<std::int64_t, 1> shape{target_len};
-    case_axis = pluss::table::Thread(pluss::make_note(target_labels, shape));
+    const auto anchor = static_cast<std::size_t>(anchor_idx);
+    const auto anchor_label_to_idx =
+        make_unique_label_to_idx(case_labels_from_stream(impl_ref_().streams_[anchor]));
+    std::vector<std::int64_t> anchor_case_indices;
+    anchor_case_indices.reserve(target_labels.size());
+    bool all_labels_in_anchor = true;
+    for (const auto& label : target_labels) {
+      const auto it = anchor_label_to_idx.find(label);
+      if (it == anchor_label_to_idx.end()) {
+        all_labels_in_anchor = false;
+        break;
+      }
+      anchor_case_indices.push_back(it->second);
+    }
+
+    if (all_labels_in_anchor) {
+      case_axis = impl_ref_().streams_[anchor].cases()->take(anchor_case_indices);
+    } else {
+      const std::array<std::int64_t, 1> shape{target_len};
+      case_axis = pluss::table::Thread(pluss::make_note(target_labels, shape));
+    }
   }
 
   std::vector<std::pair<std::string, pluss::table::Thread>> out_cols;
@@ -157,4 +176,3 @@ detail::CatalogImpl& Catalog::mut_impl_() {
   }
   return *impl_;
 }
-

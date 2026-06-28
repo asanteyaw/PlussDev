@@ -24,6 +24,7 @@ struct RNNOptions {
 namespace detail {
 
 inline pluss::ai::rnn::NetConfig as_run_config_(const RNNOptions& options) {
+  const bool pre_compute_input = options.cfg.platform != ::pluss::pMPS;
   return pluss::ai::rnn::NetConfig{
       .training = options.training,
       .batch_first = options.batch_first,
@@ -32,7 +33,7 @@ inline pluss::ai::rnn::NetConfig as_run_config_(const RNNOptions& options) {
       .num_layers = options.num_layers,
       .use_bias = options.bias,
       .split_bias = options.split_bias,
-      .pre_compute_input = true,
+      .pre_compute_input = pre_compute_input,
       .proj_size = 0,
       .nonlinearity = options.nonlinearity,
       .cfg = options.cfg,

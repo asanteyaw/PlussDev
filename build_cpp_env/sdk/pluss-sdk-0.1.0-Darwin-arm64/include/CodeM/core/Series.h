@@ -12,8 +12,12 @@
 #include <type_traits>
 #include <iosfwd>
 #include <utility>
+#include <limits>
+
 
 #include "CodeM/core/Errors.h"
+#include "CodeM/Indexing/ExtractSpec.h"
+#include "CodeM/Traverse/Traverse.h"
 
 #include "CodeM/core/SeriesBase.h"
 #include "CodeM/core/DType.h"
@@ -542,19 +546,54 @@ public:
     Series skewness() const { return pluss::subsp::stats::skewness(self()); }
     Series kurtosis() const { return pluss::subsp::stats::kurtosis(self()); }
 
+    // Distribution helpers (kept on stat surface; not on core Series surface).
+    Series pdf() const { return _compat::invoke("pdf", self()); }
+    Series pdf(double sigma) const { return _compat::invoke("pdf", self(), {sigma}); }
+    Series pdf(double mu, double sigma) const { return _compat::invoke("pdf", self(), {mu, sigma}); }
+
+    Series logpdf() const { return _compat::invoke("logpdf", self()); }
+    Series logpdf(double sigma) const { return _compat::invoke("logpdf", self(), {sigma}); }
+    Series logpdf(double mu, double sigma) const { return _compat::invoke("logpdf", self(), {mu, sigma}); }
+
+    Series logcdf() const { return _compat::invoke("logcdf", self()); }
+    Series logcdf(double sigma) const { return _compat::invoke("logcdf", self(), {sigma}); }
+    Series logcdf(double mu, double sigma) const { return _compat::invoke("logcdf", self(), {mu, sigma}); }
+
+    Series cdf() const { return _compat::invoke("cdf", self()); }
+    Series cdf(double sigma) const { return _compat::invoke("cdf", self(), {sigma}); }
+    Series cdf(double mu, double sigma) const { return _compat::invoke("cdf", self(), {mu, sigma}); }
+
     // Rolling stats
-    template <class... Args>
-    Series movsum(Args&&... args) const { return invoke_self_("movsum", std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movmean(Args&&... args) const { return invoke_self_("movmean", std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movmax(Args&&... args) const { return invoke_self_("movmax", std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movmin(Args&&... args) const { return invoke_self_("movmin", std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movstd(Args&&... args) const { return invoke_self_("movstd", std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movvar(Args&&... args) const { return invoke_self_("movvar", std::forward<Args>(args)...); }
+    Series movsum() const { return _compat::invoke("movsum", self()); }
+    Series movsum(std::int64_t window) const { return _compat::invoke("movsum", self(), {window}); }
+    Series movsum(std::int64_t window, std::int64_t dim) const {
+      return _compat::invoke("movsum", self(), {window, dim});
+    }
+    Series movmean() const { return _compat::invoke("movmean", self()); }
+    Series movmean(std::int64_t window) const { return _compat::invoke("movmean", self(), {window}); }
+    Series movmean(std::int64_t window, std::int64_t dim) const {
+      return _compat::invoke("movmean", self(), {window, dim});
+    }
+    Series movmax() const { return _compat::invoke("movmax", self()); }
+    Series movmax(std::int64_t window) const { return _compat::invoke("movmax", self(), {window}); }
+    Series movmax(std::int64_t window, std::int64_t dim) const {
+      return _compat::invoke("movmax", self(), {window, dim});
+    }
+    Series movmin() const { return _compat::invoke("movmin", self()); }
+    Series movmin(std::int64_t window) const { return _compat::invoke("movmin", self(), {window}); }
+    Series movmin(std::int64_t window, std::int64_t dim) const {
+      return _compat::invoke("movmin", self(), {window, dim});
+    }
+    Series movstd() const { return _compat::invoke("movstd", self()); }
+    Series movstd(std::int64_t window) const { return _compat::invoke("movstd", self(), {window}); }
+    Series movstd(std::int64_t window, std::int64_t dim) const {
+      return _compat::invoke("movstd", self(), {window, dim});
+    }
+    Series movvar() const { return _compat::invoke("movvar", self()); }
+    Series movvar(std::int64_t window) const { return _compat::invoke("movvar", self(), {window}); }
+    Series movvar(std::int64_t window, std::int64_t dim) const {
+      return _compat::invoke("movvar", self(), {window, dim});
+    }
 
     // Normalization-style stats
     Series normr() const { return pluss::subsp::stats::normr(self()); }
@@ -568,12 +607,6 @@ public:
     Series cdist() const { return pluss::subsp::stats::cdist(self(), peer1()); }
     Series cdist(const Series& other) const { return pluss::subsp::stats::cdist(self(), other); }
 
-    // Escape hatch for quickly trying stat-family ops not yet sugar-wrapped here.
-    template <class... Args>
-    Series call(std::string_view op, Args&&... args) const {
-      return invoke_self_(op, std::forward<Args>(args)...);
-    }
-
   private:
     const Series& self() const {
       PLUSS_CHECK(self_ != nullptr, "Series.stat(): null self");
@@ -583,16 +616,6 @@ public:
     const Series& peer1() const {
       PLUSS_CHECK(!peers_.empty(), "Series.stat(...): this operation requires one peer Series");
       return peers_.front();
-    }
-
-    template <class... Args>
-    Series invoke_self_(std::string_view op, Args&&... args) const {
-      return _compat::invoke(op, self(), std::forward<Args>(args)...);
-    }
-
-    template <class... Args>
-    Series invoke_peer1_(std::string_view op, Args&&... args) const {
-      return _compat::invoke(op, self(), peer1(), std::forward<Args>(args)...);
     }
 
     const Series* self_{nullptr};
@@ -630,18 +653,36 @@ public:
     Series nanstd() const { return (*this)().nanstd(); }
     Series skewness() const { return (*this)().skewness(); }
     Series kurtosis() const { return (*this)().kurtosis(); }
-    template <class... Args>
-    Series movsum(Args&&... args) const { return (*this)().movsum(std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movmean(Args&&... args) const { return (*this)().movmean(std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movmax(Args&&... args) const { return (*this)().movmax(std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movmin(Args&&... args) const { return (*this)().movmin(std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movstd(Args&&... args) const { return (*this)().movstd(std::forward<Args>(args)...); }
-    template <class... Args>
-    Series movvar(Args&&... args) const { return (*this)().movvar(std::forward<Args>(args)...); }
+    Series pdf() const { return (*this)().pdf(); }
+    Series pdf(double sigma) const { return (*this)().pdf(sigma); }
+    Series pdf(double mu, double sigma) const { return (*this)().pdf(mu, sigma); }
+    Series logpdf() const { return (*this)().logpdf(); }
+    Series logpdf(double sigma) const { return (*this)().logpdf(sigma); }
+    Series logpdf(double mu, double sigma) const { return (*this)().logpdf(mu, sigma); }
+    Series logcdf() const { return (*this)().logcdf(); }
+    Series logcdf(double sigma) const { return (*this)().logcdf(sigma); }
+    Series logcdf(double mu, double sigma) const { return (*this)().logcdf(mu, sigma); }
+    Series cdf() const { return (*this)().cdf(); }
+    Series cdf(double sigma) const { return (*this)().cdf(sigma); }
+    Series cdf(double mu, double sigma) const { return (*this)().cdf(mu, sigma); }
+    Series movsum() const { return (*this)().movsum(); }
+    Series movsum(std::int64_t window) const { return (*this)().movsum(window); }
+    Series movsum(std::int64_t window, std::int64_t dim) const { return (*this)().movsum(window, dim); }
+    Series movmean() const { return (*this)().movmean(); }
+    Series movmean(std::int64_t window) const { return (*this)().movmean(window); }
+    Series movmean(std::int64_t window, std::int64_t dim) const { return (*this)().movmean(window, dim); }
+    Series movmax() const { return (*this)().movmax(); }
+    Series movmax(std::int64_t window) const { return (*this)().movmax(window); }
+    Series movmax(std::int64_t window, std::int64_t dim) const { return (*this)().movmax(window, dim); }
+    Series movmin() const { return (*this)().movmin(); }
+    Series movmin(std::int64_t window) const { return (*this)().movmin(window); }
+    Series movmin(std::int64_t window, std::int64_t dim) const { return (*this)().movmin(window, dim); }
+    Series movstd() const { return (*this)().movstd(); }
+    Series movstd(std::int64_t window) const { return (*this)().movstd(window); }
+    Series movstd(std::int64_t window, std::int64_t dim) const { return (*this)().movstd(window, dim); }
+    Series movvar() const { return (*this)().movvar(); }
+    Series movvar(std::int64_t window) const { return (*this)().movvar(window); }
+    Series movvar(std::int64_t window, std::int64_t dim) const { return (*this)().movvar(window, dim); }
     Series normr() const { return (*this)().normr(); }
     Series normc() const { return (*this)().normc(); }
     Series standardize() const { return (*this)().standardize(); }
@@ -650,11 +691,6 @@ public:
     Series pdist2(const Series& other) const { return (*this)().pdist2(other); }
     Series cdist() const { return (*this)().cdist(); }
     Series cdist(const Series& other) const { return (*this)().cdist(other); }
-    template <class... Args>
-    Series call(std::string_view op, Args&&... args) const {
-      return (*this)().call(op, std::forward<Args>(args)...);
-    }
-
   private:
     Series& owner() const {
       PLUSS_CHECK(owner_ != nullptr, "Series.stat: unbound accessor");
@@ -674,9 +710,7 @@ public:
   public:
     explicit SeriesLinearAlgProxy(const Series& self) : self_(&self) {}
     SeriesLinearAlgProxy(const Series& self, const Series& other) : self_(&self), peers_{other} {}
-    SeriesLinearAlgProxy(const Series& self, std::initializer_list<Series> others)
-        : self_(&self), peers_(others.begin(), others.end()) {}
-    SeriesLinearAlgProxy(const Series& self, std::span<const Series> others)
+    SeriesLinearAlgProxy(const Series& self, pluss::msharp::RangeView::Series others)
         : self_(&self), peers_(others.begin(), others.end()) {}
 
     Series matmul() const { return pluss::subsp::linearalg::matmul(self(), peer1()); }
@@ -704,6 +738,7 @@ public:
     Series svd_u(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_u(self(), full_matrices); }
     Series svd_s(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_s(self(), full_matrices); }
     Series svd_vh(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_vh(self(), full_matrices); }
+    pluss::subsp::linearalg::SvdDecomposition svd(bool full_matrices = true) const;
 
     Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
       return pluss::subsp::linearalg::triangular_solve(self(), b, upper, unitriangular);
@@ -722,11 +757,6 @@ public:
     }
     Series lu_solve(const Series& b) const { return pluss::subsp::linearalg::lu_solve(self(), b); }
     Series lu_solve() const { return pluss::subsp::linearalg::lu_solve(self(), peer1()); }
-
-    template <class... Args>
-    Series call(std::string_view op, Args&&... args) const {
-      return _compat::invoke(op, self(), std::forward<Args>(args)...);
-    }
 
   private:
     const Series& self() const {
@@ -752,10 +782,7 @@ public:
 
     SeriesLinearAlgProxy operator()() const { return SeriesLinearAlgProxy(owner()); }
     SeriesLinearAlgProxy operator()(const Series& other) const { return SeriesLinearAlgProxy(owner(), other); }
-    SeriesLinearAlgProxy operator()(std::initializer_list<Series> others) const {
-      return SeriesLinearAlgProxy(owner(), others);
-    }
-    SeriesLinearAlgProxy operator()(std::span<const Series> others) const {
+    SeriesLinearAlgProxy operator()(pluss::msharp::RangeView::Series others) const {
       return SeriesLinearAlgProxy(owner(), others);
     }
 
@@ -778,6 +805,7 @@ public:
     Series svd_u(bool full_matrices = true) const { return (*this)().svd_u(full_matrices); }
     Series svd_s(bool full_matrices = true) const { return (*this)().svd_s(full_matrices); }
     Series svd_vh(bool full_matrices = true) const { return (*this)().svd_vh(full_matrices); }
+    pluss::subsp::linearalg::SvdDecomposition svd(bool full_matrices = true) const;
     Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
       return (*this)().triangular_solve(b, upper, unitriangular);
     }
@@ -786,11 +814,6 @@ public:
     }
     Series cholesky_inverse(bool upper = false) const { return (*this)().cholesky_inverse(upper); }
     Series lu_solve(const Series& b) const { return (*this)().lu_solve(b); }
-    template <class... Args>
-    Series call(std::string_view op, Args&&... args) const {
-      return (*this)().call(op, std::forward<Args>(args)...);
-    }
-
   private:
     Series& owner() const {
       PLUSS_CHECK(owner_ != nullptr, "Series.linearalg: unbound accessor");
@@ -804,25 +827,17 @@ public:
   static Series undefined();
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
-  static Series empty(std::initializer_list<std::int64_t> sizes, ScalarType st) {
-    return empty(pluss::msharp::RangeView::Int(sizes), st);
-  }
-  static Series empty(std::initializer_list<std::int64_t> sizes, ScalarType st, Platform platform) {
-    return empty(pluss::msharp::RangeView::Int(sizes), st, platform);
-  }
   static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series zeros(std::initializer_list<std::int64_t> sizes, ScalarType st) {
-    return zeros(pluss::msharp::RangeView::Int(sizes), st);
-  }
+  static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
   static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series ones(std::initializer_list<std::int64_t> sizes, ScalarType st) {
-    return ones(pluss::msharp::RangeView::Int(sizes), st);
-  }
+  static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
   static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st);
-  static Series full(std::initializer_list<std::int64_t> sizes, double value, ScalarType st) {
-    return full(pluss::msharp::RangeView::Int(sizes), value, st);
-  }
-  static Series make_from_doubles(const std::vector<double>& flat, pluss::msharp::RangeView::Int sizes, ScalarType st);
+  static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st, Platform platform);
+  static Series arange(double start, double end, double step, ScalarType dtype, Platform platform);
+  static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype, Platform platform);
+  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype, Platform platform);
+  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
+  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
 
   // Core view/cast helpers used across the library.
   Series contiguous() const;
@@ -973,10 +988,6 @@ public:
   #include "CodeM/Series/SeriesOpsInternalMethods.inc"
 #endif
 
-  Series reshape(std::initializer_list<std::int64_t> new_sizes) const {
-    return reshape(pluss::msharp::RangeView::Int(new_sizes));
-  }
-
 // ---------------------------------------------------------------------------
 // Full op surface
 // ---------------------------------------------------------------------------
@@ -1023,17 +1034,17 @@ public:
                bool accumulate_sensitivity = false,
                bool track_higher_order = false) const {
     (void)pluss::codem::_compat::invoke(
-        "_backward", *this, keep_graph, accumulate_sensitivity, track_higher_order);
+        "_backward", *this, {keep_graph, accumulate_sensitivity, track_higher_order});
   }
   void reverse(const Series& sensitivity_output) const {
-    (void)pluss::codem::_compat::invoke("_backward", *this, sensitivity_output);
+    (void)pluss::codem::_compat::invoke("_backward", *this, {sensitivity_output});
   }
   void reverse(const Series& sensitivity_output,
                bool keep_graph,
                bool accumulate_sensitivity = false,
                bool track_higher_order = false) const {
     (void)pluss::codem::_compat::invoke(
-        "_backward", *this, sensitivity_output, keep_graph, accumulate_sensitivity, track_higher_order);
+        "_backward", *this, {sensitivity_output, keep_graph, accumulate_sensitivity, track_higher_order});
   }
 
   bool tracks_slope() const { return pluss::codem::_compat::invoke("tracks_slope", *this).item<bool>(); }
@@ -1065,42 +1076,7 @@ public:
     return target_platform == Platform::CPU ? out_cpu : out_cpu.to(target_platform);
   }
 
-public:
-  struct ExtractSpec final {
-    enum class Kind : std::uint8_t { Slice, ScalarIndex, AdvancedIndex, NewAxis, Ellipsis };
-
-    Kind kind{Kind::Slice};
-    pluss::Slicing::Slice slice{};
-    std::int64_t scalar_index{0};
-    pluss::msharp::intrusive_ptr<SeriesImpl> advanced_impl{};
-
-    ExtractSpec() = default;
-    ExtractSpec(pluss::Slicing::Slice s) : kind(Kind::Slice), slice(s) {}
-    ExtractSpec(pluss::Slicing::EllipsisTag) : kind(Kind::Ellipsis) {}
-    ExtractSpec(pluss::Slicing::NewAxisTag) : kind(Kind::NewAxis) {}
-
-    ExtractSpec(std::initializer_list<std::int64_t> shorthand)
-        : kind(Kind::Slice), slice(slice_from_shorthand_(shorthand)) {}
-
-    template <class I>
-      requires(std::is_integral_v<std::remove_cv_t<I>> && !std::is_same_v<std::remove_cv_t<I>, bool>)
-    ExtractSpec(I i) : kind(Kind::ScalarIndex), scalar_index(static_cast<std::int64_t>(i)) {}
-
-    explicit ExtractSpec(const Series& idx) : kind(Kind::AdvancedIndex) {
-      PLUSS_CHECK(idx.defined(), "Series::extract: advanced index Series is undefined");
-      advanced_impl = idx.impl();
-    }
-
-  private:
-    static pluss::Slicing::Slice slice_from_shorthand_(std::initializer_list<std::int64_t> shorthand) {
-      PLUSS_CHECK(shorthand.size() >= 1 && shorthand.size() <= 3,
-                  "Series::extract: slice shorthand must have 1, 2, or 3 elements");
-      const auto* p = shorthand.begin();
-      if (shorthand.size() == 1) return pluss::Slicing::Slice{p[0]};
-      if (shorthand.size() == 2) return pluss::Slicing::Slice{p[0], p[1]};
-      return pluss::Slicing::Slice{p[0], p[1], p[2]};
-    }
-  };
+private:
 
 private:
   using ExtractSpec_ = ExtractSpec;
@@ -1312,10 +1288,63 @@ private:
           ++dim_cursor;
           continue;
         }
+        if (b.step > 0) {
+          out = out.slice(dim_cursor, b.start, b.stop, b.step);
+          ++dim_cursor;
+          continue;
+        }
       }
       const Series idx = make_index_series_on_(n, spec, out.platform());
-      out = pluss::codem::_compat::invoke("index_select", out, dim_cursor, idx);
+      out = pluss::codem::_compat::invoke("index_select", out, {dim_cursor, idx});
       ++dim_cursor;
+    }
+    return out;
+  }
+
+  static bool can_traverse_as_view_(const std::vector<ExtractSpec_>& normalized) {
+    for (const auto& spec : normalized) {
+      if (spec.kind == ExtractSpec::Kind::AdvancedIndex) return false;
+      if (spec.kind == ExtractSpec::Kind::Slice && spec.slice.step <= 0) return false;
+    }
+    return true;
+  }
+
+  Series traverse_slice_from_specs_(const std::vector<ExtractSpec_>& specs) const {
+    PLUSS_CHECK(defined(), "Series::traverse_slice: undefined Series");
+    const auto normalized = normalize_extract_specs_(specs, dim());
+
+    if (!can_traverse_as_view_(normalized)) {
+      PLUSS_FAIL(
+          "Series::traverse_slice: selector is not view-representable; "
+          "use extract() or extract_put_() for materializing paths");
+    }
+
+    Series out = *this;
+    std::int64_t dim_cursor = 0;
+    for (const auto& spec : normalized) {
+      if (spec.kind == ExtractSpec::Kind::NewAxis) {
+        out = out.unsqueeze(dim_cursor);
+        ++dim_cursor;
+        continue;
+      }
+
+      PLUSS_CHECK(dim_cursor < out.dim(), "Series::traverse_slice: internal dimension cursor overflow");
+      const std::int64_t n = out.size(dim_cursor);
+
+      if (spec.kind == ExtractSpec::Kind::ScalarIndex) {
+        out = out.select(dim_cursor, normalize_scalar_index_(spec.scalar_index, n));
+        continue;
+      }
+
+      if (spec.kind == ExtractSpec::Kind::Slice) {
+        const auto b = normalize_slice_bounds_(spec.slice, n);
+        if (is_identity_slice_(b, n)) {
+          ++dim_cursor;
+          continue;
+        }
+        out = out.slice(dim_cursor, b.start, b.stop, b.step);
+        ++dim_cursor;
+      }
     }
     return out;
   }
@@ -1323,170 +1352,211 @@ private:
   Series& extract_put_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) {
     PLUSS_CHECK(defined(), "Series::extract_put_: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()), Series::undefined());
+    std::vector<Series> defined_raw;
+    std::vector<std::int64_t> defined_dims;
+    defined_raw.reserve(static_cast<std::size_t>(dim()));
+    defined_dims.reserve(static_cast<std::size_t>(dim()));
 
-    struct ExtractPutDimPlan_ final {
-      bool full{false};
-      std::vector<std::int64_t> idx{};
-      std::int64_t extent{0};
-    };
-
-    std::vector<ExtractPutDimPlan_> per_dim_plans;
-    per_dim_plans.reserve(static_cast<std::size_t>(dim()));
+    std::int64_t selected_numel = 1;
     std::int64_t src_dim = 0;
     for (const auto& spec : normalized) {
       if (spec.kind == ExtractSpec::Kind::NewAxis) continue;
       PLUSS_CHECK(src_dim < dim(), "Series::extract_put_: too many consuming specs");
-
       const auto dim_size = size(src_dim);
-      ExtractPutDimPlan_ plan;
+
       if (spec.kind == ExtractSpec::Kind::Slice) {
         const auto b = normalize_slice_bounds_(spec.slice, dim_size);
         if (is_identity_slice_(b, dim_size)) {
-          plan.full = true;
-          plan.extent = dim_size;
-        } else {
-          plan.idx = materialize_dim_indices_(spec, dim_size);
-          plan.extent = static_cast<std::int64_t>(plan.idx.size());
+          selected_numel *= dim_size;
+          ++src_dim;
+          continue;
         }
-      } else {
-        plan.idx = materialize_dim_indices_(spec, dim_size);
-        plan.extent = static_cast<std::int64_t>(plan.idx.size());
       }
-      per_dim_plans.push_back(std::move(plan));
+
+      Series idx = make_index_series_on_(dim_size, spec, platform());
+      if (idx.scalar_type() != ScalarType::Int64) {
+        idx = idx.to(platform(), ScalarType::Int64);
+      }
+      selected_numel *= idx.numel();
+      defined_raw.push_back(std::move(idx));
+      defined_dims.push_back(src_dim);
       ++src_dim;
     }
-    PLUSS_CHECK(src_dim == dim(),
-                "Series::extract_put_: normalized specs did not consume all source dimensions");
+    PLUSS_CHECK(
+        src_dim == dim(),
+        "Series::extract_put_: normalized specs did not consume all source dimensions");
 
-    std::int64_t selected_numel = 1;
-    for (const auto& plan : per_dim_plans) {
-      selected_numel *= plan.extent;
-    }
     if (selected_numel == 0) return *this;
 
-    std::vector<std::int64_t> logical_strides(static_cast<std::size_t>(dim()), 1);
-    for (std::int64_t d = dim() - 2; d >= 0; --d) {
-      logical_strides[static_cast<std::size_t>(d)] =
-          logical_strides[static_cast<std::size_t>(d + 1)] * size(d + 1);
-    }
-
-    std::vector<std::int64_t> linear;
-    linear.reserve(static_cast<std::size_t>(selected_numel));
-    if (per_dim_plans.empty()) {
-      linear.push_back(0);
-    } else {
-      std::vector<std::int64_t> counter(static_cast<std::size_t>(dim()), 0);
-      while (true) {
-        std::int64_t lin = 0;
-        for (std::int64_t d = 0; d < dim(); ++d) {
-          const auto& plan = per_dim_plans[static_cast<std::size_t>(d)];
-          const auto cd = counter[static_cast<std::size_t>(d)];
-          const auto coord = plan.full ? cd : plan.idx[static_cast<std::size_t>(cd)];
-          lin += coord * logical_strides[static_cast<std::size_t>(d)];
-        }
-        linear.push_back(lin);
-
-        std::int64_t d = dim() - 1;
-        for (; d >= 0; --d) {
-          auto& c = counter[static_cast<std::size_t>(d)];
-          ++c;
-          if (c < per_dim_plans[static_cast<std::size_t>(d)].extent) {
-            break;
-          }
-          c = 0;
-        }
-        if (d < 0) break;
+    if (!defined_raw.empty()) {
+      const std::size_t k = defined_raw.size();
+      for (std::size_t i = 0; i < k; ++i) {
+        std::vector<std::int64_t> shape(k, 1);
+        shape[i] = defined_raw[i].numel();
+        indices[static_cast<std::size_t>(defined_dims[i])] =
+            defined_raw[i].reshape(std::span<const std::int64_t>(shape.data(), shape.size()));
       }
-    }
-
-    Series idx = Series::empty(
-        {static_cast<std::int64_t>(linear.size())},
-        ScalarType::Int64,
-        Platform::CPU);
-    auto* p = reinterpret_cast<std::int64_t*>(idx.raw_data());
-    for (std::int64_t i = 0; i < static_cast<std::int64_t>(linear.size()); ++i) {
-      p[i] = linear[static_cast<std::size_t>(i)];
-    }
-    if (platform() != Platform::CPU) {
-      idx = idx.to(platform(), ScalarType::Int64);
     }
 
     Series src = values;
     if (src.scalar_type() != scalar_type() || src.platform() != platform()) {
       src = src.to(platform(), scalar_type());
     }
-    PLUSS_CHECK(src.numel() == 1 || src.numel() == static_cast<std::int64_t>(linear.size()),
-                "Series::extract_put_: source must be scalar or match selected element count");
+    PLUSS_CHECK(
+        src.numel() == 1 || src.numel() == selected_numel,
+        "Series::extract_put_: source must be scalar or match selected element count");
     if (src.numel() != 1) {
-      src = src.reshape({static_cast<std::int64_t>(linear.size())});
+      src = src.reshape({selected_numel});
     }
-    auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
-    (this->*put_fn)(idx, src, false);
+
+    pluss::codem::_compat::invoke_(
+        "index_put_",
+        *this,
+        {pluss::msharp::RangeView::Of<Series>(indices), src, false});
     return *this;
   }
 
+  Series extract_put_copy_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) const {
+    PLUSS_CHECK(defined(), "Series::extract_put: undefined Series");
+    const auto normalized = normalize_extract_specs_(specs, dim());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()), Series::undefined());
+    std::vector<Series> defined_raw;
+    std::vector<std::int64_t> defined_dims;
+    defined_raw.reserve(static_cast<std::size_t>(dim()));
+    defined_dims.reserve(static_cast<std::size_t>(dim()));
+
+    std::int64_t selected_numel = 1;
+    std::int64_t src_dim = 0;
+    for (const auto& spec : normalized) {
+      if (spec.kind == ExtractSpec::Kind::NewAxis) continue;
+      PLUSS_CHECK(src_dim < dim(), "Series::extract_put: too many consuming specs");
+      const auto dim_size = size(src_dim);
+
+      if (spec.kind == ExtractSpec::Kind::Slice) {
+        const auto b = normalize_slice_bounds_(spec.slice, dim_size);
+        if (is_identity_slice_(b, dim_size)) {
+          selected_numel *= dim_size;
+          ++src_dim;
+          continue;
+        }
+      }
+
+      Series idx = make_index_series_on_(dim_size, spec, platform());
+      if (idx.scalar_type() != ScalarType::Int64) {
+        idx = idx.to(platform(), ScalarType::Int64);
+      }
+      selected_numel *= idx.numel();
+      defined_raw.push_back(std::move(idx));
+      defined_dims.push_back(src_dim);
+      ++src_dim;
+    }
+    PLUSS_CHECK(
+        src_dim == dim(),
+        "Series::extract_put: normalized specs did not consume all source dimensions");
+
+    Series out = clone();
+    if (selected_numel == 0) return out;
+
+    if (!defined_raw.empty()) {
+      const std::size_t k = defined_raw.size();
+      for (std::size_t i = 0; i < k; ++i) {
+        std::vector<std::int64_t> shape(k, 1);
+        shape[i] = defined_raw[i].numel();
+        indices[static_cast<std::size_t>(defined_dims[i])] =
+            defined_raw[i].reshape(std::span<const std::int64_t>(shape.data(), shape.size()));
+      }
+    }
+
+    Series src = values;
+    if (src.scalar_type() != scalar_type() || src.platform() != platform()) {
+      src = src.to(platform(), scalar_type());
+    }
+    PLUSS_CHECK(
+        src.numel() == 1 || src.numel() == selected_numel,
+        "Series::extract_put: source must be scalar or match selected element count");
+    if (src.numel() != 1) {
+      src = src.reshape({selected_numel});
+    }
+
+    return pluss::codem::_compat::invoke(
+        "index_put",
+        out,
+        {pluss::msharp::RangeView::Of<Series>(indices), src, false});
+  }
+
 public:
-  // Keep extract on the original variadic/fixed-arity design.
-  Series extract(pluss::Slicing::Slice d0 = pluss::Slicing::SliceAll(),
-                 pluss::Slicing::Slice d1 = pluss::Slicing::SliceAll(),
-                 pluss::Slicing::Slice d2 = pluss::Slicing::SliceAll(),
-                 pluss::Slicing::Slice d3 = pluss::Slicing::SliceAll(),
-                 pluss::Slicing::Slice d4 = pluss::Slicing::SliceAll(),
-                 pluss::Slicing::Slice d5 = pluss::Slicing::SliceAll(),
-                 pluss::Slicing::Slice d6 = pluss::Slicing::SliceAll()) const {
-    return extract_from_specs_({ExtractSpec_(d0),
-                                ExtractSpec_(d1),
-                                ExtractSpec_(d2),
-                                ExtractSpec_(d3),
-                                ExtractSpec_(d4),
-                                ExtractSpec_(d5),
-                                ExtractSpec_(d6)});
+  // Traversal/view surface. Selector must be view-representable.
+  Series traverse_slice(pluss::msharp::RangeView::Of<ExtractSpec> specs) const {
+    return traverse_slice_from_specs_({specs.begin(), specs.end()});
   }
 
-  template <class... Specs>
-  Series extract(Specs&&... specs) const
-      requires(sizeof...(Specs) > 0) {
-    std::vector<ExtractSpec_> parsed;
-    parsed.reserve(sizeof...(Specs));
-    (parsed.emplace_back(std::forward<Specs>(specs)), ...);
-    return extract_from_specs_(parsed);
+  Series& traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) {
+    Series view = traverse_slice(specs);
+    pluss::codem::_compat::invoke_("copy_", view, {values});
+    return *this;
   }
 
-  Series& extract_put_(std::span<const ExtractSpec> specs, const Series& values) {
-    return extract_put_from_specs_({specs.begin(), specs.end()}, values);
-  }
-
-  Series& extract_put_(std::initializer_list<ExtractSpec> specs, const Series& values) {
-    return extract_put_(std::span<const ExtractSpec>(specs.begin(), specs.size()), values);
-  }
-
-  Series extract_put(std::span<const ExtractSpec> specs, const Series& values) const {
+  Series traverse_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const {
     Series out = *this;
-    out.extract_put_(specs, values);
+    Series view = out.traverse_slice(specs);
+    pluss::codem::_compat::invoke_("copy_", view, {values});
     return out;
   }
 
-  Series extract_put(std::initializer_list<ExtractSpec> specs, const Series& values) const {
-    return extract_put(std::span<const ExtractSpec>(specs.begin(), specs.size()), values);
+  // Dynamic extract surface: accepts a dynamic list of specs.
+  Series extract(pluss::msharp::RangeView::Of<ExtractSpec> specs) const {
+    return extract_from_specs_({specs.begin(), specs.end()});
+  }
+
+  Series extract(ExtractSpec a0, ExtractSpec a1) const {
+    const std::array<ExtractSpec, 2> specs{a0, a1};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+  }
+
+  Series extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2) const {
+    const std::array<ExtractSpec, 3> specs{a0, a1, a2};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+  }
+
+  Series extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2, ExtractSpec a3) const {
+    const std::array<ExtractSpec, 4> specs{a0, a1, a2, a3};
+    return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
+  }
+
+  Series& extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) {
+    return extract_put_from_specs_({specs.begin(), specs.end()}, values);
+  }
+
+
+  Series extract_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const {
+    return extract_put_copy_from_specs_({specs.begin(), specs.end()}, values);
   }
 
   // PlussQit naming deviations (method-first aliases).
-  Series pile(const std::vector<Series>& others, std::int64_t dim=0) const;
-  Series unite(const std::vector<Series>& others, std::int64_t dim=0) const;
-  Series index(std::initializer_list<Series> indices) const {
-    return index(std::vector<Series>(indices.begin(), indices.end()));
-  }
-  Series index_put(const std::vector<Series>& indices, const Series& values, bool accumulate) const {
-    return pluss::codem::_compat::invoke("index_put", *this, indices, values, accumulate);
+  Series pile(pluss::msharp::RangeView::Of<Series> others, std::int64_t dim=0) const;
+  Series unite(pluss::msharp::RangeView::Of<Series> others, std::int64_t dim=0, bool strict_dtype=true) const;
+
+  // Canonical indexing entrypoint. This accepts heterogeneous index specs
+  // (advanced-index Series, scalar indices, SliceAll/SliceRange, NewAxis,
+  // Ellipsis). Implementation lives in OpsInternal.cpp.
+  Series index(pluss::msharp::RangeView::Of<ExtractSpec> specs) const;
+  Series index_put(pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) const {
+    return pluss::codem::_compat::invoke("index_put", *this, {indices, values, accumulate});
   }
   Series index_put(std::initializer_list<Series> indices, const Series& values, bool accumulate) const {
-    return index_put(std::vector<Series>(indices.begin(), indices.end()), values, accumulate);
+    return index_put(pluss::msharp::RangeView::Of<Series>(indices), values, accumulate);
   }
-  Series& index_put_(const std::vector<Series>& indices, const Series& values, bool accumulate) const {
-    return pluss::codem::_compat::invoke_("index_put_", *this, indices, values, accumulate);
+  Series index_put(std::int64_t index, const Series& values) const {
+    Series out = *this;
+    out.index_put_(index, values, false);
+    return out;
+  }
+  Series& index_put_(pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) const {
+    return pluss::codem::_compat::invoke_("index_put_", *this, {indices, values, accumulate});
   }
   Series& index_put_(std::initializer_list<Series> indices, const Series& values, bool accumulate) const {
-    return index_put_(std::vector<Series>(indices.begin(), indices.end()), values, accumulate);
+    return index_put_(pluss::msharp::RangeView::Of<Series>(indices), values, accumulate);
   }
 
   // Torch-like scalar index convenience: x.index_put_(0, value)
@@ -1502,14 +1572,15 @@ public:
     if (platform() != Platform::CPU) {
       idx = idx.to(platform(), ScalarType::Int64);
     }
-    return index_put_(std::vector<Series>{idx}, values, accumulate);
+    const std::array<Series, 1> idx_arr{{idx}};
+    return index_put_(pluss::msharp::RangeView::Of<Series>(idx_arr), values, accumulate);
   }
 
   // Slice-spec index convenience for common 1D/2D scalar assignment forms:
   // - 1D: x.index_put_({i}, value)
   // - 2D: x.index_put_({SliceAll(), j}, col_values)
   // For richer N-D slicing/writes use extract_put_ directly.
-  Series& index_put_(std::initializer_list<ExtractSpec> specs, const Series& values, bool accumulate=false) {
+  Series& index_put_(std::initializer_list<ExtractSpec> specs, const Series& values, bool accumulate=false) const {
     PLUSS_CHECK(!accumulate,
                 "Series::index_put_(specs, value, accumulate): accumulate=true is unsupported for slice-spec indexing; use Series index list overload instead");
     const std::vector<ExtractSpec> parsed(specs.begin(), specs.end());
@@ -1525,7 +1596,7 @@ public:
                   "Series::index_put_({i}, value): spec must be a scalar index");
       PLUSS_CHECK(values.numel() == 1,
                   "Series::index_put_({i}, value): value must be scalar (numel==1)");
-      return extract_put_(parsed, values);
+      return const_cast<Series*>(this)->extract_put_(parsed, values);
     }
 
     PLUSS_CHECK(dim() == 2,
@@ -1536,7 +1607,19 @@ public:
                 "Series::index_put_({SliceAll(), j}, value): second spec must be a scalar column index");
     PLUSS_CHECK(values.dim() == 1 && values.numel() == size(0),
                 "Series::index_put_({SliceAll(), j}, value): value must be 1D with length equal to size(0)");
-    return extract_put_(parsed, values);
+    return const_cast<Series*>(this)->extract_put_(parsed, values);
+  }
+
+  Series slice(std::int64_t dim, std::int64_t start, std::int64_t end) const {
+    return slice(dim, start, end, 1);
+  }
+
+  Series slice(std::int64_t dim, std::int64_t start) const {
+    return slice(dim, start, std::numeric_limits<std::int64_t>::max(), 1);
+  }
+
+  Series slice(std::int64_t dim) const {
+    return slice(dim, 0, std::numeric_limits<std::int64_t>::max(), 1);
   }
 
   // Statistical accessor:
@@ -1547,16 +1630,21 @@ public:
   // - safe call style: `s.linearalg().det()`
   // - convenience dot style: `s.linearalg.det()`
   SeriesLinearAlgAccessor linearalg;
+  // Traverse/query accessor:
+  // - dot style: `s.traverse.find_all(mask)`
+  // - with explicit `on` selector: `s.traverse(specs).find_ge(...)`
+  SeriesTraverseAccessor traverse;
 
-  Series() : SeriesBase(), stat(*this), linearalg(*this) {}
-  Series(const Series& other) : SeriesBase(other), stat(*this), linearalg(*this) {}
-  Series(Series&& other) noexcept : SeriesBase(std::move(other)), stat(*this), linearalg(*this) {}
+  Series() : SeriesBase(), stat(*this), linearalg(*this), traverse(*this) {}
+  Series(const Series& other) : SeriesBase(other), stat(*this), linearalg(*this), traverse(*this) {}
+  Series(Series&& other) noexcept : SeriesBase(std::move(other)), stat(*this), linearalg(*this), traverse(*this) {}
   Series& operator=(const Series& other) {
     if (this != &other) {
       SeriesBase::operator=(other);
     }
     stat.rebind(*this);
     linearalg.rebind(*this);
+    traverse.rebind(*this);
     return *this;
   }
   Series& operator=(Series&& other) noexcept {
@@ -1565,6 +1653,7 @@ public:
     }
     stat.rebind(*this);
     linearalg.rebind(*this);
+    traverse.rebind(*this);
     return *this;
   }
 
@@ -1717,14 +1806,21 @@ private:
   // Internal-only ctor: Series objects are created via factories and internal
   // kernels (ops_internal), not by end users.
   explicit Series(pluss::msharp::intrusive_ptr<SeriesImpl> impl)
-      : SeriesBase(std::move(impl)), stat(*this), linearalg(*this) {}
+      : SeriesBase(std::move(impl)), stat(*this), linearalg(*this), traverse(*this) {}
 
   // Internal construction hook used by ops_internal implementations.
   friend struct ops_internal::SeriesFactoryAccess;
 };
 
 
+inline ExtractSpec::ExtractSpec(const Series& idx) : kind(Kind::AdvancedIndex) {
+  PLUSS_CHECK(idx.defined(), "Series::extract: advanced index Series is undefined");
+  advanced_impl = idx.impl();
+}
+
 } // namespace pluss::codem
+
+#include "CodeM/Traverse/TraverseTypes.h"
 
 // Now that `pluss::codem::Series` is a complete type, include the compat
 // header again to compile the template helper definitions that rely on the

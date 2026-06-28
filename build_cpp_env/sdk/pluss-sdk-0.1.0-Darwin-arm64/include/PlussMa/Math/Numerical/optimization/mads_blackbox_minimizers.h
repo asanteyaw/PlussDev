@@ -239,7 +239,7 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "mesh_adaptive_direct_search_minimizer objective must return real scalar Series");
       }
       return out;
@@ -264,7 +264,7 @@ BlackboxSolverOutcome orthomads_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("orthomads_minimizer objective must return real scalar Series");
+        ::pluss::throw_error("orthomads_minimizer objective must return real scalar Series");
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
@@ -288,7 +288,7 @@ BlackboxSolverOutcome ltmads_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("ltmads_minimizer objective must return real scalar Series");
+        ::pluss::throw_error("ltmads_minimizer objective must return real scalar Series");
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {

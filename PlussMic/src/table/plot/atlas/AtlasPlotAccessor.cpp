@@ -171,7 +171,7 @@ pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, 
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
-    values = values.where(*numeric_thread.validity_mask(), nan_fill);
+    values = values.where(numeric_thread.validity_mask()->logical_not(), nan_fill);
   }
   return values.reshape({values.numel()});
 }

@@ -94,6 +94,44 @@ std::string lower_copy(std::string s) {
   return s;
 }
 
+bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
+  const auto st = s.scalar_type();
+  const auto* base = s.raw_data();
+  switch (st) {
+    case pluss::codem::ScalarType::Float16:
+      return std::isnan(
+          pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
+    case pluss::codem::ScalarType::BFloat16:
+      return std::isnan(
+          pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
+    case pluss::codem::ScalarType::Float32:
+      return std::isnan(reinterpret_cast<const float*>(base)[row]);
+    case pluss::codem::ScalarType::Float64:
+      return std::isnan(reinterpret_cast<const double*>(base)[row]);
+    case pluss::codem::ScalarType::Complex64: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
+      return std::isnan(v.real()) || std::isnan(v.imag());
+    }
+    case pluss::codem::ScalarType::Complex128: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
+      return std::isnan(v.real()) || std::isnan(v.imag());
+    }
+    default:
+      return false;
+  }
+}
+
+bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t row) {
+  if (t.has_validity_mask()) {
+    const auto valid = t.validity_mask()->to_vec<bool>();
+    if (!valid[static_cast<std::size_t>(row)]) {
+      return true;
+    }
+  }
+  return t.kind() == pluss::table::ThreadKind::Series
+         && series_value_is_nan_for_io(t.as_series(), row);
+}
+
 bool csv_profile_enabled(const ReadCsvOptions& options) {
   if (options.profile) {
     return true;
@@ -117,6 +155,13 @@ void ltrim_inplace(std::string& s) {
   }
   if (i > 0) {
     s.erase(0, i);
+  }
+}
+
+void strip_utf8_bom_inplace(std::string& s) {
+  constexpr std::string_view kUtf8Bom{"\xEF\xBB\xBF", 3};
+  if (s.starts_with(kUtf8Bom)) {
+    s.erase(0, kUtf8Bom.size());
   }
 }
 
@@ -398,11 +443,8 @@ std::string scalar_for_csv(const pluss::Series& s, std::int64_t row, const Write
 }
 
 std::string thread_value_for_csv(const pluss::table::Thread& t, std::int64_t row, const WriteCsvOptions& options) {
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
-    if (!valid[static_cast<std::size_t>(row)]) {
-      return options.na_rep;
-    }
+  if (thread_value_is_missing_for_io(t, row)) {
+    return options.na_rep;
   }
 
   switch (t.kind()) {
@@ -582,6 +624,9 @@ std::optional<ColumnarRawResult> try_build_raw_batch_serial(const ReadCsvOptions
   };
 
   while (parse_record(in, options, row)) {
+    if (parsed_rows == 0 && !row.empty()) {
+      strip_utf8_bom_inplace(row.front());
+    }
     const auto logical_row = parsed_rows++;
     if (options.skipcases_first_n > 0 && logical_row < options.skipcases_first_n) {
       continue;
@@ -705,6 +750,9 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
     const auto header_pos = static_cast<std::size_t>(options.header_row);
     PLUSS_CHECK(header_pos < kept_rows.size(), "load_csv: header_row is out of range");
     names = records[kept_rows[header_pos]];
+    if (!names.empty()) {
+      strip_utf8_bom_inplace(names.front());
+    }
     if (options.skipinitialspace) {
       for (auto& n : names) {
         ltrim_inplace(n);

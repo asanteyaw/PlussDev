@@ -76,6 +76,12 @@ auto out = stream.as_note();
 Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Conversion Rules
+
+- These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
+- `astype(...)` is the direct numeric-series dtype path.
+
+
 ### `as_series`
 
 #### Signature
@@ -110,6 +116,12 @@ auto out = stream.as_series();
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+
+#### Conversion Rules
+
+- These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
+- `astype(...)` is the direct numeric-series dtype path.
+
 
 ### `as_timeindex`
 
@@ -146,6 +158,12 @@ auto out = stream.as_timeindex();
 Timeline([...])
 ```
 
+#### Conversion Rules
+
+- These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
+- `astype(...)` is the direct numeric-series dtype path.
+
+
 ### `as_timeline`
 
 #### Signature
@@ -180,6 +198,12 @@ auto out = stream.as_timeline();
 ```text
 Timeline([...])
 ```
+
+#### Conversion Rules
+
+- These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
+- `astype(...)` is the direct numeric-series dtype path.
+
 
 ### `astype`
 
@@ -217,6 +241,12 @@ auto out = stream.astype(pluss::codem::ScalarType::Float64);
 Series([10.0, 20.0, 30.0])
 ```
 
+#### Conversion Rules
+
+- These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
+- `astype(...)` is the direct numeric-series dtype path.
+
+
 ### `bfill`
 
 #### Signature
@@ -236,12 +266,13 @@ Stream bfill(self) const
 
 #### Notes
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Backward-fills one stream while preserving its case labels and stream-level structure.
 
 #### Examples
 
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0, 0.0}));
+stream = stream.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));
 
 auto out = stream.bfill();
 ```
@@ -249,8 +280,14 @@ auto out = stream.bfill();
 #### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+Series([10.0, 30.0, 30.0, null])
 ```
+
+#### Practical Behavior
+
+- `bfill()` applies thread-level backward fill while preserving the stream case labels.
+- Use this when you want the fill behavior of `Thread::bfill()` but you are already operating in Kindle/Stream workflows.
+
 
 ### `cases`
 
@@ -325,6 +362,12 @@ auto out = stream.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::Sca
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+
+#### Conversion Rules
+
+- These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
+- `astype(...)` is the direct numeric-series dtype path.
+
 
 ### `clear_cases`
 
@@ -565,6 +608,12 @@ auto out = stream.drop_meta("unit");
 Series([10.0, 20.0, 30.0])
 ```
 
+#### Practical Behavior
+
+- These methods remove one metadata key only.
+- Payload values, cases, and validity remain unchanged.
+
+
 ### `drop_meta_`
 
 #### Signature
@@ -596,6 +645,12 @@ stream = stream.with_meta("unit", "km");
 stream.drop_meta_("unit");
 ```
 
+#### Practical Behavior
+
+- These methods remove one metadata key only.
+- Payload values, cases, and validity remain unchanged.
+
+
 ### `dropna`
 
 #### Signature
@@ -620,7 +675,8 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### Examples
 
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}));
+stream = stream.with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
 
 auto out = stream.dropna();
 ```
@@ -628,8 +684,14 @@ auto out = stream.dropna();
 #### Output
 
 ```text
-Series([10.0, 20.0, 30.0])
+Series([10.0, 30.0])
 ```
+
+#### Practical Behavior
+
+- `dropna()` removes invalid entries from the stream while preserving stream semantics for the remaining entries.
+- Use it when rows with null payload values should be removed entirely.
+
 
 ### `dtype_name`
 

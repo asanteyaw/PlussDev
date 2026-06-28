@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Part III: The Table Model &#8212; PlussMic User Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=705d315b" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/layout.js?v=014eaf41"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Part IV: Loading and Saving Data" href="part04_io.html" />
+    <link rel="prev" title="Part II: Installation, Includes, and Build Setup" href="part02_installation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="part-iii-the-table-model">
+<h1>Part III: The Table Model<a class="headerlink" href="#part-iii-the-table-model" title="Link to this heading">¶</a></h1>
+<p>This part explains how <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, and <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+relate. Understanding these types makes the rest of PlussMic predictable.</p>
+<section id="thread">
+<h2>Thread<a class="headerlink" href="#thread" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is one typed column. It can hold one of four payload kinds:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="nf">numeric</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;green&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blue&quot;</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="n">dates</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-01-03T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">}));</span>
+</pre></div>
+</div>
+<p>Inspect a thread:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kr">thread</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+<span class="kr">thread</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">();</span>
+<span class="kr">thread</span><span class="p">.</span><span class="n">dtype_name</span><span class="p">();</span>
+<span class="kr">thread</span><span class="p">.</span><span class="n">info</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Access the payload only after you know the kind:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadKind</span><span class="o">::</span><span class="n">Series</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="missingness-and-validity">
+<h2>Missingness and validity<a class="headerlink" href="#missingness-and-validity" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code> can carry a validity mask. Loader-created columns use this to represent
+missing values from input files.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">present</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">complete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">dropna</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Numeric threads also support <code class="docutils literal notranslate"><span class="pre">isnan</span></code> and <code class="docutils literal notranslate"><span class="pre">isfinite</span></code>.</p>
+</section>
+<section id="dataframe">
+<h2>DataFrame<a class="headerlink" href="#dataframe" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> is a set of named <code class="docutils literal notranslate"><span class="pre">Thread</span></code> features with an optional case axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.5</span><span class="p">})},</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Shape and schema:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">ncases</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">nfeatures</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">feature_names</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">info</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="verified-example-building-a-small-frame">
+<h3>Verified example: building a small frame<a class="headerlink" href="#verified-example-building-a-small-frame" title="Link to this heading">¶</a></h3>
+<p>The following code creates two text features and two numeric features:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="p">}).</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;ncases=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">ncases</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, nfeatures=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">nfeatures</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;features:&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">feature_names</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================================
+     | city    region  units  price
+-----------------------------------
+0    | Accra   south   10     3
+1    | Tema    south   7      4
+2    | Kumasi  middle  12     2.5
+3    | Tamale  north   5      5
+-----------------------------------
+[4 cs x 4 feat]
+ncases=4, nfeatures=4
+features: city region units price
+</pre></div>
+</div>
+<p>This table is the exact string returned by <code class="docutils literal notranslate"><span class="pre">sales.to_string()</span></code> in the current
+build. <code class="docutils literal notranslate"><span class="pre">head()</span></code> also renders a table because it returns a renderable
+<code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, but its implementation is not used to produce this output.
+The display has four cases and four features. The default case axis is the
+integer axis shown at the left. <code class="docutils literal notranslate"><span class="pre">feature_names()</span></code> preserves insertion order:
+<code class="docutils literal notranslate"><span class="pre">city</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, then <code class="docutils literal notranslate"><span class="pre">price</span></code>.</p>
+<p>Feature selection:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span><span class="w">                 </span><span class="c1">// Thread</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">smaller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">});</span><span class="w">   </span><span class="c1">// DataFrame</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">series_features</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">note_features</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">features(&quot;name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with display labels from the frame’s case
+axis and a display name matching the feature. <code class="docutils literal notranslate"><span class="pre">features({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;})</span></code> returns a
+new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with the same case axis and the selected feature order.</p>
+</section>
+</section>
+<section id="cases">
+<h2>Cases<a class="headerlink" href="#cases" title="Link to this heading">¶</a></h2>
+<p>The case axis is the row label/index axis. It may be default integer labels or
+loaded from a feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cases</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cloc</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first_ten</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">reset_cases</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">set_cases(&quot;id&quot;,</span> <span class="pre">true)</span></code> uses <code class="docutils literal notranslate"><span class="pre">id</span></code> as the case axis and drops it from features.
+Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> to keep the feature as well.</p>
+</section>
+<section id="dataframeview">
+<h2>DataFrameView<a class="headerlink" href="#dataframeview" title="Link to this heading">¶</a></h2>
+<p>Some methods return <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">tail</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">aggregate</span><span class="p">({{</span><span class="s">&quot;mean_sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SummaryOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">}});</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code> is still a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, but it also knows how to auto-render a
+preview in terminal or popup contexts. If you need a materialized <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>,
+pass <code class="docutils literal notranslate"><span class="pre">render=false</span></code> where the method supports it:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">first_ten</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="atlas">
+<h2>Atlas<a class="headerlink" href="#atlas" title="Link to this heading">¶</a></h2>
+<p>An <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> stacks related frames:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">january</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;month == 1&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">february</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;month == 2&quot;</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="nf">atlas</span><span class="p">({</span><span class="n">january</span><span class="p">,</span><span class="w"> </span><span class="n">february</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Use an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> for:</p>
+<ul class="simple">
+<li><p>repeated experiments;</p></li>
+<li><p>scenario outputs;</p></li>
+<li><p>time-sliced frames;</p></li>
+<li><p>multi-sheet workbook-like data;</p></li>
+<li><p>3D plotting and depth aggregation.</p></li>
+</ul>
+</section>
+<section id="conversion-model">
+<h2>Conversion model<a class="headerlink" href="#conversion-model" title="Link to this heading">¶</a></h2>
+<p>PlussMic can convert between layers:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">roundtrip_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">tabelize</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">roundtrip_atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="o">::</span><span class="n">tabelize</span><span class="p">(</span><span class="n">archive</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Registry</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">catalog</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">back_catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Use these conversions when you need a different data model for a specific part
+of your workflow.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PlussMic User Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">PlussMic User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../manual.html#how-to-read-this-manual">How to read this manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../manual.html#example-policy">Example policy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../manual.html#verified-examples">Verified examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html">DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html">ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html#practical-dataframeplotaccessor-api-reference">Practical DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_accessor_api_reference.html">DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_accessor_api_reference.html#practical-dataframesqlaccessor-api-reference">Practical DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_prepared_api_reference.html">DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_prepared_api_reference.html#practical-dataframesqlprepared-api-reference">Practical DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_atlas.html">Thread And Atlas Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_api_reference.html">Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_api_reference.html#practical-thread-api-reference">Practical Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_value_api_reference.html">ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_value_api_reference.html#practical-threadvalue-api-reference">Practical ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../atlas_api_reference.html">Atlas API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../atlas_api_reference.html#practical-atlas-api-reference">Practical Atlas API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stream_api_reference.html">Stream API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stream_api_reference.html#practical-stream-api-reference">Practical Stream API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog_api_reference.html">Catalog API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog_api_reference.html#practical-catalog-api-reference">Practical Catalog API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../archive_api_reference.html">Archive API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../archive_api_reference.html#practical-archive-api-reference">Practical Archive API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slot_api_reference.html">Slot API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slot_api_reference.html#practical-slot-api-reference">Practical Slot API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../registry_api_reference.html">Registry API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../registry_api_reference.html#practical-registry-api-reference">Practical Registry API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aisle_api_reference.html">Aisle API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aisle_api_reference.html#practical-aisle-api-reference">Practical Aisle API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../manual.html">PlussMic User Manual</a><ul>
+      <li>Previous: <a href="part02_installation.html" title="previous chapter">Part II: Installation, Includes, and Build Setup</a></li>
+      <li>Next: <a href="part04_io.html" title="next chapter">Part IV: Loading and Saving Data</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/manual/part03_table_model.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

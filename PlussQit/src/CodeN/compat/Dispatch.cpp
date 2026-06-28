@@ -872,6 +872,13 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
   if (op == "nlp_remove_headers" && args.size() == 1) return ops_internal::nlp_remove_headers(self);
   if (op == "nlp_remove_footers" && args.size() == 1) return ops_internal::nlp_remove_footers(self);
   if (op == "nlp_mask_pii" && args.size() == 1) return ops_internal::nlp_mask_pii(self, as_i64(args[0]));
+  if (op == "nlp_join_tokens" && args.size() == 1) return ops_internal::join(self, as_str(args[0]));
+  if (op == "tex_extract_environment" && args.size() == 1) {
+    ::std::string extract_op = "tex_extract_env_";
+    extract_op.append(as_str(args[0]));
+    const auto batch = ops_internal::token_feature(self, extract_op);
+    return batch.tokens();
+  }
   if (op == "tex_expand_macros" && args.size() == 1) return ops_internal::tex_expand_macros(self, as_i64(args[0]));
   if (op == "tex_remove_environment" && args.size() == 1) return ops_internal::tex_remove_environment(self, as_str(args[0]));
   if (op == "tex_remove_macro" && args.size() == 1) return ops_internal::tex_remove_macro(self, as_str(args[0]));
@@ -921,7 +928,6 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
   if (op == "overlap_tokens" && args.size() == 1) return ops_internal::overlap_tokens(self, as_note(args[0]));
   if (op == "overlap_terms" && args.size() == 1) return ops_internal::overlap_terms(self, as_note(args[0]));
 
-  if (has_decl_sig(kDeclNoteSigs, op, args.size())) return self;
   fail("Note", op, args.size());
   } catch (const ::pluss::Error&) {
     throw;

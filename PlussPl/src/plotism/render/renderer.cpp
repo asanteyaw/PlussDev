@@ -5041,9 +5041,33 @@ void render_planar_traces(
                 const Rgba fill = palette_lookup(trace.palette_ramp(), color_range, color_value);
                 add_path(
                     list,
-                    std::move(polygon),
+                    polygon,
                     FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.4},
                     true);
+                if (trace.annotate_levels() && std::isfinite(color_value)) {
+                  Point2d center{};
+                  for (const auto& point : polygon) {
+                    center.x += point.x;
+                    center.y += point.y;
+                  }
+                  center.x /= static_cast<double>(polygon.size());
+                  center.y /= static_cast<double>(polygon.size());
+
+                  const double luminance =
+                      0.2126 * fill.red + 0.7152 * fill.green + 0.0722 * fill.blue;
+                  const Rgba text_color = luminance > 0.55
+                      ? Rgba::from_u8(24, 23, 21)
+                      : Rgba::from_u8(248, 247, 244);
+                  std::ostringstream label;
+                  label << std::setprecision(3) << color_value;
+                  add_text(
+                      list,
+                      center,
+                      label.str(),
+                      10.0,
+                      text_color,
+                      TextCommand::Align::Middle);
+                }
               }
             }
           } else if constexpr (std::is_same_v<Payload, SpikeData>) {

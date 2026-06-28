@@ -153,6 +153,7 @@ public:
     Max = 6,
     Std = 7,
     Var = 8,
+    Prod = 9,
   };
 
   enum class GroupOp : std::uint8_t {
@@ -457,6 +458,8 @@ public:
   DataFrame select_regex(std::string_view pattern) const;
   DataFrame features(std::initializer_list<std::string_view> names);
   DataFrame features(std::initializer_list<std::string_view> names) const;
+  DataFrame features(std::initializer_list<const char*> names);
+  DataFrame features(std::initializer_list<const char*> names) const;
   DataFrame series_features() const;
   DataFrame note_features() const;
   DataFrame timeline_features() const;
@@ -468,6 +471,13 @@ public:
   DataFrame astype(pluss::msharp::RangeView::Of<std::string_view> features,
                    pluss::codem::ScalarType dtype) const;
   DataFrame insert(std::int64_t feature_index, std::string name, const Thread& feature) const;
+  DataFrame place(std::string name,
+                  const Thread& feature,
+                  std::string_view anchor_feature,
+                  bool after = false) const;
+  DataFrame place(std::string_view name,
+                  std::string_view anchor_feature,
+                  bool after = false) const;
   DataFrame drop(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame reorder(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame add_prefix(std::string_view prefix) const;
@@ -486,6 +496,24 @@ public:
   DataFrame align_cases(const Thread& new_cases) const;
   DataFrame join(const DataFrame& other, std::string collision_suffix = "_right") const;
   DataFrame update(const DataFrame& other, bool overwrite = true) const;
+  DataFrame unify(std::string_view left_on,
+                  const DataFrame& right,
+                  std::string_view right_on = "",
+                  std::string_view how = "inner",
+                  std::string right_suffix = "_right",
+                  std::string_view validate = "many_to_many") const;
+  DataFrame unify(pluss::msharp::RangeView::Of<std::string_view> left_on,
+                  const DataFrame& right,
+                  pluss::msharp::RangeView::Of<std::string_view> right_on = {},
+                  std::string_view how = "inner",
+                  std::string right_suffix = "_right",
+                  std::string_view validate = "many_to_many") const;
+  DataFrame unify(std::initializer_list<std::string_view> left_on,
+                  const DataFrame& right,
+                  std::initializer_list<std::string_view> right_on = {},
+                  std::string_view how = "inner",
+                  std::string right_suffix = "_right",
+                  std::string_view validate = "many_to_many") const;
 
   DataFramePlotAccessor plot() const;
   DataFramePlotAccessor plot(const DataFramePlotOptions& options) const;
@@ -503,6 +531,7 @@ public:
   LetSlots set(std::initializer_list<std::string_view> names) {
     return set(pluss::msharp::RangeView::Of<std::string_view>(names));
   }
+  LetSlots set(std::initializer_list<const char*> names);
   DataFrame set_features(std::string_view name, const Thread& value) const;
   DataFrame& set_features_(std::string_view name, const Thread& value);
   DataFrame set_features(pluss::msharp::RangeView::Of<std::string_view> names,
@@ -548,8 +577,31 @@ public:
   DataFrame assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const;
   DataFrame transform(const std::function<Thread(const Thread&)>& fn) const;
+  DataFrame transform(std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const;
   DataFrame transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
   DataFrame transform(pluss::msharp::RangeView::Of<TransformSpec> specs) const;
+  DataFrame put(std::string_view feature, const Thread& bool_mask, const Thread& value) const;
+  DataFrame put(std::string_view feature, const Thread& bool_mask, double value) const;
+  DataFrame put(std::string_view feature, const Thread& bool_mask, std::string_view value) const;
+  DataFrame put(std::string_view feature, const Thread& bool_mask, const char* value) const {
+    return put(feature, bool_mask, std::string_view{value != nullptr ? value : ""});
+  }
+  DataFrame put(std::string_view feature, const Thread& bool_mask, pluss::null_t value) const;
+  DataFrame put(std::string_view feature, const pluss::Series& bool_mask, const Thread& value) const {
+    return put(feature, Thread(bool_mask), value);
+  }
+  DataFrame put(std::string_view feature, const pluss::Series& bool_mask, double value) const {
+    return put(feature, Thread(bool_mask), value);
+  }
+  DataFrame put(std::string_view feature, const pluss::Series& bool_mask, std::string_view value) const {
+    return put(feature, Thread(bool_mask), value);
+  }
+  DataFrame put(std::string_view feature, const pluss::Series& bool_mask, const char* value) const {
+    return put(feature, Thread(bool_mask), value);
+  }
+  DataFrame put(std::string_view feature, const pluss::Series& bool_mask, pluss::null_t value) const {
+    return put(feature, Thread(bool_mask), value);
+  }
   DataFrame tz_convert(pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name) const;
   DataFrame tz_localize(pluss::msharp::RangeView::Of<std::string_view> features,
                         std::string_view tz_name,
@@ -646,13 +698,50 @@ public:
   DataFrame compare(double other) const;
   DataFrame compare(const DataFrame& other) const;
   DataFrameView sum(bool render = true) const;
+  Thread sum(std::int64_t axis, bool skipna = true) const;
+  Thread sum(int axis, bool skipna = true) const {
+    return sum(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView mean(bool render = true) const;
+  Thread mean(std::int64_t axis, bool skipna = true) const;
+  Thread mean(int axis, bool skipna = true) const {
+    return mean(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView median(bool render = true) const;
+  Thread median(std::int64_t axis, bool skipna = true) const;
+  Thread median(int axis, bool skipna = true) const {
+    return median(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView min(bool render = true) const;
+  Thread min(std::int64_t axis, bool skipna = true) const;
+  Thread min(int axis, bool skipna = true) const {
+    return min(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView max(bool render = true) const;
+  Thread max(std::int64_t axis, bool skipna = true) const;
+  Thread max(int axis, bool skipna = true) const {
+    return max(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView std(bool render = true) const;
+  Thread std(std::int64_t axis, bool skipna = true) const;
+  Thread std(int axis, bool skipna = true) const {
+    return std(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView var(bool render = true) const;
+  Thread var(std::int64_t axis, bool skipna = true) const;
+  Thread var(int axis, bool skipna = true) const {
+    return var(static_cast<std::int64_t>(axis), skipna);
+  }
   DataFrameView count(bool render = true) const;
+  Thread count(std::int64_t axis) const;
+  Thread count(int axis) const {
+    return count(static_cast<std::int64_t>(axis));
+  }
+  DataFrameView prod(bool render = true) const;
+  Thread prod(std::int64_t axis, bool skipna = true) const;
+  Thread prod(int axis, bool skipna = true) const {
+    return prod(static_cast<std::int64_t>(axis), skipna);
+  }
   Thread any(pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const;
   Thread any(std::int64_t axis,
              pluss::msharp::RangeView::Of<std::string_view> features = {},
@@ -661,6 +750,8 @@ public:
   Thread all(std::int64_t axis,
              pluss::msharp::RangeView::Of<std::string_view> features = {},
              bool skipna = true) const;
+  Thread idxmin(std::int64_t axis = 0, bool skipna = true) const;
+  Thread idxmax(std::int64_t axis = 0, bool skipna = true) const;
   DataFrameView count_distinct(pluss::msharp::RangeView::Of<std::string_view> features = {},
                                bool dropna = true,
                                bool render = true) const;
@@ -694,6 +785,71 @@ public:
   DataFrame fillna(const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const;
   DataFrame fillna(const pluss::TimeIndex& value) const;
   DataFrame fillna(const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const;
+  DataFrame replace(double from, double to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(double from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(pluss::null_t from, double to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(std::string_view from,
+                    std::string_view to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const char* from,
+                    const char* to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const {
+    return replace(std::string_view{from != nullptr ? from : ""},
+                   std::string_view{to != nullptr ? to : ""},
+                   features);
+  }
+  DataFrame replace(std::string_view from,
+                    pluss::null_t to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(pluss::null_t from,
+                    std::string_view to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const char* from,
+                    pluss::null_t to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const {
+    return replace(std::string_view{from != nullptr ? from : ""}, to, features);
+  }
+  DataFrame replace(pluss::null_t from,
+                    const char* to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const {
+    return replace(from, std::string_view{to != nullptr ? to : ""}, features);
+  }
+  DataFrame replace(const pluss::Series& from,
+                    const pluss::Series& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::Series& from,
+                    pluss::null_t to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(pluss::null_t from,
+                    const pluss::Series& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::Note& from,
+                    const pluss::Note& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::Note& from,
+                    pluss::null_t to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(pluss::null_t from,
+                    const pluss::Note& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::Timeline& from,
+                    const pluss::Timeline& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::Timeline& from,
+                    pluss::null_t to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(pluss::null_t from,
+                    const pluss::Timeline& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::TimeIndex& from,
+                    const pluss::TimeIndex& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(const pluss::TimeIndex& from,
+                    pluss::null_t to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame replace(pluss::null_t from,
+                    const pluss::TimeIndex& to,
+                    pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame& fillna_(double value);
   DataFrame& fillna_(std::string_view value);
   DataFrame& fillna_(const char* value) {
@@ -701,6 +857,28 @@ public:
   }
   DataFrame& fillna_(const pluss::Timeline& value);
   DataFrame& fillna_(const pluss::TimeIndex& value);
+  DataFrame& put_(std::string_view feature, const Thread& bool_mask, const Thread& value);
+  DataFrame& put_(std::string_view feature, const Thread& bool_mask, double value);
+  DataFrame& put_(std::string_view feature, const Thread& bool_mask, std::string_view value);
+  DataFrame& put_(std::string_view feature, const Thread& bool_mask, const char* value) {
+    return put_(feature, bool_mask, std::string_view{value != nullptr ? value : ""});
+  }
+  DataFrame& put_(std::string_view feature, const Thread& bool_mask, pluss::null_t value);
+  DataFrame& put_(std::string_view feature, const pluss::Series& bool_mask, const Thread& value) {
+    return put_(feature, Thread(bool_mask), value);
+  }
+  DataFrame& put_(std::string_view feature, const pluss::Series& bool_mask, double value) {
+    return put_(feature, Thread(bool_mask), value);
+  }
+  DataFrame& put_(std::string_view feature, const pluss::Series& bool_mask, std::string_view value) {
+    return put_(feature, Thread(bool_mask), value);
+  }
+  DataFrame& put_(std::string_view feature, const pluss::Series& bool_mask, const char* value) {
+    return put_(feature, Thread(bool_mask), value);
+  }
+  DataFrame& put_(std::string_view feature, const pluss::Series& bool_mask, pluss::null_t value) {
+    return put_(feature, Thread(bool_mask), value);
+  }
   DataFrame dropna() const;
   DataFrame dropna_all(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame ffill() const;
@@ -732,7 +910,7 @@ public:
                 bool add_cases,
                 bool header = true,
                 char sep = ',',
-                std::string na_rep = "NA",
+                std::string na_rep = "",
                 std::optional<std::string> case_label = std::nullopt,
                 std::optional<std::string> float_format = std::nullopt,
                 char quotechar = '"',
@@ -749,7 +927,7 @@ public:
                   std::string sheet_name,
                   bool add_cases = false,
                   bool header = true,
-                  std::string na_rep = "NA",
+                  std::string na_rep = "",
                   std::optional<std::string> case_label = std::nullopt) const;
   void save_excel(std::string_view filepath, const pluss::loader::WriteExcelOptions& options) const;
   void save_excel(std::string_view filepath, const pluss::loader::Config& config) const;
@@ -786,8 +964,6 @@ private:
   DataFrame arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const;
   DataFrame query(const pluss::Series& bool_mask) const;
   DataFrame query(const QueryFn& predicate) const;
-  DataFrame derive(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const;
-  DataFrame derive(pluss::msharp::RangeView::Of<DeriveSpec> specs) const;
   DataFrame summarize_specs(const std::vector<SummarySpec>& specs, bool render = true) const;
   DataFrameView tally_impl(const std::vector<std::string>& feature_names,
                            std::int64_t top_n,

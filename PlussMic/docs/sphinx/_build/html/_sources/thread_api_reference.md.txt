@@ -41,6 +41,66 @@ auto out = thread.abs();
 [10.0, 20.0, 30.0]
 ```
 
+### `all`
+
+#### Signature
+
+```cpp
+pluss::Series all(self, bool skipna = true) const
+```
+
+#### Parameters
+
+`skipna` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`pluss::Series`
+    Value produced by this call.
+
+#### Notes
+
+Applies `all` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.all();
+```
+
+### `any`
+
+#### Signature
+
+```cpp
+pluss::Series any(self, bool skipna = true) const
+```
+
+#### Parameters
+
+`skipna` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`pluss::Series`
+    Value produced by this call.
+
+#### Notes
+
+Applies `any` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.any();
+```
+
 ### `as_note`
 
 #### Signature
@@ -75,6 +135,14 @@ auto out = thread.as_note();
 ```text
 ["Accra", "Tema", "Kumasi"]
 ```
+
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
 
 ### `as_series`
 
@@ -111,6 +179,14 @@ auto out = thread.as_series();
 [10.0, 20.0, 30.0]
 ```
 
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
+
 ### `as_timeindex`
 
 #### Signature
@@ -146,6 +222,14 @@ auto out = thread.as_timeindex();
 ["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]
 ```
 
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
+
 ### `as_timeline`
 
 #### Signature
@@ -180,6 +264,14 @@ auto out = thread.as_timeline();
 ```text
 ["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]
 ```
+
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
 
 ### `astype`
 
@@ -217,6 +309,14 @@ auto out = thread.astype(pluss::codem::ScalarType::Float64);
 [10.0, 20.0, 30.0]
 ```
 
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
+
 ### `bfill`
 
 #### Signature
@@ -236,12 +336,13 @@ Thread bfill(self) const
 
 #### Notes
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Backward-fills one thread by pulling the next valid value upward within the same payload.
 
 #### Examples
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 0.0, 30.0, 0.0}));
+thread = thread.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));
 
 auto out = thread.bfill();
 ```
@@ -249,8 +350,465 @@ auto out = thread.bfill();
 #### Output
 
 ```text
-[10.0, 20.0, 30.0]
+[10.0, 30.0, 30.0, null]
 ```
+
+#### Practical Behavior
+
+- `bfill()` works within one column.
+- Each null entry pulls the next valid value below it.
+- Trailing null runs remain null because there is no later value to use.
+- Use this when only one feature should be filled instead of the whole frame.
+
+
+### `btw`
+
+#### Signature
+
+```cpp
+Thread btw(self, const Thread& lo, const Thread& hi, bool include_left, bool include_right) const
+```
+
+#### Parameters
+
+`lo` : `const Thread&`
+    See the signature for the supported argument form.
+
+`hi` : `const Thread&`
+    See the signature for the supported argument form.
+
+`include_left` : `bool`
+    See the signature for the supported argument form.
+
+`include_right` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Builds a boolean mask telling you whether each row falls between lower and upper bounds.
+
+#### See also
+
+- `Thread btw(self, scalar a, scalar b, bool inclusive = false) const`
+- `Thread btw(self, scalar a, scalar b, bool include_left, bool include_right) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool inclusive = true) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool include_left, bool include_right) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool inclusive = true) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0}));
+auto lo = pluss::table::Thread(pluss::make_series({40.0, 60.0, 80.0}));
+auto hi = pluss::table::Thread(pluss::make_series({50.0, 70.0, 81.0}));
+
+auto out = thread.btw(lo, hi, true);
+```
+
+#### Output
+
+```text
+[true, true, false]
+```
+
+#### Boundary Rules
+
+- This overload is row-wise: each row is compared against its own lower and upper bound.
+- `lo` and `hi` must be defined and must match the size of the current thread.
+- Use this when the allowable range changes per row instead of using one scalar interval for the whole column.
+
+
+### `btw`
+
+#### Signature
+
+```cpp
+Thread btw(self, const Thread& lo, const Thread& hi, bool inclusive = true) const
+```
+
+#### Parameters
+
+`lo` : `const Thread&`
+    See the signature for the supported argument form.
+
+`hi` : `const Thread&`
+    See the signature for the supported argument form.
+
+`inclusive` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Builds a boolean mask telling you whether each row falls between lower and upper bounds.
+
+#### See also
+
+- `Thread btw(self, scalar a, scalar b, bool inclusive = false) const`
+- `Thread btw(self, scalar a, scalar b, bool include_left, bool include_right) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool inclusive = true) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool include_left, bool include_right) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool include_left, bool include_right) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0}));
+auto lo = pluss::table::Thread(pluss::make_series({40.0, 60.0, 80.0}));
+auto hi = pluss::table::Thread(pluss::make_series({50.0, 70.0, 81.0}));
+
+auto out = thread.btw(lo, hi, true);
+```
+
+#### Output
+
+```text
+[true, true, false]
+```
+
+#### Boundary Rules
+
+- This overload is row-wise: each row is compared against its own lower and upper bound.
+- `lo` and `hi` must be defined and must match the size of the current thread.
+- Use this when the allowable range changes per row instead of using one scalar interval for the whole column.
+
+
+### `btw`
+
+#### Signature
+
+```cpp
+Thread btw(self, scalar a, scalar b, bool include_left, bool include_right) const
+```
+
+#### Parameters
+
+`a` : `scalar`
+    See the signature for the supported argument form.
+
+`b` : `scalar`
+    See the signature for the supported argument form.
+
+`include_left` : `bool`
+    See the signature for the supported argument form.
+
+`include_right` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Builds a boolean mask telling you whether each row falls between lower and upper bounds.
+
+#### See also
+
+- `Thread btw(self, scalar a, scalar b, bool inclusive = false) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool inclusive = true) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool include_left, bool include_right) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool inclusive = true) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool include_left, bool include_right) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0, 101.0}));
+
+auto out = thread.btw(50.0, 100.0, true);
+```
+
+#### Output
+
+```text
+[false, true, true, false]
+```
+
+#### Boundary Rules
+
+- This overload is for numeric `Series` payloads only.
+- If `a > b`, the implementation swaps the bounds for you.
+- When bounds are swapped, the left/right inclusivity flags are swapped too, so the semantics stay consistent.
+- Use `inclusive=true` when both ends should be closed, or the four-argument form when each side needs different behavior.
+
+#### Common Pattern
+
+```cpp
+auto passing = scores.btw(50.0, 100.0, true);
+auto strict_band = scores.btw(50.0, 100.0, false, true);
+```
+
+
+### `btw`
+
+#### Signature
+
+```cpp
+Thread btw(self, scalar a, scalar b, bool inclusive = false) const
+```
+
+#### Parameters
+
+`a` : `scalar`
+    See the signature for the supported argument form.
+
+`b` : `scalar`
+    See the signature for the supported argument form.
+
+`inclusive` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Builds a boolean mask telling you whether each row falls between lower and upper bounds.
+
+#### See also
+
+- `Thread btw(self, scalar a, scalar b, bool include_left, bool include_right) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool inclusive = true) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool include_left, bool include_right) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool inclusive = true) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool include_left, bool include_right) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0, 101.0}));
+
+auto out = thread.btw(50.0, 100.0, true);
+```
+
+#### Output
+
+```text
+[false, true, true, false]
+```
+
+#### Boundary Rules
+
+- This overload is for numeric `Series` payloads only.
+- If `a > b`, the implementation swaps the bounds for you.
+- When bounds are swapped, the left/right inclusivity flags are swapped too, so the semantics stay consistent.
+- Use `inclusive=true` when both ends should be closed, or the four-argument form when each side needs different behavior.
+
+#### Common Pattern
+
+```cpp
+auto passing = scores.btw(50.0, 100.0, true);
+auto strict_band = scores.btw(50.0, 100.0, false, true);
+```
+
+
+### `btw`
+
+#### Signature
+
+```cpp
+Thread btw(self, std::string_view lo, std::string_view hi, bool include_left, bool include_right) const
+```
+
+#### Parameters
+
+`lo` : `std::string_view`
+    See the signature for the supported argument form.
+
+`hi` : `std::string_view`
+    See the signature for the supported argument form.
+
+`include_left` : `bool`
+    See the signature for the supported argument form.
+
+`include_right` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Builds a boolean mask telling you whether each row falls between lower and upper bounds.
+
+#### See also
+
+- `Thread btw(self, scalar a, scalar b, bool inclusive = false) const`
+- `Thread btw(self, scalar a, scalar b, bool include_left, bool include_right) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool inclusive = true) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool inclusive = true) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool include_left, bool include_right) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_timeline({
+    "2024-01-05T09:00:00Z",
+    "2024-01-18T12:00:00Z",
+    "2024-02-02T08:00:00Z",
+}));
+
+auto out = thread.btw("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
+```
+
+#### Output
+
+```text
+[true, true, false]
+```
+
+#### Boundary Rules
+
+- This overload is for `Timeline` and `TimeIndex` payloads.
+- The string bounds are parsed as timeline values.
+- Reversed bounds are accepted; the implementation swaps them before comparison.
+- This is the range-filter form to use for date/time columns.
+
+#### Common Pattern
+
+```cpp
+auto january = ts.btw("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
+```
+
+
+### `btw`
+
+#### Signature
+
+```cpp
+Thread btw(self, std::string_view lo, std::string_view hi, bool inclusive = true) const
+```
+
+#### Parameters
+
+`lo` : `std::string_view`
+    See the signature for the supported argument form.
+
+`hi` : `std::string_view`
+    See the signature for the supported argument form.
+
+`inclusive` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Builds a boolean mask telling you whether each row falls between lower and upper bounds.
+
+#### See also
+
+- `Thread btw(self, scalar a, scalar b, bool inclusive = false) const`
+- `Thread btw(self, scalar a, scalar b, bool include_left, bool include_right) const`
+- `Thread btw(self, std::string_view lo, std::string_view hi, bool include_left, bool include_right) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool inclusive = true) const`
+- `Thread btw(self, const Thread& lo, const Thread& hi, bool include_left, bool include_right) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_timeline({
+    "2024-01-05T09:00:00Z",
+    "2024-01-18T12:00:00Z",
+    "2024-02-02T08:00:00Z",
+}));
+
+auto out = thread.btw("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
+```
+
+#### Output
+
+```text
+[true, true, false]
+```
+
+#### Boundary Rules
+
+- This overload is for `Timeline` and `TimeIndex` payloads.
+- The string bounds are parsed as timeline values.
+- Reversed bounds are accepted; the implementation swaps them before comparison.
+- This is the range-filter form to use for date/time columns.
+
+#### Common Pattern
+
+```cpp
+auto january = ts.btw("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
+```
+
+
+### `bucketize`
+
+#### Signature
+
+```cpp
+Thread bucketize(self, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels =
+```
+
+#### Parameters
+
+`bins` : `pluss::msharp::RangeView::Double`
+    See the signature for the supported argument form.
+
+`labels` : `pluss::msharp::RangeView::Int`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Places numeric values into interval bins and returns the assigned bin labels as a new thread.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({12.0, 18.0, 27.0, 35.0, 0.0}));
+thread = thread.with_validity_mask(pluss::make_series({true, true, true, true, false}, pluss::codem::ScalarType::Bool));
+std::vector<double> bins{0.0, 20.0, 30.0, 40.0};
+
+auto out = thread.bucketize(bins, {}, true, true);
+```
+
+#### Output
+
+```text
+[0, 0, 1, 2, null]
+```
+
+#### Practical Behavior
+
+- `bucketize(...)` is only valid for numeric `Series` payloads.
+- `bins` must contain at least two edges, must not contain `NaN`, and must be strictly increasing.
+- If `labels` is empty, the method uses `0, 1, 2, ...` for the bucket labels.
+- If `labels` is provided, its size must be exactly `bins.size() - 1`.
+- Values that do not land in any interval remain invalid in the output rather than being forced into a bucket.
+
+#### Boundary Rules
+
+- With `right=true`, intervals are right-closed by default: `(a, b]`.
+- With `right=false`, intervals are left-closed and right-open: `[a, b)`.
+- `include_lowest=true` makes the first bucket include its left edge even when `right=true`.
+
 
 ### `cast`
 
@@ -291,6 +849,72 @@ auto out = thread.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::Sca
 [10.0, 20.0, 30.0]
 ```
 
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
+
+### `clear_display_labels`
+
+#### Signature
+
+```cpp
+Thread clear_display_labels(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `clear_display_labels` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.clear_display_labels();
+```
+
+### `clear_display_name`
+
+#### Signature
+
+```cpp
+Thread clear_display_name(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `clear_display_name` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.clear_display_name();
+```
+
 ### `clear_validity_mask`
 
 #### Signature
@@ -320,6 +944,12 @@ auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
 auto out = thread.clear_validity_mask();
 ```
+
+#### Practical Behavior
+
+- `clear_validity_mask()` keeps the payload values but drops null-tracking, so every entry becomes valid again.
+- Use this when null semantics should be discarded rather than filled.
+
 
 ### `clear_validity_mask_`
 
@@ -390,6 +1020,292 @@ auto out = thread.clip(0.0, 25.0);
 [10.0, 20.0, 30.0]
 ```
 
+#### Practical Behavior
+
+- `clip(min, max)` clamps numeric series values into the closed interval `[min, max]`.
+- The validity mask is preserved.
+
+
+### `compare`
+
+#### Signature
+
+```cpp
+Thread compare(self, const char* other, ThreadBinaryCompareOp op) const
+```
+
+#### Parameters
+
+`other` : `const char*`
+    See the signature for the supported argument form.
+
+`op` : `ThreadBinaryCompareOp`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This produces a comparison-style result you can inspect directly or reuse as a mask.
+
+#### See also
+
+- `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
+```
+
+#### Output
+
+```text
+[false, true, true]
+```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
+
+### `compare`
+
+#### Signature
+
+```cpp
+Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const
+```
+
+#### Parameters
+
+`other` : `const pluss::Note&`
+    See the signature for the supported argument form.
+
+`op` : `ThreadBinaryCompareOp`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This produces a comparison-style result you can inspect directly or reuse as a mask.
+
+#### See also
+
+- `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
+```
+
+#### Output
+
+```text
+[false, true, true]
+```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
+
+### `compare`
+
+#### Signature
+
+```cpp
+Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const
+```
+
+#### Parameters
+
+`other` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`op` : `ThreadBinaryCompareOp`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This produces a comparison-style result you can inspect directly or reuse as a mask.
+
+#### See also
+
+- `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
+```
+
+#### Output
+
+```text
+[false, true, true]
+```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
+
+### `compare`
+
+#### Signature
+
+```cpp
+Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const
+```
+
+#### Parameters
+
+`other` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+`op` : `ThreadBinaryCompareOp`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This produces a comparison-style result you can inspect directly or reuse as a mask.
+
+#### See also
+
+- `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
+```
+
+#### Output
+
+```text
+[false, true, true]
+```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
+
+### `compare`
+
+#### Signature
+
+```cpp
+Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const
+```
+
+#### Parameters
+
+`other` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+`op` : `ThreadBinaryCompareOp`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This produces a comparison-style result you can inspect directly or reuse as a mask.
+
+#### See also
+
+- `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
+```
+
+#### Output
+
+```text
+[false, true, true]
+```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
+
 ### `compare`
 
 #### Signature
@@ -418,6 +1334,12 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 #### See also
 
 - `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
 
 #### Examples
 
@@ -431,8 +1353,15 @@ auto out = thread.compare(other, pluss::table::ThreadBinaryCompareOp::Gt);
 #### Output
 
 ```text
-1
+[false, true, false]
 ```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
 
 ### `compare`
 
@@ -461,6 +1390,12 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### See also
 
+- `Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
 - `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
 
 #### Examples
@@ -474,8 +1409,71 @@ auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
 #### Output
 
 ```text
-1
+[false, true, true]
 ```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
+
+### `compare`
+
+#### Signature
+
+```cpp
+Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const
+```
+
+#### Parameters
+
+`other` : `std::string_view`
+    See the signature for the supported argument form.
+
+`op` : `ThreadBinaryCompareOp`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This produces a comparison-style result you can inspect directly or reuse as a mask.
+
+#### See also
+
+- `Thread compare(self, scalar other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const char* other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const`
+- `Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);
+```
+
+#### Output
+
+```text
+[false, true, true]
+```
+
+#### Comparison Rules
+
+- Scalar/native comparisons broadcast the right-hand value across the whole thread.
+- Thread-vs-thread comparisons are row-wise and require compatible sizes.
+- Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.
+
 
 ### `compare_rows`
 
@@ -546,14 +1544,20 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
 
-auto out = thread.contains("Accra");
+auto out = thread.contains("Acc");
 ```
 
 #### Output
 
 ```text
-[true, false, true]
+[true, false, false]
 ```
+
+#### Practical Behavior
+
+- `contains(needle)` is only valid for note-backed threads.
+- It returns a boolean series telling you which text entries contain the requested substring.
+
 
 ### `corr`
 
@@ -584,9 +1588,23 @@ Applies `corr` to the current `Thread` object. Use the example and output togeth
 
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto other = pluss::table::Thread(pluss::make_series({12.0, 18.0, 29.0}));
 
-auto out = thread.corr();
+auto out = thread.corr(other, pluss::table::ThreadCorrMethod::Pearson);
 ```
+
+#### Output
+
+```text
+0.9819805
+```
+
+#### Practical Behavior
+
+- `corr(other, method)` requires both threads to be numeric series of the same size.
+- Invalid, null, or non-finite pairs are removed before the statistic is computed.
+- If too few valid paired values remain, the result is `NaN`.
+
 
 ### `count`
 
@@ -613,10 +1631,23 @@ Returns a size/count summary for the current object without changing it.
 #### Examples
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
 
-auto out = thread.count();
+auto out = thread.count(true);
 ```
+
+#### Output
+
+```text
+[3]
+```
+
+#### Practical Behavior
+
+- For numeric/text/temporal threads, `count(true)` returns the number of valid entries.
+- For boolean series, the underlying series count kernel is used.
+- `count(false)` is only meaningful on boolean series payloads.
+
 
 ### `day`
 
@@ -653,6 +1684,12 @@ auto out = thread.day();
 [1, 2, 3]
 ```
 
+#### Practical Behavior
+
+- `day()` is valid only for timeline/timeindex payloads.
+- The result preserves the validity mask while projecting the day component.
+
+
 ### `defined`
 
 #### Signature
@@ -688,6 +1725,138 @@ auto out = thread.defined();
 true
 ```
 
+### `describe`
+
+#### Signature
+
+```cpp
+ThreadView describe(self, bool render = true) const
+```
+
+#### Parameters
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`ThreadView`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.describe(false);
+```
+
+#### Output
+
+```text
+count  3
+mean   20.0
+std    10.0
+min    10.0
+25%    15.0
+50%    20.0
+75%    25.0
+max    30.0
+```
+
+#### Practical Behavior
+
+- Numeric series are summarized through the table-style numeric describe path.
+- Note payloads produce count/unique/top/freq style summaries.
+- Other payload kinds are not supported by `describe()`.
+
+
+### `display_labels`
+
+#### Signature
+
+```cpp
+Thread display_labels(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `display_labels` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0})).with_display_labels(pluss::table::Thread(pluss::make_note({"a", "b", "c"})));
+
+auto out = thread.display_labels();
+```
+
+#### Output
+
+```text
+["a", "b", "c"]
+```
+
+#### Practical Behavior
+
+- These accessors expose display metadata attached to the thread.
+- They do not change the payload values or validity mask.
+
+
+### `display_name`
+
+#### Signature
+
+```cpp
+std::string display_name(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+Applies `display_name` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0})).with_display_name("sales");
+
+auto out = thread.display_name();
+```
+
+#### Output
+
+```text
+sales
+```
+
+#### Practical Behavior
+
+- These accessors expose display metadata attached to the thread.
+- They do not change the payload values or validity mask.
+
+
 ### `distinct`
 
 #### Signature
@@ -713,10 +1882,22 @@ Applies `distinct` to the current `Thread` object. Use the example and output to
 #### Examples
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Accra"}));
 
-auto out = thread.distinct();
+auto out = thread.distinct(true);
 ```
+
+#### Output
+
+```text
+["Accra", "Tema"]
+```
+
+#### Practical Behavior
+
+- `distinct(dropna)` keeps the first occurrence of each distinct value in encounter order.
+- With `dropna=false`, at most one null entry is retained.
+
 
 ### `dropna`
 
@@ -742,7 +1923,8 @@ This is part of the missing-data cleanup path and is usually applied before summ
 #### Examples
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 0.0, 30.0}));
+thread = thread.with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
 
 auto out = thread.dropna();
 ```
@@ -750,8 +1932,14 @@ auto out = thread.dropna();
 #### Output
 
 ```text
-[10.0, 20.0, 30.0]
+[10.0, 30.0]
 ```
+
+#### Practical Behavior
+
+- `dropna()` removes invalid entries from the thread and compacts the result.
+- Use this when null rows should disappear rather than be filled.
+
 
 ### `dtype_name`
 
@@ -787,6 +1975,12 @@ auto out = thread.dtype_name();
 ```text
 Float64
 ```
+
+#### Practical Behavior
+
+- `dtype_name()` reports the scalar dtype used by a numeric series payload.
+- Use it when debugging type-dependent behavior or conversion steps.
+
 
 ### `exp`
 
@@ -1325,6 +2519,64 @@ auto out = thread.filter(mask);
 [10.0, 20.0, 30.0]
 ```
 
+### `has_display_labels`
+
+#### Signature
+
+```cpp
+bool has_display_labels(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+Applies `has_display_labels` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.has_display_labels();
+```
+
+### `has_display_name`
+
+#### Signature
+
+```cpp
+bool has_display_name(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+Applies `has_display_name` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.has_display_name();
+```
+
 ### `has_validity_mask`
 
 #### Signature
@@ -1359,7 +2611,7 @@ auto out = thread.has_validity_mask();
 #### Signature
 
 ```cpp
-Thread head(self, std::int64_t n) const
+ThreadView head(self, std::int64_t n = 5, bool render = true) const
 ```
 
 #### Parameters
@@ -1367,9 +2619,12 @@ Thread head(self, std::int64_t n) const
 `n` : `std::int64_t`
     Number of rows, entries, or depth items to keep in the preview.
 
+`render` : `bool`
+    See the signature for the supported argument form.
+
 #### Returns
 
-`Thread`
+`ThreadView`
     Value produced by this call.
 
 #### Notes
@@ -1423,6 +2678,102 @@ auto out = thread.hour();
 
 ```text
 [1, 2, 3]
+```
+
+### `info`
+
+#### Signature
+
+```cpp
+void info(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### See also
+
+- `void info(self, std::ostream& os) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.info();
+```
+
+### `info`
+
+#### Signature
+
+```cpp
+void info(self, std::ostream& os) const
+```
+
+#### Parameters
+
+`os` : `std::ostream&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### See also
+
+- `void info(self) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.info();
+```
+
+### `info_string`
+
+#### Signature
+
+```cpp
+std::string info_string(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+Serializes or renders the current object into a text form you can inspect, log, or export.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.info_string();
 ```
 
 ### `is_valid`
@@ -1671,6 +3022,85 @@ auto out = thread.lower();
 ["Accra", "Tema", "Kumasi"]
 ```
 
+### `lstrip`
+
+#### Signature
+
+```cpp
+Thread lstrip(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Trims only the left edge of note-backed text values. This is useful for prefixes such as leading `#` in IDs.
+
+#### See also
+
+- `Thread lstrip(self, std::string_view chars) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.lstrip();
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `lstrip`
+
+#### Signature
+
+```cpp
+Thread lstrip(self, std::string_view chars) const
+```
+
+#### Parameters
+
+`chars` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Trims only the left edge of note-backed text values. This is useful for prefixes such as leading `#` in IDs.
+
+#### See also
+
+- `Thread lstrip(self) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"#203930", "##7788", "4455##"}));
+
+auto out = thread.lstrip("#");
+```
+
+#### Output
+
+```text
+["203930", "7788", "4455##"]
+```
+
 ### `max`
 
 #### Signature
@@ -1739,6 +3169,35 @@ auto out = thread.mean();
 
 ```text
 20.0
+```
+
+### `median`
+
+#### Signature
+
+```cpp
+pluss::Series median(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`pluss::Series`
+    Value produced by this call.
+
+#### Notes
+
+Applies `median` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.median();
 ```
 
 ### `min`
@@ -1974,6 +3433,85 @@ auto out = thread.replace("Tema", "Tamale");
 ["Accra", "Tema", "Kumasi"]
 ```
 
+### `rstrip`
+
+#### Signature
+
+```cpp
+Thread rstrip(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Trims only the right edge of note-backed text values. Use it when trailing markers should be removed without touching the left side.
+
+#### See also
+
+- `Thread rstrip(self, std::string_view chars) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.rstrip();
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `rstrip`
+
+#### Signature
+
+```cpp
+Thread rstrip(self, std::string_view chars) const
+```
+
+#### Parameters
+
+`chars` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Trims only the right edge of note-backed text values. Use it when trailing markers should be removed without touching the left side.
+
+#### See also
+
+- `Thread rstrip(self) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"#203930", "##7788", "4455##"}));
+
+auto out = thread.rstrip("#");
+```
+
+#### Output
+
+```text
+["#203930", "##7788", "4455"]
+```
+
 ### `shift`
 
 #### Signature
@@ -2161,6 +3699,39 @@ auto out = thread.slice(0, 2);
 [10.0, 20.0, 30.0]
 ```
 
+### `sort_values`
+
+#### Signature
+
+```cpp
+Thread sort_values(self, bool ascending = true, bool nulls_last = true) const
+```
+
+#### Parameters
+
+`ascending` : `bool`
+    See the signature for the supported argument form.
+
+`nulls_last` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `sort_values` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.sort_values();
+```
+
 ### `std`
 
 #### Signature
@@ -2195,6 +3766,85 @@ auto out = thread.std(true);
 
 ```text
 20.0
+```
+
+### `strip`
+
+#### Signature
+
+```cpp
+Thread strip(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Trims note-backed text values. Use `strip()` for whitespace or `strip(chars)` for an explicit trim set.
+
+#### See also
+
+- `Thread strip(self, std::string_view chars) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.strip();
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `strip`
+
+#### Signature
+
+```cpp
+Thread strip(self, std::string_view chars) const
+```
+
+#### Parameters
+
+`chars` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Trims note-backed text values. Use `strip()` for whitespace or `strip(chars)` for an explicit trim set.
+
+#### See also
+
+- `Thread strip(self) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.strip("# ");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
 ```
 
 ### `sum`
@@ -2237,7 +3887,7 @@ auto out = thread.sum();
 #### Signature
 
 ```cpp
-Thread tail(self, std::int64_t n) const
+ThreadView tail(self, std::int64_t n = 5, bool render = true) const
 ```
 
 #### Parameters
@@ -2245,9 +3895,12 @@ Thread tail(self, std::int64_t n) const
 `n` : `std::int64_t`
     Number of rows, entries, or depth items to keep in the preview.
 
+`render` : `bool`
+    See the signature for the supported argument form.
+
 #### Returns
 
-`Thread`
+`ThreadView`
     Value produced by this call.
 
 #### Notes
@@ -2412,6 +4065,35 @@ auto out = thread.to_string();
 [10.0, 20.0, 30.0]
 ```
 
+### `ts`
+
+#### Signature
+
+```cpp
+TimeSeriesAccessor ts(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`TimeSeriesAccessor`
+    Value produced by this call.
+
+#### Notes
+
+Applies `ts` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.ts();
+```
+
 ### `unique`
 
 #### Signature
@@ -2511,41 +4193,6 @@ auto out = thread.value();
 10.0
 ```
 
-### `values`
-
-#### Signature
-
-```cpp
-const Thread& values(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const Thread&`
-    Value produced by this call.
-
-#### Notes
-
-Materializes the current members as a collection you can inspect or reuse elsewhere.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.values();
-```
-
-#### Output
-
-```text
-[10.0, 20.0, 30.0]
-```
-
 ### `var`
 
 #### Signature
@@ -2580,6 +4227,42 @@ auto out = thread.var(true);
 
 ```text
 20.0
+```
+
+### `view`
+
+#### Signature
+
+```cpp
+ThreadView view(self, std::int64_t start, std::int64_t stop, bool render = true) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    Inclusive starting position of the slice.
+
+`stop` : `std::int64_t`
+    Exclusive ending position of the slice.
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`ThreadView`
+    Value produced by this call.
+
+#### Notes
+
+Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.view();
 ```
 
 ### `window`
@@ -2622,6 +4305,66 @@ auto out = thread.window(2, pluss::table::ThreadWindowOp::RollingMean, 1);
 
 ```text
 [10.0, 20.0, 30.0]
+```
+
+### `with_display_labels`
+
+#### Signature
+
+```cpp
+Thread with_display_labels(self, const Thread& labels) const
+```
+
+#### Parameters
+
+`labels` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `with_display_labels` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.with_display_labels();
+```
+
+### `with_display_name`
+
+#### Signature
+
+```cpp
+Thread with_display_name(self, std::string name) const
+```
+
+#### Parameters
+
+`name` : `std::string`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `with_display_name` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.with_display_name();
 ```
 
 ### `with_validity_mask`

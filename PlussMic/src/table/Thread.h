@@ -11,6 +11,7 @@
 #include "MSharp/IntrusivePtr.h"
 #include "MSharp/RangeView.h"
 #include "table/display/Display.h"
+#include "pluss/null.h"
 #include "pluss/codem/codem.h"
 #include "pluss/coden/coden.h"
 #include "pluss/codeh/codeh.h"
@@ -162,8 +163,133 @@ public:
   double corr(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pearson) const;
 
   // Text operations (Note payload only).
+  Thread strip() const;
+  Thread strip(std::string_view chars) const;
+  Thread lstrip() const;
+  Thread lstrip(std::string_view chars) const;
+  Thread rstrip() const;
+  Thread rstrip(std::string_view chars) const;
   Thread lower() const;
   Thread replace(std::string_view from, std::string_view to) const;
+  Thread put(const Thread& bool_mask, const Thread& value) const;
+  Thread put(const Thread& bool_mask, double value) const;
+  Thread put(const Thread& bool_mask, std::string_view value) const;
+  Thread put(const Thread& bool_mask, const char* value) const {
+    return put(bool_mask, std::string_view{value != nullptr ? value : ""});
+  }
+  Thread put(const Thread& bool_mask, pluss::null_t value) const;
+  Thread put(const pluss::Series& bool_mask, const Thread& value) const {
+    return put(Thread(bool_mask), value);
+  }
+  Thread put(const pluss::Series& bool_mask, double value) const {
+    return put(Thread(bool_mask), value);
+  }
+  Thread put(const pluss::Series& bool_mask, std::string_view value) const {
+    return put(Thread(bool_mask), value);
+  }
+  Thread put(const pluss::Series& bool_mask, const char* value) const {
+    return put(Thread(bool_mask), value);
+  }
+  Thread put(const pluss::Series& bool_mask, pluss::null_t value) const {
+    return put(Thread(bool_mask), value);
+  }
+  Thread replace(double from, double to) const;
+  Thread replace(double from, pluss::null_t to) const;
+  Thread replace(pluss::null_t from, double to) const;
+  Thread replace(const pluss::Series& from, const pluss::Series& to) const;
+  Thread replace(const pluss::Series& from, pluss::null_t to) const;
+  Thread replace(pluss::null_t from, const pluss::Series& to) const;
+  Thread replace(const pluss::Note& from, const pluss::Note& to) const;
+  Thread replace(const pluss::Note& from, pluss::null_t to) const;
+  Thread replace(pluss::null_t from, const pluss::Note& to) const;
+  Thread replace(const pluss::Timeline& from, const pluss::Timeline& to) const;
+  Thread replace(const pluss::Timeline& from, pluss::null_t to) const;
+  Thread replace(pluss::null_t from, const pluss::Timeline& to) const;
+  Thread replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to) const;
+  Thread replace(const pluss::TimeIndex& from, pluss::null_t to) const;
+  Thread replace(pluss::null_t from, const pluss::TimeIndex& to) const;
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       const Thread& default_value);
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       double default_value);
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       std::string_view default_value);
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       const char* default_value) {
+    return select(
+        conditions,
+        choices,
+        std::string_view{default_value != nullptr ? default_value : ""});
+  }
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       const pluss::Timeline& default_value);
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       const pluss::TimeIndex& default_value);
+  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
+                       pluss::msharp::RangeView::Of<Thread> choices,
+                       pluss::null_t default_value);
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       const Thread& default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       double default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       std::string_view default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       const char* default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       const pluss::Timeline& default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       const pluss::TimeIndex& default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
+  static Thread select(std::initializer_list<Thread> conditions,
+                       std::initializer_list<Thread> choices,
+                       pluss::null_t default_value) {
+    return select(
+        pluss::msharp::RangeView::Of<Thread>(conditions),
+        pluss::msharp::RangeView::Of<Thread>(choices),
+        default_value);
+  }
   pluss::Series contains(std::string_view needle) const;
 
   // Time operations (Timeline / TimeIndex payload only).
@@ -177,6 +303,14 @@ public:
   Thread numeric_binary(double other, ThreadBinaryMathOp op, bool reverse = false) const;
   Thread numeric_binary(const Thread& other, ThreadBinaryMathOp op) const;
   Thread compare(double other, ThreadBinaryCompareOp op) const;
+  Thread compare(std::string_view other, ThreadBinaryCompareOp op) const;
+  Thread compare(const char* other, ThreadBinaryCompareOp op) const {
+    return compare(std::string_view{other != nullptr ? other : ""}, op);
+  }
+  Thread compare(const pluss::Series& other, ThreadBinaryCompareOp op) const;
+  Thread compare(const pluss::Note& other, ThreadBinaryCompareOp op) const;
+  Thread compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) const;
+  Thread compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const;
   Thread compare(const Thread& other, ThreadBinaryCompareOp op) const;
   Thread btw(double a, double b, bool inclusive = false) const;
   Thread btw(double a, double b, bool include_left, bool include_right) const;
@@ -309,21 +443,69 @@ Thread operator&(const Thread& lhs, const Thread& rhs);
 Thread operator|(const Thread& lhs, const Thread& rhs);
 Thread operator==(const Thread& lhs, double rhs);
 Thread operator==(double lhs, const Thread& rhs);
+Thread operator==(const Thread& lhs, std::string_view rhs);
+Thread operator==(std::string_view lhs, const Thread& rhs);
+Thread operator==(const Thread& lhs, const char* rhs);
+Thread operator==(const char* lhs, const Thread& rhs);
+Thread operator==(const Thread& lhs, const pluss::Series& rhs);
+Thread operator==(const Thread& lhs, const pluss::Note& rhs);
+Thread operator==(const Thread& lhs, const pluss::Timeline& rhs);
+Thread operator==(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator==(const Thread& lhs, const Thread& rhs);
 Thread operator!=(const Thread& lhs, double rhs);
 Thread operator!=(double lhs, const Thread& rhs);
+Thread operator!=(const Thread& lhs, std::string_view rhs);
+Thread operator!=(std::string_view lhs, const Thread& rhs);
+Thread operator!=(const Thread& lhs, const char* rhs);
+Thread operator!=(const char* lhs, const Thread& rhs);
+Thread operator!=(const Thread& lhs, const pluss::Series& rhs);
+Thread operator!=(const Thread& lhs, const pluss::Note& rhs);
+Thread operator!=(const Thread& lhs, const pluss::Timeline& rhs);
+Thread operator!=(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator!=(const Thread& lhs, const Thread& rhs);
 Thread operator<(const Thread& lhs, double rhs);
 Thread operator<(double lhs, const Thread& rhs);
+Thread operator<(const Thread& lhs, std::string_view rhs);
+Thread operator<(std::string_view lhs, const Thread& rhs);
+Thread operator<(const Thread& lhs, const char* rhs);
+Thread operator<(const char* lhs, const Thread& rhs);
+Thread operator<(const Thread& lhs, const pluss::Series& rhs);
+Thread operator<(const Thread& lhs, const pluss::Note& rhs);
+Thread operator<(const Thread& lhs, const pluss::Timeline& rhs);
+Thread operator<(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator<(const Thread& lhs, const Thread& rhs);
 Thread operator<=(const Thread& lhs, double rhs);
 Thread operator<=(double lhs, const Thread& rhs);
+Thread operator<=(const Thread& lhs, std::string_view rhs);
+Thread operator<=(std::string_view lhs, const Thread& rhs);
+Thread operator<=(const Thread& lhs, const char* rhs);
+Thread operator<=(const char* lhs, const Thread& rhs);
+Thread operator<=(const Thread& lhs, const pluss::Series& rhs);
+Thread operator<=(const Thread& lhs, const pluss::Note& rhs);
+Thread operator<=(const Thread& lhs, const pluss::Timeline& rhs);
+Thread operator<=(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator<=(const Thread& lhs, const Thread& rhs);
 Thread operator>(const Thread& lhs, double rhs);
 Thread operator>(double lhs, const Thread& rhs);
+Thread operator>(const Thread& lhs, std::string_view rhs);
+Thread operator>(std::string_view lhs, const Thread& rhs);
+Thread operator>(const Thread& lhs, const char* rhs);
+Thread operator>(const char* lhs, const Thread& rhs);
+Thread operator>(const Thread& lhs, const pluss::Series& rhs);
+Thread operator>(const Thread& lhs, const pluss::Note& rhs);
+Thread operator>(const Thread& lhs, const pluss::Timeline& rhs);
+Thread operator>(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator>(const Thread& lhs, const Thread& rhs);
 Thread operator>=(const Thread& lhs, double rhs);
 Thread operator>=(double lhs, const Thread& rhs);
+Thread operator>=(const Thread& lhs, std::string_view rhs);
+Thread operator>=(std::string_view lhs, const Thread& rhs);
+Thread operator>=(const Thread& lhs, const char* rhs);
+Thread operator>=(const char* lhs, const Thread& rhs);
+Thread operator>=(const Thread& lhs, const pluss::Series& rhs);
+Thread operator>=(const Thread& lhs, const pluss::Note& rhs);
+Thread operator>=(const Thread& lhs, const pluss::Timeline& rhs);
+Thread operator>=(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator>=(const Thread& lhs, const Thread& rhs);
 
 class ThreadValue {

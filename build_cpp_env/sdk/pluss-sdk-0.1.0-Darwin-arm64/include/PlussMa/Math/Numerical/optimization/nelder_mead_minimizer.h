@@ -65,11 +65,11 @@ NelderMeadOutcome nelder_mead_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "subsp::math::optimization::nelder_mead_minimizer: objective must return a scalar value");
       }
       if (out.dtype().is_complex()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "subsp::math::optimization::nelder_mead_minimizer: objective must return a real scalar");
       }
       return out;

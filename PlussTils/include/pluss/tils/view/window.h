@@ -5,6 +5,7 @@
 #include "pluss/tils/view/window/html_document.h"
 #include "pluss/tils/view/window/html_layout.h"
 #include "pluss/tils/view/window/html_mapping.h"
+#include "pluss/tils/view/window/html_scroll.h"
 #include "pluss/tils/view/window/plot.h"
 #include "pluss/tils/view/window/renderer.h"
 #include "pluss/tils/view/window/runtime.h"

@@ -129,23 +129,11 @@ Thread& Thread::clear_validity_mask_() {
 }
 
 Thread Thread::isnull() const {
-  const auto& src = impl_ref_();
-  if (!src.validity_mask_.has_value()) {
-    return Thread(bool_series_zeros(src.size_));
-  }
-  return Thread(src.validity_mask_->logical_not());
+  return Thread(thread_non_missing_mask(*this).logical_not());
 }
 
 Thread Thread::notnull() const {
-  if (!has_validity_mask()) {
-    auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
-    auto* p = reinterpret_cast<bool*>(out.raw_data());
-    for (std::int64_t i = 0; i < size(); ++i) {
-      p[i] = true;
-    }
-    return Thread(out);
-  }
-  return Thread(*validity_mask());
+  return Thread(thread_non_missing_mask(*this));
 }
 
 Thread Thread::isnan() const {
@@ -164,10 +152,11 @@ Thread Thread::isfinite() const {
 
 Thread Thread::fillna(double value) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::fillna(double) is only valid for Series payload");
-  if (!has_validity_mask()) {
+  const auto missing = notnull().as_series().logical_not();
+  if (!has_validity_mask() && !series_uses_nan_missing(as_series())) {
     return *this;
   }
-  auto out = as_series().where(*validity_mask(), value);
+  auto out = as_series().where(missing, value);
   return Thread(out, std::nullopt);
 }
 
@@ -214,6 +203,321 @@ Thread Thread::fillna(const pluss::TimeIndex& value) const {
   return fillna(value.timeline());
 }
 
+namespace {
+
+pluss::Series thread_put_mask_(const Thread& bool_mask,
+                               std::int64_t expected_size,
+                               std::string_view where) {
+  PLUSS_CHECK(bool_mask.defined(), std::string(where) + ": mask is undefined");
+  PLUSS_CHECK(bool_mask.kind() == ThreadKind::Series, std::string(where) + ": mask must be a Series thread");
+  const auto& mask = bool_mask.as_series();
+  (void)bool_vec_from_series(mask, expected_size, where);
+  return mask;
+}
+
+void validate_thread_put_value_(const Thread& base,
+                                const Thread& value,
+                                std::string_view where) {
+  PLUSS_CHECK(value.defined(), std::string(where) + ": replacement value is undefined");
+  PLUSS_CHECK(value.kind() == base.kind(),
+              std::string(where) + ": replacement kind must match target thread kind");
+  PLUSS_CHECK(value.size() == 1 || value.size() == base.size(),
+              std::string(where) + ": replacement value must be scalar-like or match target length");
+}
+
+std::optional<pluss::Series> nullify_matches_mask(const Thread& t,
+                                                  const pluss::Series& matches,
+                                                  bool& changed);
+
+} // namespace
+
+Thread Thread::put(const Thread& bool_mask, const Thread& value) const {
+  const auto mask = thread_put_mask_(bool_mask, size(), "Thread::put");
+  validate_thread_put_value_(*this, value, "Thread::put");
+
+  if (kind() == ThreadKind::Note) {
+    const auto hit = mask.to_vec<bool>();
+    auto out_valid = notnull().as_series().to_vec<bool>();
+    std::vector<std::string> out_values;
+    out_values.reserve(static_cast<std::size_t>(size()));
+    const bool scalar_value = value.size() == 1;
+    for (std::int64_t i = 0; i < size(); ++i) {
+      const auto idx = static_cast<std::size_t>(i);
+      if (hit[idx]) {
+        const auto rhs_row = scalar_value ? static_cast<std::int64_t>(0) : i;
+        out_values.emplace_back(value.as_note().at(rhs_row));
+        out_valid[idx] = value.is_valid(rhs_row);
+      } else {
+        out_values.emplace_back(as_note().at(i));
+      }
+    }
+    return Thread(rebuild_note_like(as_note(), out_values), optional_mask_from_valid(out_valid));
+  }
+
+  return select({Thread(mask)}, {value}, *this);
+}
+
+Thread Thread::put(const Thread& bool_mask, double value) const {
+  if (kind() == ThreadKind::Series) {
+    const auto& s = as_series();
+    return put(bool_mask, Thread(pluss::Series::full({1}, value, s.scalar_type(), s.platform())));
+  }
+  return put(bool_mask, Thread(pluss::make_series(std::vector<double>{value}, {1})));
+}
+
+Thread Thread::put(const Thread& bool_mask, std::string_view value) const {
+  return put(bool_mask, Thread(pluss::make_note(std::vector<std::string>{std::string(value)})));
+}
+
+Thread Thread::put(const Thread& bool_mask, pluss::null_t) const {
+  const auto mask = thread_put_mask_(bool_mask, size(), "Thread::put");
+  bool changed = false;
+  const auto new_mask = nullify_matches_mask(*this, mask, changed);
+  if (!changed) {
+    return *this;
+  }
+
+  switch (kind()) {
+    case ThreadKind::Series:
+      return Thread(as_series(), new_mask);
+    case ThreadKind::Note:
+      return Thread(as_note(), new_mask);
+    case ThreadKind::Timeline:
+      return Thread(as_timeline(), new_mask);
+    case ThreadKind::TimeIndex:
+      return Thread(as_timeindex(), new_mask);
+    default:
+      PLUSS_FAIL("Thread::put(null): unsupported payload kind");
+  }
+}
+
+Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                      pluss::msharp::RangeView::Of<Thread> choices,
+                      const Thread& default_value) {
+  PLUSS_CHECK(!conditions.empty(), "Thread::select: at least one condition is required");
+  PLUSS_CHECK(conditions.size() == choices.size(),
+              "Thread::select: condition/choice count mismatch");
+  PLUSS_CHECK(default_value.defined(), "Thread::select: default value is undefined");
+
+  const auto out_kind = choices[0].kind();
+  PLUSS_CHECK(default_value.kind() == out_kind,
+              "Thread::select: default value kind must match choice kind");
+
+  std::vector<pluss::Series> cond_masks;
+  cond_masks.reserve(conditions.size());
+  for (const auto& cond : conditions) {
+    PLUSS_CHECK(cond.defined(), "Thread::select: condition is undefined");
+    PLUSS_CHECK(cond.kind() == ThreadKind::Series,
+                "Thread::select: conditions must be Series-backed boolean masks");
+    PLUSS_CHECK(cond.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
+                "Thread::select: conditions must use Bool dtype");
+    cond_masks.push_back(cond.as_series());
+  }
+  const auto output_size = cond_masks.front().numel();
+  for (const auto& mask : cond_masks) {
+    PLUSS_CHECK(mask.numel() == output_size,
+                "Thread::select: all conditions must have the same length");
+  }
+
+  auto validity_series = [](const Thread& t) -> pluss::Series {
+    if (t.has_validity_mask()) {
+      return t.notnull().as_series();
+    }
+    return pluss::Series::ones({1}, pluss::codem::ScalarType::Bool);
+  };
+
+  std::vector<pluss::Series> choice_validity;
+  choice_validity.reserve(choices.size());
+  for (const auto& choice : choices) {
+    PLUSS_CHECK(choice.defined(), "Thread::select: choice is undefined");
+    PLUSS_CHECK(choice.kind() == out_kind,
+                "Thread::select: all choices must use the same payload kind");
+    PLUSS_CHECK(choice.size() == 1 || choice.size() == output_size,
+                "Thread::select: each choice must be scalar-like or match condition length");
+    choice_validity.push_back(validity_series(choice));
+  }
+  PLUSS_CHECK(default_value.size() == 1 || default_value.size() == output_size,
+              "Thread::select: default value must be scalar-like or match condition length");
+
+  auto expand_validity = [](const pluss::Series& valid, std::int64_t output_size) {
+    if (valid.numel() == output_size) {
+      return valid;
+    }
+    PLUSS_CHECK(valid.numel() == 1,
+                "Thread::select: validity mask must match output size or be scalar-like");
+    const bool keep = valid.to_vec<bool>()[0];
+    return pluss::Series::full(
+        {output_size},
+        keep ? 1.0 : 0.0,
+        pluss::codem::ScalarType::Bool,
+        valid.platform());
+  };
+
+  switch (out_kind) {
+    case ThreadKind::Series: {
+      std::vector<pluss::Series> payloads;
+      payloads.reserve(choices.size());
+      for (const auto& choice : choices) {
+        payloads.push_back(choice.as_series());
+      }
+      auto out = pluss::select(
+          pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
+          pluss::msharp::RangeView::Of<pluss::Series>(payloads),
+          default_value.as_series());
+
+      std::vector<pluss::Series> expanded_validity;
+      expanded_validity.reserve(choice_validity.size());
+      for (const auto& valid : choice_validity) {
+        expanded_validity.push_back(expand_validity(valid, out.numel()));
+      }
+      const auto out_valid = optional_mask_from_valid(
+          pluss::select(
+              pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
+              pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
+              expand_validity(validity_series(default_value), out.numel()))
+              .to_vec<bool>());
+      return Thread(out, std::move(out_valid));
+    }
+
+    case ThreadKind::Timeline: {
+      auto out = default_value.as_timeline();
+      for (std::size_t i = conditions.size(); i > 0; --i) {
+        out = choices[i - 1].as_timeline().where(cond_masks[i - 1], out);
+      }
+
+      std::vector<pluss::Series> expanded_validity;
+      expanded_validity.reserve(choice_validity.size());
+      for (const auto& valid : choice_validity) {
+        expanded_validity.push_back(expand_validity(valid, out.numel()));
+      }
+      const auto out_valid = optional_mask_from_valid(
+          pluss::select(
+              pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
+              pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
+              expand_validity(validity_series(default_value), out.numel()))
+              .to_vec<bool>());
+      return Thread(out, std::move(out_valid));
+    }
+
+    case ThreadKind::TimeIndex: {
+      auto out = default_value.as_timeindex().timeline();
+      for (std::size_t i = conditions.size(); i > 0; --i) {
+        out = choices[i - 1].as_timeindex().timeline().where(cond_masks[i - 1], out);
+      }
+
+      std::vector<pluss::Series> expanded_validity;
+      expanded_validity.reserve(choice_validity.size());
+      for (const auto& valid : choice_validity) {
+        expanded_validity.push_back(expand_validity(valid, out.numel()));
+      }
+      const auto out_valid = optional_mask_from_valid(
+          pluss::select(
+              pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
+              pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
+              expand_validity(validity_series(default_value), out.numel()))
+              .to_vec<bool>());
+      return Thread(out.to_timeindex(false), std::move(out_valid));
+    }
+
+    case ThreadKind::Note: {
+      std::vector<std::string> out_values;
+      out_values.reserve(static_cast<std::size_t>(output_size));
+      auto out_valid = expand_validity(validity_series(default_value), output_size).to_vec<bool>();
+      const bool default_scalar = default_value.size() == 1;
+      for (std::int64_t i = 0; i < output_size; ++i) {
+        out_values.emplace_back(default_value.as_note().at(default_scalar ? 0 : i));
+      }
+
+      std::vector<std::vector<bool>> cond_hits;
+      cond_hits.reserve(cond_masks.size());
+      for (const auto& cond_mask : cond_masks) {
+        cond_hits.push_back(cond_mask.to_vec<bool>());
+      }
+
+      for (std::size_t cond_idx = conditions.size(); cond_idx > 0; --cond_idx) {
+        const auto& choice = choices[cond_idx - 1];
+        const bool scalar_choice = choice.size() == 1;
+        const auto choice_valid = expand_validity(choice_validity[cond_idx - 1], output_size).to_vec<bool>();
+        const auto& hits = cond_hits[cond_idx - 1];
+        for (std::int64_t row = 0; row < output_size; ++row) {
+          const auto row_idx = static_cast<std::size_t>(row);
+          if (!hits[row_idx]) {
+            continue;
+          }
+          const auto rhs_row = scalar_choice ? static_cast<std::int64_t>(0) : row;
+          out_values[row_idx] = std::string(choice.as_note().at(rhs_row));
+          out_valid[row_idx] = choice_valid[row_idx];
+        }
+      }
+
+      return Thread(rebuild_note_like(default_value.as_note(), out_values),
+                    optional_mask_from_valid(out_valid));
+    }
+    default:
+      PLUSS_FAIL("Thread::select: unsupported payload kind");
+  }
+}
+
+Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                      pluss::msharp::RangeView::Of<Thread> choices,
+                      double default_value) {
+  PLUSS_CHECK(!choices.empty(), "Thread::select(double): at least one choice is required");
+  PLUSS_CHECK(choices[0].kind() == ThreadKind::Series,
+              "Thread::select(double): choices must be Series-backed");
+  return select(
+      conditions,
+      choices,
+      Thread(pluss::Series::full(
+          {1},
+          default_value,
+          choices[0].as_series().scalar_type(),
+          choices[0].as_series().platform())));
+}
+
+Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                      pluss::msharp::RangeView::Of<Thread> choices,
+                      std::string_view default_value) {
+  return select(
+      conditions,
+      choices,
+      Thread(pluss::make_note(std::vector<std::string>{std::string(default_value)})));
+}
+
+Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                      pluss::msharp::RangeView::Of<Thread> choices,
+                      const pluss::Timeline& default_value) {
+  PLUSS_CHECK(default_value.defined(), "Thread::select(Timeline): default value is undefined");
+  PLUSS_CHECK(default_value.numel() == 1, "Thread::select(Timeline): default value must be scalar-like");
+  return select(
+      conditions,
+      choices,
+      Thread(pluss::make_timeline(
+          std::vector<std::string>{std::string(default_value.to_note_iso().at(0))})));
+}
+
+Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                      pluss::msharp::RangeView::Of<Thread> choices,
+                      const pluss::TimeIndex& default_value) {
+  PLUSS_CHECK(default_value.timeline().defined(), "Thread::select(TimeIndex): default value is undefined");
+  PLUSS_CHECK(default_value.size() == 1, "Thread::select(TimeIndex): default value must be scalar-like");
+  return select(
+      conditions,
+      choices,
+      Thread(pluss::make_timeindex(
+          std::vector<std::string>{std::string(default_value.to_note_iso().at(0))})));
+}
+
+Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
+                      pluss::msharp::RangeView::Of<Thread> choices,
+                      pluss::null_t) {
+  PLUSS_CHECK(!choices.empty(), "Thread::select(null): at least one choice is required");
+  const auto& seed = choices[0];
+  return select(
+      conditions,
+      choices,
+      seed.with_validity_mask(pluss::Series::zeros({seed.size()}, pluss::codem::ScalarType::Bool)));
+}
+
 Thread Thread::abs() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::abs is only valid for Series payload");
   return Thread(as_series().abs(), validity_mask());
@@ -256,7 +560,7 @@ Thread& Thread::fillna_(double value) {
   auto& w = mut_impl_();
   auto* s = std::get_if<pluss::Series>(&w.payload_);
   PLUSS_CHECK(s != nullptr, "Thread::fillna_: internal payload mismatch");
-  *s = s->where(*w.validity_mask_, value);
+  *s = s->where(w.validity_mask_->logical_not(), value);
   w.validity_mask_.reset();
   return *this;
 }
@@ -1021,9 +1325,235 @@ Thread Thread::lower() const {
   return Thread(as_note().lower(), validity_mask());
 }
 
+Thread Thread::strip() const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::strip is only valid for Note payload");
+  return Thread(as_note().strip(), validity_mask());
+}
+
+Thread Thread::strip(std::string_view chars) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::strip(chars) is only valid for Note payload");
+  return Thread(as_note().strip(chars), validity_mask());
+}
+
+Thread Thread::lstrip() const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::lstrip is only valid for Note payload");
+  return Thread(as_note().lstrip(), validity_mask());
+}
+
+Thread Thread::lstrip(std::string_view chars) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::lstrip(chars) is only valid for Note payload");
+  return Thread(as_note().lstrip(chars), validity_mask());
+}
+
+Thread Thread::rstrip() const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::rstrip is only valid for Note payload");
+  return Thread(as_note().rstrip(), validity_mask());
+}
+
+Thread Thread::rstrip(std::string_view chars) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::rstrip(chars) is only valid for Note payload");
+  return Thread(as_note().rstrip(chars), validity_mask());
+}
+
+namespace {
+
+std::optional<pluss::Series> nullify_matches_mask(const Thread& t, const pluss::Series& matches, bool& changed) {
+  auto valid = t.has_validity_mask() ? t.validity_mask()->to_vec<bool>()
+                                     : std::vector<bool>(static_cast<std::size_t>(t.size()), true);
+  const auto hit = matches.to_vec<bool>();
+
+  changed = false;
+  for (std::int64_t i = 0; i < t.size(); ++i) {
+    const auto idx = static_cast<std::size_t>(i);
+    if (valid[idx] && hit[idx]) {
+      valid[idx] = false;
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return t.validity_mask();
+  }
+  return optional_mask_from_valid(valid);
+}
+
+} // namespace
+
 Thread Thread::replace(std::string_view from, std::string_view to) const {
   PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::replace is only valid for Note payload");
   return Thread(as_note().replace(from, to), validity_mask());
+}
+
+Thread Thread::replace(double from, double to) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::replace(double, double) is only valid for Series payload");
+  auto mask = compare(from, ThreadBinaryCompareOp::Eq).as_series();
+  return Thread(as_series().where(mask, to), validity_mask());
+}
+
+Thread Thread::replace(double from, pluss::null_t) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::replace(double, null) is only valid for Series payload");
+  bool changed = false;
+  const auto new_mask = nullify_matches_mask(*this, compare(from, ThreadBinaryCompareOp::Eq).as_series(), changed);
+  if (!changed) {
+    return *this;
+  }
+  return Thread(as_series(), new_mask);
+}
+
+Thread Thread::replace(pluss::null_t, double to) const {
+  return fillna(to);
+}
+
+Thread Thread::replace(const pluss::Series& from, const pluss::Series& to) const {
+  PLUSS_CHECK(from.defined(), "Thread::replace(Series, Series): from Series is undefined");
+  PLUSS_CHECK(to.defined(), "Thread::replace(Series, Series): to Series is undefined");
+  PLUSS_CHECK(from.numel() == 1, "Thread::replace(Series, Series): from Series must be scalar");
+  PLUSS_CHECK(to.numel() == 1, "Thread::replace(Series, Series): to Series must be scalar");
+  double lhs = 0.0;
+  double rhs = 0.0;
+  PLUSS_CHECK(extract_numeric_value(from, 0, lhs),
+              "Thread::replace(Series, Series): from Series must be numeric or bool");
+  PLUSS_CHECK(extract_numeric_value(to, 0, rhs),
+              "Thread::replace(Series, Series): to Series must be numeric or bool");
+  return replace(lhs, rhs);
+}
+
+Thread Thread::replace(const pluss::Series& from, pluss::null_t to) const {
+  PLUSS_CHECK(from.defined(), "Thread::replace(Series, null): from Series is undefined");
+  PLUSS_CHECK(from.numel() == 1, "Thread::replace(Series, null): from Series must be scalar");
+  double lhs = 0.0;
+  PLUSS_CHECK(extract_numeric_value(from, 0, lhs),
+              "Thread::replace(Series, null): from Series must be numeric or bool");
+  return replace(lhs, to);
+}
+
+Thread Thread::replace(pluss::null_t from, const pluss::Series& to) const {
+  PLUSS_CHECK(to.defined(), "Thread::replace(null, Series): to Series is undefined");
+  PLUSS_CHECK(to.numel() == 1, "Thread::replace(null, Series): to Series must be scalar");
+  double rhs = 0.0;
+  PLUSS_CHECK(extract_numeric_value(to, 0, rhs),
+              "Thread::replace(null, Series): to Series must be numeric or bool");
+  return replace(from, rhs);
+}
+
+Thread Thread::replace(const pluss::Note& from, const pluss::Note& to) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::replace(Note, Note) is only valid for Note payload");
+  PLUSS_CHECK(from.defined(), "Thread::replace(Note, Note): from Note is undefined");
+  PLUSS_CHECK(to.defined(), "Thread::replace(Note, Note): to Note is undefined");
+  PLUSS_CHECK(from.numel() == 1, "Thread::replace(Note, Note): from Note must be scalar");
+  PLUSS_CHECK(to.numel() == 1, "Thread::replace(Note, Note): to Note must be scalar");
+
+  const auto from_text = std::string(from.at(0));
+  const auto to_text = std::string(to.at(0));
+  const auto valid = has_validity_mask() ? validity_mask()->to_vec<bool>()
+                                         : std::vector<bool>(static_cast<std::size_t>(size()), true);
+  std::vector<std::string> values;
+  values.reserve(static_cast<std::size_t>(size()));
+  bool changed = false;
+  for (std::int64_t i = 0; i < size(); ++i) {
+    auto text = std::string(as_note().at(i));
+    if (valid[static_cast<std::size_t>(i)] && text == from_text) {
+      text = to_text;
+      changed = true;
+    }
+    values.push_back(std::move(text));
+  }
+  if (!changed) {
+    return *this;
+  }
+  return Thread(rebuild_note_like(as_note(), values), validity_mask());
+}
+
+Thread Thread::replace(const pluss::Note& from, pluss::null_t to) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::replace(Note, null) is only valid for Note payload");
+  PLUSS_CHECK(from.defined(), "Thread::replace(Note, null): from Note is undefined");
+  PLUSS_CHECK(from.numel() == 1, "Thread::replace(Note, null): from Note must be scalar");
+
+  const auto from_text = std::string(from.at(0));
+  auto valid = has_validity_mask() ? validity_mask()->to_vec<bool>()
+                                   : std::vector<bool>(static_cast<std::size_t>(size()), true);
+  bool changed = false;
+  for (std::int64_t i = 0; i < size(); ++i) {
+    const auto idx = static_cast<std::size_t>(i);
+    if (valid[idx] && as_note().at(i) == from_text) {
+      valid[idx] = false;
+      changed = true;
+    }
+  }
+  if (!changed) {
+    return *this;
+  }
+  return Thread(as_note(), optional_mask_from_valid(valid));
+}
+
+Thread Thread::replace(pluss::null_t, const pluss::Note& to) const {
+  PLUSS_CHECK(to.defined(), "Thread::replace(null, Note): to Note is undefined");
+  PLUSS_CHECK(to.numel() == 1, "Thread::replace(null, Note): to Note must be scalar");
+  return fillna(to.at(0));
+}
+
+Thread Thread::replace(const pluss::Timeline& from, const pluss::Timeline& to) const {
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::replace(Timeline, Timeline) is only valid for Timeline/TimeIndex payload");
+  PLUSS_CHECK(from.defined(), "Thread::replace(Timeline, Timeline): from Timeline is undefined");
+  PLUSS_CHECK(to.defined(), "Thread::replace(Timeline, Timeline): to Timeline is undefined");
+  PLUSS_CHECK(from.numel() == 1, "Thread::replace(Timeline, Timeline): from Timeline must be scalar");
+  PLUSS_CHECK(to.numel() == 1, "Thread::replace(Timeline, Timeline): to Timeline must be scalar");
+
+  const auto keep = compare(from, ThreadBinaryCompareOp::Eq).as_series().logical_not();
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().where(keep, to), validity_mask());
+  }
+  return Thread(as_timeindex().timeline().where(keep, to).to_timeindex(false), validity_mask());
+}
+
+Thread Thread::replace(const pluss::Timeline& from, pluss::null_t to) const {
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::replace(Timeline, null) is only valid for Timeline/TimeIndex payload");
+  PLUSS_CHECK(from.defined(), "Thread::replace(Timeline, null): from Timeline is undefined");
+  PLUSS_CHECK(from.numel() == 1, "Thread::replace(Timeline, null): from Timeline must be scalar");
+  bool changed = false;
+  const auto new_mask = nullify_matches_mask(*this, compare(from, ThreadBinaryCompareOp::Eq).as_series(), changed);
+  if (!changed) {
+    return *this;
+  }
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline(), new_mask);
+  }
+  return Thread(as_timeindex(), new_mask);
+}
+
+Thread Thread::replace(pluss::null_t, const pluss::Timeline& to) const {
+  return fillna(to);
+}
+
+Thread Thread::replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to) const {
+  PLUSS_CHECK(kind() == ThreadKind::TimeIndex,
+              "Thread::replace(TimeIndex, TimeIndex) is only valid for TimeIndex payload");
+  PLUSS_CHECK(from.timeline().defined(), "Thread::replace(TimeIndex, TimeIndex): from TimeIndex is undefined");
+  PLUSS_CHECK(to.timeline().defined(), "Thread::replace(TimeIndex, TimeIndex): to TimeIndex is undefined");
+  PLUSS_CHECK(from.size() == 1, "Thread::replace(TimeIndex, TimeIndex): from TimeIndex must be scalar");
+  PLUSS_CHECK(to.size() == 1, "Thread::replace(TimeIndex, TimeIndex): to TimeIndex must be scalar");
+
+  const auto keep = compare(from, ThreadBinaryCompareOp::Eq).as_series().logical_not();
+  return Thread(as_timeindex().timeline().where(keep, to.timeline()).to_timeindex(false), validity_mask());
+}
+
+Thread Thread::replace(const pluss::TimeIndex& from, pluss::null_t to) const {
+  PLUSS_CHECK(kind() == ThreadKind::TimeIndex,
+              "Thread::replace(TimeIndex, null) is only valid for TimeIndex payload");
+  PLUSS_CHECK(from.timeline().defined(), "Thread::replace(TimeIndex, null): from TimeIndex is undefined");
+  PLUSS_CHECK(from.size() == 1, "Thread::replace(TimeIndex, null): from TimeIndex must be scalar");
+  bool changed = false;
+  const auto new_mask = nullify_matches_mask(*this, compare(from, ThreadBinaryCompareOp::Eq).as_series(), changed);
+  if (!changed) {
+    return *this;
+  }
+  return Thread(as_timeindex(), new_mask);
+}
+
+Thread Thread::replace(pluss::null_t, const pluss::TimeIndex& to) const {
+  return fillna(to);
 }
 
 pluss::Series Thread::contains(std::string_view needle) const {
@@ -1131,67 +1661,131 @@ Thread Thread::compare(double other, ThreadBinaryCompareOp op) const {
   return Thread(out, validity_mask());
 }
 
-Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
-  PLUSS_CHECK(size() == other.size(), "Thread::compare: size mismatch");
+Thread Thread::compare(std::string_view other, ThreadBinaryCompareOp op) const {
+  if (kind() == ThreadKind::Note) {
+    std::vector<std::uint8_t> raw;
+    switch (op) {
+      case ThreadBinaryCompareOp::Eq:
+        raw = (as_note() == other);
+        break;
+      case ThreadBinaryCompareOp::Ne:
+        raw = (as_note() != other);
+        break;
+      case ThreadBinaryCompareOp::Lt:
+        raw = (as_note() < other);
+        break;
+      case ThreadBinaryCompareOp::Le:
+        raw = (as_note() <= other);
+        break;
+      case ThreadBinaryCompareOp::Gt:
+        raw = (as_note() > other);
+        break;
+      case ThreadBinaryCompareOp::Ge:
+        raw = (as_note() >= other);
+        break;
+    }
+    return Thread(bool_series_from_u8(raw), validity_mask());
+  }
 
-  if (kind() == ThreadKind::Series && other.kind() == ThreadKind::Series) {
+  auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
+  auto* p = reinterpret_cast<bool*>(out.raw_data());
+
+  std::optional<std::vector<bool>> valid;
+  if (has_validity_mask()) {
+    valid = validity_mask()->to_vec<bool>();
+  }
+
+  const std::string rhs_text(other);
+  for (std::int64_t i = 0; i < size(); ++i) {
+    if (valid.has_value() && !(*valid)[static_cast<std::size_t>(i)]) {
+      p[i] = false;
+      continue;
+    }
+    const auto lhs_text = thread_scalar_string_at(*this, i);
+    switch (op) {
+      case ThreadBinaryCompareOp::Eq:
+        p[i] = lhs_text == rhs_text;
+        break;
+      case ThreadBinaryCompareOp::Ne:
+        p[i] = lhs_text != rhs_text;
+        break;
+      case ThreadBinaryCompareOp::Lt:
+        p[i] = lhs_text < rhs_text;
+        break;
+      case ThreadBinaryCompareOp::Le:
+        p[i] = lhs_text <= rhs_text;
+        break;
+      case ThreadBinaryCompareOp::Gt:
+        p[i] = lhs_text > rhs_text;
+        break;
+      case ThreadBinaryCompareOp::Ge:
+        p[i] = lhs_text >= rhs_text;
+        break;
+    }
+  }
+  return Thread(out, validity_mask());
+}
+
+Thread Thread::compare(const pluss::Series& other, ThreadBinaryCompareOp op) const {
+  PLUSS_CHECK(other.defined(), "Thread::compare(Series): rhs Series is undefined");
+  if (other.numel() == 1) {
+    double rhs_value = 0.0;
+    PLUSS_CHECK(extract_numeric_value(other, 0, rhs_value),
+                "Thread::compare(Series): scalar rhs Series must be numeric or bool");
+    return compare(rhs_value, op);
+  }
+  PLUSS_CHECK(other.dim() == 1, "Thread::compare(Series): rhs Series must be scalar or 1D");
+  return compare(Thread(other), op);
+}
+
+Thread Thread::compare(const pluss::Note& other, ThreadBinaryCompareOp op) const {
+  PLUSS_CHECK(other.defined(), "Thread::compare(Note): rhs Note is undefined");
+  if (other.numel() == 1) {
+    return compare(other.at(0), op);
+  }
+  PLUSS_CHECK(other.dim() == 1, "Thread::compare(Note): rhs Note must be scalar or 1D");
+  return compare(Thread(other), op);
+}
+
+Thread Thread::compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) const {
+  PLUSS_CHECK(other.defined(), "Thread::compare(Timeline): rhs Timeline is undefined");
+  if (other.numel() == 1 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
+    const auto& lhs = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
+    return Thread(apply_compare_timeline_timeline(lhs, other, op), validity_mask());
+  }
+  PLUSS_CHECK(other.dim() == 1, "Thread::compare(Timeline): rhs Timeline must be scalar or 1D");
+  return compare(Thread(other), op);
+}
+
+Thread Thread::compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const {
+  PLUSS_CHECK(other.timeline().defined(), "Thread::compare(TimeIndex): rhs TimeIndex is undefined");
+  if (other.size() == 1 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
+    const auto& lhs = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
     return Thread(
-        apply_compare_series_series(as_series(), other.as_series(), op),
-        combine_validity_masks(*this, other));
+        apply_compare_timeline_timeline(lhs, other.timeline(), op),
+        validity_mask());
+  }
+  return compare(Thread(other), op);
+}
+
+Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
+  if (kind() == ThreadKind::Series && other.kind() == ThreadKind::Series) {
+    auto out = apply_compare_series_series(as_series(), other.as_series(), op);
+    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
   }
 
   if (kind() == ThreadKind::Timeline && other.kind() == ThreadKind::Timeline) {
     const auto& lhs = as_timeline();
     const auto& rhs = other.as_timeline();
-    pluss::Series out = lhs.eq(rhs);
-    switch (op) {
-      case ThreadBinaryCompareOp::Eq:
-        out = lhs.eq(rhs);
-        break;
-      case ThreadBinaryCompareOp::Ne:
-        out = lhs.ne(rhs);
-        break;
-      case ThreadBinaryCompareOp::Lt:
-        out = lhs.lt(rhs);
-        break;
-      case ThreadBinaryCompareOp::Le:
-        out = lhs.le(rhs);
-        break;
-      case ThreadBinaryCompareOp::Gt:
-        out = lhs.gt(rhs);
-        break;
-      case ThreadBinaryCompareOp::Ge:
-        out = lhs.ge(rhs);
-        break;
-    }
-    return Thread(out, combine_validity_masks(*this, other));
+    auto out = apply_compare_timeline_timeline(lhs, rhs, op);
+    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
   }
 
   if (kind() == ThreadKind::TimeIndex && other.kind() == ThreadKind::TimeIndex) {
     const auto& lhs = as_timeindex().timeline();
     const auto& rhs = other.as_timeindex().timeline();
-    pluss::Series out = lhs.eq(rhs);
-    switch (op) {
-      case ThreadBinaryCompareOp::Eq:
-        out = lhs.eq(rhs);
-        break;
-      case ThreadBinaryCompareOp::Ne:
-        out = lhs.ne(rhs);
-        break;
-      case ThreadBinaryCompareOp::Lt:
-        out = lhs.lt(rhs);
-        break;
-      case ThreadBinaryCompareOp::Le:
-        out = lhs.le(rhs);
-        break;
-      case ThreadBinaryCompareOp::Gt:
-        out = lhs.gt(rhs);
-        break;
-      case ThreadBinaryCompareOp::Ge:
-        out = lhs.ge(rhs);
-        break;
-    }
-    return Thread(out, combine_validity_masks(*this, other));
+    auto out = apply_compare_timeline_timeline(lhs, rhs, op);
+    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
   }
 
   if (kind() == ThreadKind::Note && other.kind() == ThreadKind::Note) {
@@ -1218,35 +1812,16 @@ Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
         raw = (lhs >= rhs);
         break;
     }
-    return Thread(bool_series_from_u8(raw), combine_validity_masks(*this, other));
+    auto out = bool_series_from_u8(raw);
+    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
   }
 
   if ((kind() == ThreadKind::Timeline && other.kind() == ThreadKind::TimeIndex)
       || (kind() == ThreadKind::TimeIndex && other.kind() == ThreadKind::Timeline)) {
     const auto lhs_t = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
     const auto rhs_t = (other.kind() == ThreadKind::Timeline) ? other.as_timeline() : other.as_timeindex().timeline();
-    pluss::Series out = lhs_t.eq(rhs_t);
-    switch (op) {
-      case ThreadBinaryCompareOp::Eq:
-        out = lhs_t.eq(rhs_t);
-        break;
-      case ThreadBinaryCompareOp::Ne:
-        out = lhs_t.ne(rhs_t);
-        break;
-      case ThreadBinaryCompareOp::Lt:
-        out = lhs_t.lt(rhs_t);
-        break;
-      case ThreadBinaryCompareOp::Le:
-        out = lhs_t.le(rhs_t);
-        break;
-      case ThreadBinaryCompareOp::Gt:
-        out = lhs_t.gt(rhs_t);
-        break;
-      case ThreadBinaryCompareOp::Ge:
-        out = lhs_t.ge(rhs_t);
-        break;
-    }
-    return Thread(out, combine_validity_masks(*this, other));
+    auto out = apply_compare_timeline_timeline(lhs_t, rhs_t, op);
+    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
   }
 
   PLUSS_FAIL("Thread::compare: unsupported payload combination");

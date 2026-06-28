@@ -100,9 +100,11 @@ inline pluss::ai::rnn::NetWeight make_weight_block_(std::int64_t gate_size,
   out.weight_ih = ::pluss::detail::nn::uniform_({gate_size, layer_input_size}, -bound, bound, fcfg, seed);
   out.weight_hh = ::pluss::detail::nn::uniform_({gate_size, hidden_recurrent_size}, -bound, bound, fcfg, seed + 1ULL);
   if (with_bias) {
-    out.bias_ih = ::pluss::detail::nn::uniform_({gate_size}, -bound, bound, fcfg, seed + 2ULL);
     if (split_bias) {
+      out.bias_ih = ::pluss::detail::nn::uniform_({gate_size}, -bound, bound, fcfg, seed + 2ULL);
       out.bias_hh = ::pluss::detail::nn::uniform_({gate_size}, -bound, bound, fcfg, seed + 3ULL);
+    } else {
+      out.bias = ::pluss::detail::nn::uniform_({gate_size}, -bound, bound, fcfg, seed + 2ULL);
     }
   }
   if (proj_size > 0) {
@@ -137,6 +139,7 @@ protected:
       const auto prefix = "layer" + std::to_string(i) + ".";
       this->parameter_record(prefix + "weight_ih", block.weight_ih);
       this->parameter_record(prefix + "weight_hh", block.weight_hh);
+      if (block.bias.defined()) this->parameter_record(prefix + "bias", block.bias);
       if (block.bias_ih.defined()) this->parameter_record(prefix + "bias_ih", block.bias_ih);
       if (block.bias_hh.defined()) this->parameter_record(prefix + "bias_hh", block.bias_hh);
       if (block.weight_hr.defined()) this->parameter_record(prefix + "weight_hr", block.weight_hr);

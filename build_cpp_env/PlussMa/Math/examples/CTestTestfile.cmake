@@ -6,4 +6,3 @@
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("Numerical")
 subdirs("Finance")
-subdirs("mini_heston")

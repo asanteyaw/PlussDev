@@ -209,7 +209,7 @@ inline std::tuple<Series, Series> scaled_attention(
     const Series& attn_mask = Series(),
     AttentionOptions options = {}) {
   detail::attn::require_qkv_shapes_(query, key, value, "scaled_attention");
-  PLUSS_CHECK(options.dropout >= 0.0 && options.dropout < 1.0, "pluss::ai::scaled_attention: dropout must be in [0, 1)");
+  PLUSS_CHECK(options.dropout >= 0.0 && options.dropout <= 1.0, "pluss::ai::scaled_attention: dropout must be in [0, 1]");
 
   const Series q = query;
   const Series k = detail::attn::cast_like_(key, q);

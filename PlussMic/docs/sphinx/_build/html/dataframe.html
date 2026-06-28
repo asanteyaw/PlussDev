@@ -16,7 +16,7 @@
     <script src="_static/layout.js?v=014eaf41"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="DataFrame Display And Popup Viewer" href="dataframe_display.html" />
+    <link rel="next" title="Time-Series Accessor Guide" href="time_series_accessor_guide.html" />
     <link rel="prev" title="Demo Catalog" href="demo_catalog.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -95,6 +95,62 @@ Use it when you want:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">cases()</span></code> is the row axis, not just a display index</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">describe()</span></code> is the fastest way to check whether numeric casts and missing values look right</p></li>
 </ul>
+</section>
+<section id="common-everyday-tasks">
+<h2>Common Everyday Tasks<a class="headerlink" href="#common-everyday-tasks" title="Link to this heading">¶</a></h2>
+<p>These are the patterns most people look for first when learning the day-to-day
+table workflow.</p>
+<section id="select-one-column-vs-many-columns">
+<h3>Select one column vs many columns<a class="headerlink" href="#select-one-column-vs-many-columns" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span><span class="w">                </span><span class="c1">// Thread</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">});</span><span class="w">     </span><span class="c1">// DataFrame</span>
+</pre></div>
+</div>
+<p>Rule of thumb:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">features(&quot;name&quot;)</span></code> returns one <code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">features({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;})</span></code> returns a smaller <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></li>
+</ul>
+</section>
+<section id="rename-one-column-vs-many-columns">
+<h3>Rename one column vs many columns<a class="headerlink" href="#rename-one-column-vs-many-columns" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">renamed_one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rename</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">renamed_many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rename_features</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;location&quot;</span><span class="p">},</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">rename(...)</span></code> for one feature. Use <code class="docutils literal notranslate"><span class="pre">rename_features(...)</span></code> when you have a
+mapping of old names to new names.</p>
+</section>
+<section id="replace-or-create-a-column">
+<h3>Replace or create a column<a class="headerlink" href="#replace-or-create-a-column" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;profit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">60.0</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_features</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;profit&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">60.0</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">set(...)</span> <span class="pre">=</span> <span class="pre">...</span></code> when you want assignment-style syntax. Use
+<code class="docutils literal notranslate"><span class="pre">set_features(...)</span></code> when you prefer expression-style chaining.</p>
+</section>
+<section id="clean-a-text-column">
+<h3>Clean a text column<a class="headerlink" href="#clean-a-text-column" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">gradebook</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">gradebook</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">).</span><span class="n">as_note</span><span class="p">().</span><span class="n">strip</span><span class="p">().</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This is the direct table-cleaning pattern:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;OrgDefinedId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;OrgDefinedId&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">.as_note()</span></code> when you want Note-specific text methods such as <code class="docutils literal notranslate"><span class="pre">strip</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lstrip</span></code>, and <code class="docutils literal notranslate"><span class="pre">rstrip</span></code>.</p>
+</section>
 <section id="display-views">
 <h3>Display Views<a class="headerlink" href="#display-views" title="Link to this heading">¶</a></h3>
 <p>The table-style preview verbs return a <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, not a plain <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.
@@ -152,6 +208,11 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 <li><p>use <code class="docutils literal notranslate"><span class="pre">query(&quot;...&quot;)</span></code> when the filter is easier to read as a table expression</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">top</span></code> and <code class="docutils literal notranslate"><span class="pre">bottom</span></code> are good for ranking tasks without writing extra sort/slice steps</p></li>
 </ul>
+<p>Direct literal comparison is also supported for note-backed columns:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">laurels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;First Name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Laurel&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>That matches every row whose <code class="docutils literal notranslate"><span class="pre">First</span> <span class="pre">Name</span></code> equals <code class="docutils literal notranslate"><span class="pre">&quot;Laurel&quot;</span></code>.</p>
 </section>
 <section id="grouping-pivoting-and-summaries">
 <h2>Grouping, Pivoting, And Summaries<a class="headerlink" href="#grouping-pivoting-and-summaries" title="Link to this heading">¶</a></h2>
@@ -204,6 +265,58 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 <span class="k">auto</span><span class="w"> </span><span class="n">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">stitch_on(...)</span></code> is the inner-match join helper. For general key-based merge/join
+workflows, prefer <code class="docutils literal notranslate"><span class="pre">unify(...)</span></code>.</p>
+<section id="same-key-merge">
+<h3>Same-key merge<a class="headerlink" href="#same-key-merge" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df_ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gradebook</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">finals</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Final Points Grade&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;left&quot;</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">right_on=&quot;&quot;</span></code> when both frames use the same key name.</p>
+</section>
+<section id="different-key-merge">
+<h3>Different-key merge<a class="headerlink" href="#different-key-merge" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df_ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gradebook</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">finals</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;Username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Final Points Grade&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="s">&quot;Username&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;left&quot;</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="cardinality-validation">
+<h3>Cardinality validation<a class="headerlink" href="#cardinality-validation" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df_ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gradebook</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;OrgDefinedId&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">finals</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;Username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Final Points Grade&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="s">&quot;Username&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;left&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;_right&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;many_to_one&quot;</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">validate</span></code> options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;many_to_many&quot;</span></code>: default; duplicates are allowed on both sides</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;one_to_one&quot;</span></code>: both sides must have unique keys</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;one_to_many&quot;</span></code>: left must be unique; right may repeat</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;many_to_one&quot;</span></code>: right must be unique; left may repeat</p></li>
+</ul>
+<p>Important behavior:</p>
+<ul class="simple">
+<li><p>matching is by key value, not by row position</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">how=&quot;left&quot;</span></code> preserves left-row order</p></li>
+<li><p>if a non-key right-hand feature name collides with a left-hand name,
+<code class="docutils literal notranslate"><span class="pre">right_suffix</span></code> is appended to the right-hand feature name</p></li>
+</ul>
+</section>
 </section>
 <section id="time-aware-table-verbs">
 <h2>Time-Aware Table Verbs<a class="headerlink" href="#time-aware-table-verbs" title="Link to this heading">¶</a></h2>
@@ -261,12 +374,14 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">DataFrame Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#what-dataframe-is-good-at">What DataFrame Is Good At</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#construction-and-loading">Construction And Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#inspect-rows-features-and-cases">Inspect Rows, Features, And Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-everyday-tasks">Common Everyday Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cast-and-derive-features">Cast And Derive Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#filter-query-and-sort">Filter, Query, And Sort</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#grouping-pivoting-and-summaries">Grouping, Pivoting, And Summaries</a></li>
@@ -276,6 +391,7 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 <li class="toctree-l2"><a class="reference internal" href="#sql-and-io">SQL And IO</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
@@ -316,7 +432,7 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="demo_catalog.html" title="previous chapter">Demo Catalog</a></li>
-      <li>Next: <a href="dataframe_display.html" title="next chapter">DataFrame Display And Popup Viewer</a></li>
+      <li>Next: <a href="time_series_accessor_guide.html" title="next chapter">Time-Series Accessor Guide</a></li>
   </ul></li>
 </ul>
 </div>

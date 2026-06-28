@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <cstdint>
 #include <initializer_list>
 #include <optional>
@@ -126,7 +127,14 @@ inline pluss::codem::Series to_series(const NestedSeriesLiteral& literal,
   }
 
   const auto out_dtype = dtype.has_value() ? *dtype : deduce_literal_dtype(literal);
-  return pluss::codem::Series::make_from_doubles(flat, sizes, out_dtype);
+  pluss::codem::Series out = pluss::codem::Series::empty(sizes, out_dtype);
+  pluss::codem::Series tmp = pluss::codem::Series::empty(sizes, pluss::codem::ScalarType::Float64);
+  std::memcpy(
+      tmp.raw_mutable_data(),
+      flat.data(),
+      sizeof(double) * static_cast<std::size_t>(tmp.numel()));
+  out.copy_(tmp.to(out_dtype), false);
+  return out;
 }
 
 } // namespace pluss::detail

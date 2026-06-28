@@ -43,7 +43,7 @@ struct WriteExcelOptions {
   bool cases{false}; // legacy alias
   bool header{true};
   std::optional<std::string> case_label{};
-  std::string na_rep{"NA"};
+  std::string na_rep{};
 };
 
 using Workbook = std::vector<std::pair<std::string, pluss::table::DataFrame>>;

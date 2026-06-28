@@ -24,6 +24,8 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
+#include "pluss/codeh/timeindex_factory.h"
+#include "pluss/codeh/timeline_factory.h"
 #include "pluss/tils/aux/transmit.h"
 #include "loader/CsvLoader.h"
 #include "loader/Loader.h"
@@ -493,6 +495,8 @@ std::string summary_op_name(DataFrame::SummaryOp op) {
       return "std";
     case DataFrame::SummaryOp::Var:
       return "var";
+    case DataFrame::SummaryOp::Prod:
+      return "prod";
     default:
       return "summary";
   }
@@ -564,6 +568,12 @@ double numeric_reduce_value(const Thread& t, DataFrame::SummaryOp op) {
   // Delegate numeric reductions to Thread to keep 1D math semantics in Thread.
   const auto clean = t.dropna();
   if (clean.size() == 0) {
+    if (op == DataFrame::SummaryOp::Sum) {
+      return 0.0;
+    }
+    if (op == DataFrame::SummaryOp::Prod) {
+      return 1.0;
+    }
     return std::numeric_limits<double>::quiet_NaN();
   }
 
@@ -590,6 +600,8 @@ double numeric_reduce_value(const Thread& t, DataFrame::SummaryOp op) {
       return scalar_series_to_double(clean.std(true), "DataFrame::summarize(std)");
     case DataFrame::SummaryOp::Var:
       return scalar_series_to_double(clean.var(true), "DataFrame::summarize(var)");
+    case DataFrame::SummaryOp::Prod:
+      return scalar_series_to_double(clean.as_series().prod(), "DataFrame::summarize(prod)");
     default:
       PLUSS_FAIL("DataFrame::summarize: unsupported numeric SummaryOp");
   }

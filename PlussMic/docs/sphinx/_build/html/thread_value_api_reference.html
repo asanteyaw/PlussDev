@@ -265,11 +265,11 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-<section id="pluss-note">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code><a class="headerlink" href="#pluss-note" title="Link to this heading">¶</a></h3>
+<section id="payload">
+<h3><code class="docutils literal notranslate"><span class="pre">payload</span></code><a class="headerlink" href="#payload" title="Link to this heading">¶</a></h3>
 <section id="id31">
 <h4>Signature<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Payload</span><span class="w"> </span><span class="n">payload</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -279,28 +279,28 @@ Value produced by this call.</p>
 </section>
 <section id="id33">
 <h4>Returns<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">operator</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">Payload</span></code>
 Value produced by this call.</p>
 </section>
 <section id="id34">
 <h4>Notes<a class="headerlink" href="#id34" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>.</p>
+<p>Applies <code class="docutils literal notranslate"><span class="pre">payload</span></code> to the current <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> object. Use the example and output together to see which part of the object changes and which structure is preserved.</p>
 </section>
 <section id="id35">
 <h4>Examples<a class="headerlink" href="#id35" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">payload</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 </section>
-<section id="pluss-series">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code><a class="headerlink" href="#pluss-series" title="Link to this heading">¶</a></h3>
+<section id="pluss-note">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code><a class="headerlink" href="#pluss-note" title="Link to this heading">¶</a></h3>
 <section id="id36">
 <h4>Signature<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -315,23 +315,23 @@ Value produced by this call.</p>
 </section>
 <section id="id39">
 <h4>Notes<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>.</p>
+<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>.</p>
 </section>
 <section id="id40">
 <h4>Examples<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 </section>
-<section id="pluss-timeindex">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code><a class="headerlink" href="#pluss-timeindex" title="Link to this heading">¶</a></h3>
+<section id="pluss-series">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code><a class="headerlink" href="#pluss-series" title="Link to this heading">¶</a></h3>
 <section id="id41">
 <h4>Signature<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -346,23 +346,23 @@ Value produced by this call.</p>
 </section>
 <section id="id44">
 <h4>Notes<a class="headerlink" href="#id44" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>.</p>
+<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>.</p>
 </section>
 <section id="id45">
 <h4>Examples<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 </section>
-<section id="pluss-timeline">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code><a class="headerlink" href="#pluss-timeline" title="Link to this heading">¶</a></h3>
+<section id="pluss-timeindex">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code><a class="headerlink" href="#pluss-timeindex" title="Link to this heading">¶</a></h3>
 <section id="id46">
 <h4>Signature<a class="headerlink" href="#id46" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -377,10 +377,41 @@ Value produced by this call.</p>
 </section>
 <section id="id49">
 <h4>Notes<a class="headerlink" href="#id49" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code>.</p>
+<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>.</p>
 </section>
 <section id="id50">
 <h4>Examples<a class="headerlink" href="#id50" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="pluss-timeline">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code><a class="headerlink" href="#pluss-timeline" title="Link to this heading">¶</a></h3>
+<section id="id51">
+<h4>Signature<a class="headerlink" href="#id51" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">operator</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id52">
+<h4>Parameters<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id53">
+<h4>Returns<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">operator</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id54">
+<h4>Notes<a class="headerlink" href="#id54" title="Link to this heading">¶</a></h4>
+<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code>.</p>
+</section>
+<section id="id55">
+<h4>Examples<a class="headerlink" href="#id55" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
@@ -391,27 +422,27 @@ Value produced by this call.</p>
 </section>
 <section id="thread">
 <h3><code class="docutils literal notranslate"><span class="pre">thread</span></code><a class="headerlink" href="#thread" title="Link to this heading">¶</a></h3>
-<section id="id51">
-<h4>Signature<a class="headerlink" href="#id51" title="Link to this heading">¶</a></h4>
+<section id="id56">
+<h4>Signature<a class="headerlink" href="#id56" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="kr">thread</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="id52">
-<h4>Parameters<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
+<section id="id57">
+<h4>Parameters<a class="headerlink" href="#id57" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id53">
-<h4>Returns<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h4>
+<section id="id58">
+<h4>Returns<a class="headerlink" href="#id58" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id54">
-<h4>Notes<a class="headerlink" href="#id54" title="Link to this heading">¶</a></h4>
+<section id="id59">
+<h4>Notes<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h4>
 <p>Returns the wrapped single-value <code class="docutils literal notranslate"><span class="pre">Thread</span></code> object.</p>
 </section>
-<section id="id55">
-<h4>Examples<a class="headerlink" href="#id55" title="Link to this heading">¶</a></h4>
+<section id="id60">
+<h4>Examples<a class="headerlink" href="#id60" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
@@ -419,8 +450,8 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 </section>
-<section id="id56">
-<h4>Output<a class="headerlink" href="#id56" title="Link to this heading">¶</a></h4>
+<section id="id61">
+<h4>Output<a class="headerlink" href="#id61" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0]
 </pre></div>
 </div>
@@ -456,9 +487,11 @@ Value produced by this call.</p>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>

@@ -16,15 +16,29 @@ cmake -S . -B build
 cmake --build build --target pluss -j
 ```
 
+Default behavior (new build directories):
+
+- `CMAKE_BUILD_TYPE` defaults to `RelWithDebInfo` on single-config generators.
+- `PLUSS_TRACE_FRIENDLY_RELEASE=ON` keeps frame pointers and minimal line tables in `Release` builds for better stack traces.
+- This is meant to give meaningful errors without requiring users to manually switch to full debug workflows.
+
+# Build the codebase
+From the root folder run:
+```bash
+rm -rf build && mkdir build && cmake --workflow --preset cpp_env_build 
+```
+
 ## Build A Torch-Enabled SDK
 
 If you want `pluss` <-> LibTorch interop (`PLUSS_ENABLE_TORCH=ON`), configure a separate build tree for Torch:
+
 
 ```bash
 rm -rf build-torch-sdk
 
 cmake -S . -B build-torch-sdk \
   -DPLUSS_ENABLE_TORCH=ON \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \
   -DPKG_CONFIG_EXECUTABLE="$CONDA_PREFIX/bin/pkg-config"
   
@@ -40,6 +54,7 @@ build-torch-sdk/sdk/pluss-sdk-<version>-<os>-<arch>/
 Notes:
 
 - Build Torch and non-Torch SDKs in separate build directories (for example `build/` and `build-torch-sdk/`).
+- For strongest file:line call traces in downstream apps, build downstream in `RelWithDebInfo` too (or at least with symbols).
 - Ensure your env is activated first (so `CONDA_PREFIX` is exported). Example: `conda activate cpp_env`.
 - In multiline shell commands, ensure `\` is the last character on the line (no trailing spaces), otherwise zsh may execute `-D...` lines as separate commands.
 - On macOS, CMake now auto-selects `cpp_env/bin/clang` and `cpp_env/bin/clang++` for compile when compilers are not explicitly pinned.
@@ -54,6 +69,7 @@ Notes:
   - `-DTorch_DIR=/path/to/torch/share/cmake/Torch`
   - optionally `-DCMAKE_PREFIX_PATH="/extra/prefix;/another/prefix"`
 - In a Torch-enabled SDK build, `PLUSS_ENABLE_TORCH` is exported by CMake targets. Consumers linking `Pluss::SDK`/`PlussQit::CodeM` automatically get `pluss::from_torch(...)` and `pluss::to_torch(...)` from `<pluss/pluss.h>` / `<pluss/core.h>`.
+- `Pluss::SDK` now propagates traceback-friendly compile flags to consumers (`-fno-omit-frame-pointer` and minimal line tables in Release), so downstream call stacks are meaningful by default.
 - Unified core serialization is available via `pluss::io::save/load` and top-level aliases `pluss::save/load` for `Series/Note/Timeline/TimeIndex` and supported STL containers. See `docs/IO_SAVE_LOAD_GUIDE.md`.
 - If your app also uses `torch::Tensor` directly, keep `find_package(Torch REQUIRED)` in your consumer CMake for clarity.
 
@@ -100,6 +116,9 @@ project(pluss_consumer LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+endif()
 
 find_package(Pluss CONFIG REQUIRED)
 

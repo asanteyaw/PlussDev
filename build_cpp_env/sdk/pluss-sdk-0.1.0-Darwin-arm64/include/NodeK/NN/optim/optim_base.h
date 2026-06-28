@@ -2,6 +2,7 @@
 
 #include "NodeK/NN/modules/Module.h"
 #include "CodeM/core/SeriesTape.h"
+#include "MSharp/RangeView.h"
 #include "pluss/codem/codem.h"
 #include "pluss/nn_detail.h"
 
@@ -10,6 +11,8 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <span>
 #include <stdexcept>
@@ -75,9 +78,9 @@ struct StepLaneTelemetry {
 
 class PLUSS_API Optimizer {
 public:
-  explicit Optimizer(std::vector<Series*> parameters)
-      : parameters_(std::move(parameters)),
-        parameter_labels_(default_labels_(parameters_.size())) {
+  explicit Optimizer(pluss::msharp::RangeView::Of<Series*> parameters)
+      : parameters_(parameters.begin(), parameters.end()),
+        parameter_labels_(default_labels_(parameters.size())) {
     validate_parameters_();
   }
 
@@ -125,19 +128,28 @@ public:
         if (tracked) {
           ++covered_count;
         }
-        grads.push_back(p->sensitivity());
+        Series sens = p->sensitivity();
+        if (sens.defined() && !sens.is_contiguous()) {
+          sens = sens.contiguous();
+        }
+        grads.push_back(std::move(sens));
       }
     }
     validate_step_diagnostics_(tracked_count, covered_count);
     step(grads);
   }
 
-  void step(const std::vector<Series>& gradients) {
+  void step(pluss::msharp::RangeView::Series gradients) {
     if (gradients.size() != parameters_.size()) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer::step: gradients size must match parameter count");
     }
-    if (requires_recording_during_step_()) {
+    const bool force_recording_step = []() {
+      const char* raw = std::getenv("PLUSS_OPTIM_STEP_KEEP_RECORDING");
+      if (!raw) return false;
+      return std::strcmp(raw, "1") == 0 || std::strcmp(raw, "true") == 0 || std::strcmp(raw, "TRUE") == 0;
+    }();
+    if (requires_recording_during_step_() || force_recording_step) {
       validate_parameter_finiteness_();
       validate_gradients_(gradients);
       apply_step_(gradients);
@@ -157,14 +169,14 @@ public:
     clear();
     Series loss = std::invoke(std::forward<Closure>(closure));
     if (!loss.defined()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Optimizer::step(closure): closure returned undefined loss");
+      ::pluss::throw_error("pluss::ai::nn::optim::Optimizer::step(closure): closure returned undefined loss");
     }
     ::pluss::detail::nn::require_training_float_dtype_(
         loss.scalar_type(),
         "nn::optim::Optimizer::step(closure)",
         "loss");
     if (step_diagnostics_.fail_if_non_finite_loss && has_non_finite_(loss)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Optimizer::step(closure): non-finite loss detected");
+      ::pluss::throw_error("pluss::ai::nn::optim::Optimizer::step(closure): non-finite loss detected");
     }
     loss.reverse();
     step();
@@ -180,7 +192,7 @@ public:
     Series loss = std::move(out.first);
     std::vector<Series> gradients = std::move(out.second);
     if (!loss.defined()) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer::step(closure): closure returned undefined loss");
     }
     ::pluss::detail::nn::require_training_float_dtype_(
@@ -188,7 +200,7 @@ public:
         "nn::optim::Optimizer::step(closure)",
         "loss");
     if (step_diagnostics_.fail_if_non_finite_loss && has_non_finite_(loss)) {
-      throw std::runtime_error("pluss::ai::nn::optim::Optimizer::step(closure): non-finite loss detected");
+      ::pluss::throw_error("pluss::ai::nn::optim::Optimizer::step(closure): non-finite loss detected");
     }
     step(gradients);
     return loss;
@@ -198,11 +210,11 @@ protected:
   static Series clip_gradient_(const Series& g, const GradientClipOptions& clip) {
     if (!g.defined() || clip.mode == GradientClipMode::None) return g;
     if (!(clip.threshold > 0.0) || !std::isfinite(clip.threshold)) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer: clip threshold must be positive and finite");
     }
     if (!(clip.epsilon > 0.0) || !std::isfinite(clip.epsilon)) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer: clip epsilon must be positive and finite");
     }
 
@@ -236,13 +248,13 @@ protected:
                                          bool capturable_supported = false) {
     const auto fail_or_loop = [&](std::string_view reason) -> UpdateLane {
       if (exec.strict) {
-        throw std::runtime_error(std::string(where) + ": " + std::string(reason));
+        ::pluss::throw_error(std::string(where) + ": " + std::string(reason));
       }
       return UpdateLane::Loop;
     };
 
     if (exec.capturable && !capturable_supported && exec.strict) {
-      throw std::runtime_error(std::string(where) +
+      ::pluss::throw_error(std::string(where) +
                                ": capturable execution requested but unsupported for this optimizer");
     }
 
@@ -267,9 +279,9 @@ protected:
   }
 
   static const Series* active_lane_anchor_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     for (const auto i : indices) {
       if (i >= params.size() || i >= gradients.size()) continue;
       const Series* p = params[i];
@@ -330,27 +342,27 @@ protected:
   }
 
   static bool supports_batched_lane_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     const Series* anchor = active_lane_anchor_(indices, params, gradients);
     if (anchor == nullptr) return false;
     return supports_batched_lane_platform_(anchor->platform(), anchor->scalar_type());
   }
 
   static bool supports_fused_lane_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     const Series* anchor = active_lane_anchor_(indices, params, gradients);
     if (anchor == nullptr) return false;
     return supports_fused_lane_platform_(anchor->platform(), anchor->scalar_type());
   }
 
   static bool supports_capturable_lane_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     const Series* anchor = active_lane_anchor_(indices, params, gradients);
     if (anchor == nullptr) return true;
     const Platform platform = anchor->platform();
@@ -361,9 +373,9 @@ protected:
   }
 
   static std::size_t active_lane_parameter_count_(
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients) {
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients) {
     std::size_t count = 0;
     for (const auto i : indices) {
       if (i >= params.size() || i >= gradients.size()) continue;
@@ -383,16 +395,20 @@ protected:
     return shape;
   }
 
-  static Series pack_batched_(const std::vector<Series>& slices, const char* where) {
+  static Series pack_batched_(pluss::msharp::RangeView::Series slices, const char* where) {
     if (slices.empty()) {
-      throw std::runtime_error(std::string(where) + ": expected non-empty batched slices");
+      ::pluss::throw_error(std::string(where) + ": expected non-empty batched slices");
     }
     if (slices.size() == 1) return slices.front();
     return slices.front().unite(std::vector<Series>(slices.begin() + 1, slices.end()), 0);
   }
 
   static Series scalar_on_(double value, const Series& like) {
-    return Series::full({}, value, like.scalar_type()).to(like.platform());
+    return Series::full({}, value, like.scalar_type(), like.platform());
+  }
+
+  static Series state_zeros_like_(const Series& like) {
+    return pluss::zeros_like(like, like.scalar_type());
   }
 
   void reset_step_lane_telemetry_() {
@@ -403,9 +419,9 @@ protected:
       std::size_t group_index,
       UpdateLane requested,
       UpdateLane resolved,
-      const std::vector<std::size_t>& indices,
-      const std::vector<Series*>& params,
-      const std::vector<Series>& gradients,
+      pluss::msharp::RangeView::Of<std::size_t> indices,
+      pluss::msharp::RangeView::Of<Series*> params,
+      pluss::msharp::RangeView::Series gradients,
       bool batch_shape_compatible,
       bool batched_supported,
       bool fused_supported,
@@ -426,21 +442,21 @@ protected:
     last_step_lane_telemetry_.push_back(std::move(item));
   }
 
-  void validate_state_vector_(const std::vector<Series>& state, const char* where) const {
+  void validate_state_vector_(pluss::msharp::RangeView::Series state, const char* where) const {
     if (state.size() != parameters_.size()) {
-      throw std::runtime_error(std::string(where) + ": state size must match parameter count");
+      ::pluss::throw_error(std::string(where) + ": state size must match parameter count");
     }
     for (std::size_t i = 0; i < state.size(); ++i) {
       const Series& s = state[i];
       const Series* p = parameters_[i];
       if (!s.defined()) {
-        throw std::runtime_error(std::string(where) + ": state tensors must be defined");
+        ::pluss::throw_error(std::string(where) + ": state tensors must be defined");
       }
       if (s.platform() != p->platform()) {
-        throw std::runtime_error(std::string(where) + ": state/platform mismatch");
+        ::pluss::throw_error(std::string(where) + ": state/platform mismatch");
       }
       if (!same_shape_(s, *p)) {
-        throw std::runtime_error(std::string(where) + ": state/shape mismatch");
+        ::pluss::throw_error(std::string(where) + ": state/shape mismatch");
       }
     }
   }
@@ -451,7 +467,7 @@ public:
   void set_step_diagnostics(StepDiagnosticsOptions options) {
     if (options.minimum_tracked_coverage < 0.0 || options.minimum_tracked_coverage > 1.0 ||
         !std::isfinite(options.minimum_tracked_coverage)) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer: minimum_tracked_coverage must be finite in [0, 1]");
     }
     step_diagnostics_ = options;
@@ -491,26 +507,31 @@ private:
 
   static bool has_non_finite_(const Series& x) {
     const Series finite_all = x.isfinite().all();
+    if (finite_all.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
+      ::pluss::throw_error(
+          "pluss::ai::nn::optim::Optimizer: non-finite CUDA diagnostics require explicit CPU scalar "
+          "materialization; enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 or disable the diagnostic option");
+    }
     return !finite_all.to(pluss::pCPU).item<bool>();
   }
 
   void validate_parameters_() {
     if (parameters_.empty()) {
-      throw std::runtime_error("pluss::ai::nn::optim::Optimizer: expected non-empty parameter list");
+      ::pluss::throw_error("pluss::ai::nn::optim::Optimizer: expected non-empty parameter list");
     }
     for (std::size_t i = 0; i < parameters_.size(); ++i) {
       Series* p = parameters_[i];
       const std::string& label = parameter_labels_[i];
       if (p == nullptr || !p->defined()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer: expected defined parameter Series for " + label);
       }
       if (!pluss::codem::dtype_of(p->scalar_type()).is_floating()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer: expected floating dtype parameter for " + label);
       }
       if (!::pluss::detail::nn::is_training_float_dtype_(p->scalar_type())) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer: training expects Float32/Float16/BFloat16 parameters; got unsupported dtype for " +
             label);
       }
@@ -520,26 +541,26 @@ private:
     }
   }
 
-  void validate_gradients_(const std::vector<Series>& gradients) const {
+  void validate_gradients_(pluss::msharp::RangeView::Series gradients) const {
     for (std::size_t i = 0; i < gradients.size(); ++i) {
       const Series& g = gradients[i];
       const Series* p = parameters_[i];
       const std::string& label = parameter_labels_[i];
       if (!g.defined()) continue;
       if (g.platform() != p->platform()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer::step: gradient/platform mismatch for " + label);
       }
       if (g.scalar_type() != p->scalar_type()) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer::step: gradient/dtype mismatch for " + label);
       }
       if (!same_shape_(g, *p) && !(g.numel() == 1 && p->numel() == 1)) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer::step: gradient/shape mismatch for " + label);
       }
       if (step_diagnostics_.fail_if_non_finite_sensitivity && has_non_finite_(g)) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer::step: non-finite sensitivity detected for " + label);
       }
     }
@@ -551,7 +572,7 @@ private:
       const Series* p = parameters_[i];
       if (!p || !p->defined()) continue;
       if (has_non_finite_(*p)) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer::step: non-finite parameter detected for " +
             parameter_labels_[i]);
       }
@@ -561,19 +582,19 @@ private:
   void validate_step_diagnostics_(std::size_t tracked_count, std::size_t covered_count) const {
     if (tracked_count == 0) return;
     if (step_diagnostics_.fail_if_no_sensitivity && covered_count == 0) {
-      throw std::runtime_error(
+      ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer::step: no sensitivities were produced for tracked parameters");
     }
     if (step_diagnostics_.minimum_tracked_coverage > 0.0) {
       const double coverage = static_cast<double>(covered_count) / static_cast<double>(tracked_count);
       if (coverage + 1e-15 < step_diagnostics_.minimum_tracked_coverage) {
-        throw std::runtime_error(
+        ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer::step: tracked-parameter sensitivity coverage below minimum");
       }
     }
   }
 
-  virtual void apply_step_(const std::vector<Series>& gradients) = 0;
+  virtual void apply_step_(pluss::msharp::RangeView::Series gradients) = 0;
   virtual bool requires_recording_during_step_() const { return false; }
 
   std::vector<Series*> parameters_{};

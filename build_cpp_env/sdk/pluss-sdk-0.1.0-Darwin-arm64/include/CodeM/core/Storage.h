@@ -7,11 +7,18 @@
 
 namespace pluss::codem {
 
-// CPU-only storage (shareable). Later: allocator interface, external memory, mmap, etc.
+enum class StorageLocation : std::uint8_t {
+  Host = 0,
+  CudaDevice = 1,
+};
+
+// Shareable storage handle. Host storage is directly addressable; device storage
+// must be accessed through backend copy/kernel APIs.
 class CODEM_API Storage final {
 public:
   Storage() = default;
   explicit Storage(std::size_t nbytes, std::size_t alignment = 64);
+  static Storage cuda_device(std::size_t nbytes);
 
   // Adopt externally-managed memory (kept alive via shared_ptr).
   Storage(std::shared_ptr<std::byte> external, std::size_t nbytes, std::size_t alignment = 1);
@@ -20,6 +27,8 @@ public:
   const std::byte* data() const noexcept { return data_.get(); }
   std::size_t nbytes() const noexcept { return nbytes_; }
   std::size_t alignment() const noexcept { return alignment_; }
+  StorageLocation location() const noexcept { return location_; }
+  bool host_accessible() const noexcept { return location_ == StorageLocation::Host; }
   bool defined() const noexcept { return static_cast<bool>(data_); }
   std::shared_ptr<std::byte> handle() const noexcept { return data_; }
   std::int64_t version() const noexcept;
@@ -40,6 +49,7 @@ private:
   std::shared_ptr<VersionState> version_state_{nullptr};
   std::size_t nbytes_{0};
   std::size_t alignment_{64};
+  StorageLocation location_{StorageLocation::Host};
 };
 
 } // namespace pluss::codem

@@ -79,7 +79,7 @@ inline std::any call_pmf_any(Obj& obj, Ret (C::*pmf)(P...), std::span<const Valu
   if (args.size() != sizeof...(P)) {
     std::ostringstream oss;
     oss << "dispense(pmf): expected " << sizeof...(P) << " positional args, got " << args.size();
-    throw std::runtime_error(oss.str());
+    ::pluss::throw_error(oss.str());
   }
 
   std::array<Value, sizeof...(P)> ordered{};
@@ -106,7 +106,7 @@ inline std::any call_pmf_any(const Obj& obj, Ret (C::*pmf)(P...) const, std::spa
   if (args.size() != sizeof...(P)) {
     std::ostringstream oss;
     oss << "dispense(pmf): expected " << sizeof...(P) << " positional args, got " << args.size();
-    throw std::runtime_error(oss.str());
+    ::pluss::throw_error(oss.str());
   }
 
   std::array<Value, sizeof...(P)> ordered{};

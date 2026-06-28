@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pluss/ai/nn_functional.h"
+
 #include "NodeK/NN/modules/Module.h"
 #include "NodeK/NN/modules/activation/Activation.h"
 #include "NodeK/NN/modules/container/Schedule.h"
@@ -13,4 +15,5 @@
 #include "NodeK/NN/modules/attention/transformer.h"
 #include "NodeK/NN/modules/cnn/NNconv1d.h"
 #include "NodeK/NN/modules/cnn/NNconvNd.h"
+#include "NodeK/NN/modules/cnn/NNconv3d.h"
 #include "NodeK/NN/optim/optim.h"

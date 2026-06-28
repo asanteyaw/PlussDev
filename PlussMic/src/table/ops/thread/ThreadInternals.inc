@@ -136,6 +136,26 @@ bool is_numeric_series_type(const pluss::Series& s) {
   return dt.scalar == pluss::codem::ScalarType::Bool || dt.is_integral() || dt.is_floating();
 }
 
+bool series_uses_nan_missing(const pluss::Series& s) {
+  const auto dt = s.dtype();
+  return dt.is_floating() || dt.is_complex();
+}
+
+pluss::Series thread_non_missing_mask(const Thread& t) {
+  auto valid = t.has_validity_mask()
+                   ? *t.validity_mask()
+                   : pluss::Series::ones({t.size()}, pluss::codem::ScalarType::Bool);
+  if (t.kind() != ThreadKind::Series) {
+    return valid;
+  }
+
+  const auto& s = t.as_series();
+  if (!series_uses_nan_missing(s)) {
+    return valid;
+  }
+  return valid.logical_and(s.isnan().logical_not());
+}
+
 double pearson_corr_from_vectors_(const std::vector<double>& x, const std::vector<double>& y) {
   const auto n = x.size();
   if (n < 2 || y.size() != n) {
@@ -461,6 +481,28 @@ pluss::Series apply_compare_series_series(
   }
 }
 
+pluss::Series apply_compare_timeline_timeline(
+    const pluss::Timeline& lhs,
+    const pluss::Timeline& rhs,
+    ThreadBinaryCompareOp op) {
+  switch (op) {
+    case ThreadBinaryCompareOp::Eq:
+      return lhs.eq(rhs);
+    case ThreadBinaryCompareOp::Ne:
+      return lhs.ne(rhs);
+    case ThreadBinaryCompareOp::Lt:
+      return lhs.lt(rhs);
+    case ThreadBinaryCompareOp::Le:
+      return lhs.le(rhs);
+    case ThreadBinaryCompareOp::Gt:
+      return lhs.gt(rhs);
+    case ThreadBinaryCompareOp::Ge:
+      return lhs.ge(rhs);
+    default:
+      PLUSS_FAIL("Thread: unsupported temporal compare op");
+  }
+}
+
 pluss::Series apply_compare_series_scalar(
     const pluss::Series& lhs,
     double rhs,
@@ -492,6 +534,50 @@ std::optional<pluss::Series> combine_validity_masks(const Thread& lhs, const Thr
   }
   if (rhs.has_validity_mask()) {
     return rhs.validity_mask();
+  }
+  return std::nullopt;
+}
+
+std::optional<pluss::Series> broadcast_validity_mask_to_size(
+    const std::optional<pluss::Series>& mask,
+    std::int64_t output_size,
+    std::string_view where) {
+  if (!mask.has_value()) {
+    return std::nullopt;
+  }
+
+  PLUSS_CHECK(mask->dim() == 1, std::string(where) + ": validity mask must be 1D");
+  PLUSS_CHECK(mask->scalar_type() == pluss::codem::ScalarType::Bool,
+              std::string(where) + ": validity mask must use Bool dtype");
+
+  if (mask->numel() == output_size) {
+    return mask;
+  }
+
+  PLUSS_CHECK(mask->numel() == 1,
+              std::string(where) + ": validity mask must match output size or be scalar-like");
+
+  const bool valid = bool_vec_from_series(*mask, 1, where)[0];
+  if (valid) {
+    return std::nullopt;
+  }
+  return pluss::Series::zeros({output_size}, pluss::codem::ScalarType::Bool);
+}
+
+std::optional<pluss::Series> combine_validity_masks_broadcast(
+    const Thread& lhs,
+    const Thread& rhs,
+    std::int64_t output_size) {
+  auto lhs_mask = broadcast_validity_mask_to_size(lhs.validity_mask(), output_size, "Thread::compare");
+  auto rhs_mask = broadcast_validity_mask_to_size(rhs.validity_mask(), output_size, "Thread::compare");
+  if (lhs_mask.has_value() && rhs_mask.has_value()) {
+    return lhs_mask->logical_and(*rhs_mask);
+  }
+  if (lhs_mask.has_value()) {
+    return lhs_mask;
+  }
+  if (rhs_mask.has_value()) {
+    return rhs_mask;
   }
   return std::nullopt;
 }

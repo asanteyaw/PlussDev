@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <map>
@@ -47,6 +48,44 @@ std::string normalize_sheet_name(std::string name) {
                             [](char c) { return std::isspace(static_cast<unsigned char>(c)) != 0 || c == '_'; }),
              name.end());
   return name;
+}
+
+bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
+  const auto st = s.scalar_type();
+  const auto* base = s.raw_data();
+  switch (st) {
+    case pluss::codem::ScalarType::Float16:
+      return std::isnan(
+          pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
+    case pluss::codem::ScalarType::BFloat16:
+      return std::isnan(
+          pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
+    case pluss::codem::ScalarType::Float32:
+      return std::isnan(reinterpret_cast<const float*>(base)[row]);
+    case pluss::codem::ScalarType::Float64:
+      return std::isnan(reinterpret_cast<const double*>(base)[row]);
+    case pluss::codem::ScalarType::Complex64: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
+      return std::isnan(v.real()) || std::isnan(v.imag());
+    }
+    case pluss::codem::ScalarType::Complex128: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
+      return std::isnan(v.real()) || std::isnan(v.imag());
+    }
+    default:
+      return false;
+  }
+}
+
+bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t row) {
+  if (t.has_validity_mask()) {
+    const auto valid = t.validity_mask()->to_vec<bool>();
+    if (!valid[static_cast<std::size_t>(row)]) {
+      return true;
+    }
+  }
+  return t.kind() == pluss::table::ThreadKind::Series
+         && series_value_is_nan_for_io(t.as_series(), row);
 }
 
 std::string xml_escape(std::string_view input) {
@@ -123,11 +162,8 @@ std::string scalar_for_excel(const pluss::Series& s, std::int64_t row) {
 }
 
 std::string thread_value_for_excel(const pluss::table::Thread& t, std::int64_t row, std::string_view na_rep) {
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
-    if (!valid[static_cast<std::size_t>(row)]) {
-      return std::string(na_rep);
-    }
+  if (thread_value_is_missing_for_io(t, row)) {
+    return std::string(na_rep);
   }
 
   switch (t.kind()) {

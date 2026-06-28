@@ -1,6 +1,7 @@
 #if defined(__APPLE__)
 
 #import <Cocoa/Cocoa.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include <algorithm>
 #include <cmath>
@@ -79,13 +80,20 @@ NSString* shortcut_note_for_key_event(NSEvent* event) {
     return nil;
   }
   const unichar key = [chars characterAtIndex:0];
+  const NSEventModifierFlags flags =
+      [event modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
+  const bool command = (flags & NSEventModifierFlagCommand) != 0;
 
-  if (key == '+' || key == '=') return @"zoom_in";
-  if (key == '-' || key == '_') return @"zoom_out";
-  if (key == '0') return @"reset_view";
-  if (key == 's' || key == 'S') return @"save_snapshot";
-  if (key == 'j' || key == 'J' || key == NSPageDownFunctionKey) return @"next_page";
-  if (key == 'k' || key == 'K' || key == NSPageUpFunctionKey) return @"previous_page";
+  if (command && (key == '+' || key == '=')) return @"zoom_in";
+  if (command && (key == '-' || key == '_')) return @"zoom_out";
+  if (command && key == '0') return @"reset_view";
+  if (command && (key == 's' || key == 'S')) return @"save_snapshot";
+  if (command && (key == 'j' || key == 'J')) return @"next_page";
+  if (command && (key == 'k' || key == 'K')) return @"previous_page";
+  if (key == NSPageDownFunctionKey) return @"page_down";
+  if (key == NSPageUpFunctionKey) return @"page_up";
+  if (key == NSHomeFunctionKey) return @"home";
+  if (key == NSEndFunctionKey) return @"end";
   if (key == NSLeftArrowFunctionKey) return @"pan_left";
   if (key == NSRightArrowFunctionKey) return @"pan_right";
   if (key == NSUpArrowFunctionKey) return @"pan_up";
@@ -115,6 +123,7 @@ NSString* shortcut_note_for_key_event(NSEvent* event) {
 @property(nonatomic, strong) id scroll_monitor;
 @property(nonatomic, strong) id drag_monitor;
 @property(nonatomic, strong) id down_monitor;
+@property(nonatomic, strong) id up_monitor;
 @end
 
 @implementation PlussTilsViewCocoaShellHost
@@ -164,6 +173,9 @@ class CocoaWindowShell final : public IWindowShell {
       NSView* content = [host_.window contentView];
       host_.image_view = [[NSImageView alloc] initWithFrame:[content bounds]];
       [host_.image_view setImageScaling:NSImageScaleAxesIndependently];
+      [host_.image_view setImageAlignment:NSImageAlignCenter];
+      [host_.image_view setEditable:NO];
+      [host_.image_view setAnimates:NO];
       [host_.image_view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
       [content addSubview:host_.image_view];
 
@@ -180,7 +192,7 @@ class CocoaWindowShell final : public IWindowShell {
                                                                        @"kind" : @"shortcut",
                                                                        @"note" : note
                                                                      }];
-                                                                     return e;
+                                                                     return nil;
                                                                    }
 
                                                                    NSString* chars = [e characters];
@@ -231,13 +243,28 @@ class CocoaWindowShell final : public IWindowShell {
                                                                       if (strong_host == nil || e == nil || e.window != strong_host.window) {
                                                                         return e;
                                                                       }
-                                                                      const double factor = e.hasPreciseScrollingDeltas ? 1.0 : 12.0;
+                                                                      NSPoint in_window = [e locationInWindow];
+                                                                      NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
+                                                                      const NSRect bounds = [strong_host.image_view bounds];
+                                                                      const double x = std::clamp(static_cast<double>(in_view.x),
+                                                                                                  0.0,
+                                                                                                  static_cast<double>(bounds.size.width));
+                                                                      const double y = std::clamp(
+                                                                          static_cast<double>(bounds.size.height - in_view.y),
+                                                                          0.0,
+                                                                          static_cast<double>(bounds.size.height));
+                                                                      const NSEventModifierFlags flags =
+                                                                          [e modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
                                                                       [strong_host.input_events addObject:@{
                                                                         @"kind" : @"scroll",
-                                                                        @"dx" : @(e.scrollingDeltaX * factor),
-                                                                        @"dy" : @(e.scrollingDeltaY * factor)
+                                                                        @"dx" : @(e.scrollingDeltaX),
+                                                                        @"dy" : @(e.scrollingDeltaY),
+                                                                        @"x" : @(x),
+                                                                        @"y" : @(y),
+                                                                        @"precise" : @(e.hasPreciseScrollingDeltas),
+                                                                        @"shift" : @((flags & NSEventModifierFlagShift) != 0)
                                                                       }];
-                                                                      return e;
+                                                                      return nil;
                                                                     }];
 
       host_.drag_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged
@@ -246,12 +273,24 @@ class CocoaWindowShell final : public IWindowShell {
                                                                     if (strong_host == nil || e == nil || e.window != strong_host.window) {
                                                                       return e;
                                                                     }
+                                                                    NSPoint in_window = [e locationInWindow];
+                                                                    NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
+                                                                    const NSRect bounds = [strong_host.image_view bounds];
+                                                                    const double x = std::clamp(static_cast<double>(in_view.x),
+                                                                                                0.0,
+                                                                                                static_cast<double>(bounds.size.width));
+                                                                    const double y = std::clamp(
+                                                                        static_cast<double>(bounds.size.height - in_view.y),
+                                                                        0.0,
+                                                                        static_cast<double>(bounds.size.height));
                                                                     [strong_host.input_events addObject:@{
                                                                       @"kind" : @"drag",
                                                                       @"dx" : @(e.deltaX),
-                                                                      @"dy" : @(e.deltaY)
+                                                                      @"dy" : @(e.deltaY),
+                                                                      @"x" : @(x),
+                                                                      @"y" : @(y)
                                                                     }];
-                                                                    return e;
+                                                                    return nil;
                                                                   }];
 
       host_.down_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown
@@ -276,6 +315,32 @@ class CocoaWindowShell final : public IWindowShell {
                                                                     }];
                                                                     return e;
                                                                   }];
+
+      host_.up_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp
+                                                               handler:^NSEvent* _Nullable(NSEvent* e) {
+                                                                 PlussTilsViewCocoaShellHost* strong_host = weak_host;
+                                                                 if (strong_host == nil || e == nil || e.window != strong_host.window ||
+                                                                     strong_host.window == nil ||
+                                                                     strong_host.image_view == nil) {
+                                                                   return e;
+                                                                 }
+                                                                 NSPoint in_window = [e locationInWindow];
+                                                                 NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
+                                                                 const NSRect bounds = [strong_host.image_view bounds];
+                                                                 const double x = std::clamp(static_cast<double>(in_view.x),
+                                                                                             0.0,
+                                                                                             static_cast<double>(bounds.size.width));
+                                                                 const double y = std::clamp(
+                                                                     static_cast<double>(bounds.size.height - in_view.y),
+                                                                     0.0,
+                                                                     static_cast<double>(bounds.size.height));
+                                                                 [strong_host.input_events addObject:@{
+                                                                   @"kind" : @"pointer_up",
+                                                                   @"x" : @(x),
+                                                                   @"y" : @(y)
+                                                                 }];
+                                                                 return e;
+                                                               }];
 
       [host_.window makeKeyAndOrderFront:nil];
       [NSApp activateIgnoringOtherApps:YES];
@@ -315,10 +380,7 @@ class CocoaWindowShell final : public IWindowShell {
 
   void close() noexcept override {
     @autoreleasepool {
-      if (!open_) {
-        return;
-      }
-
+      const bool was_open = open_;
       if (host_ != nil && host_.window != nil) {
         if (host_.key_monitor != nil) {
           [NSEvent removeMonitor:host_.key_monitor];
@@ -336,10 +398,18 @@ class CocoaWindowShell final : public IWindowShell {
           [NSEvent removeMonitor:host_.down_monitor];
           host_.down_monitor = nil;
         }
-        [host_.window close];
+        if (host_.up_monitor != nil) {
+          [NSEvent removeMonitor:host_.up_monitor];
+          host_.up_monitor = nil;
+        }
+        if (open_) {
+          [host_.window close];
+        }
       }
       open_ = false;
-      events_.push_back(ShellEvent{ShellEventKind::Closed, last_size_, "cocoa_shell_closed"});
+      if (was_open) {
+        events_.push_back(ShellEvent{ShellEventKind::Closed, last_size_, "cocoa_shell_closed"});
+      }
       pump_app_events();
     }
   }
@@ -377,22 +447,34 @@ class CocoaWindowShell final : public IWindowShell {
           } else if ([kind isEqualToString:@"scroll"]) {
             const double dx = [packet[@"dx"] doubleValue];
             const double dy = [packet[@"dy"] doubleValue];
+            const double x = [packet[@"x"] doubleValue];
+            const double y = [packet[@"y"] doubleValue];
+            const bool precise = [packet[@"precise"] boolValue];
+            const bool shift = [packet[@"shift"] boolValue];
             events_.push_back(ShellEvent{
                 ShellEventKind::PointerScroll,
                 last_size_,
                 "cocoa_scroll",
                 dx,
                 dy,
+                x,
+                y,
+                precise,
+                shift,
             });
           } else if ([kind isEqualToString:@"drag"]) {
             const double dx = [packet[@"dx"] doubleValue];
             const double dy = [packet[@"dy"] doubleValue];
+            const double x = [packet[@"x"] doubleValue];
+            const double y = [packet[@"y"] doubleValue];
             events_.push_back(ShellEvent{
                 ShellEventKind::PointerDrag,
                 last_size_,
                 "cocoa_drag",
                 dx,
                 dy,
+                x,
+                y,
             });
           } else if ([kind isEqualToString:@"pointer_down"]) {
             const double x = [packet[@"x"] doubleValue];
@@ -401,6 +483,18 @@ class CocoaWindowShell final : public IWindowShell {
                 ShellEventKind::PointerDown,
                 last_size_,
                 "cocoa_pointer_down",
+                0.0,
+                0.0,
+                x,
+                y,
+            });
+          } else if ([kind isEqualToString:@"pointer_up"]) {
+            const double x = [packet[@"x"] doubleValue];
+            const double y = [packet[@"y"] doubleValue];
+            events_.push_back(ShellEvent{
+                ShellEventKind::PointerUp,
+                last_size_,
+                "cocoa_pointer_up",
                 0.0,
                 0.0,
                 x,
@@ -439,6 +533,58 @@ class CocoaWindowShell final : public IWindowShell {
         .supports_pointer_click = true,
         .supports_text_input = true,
     };
+  }
+
+  bool set_clipboard_text(const std::string_view text) override {
+    @autoreleasepool {
+      NSString* value =
+          [[NSString alloc] initWithBytes:text.data()
+                                  length:text.size()
+                                encoding:NSUTF8StringEncoding];
+      if (value == nil) {
+        return false;
+      }
+      NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+      [pasteboard clearContents];
+      return [pasteboard setString:value forType:NSPasteboardTypeString] == YES;
+    }
+  }
+
+  std::string choose_save_path(const std::string_view suggested_name,
+                               const std::string_view extension) override {
+    @autoreleasepool {
+      NSSavePanel* panel = [NSSavePanel savePanel];
+      [panel setCanCreateDirectories:YES];
+
+      NSString* name =
+          [[NSString alloc] initWithBytes:suggested_name.data()
+                                  length:suggested_name.size()
+                                encoding:NSUTF8StringEncoding];
+      if (name != nil && [name length] > 0) {
+        [panel setNameFieldStringValue:name];
+      }
+
+      NSString* ext =
+          [[NSString alloc] initWithBytes:extension.data()
+                                  length:extension.size()
+                                encoding:NSUTF8StringEncoding];
+      if (@available(macOS 11.0, *)) {
+        if ([ext caseInsensitiveCompare:@"png"] == NSOrderedSame) {
+          [panel setAllowedContentTypes:@[UTTypePNG]];
+        } else if ([ext caseInsensitiveCompare:@"svg"] == NSOrderedSame) {
+          UTType* svg_type = [UTType typeWithFilenameExtension:@"svg"];
+          if (svg_type != nil) {
+            [panel setAllowedContentTypes:@[svg_type]];
+          }
+        }
+      }
+
+      if ([panel runModal] != NSModalResponseOK || [panel URL] == nil) {
+        return {};
+      }
+      const char* path = [[[panel URL] path] fileSystemRepresentation];
+      return path != nullptr ? std::string(path) : std::string{};
+    }
   }
 
  private:

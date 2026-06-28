@@ -174,7 +174,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("differential_evolution_minimizer objective must return real scalar Series");
+        ::pluss::throw_error("differential_evolution_minimizer objective must return real scalar Series");
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
@@ -198,7 +198,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("differential_evolution_prmm_minimizer objective must return real scalar Series");
+        ::pluss::throw_error("differential_evolution_prmm_minimizer objective must return real scalar Series");
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
@@ -222,7 +222,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("particle_swarm_minimizer objective must return real scalar Series");
+        ::pluss::throw_error("particle_swarm_minimizer objective must return real scalar Series");
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
@@ -246,7 +246,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
     if constexpr (std::is_same_v<Ret, Series>) {
       const Series out = fn(x);
       if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
-        throw std::runtime_error("particle_swarm_dv_minimizer objective must return real scalar Series");
+        ::pluss::throw_error("particle_swarm_dv_minimizer objective must return real scalar Series");
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {

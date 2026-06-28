@@ -130,6 +130,8 @@ void test_stream_methods() {
 
   const auto filled = metric.fillna(0.0);
   expect(!filled.has_validity_mask(), "fillna should clear validity mask");
+  expect(filled.as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+         "Stream::fillna(double) should preserve valid values and replace only null rows");
   const auto dropped = metric.dropna();
   expect(dropped.size() == 3, "dropna should keep only valid rows");
   const auto taken = metric.take(std::vector<std::int64_t>{0, 2, 4});
@@ -232,6 +234,8 @@ void test_catalog_sort_group_missing() {
   const auto nulls = base.isnull({"metric"});
   const auto not_nulls = base.notnull({"metric"});
   expect(filled.count() == 5, "fillna should not change row count");
+  expect(filled.stream("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+         "Catalog::fillna(double, keys) should preserve valid values and replace only null rows");
   expect(dropped.count() == 3, "dropna(metric) should drop null rows");
   expect(ffilled.count() == 5, "ffill should preserve row count");
   expect(bfilled.count() == 5, "bfill should preserve row count");
@@ -352,6 +356,14 @@ void test_catalog_aggregates_apply_text_merge() {
 void test_catalog_mutation_tabelize_io() {
   using namespace pluss::kindle::literals;
   auto base = make_base_catalog();
+
+  const DataFrame default_cases({
+      {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+      {"units", pluss::make_series({10.0, 7.0, 12.0})},
+  });
+  const auto default_cases_roundtrip = Catalog::kindelize(default_cases).tabelize();
+  expect(default_cases_roundtrip.equals(default_cases),
+         "kindelize/tabelize should preserve a numeric default case axis");
 
   base = base.set_stream("id_plus", base.stream("id") + 1.0);
   base.set_stream_("city_copy", base.stream("city"));

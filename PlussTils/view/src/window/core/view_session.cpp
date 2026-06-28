@@ -28,11 +28,11 @@ namespace {
                                             const WindowInputPolicy& policy,
                                             std::vector<WindowCommand>& emitted_commands) {
   if (table_mode) {
-    if (note == "next_page") {
+    if (note == "next_page" || note == "page_down") {
       emitted_commands.push_back(WindowCommand{.kind = WindowCommandKind::TableNextPage});
       return true;
     }
-    if (note == "previous_page") {
+    if (note == "previous_page" || note == "page_up") {
       emitted_commands.push_back(WindowCommand{.kind = WindowCommandKind::TablePreviousPage});
       return true;
     }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pluss/subsp/math/finance/calibration.h"
 #include "pluss/subsp/math/finance/pricing.h"
 #include "pluss/subsp/math/finance/rates.h"
 #include "pluss/subsp/math/finance/volatility.h"
@@ -82,27 +81,6 @@ class CODEM_API Heston final : public StochVolBase {
                                               const pricing::MonteCarloOptions& options = {},
                                               pluss::codem::Config cfg = {}) const;
 
-  [[nodiscard]] double sse(const std::vector<calibration::OptionQuote>& quotes,
-                           double spot,
-                           double rate,
-                           double dividend_yield,
-                           const calibration::HestonCalibOptions& options = {},
-                           pluss::codem::Config cfg = {}) const;
-
-  [[nodiscard]] calibration::HestonCalibResult calibrate(const std::vector<calibration::OptionQuote>& quotes,
-                                                         double spot,
-                                                         double rate,
-                                                         double dividend_yield,
-                                                         const calibration::HestonCalibOptions& options = {},
-                                                         pluss::codem::Config cfg = {}) const;
-
-  calibration::HestonCalibResult calibrate_inplace(const std::vector<calibration::OptionQuote>& quotes,
-                                                   double spot,
-                                                   double rate,
-                                                   double dividend_yield,
-                                                   const calibration::HestonCalibOptions& options = {},
-                                                   pluss::codem::Config cfg = {});
-
  private:
   volatility::HestonParams params_{};
 };
@@ -158,27 +136,6 @@ class CODEM_API Bates final : public StochVolBase {
                                                const pricing::HestonFftOptions& options = {},
                                                pluss::codem::Config cfg = {}) const;
 
-  [[nodiscard]] double sse(const std::vector<calibration::OptionQuote>& quotes,
-                           double spot,
-                           double rate,
-                           double dividend_yield,
-                           const calibration::BatesCalibOptions& options = {},
-                           pluss::codem::Config cfg = {}) const;
-
-  [[nodiscard]] calibration::BatesCalibResult calibrate(const std::vector<calibration::OptionQuote>& quotes,
-                                                        double spot,
-                                                        double rate,
-                                                        double dividend_yield,
-                                                        const calibration::BatesCalibOptions& options = {},
-                                                        pluss::codem::Config cfg = {}) const;
-
-  calibration::BatesCalibResult calibrate_inplace(const std::vector<calibration::OptionQuote>& quotes,
-                                                  double spot,
-                                                  double rate,
-                                                  double dividend_yield,
-                                                  const calibration::BatesCalibOptions& options = {},
-                                                  pluss::codem::Config cfg = {});
-
  private:
   volatility::BatesParams params_{};
 };
@@ -216,27 +173,6 @@ class CODEM_API Sv final : public StochVolBase {
                                 const pricing::MonteCarloOptions& options = {},
                                 pluss::codem::Config cfg = {}) const override;
 
-  [[nodiscard]] double sse(const std::vector<calibration::OptionQuote>& quotes,
-                           double spot,
-                           double rate,
-                           double dividend_yield,
-                           const calibration::SvCalibOptions& options = {},
-                           pluss::codem::Config cfg = {}) const;
-
-  [[nodiscard]] calibration::SvCalibResult calibrate(const std::vector<calibration::OptionQuote>& quotes,
-                                                     double spot,
-                                                     double rate,
-                                                     double dividend_yield,
-                                                     const calibration::SvCalibOptions& options = {},
-                                                     pluss::codem::Config cfg = {}) const;
-
-  calibration::SvCalibResult calibrate_inplace(const std::vector<calibration::OptionQuote>& quotes,
-                                               double spot,
-                                               double rate,
-                                               double dividend_yield,
-                                               const calibration::SvCalibOptions& options = {},
-                                               pluss::codem::Config cfg = {});
-
  private:
  volatility::SvParams params_{};
 };
@@ -272,32 +208,6 @@ class CODEM_API HestonNandi final : public StochVolBase {
                              double dividend_yield,
                              double maturity,
                              const pricing::HestonNandiIntegrationOptions& options = {}) const;
-
-  [[nodiscard]] double returns_nll(const pluss::codem::Series& returns,
-                                   pluss::codem::Config cfg = {}) const;
-
-  [[nodiscard]] double sse(const std::vector<calibration::OptionQuote>& quotes,
-                           double spot,
-                           double rate,
-                           double dividend_yield,
-                           const calibration::HestonNandiCalibOptions& options = {},
-                           pluss::codem::Config cfg = {}) const;
-
-  [[nodiscard]] calibration::HestonNandiCalibResult calibrate(const pluss::codem::Series& returns,
-                                                              const std::vector<calibration::OptionQuote>& quotes,
-                                                              double spot,
-                                                              double rate,
-                                                              double dividend_yield,
-                                                              const calibration::HestonNandiCalibOptions& options = {},
-                                                              pluss::codem::Config cfg = {}) const;
-
-  calibration::HestonNandiCalibResult calibrate_inplace(const pluss::codem::Series& returns,
-                                                        const std::vector<calibration::OptionQuote>& quotes,
-                                                        double spot,
-                                                        double rate,
-                                                        double dividend_yield,
-                                                        const calibration::HestonNandiCalibOptions& options = {},
-                                                        pluss::codem::Config cfg = {});
 
  private:
   volatility::HestonNandiParams params_{};
@@ -445,15 +355,6 @@ class CODEM_API VasicekRate final : public ShortRateBase {
 
   [[nodiscard]] double zcb(double maturity, double short_rate) const override;
 
-  [[nodiscard]] double sse(const std::vector<calibration::RateQuote>& quotes,
-                           const calibration::VasicekCalibOptions& options = {}) const;
-
-  [[nodiscard]] calibration::VasicekCalibResult calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                                          const calibration::VasicekCalibOptions& options = {}) const;
-
-  calibration::VasicekCalibResult calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                    const calibration::VasicekCalibOptions& options = {});
-
  private:
   rates::VasicekParams params_{};
 };
@@ -474,15 +375,6 @@ class CODEM_API CirRate final : public ShortRateBase {
 
   [[nodiscard]] double zcb(double maturity, double short_rate) const override;
 
-  [[nodiscard]] double sse(const std::vector<calibration::RateQuote>& quotes,
-                           const calibration::CirCalibOptions& options = {}) const;
-
-  [[nodiscard]] calibration::CirCalibResult calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                                      const calibration::CirCalibOptions& options = {}) const;
-
-  calibration::CirCalibResult calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                const calibration::CirCalibOptions& options = {});
-
  private:
   rates::CirParams params_{};
 };
@@ -502,15 +394,6 @@ class CODEM_API HullWhiteRate final : public ShortRateBase {
                                        std::uint64_t seed = 0) const override;
 
   [[nodiscard]] double zcb(double maturity, double short_rate) const override;
-
-  [[nodiscard]] double sse(const std::vector<calibration::RateQuote>& quotes,
-                           const calibration::HullWhiteCalibOptions& options = {}) const;
-
-  [[nodiscard]] calibration::HullWhiteCalibResult calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                                            const calibration::HullWhiteCalibOptions& options = {}) const;
-
-  calibration::HullWhiteCalibResult calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                      const calibration::HullWhiteCalibOptions& options = {});
 
  private:
   rates::HullWhiteParams params_{};
@@ -535,15 +418,6 @@ class CODEM_API HjmRate {
                               std::int64_t steps = 252,
                               rates::SimOptions options = {},
                               pluss::codem::Config cfg = {}) const;
-
-  [[nodiscard]] double sse(const std::vector<calibration::RateQuote>& quotes,
-                           const calibration::HjmCalibOptions& options = {}) const;
-
-  [[nodiscard]] calibration::HjmCalibResult calibrate(const std::vector<calibration::RateQuote>& quotes,
-                                                      const calibration::HjmCalibOptions& options = {}) const;
-
-  calibration::HjmCalibResult calibrate_inplace(const std::vector<calibration::RateQuote>& quotes,
-                                                const calibration::HjmCalibOptions& options = {});
 
  private:
   rates::HjmParams params_{};

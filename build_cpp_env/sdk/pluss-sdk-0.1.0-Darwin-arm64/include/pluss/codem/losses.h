@@ -47,12 +47,43 @@ inline Series mse(const Series& prediction, const Series& target, LossReduce red
   return detail::reduce_loss_(per, reduction);
 }
 
-inline Series rmse(const Series& prediction, const Series& target, LossReduce reduction = LossReduce::Mean) {
-  if (reduction == LossReduce::None) {
-    return prediction.sub(target).square().sqrt();
-  }
-  return mse(prediction, target, reduction).sqrt();
+inline Series quantile_loss(
+    const Series& prediction,
+    const Series& target,
+    const Series& quantiles,
+    LossReduce reduction = LossReduce::Mean
+) {
+  detail::validate_loss_inputs_(prediction, target, "quantile_loss");
+  PLUSS_CHECK(quantiles.defined(), "pluss::quantile_loss: quantiles must be defined");
+  PLUSS_CHECK(
+      quantiles.platform() == prediction.platform(),
+      "pluss::quantile_loss: quantiles platform mismatch");
+
+  Series pred = prediction;
+  Series tgt = target;
+  Series q = quantiles;
+
+  // Normalize to row-wise [B, Q] style where needed.
+  if (pred.dim() == 1) pred = pred.unsqueeze(1);
+  if (tgt.dim() == 1) tgt = tgt.unsqueeze(1);
+  if (q.dim() == 0) q = q.unsqueeze(0);
+
+  PLUSS_CHECK(q.dim() == 1, "pluss::quantile_loss: quantiles must be scalar or 1D");
+  PLUSS_CHECK(q.isfinite().all().item<bool>(), "pluss::quantile_loss: quantiles must be finite");
+  PLUSS_CHECK(
+      q.ge(0.0).logical_and(q.le(1.0)).all().item<bool>(),
+      "pluss::quantile_loss: quantiles must be in [0, 1]");
+
+  if (q.scalar_type() != pred.scalar_type()) q = q.to(pred.scalar_type());
+
+  const Series q_row = q.unsqueeze(0);  // [1, Q]
+  const Series error = tgt.sub(pred);   // [B, Q] (broadcast if needed)
+  const Series pos = error.relu();
+  const Series neg = error.neg().relu();
+  const Series per = q_row.mul(pos).add((1.0 - q_row).mul(neg));
+  return detail::reduce_loss_(per, reduction);
 }
+
 
 inline Series mae(const Series& prediction, const Series& target, LossReduce reduction = LossReduce::Mean) {
   detail::validate_loss_inputs_(prediction, target, "mae");
@@ -90,7 +121,7 @@ inline Series rel_mse(const Series& prediction,
     denom = denom.abs();
   }
   denom = denom.clamp_min(epsilon);
-  const Series per = prediction.sub(target).square().div(denom);
+  const Series per = prediction.sub(target).div(denom).square();
   return detail::reduce_loss_(per, reduction);
 }
 

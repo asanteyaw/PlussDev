@@ -28,6 +28,10 @@ TEST_CASE("CodeN TeX extract/token command family is concrete", "[coden][patch17
   REQUIRE(env_eq.tokens().numel() >= 1);
   REQUIRE(env_eq.tokens().at(0).find("\\begin{equation}") != std::string::npos);
 
+  auto env_generic = tex.tex_extract_environment("equation");
+  REQUIRE(env_generic.numel() >= 1);
+  REQUIRE(env_generic.at(0).find("\\begin{equation}") != std::string::npos);
+
   auto refs = tex.tex_refs();
   REQUIRE(has_token(refs.tokens(), "eq:1"));
 }
@@ -52,4 +56,9 @@ TEST_CASE("CodeN NLP/tokenization extract family is concrete", "[coden][patch17]
 
   auto found = n.find_all_regex("[A-Z]{2,}");
   REQUIRE(found.tokens().numel() >= 2);
+
+  auto joined = pluss::make_note({"OpenAI", "shipped", "GPT"}).nlp_join_tokens(" ");
+  REQUIRE(joined.defined());
+  REQUIRE(joined.is_scalar());
+  REQUIRE(joined.scalar() == "OpenAI shipped GPT");
 }

@@ -152,6 +152,19 @@ void test_scatter_heatmap_and_validation() {
   expect(fig_heatmap.panes().front().scale_guide_enabled(),
          "plot().heatmap(pivot) should enable scale guide by default");
 
+  pluss::table::HeatmapPlotOptions annotated_options;
+  annotated_options.annotate_levels = true;
+  annotated_options.scale_guide = false;
+  const auto annotated_heatmap = surface.plot().heatmap(
+      "maturity",
+      "delta_bucket",
+      "implied_vol",
+      DataFrame::GroupOp::Mean,
+      annotated_options);
+  const auto annotated_svg = annotated_heatmap.to_svg();
+  expect(annotated_svg.find(">0.3</text>") != std::string::npos,
+         "plot().heatmap(annotate_levels) should render cell values");
+
   const auto fig_corr = df.plot().corr_heatmap({"x", "y", "z"});
   expect(fig_corr.panes().front().traces().front().annotate_levels(),
          "plot().corr_heatmap should annotate cell values by default");

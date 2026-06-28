@@ -4,6 +4,7 @@
 #include <array>
 #include <cctype>
 #include <charconv>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
@@ -93,6 +94,14 @@ struct SimpleSelector {
   return std::max(0, value);
 }
 
+[[nodiscard]] RectI intersect_rect(const RectI lhs, const RectI rhs) {
+  const int x0 = std::max(lhs.x, rhs.x);
+  const int y0 = std::max(lhs.y, rhs.y);
+  const int x1 = std::min(lhs.x + lhs.width, rhs.x + rhs.width);
+  const int y1 = std::min(lhs.y + lhs.height, rhs.y + rhs.height);
+  return RectI{x0, y0, std::max(0, x1 - x0), std::max(0, y1 - y0)};
+}
+
 void reset_render_stats(HtmlRenderStats& stats) {
   stats.document_viewport_rect = RectI{};
   stats.table_viewport_rect = RectI{};
@@ -101,6 +110,11 @@ void reset_render_stats(HtmlRenderStats& stats) {
   stats.table_max_scroll_x = 0;
   stats.table_max_scroll_y = 0;
   stats.table_body_row_height_px = 0;
+  stats.document_horizontal_track_rect = RectI{};
+  stats.document_horizontal_thumb_rect = RectI{};
+  stats.document_vertical_track_rect = RectI{};
+  stats.document_vertical_thumb_rect = RectI{};
+  stats.table_scroll_regions.clear();
   stats.has_table = false;
 }
 
@@ -735,6 +749,20 @@ struct LinearGradientSpec {
   return node.tag;
 }
 
+[[nodiscard]] std::string node_instance_target(const HtmlNode& node, std::string_view fallback) {
+  if (const std::string* id = attribute_value(&node, "id"); id != nullptr && !id->empty()) {
+    return *id;
+  }
+  if (const std::string* name = attribute_value(&node, "name"); name != nullptr && !name->empty()) {
+    return *name;
+  }
+
+  std::string target = fallback.empty() ? node.tag : std::string(fallback);
+  target += '@';
+  target += std::to_string(reinterpret_cast<std::uintptr_t>(&node));
+  return target;
+}
+
 [[nodiscard]] std::optional<double> parse_numeric_text(std::string_view value) {
   const std::string token = trim_copy(value);
   if (token.empty()) {
@@ -1161,6 +1189,9 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
     i = j;
     if (token.empty()) continue;
     if (token == ">" || token == "+" || token == "~") continue;
+    if (token.find(':') != std::string::npos) {
+      return {};
+    }
 
     SimpleSelector part{};
     std::size_t p = 0;
@@ -1448,8 +1479,9 @@ void collect_table_rows_recursive(const HtmlNode& node,
 
   if (preferred <= 0 && node.kind == HtmlNodeKind::Text) {
     const std::string transformed = apply_text_transform(node.text, style.text_transform);
-    preferred = layout_math_text(truncate_to_width(transformed, style.font_size, 760), style.font_size).width +
-                (style.padding * 2) + (style.border * 2) + 8;
+    const int natural_width = layout_math_text(transformed, style.font_size).width +
+                              (style.padding * 2) + (style.border * 2) + 8;
+    preferred = style.white_space == "nowrap" ? natural_width : std::min(natural_width, cap_width);
   }
 
   if (preferred <= 0 && (node.tag == "button" || node.tag == "input")) {
@@ -1467,8 +1499,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
     if (style.display == "flex") {
       const int gap = std::max(0, style.gap);
       int sum = 0;
-      const std::size_t sample = std::min<std::size_t>(node.children.size(), 4);
-      for (std::size_t i = 0; i < sample; ++i) {
+      for (std::size_t i = 0; i < node.children.size(); ++i) {
         const int child_w =
             estimate_node_preferred_width(document, node.children[i], lineage, &style, cap_width, viewport_width);
         if (i > 0) {
@@ -1476,11 +1507,10 @@ void collect_table_rows_recursive(const HtmlNode& node,
         }
         sum += child_w;
       }
-      preferred = sum;
+      preferred = style.flex_wrap == "nowrap" ? sum : std::min(sum, cap_width);
     } else {
       int max_child = 0;
-      const std::size_t sample = std::min<std::size_t>(node.children.size(), 4);
-      for (std::size_t i = 0; i < sample; ++i) {
+      for (std::size_t i = 0; i < node.children.size(); ++i) {
         max_child = std::max(max_child,
                              estimate_node_preferred_width(
                                  document, node.children[i], lineage, &style, cap_width, viewport_width));
@@ -1495,7 +1525,7 @@ void collect_table_rows_recursive(const HtmlNode& node,
   }
 
   preferred += style.margin * 2;
-  return std::clamp(preferred, 80, std::max(80, cap_width));
+  return std::clamp(preferred, 80, 32768);
 }
 
 [[nodiscard]] int measure_node_height(const HtmlDocument& document,
@@ -1641,7 +1671,12 @@ void collect_table_rows_recursive(const HtmlNode& node,
     total_rows_height += measure_table_row_height(document, row, plan, style, viewport_width);
   }
 
-  return (margin * 2) + (padding * 2) + (border * 2) + total_rows_height;
+  int viewport_content_height = total_rows_height;
+  if (style.explicit_height > 0) {
+    viewport_content_height = style.explicit_height;
+  }
+  viewport_content_height = std::max(viewport_content_height, style.min_height);
+  return (margin * 2) + (padding * 2) + (border * 2) + viewport_content_height;
 }
 
 [[nodiscard]] int measure_node_height(const HtmlDocument& document,
@@ -1741,7 +1776,10 @@ void collect_table_rows_recursive(const HtmlNode& node,
           child_w = estimate_node_preferred_width(document, child, lineage, &style, content_width, viewport_width);
         }
         if (child_w <= 0) child_w = fallback_w;
-        child_w = std::clamp(child_w, 80, std::max(80, content_width));
+        child_w = std::max(80, child_w);
+        if (wrap) {
+          child_w = std::min(child_w, std::max(80, content_width));
+        }
 
         if (wrap && row_x > 0 && row_x + child_w > content_width) {
           consumed_h += row_h + gap;
@@ -2018,7 +2056,9 @@ struct SvgPaint {
   return paint;
 }
 
-[[nodiscard]] SvgViewport resolve_svg_viewport(const HtmlNode& svg_node, const RectI panel_rect) {
+[[nodiscard]] SvgViewport resolve_svg_viewport(const HtmlNode& svg_node,
+                                               const RectI panel_rect,
+                                               const double requested_scale) {
   SvgViewport viewport{};
   viewport.width = std::max(1.0, static_cast<double>(panel_rect.width));
   viewport.height = std::max(1.0, static_cast<double>(panel_rect.height));
@@ -2041,7 +2081,8 @@ struct SvgPaint {
 
   const double sx = static_cast<double>(std::max(1, panel_rect.width)) / viewport.width;
   const double sy = static_cast<double>(std::max(1, panel_rect.height)) / viewport.height;
-  viewport.scale = std::max(0.001, std::min(sx, sy));
+  viewport.scale = std::max(0.001, std::min(sx, sy)) *
+                   std::clamp(requested_scale, 0.35, 3.0);
   viewport.origin_x =
       static_cast<double>(panel_rect.x) + (static_cast<double>(panel_rect.width) - viewport.width * viewport.scale) * 0.5;
   viewport.origin_y =
@@ -2451,7 +2492,7 @@ int render_table(Scene& scene,
     scene.add(TextCommand{PointI{outer_x + 8, outer_y + 24}, "Empty table", 12, style.text_color});
     return total_h;
   }
-  const std::string table_target = node_interaction_target(node, "table");
+  const std::string table_target = node_instance_target(node, "table");
 
   const int content_x = outer_x + border + padding;
   const int content_y = outer_y + border + padding;
@@ -2589,20 +2630,32 @@ int render_table(Scene& scene,
   const int scrollable_content_w = std::max(0, row_total_w - sticky_total_w);
   const int max_scroll_x = std::max(0, scrollable_content_w - scrollable_view_w);
   const int max_scroll_y = std::max(0, body_total_h - body_viewport_h);
-  const int scroll_x = std::clamp(render_config.table_scroll_x_px, 0, max_scroll_x);
-  const int scroll_y = std::clamp(render_config.table_scroll_y_px, 0, max_scroll_y);
+  int requested_scroll_x = render_config.table_scroll_x_px;
+  int requested_scroll_y = render_config.table_scroll_y_px;
+  if (render_config.table_scroll_offsets != nullptr) {
+    const auto it = render_config.table_scroll_offsets->find(table_target);
+    if (it != render_config.table_scroll_offsets->end()) {
+      requested_scroll_x = it->second.x;
+      requested_scroll_y = it->second.y;
+    }
+  }
+  const int scroll_x = std::clamp(requested_scroll_x, 0, max_scroll_x);
+  const int scroll_y = std::clamp(requested_scroll_y, 0, max_scroll_y);
   const int table_origin_x = content_x - scroll_x;
   const int scrollable_left = content_x + sticky_total_w;
   const int scrollable_right = content_x + content_w;
+  RectI interactive_viewport = viewport_clip;
   if (render_config.render_stats != nullptr) {
     auto& stats = *render_config.render_stats;
+    interactive_viewport = intersect_rect(viewport_clip, stats.document_viewport_rect);
     stats.has_table = true;
-    stats.table_max_scroll_x = std::max(stats.table_max_scroll_x, max_scroll_x);
-    stats.table_max_scroll_y = std::max(stats.table_max_scroll_y, max_scroll_y);
     const int current_area = stats.table_viewport_rect.width * stats.table_viewport_rect.height;
-    const int candidate_area = viewport_clip.width * viewport_clip.height;
+    const int candidate_area = interactive_viewport.width * interactive_viewport.height;
     if (candidate_area >= current_area) {
-      stats.table_viewport_rect = viewport_clip;
+      stats.table_viewport_rect = interactive_viewport;
+      stats.table_max_scroll_x = max_scroll_x;
+      stats.table_max_scroll_y = max_scroll_y;
+      stats.table_body_row_height_px = 0;
     }
     if (!body_order.empty()) {
       const std::size_t sample_count = std::min<std::size_t>(body_order.size(), 12U);
@@ -2611,8 +2664,9 @@ int render_table(Scene& scene,
         sample_sum += row_heights[body_order[i]];
       }
       if (sample_sum > 0 && sample_count > 0) {
-        stats.table_body_row_height_px =
-            std::max(stats.table_body_row_height_px, sample_sum / static_cast<int>(sample_count));
+        if (candidate_area >= current_area) {
+          stats.table_body_row_height_px = sample_sum / static_cast<int>(sample_count);
+        }
       }
     }
   }
@@ -2742,6 +2796,12 @@ int render_table(Scene& scene,
                                          max_lines,
                                          cell_style.font_size,
                                          text_max_w);
+        if (cell_style.has_background) {
+          draw_style_fill(
+              scene,
+              RectI{sticky_x + 1, row_y + 1, std::max(1, sticky_w - 2), std::max(1, row_h - 2)},
+              cell_style);
+        }
         draw_text_lines(scene,
                         wrapped,
                         cell_style.font_size,
@@ -2835,35 +2895,57 @@ int render_table(Scene& scene,
                           1,
                           Color::rgba(216, 222, 228, 255)});
   }
+  RectI horizontal_track{};
+  RectI horizontal_thumb{};
+  RectI vertical_track{};
+  RectI vertical_thumb{};
   if (max_scroll_x > 0) {
-    const int track_h = 6;
-    const int track_y = outer_y + outer_h - std::max(10, padding / 2 + track_h);
+    const int track_h = 10;
+    const int track_y = outer_y + outer_h - std::max(14, padding / 2 + track_h);
     const int track_w = std::max(36, scrollable_view_w - 6);
     const int track_x = content_x + sticky_total_w + 3;
-    draw_rect_fill(scene, RectI{track_x, track_y, track_w, track_h}, Color::rgba(220, 226, 233, 255), 3);
+    horizontal_track = RectI{track_x, track_y, track_w, track_h};
+    draw_rect_fill(scene, horizontal_track, Color::rgba(218, 224, 231, 238), 5);
 
     const double ratio = static_cast<double>(scrollable_view_w) / static_cast<double>(std::max(1, scrollable_content_w));
-    const int thumb_w = std::max(22, static_cast<int>(std::lround(static_cast<double>(track_w) * ratio)));
+    const int thumb_w =
+        std::min(track_w, std::max(32, static_cast<int>(std::lround(static_cast<double>(track_w) * ratio))));
     const int thumb_x = track_x + static_cast<int>(std::lround(
                                    (static_cast<double>(std::max(0, track_w - thumb_w)) *
                                     static_cast<double>(scroll_x)) /
                                    static_cast<double>(max_scroll_x)));
-    draw_rect_fill(scene, RectI{thumb_x, track_y, thumb_w, track_h}, Color::rgba(111, 129, 148, 255), 3);
+    horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
+    draw_rect_fill(scene, horizontal_thumb, Color::rgba(94, 111, 130, 255), 5);
   }
   if (max_scroll_y > 0) {
-    const int track_w = 6;
-    const int track_x = outer_x + outer_w - std::max(10, padding / 2 + track_w);
+    const int track_w = 10;
+    const int track_x = outer_x + outer_w - std::max(14, padding / 2 + track_w);
     const int track_h = std::max(36, body_viewport_h - 6);
     const int track_y = content_y + header_h + 3;
-    draw_rect_fill(scene, RectI{track_x, track_y, track_w, track_h}, Color::rgba(220, 226, 233, 255), 3);
+    vertical_track = RectI{track_x, track_y, track_w, track_h};
+    draw_rect_fill(scene, vertical_track, Color::rgba(218, 224, 231, 238), 5);
 
     const double ratio = static_cast<double>(body_viewport_h) / static_cast<double>(body_total_h);
-    const int thumb_h = std::max(22, static_cast<int>(std::lround(static_cast<double>(track_h) * ratio)));
+    const int thumb_h =
+        std::min(track_h, std::max(32, static_cast<int>(std::lround(static_cast<double>(track_h) * ratio))));
     const int thumb_y = track_y + static_cast<int>(std::lround(
                                    (static_cast<double>(std::max(0, track_h - thumb_h)) *
                                     static_cast<double>(scroll_y)) /
                                    static_cast<double>(max_scroll_y)));
-    draw_rect_fill(scene, RectI{track_x, thumb_y, track_w, thumb_h}, Color::rgba(111, 129, 148, 255), 3);
+    vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
+    draw_rect_fill(scene, vertical_thumb, Color::rgba(94, 111, 130, 255), 5);
+  }
+  if (render_config.render_stats != nullptr) {
+    render_config.render_stats->table_scroll_regions.push_back(HtmlScrollRegion{
+        .target = table_target,
+        .viewport_rect = interactive_viewport,
+        .max_scroll_x = max_scroll_x,
+        .max_scroll_y = max_scroll_y,
+        .horizontal_track_rect = horizontal_track,
+        .horizontal_thumb_rect = horizontal_thumb,
+        .vertical_track_rect = vertical_track,
+        .vertical_thumb_rect = vertical_thumb,
+    });
   }
   return total_h;
 }
@@ -2932,11 +3014,16 @@ int render_node(Scene& scene,
 
   if (node.tag == "button" && render_config.hit_regions != nullptr) {
     std::string target = node_interaction_target(node, trim_copy(collect_node_text(node)));
+    int value = 0;
+    if (const std::string* frame_index = attribute_value(&node, "data-frame-index");
+        frame_index != nullptr) {
+      value = parse_css_int(*frame_index);
+    }
     render_config.hit_regions->push_back(HtmlHitRegion{
         .rect = outer_rect,
         .action = "button.click",
         .target = std::move(target),
-        .value = 0,
+        .value = value,
     });
   }
 
@@ -2950,7 +3037,8 @@ int render_node(Scene& scene,
     }
     if (node.tag == "svg") {
       const SvgPaint root_paint = resolve_svg_paint(node, SvgPaint{});
-      const SvgViewport viewport = resolve_svg_viewport(node, panel_rect);
+      const SvgViewport viewport =
+          resolve_svg_viewport(node, panel_rect, render_config.widget_scale);
       scene.add(SetClipRectCommand{panel_rect});
       render_svg_children(scene, node, viewport, root_paint);
       scene.add(ClearClipRectCommand{});
@@ -3014,7 +3102,7 @@ int render_node(Scene& scene,
                     content_x + 6,
                     baseline_y,
                     line_h,
-                    "left",
+                    style.text_align,
                     std::max(20, content_w - 12));
     if (focused) {
       const int text_w = layout_math_text(clipped, style.font_size).width;
@@ -3125,7 +3213,10 @@ int render_node(Scene& scene,
         child_w = estimate_node_preferred_width(document, child, lineage, &style, content_w, viewport_width);
       }
       if (child_w <= 0) child_w = fallback_w;
-      child_w = std::clamp(child_w, 80, std::max(80, content_w));
+      child_w = std::max(80, child_w);
+      if (wrap) {
+        child_w = std::min(child_w, std::max(80, content_w));
+      }
 
       if (wrap && row_x > 0 && row_x + child_w > content_w) {
         row_y += row_h + gap;
@@ -3172,6 +3263,8 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
   if (config.render_stats != nullptr) {
     reset_render_stats(*config.render_stats);
   }
+  const std::size_t first_hit_region =
+      config.hit_regions != nullptr ? config.hit_regions->size() : 0U;
 
   const int width = std::max(320, viewport.width);
   const int height = std::max(240, viewport.height);
@@ -3245,6 +3338,19 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
     scene.add(ClearClipRectCommand{});
   }
 
+  if (config.hit_regions != nullptr) {
+    auto& regions = *config.hit_regions;
+    std::size_t index = std::min(first_hit_region, regions.size());
+    while (index < regions.size()) {
+      regions[index].rect = intersect_rect(regions[index].rect, body_clip);
+      if (regions[index].rect.empty()) {
+        regions.erase(regions.begin() + static_cast<std::ptrdiff_t>(index));
+      } else {
+        ++index;
+      }
+    }
+  }
+
   if (!rendered_any) {
     scene.add(TextCommand{
         PointI{body_left, body_top + 20},
@@ -3255,34 +3361,48 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
   }
 
   if (max_scroll_x > 0) {
-    const int track_h = 6;
-    const int track_y = body_bottom - 8;
+    const int track_h = 10;
+    const int track_y = body_bottom - 12;
     const int track_x = body_left + 3;
     const int track_w = std::max(40, body_width - (max_scroll_y > 0 ? 14 : 8));
-    draw_rect_fill(scene, RectI{track_x, track_y, track_w, track_h}, Color::rgba(220, 226, 233, 255), 3);
+    const RectI track{track_x, track_y, track_w, track_h};
+    draw_rect_fill(scene, track, Color::rgba(218, 224, 231, 238), 5);
 
     const double ratio = static_cast<double>(body_width) / static_cast<double>(std::max(1, content_pref_w));
-    const int thumb_w = std::max(22, static_cast<int>(std::lround(static_cast<double>(track_w) * ratio)));
+    const int thumb_w =
+        std::min(track_w, std::max(32, static_cast<int>(std::lround(static_cast<double>(track_w) * ratio))));
     const int thumb_x = track_x + static_cast<int>(std::lround(
                                    (static_cast<double>(std::max(0, track_w - thumb_w)) *
                                     static_cast<double>(doc_scroll_x)) /
                                    static_cast<double>(max_scroll_x)));
-    draw_rect_fill(scene, RectI{thumb_x, track_y, thumb_w, track_h}, Color::rgba(111, 129, 148, 255), 3);
+    const RectI thumb{thumb_x, track_y, thumb_w, track_h};
+    draw_rect_fill(scene, thumb, Color::rgba(94, 111, 130, 255), 5);
+    if (config.render_stats != nullptr) {
+      config.render_stats->document_horizontal_track_rect = track;
+      config.render_stats->document_horizontal_thumb_rect = thumb;
+    }
   }
   if (max_scroll_y > 0) {
-    const int track_w = 6;
-    const int track_x = width - std::max(10, config.root_padding_px / 2 + track_w);
+    const int track_w = 10;
+    const int track_x = width - std::max(14, config.root_padding_px / 2 + track_w);
     const int track_y = body_top + 3;
     const int track_h = std::max(36, body_height - (max_scroll_x > 0 ? 14 : 6));
-    draw_rect_fill(scene, RectI{track_x, track_y, track_w, track_h}, Color::rgba(220, 226, 233, 255), 3);
+    const RectI track{track_x, track_y, track_w, track_h};
+    draw_rect_fill(scene, track, Color::rgba(218, 224, 231, 238), 5);
 
     const double ratio = static_cast<double>(body_height) / static_cast<double>(std::max(1, content_height));
-    const int thumb_h = std::max(22, static_cast<int>(std::lround(static_cast<double>(track_h) * ratio)));
+    const int thumb_h =
+        std::min(track_h, std::max(32, static_cast<int>(std::lround(static_cast<double>(track_h) * ratio))));
     const int thumb_y = track_y + static_cast<int>(std::lround(
                                    (static_cast<double>(std::max(0, track_h - thumb_h)) *
                                     static_cast<double>(doc_scroll_y)) /
                                    static_cast<double>(max_scroll_y)));
-    draw_rect_fill(scene, RectI{track_x, thumb_y, track_w, thumb_h}, Color::rgba(111, 129, 148, 255), 3);
+    const RectI thumb{track_x, thumb_y, track_w, thumb_h};
+    draw_rect_fill(scene, thumb, Color::rgba(94, 111, 130, 255), 5);
+    if (config.render_stats != nullptr) {
+      config.render_stats->document_vertical_track_rect = track;
+      config.render_stats->document_vertical_thumb_rect = thumb;
+    }
   }
 
   return scene;

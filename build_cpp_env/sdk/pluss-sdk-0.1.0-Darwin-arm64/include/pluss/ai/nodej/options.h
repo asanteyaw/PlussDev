@@ -72,6 +72,8 @@ enum class ClassWeightMode : std::uint8_t {
 enum class ScoreCalibration : std::uint8_t {
   None = 0,
   Platt = 1,
+  Isotonic = 2,
+  Temperature = 3,
 };
 
 struct RandomState {
@@ -132,6 +134,9 @@ struct SplitOptions {
   std::int64_t time_test_size = 0;
   std::int64_t time_max_train_size = 0;
   bool stratified = false;
+  // Optional per-sample group labels used when plan == CVPlanKind::GroupKFold.
+  // Length must match the sample count.
+  Series groups = Series::undefined();
   bool reliability_defaults = true;
   bool shuffle = true;
   // Parallel workers for fold evaluation in cross_assess.

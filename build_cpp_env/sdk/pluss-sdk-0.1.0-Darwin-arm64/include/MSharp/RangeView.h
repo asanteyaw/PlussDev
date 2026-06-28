@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <algorithm>
 #include <cstdint>
 #include <initializer_list>
 #include <iterator>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <type_traits>
@@ -11,7 +13,6 @@
 
 namespace pluss::codem {
 class Series;
-class SymInt;
 } // namespace pluss::codem
 
 namespace pluss::coden {
@@ -21,6 +22,11 @@ class Note;
 namespace pluss::codeh {
 class Timeline;
 } // namespace pluss::codeh
+
+namespace pluss::msharp {
+class SymInt;
+class SymBool;
+} // namespace pluss::msharp
 
 namespace pluss::msharp {
 
@@ -60,6 +66,11 @@ public:
   template <std::size_t N>
   constexpr BasicRangeView(const T (&array)[N]) noexcept
       : data_(array), size_(N) {}
+
+  template <class U, std::size_t N>
+    requires(std::is_convertible_v<const U*, const T*>)
+  constexpr BasicRangeView(const std::array<U, N>& array) noexcept
+      : data_(array.data()), size_(N) {}
 
   [[nodiscard]] constexpr const T* data() const noexcept { return data_; }
   [[nodiscard]] constexpr std::size_t size() const noexcept { return size_; }
@@ -165,12 +176,27 @@ namespace RangeView {
 template <class T>
 using Of = BasicRangeView<T>;
 
+template <class T>
+using OptionalOf = std::optional<Of<T>>;
+
 using Int = Of<std::int64_t>;
+using Bool = Of<bool>;
 using Double = Of<double>;
-using SymInt = Of<pluss::codem::SymInt>;
+// Alias over the scalar symbolic-int type owned by MSharp.
+// RangeView is the non-owning view container; element types come from domain modules.
+using SymInt = Of<pluss::msharp::SymInt>;
+using SymBool = Of<pluss::msharp::SymBool>;
 using Series = Of<pluss::codem::Series>;
 using Note = Of<pluss::coden::Note>;
 using Timeline = Of<pluss::codeh::Timeline>;
+
+using OptionalInt = OptionalOf<std::int64_t>;
+using OptionalBool = OptionalOf<bool>;
+using OptionalSymInt = OptionalOf<pluss::msharp::SymInt>;
+using OptionalSymBool = OptionalOf<pluss::msharp::SymBool>;
+using OptionalSeries = OptionalOf<pluss::codem::Series>;
+using OptionalNote = OptionalOf<pluss::coden::Note>;
+using OptionalTimeline = OptionalOf<pluss::codeh::Timeline>;
 
 } // namespace RangeView
 

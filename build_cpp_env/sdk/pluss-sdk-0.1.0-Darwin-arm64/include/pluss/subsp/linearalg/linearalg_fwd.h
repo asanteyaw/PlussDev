@@ -73,6 +73,8 @@ struct LinearAlgDispatchCounters {
   std::uint64_t mps_native_svd_device_fallback = 0;
 };
 
+struct SvdDecomposition;
+
 CODEM_API const char* linearalg_dense_provider_name(LinearAlgDenseProvider provider) noexcept;
 CODEM_API const char* linearalg_solver_provider_name(LinearAlgSolverProvider provider) noexcept;
 CODEM_API LinearAlgBackendInfo linearalg_backend_info(LinearAlgTarget target = LinearAlgTarget::CPU) noexcept;
@@ -101,6 +103,7 @@ CODEM_API pluss::codem::Series qr_r(const pluss::codem::Series& a, bool reduced 
 CODEM_API pluss::codem::Series svd_u(const pluss::codem::Series& a, bool full_matrices = true);
 CODEM_API pluss::codem::Series svd_s(const pluss::codem::Series& a, bool full_matrices = true);
 CODEM_API pluss::codem::Series svd_vh(const pluss::codem::Series& a, bool full_matrices = true);
+CODEM_API SvdDecomposition svd(const pluss::codem::Series& a, bool full_matrices = true);
 
 CODEM_API pluss::codem::Series triangular_solve(const pluss::codem::Series& a,
                                                 const pluss::codem::Series& b,

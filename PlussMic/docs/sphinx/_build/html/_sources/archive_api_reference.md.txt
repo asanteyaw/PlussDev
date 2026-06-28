@@ -52,6 +52,12 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Practical Behavior
+
+- `aggregate_over_catalogs(...)` hands the full catalog vector to your reducer and expects one output object back.
+- Use it when the aggregation depends on multiple catalogs together rather than catalog-by-catalog mapping.
+
+
 ### `align_depth`
 
 #### Signature
@@ -97,6 +103,12 @@ auto out = archive.align_depth(labels);
 train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
 ```
+
+#### Practical Behavior
+
+- `align_depth(labels)` reorders catalogs to match the requested depth label order.
+- Use it when archive depth order must match another archive or reporting layout.
+
 
 ### `catalog`
 
@@ -316,6 +328,56 @@ auto out = archive.depth_labels();
 ["train", "test"]
 ```
 
+### `dloc`
+
+#### Signature
+
+```cpp
+Catalog dloc(self, std::int64_t i) const
+```
+
+#### Parameters
+
+`i` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Catalog`
+    Value produced by this call.
+
+#### Notes
+
+Applies `dloc` to the current `Archive` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
+});
+auto c1 = pluss::kindle::Catalog({
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
+});
+auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
+
+auto out = archive.dloc(1);
+```
+
+#### Output
+
+```text
+metric -> Series([30.0, 40.0])
+```
+
+#### Practical Behavior
+
+- `dloc(i)` is the positional depth-access alias for `catalog(i)`.
+- Use it when you want the depth-axis wording to be explicit.
+
+
 ### `empty`
 
 #### Signature
@@ -402,52 +464,6 @@ auto out = archive.head(1);
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-Catalog iloc(self, std::int64_t i) const
-```
-
-#### Parameters
-
-`i` : `std::int64_t`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto c0 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0})),
-});
-auto c1 = pluss::kindle::Catalog({
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0})),
-});
-auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::make_note({"train", "test"})));
-
-auto out = archive.iloc(0);
-```
-
-#### Output
-
-```text
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
 ### `kindelize`

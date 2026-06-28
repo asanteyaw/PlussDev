@@ -4,6 +4,7 @@
 #include "lstm_impl.h"
 #include "rnn_impl.h"
 #include <NodeK/kernels/cudnn_rnn.h>
+#include <NodeK/kernels/mps_rnn.h>
 
 #include <tuple>
 #include <utility>
@@ -14,19 +15,20 @@ namespace pluss::ai::rnn::detail {
 inline bool weight_tracks_slope_(const NetWeight& w) {
   return (w.weight_ih.defined() && w.weight_ih.tracks_slope()) ||
       (w.weight_hh.defined() && w.weight_hh.tracks_slope()) ||
+      (w.bias.defined() && w.bias.tracks_slope()) ||
       (w.bias_ih.defined() && w.bias_ih.tracks_slope()) ||
       (w.bias_hh.defined() && w.bias_hh.tracks_slope()) ||
       (w.weight_hr.defined() && w.weight_hr.tracks_slope());
 }
 
-inline bool any_weight_tracks_slope_(const std::vector<NetWeight>& params) {
+inline bool any_weight_tracks_slope_(pluss::msharp::RangeView::Of<NetWeight> params) {
   for (const auto& p : params) {
     if (weight_tracks_slope_(p)) return true;
   }
   return false;
 }
 
-inline Series stack_dim0_(const std::vector<Series>& xs) {
+inline Series stack_dim0_(pluss::msharp::RangeView::Series xs) {
   PLUSS_CHECK(!xs.empty(), "pluss::rnn: stack_dim0 requires non-empty inputs");
   Series head = xs.front().unsqueeze(0);
   if (xs.size() == 1) return head;
@@ -84,7 +86,7 @@ inline std::pair<Series, Series> gru_layer(const Series& input,
       const Series r = gate_chunk(step, 0, 3).add(gate_chunk(gh, 0, 3)).sigmoid();
       const Series z = gate_chunk(step, 1, 3).add(gate_chunk(gh, 1, 3)).sigmoid();
       const Series n = gate_chunk(step, 2, 3).add(r.mul(gate_chunk(gh, 2, 3))).tanh();
-      hidden = z.mul(hidden).add((1.0 - z).mul(n));
+      hidden = n.add(z.mul(hidden.sub(n)));
     } else {
       hidden = gru_impl(step, hidden, params, cfg.split_bias);
     }
@@ -137,10 +139,11 @@ namespace pluss::ai::rnn {
 
 inline std::tuple<Series, Series> rnn(const Series& input,
                                       const Series& hx,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   validate_config(cfg);
   detail::validate_param_count(params, cfg, "rnn");
+  detail::validate_bias_layout(params, cfg, "rnn");
   const Series x0 = detail::maybe_batch_first_to_time_major(input, cfg);
   detail::require_rank_at_least_(x0, 3, "rnn");
   const std::int64_t batch = x0.sizes()[1];
@@ -155,6 +158,11 @@ inline std::tuple<Series, Series> rnn(const Series& input,
       cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_rnn(x0, state, params, cfg, require_backward); routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+  if (x0.platform() == pluss::pMPS) {
+    if (const auto routed = ::pluss::ai::kernels::mps::try_rnn(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
     }
   }
@@ -184,17 +192,31 @@ inline std::tuple<Series, Series> rnn(const Series& input,
 }
 
 inline std::tuple<Series, Series> rnn(const Series& input,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   return rnn(input, Series(), params, std::move(cfg));
 }
 
+inline std::tuple<Series, Series> rnn(const Series& input,
+                                      const Series& hx,
+                                      const NetWeight& params,
+                                      NetConfig cfg = {}) {
+  return rnn(input, hx, pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+}
+
+inline std::tuple<Series, Series> rnn(const Series& input,
+                                      const NetWeight& params,
+                                      NetConfig cfg = {}) {
+  return rnn(input, Series(), pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+}
+
 inline std::tuple<Series, Series> gru(const Series& input,
                                       const Series& hx,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   validate_config(cfg);
   detail::validate_param_count(params, cfg, "gru");
+  detail::validate_bias_layout(params, cfg, "gru");
   const Series x0 = detail::maybe_batch_first_to_time_major(input, cfg);
   detail::require_rank_at_least_(x0, 3, "gru");
   const std::int64_t batch = x0.sizes()[1];
@@ -209,6 +231,11 @@ inline std::tuple<Series, Series> gru(const Series& input,
       cfg.training && (x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+  if (x0.platform() == pluss::pMPS) {
+    if (const auto routed = ::pluss::ai::kernels::mps::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
     }
   }
@@ -238,26 +265,41 @@ inline std::tuple<Series, Series> gru(const Series& input,
 }
 
 inline std::tuple<Series, Series> gru(const Series& input,
-                                      const std::vector<NetWeight>& params,
+                                      pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
   return gru(input, Series(), params, std::move(cfg));
 }
 
-inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
-                                                           const Series& hx,
-                                                           const Series& cx,
-                                                           const std::vector<NetWeight>& params,
-                                                           NetConfig cfg = {}) {
+inline std::tuple<Series, Series> gru(const Series& input,
+                                      const Series& hx,
+                                      const NetWeight& params,
+                                      NetConfig cfg = {}) {
+  return gru(input, hx, pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+}
+
+inline std::tuple<Series, Series> gru(const Series& input,
+                                      const NetWeight& params,
+                                      NetConfig cfg = {}) {
+  return gru(input, Series(), pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+}
+
+using LSTMState = std::tuple<Series, Series>;
+
+inline std::tuple<Series, LSTMState> lstm(const Series& input,
+                                          const LSTMState& state,
+                                          pluss::msharp::RangeView::Of<NetWeight> params,
+                                          NetConfig cfg = {}) {
   validate_config(cfg);
   detail::validate_param_count(params, cfg, "lstm");
+  detail::validate_bias_layout(params, cfg, "lstm");
   const Series x0 = detail::maybe_batch_first_to_time_major(input, cfg);
   detail::require_rank_at_least_(x0, 3, "lstm");
   const std::int64_t batch = x0.sizes()[1];
   const std::int64_t dirs = cfg.bidirectional ? 2 : 1;
   const std::int64_t cell_hidden = params.front().weight_ih.sizes()[0] / 4;
   const std::int64_t hidden_out = params.front().weight_hr.defined() ? params.front().weight_hr.sizes()[0] : cell_hidden;
-  Series hidden = hx;
-  Series cell = cx;
+  Series hidden = std::get<0>(state);
+  Series cell = std::get<1>(state);
   if (!hidden.defined()) {
     hidden = detail::zeros_state_({cfg.num_layers * dirs, batch, hidden_out}, x0);
   }
@@ -270,6 +312,12 @@ inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
       (x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() || detail::any_weight_tracks_slope_(params));
   if (x0.platform() == pluss::pCUDA) {
     if (const auto routed = ::pluss::ai::kernels::cudnn::try_lstm(x0, hidden, cell, params, cfg, require_backward);
+        routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+  if (x0.platform() == pluss::pMPS) {
+    if (const auto routed = ::pluss::ai::kernels::mps::try_lstm(x0, hidden, cell, params, cfg, require_backward);
         routed.has_value()) {
       return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
     }
@@ -312,10 +360,39 @@ inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
       std::make_tuple(detail::stack_dim0_(final_hidden), detail::stack_dim0_(final_cell))};
 }
 
-inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
-                                                           const std::vector<NetWeight>& params,
-                                                           NetConfig cfg = {}) {
-  return lstm(input, Series(), Series(), params, std::move(cfg));
+inline std::tuple<Series, LSTMState> lstm(const Series& input,
+                                          const Series& hx,
+                                          const Series& cx,
+                                          pluss::msharp::RangeView::Of<NetWeight> params,
+                                          NetConfig cfg = {}) {
+  return lstm(input, LSTMState{hx, cx}, params, std::move(cfg));
+}
+
+inline std::tuple<Series, LSTMState> lstm(const Series& input,
+                                          pluss::msharp::RangeView::Of<NetWeight> params,
+                                          NetConfig cfg = {}) {
+  return lstm(input, LSTMState{}, params, std::move(cfg));
+}
+
+inline std::tuple<Series, LSTMState> lstm(const Series& input,
+                                          const LSTMState& state,
+                                          const NetWeight& params,
+                                          NetConfig cfg = {}) {
+  return lstm(input, state, pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+}
+
+inline std::tuple<Series, LSTMState> lstm(const Series& input,
+                                          const Series& hx,
+                                          const Series& cx,
+                                          const NetWeight& params,
+                                          NetConfig cfg = {}) {
+  return lstm(input, LSTMState{hx, cx}, pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+}
+
+inline std::tuple<Series, LSTMState> lstm(const Series& input,
+                                          const NetWeight& params,
+                                          NetConfig cfg = {}) {
+  return lstm(input, LSTMState{}, pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
 }
 
 } // namespace pluss::ai::rnn

@@ -52,6 +52,12 @@ depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
 
+#### Practical Behavior
+
+- `apply_slot(key, fn)` walks every registry in the aisle and rewrites that slot only where it exists.
+- Registries that do not have the requested key are left unchanged.
+
+
 ### `as_kindle`
 
 #### Signature
@@ -94,6 +100,12 @@ train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
 ```
 
+#### Bridge Behavior
+
+- `as_kindle()` converts the aisle into the Archive model.
+- Use this when the next workflow is archive/catalog based rather than bundle based.
+
+
 ### `concat_depth`
 
 #### Signature
@@ -135,7 +147,15 @@ auto out = aisle.concat_depth(aisle);
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
+depth2 -> Registry(ids -> Slot([Series(1), Series(2)]))
+depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+
+#### Practical Behavior
+
+- `concat_depth(other)` appends the other aisle’s registries onto the current depth axis.
+- If both aisles have labels, the labels are concatenated too.
+
 
 ### `defined`
 

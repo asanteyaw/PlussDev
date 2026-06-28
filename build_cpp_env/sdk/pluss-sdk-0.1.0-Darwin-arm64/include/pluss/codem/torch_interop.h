@@ -33,7 +33,7 @@ inline torch::ScalarType to_torch_dtype(ScalarType st) {
     case ScalarType::Float64: return torch::kFloat64;
     default: break;
   }
-  throw std::runtime_error("to_torch_dtype: unsupported dtype");
+  ::pluss::throw_error("to_torch_dtype: unsupported dtype");
 }
 
 inline ScalarType from_torch_dtype(torch::ScalarType st) {
@@ -53,17 +53,17 @@ inline ScalarType from_torch_dtype(torch::ScalarType st) {
     case torch::kFloat64: return ScalarType::Float64;
     default: break;
   }
-  throw std::runtime_error("from_torch_dtype: unsupported dtype");
+  ::pluss::throw_error("from_torch_dtype: unsupported dtype");
 }
 
 // Create a pluss Series view over a CPU torch::Tensor (zero-copy).
 // Keeps the torch tensor alive via shared_ptr deleter capture.
 inline Series from_torch(const torch::Tensor& t) {
-  if (!t.defined()) throw std::runtime_error("from_torch: undefined");
-  if (!t.device().is_cpu()) throw std::runtime_error("from_torch: CPU only");
+  if (!t.defined()) ::pluss::throw_error("from_torch: undefined");
+  if (!t.device().is_cpu()) ::pluss::throw_error("from_torch: CPU only");
   if (!t.is_contiguous() && !t.is_non_overlapping_and_dense()) {
     // We can still represent strided views, but we require well-defined strides without overlap.
-    throw std::runtime_error("from_torch: tensor must be non-overlapping and dense (or contiguous)");
+    ::pluss::throw_error("from_torch: tensor must be non-overlapping and dense (or contiguous)");
   }
 
   const auto st = from_torch_dtype(t.scalar_type());
@@ -91,7 +91,7 @@ inline Series from_torch(const torch::Tensor& t) {
 // Convert Series -> torch::Tensor view (zero-copy) when possible.
 // If Series is overlapping/unsupported strides, you can call s.contiguous() first.
 namespace detail { inline torch::Tensor to_torch(const Series& s) {
-  if (!s.defined()) throw std::runtime_error("to_torch: undefined");
+  if (!s.defined()) ::pluss::throw_error("to_torch: undefined");
   // We expose CPU tensors only.
   const auto dtype = to_torch_dtype(s.scalar_type());
 

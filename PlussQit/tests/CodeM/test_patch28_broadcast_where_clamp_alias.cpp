@@ -1,5 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
+#include <cmath>
+#include <limits>
 
 using pluss::codem::Series;
 using pluss::codem::ScalarType;
@@ -27,4 +29,14 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
   auto ws = a.where(m, 7.0);
   auto* wsp = reinterpret_cast<const std::int64_t*>(ws.raw_data());
   REQUIRE(wsp[3] == 7);
+
+  auto finite = pluss::make_series({1.0, 2.0});
+  auto nan_values = pluss::full(
+      {2},
+      std::numeric_limits<double>::quiet_NaN(),
+      ScalarType::Float64);
+  auto choose_nan = pluss::make_series({false, true});
+  auto selected = finite.where(choose_nan, nan_values).to_vec<double>();
+  REQUIRE(selected[0] == 1.0);
+  REQUIRE(std::isnan(selected[1]));
 }

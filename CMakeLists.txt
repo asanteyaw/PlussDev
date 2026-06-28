@@ -263,6 +263,9 @@ if(TARGET plusstils_view_window_registry_demo AND TARGET PlussMic)
         PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
     )
 endif()
+if(TARGET plusstils_view_plussmic_inhouse_showcase AND TARGET PlussMic)
+    target_link_libraries(plusstils_view_plussmic_inhouse_showcase PRIVATE PlussMic)
+endif()
 
 # Top-level aggregate target for downstream consumers that want the full stack.
 # Use together with `#include <pluss/pluss.h>`.

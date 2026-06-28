@@ -58,6 +58,13 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 
+#### Practical Behavior
+
+- `apply(...)` rewrites one slot or a selected slot set; `apply_all(...)` rewrites every slot.
+- The transform must return a defined slot.
+- Use the underscore form when you want the mutation in place.
+
+
 ### `apply`
 
 #### Signature
@@ -109,6 +116,13 @@ out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+
+#### Practical Behavior
+
+- `apply(...)` rewrites one slot or a selected slot set; `apply_all(...)` rewrites every slot.
+- The transform must return a defined slot.
+- Use the underscore form when you want the mutation in place.
+
 
 ### `apply_`
 
@@ -235,6 +249,13 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
 
+#### Practical Behavior
+
+- `apply(...)` rewrites one slot or a selected slot set; `apply_all(...)` rewrites every slot.
+- The transform must return a defined slot.
+- Use the underscore form when you want the mutation in place.
+
+
 ### `as_kindle`
 
 #### Signature
@@ -275,6 +296,12 @@ metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
 
+#### Bridge Behavior
+
+- `as_kindle()` converts the registry into the Kindle/Catalog model.
+- Use this when the next operation is stream-oriented rather than bundle-oriented.
+
+
 ### `at`
 
 #### Signature
@@ -313,6 +340,12 @@ auto out = rg.at("ids");
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+
+#### Practical Behavior
+
+- `at(key)` fetches one named slot from the registry.
+- Use it when you want direct slot access before applying slot-level transforms.
+
 
 ### `begin`
 
@@ -388,9 +421,14 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+<empty rg>
 ```
+
+#### Practical Behavior
+
+- `clear()` returns an empty registry with no slots.
+- Use `clear_()` when you want the same effect in place.
+
 
 ### `clear_`
 
@@ -423,6 +461,93 @@ auto rg = pluss::bundle::Registry({
 
 rg.clear_();
 ```
+
+### `cloc`
+
+#### Signature
+
+```cpp
+Registry cloc(self, std::int64_t row) const
+```
+
+#### Parameters
+
+`row` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Notes
+
+Applies `cloc` to the current `Registry` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Registry cloc(self, std::int64_t start, std::int64_t stop) const`
+
+#### Examples
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.cloc();
+```
+
+#### Practical Behavior
+
+- `cloc(...)` slices positional rows across every slot while keeping slot alignment intact.
+
+
+### `cloc`
+
+#### Signature
+
+```cpp
+Registry cloc(self, std::int64_t start, std::int64_t stop) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    Inclusive starting position of the slice.
+
+`stop` : `std::int64_t`
+    Exclusive ending position of the slice.
+
+#### Returns
+
+`Registry`
+    Value produced by this call.
+
+#### Notes
+
+Applies `cloc` to the current `Registry` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Registry cloc(self, std::int64_t row) const`
+
+#### Examples
+
+```cpp
+auto rg = pluss::bundle::Registry({
+    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
+});
+
+auto out = rg.cloc();
+```
+
+#### Practical Behavior
+
+- `cloc(...)` slices positional rows across every slot while keeping slot alignment intact.
+
 
 ### `combine`
 
@@ -469,9 +594,16 @@ ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+ids      -> Slot([Series(1), Series(2), Series(3)])
+city     -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+flag_rhs -> Slot([Series(true), Series(false), Series(true)])
 ```
+
+#### Practical Behavior
+
+- `combine(other, suffix)` appends slots from `other` and renames collisions using the supplied suffix.
+- If the first suffixed name still collides, numbered suffixes are added until the name is unique.
+
 
 ### `concat_values`
 
@@ -515,12 +647,17 @@ auto out = rg.concat_values("ids", extra);
 ```text
 rg.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
+ids  -> Slot([Series(1), Series(2), Series(3), Series(4), Series(5)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+
+#### Practical Behavior
+
+- `concat_values(key, other)` appends the values from another slot onto one existing slot.
+- The target key must exist and the appended slot must be defined.
+
 
 ### `concat_values_`
 
@@ -645,8 +782,13 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+
+#### Practical Behavior
+
+- `drop(...)` removes named slots, not individual values.
+- Unknown keys throw immediately.
+
 
 ### `drop`
 
@@ -695,8 +837,13 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+
+#### Practical Behavior
+
+- `drop(...)` removes named slots, not individual values.
+- Unknown keys throw immediately.
+
 
 ### `drop`
 
@@ -745,8 +892,13 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+
+#### Practical Behavior
+
+- `drop(...)` removes named slots, not individual values.
+- Unknown keys throw immediately.
+
 
 ### `drop_empty_slots`
 
@@ -774,6 +926,7 @@ Removes slots whose payload is empty and returns the reduced registry.
 ```cpp
 auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"empty", pluss::bundle::Slot({})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
@@ -784,13 +937,20 @@ auto out = rg.drop_empty_slots();
 
 ```text
 rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+ids    -> Slot([Series(1), Series(2), Series(3)])
+empty  -> Slot([])
+city   -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 
 out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+
+#### Practical Behavior
+
+- These methods remove slots whose payload is empty.
+- Non-empty slots are passed through unchanged.
+
 
 ### `drop_empty_slots_`
 
@@ -818,11 +978,18 @@ Removes empty slots in place.
 ```cpp
 auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
+    {"empty", pluss::bundle::Slot({})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 rg.drop_empty_slots_();
 ```
+
+#### Practical Behavior
+
+- These methods remove slots whose payload is empty.
+- Non-empty slots are passed through unchanged.
+
 
 ### `empty`
 
@@ -1366,107 +1533,6 @@ auto rg = pluss::bundle::Registry({
 });
 
 auto out = rg.head(2);
-```
-
-#### Output
-
-```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-Registry iloc(self, std::int64_t row) const
-```
-
-#### Parameters
-
-`row` : `std::int64_t`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`Registry`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### See also
-
-- `Registry iloc(self, std::int64_t start, std::int64_t stop) const`
-
-#### Examples
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.iloc(1);
-```
-
-#### Output
-
-```text
-rg.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-
-out.head():
-ids  -> Slot([Series(1), Series(2), Series(3)])
-city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
-```
-
-### `iloc`
-
-#### Signature
-
-```cpp
-Registry iloc(self, std::int64_t start, std::int64_t stop) const
-```
-
-#### Parameters
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::int64_t`
-    Exclusive ending position of the slice.
-
-#### Returns
-
-`Registry`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### See also
-
-- `Registry iloc(self, std::int64_t row) const`
-
-#### Examples
-
-```cpp
-auto rg = pluss::bundle::Registry({
-    {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
-    {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
-});
-
-auto out = rg.iloc(0, 2);
 ```
 
 #### Output

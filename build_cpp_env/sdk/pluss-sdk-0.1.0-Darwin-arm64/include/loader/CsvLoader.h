@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "pluss/coden/coden.h"
 #include "table/Thread.h"
 
 namespace pluss::table {
@@ -27,8 +28,8 @@ enum class BadLinePolicy : std::uint8_t {
 
 enum class CsvEngine : std::uint8_t {
   Auto = 0,
-  Serial = 1,
-  Parallel = 2,
+  Parallel = 1,
+  Serial = 2,
 };
 
 struct CsvSeparator {
@@ -56,6 +57,9 @@ struct ReadCsvOptions {
   CsvEngine engine{CsvEngine::Auto};
   std::optional<std::size_t> parallel_threads{};
   std::size_t parallel_min_bytes{4 * 1024 * 1024};
+  // Auto policy: prefer Serial (Note-backed) ingest only for very large files.
+  // Tuned to bias Auto toward Parallel on large-but-common workloads.
+  std::size_t auto_serial_min_bytes{2ULL * 1024ULL * 1024ULL * 1024ULL};
   bool profile{false};
 
   // Parsing structure
@@ -127,6 +131,7 @@ struct CsvRawColumn {
   std::string name{};
   std::size_t source_index{0};
   std::vector<std::string> values{};
+  std::optional<pluss::coden::Note> note_values{};
 };
 
 struct CsvRawBatch {
@@ -144,11 +149,6 @@ CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string
                                        const ReadCsvOptions& options = {});
 CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options);
 CsvRawBatch read_csv_raw_batch(std::string_view filepath, const ReadCsvOptions& options = {});
-
-pluss::table::Thread infer_thread_from_raw_csv_column(std::string_view col_name,
-                                                       std::size_t source_col_index,
-                                                       const std::vector<std::string>& raw_values,
-                                                       const ReadCsvOptions& options);
 
 CsvBatch read_csv_batch(const ReadCsvOptions& options);
 CsvBatch read_csv_batch(std::string_view filepath, const ReadCsvOptions& options = {});

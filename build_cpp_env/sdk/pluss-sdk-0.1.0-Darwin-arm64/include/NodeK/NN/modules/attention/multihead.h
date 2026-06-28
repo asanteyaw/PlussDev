@@ -58,8 +58,8 @@ public:
         options_.embed_dim % options_.num_heads == 0,
         "pluss::ai::nn::MultiheadAttention: embed_dim must be divisible by num_heads");
     PLUSS_CHECK(
-        options_.dropout >= 0.0 && options_.dropout < 1.0,
-        "pluss::ai::nn::MultiheadAttention: dropout must be in [0,1)");
+        options_.dropout >= 0.0 && options_.dropout <= 1.0,
+        "pluss::ai::nn::MultiheadAttention: dropout must be in [0,1]");
 
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
     const double bound = 1.0 / std::sqrt(static_cast<double>(options_.embed_dim));

@@ -24,13 +24,16 @@
 // - pluss::io::save(...) / pluss::io::load<...>(...)
 // - pluss::save(...) / pluss::load<...>(...) aliases
 //
+// Validation facade (function-style checks):
+// - pluss::validate::check(...) / warn(...) / fail(...) / inspect(...) / check_eq(...)
+//
 // Dynamic union holder:
-// - pluss::Queue (Series/Note/Timeline/TimeIndex)
-// - pluss::Queue::invoke("method", args...) for dynamic method-name dispatch on Queue
+// - pluss::Type (Series/Note/Timeline/TimeIndex)
+// - pluss::Type::invoke("method", args...) for dynamic method-name dispatch on Type
 // - pluss::dispense<R>(obj, "method", args...) typed dynamic dispatch
 // - pluss::dispense_any(obj, "method", args...) runtime variant dispatch
 //
-// Core pluss surface (Series/Note/Timeline/TimeIndex + Queue/Dispense) lives in PlussQit.
+// Core pluss surface (Series/Note/Timeline/TimeIndex + Type/Dispense) lives in PlussQit.
 #include "pluss/core.h"
 
 // PlussAI is intentionally opt-in:

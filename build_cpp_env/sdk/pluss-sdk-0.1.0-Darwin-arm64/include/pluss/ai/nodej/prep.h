@@ -219,7 +219,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   FunctionTransformerOptions options_{};
@@ -250,11 +250,11 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
-  Status add_stage(std::unique_ptr<TransformerBase> transformer, std::vector<std::int64_t> feature_route);
+  Status add_stage(std::unique_ptr<TransformerBase> transformer, pluss::msharp::RangeView::Int feature_route);
   Status add_pipeline(std::vector<std::unique_ptr<TransformerBase>> transformers,
-                      std::vector<std::int64_t> feature_route);
+                      pluss::msharp::RangeView::Int feature_route);
   void clear_stages() noexcept;
   [[nodiscard]] std::int64_t stage_count() const noexcept;
 
@@ -286,7 +286,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   StandardScalerOptions options_{};
@@ -308,7 +308,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   MinMaxScalerOptions options_{};
@@ -330,7 +330,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   RobustScalerOptions options_{};
@@ -352,7 +352,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   SimpleImputerOptions options_{};
@@ -373,7 +373,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   NeighborImputerOptions options_{};
@@ -396,7 +396,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   IterativeImputerOptions options_{};
@@ -419,7 +419,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   VectorNormalizerOptions options_{};
@@ -439,7 +439,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   MaxAbsScalerOptions options_{};
@@ -460,7 +460,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   QuantileMapOptions options_{};
@@ -481,7 +481,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   PowerMapOptions options_{};
@@ -504,7 +504,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   ThresholdBinarizerOptions options_{};
@@ -524,7 +524,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   PolynomialLiftOptions options_{};
@@ -551,7 +551,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   OneHotEncoderOptions options_{};
@@ -580,7 +580,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   FrequencyEncoderOptions options_{};
@@ -607,7 +607,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   OrdinalEncoderOptions options_{};
@@ -633,7 +633,7 @@ public:
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
-  Status load_state(const std::vector<Series>& state) override;
+  Status load_state(pluss::msharp::RangeView::Series state) override;
 
 private:
   LabelEncoderOptions options_{};

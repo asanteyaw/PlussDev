@@ -87,8 +87,16 @@ void set_keep_sensitivity(const Series& s, bool keep);
 
 bool is_leaf(const Series& s);
 std::optional<SourceInfo> source_info(const Series& s);
+std::shared_ptr<SourceLink> source_link(const Series& s);
 
 void bind_source_link(
+    const Series& s,
+    std::shared_ptr<SourceLink> link,
+    const std::source_location& loc = std::source_location::current());
+// Records alias lineage without forcing `tracks_slope=true` on `s`.
+// This is used by view-producing ops so later in-place mutations can recover
+// the base alias chain even when the base was not tracked at view creation.
+void bind_alias_link(
     const Series& s,
     std::shared_ptr<SourceLink> link,
     const std::source_location& loc = std::source_location::current());

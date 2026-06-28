@@ -25,6 +25,7 @@ add_library(PlussTilsView STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_document.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_layout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_mapping.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/window/html/html_scroll.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/text/text_layout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/InHouseHtmlViewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/PlatformHtmlViewer.h
@@ -276,6 +277,26 @@ set_target_properties(plusstils_view_inhouse_html_render_demo PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
+add_executable(plusstils_view_inhouse_scroll_showcase
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/window/inhouse_scroll_showcase.cpp
+)
+target_link_libraries(plusstils_view_inhouse_scroll_showcase PRIVATE PlussTilsView)
+set_target_properties(plusstils_view_inhouse_scroll_showcase PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
+add_executable(plusstils_view_plussmic_inhouse_showcase
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/window/plussmic_inhouse_showcase.cpp
+)
+target_link_libraries(plusstils_view_plussmic_inhouse_showcase PRIVATE PlussTilsView)
+set_target_properties(plusstils_view_plussmic_inhouse_showcase PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
 if(PLUSSTILS_VIEW_ENABLE_EXPERIMENTAL_NATIVE_SHOWCASE)
     add_executable(plusstils_view_window_popup_showcase_demo
         ${CMAKE_CURRENT_SOURCE_DIR}/examples/window/popup_showcase_demo.cpp
@@ -286,6 +307,34 @@ if(PLUSSTILS_VIEW_ENABLE_EXPERIMENTAL_NATIVE_SHOWCASE)
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
     )
+endif()
+
+if(BUILD_TESTING)
+    add_executable(plussview_html_scroll_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/html_scroll_tests.cpp
+    )
+    target_link_libraries(plussview_html_scroll_tests PRIVATE PlussTilsView)
+    set_target_properties(plussview_html_scroll_tests PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
+    add_test(NAME plussview_html_scroll_tests COMMAND plussview_html_scroll_tests)
+
+    if(APPLE)
+        add_executable(plussview_macos_input_driver
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/macos_input_driver.mm
+        )
+        target_link_libraries(plussview_macos_input_driver PRIVATE
+            "-framework AppKit"
+            "-framework CoreGraphics"
+        )
+        set_target_properties(plussview_macos_input_driver PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
+            CXX_EXTENSIONS OFF
+        )
+    endif()
 endif()
 
 install(TARGETS PlussTilsView

@@ -332,6 +332,62 @@ plusstils_view_inhouse_html_render_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_html_render_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_html_render_demo.dir/build
 .PHONY : plusstils_view_inhouse_html_render_demo/fast
 
+# Convenience name for target.
+PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/rule
+.PHONY : PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/rule
+
+# Convenience name for target.
+plusstils_view_inhouse_scroll_showcase: PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/rule
+.PHONY : plusstils_view_inhouse_scroll_showcase
+
+# fast build rule for target.
+plusstils_view_inhouse_scroll_showcase/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build
+.PHONY : plusstils_view_inhouse_scroll_showcase/fast
+
+# Convenience name for target.
+PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/rule
+.PHONY : PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/rule
+
+# Convenience name for target.
+plusstils_view_plussmic_inhouse_showcase: PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/rule
+.PHONY : plusstils_view_plussmic_inhouse_showcase
+
+# fast build rule for target.
+plusstils_view_plussmic_inhouse_showcase/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build
+.PHONY : plusstils_view_plussmic_inhouse_showcase/fast
+
+# Convenience name for target.
+PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule
+.PHONY : PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule
+
+# Convenience name for target.
+plussview_html_scroll_tests: PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule
+.PHONY : plussview_html_scroll_tests
+
+# fast build rule for target.
+plussview_html_scroll_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build
+.PHONY : plussview_html_scroll_tests/fast
+
+# Convenience name for target.
+PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule
+.PHONY : PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule
+
+# Convenience name for target.
+plussview_macos_input_driver: PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule
+.PHONY : plussview_macos_input_driver
+
+# fast build rule for target.
+plussview_macos_input_driver/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build.make PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build
+.PHONY : plussview_macos_input_driver/fast
+
 examples/window/export_smoke_demo.o: examples/window/export_smoke_demo.cpp.o
 .PHONY : examples/window/export_smoke_demo.o
 
@@ -404,6 +460,30 @@ examples/window/inhouse_html_render_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_html_render_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_html_render_demo.dir/examples/window/inhouse_html_render_demo.cpp.s
 .PHONY : examples/window/inhouse_html_render_demo.cpp.s
 
+examples/window/inhouse_scroll_showcase.o: examples/window/inhouse_scroll_showcase.cpp.o
+.PHONY : examples/window/inhouse_scroll_showcase.o
+
+# target to build an object file
+examples/window/inhouse_scroll_showcase.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/examples/window/inhouse_scroll_showcase.cpp.o
+.PHONY : examples/window/inhouse_scroll_showcase.cpp.o
+
+examples/window/inhouse_scroll_showcase.i: examples/window/inhouse_scroll_showcase.cpp.i
+.PHONY : examples/window/inhouse_scroll_showcase.i
+
+# target to preprocess a source file
+examples/window/inhouse_scroll_showcase.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/examples/window/inhouse_scroll_showcase.cpp.i
+.PHONY : examples/window/inhouse_scroll_showcase.cpp.i
+
+examples/window/inhouse_scroll_showcase.s: examples/window/inhouse_scroll_showcase.cpp.s
+.PHONY : examples/window/inhouse_scroll_showcase.s
+
+# target to generate assembly for a file
+examples/window/inhouse_scroll_showcase.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_inhouse_scroll_showcase.dir/examples/window/inhouse_scroll_showcase.cpp.s
+.PHONY : examples/window/inhouse_scroll_showcase.cpp.s
+
 examples/window/interaction_core_demo.o: examples/window/interaction_core_demo.cpp.o
 .PHONY : examples/window/interaction_core_demo.o
 
@@ -427,6 +507,30 @@ examples/window/interaction_core_demo.s: examples/window/interaction_core_demo.c
 examples/window/interaction_core_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_window_interaction_core_demo.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_window_interaction_core_demo.dir/examples/window/interaction_core_demo.cpp.s
 .PHONY : examples/window/interaction_core_demo.cpp.s
+
+examples/window/plussmic_inhouse_showcase.o: examples/window/plussmic_inhouse_showcase.cpp.o
+.PHONY : examples/window/plussmic_inhouse_showcase.o
+
+# target to build an object file
+examples/window/plussmic_inhouse_showcase.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/examples/window/plussmic_inhouse_showcase.cpp.o
+.PHONY : examples/window/plussmic_inhouse_showcase.cpp.o
+
+examples/window/plussmic_inhouse_showcase.i: examples/window/plussmic_inhouse_showcase.cpp.i
+.PHONY : examples/window/plussmic_inhouse_showcase.i
+
+# target to preprocess a source file
+examples/window/plussmic_inhouse_showcase.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/examples/window/plussmic_inhouse_showcase.cpp.i
+.PHONY : examples/window/plussmic_inhouse_showcase.cpp.i
+
+examples/window/plussmic_inhouse_showcase.s: examples/window/plussmic_inhouse_showcase.cpp.s
+.PHONY : examples/window/plussmic_inhouse_showcase.s
+
+# target to generate assembly for a file
+examples/window/plussmic_inhouse_showcase.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/build.make PlussTils/view/CMakeFiles/plusstils_view_plussmic_inhouse_showcase.dir/examples/window/plussmic_inhouse_showcase.cpp.s
+.PHONY : examples/window/plussmic_inhouse_showcase.cpp.s
 
 examples/window/registry_demo.o: examples/window/registry_demo.cpp.o
 .PHONY : examples/window/registry_demo.o
@@ -796,6 +900,30 @@ src/window/html/html_mapping.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/html/html_mapping.cpp.s
 .PHONY : src/window/html/html_mapping.cpp.s
 
+src/window/html/html_scroll.o: src/window/html/html_scroll.cpp.o
+.PHONY : src/window/html/html_scroll.o
+
+# target to build an object file
+src/window/html/html_scroll.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/html/html_scroll.cpp.o
+.PHONY : src/window/html/html_scroll.cpp.o
+
+src/window/html/html_scroll.i: src/window/html/html_scroll.cpp.i
+.PHONY : src/window/html/html_scroll.i
+
+# target to preprocess a source file
+src/window/html/html_scroll.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/html/html_scroll.cpp.i
+.PHONY : src/window/html/html_scroll.cpp.i
+
+src/window/html/html_scroll.s: src/window/html/html_scroll.cpp.s
+.PHONY : src/window/html/html_scroll.s
+
+# target to generate assembly for a file
+src/window/html/html_scroll.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/html/html_scroll.cpp.s
+.PHONY : src/window/html/html_scroll.cpp.s
+
 src/window/render/canvas.o: src/window/render/canvas.cpp.o
 .PHONY : src/window/render/canvas.o
 
@@ -1028,6 +1156,38 @@ src/window/text/text_layout.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/text/text_layout.cpp.s
 .PHONY : src/window/text/text_layout.cpp.s
 
+test/html_scroll_tests.o: test/html_scroll_tests.cpp.o
+.PHONY : test/html_scroll_tests.o
+
+# target to build an object file
+test/html_scroll_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/test/html_scroll_tests.cpp.o
+.PHONY : test/html_scroll_tests.cpp.o
+
+test/html_scroll_tests.i: test/html_scroll_tests.cpp.i
+.PHONY : test/html_scroll_tests.i
+
+# target to preprocess a source file
+test/html_scroll_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/test/html_scroll_tests.cpp.i
+.PHONY : test/html_scroll_tests.cpp.i
+
+test/html_scroll_tests.s: test/html_scroll_tests.cpp.s
+.PHONY : test/html_scroll_tests.s
+
+# target to generate assembly for a file
+test/html_scroll_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/test/html_scroll_tests.cpp.s
+.PHONY : test/html_scroll_tests.cpp.s
+
+test/macos_input_driver.o: test/macos_input_driver.mm.o
+.PHONY : test/macos_input_driver.o
+
+# target to build an object file
+test/macos_input_driver.mm.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build.make PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/test/macos_input_driver.mm.o
+.PHONY : test/macos_input_driver.mm.o
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1045,6 +1205,8 @@ help:
 	@echo "... test"
 	@echo "... PlussTilsView"
 	@echo "... plusstils_view_inhouse_html_render_demo"
+	@echo "... plusstils_view_inhouse_scroll_showcase"
+	@echo "... plusstils_view_plussmic_inhouse_showcase"
 	@echo "... plusstils_view_window_export_smoke_demo"
 	@echo "... plusstils_view_window_first_plot_demo"
 	@echo "... plusstils_view_window_interaction_core_demo"
@@ -1053,6 +1215,8 @@ help:
 	@echo "... plusstils_view_window_session_demo"
 	@echo "... plusstils_view_window_shell_backend_demo"
 	@echo "... plusstils_view_window_table_demo"
+	@echo "... plussview_html_scroll_tests"
+	@echo "... plussview_macos_input_driver"
 	@echo "... examples/window/export_smoke_demo.o"
 	@echo "... examples/window/export_smoke_demo.i"
 	@echo "... examples/window/export_smoke_demo.s"
@@ -1062,9 +1226,15 @@ help:
 	@echo "... examples/window/inhouse_html_render_demo.o"
 	@echo "... examples/window/inhouse_html_render_demo.i"
 	@echo "... examples/window/inhouse_html_render_demo.s"
+	@echo "... examples/window/inhouse_scroll_showcase.o"
+	@echo "... examples/window/inhouse_scroll_showcase.i"
+	@echo "... examples/window/inhouse_scroll_showcase.s"
 	@echo "... examples/window/interaction_core_demo.o"
 	@echo "... examples/window/interaction_core_demo.i"
 	@echo "... examples/window/interaction_core_demo.s"
+	@echo "... examples/window/plussmic_inhouse_showcase.o"
+	@echo "... examples/window/plussmic_inhouse_showcase.i"
+	@echo "... examples/window/plussmic_inhouse_showcase.s"
 	@echo "... examples/window/registry_demo.o"
 	@echo "... examples/window/registry_demo.i"
 	@echo "... examples/window/registry_demo.s"
@@ -1111,6 +1281,9 @@ help:
 	@echo "... src/window/html/html_mapping.o"
 	@echo "... src/window/html/html_mapping.i"
 	@echo "... src/window/html/html_mapping.s"
+	@echo "... src/window/html/html_scroll.o"
+	@echo "... src/window/html/html_scroll.i"
+	@echo "... src/window/html/html_scroll.s"
 	@echo "... src/window/render/canvas.o"
 	@echo "... src/window/render/canvas.i"
 	@echo "... src/window/render/canvas.s"
@@ -1140,6 +1313,10 @@ help:
 	@echo "... src/window/text/text_layout.o"
 	@echo "... src/window/text/text_layout.i"
 	@echo "... src/window/text/text_layout.s"
+	@echo "... test/html_scroll_tests.o"
+	@echo "... test/html_scroll_tests.i"
+	@echo "... test/html_scroll_tests.s"
+	@echo "... test/macos_input_driver.o"
 .PHONY : help
 
 

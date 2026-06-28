@@ -81,12 +81,45 @@ concept HueSeriesLike =
   return out;
 }
 
+template <std::ranges::input_range Range>
+  requires std::convertible_to<std::ranges::range_reference_t<const Range>, std::string_view>
+[[nodiscard]] inline std::vector<std::string_view> label_views(const Range& labels) {
+  std::vector<std::string_view> out;
+  if constexpr (requires { labels.size(); }) {
+    out.reserve(static_cast<std::size_t>(labels.size()));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
+template <std::ranges::input_range Range>
+  requires std::convertible_to<std::ranges::range_reference_t<const Range>, std::string_view>
+[[nodiscard]] inline std::vector<std::string> owned_labels(const Range& labels) {
+  std::vector<std::string> out;
+  if constexpr (requires { labels.size(); }) {
+    out.reserve(static_cast<std::size_t>(labels.size()));
+  }
+  for (const auto& label : labels) {
+    out.emplace_back(std::string_view(label));
+  }
+  return out;
+}
+
 [[nodiscard]] inline std::vector<double> to_f64_vector(const Series& values) {
   return values.to(ScalarType::Float64).to_vec<double>();
 }
 
 [[nodiscard]] inline Series flatten_f64(const Series& values) {
   return values.to(ScalarType::Float64).reshape({values.numel()});
+}
+
+[[nodiscard]] inline double scalar_f64(const Series& value) {
+  if (value.scalar_type() == ScalarType::Float64) {
+    return value.item<double>();
+  }
+  return value.to(ScalarType::Float64).item<double>();
 }
 
 [[nodiscard]] inline std::pair<std::vector<double>, std::vector<std::string>> encode_categories(
@@ -169,8 +202,8 @@ inline void require_equal_xy_hue_lengths(
     return {hue, {}};
   }
   const std::int64_t bins = std::max<std::int64_t>(bin_count, 2);
-  const double low = to_f64_vector(hue.min())[0];
-  const double high = to_f64_vector(hue.max())[0];
+  const double low = scalar_f64(hue.min());
+  const double high = scalar_f64(hue.max());
   if (!(high > low)) {
     return {pluss::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
   }
@@ -709,7 +742,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
 }
 
 [[nodiscard]] inline std::int64_t require_equal_lengths(
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     std::string_view where) {
   if (columns.empty()) {
     return 0;
@@ -724,7 +757,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
 }
 
 [[nodiscard]] inline std::vector<Series> prepare_numeric_columns(
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     bool normalize) {
   std::vector<Series> prepared;
   prepared.reserve(columns.size());
@@ -827,30 +860,28 @@ inline void downsample_columns(
   return columns;
 }
 
-[[nodiscard]] inline Series matrix_from_columns(const std::vector<Series>& columns, std::int64_t rows) {
+[[nodiscard]] inline Series matrix_from_columns(pluss::msharp::RangeView::Series columns, std::int64_t rows) {
   if (columns.empty()) {
     return {};
   }
-  std::vector<Series> flat;
-  flat.reserve(columns.size());
-  std::transform(columns.begin(), columns.end(), std::back_inserter(flat), [&](const Series& column) {
+  std::vector<Series> normalized;
+  normalized.reserve(columns.size());
+  std::transform(columns.begin(), columns.end(), std::back_inserter(normalized), [&](const Series& column) {
     return flatten_f64(column).reshape({rows});
   });
-  auto linear = flat.front();
-  if (flat.size() > 1) {
-    std::vector<Series> tail;
-    tail.reserve(flat.size() - 1);
-    std::copy(flat.begin() + 1, flat.end(), std::back_inserter(tail));
-    linear = linear.unite(tail, 0);
+  const auto normalized_view = pluss::msharp::RangeView::Series(normalized);
+  auto linear = normalized_view.front();
+  if (normalized_view.size() > 1) {
+    linear = linear.unite(normalized_view.drop_front(), 0);
   }
   return linear
-      .reshape({static_cast<std::int64_t>(flat.size()), rows})
+      .reshape({static_cast<std::int64_t>(normalized_view.size()), rows})
       .transpose(0, 1)
       .contiguous();
 }
 
 [[nodiscard]] inline std::vector<double> row_major_values(
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     std::int64_t rows) {
   return matrix_from_columns(columns, rows).to(ScalarType::Float64).to_vec<double>();
 }
@@ -1070,6 +1101,12 @@ struct FieldmapGrid {
   return order;
 }
 
+[[nodiscard]] inline std::vector<std::size_t> identity_indices(std::size_t count) {
+  std::vector<std::size_t> order(count, 0);
+  std::iota(order.begin(), order.end(), std::size_t{0});
+  return order;
+}
+
 [[nodiscard]] inline FieldmapGrid cluster_grid_by_mean(
     const Series& x_values,
     const Series& y_values,
@@ -1126,9 +1163,9 @@ struct FieldmapGrid {
       [](const double sum, const double cnt) { return (cnt > 0.0) ? (sum / cnt) : std::numeric_limits<double>::infinity(); });
 
   const std::vector<std::size_t> row_order =
-      cluster_rows ? argsort_indices(row_mean) : argsort_indices(std::vector<double>(row_mean.size(), 0.0));
+      cluster_rows ? argsort_indices(row_mean) : identity_indices(row_mean.size());
   const std::vector<std::size_t> col_order =
-      cluster_cols ? argsort_indices(col_mean) : argsort_indices(std::vector<double>(col_mean.size(), 0.0));
+      cluster_cols ? argsort_indices(col_mean) : identity_indices(col_mean.size());
 
   std::vector<double> x_sorted(static_cast<std::size_t>(cols), 0.0);
   std::vector<double> y_sorted(static_cast<std::size_t>(rows), 0.0);
@@ -1525,7 +1562,7 @@ Trace& hist3d(Pane& pane, X&& x, Y&& y, const Hist3DOptions& options = {}) {
     grid.z = detail::smooth_grid(grid.z, std::max<std::int64_t>(1, options.smooth_passes));
   }
   if (options.normalize) {
-    const double total = detail::to_f64_vector(grid.z.sum())[0];
+    const double total = detail::scalar_f64(grid.z.sum());
     if (total > 0.0 && std::isfinite(total)) {
       grid.z = grid.z.div(total);
     }
@@ -1773,13 +1810,15 @@ Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
 template <class Values>
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
-  const std::vector<double> y(static_cast<std::size_t>(x.numel()), std::max(height, 1e-4));
-  return pane.spike(x, ::pluss::make_series(y, {x.numel()}), 0.0);
+  const double spike_height = std::max(height, 1e-4);
+  const Series y = ::pluss::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
+  return pane.spike(x, y, 0.0);
 }
 
 inline Trace& stripplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.cloud(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
@@ -1802,7 +1841,8 @@ Trace& boxplot(Pane& pane, Values&& values) {
 
 inline Trace& boxplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.quartet(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
@@ -1825,13 +1865,15 @@ Trace& violinplot(Pane& pane, Values&& values, const ViolinOptions& options) {
 
 inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.violin(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values, const ViolinOptions& options) {
   const auto [encoded, labels] = detail::encode_categories(categories);
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.violin(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values, options);
 }
 
@@ -1972,11 +2014,12 @@ Trace& barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {}) {
 
 inline Trace& barplot(Pane& pane, const Note& categories, const Series& values, const BarPlotOptions& options = {}) {
   const auto [encoded, labels] = detail::encode_categories(categories);
+  const auto label_vec = detail::label_views(labels);
   if (options.horizontal) {
-    pane.y_categories(labels);
+    pane.y_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
     return pane.columns_h(values, ::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}));
   }
-  pane.x_categories(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.columns(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
@@ -1999,7 +2042,8 @@ inline Trace& countplot(Pane& pane, const Note& categories) {
     labels.push_back(label);
     y.push_back(count);
   }
-  pane.x_categories(labels);
+  const auto label_vec = detail::label_views(labels);
+  pane.x_categories(pluss::msharp::RangeView::Of<std::string_view>(label_vec));
   return pane.columns(::pluss::make_series(y, {static_cast<std::int64_t>(y.size())}));
 }
 
@@ -2009,8 +2053,13 @@ Trace& pieplot(Pane& pane, Values&& values) {
 }
 
 template <class Values>
-Trace& pieplot(Pane& pane, Values&& values, std::vector<std::string> labels) {
-  return pane.wedge(detail::to_series(std::forward<Values>(values)), std::move(labels));
+Trace& pieplot(Pane& pane, Values&& values, pluss::msharp::RangeView::Of<std::string_view> labels) {
+  return pane.wedge(detail::to_series(std::forward<Values>(values)), labels);
+}
+
+template <class Values>
+Trace& pieplot(Pane& pane, Values&& values, std::initializer_list<std::string_view> labels) {
+  return pieplot(pane, std::forward<Values>(values), pluss::msharp::RangeView::Of<std::string_view>(labels));
 }
 
 template <class X, class Y>
@@ -2611,7 +2660,8 @@ inline Trace& catplot(
       buckets[idx].sumsq += v * v;
     }
 
-    pane.x_ticks(group_centers, group_levels);
+    const auto group_level_views = detail::label_views(group_levels);
+    pane.x_ticks(group_centers, pluss::msharp::RangeView::Of<std::string_view>(group_level_views));
     Trace* last = nullptr;
     for (const auto h : std::views::iota(std::size_t{0}, nh)) {
       std::vector<double> x_vals;
@@ -2687,7 +2737,8 @@ inline Trace& catplot(
     per_hue_y[h].push_back(v);
   }
 
-  pane.x_ticks(group_centers, group_levels);
+  const auto group_level_views = detail::label_views(group_levels);
+  pane.x_ticks(group_centers, pluss::msharp::RangeView::Of<std::string_view>(group_level_views));
   Trace* last = nullptr;
   for (const auto h : std::views::iota(std::size_t{0}, nh)) {
     if (per_hue_x[h].empty()) {
@@ -2883,8 +2934,8 @@ struct DisGridPlotOptions {
 
 inline Studio& relgridplot(
     Studio& studio,
-    const std::vector<Series>& xs,
-    const std::vector<Series>& ys,
+    pluss::msharp::RangeView::Series xs,
+    pluss::msharp::RangeView::Series ys,
     const RelGridPlotOptions& options = {}) {
   if (xs.empty() || ys.empty() || xs.size() != ys.size()) {
     throw std::invalid_argument("flash::relgridplot requires non-empty aligned x/y facet vectors");
@@ -2926,18 +2977,42 @@ inline Studio& relgridplot(
 
 inline Studio& relgridplot(
     Studio& studio,
-    const std::vector<Series>& xs,
-    const std::vector<Series>& ys,
+    pluss::msharp::RangeView::Series xs,
+    pluss::msharp::RangeView::Series ys,
     std::string_view kind) {
   RelGridPlotOptions options;
   options.kind = relgrid_kind(kind);
   return relgridplot(studio, xs, ys, options);
 }
 
+inline Studio& relgridplot(
+    Studio& studio,
+    std::initializer_list<Series> xs,
+    std::initializer_list<Series> ys,
+    const RelGridPlotOptions& options = {}) {
+  return relgridplot(
+      studio,
+      pluss::msharp::RangeView::Series(xs),
+      pluss::msharp::RangeView::Series(ys),
+      options);
+}
+
+inline Studio& relgridplot(
+    Studio& studio,
+    std::initializer_list<Series> xs,
+    std::initializer_list<Series> ys,
+    std::string_view kind) {
+  return relgridplot(
+      studio,
+      pluss::msharp::RangeView::Series(xs),
+      pluss::msharp::RangeView::Series(ys),
+      kind);
+}
+
 inline Studio& catgridplot(
     Studio& studio,
-    const std::vector<Note>& groups,
-    const std::vector<Series>& values,
+    pluss::msharp::RangeView::Note groups,
+    pluss::msharp::RangeView::Series values,
     const CatGridPlotOptions& options = {}) {
   if (groups.empty() || values.empty() || groups.size() != values.size()) {
     throw std::invalid_argument("flash::catgridplot requires non-empty aligned group/value facet vectors");
@@ -2968,9 +3043,9 @@ inline Studio& catgridplot(
 
 inline Studio& catgridplot(
     Studio& studio,
-    const std::vector<Note>& groups,
-    const std::vector<Series>& values,
-    const std::vector<Note>& hues,
+    pluss::msharp::RangeView::Note groups,
+    pluss::msharp::RangeView::Series values,
+    pluss::msharp::RangeView::Note hues,
     const CatGridPlotOptions& options = {}) {
   if (groups.empty() || values.empty() || hues.empty() ||
       groups.size() != values.size() || groups.size() != hues.size()) {
@@ -3000,9 +3075,35 @@ inline Studio& catgridplot(
   return studio;
 }
 
+inline Studio& catgridplot(
+    Studio& studio,
+    std::initializer_list<Note> groups,
+    std::initializer_list<Series> values,
+    const CatGridPlotOptions& options = {}) {
+  return catgridplot(
+      studio,
+      pluss::msharp::RangeView::Note(groups),
+      pluss::msharp::RangeView::Series(values),
+      options);
+}
+
+inline Studio& catgridplot(
+    Studio& studio,
+    std::initializer_list<Note> groups,
+    std::initializer_list<Series> values,
+    std::initializer_list<Note> hues,
+    const CatGridPlotOptions& options = {}) {
+  return catgridplot(
+      studio,
+      pluss::msharp::RangeView::Note(groups),
+      pluss::msharp::RangeView::Series(values),
+      pluss::msharp::RangeView::Note(hues),
+      options);
+}
+
 inline Studio& disgridplot(
     Studio& studio,
-    const std::vector<Series>& values,
+    pluss::msharp::RangeView::Series values,
     const DisGridPlotOptions& options = {}) {
   if (values.empty()) {
     throw std::invalid_argument("flash::disgridplot requires at least one facet series");
@@ -3045,10 +3146,24 @@ inline Studio& disgridplot(
   return studio;
 }
 
-inline Studio& disgridplot(Studio& studio, const std::vector<Series>& values, std::string_view kind) {
+inline Studio& disgridplot(Studio& studio, pluss::msharp::RangeView::Series values, std::string_view kind) {
   DisGridPlotOptions options;
   options.kind = disgrid_kind(kind);
   return disgridplot(studio, values, options);
+}
+
+inline Studio& disgridplot(
+    Studio& studio,
+    std::initializer_list<Series> values,
+    const DisGridPlotOptions& options = {}) {
+  return disgridplot(studio, pluss::msharp::RangeView::Series(values), options);
+}
+
+inline Studio& disgridplot(
+    Studio& studio,
+    std::initializer_list<Series> values,
+    std::string_view kind) {
+  return disgridplot(studio, pluss::msharp::RangeView::Series(values), kind);
 }
 
 template <class Mapper>
@@ -3180,7 +3295,10 @@ struct PairPlotOptions {
   return {std::move(columns), std::move(labels)};
 }
 
-inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, const PairPlotOptions& options = {}) {
+inline Studio& pairplot(
+    Studio& studio,
+    pluss::msharp::RangeView::Series columns,
+    const PairPlotOptions& options = {}) {
   if (columns.empty()) {
     throw std::invalid_argument("flash::pairplot requires at least one series");
   }
@@ -3355,6 +3473,13 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, cons
   return studio;
 }
 
+inline Studio& pairplot(
+    Studio& studio,
+    std::initializer_list<Series> columns,
+    const PairPlotOptions& options = {}) {
+  return pairplot(studio, pluss::msharp::RangeView::Series(columns), options);
+}
+
 inline Studio& pairplot(Studio& studio, const Dataset& data, const PairPlotOptions& options = {}) {
   auto [columns, labels] = dataset_numeric_columns(data);
   auto pair_options = options;
@@ -3387,13 +3512,37 @@ inline Studio& pairplot(
 inline Studio& pairplot(
     Studio& studio,
     const Series& matrix,
-    std::vector<std::string> feature_names,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     const PairPlotOptions& options = {}) {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return pairplot(studio, matrix, frame_options, options);
+}
+
+inline Studio& pairplot(
+    Studio& studio,
+    const Series& matrix,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    const PairPlotOptions& options = {}) {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return pairplot(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      options);
+}
+
+inline Studio& pairplot(
+    Studio& studio,
+    const Series& matrix,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    const PairPlotOptions& options = {}) {
+  return pairplot(studio, matrix, pluss::msharp::RangeView::Of<std::string_view>(feature_names), feature_axis, options);
 }
 
 inline Studio& pairplot(Studio& studio, const Series& matrix, const PairPlotOptions& options = {}) {
@@ -3496,7 +3645,7 @@ struct TriplotOptions {
 
 inline Studio& triplot(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const TriplotOptions& options = {}) {
   PLUSS_CHECK(columns.size() >= 3, "flash::triplot requires at least three numeric features");
   auto prepared = detail::prepare_numeric_columns(columns, false);
@@ -3592,6 +3741,13 @@ inline Studio& triplot(
 
 inline Studio& triplot(
     Studio& studio,
+    std::initializer_list<Series> columns,
+    const TriplotOptions& options = {}) {
+  return triplot(studio, pluss::msharp::RangeView::Series(columns), options);
+}
+
+inline Studio& triplot(
+    Studio& studio,
     const Dataset& data,
     const TriplotOptions& options = {}) {
   auto [columns, labels] = dataset_numeric_columns(data);
@@ -3625,13 +3781,37 @@ inline Studio& triplot(
 inline Studio& triplot(
     Studio& studio,
     const Series& matrix,
-    std::vector<std::string> feature_names,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     const TriplotOptions& options = {}) {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return triplot(studio, matrix, frame_options, options);
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const Series& matrix,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    const TriplotOptions& options = {}) {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return triplot(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      options);
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const Series& matrix,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    const TriplotOptions& options = {}) {
+  return triplot(studio, matrix, pluss::msharp::RangeView::Of<std::string_view>(feature_names), feature_axis, options);
 }
 
 inline Studio& triplot(
@@ -3747,7 +3927,7 @@ struct SummaryOptions {
 
 inline Studio& parallelplot(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const ParallelCoordinatesOptions& options = {}) {
   if (columns.size() < 2) {
     throw std::invalid_argument("flash::parallelplot requires at least two columns");
@@ -3768,9 +3948,10 @@ inline Studio& parallelplot(
   const auto flat_values = detail::row_major_values(prepared, plotted_rows);
 
   auto& pane = studio.pane2();
+  const auto label_views = detail::label_views(labels);
   pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
       .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
-      .x_ticks(x, labels)
+      .x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
       .y_label(options.normalize ? "normalized value" : "value");
 
@@ -3790,7 +3971,7 @@ inline Studio& parallelplot(
 
 inline Studio& parallelplot(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const Note& class_labels,
     const ParallelCoordinatesOptions& options = {}) {
   if (columns.size() < 2) {
@@ -3826,9 +4007,10 @@ inline Studio& parallelplot(
   }
 
   auto& pane = studio.pane2();
+  const auto feature_label_views = detail::label_views(feature_labels);
   pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
       .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
-      .x_ticks(x, feature_labels)
+      .x_ticks(x, pluss::msharp::RangeView::Of<std::string_view>(feature_label_views))
       .x_label("feature")
       .y_label(options.normalize ? "normalized value" : "value");
   const auto colors = detail::categorical_colors(static_cast<std::int64_t>(ordered_classes.size()));
@@ -3887,13 +4069,42 @@ inline Studio& parallelplot(
 inline Studio& parallelplot(
     Studio& studio,
     const Series& matrix,
-    std::vector<std::string> feature_names,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     const ParallelCoordinatesOptions& options = {}) {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return parallelplot(studio, matrix, frame_options, options);
+}
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const Series& matrix,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    const ParallelCoordinatesOptions& options = {}) {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return parallelplot(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      options);
+}
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const Series& matrix,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    const ParallelCoordinatesOptions& options = {}) {
+  return parallelplot(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_names),
+      feature_axis,
+      options);
 }
 
 inline Studio& parallelplot(
@@ -3905,7 +4116,7 @@ inline Studio& parallelplot(
 
 inline Studio& andrews_curves(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const AndrewsCurvesOptions& options = {}) {
   if (columns.size() < 2) {
     throw std::invalid_argument("flash::andrews_curves requires at least two columns");
@@ -3951,7 +4162,7 @@ inline Studio& andrews_curves(
 
 inline Studio& andrews_curves(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const Note& class_labels,
     const AndrewsCurvesOptions& options = {}) {
   if (columns.size() < 2) {
@@ -4050,13 +4261,42 @@ inline Studio& andrews_curves(
 inline Studio& andrews_curves(
     Studio& studio,
     const Series& matrix,
-    std::vector<std::string> feature_names,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     const AndrewsCurvesOptions& options = {}) {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return andrews_curves(studio, matrix, frame_options, options);
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const Series& matrix,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    const AndrewsCurvesOptions& options = {}) {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return andrews_curves(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      options);
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const Series& matrix,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    const AndrewsCurvesOptions& options = {}) {
+  return andrews_curves(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_names),
+      feature_axis,
+      options);
 }
 
 inline Studio& andrews_curves(
@@ -4068,7 +4308,7 @@ inline Studio& andrews_curves(
 
 inline Studio& radviz(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const RadvizOptions& options = {}) {
   if (columns.size() < 3) {
     throw std::invalid_argument("flash::radviz requires at least three columns");
@@ -4137,7 +4377,7 @@ inline Studio& radviz(
 
 inline Studio& radviz(
     Studio& studio,
-    const std::vector<Series>& columns,
+    pluss::msharp::RangeView::Series columns,
     const Note& class_labels,
     const RadvizOptions& options = {}) {
   if (columns.size() < 3) {
@@ -4254,13 +4494,42 @@ inline Studio& radviz(
 inline Studio& radviz(
     Studio& studio,
     const Series& matrix,
-    std::vector<std::string> feature_names,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     const RadvizOptions& options = {}) {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return radviz(studio, matrix, frame_options, options);
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const Series& matrix,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    const RadvizOptions& options = {}) {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return radviz(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      options);
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const Series& matrix,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    const RadvizOptions& options = {}) {
+  return radviz(
+      studio,
+      matrix,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_names),
+      feature_axis,
+      options);
 }
 
 inline Studio& radviz(
@@ -4557,8 +4826,8 @@ Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOption
 
 inline Studio& summaryplot(
     Studio& studio,
-    const std::vector<Series>& columns,
-    const std::vector<std::string>& labels,
+    pluss::msharp::RangeView::Series columns,
+    pluss::msharp::RangeView::Of<std::string_view> labels,
     const SummaryOptions& options = {}) {
   if (columns.empty()) {
     throw std::invalid_argument("flash::summaryplot requires at least one column");
@@ -4567,7 +4836,7 @@ inline Studio& summaryplot(
     throw std::invalid_argument("flash::summaryplot: labels size must match columns size");
   }
 
-  std::vector<std::string> names = labels;
+  std::vector<std::string> names = detail::owned_labels(labels);
   if (names.empty()) {
     names.reserve(columns.size());
     for (const auto i : std::views::iota(std::size_t{0}, columns.size())) {
@@ -4727,6 +4996,18 @@ inline Studio& summaryplot(
   return studio;
 }
 
+inline Studio& summaryplot(
+    Studio& studio,
+    std::initializer_list<Series> columns,
+    std::initializer_list<std::string_view> labels,
+    const SummaryOptions& options = {}) {
+  return summaryplot(
+      studio,
+      pluss::msharp::RangeView::Series(columns),
+      pluss::msharp::RangeView::Of<std::string_view>(labels),
+      options);
+}
+
 template <class X, class Y>
   requires(detail::HueSeriesLike<X> && detail::HueSeriesLike<Y>)
 Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter") {
@@ -4857,12 +5138,12 @@ inline Studio& jointplot(
     const Series& matrix,
     std::string_view x_name,
     std::string_view y_name,
-    std::vector<std::string> feature_names,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     std::string_view kind = "scatter") {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return jointplot(studio, matrix, x_name, y_name, frame_options, kind);
 }
 
@@ -4871,13 +5152,87 @@ inline Studio& jointplot(
     const Series& matrix,
     std::string_view x_name,
     std::string_view y_name,
-    std::vector<std::string> feature_names,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    std::string_view kind = "scatter") {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return jointplot(
+      studio,
+      matrix,
+      x_name,
+      y_name,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    pluss::msharp::RangeView::Of<std::string_view> feature_names,
     Axis feature_axis,
     const JointPlotOptions& options) {
   MatrixFrameOptions frame_options;
   frame_options.feature_axis = feature_axis;
-  frame_options.feature_names = std::move(feature_names);
+  frame_options.feature_names = detail::owned_labels(feature_names);
   return jointplot(studio, matrix, x_name, y_name, frame_options, options);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    const std::vector<std::string>& feature_names,
+    Axis feature_axis,
+    const JointPlotOptions& options) {
+  const auto feature_name_views = detail::label_views(feature_names);
+  return jointplot(
+      studio,
+      matrix,
+      x_name,
+      y_name,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_name_views),
+      feature_axis,
+      options);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    std::string_view kind = "scatter") {
+  return jointplot(
+      studio,
+      matrix,
+      x_name,
+      y_name,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_names),
+      feature_axis,
+      kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    std::initializer_list<std::string_view> feature_names,
+    Axis feature_axis,
+    const JointPlotOptions& options) {
+  return jointplot(
+      studio,
+      matrix,
+      x_name,
+      y_name,
+      pluss::msharp::RangeView::Of<std::string_view>(feature_names),
+      feature_axis,
+      options);
 }
 
 inline Studio& jointplot(

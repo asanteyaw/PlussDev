@@ -24,6 +24,7 @@ struct LSTMOptions {
 namespace detail {
 
 inline pluss::ai::rnn::NetConfig as_run_config_(const LSTMOptions& options) {
+  const bool pre_compute_input = options.cfg.platform != ::pluss::pMPS;
   return pluss::ai::rnn::NetConfig{
       .training = options.training,
       .batch_first = options.batch_first,
@@ -32,7 +33,7 @@ inline pluss::ai::rnn::NetConfig as_run_config_(const LSTMOptions& options) {
       .num_layers = options.num_layers,
       .use_bias = options.bias,
       .split_bias = options.split_bias,
-      .pre_compute_input = true,
+      .pre_compute_input = pre_compute_input,
       .proj_size = options.proj_size,
       .nonlinearity = "tanh",
       .cfg = options.cfg,
@@ -87,9 +88,7 @@ public:
 
   std::tuple<Series, std::tuple<Series, Series>> forward(const Series& input,
                                                          const std::tuple<Series, Series>& state = {}) const {
-    const Series hx = std::get<0>(state);
-    const Series cx = std::get<1>(state);
-    return pluss::ai::rnn::lstm(input, hx, cx, this->params_, detail::as_run_config_(this->options_));
+    return pluss::ai::rnn::lstm(input, state, this->params_, detail::as_run_config_(this->options_));
   }
 
   std::tuple<PackedSequence, std::tuple<Series, Series>> forward(
