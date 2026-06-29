@@ -220,6 +220,19 @@ public:
     bool nulls_last{true};
   };
 
+  enum class ReorderPlacement : std::uint8_t {
+    Front = 0,
+    Back = 1,
+    Before = 2,
+    After = 3,
+  };
+
+  struct ReorderSpec {
+    std::vector<std::string> features{};
+    ReorderPlacement placement{ReorderPlacement::Front};
+    std::string anchor{};
+  };
+
   struct CastSpec {
     std::string feature;
     ThreadCastTarget target{ThreadCastTarget::Series};
@@ -480,6 +493,21 @@ public:
                   bool after = false) const;
   DataFrame drop(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame reorder(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame reorder(const ReorderSpec& spec) const;
+  DataFrame bucketize(pluss::msharp::RangeView::Double bins,
+                      pluss::msharp::RangeView::Int labels = {},
+                      bool right = true,
+                      bool include_lowest = true) const;
+  DataFrame bucketize(std::string_view feature_name,
+                      pluss::msharp::RangeView::Double bins,
+                      pluss::msharp::RangeView::Int labels = {},
+                      bool right = true,
+                      bool include_lowest = true) const;
+  DataFrame bucketize(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                      pluss::msharp::RangeView::Double bins,
+                      pluss::msharp::RangeView::Int labels = {},
+                      bool right = true,
+                      bool include_lowest = true) const;
   DataFrame add_prefix(std::string_view prefix) const;
   DataFrame add_suffix(std::string_view suffix) const;
   DataFrame sort_values(pluss::msharp::RangeView::Of<std::string_view> features,
@@ -565,6 +593,7 @@ public:
   DataFrameView head(std::int64_t n = 5, bool render = true) const;
   DataFrameView tail(std::int64_t n = 5, bool render = true) const;
   DataFrame sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
+  DataFrame reshuffle(int axis = 0, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame shift(std::int64_t periods = 1) const;
   DataFrame shift(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods = 1) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;

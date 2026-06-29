@@ -187,8 +187,8 @@ def parse_params(text: str) -> list[tuple[str, str]]:
 
 def parse_signature(sig: str, class_name: str) -> Method | None:
     sig = clean_space(sig)
-    sig = sig.split('{', 1)[0].strip()
     sig = sig.rstrip(';').strip()
+    sig = re.sub(r'\{\s*$', '', sig).strip()
     sig = sig.replace(' noexcept', '')
     if not sig or '(' not in sig:
         return None
@@ -235,6 +235,9 @@ def extract_methods(class_name: str, header_path: pathlib.Path) -> list[Method]:
     depth = 0
     visibility = 'private'
     decl = []
+    decl_paren = 0
+    decl_angle = 0
+    decl_brack = 0
     methods: list[Method] = []
     i = 0
     while i < len(body):
@@ -255,16 +258,34 @@ def extract_methods(class_name: str, header_path: pathlib.Path) -> list[Method]:
                     visibility = marker[:-1]
                     i += len(marker)
                     decl = []
+                    decl_paren = decl_angle = decl_brack = 0
                     break
             else:
-                if ch == '{':
+                structural_brace = ch == '{' and decl_paren == 0 and decl_angle == 0 and decl_brack == 0
+                structural_close = ch == '}' and decl_paren == 0 and decl_angle == 0 and decl_brack == 0
+
+                if ch == '(':
+                    decl_paren += 1
+                elif ch == ')':
+                    decl_paren = max(0, decl_paren - 1)
+                elif ch == '<':
+                    decl_angle += 1
+                elif ch == '>':
+                    decl_angle = max(0, decl_angle - 1)
+                elif ch == '[':
+                    decl_brack += 1
+                elif ch == ']':
+                    decl_brack = max(0, decl_brack - 1)
+
+                if structural_brace:
                     depth += 1
-                elif ch == '}':
+                elif structural_close:
                     depth = max(0, depth - 1)
                 decl.append(ch)
                 if ch == ';' and visibility == 'public':
                     statement = clean_space(''.join(decl))
                     decl = []
+                    decl_paren = decl_angle = decl_brack = 0
                     if any(statement.startswith(x) for x in ('enum class ', 'struct ', 'class ', 'using ', 'friend ')):
                         pass
                     else:
@@ -273,13 +294,15 @@ def extract_methods(class_name: str, header_path: pathlib.Path) -> list[Method]:
                             methods.append(method)
                 elif ch == ';':
                     decl = []
-                elif ch == '{':
+                    decl_paren = decl_angle = decl_brack = 0
+                elif structural_brace:
                     statement = clean_space(''.join(decl))
                     if visibility == 'public':
                         method = parse_signature(statement, class_name)
                         if method:
                             methods.append(method)
                     decl = []
+                    decl_paren = decl_angle = decl_brack = 0
                 i += 1
                 continue
             continue
@@ -316,6 +339,9 @@ def returns_doc(ret: str) -> str:
         'void': 'Performs the side effect and returns no value.',
         'std::int64_t': 'Integer count, size, or positional result.',
         'std::string': 'Rendered string result.',
+        'MatrixValues': 'Grouped matrix blocks split by payload family (`Series`, `Note`, `Timeline`, and `TimeIndex`).',
+        'DataFrame::MatrixValues': 'Grouped matrix blocks split by payload family (`Series`, `Note`, `Timeline`, and `TimeIndex`).',
+        'pluss::loader::LoadResult': 'Multi-sheet Excel load bundle containing one frame per requested sheet.',
         'const std::vector<std::string>&': 'Borrowed list of names.',
         'std::vector<Thread>': 'Materialized collection of thread objects.',
         'std::vector<Stream>': 'Materialized collection of stream objects.',
@@ -334,34 +360,72 @@ def params_doc(params: list[tuple[str, str]]) -> str:
     param_notes = {
         'filepath': 'File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.',
         'source_type': 'Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.',
+        'config': 'Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.',
+        'config_entries': 'Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.',
+        'options': 'Typed loader, renderer, SQL, plotting, or policy options for this overload.',
+        'engine': 'Backend selector. Use `"auto"` to let PlussMic choose, or pass an explicit engine name when you need predictable routing.',
         'sheet_name': 'Worksheet name to read from or write to inside an Excel workbook.',
+        'sheet_names': 'Worksheet names to load together from one Excel workbook. This overload returns a multi-sheet load result instead of one frame.',
         'sheet_index': 'Zero-based worksheet position inside an Excel workbook.',
+        'sheet_indices': 'Zero-based worksheet positions to load together from one Excel workbook.',
         'header': 'Controls whether feature names are written to, or expected from, the file header row.',
         'add_cases': 'When `true`, the current case axis is exported as its own column so row labels can be reconstructed when the file is loaded again.',
         'case_label': 'Optional column label to use for the exported case axis when `add_cases=true`.',
+        'case_col': 'Optional source column that should become the DataFrame case axis while loading.',
+        'case_feature': 'Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.',
         'na_rep': 'String written anywhere a null or missing value must be serialized.',
         'float_format': 'Optional numeric formatting string used when floating-point values are written to text output.',
         'sep': 'Column separator used for delimited text files such as CSV.',
+        'ncases': 'Optional row limit applied while loading. Leave unset to read the whole source.',
+        'usefeats': 'Feature names to load from the source. Leave empty to load every available feature.',
         'quotechar': 'Quote character used when writing delimited text output.',
         'doublequote': 'When `true`, embedded quote characters are escaped by doubling them in CSV-style output.',
         'line_terminator': 'Line ending written between serialized rows in text-based export.',
         'decimal': 'Decimal marker used when formatting floating-point output.',
         'encoding': 'Text encoding used when reading or writing text-based files.',
+        'on_bad_lines': 'Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.',
         'new_cases': 'Replacement case labels in the exact order you want the rows to follow.',
         'cases': 'Case-label thread to attach to the current object.',
         'drop_feature': 'When `true`, the feature promoted to cases is removed from the ordinary feature columns.',
+        'feature': 'Name of the source feature used by the operation.',
         'feature_name': 'Name of the target feature to read, rewrite, sort by, or promote to cases.',
+        'feature_names': 'Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.',
+        'feature_index': 'Zero-based output column position used by structural methods such as `insert(...)`.',
+        'feature_feature': 'Feature whose distinct values become new output columns in pivot-style reshaping.',
+        'value_feature': 'Feature whose values populate pivot cells or grouped summaries.',
+        'time_feature': 'Name of the Timeline or TimeIndex feature that defines the resampling, alignment, or calendar axis.',
+        'value_features': 'Feature name(s) to aggregate inside each resampling bin. Leave empty when you want PlussMic to infer compatible value features.',
+        'bins': 'Strictly increasing interval edges used to define bucket boundaries.',
+        'labels': 'Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.',
+        'right': 'When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.',
+        'include_lowest': 'When `true`, the first bucket also includes its left edge.',
+        'spec': 'Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.',
+        'anchor': 'Anchor feature used by partial reordering when placement is `Before` or `After`.',
+        'anchor_feature': 'Reference feature used to place a newly inserted or moved feature before or after an existing column.',
+        'after': 'When `false`, placement happens before the anchor. When `true`, placement happens after the anchor.',
         'left_on': 'Key feature name(s) on the left frame used to match rows during `unify(...)`.',
         'right_on': 'Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.',
         'how': 'Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.',
         'right_suffix': 'Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.',
         'validate': 'Optional key-cardinality check for `unify(...)`: `"many_to_many"` (default), `"one_to_one"`, `"one_to_many"`, or `"many_to_one"`.',
+        'collision_suffix': 'Suffix added when a second frame contributes a feature name that already exists on the left-hand side.',
+        'overwrite': 'When `true`, matching values from the right-hand side overwrite existing left-hand values during update-style operations.',
         'field': 'Name of the target stream in the catalog.',
         'key': 'Name of the target slot or stream.',
         'keys': 'Collection of slot or stream names to keep, drop, or rewrite together.',
         'names': 'Collection of feature, slot, or stream names supplied in positional order.',
         'features': 'Feature name(s) that select the target DataFrame columns for the operation.',
         'n': 'Number of rows, entries, or depth items to keep in the preview.',
+        'axis': 'Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.',
+        'skipna': 'When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.',
+        'random_state': 'Optional seed used to make sampling or shuffling reproducible.',
+        'freq': 'Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.',
+        'op': 'Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.',
+        'step': 'Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.',
+        'render': 'When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.',
+        'dropna_keys': 'When `true`, rows with null pivot/group keys are excluded before reshaping.',
+        'statement': 'SQL statement text to prepare against the current frame.',
+        'arg2': 'Pass `nullptr` here to request a multi-sheet Excel load result that includes every sheet.',
         'start': 'Inclusive starting position of the slice.',
         'stop': 'Exclusive ending position of the slice.',
     }
@@ -379,6 +443,7 @@ def generic_note(class_name: str, method: Method) -> str:
         'DataFrame': {
             'aggregate': 'Builds a compact summary frame from one or more aggregation specs, so you can inspect computed metrics instead of the full row set.',
             'bottom': 'Returns the rows with the smallest values in the selected feature.',
+            'bucketize': 'Buckets numeric `Series` features into interval labels while preserving the rest of the frame unchanged.',
             'cases_series': 'Returns the current case axis as a `Series`, which is useful when you need the row labels as data.',
             'combine': 'Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.',
             'copy': 'Returns a detached copy of the frame so later edits to the result do not affect the source object.',
@@ -408,11 +473,12 @@ def generic_note(class_name: str, method: Method) -> str:
             'note_features': 'Returns only the note-backed features.',
             'pivot': 'Reshapes long-form rows into a wider table indexed by one feature and expanded by another.',
             'pivot_table': 'Builds a pivoted summary table using an aggregation function when multiple rows map to the same cell.',
+            'matrix': 'Packs same-kind features into matrix-shaped pluss blocks so lower-level numeric, text, or temporal kernels can consume them efficiently.',
             'relabel_features': 'Replaces the full feature label set with the supplied names in positional order.',
             'rename': 'Renames one feature without changing its values.',
             'rename_': 'Renames one feature in place without changing its values.',
             'rename_features': 'Renames several features in one call.',
-            'reorder': 'Reorders the feature columns without changing any row values.',
+            'reorder': 'Moves selected features into a new relative position while preserving row data and the untouched feature order.',
             'repeated_cases': 'Returns the rows whose current case labels are duplicates of an earlier row.',
             'rolling': 'Computes rolling-window features and returns them as a derived frame.',
             'sample': 'Returns a random sample of rows.',
@@ -1200,9 +1266,12 @@ def output_for(class_name: str, method: Method) -> str:
     ret = method.return_type.strip()
 
     if class_name == 'DataFrame':
+        if n.startswith('load') and ret == 'pluss::loader::LoadResult':
+            return """Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]"""
         if n in {'defined', 'unique'}:
             return 'true'
-        if n in {'nrows', 'ncols', 'nfeatures', 'count_null_rows'}:
+        if n in {'nrows', 'ncols', 'nfeatures', 'nfeats', 'ncases', 'count_null_rows'}:
             return '3'
         if n in {'column_names', 'feature_names'}:
             return '["id", "sales", "city"]'
@@ -1244,6 +1313,11 @@ id  sales  city
 90.0     Kumasi    3"""
             return DF_RENAME_OUT
         if n in {'reorder'}:
+            if 'ReorderSpec' in method.signature:
+                return """city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0"""
             return DF_REORDER_OUT
         if n in {'drop'}:
             return DF_DROP_OUT
@@ -1256,6 +1330,16 @@ id  sales  city
 1   100.0  Accra   40.0
 2   120.0  Tema    35.0
 3    90.0  Kumasi  30.0"""
+        if n == 'note_features':
+            return """city
+Accra
+Tema
+Kumasi"""
+        if n == 'bucketize':
+            return """id  sales  city
+1   2      Accra
+2   3      Tema
+3   1      Kumasi"""
         if n == 'bottom':
             return DF_BOTTOM_OUT
         if n in {'head', 'tail', 'slice', 'take', 'sample', 'where', 'filter', 'query', 'top', 'unique_cases'}:
@@ -1278,6 +1362,13 @@ id  sales  city
 10            71       null
 20            82       88
 30            93       99"""
+        if n == 'reorder':
+            if 'ReorderSpec' in method.signature:
+                return """city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0"""
+            return DF_REORDER_OUT
         if n in {'group_by'}:
             return DF_GROUP_OUT
         if n in {'count_by', 'tally'}:
@@ -1298,13 +1389,43 @@ id  sales  city
             return DF_TRANSPOSE_OUT
         if n == 'count':
             return DF_COUNT_OUT
-        if n in {'sum', 'mean', 'min', 'max', 'std', 'var'}:
+        if n == 'sum':
             return """feature  value
+id       6
 sales    310.0"""
+        if n == 'mean':
+            return """feature  value
+id       2.0
+sales    103.333333333"""
+        if n == 'median':
+            return """feature  value
+id       2.0
+sales    100.0"""
+        if n == 'min':
+            return """feature  value
+id       1
+sales    90.0"""
+        if n == 'max':
+            return """feature  value
+id       3
+sales    120.0"""
+        if n == 'std':
+            return """feature  value
+id       1.0
+sales    15.275252317"""
+        if n == 'var':
+            return """feature  value
+id       1.0
+sales    233.333333333"""
         if n == 'bfill':
             return DF_BFILL_OUT
-        if n in {'fillna', 'fillna_', 'ffill', 'isna', 'isnull', 'notna', 'notnull'}:
+        if n in {'fillna', 'fillna_', 'ffill', 'isna', 'isnull'}:
             return DF_BASE_OUT
+        if n in {'notna', 'notnull'}:
+            return """sales
+true
+false
+true"""
         if n in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
             return DF_BASE_OUT
         if n in {'resample'}:
@@ -1315,15 +1436,46 @@ sales    310.0"""
             return """ts
 2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z"""
-        if n in {'add', 'sub', 'subtract', 'mul', 'multiply', 'div', 'divide', 'truediv', 'floordiv', 'mod', 'pow', 'radd', 'rsub', 'rmul', 'rdiv', 'rtruediv', 'rfloordiv', 'rmod', 'rpow'}:
-            return DF_PLUS10_OUT if 'const DataFrame&' not in method.signature else DF_BASE_OUT
-        if n in {'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'compare'}:
+        if n in {'add', 'radd'}:
+            return DF_PLUS10_OUT if 'const DataFrame&' not in method.signature else """id  sales
+3   210.0
+4   230.0
+7   190.0"""
+        if n in {'mul', 'multiply', 'rmul'}:
+            return """id  sales  city
+10  1000.0  Accra
+20  1200.0  Tema
+30   900.0  Kumasi""" if 'const DataFrame&' not in method.signature else """id  sales
+2   11000.0
+4   13200.0
+12   9000.0"""
+        if n in {'mod', 'rmod'}:
+            return """id  sales  city
+1   0.0    Accra
+2   0.0    Tema
+3   0.0    Kumasi""" if 'const DataFrame&' not in method.signature else """id  sales
+1   100.0
+0    10.0
+3    90.0"""
+        if n in {'sub', 'subtract', 'rsub', 'div', 'divide', 'truediv', 'floordiv', 'rdiv', 'rtruediv', 'rfloordiv', 'pow', 'rpow'}:
+            return DF_BASE_OUT if 'const DataFrame&' in method.signature else DF_BASE_OUT
+        if n in {'eq', 'ne', 'le', 'gt', 'ge', 'compare'}:
             return """id  sales
 1   true
 2   true
 3   false"""
+        if n == 'lt':
+            return """id  sales
+1   true
+2   false
+3   true"""
         if n in {'copy', 'view'}:
             return DF_BASE_OUT
+        if n == 'matrix':
+            return """series blocks: 1
+note blocks: 1
+timeline blocks: 0
+timeindex blocks: 0"""
         if n in {'to_string', 'info_string'}:
             return DF_BASE_OUT
         if n in {'info'}:
@@ -1720,6 +1872,17 @@ auto right = pluss::table::DataFrame({
 });"""
 
 
+def df_pair_aligned() -> str:
+    return """auto left = pluss::table::DataFrame({
+    {\"id\", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {\"id\", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
+    {\"sales\", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
+});"""
+
+
 def df_group() -> str:
     return """auto df = pluss::table::DataFrame({
     {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
@@ -1873,7 +2036,17 @@ def example_for(class_name: str, method: Method) -> str:
             if 'ReadCsvOptions' in sig:
                 return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", options);'
             if 'Config' in sig or 'ConfigEntry' in sig:
-                return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", {{"nrows", 16}});'
+                path = GENERIC_CSV_PATH
+                fn = n
+                if 'excel' in n:
+                    path = GENERIC_XLSX_PATH
+                elif 'json' in n:
+                    path = GENERIC_JSON_PATH
+                elif 'parquet' in n:
+                    path = GENERIC_PARQUET_PATH
+                elif 'txt' in n:
+                    path = GENERIC_TXT_PATH
+                return f'auto out = pluss::table::DataFrame::{fn}("{path}", {{"nrows", 16}});'
             if 'char sep' in sig and 'usecols' in sig:
                 return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", \',\', 16, std::vector<std::string>{{"Agency Name"}}, std::nullopt);'
             if 'source_type' in sig:
@@ -1940,6 +2113,15 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'drop':
                 return df_base() + '\n\nauto out = df.drop({"city"});'
             if n == 'reorder':
+                if 'ReorderSpec' in sig:
+                    return (
+                        df_base()
+                        + '\n\n'
+                        + 'pluss::table::DataFrame::ReorderSpec spec;\n'
+                        + 'spec.features = {"city"};\n'
+                        + 'spec.placement = pluss::table::DataFrame::ReorderPlacement::Front;\n'
+                        + 'auto out = df.reorder(spec);'
+                    )
                 return df_base() + '\n\nauto out = df.reorder({"sales", "id", "city"});'
             if n == 'add_prefix':
                 return df_base() + '\n\nauto out = df.add_prefix("feat_");'
@@ -1953,6 +2135,14 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\nauto out = df.rename_features({{"sales", "revenue"}, {"city", "location"}});'
             if n == 'relabel_features' or n == 'set_axis' or n == 'set_feature_axis':
                 return df_base() + f'\n\nauto out = df.{n}({{"revenue", "location", "id_new"}});'
+        if n == 'bucketize':
+            return (
+                df_base()
+                + '\n\n'
+                + 'std::vector<double> bins{0.0, 95.0, 110.0, 130.0};\n'
+                + 'std::vector<std::int64_t> labels{1, 2, 3};\n'
+                + 'auto out = df.bucketize("sales", bins, labels, true, true);'
+            )
         if n in {'sort_values','sort_cases','top','bottom','repeated_cases','unique_cases','set_cases','reset_cases','align_cases'}:
             if n == 'sort_values':
                 if 'ArrangeSpec' in sig:
@@ -2120,15 +2310,29 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);'
         if n in {'add','sub','subtract','mul','multiply','div','divide','truediv','floordiv','mod','pow','eq','ne','lt','le','gt','ge','compare'}:
             if 'const DataFrame&' in sig:
-                return df_two() + f'\n\nauto out = left.{n}(right);'
+                return df_pair_aligned() + f'\n\nauto out = left.{n}(right);'
+            if n == 'lt':
+                return df_base() + '\n\nauto out = df.lt(110);'
             return df_base() + f'\n\nauto out = df.{n}(10);'
         if n in {'radd','rsub','rmul','rdiv','rtruediv','rfloordiv','rmod','rpow'}:
             return df_base() + f'\n\nauto out = df.{n}(10);'
-        if n in {'sum','mean','min','max','std','var','count','describe','transpose','tally','window','rolling'}:
+        if n in {'sum','mean','median','min','max','std','var','count','describe','transpose','tally','window','rolling','matrix'}:
             if n == 'window' or n == 'rolling':
                 return df_base() + '\n\nauto out = df.' + n + '({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, true);'
             if n == 'transpose':
                 return df_base() + '\n\nauto out = df.transpose(false);'
+            if n == 'matrix':
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'auto blocks = df.matrix();\n'
+                    + 'auto out = fmt::format(\n'
+                    + '    "series blocks: {}\\nnote blocks: {}\\ntimeline blocks: {}\\ntimeindex blocks: {}",\n'
+                    + '    blocks.series_span().size(),\n'
+                    + '    blocks.note_span().size(),\n'
+                    + '    blocks.timeline_span().size(),\n'
+                    + '    blocks.timeindex_span().size());'
+                )
             if n == 'tally':
                 return df_group() + '\n\nauto out = df.tally("city", 3, true, false);'
             if n == 'count':
@@ -2143,6 +2347,15 @@ def example_for(class_name: str, method: Method) -> str:
                 f'auto out = df.{n}(1, {{"passed_math", "passed_lab"}}, true);'
             )
         if n in {'isna','isnull','notna','notnull'}:
+            if n in {'notna', 'notnull'}:
+                return (
+                    'auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))\n'
+                    '                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));\n'
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"sales", sales},\n'
+                    '});\n\n'
+                    f'auto out = df.{n}({{"sales"}});'
+                )
             return df_base() + f'\n\nauto out = df.{n}({{"sales"}});'
         if n in {'fillna','fillna_','dropna','dropna_all','ffill','bfill','count_null_rows'}:
             if n == 'fillna' or n == 'fillna_':
@@ -3041,6 +3254,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Each derived thread must match the frame case count.',
                 'Use the pair form when you already have the computed thread, and the spec form when the value should be computed from the current frame inside the call.',
             ])
+        if class_name == 'DataFrame' and n == 'reshuffle':
+            return bullets('Practical Behavior', [
+                '`reshuffle(axis=0)` permutes rows and keeps the feature order unchanged.',
+                '`reshuffle(axis=1)` permutes feature order and keeps the row order unchanged.',
+                'Pass `random_state` when you need deterministic shuffling for docs, tests, or reproducible data splits.',
+            ])
         if class_name == 'DataFrame' and n in {'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'cast'}:
             return bullets('Conversion Rules', [
                 'These methods rewrite only the selected features; unselected features are passed through unchanged.',
@@ -3095,6 +3314,13 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`copy()` gives you a detached frame value for downstream edits.',
                 'Use it when you want to make the independence of the result explicit in user code or examples.',
             ])
+        if class_name == 'DataFrame' and n == 'resample':
+            return bullets('Practical Behavior', [
+                '`resample(...)` groups rows into temporal bins and aggregates one value per bin and selected feature.',
+                '`count` ignores missing values, while `size` counts rows whether the value is missing or not.',
+                'For fixed frequencies, bins are anchored from the start of the local day rather than from the first observation timestamp.',
+                'Numeric reductions such as `mean`, `sum`, `min`, `max`, `first`, and `last` require numeric Series features.',
+            ])
         if class_name == 'DataFrame' and n == 'corr':
             return bullets('Practical Behavior', [
                 '`corr(...)` builds a correlation matrix across numeric features only.',
@@ -3122,6 +3348,13 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`count_null_rows()` counts how many rows contain at least one null value anywhere in the frame.',
                 'Use this as a quick completeness check before grouping, joining, or export.',
             ])
+        if class_name == 'DataFrame' and n == 'bucketize':
+            return bullets('Practical Behavior', [
+                '`bucketize(...)` delegates to thread-level bucketization only for the selected numeric `Series` features.',
+                'Non-selected features pass through unchanged, so this is safe to use on mixed-type frames.',
+                'The no-feature overload auto-selects every numeric `Series` feature in the frame.',
+                'Bucket labels are returned as Int64-backed `Thread` columns and out-of-range values remain null.',
+            ])
         if class_name == 'DataFrame' and n == 'describe':
             return bullets('Practical Behavior', [
                 '`describe()` summarizes numeric series features only.',
@@ -3142,6 +3375,48 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`dropna_all(features)` removes rows only when all selected features are null in that row.',
                 'Rows with at least one observed value among the selected features are kept.',
+            ])
+        if class_name == 'DataFrame' and n == 'load':
+            return bullets('Practical Behavior', [
+                '`load(...)` is the format-switched entry point behind the explicit file loaders.',
+                'Use it when the source format is chosen at runtime; otherwise, the format-specific loader is clearer.',
+                'CSV-style overloads let you control separator, row limits, feature projection, case-axis promotion, and bad-line policy.',
+            ])
+        if class_name == 'DataFrame' and n in {'load_csv', 'load_excel', 'load_json', 'load_parquet', 'load_txt'}:
+            return bullets('Practical Behavior', [
+                f'`{n}(...)` loads one external source into typed PlussMic columns.',
+                'Positional overloads are quick for ad-hoc work, while option/config overloads are better when you want repeatable loader settings.',
+                'Excel multi-sheet overloads return `pluss::loader::LoadResult` because several frames may be produced at once.',
+            ])
+        if class_name == 'DataFrame' and n == 'lt':
+            return bullets('Comparison Rules', [
+                '`lt(...)` returns a boolean-style frame with the same case axis and selected feature layout as the input.',
+                'Scalar/native comparisons broadcast the right-hand value across every compatible numeric cell.',
+                'Frame-vs-frame comparisons are row-wise and require compatible shape and feature alignment.',
+            ])
+        if class_name == 'DataFrame' and n == 'matrix':
+            return bullets('Practical Behavior', [
+                '`matrix()` does not coerce every feature into one mixed block.',
+                'Instead, it packs features by payload family so numeric, note, timeline, and timeindex data stay type-stable.',
+                'Use `as_series()`, `as_note()`, `as_timeline()`, or `as_timeindex()` only when the frame contributes exactly one block of that family.',
+            ])
+        if class_name == 'DataFrame' and n in {'max', 'mean', 'median', 'min', 'std', 'sum', 'var'}:
+            return bullets('Practical Behavior', [
+                f'`{n}(...)` reduces the selected numeric features to one summary row.',
+                'Non-numeric features are skipped rather than coerced.',
+                'The output stays in DataFrame form, which makes these reducers easy to reuse in downstream frame pipelines.',
+            ])
+        if class_name == 'DataFrame' and n in {'notna', 'notnull'}:
+            return bullets('Practical Behavior', [
+                f'`{n}(...)` returns a boolean-style frame marking which cells are observed rather than missing.',
+                'Use it to build masks before `filter(...)`, replacement policies, or diagnostic summaries.',
+                '`notna(...)` and `notnull(...)` are equivalent.',
+            ])
+        if class_name == 'DataFrame' and n == 'reorder':
+            return bullets('Practical Behavior', [
+                '`reorder({"a", "b"})` now means “move these features together and preserve the relative order of everything else.”',
+                'Use `ReorderSpec` when you need to move a subset to the front, back, before an anchor, or after an anchor.',
+                'This avoids listing a 3000-feature schema just to reposition two columns.',
             ])
         if class_name == 'Thread' and n == 'bfill':
             return [
@@ -3617,53 +3892,141 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         '',
     ]
     lines.extend(class_specific_intro_sections())
-    for method in sorted(methods, key=lambda m: (m.name.lower(), user_signature(m, class_name).lower())):
-        lines.append(f'### `{method.name}`')
-        lines.append('')
-        lines.append('#### Signature')
-        lines.append('')
-        lines.append('```cpp')
-        lines.append(user_signature(method, class_name))
-        lines.append('```')
-        lines.append('')
-        lines.append('#### Parameters')
-        lines.append('')
-        lines.append(params_doc(method.params))
-        lines.append('')
-        lines.append('#### Returns')
-        lines.append('')
-        lines.append(returns_doc(method.return_type))
-        lines.append('')
-        lines.append('#### Notes')
-        lines.append('')
-        lines.append(generic_note(class_name, method))
-        if len(grouped[method.name]) > 1:
-            sibs = [m for m in grouped[method.name] if m.signature != method.signature]
-            if sibs:
-                lines.append('')
-                lines.append('#### See also')
-                lines.append('')
-                for sib in sibs:
-                    lines.append(f'- `{user_signature(sib, class_name)}`')
-        lines.append('')
-        lines.append('#### Examples')
-        lines.append('')
-        lines.append('```cpp')
-        lines.append(normalize_user_names(class_name, example_for(class_name, method)))
-        lines.append('```')
-        preview = normalize_user_names(class_name, output_for(class_name, method))
-        if preview:
+    if class_name == 'DataFrame':
+        names_by_letter: dict[str, list[str]] = {}
+        for name in sorted(grouped.keys(), key=str.lower):
+            letter = name[0].upper()
+            names_by_letter.setdefault(letter, []).append(name)
+
+        def merged_params(overloads: list[Method]) -> list[tuple[str, str]]:
+            seen: set[str] = set()
+            out: list[tuple[str, str]] = []
+            for overload in overloads:
+                for name, typ in overload.params:
+                    if name not in seen:
+                        seen.add(name)
+                        out.append((name, typ))
+            return out
+
+        def merged_returns(overloads: list[Method]) -> str:
+            seen: list[str] = []
+            for overload in overloads:
+                if overload.return_type not in seen:
+                    seen.append(overload.return_type)
+            if len(seen) == 1:
+                return returns_doc(seen[0])
+            return '\n\n'.join(returns_doc(ret) for ret in seen)
+
+        for letter in sorted(names_by_letter.keys()):
+            lines.append(f'## {letter}')
             lines.append('')
-            lines.append('#### Output')
+            for name in names_by_letter[letter]:
+                overloads = sorted(grouped[name], key=lambda m: user_signature(m, class_name).lower())
+                lines.append(f'### `{name}`')
+                lines.append('')
+                lines.append('#### API Signatures' if len(overloads) > 1 else '#### API Signature')
+                lines.append('')
+                lines.append('```cpp')
+                for idx, overload in enumerate(overloads):
+                    if idx:
+                        lines.append('')
+                    lines.append(user_signature(overload, class_name))
+                lines.append('```')
+                lines.append('')
+                lines.append('#### Parameters')
+                lines.append('')
+                lines.append(params_doc(merged_params(overloads)))
+                lines.append('')
+                lines.append('#### Returns')
+                lines.append('')
+                lines.append(merged_returns(overloads))
+                lines.append('')
+                lines.append('#### What It Does')
+                lines.append('')
+                lines.append(generic_note(class_name, overloads[0]))
+
+                seen_examples: set[str] = set()
+                rendered_any = False
+                example_count = 0
+                for overload in overloads:
+                    code = normalize_user_names(class_name, example_for(class_name, overload)).strip()
+                    if not code or code in seen_examples:
+                        continue
+                    seen_examples.add(code)
+                    example_count += 1
+                    if not rendered_any:
+                        lines.append('')
+                        lines.append('#### Examples')
+                        lines.append('')
+                        rendered_any = True
+                    if len(overloads) > 1:
+                        lines.append(f'Example {example_count}.')
+                        lines.append('')
+                    lines.append('```cpp')
+                    lines.append(code)
+                    lines.append('```')
+                    preview = normalize_user_names(class_name, output_for(class_name, overload)).strip()
+                    if preview:
+                        lines.append('')
+                        lines.append('```text')
+                        lines.append(preview)
+                        lines.append('```')
+                        lines.append('')
+
+                extra = extra_sections_for_method(overloads[0])
+                if extra:
+                    if lines[-1] != '':
+                        lines.append('')
+                    lines.extend(extra)
+                lines.append('')
+    else:
+        for method in sorted(methods, key=lambda m: (m.name.lower(), user_signature(m, class_name).lower())):
+            lines.append(f'### `{method.name}`')
             lines.append('')
-            lines.append('```text')
-            lines.append(preview)
+            lines.append('#### Signature')
+            lines.append('')
+            lines.append('```cpp')
+            lines.append(user_signature(method, class_name))
             lines.append('```')
-        extra = extra_sections_for_method(method)
-        if extra:
             lines.append('')
-            lines.extend(extra)
-        lines.append('')
+            lines.append('#### Parameters')
+            lines.append('')
+            lines.append(params_doc(method.params))
+            lines.append('')
+            lines.append('#### Returns')
+            lines.append('')
+            lines.append(returns_doc(method.return_type))
+            lines.append('')
+            lines.append('#### Notes')
+            lines.append('')
+            lines.append(generic_note(class_name, method))
+            if len(grouped[method.name]) > 1:
+                sibs = [m for m in grouped[method.name] if m.signature != method.signature]
+                if sibs:
+                    lines.append('')
+                    lines.append('#### See also')
+                    lines.append('')
+                    for sib in sibs:
+                        lines.append(f'- `{user_signature(sib, class_name)}`')
+            lines.append('')
+            lines.append('#### Examples')
+            lines.append('')
+            lines.append('```cpp')
+            lines.append(normalize_user_names(class_name, example_for(class_name, method)))
+            lines.append('```')
+            preview = normalize_user_names(class_name, output_for(class_name, method))
+            if preview:
+                lines.append('')
+                lines.append('#### Output')
+                lines.append('')
+                lines.append('```text')
+                lines.append(preview)
+                lines.append('```')
+            extra = extra_sections_for_method(method)
+            if extra:
+                lines.append('')
+                lines.extend(extra)
+            lines.append('')
     return '\n'.join(lines)
 
 

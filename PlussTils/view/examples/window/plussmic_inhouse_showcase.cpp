@@ -39,7 +39,31 @@ pluss::table::DataFrame make_frame(const double scale, const std::string& title)
       {"forecast", pluss::make_series(revenue) * 1.08},
       {"variance", pluss::make_series(revenue) * 0.08},
       {"target", pluss::make_series(revenue) * 1.12},
+      {"cost", pluss::make_series(revenue) * 0.64},
+      {"profit", pluss::make_series(revenue) * 0.36},
+      {"conversion", pluss::make_series(margin) * 0.42},
+      {"quota", pluss::make_series(orders) * 4.0},
   }).title(title);
+}
+
+pluss::table::DataFrame make_plot_frame() {
+  std::vector<double> revenue;
+  std::vector<double> margin;
+  std::vector<std::int64_t> orders;
+  revenue.reserve(28);
+  margin.reserve(28);
+  orders.reserve(28);
+  for (int row = 0; row < 28; ++row) {
+    revenue.push_back(8200.0 + 540.0 * row + 1100.0 * std::sin(row * 0.42));
+    margin.push_back(0.14 + 0.015 * (row % 7));
+    orders.push_back(48 + row * 3);
+  }
+  return pluss::table::DataFrame({
+      {"orders", pluss::make_series(orders)},
+      {"revenue", pluss::make_series(revenue)},
+      {"margin", pluss::make_series(margin)},
+      {"forecast", pluss::make_series(revenue) * 1.08},
+  }).title("Plot measures");
 }
 
 } // namespace
@@ -56,8 +80,9 @@ int main(int argc, char** argv) {
     options.width = 1180;
     options.height = 760;
     options.backend_preference = pluss::view::BackendPreference::PlussWebViewOnly;
-    auto figure = frame.plot().scatter_matrix();
+    auto figure = make_plot_frame().plot().scatter_matrix();
     figure.headline("Revenue performance and relationships");
+    figure.save_svg(options.svg_snapshot_name);
     return figure.show(options) ? 0 : 1;
   }
 

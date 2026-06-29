@@ -489,8 +489,11 @@ void test_html_display_renderers_and_backend_config() {
   const auto html = pluss::table::display::render_html(df, opts);
   expect(html.find("<table id=\"plussmic-table\"") != std::string::npos, "html display should render a table");
   expect(html.find("Search visible rows") != std::string::npos, "html display should include search control");
-  expect(html.find("Copy TSV") != std::string::npos, "html display should include copy control");
   expect(html.find("reset-table-view") != std::string::npos, "html display should include reset control");
+  expect(html.find("Copy TSV") == std::string::npos, "html display should not expose a redundant copy control");
+  expect(html.find("toggle-theme") == std::string::npos, "html display should not expose theme switching");
+  expect(html.find("save-png") == std::string::npos,
+         "PNG export should live in native viewer chrome, not the HTML document");
   expect(html.find("sortable") != std::string::npos, "html display should mark sortable headers");
   expect(html.find("Edmonton") != std::string::npos, "html display should include cell values");
   expect(html.find("prices - describe") != std::string::npos,
@@ -501,10 +504,8 @@ void test_html_display_renderers_and_backend_config() {
   auto inhouse_opts = opts;
   inhouse_opts.html_desktop_table_viewport = true;
   const auto inhouse_html = pluss::table::display::render_html(df, inhouse_opts);
-  expect(inhouse_html.find("save-png") != std::string::npos,
-         "in-house html display should include native PNG export");
-  expect(inhouse_html.find("toggle-theme") != std::string::npos,
-         "in-house html display should include theme control");
+  expect(inhouse_html == html,
+         "native WebKit and the in-house renderer should receive identical table HTML");
 
   const auto info_html = pluss::table::display::render_info_html(df, opts);
   expect(info_html.find("Feature inventory") != std::string::npos, "info html should include feature inventory");
@@ -2697,6 +2698,40 @@ void test_thread_bucketize_correctness() {
   const auto lower_open_c1 = (lower_open == 1.0).count().item<std::int64_t>();
   expect(lower_open_c1 == 2,
          "Thread::bucketize(include_lowest=false) should exclude value exactly on first left edge");
+
+  using pluss::table::DataFrame;
+  const auto scores = DataFrame({
+      {"income", pluss::table::Thread(income)},
+      {"bonus", pluss::table::Thread(pluss::make_series(std::vector<double>{
+                    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
+                }))},
+      {"city", pluss::table::Thread(pluss::make_note({
+                   "A", "A", "B", "B", "C", "C", "D", "D", "E", "E", "F", "F"
+               }))},
+  });
+
+  const auto selected_features = std::array<std::string_view, 2>{"income", "bonus"};
+  const auto df_bucketed = scores.bucketize(
+      pluss::msharp::RangeView::Of<std::string_view>(
+          std::span<const std::string_view>(selected_features.data(), selected_features.size())),
+      {0.0, 1.5, 3.0, 4.5, 6.0, std::numeric_limits<double>::infinity()},
+      {1, 2, 3, 4, 5});
+  expect(df_bucketed.features("income").as_series().scalar_type() == pluss::codem::ScalarType::Int64,
+         "DataFrame::bucketize should replace selected numeric features with Int64 bucket labels");
+  expect(df_bucketed.features("income").isnull().count().item<std::int64_t>() == 1,
+         "DataFrame::bucketize should preserve out-of-range values as null");
+  expect((df_bucketed.features("bonus") == 1.0).count().item<std::int64_t>() == 2,
+         "DataFrame::bucketize should bucketize every selected numeric feature independently");
+  expect(df_bucketed.features("city").as_note().vector() == scores.features("city").as_note().vector(),
+         "DataFrame::bucketize should leave unselected features unchanged");
+
+  const auto auto_bucketed = scores.bucketize(
+      {0.0, 1.5, 3.0, 4.5, 6.0, std::numeric_limits<double>::infinity()},
+      {1, 2, 3, 4, 5});
+  expect(auto_bucketed.features("income").as_series().scalar_type() == pluss::codem::ScalarType::Int64,
+         "DataFrame::bucketize(all) should auto-select numeric Series features");
+  expect(auto_bucketed.features("bonus").as_series().scalar_type() == pluss::codem::ScalarType::Int64,
+         "DataFrame::bucketize(all) should bucketize every numeric Series feature");
 }
 
 void test_replace_exact_and_null_overloads() {
@@ -2892,6 +2927,20 @@ void test_select_and_place_helpers() {
   expect(thread_selected.as_series().to_vec<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
          "Thread::select should delegate multi-branch numeric selection to pluss::select");
 
+  expect_throw([&]() { (void)Thread(pluss::make_note("A+")); },
+               "Thread should reject scalar Note payloads and preserve its strict 1D contract");
+
+  const auto letter_selected = Thread::select(
+      {Thread(cond0), Thread(cond1), Thread(cond2)},
+      {pluss::make_note({"A+"}), pluss::make_note({"B"}), pluss::make_note({"C"})},
+      pluss::null);
+  expect(letter_selected.kind() == ThreadKind::Note,
+         "Thread::select should accept explicit length-1 Note choices");
+  expect(letter_selected.as_note().vector() == std::vector<std::string_view>({"A+", "B", "C", ""}),
+         "Thread::select should broadcast explicit length-1 Note choices across matching rows");
+  expect(letter_selected.validity_mask()->to_vec<bool>() == std::vector<bool>({true, true, true, false}),
+         "Thread::select should preserve null default when selecting explicit length-1 Note choices");
+
   const auto thread_selected_null = Thread::select(
       {Thread(cond0), Thread(cond1), Thread(cond2)},
       {Thread(pick0), Thread(pick1), Thread(pick2)},
@@ -2927,6 +2976,25 @@ void test_select_and_place_helpers() {
   const auto reordered = moved.reorder({"id", "price", "tip", "inventory"});
   expect(reordered.feature_names() == std::vector<std::string>({"id", "price", "tip", "inventory"}),
          "DataFrame::reorder should honor an explicit full feature order");
+
+  const auto partial_front = sales.reorder({"id"});
+  expect(partial_front.feature_names() == std::vector<std::string>({"id", "price", "inventory"}),
+         "DataFrame::reorder(partial) should move selected features to the front and preserve the rest");
+
+  const auto partial_back = sales.reorder(
+      {.features = {"id"}, .placement = DataFrame::ReorderPlacement::Back});
+  expect(partial_back.feature_names() == std::vector<std::string>({"price", "inventory", "id"}),
+         "DataFrame::reorder(back) should move selected features to the back");
+
+  const auto partial_before = sales.reorder(
+      {.features = {"id"}, .placement = DataFrame::ReorderPlacement::Before, .anchor = "inventory"});
+  expect(partial_before.feature_names() == std::vector<std::string>({"price", "id", "inventory"}),
+         "DataFrame::reorder(before) should insert the moved block before the anchor and preserve other order");
+
+  const auto partial_after = sales.reorder(
+      {.features = {"price", "id"}, .placement = DataFrame::ReorderPlacement::After, .anchor = "inventory"});
+  expect(partial_after.feature_names() == std::vector<std::string>({"inventory", "price", "id"}),
+         "DataFrame::reorder(after) should insert the moved block after the anchor with stable moved order");
 }
 
 void test_series_nan_participates_in_table_missing_semantics() {

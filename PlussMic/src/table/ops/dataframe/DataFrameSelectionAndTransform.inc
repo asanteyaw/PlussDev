@@ -76,8 +76,10 @@ std::vector<std::size_t> resolve_resample_value_indices_(
     const detail::DataFrameImpl& src,
     std::size_t axis_idx,
     pluss::msharp::RangeView::Of<std::string_view> value_features,
+    std::string_view op_key,
     std::string_view where) {
   std::vector<std::size_t> indices;
+  const bool allow_any_thread = (op_key == "count" || op_key == "size");
   if (value_features.size() == 0) {
     indices.reserve(src.columns_.size());
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
@@ -85,11 +87,15 @@ std::vector<std::size_t> resolve_resample_value_indices_(
         continue;
       }
       const auto& col = src.columns_[i];
-      if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      if (allow_any_thread) {
+        indices.push_back(i);
+      } else if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
         indices.push_back(i);
       }
     }
-    PLUSS_CHECK(!indices.empty(), std::string(where) + ": no numeric Series features available for resample");
+    PLUSS_CHECK(!indices.empty(),
+                std::string(where) + (allow_any_thread ? ": no value features available for resample"
+                                                       : ": no numeric Series features available for resample"));
     return indices;
   }
 
@@ -104,10 +110,121 @@ std::vector<std::size_t> resolve_resample_value_indices_(
     PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown value feature '" + name + "'");
     PLUSS_CHECK(it->second != axis_idx, std::string(where) + ": value feature cannot also be the time axis");
     const auto& col = src.columns_[it->second];
-    PLUSS_CHECK(col.kind() == ThreadKind::Series, std::string(where) + ": value feature '" + name + "' must be Series");
+    if (!allow_any_thread) {
+      PLUSS_CHECK(col.kind() == ThreadKind::Series,
+                  std::string(where) + ": value feature '" + name + "' must be Series");
+      PLUSS_CHECK(is_numeric_series_type(col.as_series()),
+                  std::string(where) + ": value feature '" + name + "' must be numeric for op '" + std::string(op_key) + "'");
+    }
     indices.push_back(it->second);
   }
   return indices;
+}
+
+pluss::Series make_int64_series_(const std::vector<std::int64_t>& values) {
+  auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Int64);
+  auto* ptr = reinterpret_cast<std::int64_t*>(out.raw_data());
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    ptr[i] = values[i];
+  }
+  return out;
+}
+
+pluss::Series make_float64_series_(const std::vector<double>& values) {
+  auto out = pluss::Series::empty({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Float64);
+  auto* ptr = reinterpret_cast<double*>(out.raw_data());
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    ptr[i] = values[i];
+  }
+  return out;
+}
+
+Thread resample_feature_thread_(const std::vector<std::int64_t>& bin_id,
+                                std::int64_t nbins,
+                                const Thread& feature,
+                                std::string_view op_key,
+                                std::string_view where) {
+  PLUSS_CHECK(nbins >= 0, std::string(where) + ": invalid bin count");
+
+  if (op_key == "size") {
+    std::vector<std::int64_t> counts(static_cast<std::size_t>(nbins), 0);
+    for (const auto b : bin_id) {
+      if (b >= 0 && b < nbins) {
+        counts[static_cast<std::size_t>(b)] += 1;
+      }
+    }
+    return Thread(make_int64_series_(counts));
+  }
+
+  const auto valid = feature.notnull().as_series().to_vec<bool>();
+
+  if (op_key == "count") {
+    std::vector<std::int64_t> counts(static_cast<std::size_t>(nbins), 0);
+    for (std::size_t i = 0; i < bin_id.size(); ++i) {
+      const auto b = bin_id[i];
+      if (b >= 0 && b < nbins && valid[i]) {
+        counts[static_cast<std::size_t>(b)] += 1;
+      }
+    }
+    return Thread(make_int64_series_(counts));
+  }
+
+  PLUSS_CHECK(feature.kind() == ThreadKind::Series,
+              std::string(where) + ": value feature must be Series for op '" + std::string(op_key) + "'");
+  PLUSS_CHECK(is_numeric_series_type(feature.as_series()),
+              std::string(where) + ": value feature must be numeric for op '" + std::string(op_key) + "'");
+
+  const auto values = feature.as_series().to(pluss::codem::ScalarType::Float64).contiguous();
+  const auto* vp = reinterpret_cast<const double*>(values.raw_data());
+  std::vector<std::int64_t> counts(static_cast<std::size_t>(nbins), 0);
+  std::vector<double> sums(static_cast<std::size_t>(nbins), 0.0);
+  std::vector<double> mins(static_cast<std::size_t>(nbins), std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> maxs(static_cast<std::size_t>(nbins), std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> firsts(static_cast<std::size_t>(nbins), std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> lasts(static_cast<std::size_t>(nbins), std::numeric_limits<double>::quiet_NaN());
+
+  for (std::size_t i = 0; i < bin_id.size(); ++i) {
+    const auto b = bin_id[i];
+    if (b < 0 || b >= nbins || !valid[i]) {
+      continue;
+    }
+    const auto idx = static_cast<std::size_t>(b);
+    const auto v = vp[i];
+    if (counts[idx] == 0) {
+      mins[idx] = v;
+      maxs[idx] = v;
+      firsts[idx] = v;
+    } else {
+      mins[idx] = std::min(mins[idx], v);
+      maxs[idx] = std::max(maxs[idx], v);
+    }
+    lasts[idx] = v;
+    sums[idx] += v;
+    counts[idx] += 1;
+  }
+
+  std::vector<double> out(static_cast<std::size_t>(nbins), std::numeric_limits<double>::quiet_NaN());
+  for (std::int64_t b = 0; b < nbins; ++b) {
+    const auto idx = static_cast<std::size_t>(b);
+    if (op_key == "sum") {
+      out[idx] = counts[idx] == 0 ? 0.0 : sums[idx];
+    } else if (op_key == "mean") {
+      out[idx] = counts[idx] == 0 ? std::numeric_limits<double>::quiet_NaN()
+                                  : sums[idx] / static_cast<double>(counts[idx]);
+    } else if (op_key == "min") {
+      out[idx] = mins[idx];
+    } else if (op_key == "max") {
+      out[idx] = maxs[idx];
+    } else if (op_key == "first") {
+      out[idx] = firsts[idx];
+    } else if (op_key == "last") {
+      out[idx] = lasts[idx];
+    } else {
+      PLUSS_FAIL(std::string(where) + ": unsupported resample op '" + std::string(op_key) + "'");
+    }
+  }
+
+  return Thread(make_float64_series_(out));
 }
 
 pluss::Series bool_series_from_thread_mask_(
@@ -161,6 +278,39 @@ DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_
   std::shuffle(idx.begin(), idx.end(), rng);
   idx.resize(static_cast<std::size_t>(draw));
   return take(idx);
+}
+
+DataFrame DataFrame::reshuffle(int axis, std::optional<std::uint64_t> random_state) const {
+  PLUSS_CHECK(axis == 0 || axis == 1, "DataFrame::reshuffle: axis must be 0 (rows) or 1 (features)");
+  const auto& src = impl_ref_();
+  std::mt19937_64 rng(random_state.value_or(std::random_device{}()));
+
+  if (axis == 0) {
+    std::vector<std::int64_t> idx(static_cast<std::size_t>(src.nrows_));
+    std::iota(idx.begin(), idx.end(), 0);
+    std::shuffle(idx.begin(), idx.end(), rng);
+    return take(idx);
+  }
+
+  if (src.columns_.empty()) {
+    return *this;
+  }
+
+  std::vector<std::size_t> order(src.columns_.size());
+  std::iota(order.begin(), order.end(), 0);
+  std::shuffle(order.begin(), order.end(), rng);
+
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(order.size());
+  out_cols.reserve(order.size());
+  for (const auto idx : order) {
+    out_names.push_back(src.names_[idx]);
+    out_cols.push_back(src.columns_[idx]);
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_, src.title_));
 }
 
 DataFrame DataFrame::shift(std::int64_t periods) const {
@@ -576,7 +726,10 @@ DataFrameView DataFrame::resample(std::string_view time_feature,
               "DataFrame::resample: time_feature '" + axis_feature + "' must be Timeline/TimeIndex");
 
   const auto ti = time_axis_to_index_(axis_col, "DataFrame::resample");
-  const auto value_indices = resolve_resample_value_indices_(src, axis_idx, value_features, "DataFrame::resample");
+  const auto value_indices = resolve_resample_value_indices_(src, axis_idx, value_features, op_key, "DataFrame::resample");
+  const auto bins = ti.resample_bins(freq_key, step);
+  const auto bin_id = bins.bin_id.to_vec<std::int64_t>();
+  const auto nbins = bins.labels.numel();
 
   std::vector<std::string> out_names;
   std::vector<Thread> out_cols;
@@ -586,19 +739,10 @@ DataFrameView DataFrame::resample(std::string_view time_feature,
   for (const auto idx : value_indices) {
     const auto& name = src.names_[idx];
     const auto& feature = src.columns_[idx];
-    PLUSS_CHECK(feature.kind() == ThreadKind::Series, "DataFrame::resample: value feature must be Series");
-    if (op_key == "count" || op_key == "size") {
-      out_names.push_back(name);
-      out_cols.emplace_back(ti.resample_count(freq_key, step));
-      continue;
-    }
-    PLUSS_CHECK(is_numeric_series_type(feature.as_series()),
-                "DataFrame::resample: value feature '" + name + "' must be numeric for op '" + op_key + "'");
     out_names.push_back(name);
-    out_cols.emplace_back(ti.resample_agg(feature.as_series(), freq_key, op_key, step));
+    out_cols.emplace_back(resample_feature_thread_(bin_id, nbins, feature, op_key, "DataFrame::resample"));
   }
 
-  auto bins = ti.resample_bins(freq_key, step);
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), Thread(bins.labels)));
   return DataFrameView(std::move(out), render, "resample", title());

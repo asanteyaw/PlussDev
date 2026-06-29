@@ -67,7 +67,7 @@ Atlas align_depth(self, const Thread& labels) const
 #### Parameters
 
 `labels` : `const Thread&`
-    See the signature for the supported argument form.
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
 #### Returns
 
@@ -922,7 +922,7 @@ AtlasPlotAccessor plot(self, const AtlasPlotOptions& options) const
 #### Parameters
 
 `options` : `const AtlasPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -968,7 +968,7 @@ Atlas relabel_depth(self, const Thread& labels) const
 #### Parameters
 
 `labels` : `const Thread&`
-    See the signature for the supported argument form.
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
 #### Returns
 
@@ -1013,13 +1013,13 @@ sales
 #### Signature
 
 ```cpp
-void show(self, const display::DisplayOptions& options =
+void show(self, const display::DisplayOptions& options = {}) const
 ```
 
 #### Parameters
 
 `options` : `const display::DisplayOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1032,7 +1032,7 @@ This renders a human-readable view for inspection instead of creating a new anal
 
 #### See also
 
-- `void show(self, std::ostream& os, const display::DisplayOptions& options =`
+- `void show(self, std::ostream& os, const display::DisplayOptions& options = {}) const`
 
 #### Examples
 
@@ -1067,7 +1067,7 @@ sales
 #### Signature
 
 ```cpp
-void show(self, std::ostream& os, const display::DisplayOptions& options =
+void show(self, std::ostream& os, const display::DisplayOptions& options = {}) const
 ```
 
 #### Parameters
@@ -1076,7 +1076,7 @@ void show(self, std::ostream& os, const display::DisplayOptions& options =
     See the signature for the supported argument form.
 
 `options` : `const display::DisplayOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1089,7 +1089,7 @@ This renders a human-readable view for inspection instead of creating a new anal
 
 #### See also
 
-- `void show(self, const display::DisplayOptions& options =`
+- `void show(self, const display::DisplayOptions& options = {}) const`
 
 #### Examples
 
@@ -1427,13 +1427,13 @@ sales
 #### Signature
 
 ```cpp
-std::string to_string(self, const display::DisplayOptions& options =
+std::string to_string(self, const display::DisplayOptions& options = {}) const
 ```
 
 #### Parameters
 
 `options` : `const display::DisplayOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 

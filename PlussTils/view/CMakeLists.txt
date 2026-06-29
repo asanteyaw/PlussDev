@@ -36,6 +36,18 @@ add_library(Pluss::TilsView ALIAS PlussTilsView)
 if(NOT PkgConfig_FOUND)
     find_package(PkgConfig QUIET)
 endif()
+if(PkgConfig_FOUND)
+    pkg_check_modules(PLUSSTILS_VIEW_LIBZIP QUIET libzip)
+endif()
+
+set(PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE 0)
+if(PLUSSTILS_VIEW_LIBZIP_FOUND)
+    set(PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE 1)
+    target_include_directories(PlussTilsView SYSTEM PRIVATE ${PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIRS})
+    target_link_directories(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_LIBRARY_DIRS})
+    target_compile_options(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_CFLAGS_OTHER})
+    target_link_libraries(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_LIBRARIES})
+endif()
 
 set(PLUSSTILS_VIEW_HAVE_GTK_WEBKIT_VALUE 0)
 set(PLUSSTILS_VIEW_HAVE_MAC_WEBKIT_VALUE 0)
@@ -171,6 +183,9 @@ target_compile_definitions(PlussTilsView PUBLIC
     PLUSSTILS_VIEW_HAVE_GTK_WEBKIT=${PLUSSTILS_VIEW_HAVE_GTK_WEBKIT_VALUE}
     PLUSSTILS_VIEW_HAVE_MAC_WEBKIT=${PLUSSTILS_VIEW_HAVE_MAC_WEBKIT_VALUE}
     PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2=${PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2_VALUE}
+)
+target_compile_definitions(PlussTilsView PRIVATE
+    PLUSSTILS_VIEW_HAVE_LIBZIP=${PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE}
 )
 
 target_include_directories(PlussTilsView PUBLIC
@@ -320,6 +335,22 @@ if(BUILD_TESTING)
         CXX_EXTENSIONS OFF
     )
     add_test(NAME plussview_html_scroll_tests COMMAND plussview_html_scroll_tests)
+
+    if(PLUSSTILS_VIEW_LIBZIP_FOUND)
+        add_executable(plussview_html_export_tests
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/html_export_tests.cpp
+        )
+        target_link_libraries(plussview_html_export_tests PRIVATE PlussTilsView)
+        target_include_directories(plussview_html_export_tests PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+        )
+        set_target_properties(plussview_html_export_tests PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
+            CXX_EXTENSIONS OFF
+        )
+        add_test(NAME plussview_html_export_tests COMMAND plussview_html_export_tests)
+    endif()
 
     if(APPLE)
         add_executable(plussview_macos_input_driver

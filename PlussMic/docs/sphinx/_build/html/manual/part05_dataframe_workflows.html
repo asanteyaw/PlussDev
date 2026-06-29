@@ -38,7 +38,7 @@
   <section id="part-v-dataframe-workflows">
 <h1>Part V: DataFrame Workflows<a class="headerlink" href="#part-v-dataframe-workflows" title="Link to this heading">¶</a></h1>
 <p>This part covers the daily DataFrame operations: inspect, select, filter, sort,
-derive, transform, summarize, combine, and save.</p>
+assign, transform, summarize, combine, and save.</p>
 <section id="inspect-a-frame">
 <h2>Inspect a frame<a class="headerlink" href="#inspect-a-frame" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">();</span>
@@ -160,8 +160,8 @@ labels.</p>
 </pre></div>
 </div>
 <p>That keeps every row whose <code class="docutils literal notranslate"><span class="pre">First</span> <span class="pre">Name</span></code> equals <code class="docutils literal notranslate"><span class="pre">&quot;Laurel&quot;</span></code>.</p>
-<section id="verified-example-derive-then-query">
-<h3>Verified example: derive then query<a class="headerlink" href="#verified-example-derive-then-query" title="Link to this heading">¶</a></h3>
+<section id="verified-example-assign-then-query">
+<h3>Verified example: assign then query<a class="headerlink" href="#verified-example-assign-then-query" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">enriched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">assign</span><span class="p">({{</span>
 <span class="w">    </span><span class="s">&quot;revenue&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

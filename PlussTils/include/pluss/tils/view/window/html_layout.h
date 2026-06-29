@@ -54,6 +54,7 @@ struct HtmlRenderConfig {
   int table_scroll_y_px{0};
   const std::unordered_map<std::string, PointI>* table_scroll_offsets{nullptr};
   bool clip_table_viewport{true};
+  bool draw_scrollbars{true};
   double widget_scale{1.0};
   int table_sort_column{-1};
   bool table_sort_ascending{true};

@@ -14,7 +14,7 @@ That means all the table skills from the earlier chapters still apply:
 1. Load the data into a `DataFrame`.
 2. Convert columns to the correct `Thread` kind.
 3. Clean missing values deliberately.
-4. Filter, aggregate, pivot, or derive features.
+4. Filter, aggregate, pivot, or assign features.
 5. Call `plot()`, `plot3d()`, or `Atlas::plot()`.
 6. Save the returned `pluss::pl::Studio`.
 

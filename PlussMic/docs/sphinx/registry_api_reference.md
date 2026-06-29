@@ -1723,7 +1723,7 @@ static Registry load(std::string_view source_type, std::string_view filepath, co
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -1807,7 +1807,7 @@ static Registry load_csv(std::string_view filepath, const pluss::loader::Config&
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -1851,7 +1851,7 @@ static Registry load_csv(std::string_view filepath, const pluss::loader::ReadCsv
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1937,7 +1937,7 @@ static Registry load_excel(std::string_view filepath, const pluss::loader::Confi
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -1981,7 +1981,7 @@ static Registry load_excel(std::string_view filepath, const pluss::loader::ReadE
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadExcelOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2066,7 +2066,7 @@ static Registry load_json(std::string_view filepath, const pluss::loader::Config
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2149,7 +2149,7 @@ static Registry load_parquet(std::string_view filepath, const pluss::loader::Con
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2232,7 +2232,7 @@ static Registry load_txt(std::string_view filepath, const pluss::loader::Config&
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2781,7 +2781,7 @@ Registry sample(self, std::int64_t n, std::optional<std::uint64_t> random_state 
     Number of rows, entries, or depth items to keep in the preview.
 
 `random_state` : `std::optional<std::uint64_t>`
-    See the signature for the supported argument form.
+    Optional seed used to make sampling or shuffling reproducible.
 
 #### Returns
 
@@ -2820,7 +2820,7 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 #### Signature
 
 ```cpp
-void save_as(self, std::string_view target_type, std::string_view filepath, const pluss::loader::Config& config =
+void save_as(self, std::string_view target_type, std::string_view filepath, const pluss::loader::Config& config = {}) const
 ```
 
 #### Parameters
@@ -2832,7 +2832,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, cons
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2917,7 +2917,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::Config& conf
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3006,7 +3006,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::Config& co
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3095,7 +3095,7 @@ void save_json(self, std::string_view filepath, const pluss::loader::Config& con
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3184,7 +3184,7 @@ void save_parquet(self, std::string_view filepath, const pluss::loader::Config& 
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3273,7 +3273,7 @@ void save_txt(self, std::string_view filepath, const pluss::loader::Config& conf
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 

@@ -17,7 +17,7 @@ DataFrame execute(self, std::string_view statement) const
 #### Parameters
 
 `statement` : `std::string_view`
-    See the signature for the supported argument form.
+    SQL statement text to prepare against the current frame.
 
 #### Returns
 
@@ -60,7 +60,7 @@ DataFrameSqlPrepared prepare(self, std::string_view statement) const
 #### Parameters
 
 `statement` : `std::string_view`
-    See the signature for the supported argument form.
+    SQL statement text to prepare against the current frame.
 
 #### Returns
 

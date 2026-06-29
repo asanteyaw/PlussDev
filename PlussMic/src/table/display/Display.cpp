@@ -838,24 +838,7 @@ std::string html_shell_(std::string_view title,
                         const DisplayOptions& options) {
   const auto sortable = options.html_sortable ? "true" : "false";
   const auto search = options.html_search ? "true" : "false";
-  const auto copy = options.html_copy_button ? "true" : "false";
-  const std::string inhouse_tools = options.html_desktop_table_viewport
-                                        ? R"HTML(
-          <button id="save-png" class="tool-button save" type="button">Save PNG</button>
-          <button id="toggle-theme" class="tool-button theme" type="button">Theme</button>
-)HTML"
-                                        : std::string{};
-  const std::string desktop_overrides = options.html_desktop_table_viewport
-                                            ? R"CSS(
-    .tools input { min-width: 190px; width: 190px; }
-    .summary-grid { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
-    .table-wrap table { height: 500px; }
-    .atlas-panel .table-wrap table { height: 430px; }
-)CSS"
-                                            : std::string{};
-  const std::string responsive_css = options.html_desktop_table_viewport
-                                         ? std::string{}
-                                         : R"CSS(
+  const std::string responsive_css = R"CSS(
     @media (max-width: 720px) {
       .shell {
         padding: 10px;
@@ -868,7 +851,8 @@ std::string html_shell_(std::string_view title,
       }
       .tools input {
         min-width: 0;
-        width: 100%;
+        width: auto;
+        flex: 1;
       }
     }
 )CSS";
@@ -891,14 +875,14 @@ std::string html_shell_(std::string_view title,
       --accent-3: #6757d9;
       --success: #159a67;
       --panel: #ffffff;
-      --shadow: 0 14px 38px rgba(16, 32, 51, 0.14);
+      --shadow: none;
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
       color: var(--ink);
       font-family: "Avenir Next", "Inter", "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #e8f6f6 0%, #f3f1ff 52%, #fff0ec 100%);
+      background: #edf4f7;
     }}
     .shell {{
       min-height: 100vh;
@@ -911,13 +895,13 @@ std::string html_shell_(std::string_view title,
       border: 1px solid #cbd7e3;
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: var(--shadow);
+      box-shadow: none;
     }}
     .hero {{
       padding: 14px 16px;
       border-bottom: 1px solid #cbd7e3;
       border-top: 5px solid var(--accent);
-      background: linear-gradient(90deg, #dff5f4 0%, #ffffff 52%, #fff0ec 100%);
+      background: linear-gradient(90deg, #dff5f4 0%, #ffffff 68%, #f5f9fa 100%);
       display: flex;
       gap: 14px;
       align-items: center;
@@ -938,45 +922,47 @@ std::string html_shell_(std::string_view title,
     }}
     .tools {{
       display: flex;
-      gap: 7px;
+      gap: 1px;
       align-items: center;
-      flex-wrap: wrap;
+      justify-content: flex-end;
+      margin-left: auto;
+      flex-wrap: nowrap;
     }}
     .tools input {{
+      margin: 0;
       min-width: 220px;
-      padding: 8px 10px;
+      height: 40px;
+      min-height: 40px;
+      padding: 0 12px;
       border-radius: 7px;
       border: 1px solid #b9c7d5;
       background: #ffffff;
       color: var(--ink);
       font: inherit;
+      line-height: 38px;
+      appearance: none;
+      -webkit-appearance: none;
     }}
     .tools button {{
       margin: 0;
-      padding: 8px 11px;
+      height: 40px;
+      min-height: 40px;
+      min-width: 88px;
+      padding: 0 12px;
       border-radius: 7px;
-      border: 1px solid #006c73;
-      background: var(--accent);
+      border: 1px solid #075d68;
+      background: #0b7285;
       color: white;
       font: 600 0.82rem/1 "Avenir Next", "Inter", "Segoe UI", sans-serif;
+      line-height: 38px;
+      appearance: none;
+      -webkit-appearance: none;
       cursor: pointer;
     }}
-    .tools button.secondary {{
-      background: #0b7285;
-      border-color: #085d6c;
-    }}
     .tools button.reset {{
-      background: #ffffff;
-      border-color: #aebdcb;
-      color: #314459;
-    }}
-    .tools button.save {{
-      background: #3b5bdb;
-      border-color: #2f4bc0;
-    }}
-    .tools button.theme {{
-      background: #7048e8;
-      border-color: #5f3dc4;
+      background: #0b7285;
+      border-color: #075d68;
+      color: #ffffff;
     }}
     .tools button,
     .tools input {{
@@ -984,6 +970,7 @@ std::string html_shell_(std::string_view title,
     }}
     .content {{
       padding: 0 12px 12px;
+      background: #ffffff;
     }}
     .summary-grid {{
       display: grid;
@@ -1010,13 +997,15 @@ std::string html_shell_(std::string_view title,
     }}
     .table-wrap {{
       overflow: auto;
-      margin-top: 7px;
+      max-height: calc(100vh - 300px);
+      margin-top: 4px;
       border: 1px solid #c8d4df;
       border-radius: 7px;
       background: #ffffff;
     }}
     table {{
       width: 100%;
+      height: 400px;
       border-collapse: collapse;
       font-size: 0.86rem;
     }}
@@ -1026,7 +1015,7 @@ std::string html_shell_(std::string_view title,
       z-index: 2;
       background: #dcefee;
       border-bottom: 1px solid var(--line);
-      text-align: left;
+      text-align: center;
       white-space: nowrap;
     }}
     th, td {{
@@ -1052,6 +1041,9 @@ std::string html_shell_(std::string_view title,
     .sticky-left {{
       position: sticky;
       left: 0;
+      width: 72px;
+      min-width: 72px;
+      max-width: 72px;
       z-index: 1;
       background: #edf6f7;
       border-right: 2px solid #8bbfc0;
@@ -1063,6 +1055,9 @@ std::string html_shell_(std::string_view title,
     .num {{
       text-align: right;
       font-variant-numeric: tabular-nums;
+    }}
+    thead th.num {{
+      text-align: center;
     }}
     .muted {{
       color: var(--muted);
@@ -1114,6 +1109,17 @@ std::string html_shell_(std::string_view title,
       color: #ffffff;
       font-weight: 600;
     }}
+    .atlas-current-frame {{
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 1px solid #9eb2c3;
+      border-radius: 7px;
+      background: #edf6f7;
+      color: #163b47;
+      text-align: center;
+      font-weight: 700;
+      white-space: nowrap;
+    }}
     .atlas-panel {{
       display: none;
     }}
@@ -1134,74 +1140,10 @@ std::string html_shell_(std::string_view title,
       font-size: 1rem;
       font-weight: 700;
     }}
-    body.theme-midnight {{
-      --paper: #121a25;
-      --ink: #eaf2f8;
-      --muted: #9fb0c3;
-      --grid: #334356;
-      --line: #425269;
-      --panel: #182331;
-      background: #101720;
+    .atlas-panel .table-wrap table {{
+      height: 300px;
     }}
-    body.theme-midnight .frame,
-    body.theme-midnight .summary-card,
-    body.theme-midnight .table-wrap,
-    body.theme-midnight .tools input {{
-      background: #182331;
-      border-color: #34465a;
-      color: #eaf2f8;
-    }}
-    body.theme-midnight .hero {{
-      background: #162b35;
-      border-color: #34465a;
-    }}
-    body.theme-midnight .hero h1 {{
-      color: #f2fbff;
-    }}
-    body.theme-midnight thead th,
-    body.theme-midnight thead .sticky-left {{
-      background: #174b50;
-      color: #f2fbff;
-    }}
-    body.theme-midnight tbody tr:nth-child(even) {{
-      background: #1d2a39;
-    }}
-    body.theme-midnight th,
-    body.theme-midnight td {{
-      border-color: #34465a;
-    }}
-    body.theme-ocean {{
-      --ink: #0a2f3a;
-      --muted: #426e79;
-      --accent: #007c91;
-      --accent-3: #176b87;
-      background: #dff5f7;
-    }}
-    body.theme-ocean .hero {{
-      background: linear-gradient(90deg, #bfeaec 0%, #eefbfc 58%, #dcecff 100%);
-      border-top-color: #007c91;
-    }}
-    body.theme-ocean thead th,
-    body.theme-ocean thead .sticky-left {{
-      background: #b9e2e4;
-    }}
-    body.theme-violet {{
-      --ink: #2d2448;
-      --muted: #706486;
-      --accent: #5f3dc4;
-      --accent-3: #7048e8;
-      background: #f0ecff;
-    }}
-    body.theme-violet .hero {{
-      background: linear-gradient(90deg, #e5ddff 0%, #ffffff 58%, #e8f7f5 100%);
-      border-top-color: #7048e8;
-    }}
-    body.theme-violet thead th,
-    body.theme-violet thead .sticky-left {{
-      background: #ddd5fb;
-    }}
-    {6}
-    {7}
+    {5}
   </style>
 </head>
 <body>
@@ -1215,8 +1157,6 @@ std::string html_shell_(std::string_view title,
         <div class="tools">
           <input id="table-search" type="search" placeholder="Search visible rows" />
           <button id="reset-table-view" class="reset" type="button">Reset</button>
-          <button id="copy-visible" class="secondary" type="button">Copy TSV</button>
-          {8}
         </div>
       </header>
       <main class="content">
@@ -1227,19 +1167,13 @@ std::string html_shell_(std::string_view title,
   <script>
     const enableSort = {3};
     const enableSearch = {4};
-    const enableCopy = {5};
     const table = document.getElementById('plussmic-table');
     const detailTables = document.querySelectorAll('table[data-filterable="true"]');
     const searchInput = document.getElementById('table-search');
-    const copyButton = document.getElementById('copy-visible');
     const resetButton = document.getElementById('reset-table-view');
-    const themeButton = document.getElementById('toggle-theme');
 
     if (!enableSearch) {{
       searchInput.classList.add('hidden');
-    }}
-    if (!enableCopy) {{
-      copyButton.classList.add('hidden');
     }}
 
     function filterTables(query) {{
@@ -1294,34 +1228,6 @@ std::string html_shell_(std::string_view title,
       searchInput.addEventListener('input', (event) => filterTables(event.target.value));
     }}
 
-    async function copyVisibleTable() {{
-      const blocks = [];
-      detailTables.forEach((tbl) => {{
-        if (tbl.offsetParent === null) return;
-        const header = Array.from(tbl.tHead?.rows[0]?.cells ?? []).map((cell) => cell.innerText.trim()).join('\t');
-        const lines = [header];
-        Array.from(tbl.tBodies[0]?.rows ?? []).forEach((row) => {{
-          if (row.classList.contains('hidden')) return;
-          lines.push(Array.from(row.cells).map((cell) => cell.innerText.trim()).join('\t'));
-        }});
-        blocks.push(lines.join('\n'));
-      }});
-      const payload = blocks.join('\n\n');
-      try {{
-        await navigator.clipboard.writeText(payload);
-      }} catch (err) {{
-        const area = document.createElement('textarea');
-        area.value = payload;
-        document.body.appendChild(area);
-        area.select();
-        document.execCommand('copy');
-        area.remove();
-      }}
-    }}
-
-    if (enableCopy) {{
-      copyButton.addEventListener('click', copyVisibleTable);
-    }}
     resetButton.addEventListener('click', () => {{
       searchInput.value = '';
       filterTables('');
@@ -1334,39 +1240,30 @@ std::string html_shell_(std::string_view title,
         delete tbl.dataset.sortDir;
       }});
     }});
-    if (themeButton) {{
-      const themes = ['', 'theme-midnight', 'theme-ocean', 'theme-violet'];
-      let themeIndex = 0;
-      themeButton.addEventListener('click', () => {{
-        themes.forEach((theme) => {{ if (theme) document.body.classList.remove(theme); }});
-        themeIndex = (themeIndex + 1) % themes.length;
-        if (themes[themeIndex]) document.body.classList.add(themes[themeIndex]);
-      }});
+    const atlasPanels = Array.from(document.querySelectorAll('.atlas-panel'));
+    const atlasCurrentFrame = document.getElementById('atlas-current-frame');
+    function showAtlasFrame(index) {{
+      if (atlasPanels.length === 0) return;
+      const wrapped = ((index % atlasPanels.length) + atlasPanels.length) % atlasPanels.length;
+      atlasPanels.forEach((panel, panelIndex) => panel.classList.toggle('active', panelIndex === wrapped));
+      if (atlasCurrentFrame) {{
+        atlasCurrentFrame.textContent =
+          atlasPanels[wrapped].querySelector('.atlas-frame-title')?.textContent || ('Frame ' + wrapped);
+      }}
+      if (enableSearch) filterTables(searchInput.value || '');
     }}
-
-    document.querySelectorAll('.atlas-tab').forEach((button) => {{
-      button.addEventListener('click', () => {{
-        if (button.id === 'atlas-show-all') {{
-          document.querySelectorAll('.atlas-tab').forEach((candidate) => {{
-            candidate.classList.toggle('active', candidate === button);
-          }});
-          document.querySelectorAll('.atlas-panel').forEach((panel) => panel.classList.add('active'));
-          if (enableSearch) {{
-            filterTables(searchInput.value || '');
-          }}
-          return;
-        }}
-        const index = button.dataset.frameIndex;
-        document.querySelectorAll('.atlas-tab').forEach((candidate) => {{
-          candidate.classList.toggle('active', candidate === button);
-        }});
-        document.querySelectorAll('.atlas-panel').forEach((panel) => {{
-          panel.classList.toggle('active', panel.dataset.frameIndex === index);
-        }});
-        if (enableSearch) {{
-          filterTables(searchInput.value || '');
-        }}
-      }});
+    document.getElementById('atlas-previous')?.addEventListener('click', () => {{
+      const active = atlasPanels.findIndex((panel) => panel.classList.contains('active'));
+      showAtlasFrame((active < 0 ? 0 : active) - 1);
+    }});
+    document.getElementById('atlas-next')?.addEventListener('click', () => {{
+      const active = atlasPanels.findIndex((panel) => panel.classList.contains('active'));
+      showAtlasFrame((active < 0 ? -1 : active) + 1);
+    }});
+    document.getElementById('atlas-show-all')?.addEventListener('click', () => {{
+      atlasPanels.forEach((panel) => panel.classList.add('active'));
+      if (atlasCurrentFrame) atlasCurrentFrame.textContent = 'All frames';
+      if (enableSearch) filterTables(searchInput.value || '');
     }});
   </script>
 </body>
@@ -1376,10 +1273,7 @@ std::string html_shell_(std::string_view title,
                      body,
                      sortable,
                      search,
-                     copy,
-                     desktop_overrides,
-                     responsive_css,
-                     inhouse_tools);
+                     responsive_css);
 }
 
 std::string render_html_pre_(std::string_view title,
@@ -1503,20 +1397,17 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
   body += "<div class=\"section-label\">Frames</div>";
   body += "<div class=\"atlas-nav\">";
-  const bool show_all_frames = options.html_desktop_table_viewport;
+  const bool show_all_frames = false;
+  std::string initial_label = "Frame 0";
+  if (display_axis0.has_value()) {
+    initial_label = thread_value_at(*display_axis0, 0);
+  }
+  body += "<button id=\"atlas-previous\" type=\"button\" class=\"atlas-tab\">Previous</button>";
+  body += fmt::format("<span id=\"atlas-current-frame\" class=\"atlas-current-frame\">{}</span>",
+                      escape_html_(initial_label));
+  body += "<button id=\"atlas-next\" type=\"button\" class=\"atlas-tab\">Next</button>";
   body += fmt::format("<button id=\"atlas-show-all\" type=\"button\" class=\"atlas-tab{}\">All frames</button>",
                       show_all_frames ? " active" : "");
-  for (std::int64_t i = 0; i < atlas.depth(); ++i) {
-    std::string label = fmt::format("Frame {}", i);
-    if (display_axis0.has_value()) {
-      label = thread_value_at(*display_axis0, i);
-    }
-    body += fmt::format("<button id=\"atlas-tab-{}\" type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\">{}</button>",
-                        i,
-                        (!show_all_frames && i == 0) ? " active" : "",
-                        i,
-                        escape_html_(label));
-  }
   body += "</div>";
 
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
@@ -1885,9 +1776,6 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::PlussWebView) {
-      render_opts.html_desktop_table_viewport = true;
-    }
     const auto html = render_html(frame, render_opts);
     if (show_html_window_(html, render_opts, "Pluss DataFrame", backend)) {
       return;
@@ -1901,9 +1789,6 @@ void show(const Thread& thread, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::PlussWebView) {
-      render_opts.html_desktop_table_viewport = true;
-    }
     const auto html = render_html(thread, render_opts);
     if (show_html_window_(html, render_opts, "PlussMic Thread", backend)) {
       return;
@@ -1917,9 +1802,6 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::PlussWebView) {
-      render_opts.html_desktop_table_viewport = true;
-    }
     const auto html = render_html(atlas, render_opts);
     if (show_html_window_(html, render_opts, "Pluss Atlas", backend)) {
       return;
@@ -1933,9 +1815,6 @@ void show_info(const DataFrame& frame, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::PlussWebView) {
-      render_opts.html_desktop_table_viewport = true;
-    }
     const auto html = render_info_html(frame, render_opts);
     if (show_html_window_(html, render_opts, "Pluss DataFrame", backend)) {
       return;

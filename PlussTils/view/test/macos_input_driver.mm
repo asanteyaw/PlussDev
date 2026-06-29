@@ -37,9 +37,10 @@ bool find_window(const std::string& requested_title, CGRect& bounds, pid_t& owne
 }
 
 void post_mouse(const pid_t owner_pid, const CGEventType type, const CGPoint point) {
+  (void)owner_pid;
   CGEventRef event = CGEventCreateMouseEvent(nullptr, type, point, kCGMouseButtonLeft);
   if (event != nullptr) {
-    CGEventPostToPid(owner_pid, event);
+    CGEventPost(kCGHIDEventTap, event);
     CFRelease(event);
   }
 }
@@ -53,6 +54,7 @@ void move_and_click(const pid_t owner_pid, const CGPoint point) {
 }
 
 void post_text(const pid_t owner_pid, const std::string& text) {
+  (void)owner_pid;
   NSString* value = [NSString stringWithUTF8String:text.c_str()];
   for (NSUInteger index = 0; index < [value length]; ++index) {
     const UniChar character = [value characterAtIndex:index];
@@ -61,8 +63,8 @@ void post_text(const pid_t owner_pid, const std::string& text) {
     if (down != nullptr && up != nullptr) {
       CGEventKeyboardSetUnicodeString(down, 1, &character);
       CGEventKeyboardSetUnicodeString(up, 1, &character);
-      CGEventPostToPid(owner_pid, down);
-      CGEventPostToPid(owner_pid, up);
+      CGEventPost(kCGHIDEventTap, down);
+      CGEventPost(kCGHIDEventTap, up);
     }
     if (down != nullptr) CFRelease(down);
     if (up != nullptr) CFRelease(up);
@@ -86,6 +88,10 @@ int main(int argc, char** argv) {
     std::cerr << "window not found: " << title << '\n';
     return 3;
   }
+  NSRunningApplication* application =
+      [NSRunningApplication runningApplicationWithProcessIdentifier:owner_pid];
+  [application activateWithOptions:NSApplicationActivateAllWindows];
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
   const CGPoint point{
       bounds.origin.x + bounds.size.width * x_ratio,
@@ -111,7 +117,7 @@ int main(int argc, char** argv) {
       return 4;
     }
     CGEventSetLocation(event, point);
-    CGEventPostToPid(owner_pid, event);
+    CGEventPost(kCGHIDEventTap, event);
     CFRelease(event);
     return 0;
   }

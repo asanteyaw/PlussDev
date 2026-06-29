@@ -10,7 +10,7 @@ Use PlussMic when you want to:
 
 - load CSV, TXT, Excel, JSON, or Parquet data into C++;
 - inspect and summarize a dataset;
-- select, rename, reorder, derive, and transform features;
+- select, rename, reorder, assign, and transform features;
 - filter cases with masks or query expressions;
 - handle missing numeric, text, and time values;
 - group, aggregate, pivot, and correlate data;

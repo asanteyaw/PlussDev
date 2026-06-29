@@ -68,6 +68,26 @@ void test_dataframe_ts_resample_reindex_blocks() {
   auto daily = df.ts({"Adj Close", "Volume"}).resample("date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
   expect(daily.ncases() == 2, "daily resample should produce 2 bins");
   expect(daily.nfeatures() == 2, "daily resample should keep selected features");
+  const auto daily_adj = to_f64(daily.features("Adj Close"));
+  const auto daily_vol = to_f64(daily.features("Volume"));
+  expect(daily_adj.size() == 2 && std::abs(daily_adj[0] - 2.0) < 1e-12 && std::abs(daily_adj[1] - 3.0) < 1e-12,
+         "daily mean resample should match bin averages");
+  expect(daily_vol.size() == 2 && std::abs(daily_vol[0] - 15.0) < 1e-12 && std::abs(daily_vol[1] - 35.0) < 1e-12,
+         "daily mean resample should keep per-feature aggregation");
+
+  DataFrame counted({
+      {"Adj Close", Thread(pluss::make_series(std::vector<double>{
+                        1.0,
+                        std::numeric_limits<double>::quiet_NaN(),
+                        2.0,
+                        4.0,
+                    }))},
+      {"date", Thread(timeline)},
+  });
+  auto daily_count = counted.ts("Adj Close").resample("date", "D", pluss::subsp::stats::ts::ResampleOp::Count);
+  const auto counts = daily_count.features("Adj Close").as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  expect(counts.size() == 2 && counts[0] == 1 && counts[1] == 2,
+         "count resample should exclude missing values inside each bin");
 
   const std::vector<std::string_view> target_iso{
       "2024-01-01T00:00:00Z",

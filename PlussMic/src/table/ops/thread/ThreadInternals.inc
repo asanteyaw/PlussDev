@@ -871,10 +871,11 @@ std::optional<pluss::Series> merge_masks(
 }
 
 Thread forward_fill_thread(const Thread& t) {
-  if (!t.has_validity_mask()) {
+  const auto non_missing = thread_non_missing_mask(t);
+  if (!t.has_validity_mask() && non_missing.all().item<bool>()) {
     return t;
   }
-  auto valid = t.validity_mask()->to_vec<bool>();
+  auto valid = non_missing.to_vec<bool>();
   if (valid.empty()) {
     return t;
   }
@@ -940,10 +941,11 @@ Thread forward_fill_thread(const Thread& t) {
 }
 
 Thread backward_fill_thread(const Thread& t) {
-  if (!t.has_validity_mask()) {
+  const auto non_missing = thread_non_missing_mask(t);
+  if (!t.has_validity_mask() && non_missing.all().item<bool>()) {
     return t;
   }
-  auto valid = t.validity_mask()->to_vec<bool>();
+  auto valid = non_missing.to_vec<bool>();
   if (valid.empty()) {
     return t;
   }

@@ -365,10 +365,17 @@ struct Access {
       return {std::move(labels), std::move(bin)};
     }
     ::pluss::codeh::TimeZone tz = ::pluss::codeh::TimeZone::load(self.t_.tz());
-    const auto utc0 = x[0];
-    const int off0 = tz.offset_minutes_at_utc(utc0);
-    const std::int64_t local0 = utc0 + (std::int64_t)off0 * 60LL * 1'000'000'000LL;
-    const std::int64_t start_local = (local0 / q) * q;
+    std::int64_t min_local = std::numeric_limits<std::int64_t>::max();
+    for (std::int64_t i = 0; i < n; ++i) {
+      const auto utc = x[i];
+      CODEM_CHECK(utc != ::pluss::codeh::Timeline::kNaT, "TimeIndex does not allow NaT");
+      const int off = tz.offset_minutes_at_utc(utc);
+      const std::int64_t local = utc + (std::int64_t)off * 60LL * 1'000'000'000LL;
+      min_local = std::min(min_local, local);
+    }
+    constexpr std::int64_t kDayNanos = 86'400LL * 1'000'000'000LL;
+    const std::int64_t start_day_local = (min_local / kDayNanos) * kDayNanos;
+    const std::int64_t start_local = start_day_local;
 
     auto bin_id = pluss::codem::Series::empty({n}, pluss::codem::ScalarType::Int64);
     auto* bid = reinterpret_cast<std::int64_t*>(bin_id.raw_data());

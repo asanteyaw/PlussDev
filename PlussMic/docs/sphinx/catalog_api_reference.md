@@ -456,7 +456,7 @@ for (const auto& key : ct) {
 #### Signature
 
 ```cpp
-Catalog bfill(self, std::initializer_list<std::string_view> keys =
+Catalog bfill(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1211,7 +1211,7 @@ metric -> Series([10.0, 20.0, 30.0])
 #### Signature
 
 ```cpp
-Catalog dropna(self, std::initializer_list<std::string_view> keys =
+Catalog dropna(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1398,7 +1398,7 @@ count   -> Series([1, 1, 1, 1, 1])
 #### Signature
 
 ```cpp
-Catalog ffill(self, std::initializer_list<std::string_view> keys =
+Catalog ffill(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1448,7 +1448,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1470,10 +1470,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1503,7 +1503,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1525,10 +1525,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1558,7 +1558,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1580,10 +1580,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1613,7 +1613,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1635,10 +1635,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1668,7 +1668,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1690,10 +1690,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -2170,7 +2170,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog isnull(self, std::initializer_list<std::string_view> keys =
+Catalog isnull(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -2261,7 +2261,7 @@ auto out = ct.keys();
 #### Signature
 
 ```cpp
-static Catalog kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy =
+static Catalog kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy = {})
 ```
 
 #### Parameters
@@ -2363,7 +2363,7 @@ static Catalog load(std::string_view source_type, std::string_view filepath, con
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2448,7 +2448,7 @@ static Catalog load_csv(std::string_view filepath, const pluss::loader::ReadCsvO
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2484,7 +2484,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-static Catalog load_csv_with_key(std::string_view filepath, std::string_view key_field, const pluss::loader::ReadCsvOptions& options =
+static Catalog load_csv_with_key(std::string_view filepath, std::string_view key_field, const pluss::loader::ReadCsvOptions& options = {})
 ```
 
 #### Parameters
@@ -2496,7 +2496,7 @@ static Catalog load_csv_with_key(std::string_view filepath, std::string_view key
     See the signature for the supported argument form.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2577,7 +2577,7 @@ static Catalog load_excel(std::string_view filepath, const pluss::loader::ReadEx
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadExcelOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2663,7 +2663,7 @@ static Catalog load_json(std::string_view filepath, const pluss::loader::Config&
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2748,7 +2748,7 @@ static Catalog load_parquet(std::string_view filepath, const pluss::loader::Conf
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2833,7 +2833,7 @@ static Catalog load_txt(std::string_view filepath, const pluss::loader::Config& 
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3193,7 +3193,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog notnull(self, std::initializer_list<std::string_view> keys =
+Catalog notnull(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -3551,7 +3551,7 @@ Catalog sample(self, std::int64_t n, std::optional<std::uint64_t> random_state =
     Number of rows, entries, or depth items to keep in the preview.
 
 `random_state` : `std::optional<std::uint64_t>`
-    See the signature for the supported argument form.
+    Optional seed used to make sampling or shuffling reproducible.
 
 #### Returns
 
@@ -3595,7 +3595,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-void save_as(self, std::string_view target_type, std::string_view filename, const pluss::loader::Config& config =
+void save_as(self, std::string_view target_type, std::string_view filename, const pluss::loader::Config& config = {}) const
 ```
 
 #### Parameters
@@ -3607,7 +3607,7 @@ void save_as(self, std::string_view target_type, std::string_view filename, cons
     See the signature for the supported argument form.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3698,7 +3698,7 @@ void save_csv(self, std::string_view filename, const pluss::loader::Config& conf
     See the signature for the supported argument form.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3793,7 +3793,7 @@ void save_excel(self, std::string_view filename, const pluss::loader::Config& co
     See the signature for the supported argument form.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3888,7 +3888,7 @@ void save_json(self, std::string_view filename, const pluss::loader::Config& con
     See the signature for the supported argument form.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3983,7 +3983,7 @@ void save_parquet(self, std::string_view filename, const pluss::loader::Config& 
     See the signature for the supported argument form.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -4078,7 +4078,7 @@ void save_txt(self, std::string_view filename, const pluss::loader::Config& conf
     See the signature for the supported argument form.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -4800,7 +4800,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog sort_by(self, const std::vector<std::string>& fields, const std::vector<bool>& ascending =
+Catalog sort_by(self, const std::vector<std::string>& fields, const std::vector<bool>& ascending = {}) const
 ```
 
 #### Parameters
@@ -4978,7 +4978,7 @@ Series([20.0])
 #### Signature
 
 ```cpp
-pluss::table::DataFrame tabelize(self, const TabelizePolicy& policy =
+pluss::table::DataFrame tabelize(self, const TabelizePolicy& policy = {}) const
 ```
 
 #### Parameters
@@ -5416,13 +5416,16 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-pluss::table::DataFrame to_table(self, const TabelizePolicy& policy =
+pluss::table::DataFrame to_table(self, const TabelizePolicy& policy = {}, bool render = true) const
 ```
 
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
     See the signature for the supported argument form.
+
+`render` : `bool`
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 

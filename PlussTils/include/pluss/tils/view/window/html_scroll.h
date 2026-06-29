@@ -24,7 +24,10 @@ class HtmlScrollModel {
                                   double delta_y,
                                   PointI location,
                                   bool precise_delta,
-                                  bool shift_modifier);
+                                  bool shift_modifier,
+                                  bool animated = false);
+  [[nodiscard]] bool advance_animation(double elapsed_seconds);
+  [[nodiscard]] bool has_pending_animation() const noexcept;
   [[nodiscard]] bool pointer_down(PointI location);
   [[nodiscard]] bool pointer_drag(double delta_x, double delta_y, PointI location);
   void pointer_up() noexcept;
@@ -61,11 +64,15 @@ class HtmlScrollModel {
 
   HtmlRenderStats metrics_{};
   Offset document_{};
+  Offset document_target_{};
   std::unordered_map<std::string, Offset> tables_{};
+  std::unordered_map<std::string, Offset> table_targets_{};
   PointI last_pointer_{-1, -1};
   ScrollbarDrag scrollbar_drag_{};
   bool pointer_is_down_{false};
   bool suppress_content_drag_{false};
+
+  void sync_targets_to_current();
 };
 
 } // namespace pluss::view::window

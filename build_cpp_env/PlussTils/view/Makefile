@@ -375,6 +375,20 @@ plussview_html_scroll_tests/fast:
 .PHONY : plussview_html_scroll_tests/fast
 
 # Convenience name for target.
+PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/rule
+.PHONY : PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/rule
+
+# Convenience name for target.
+plussview_html_export_tests: PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/rule
+.PHONY : plussview_html_export_tests
+
+# fast build rule for target.
+plussview_html_export_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build
+.PHONY : plussview_html_export_tests/fast
+
+# Convenience name for target.
 PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule
 .PHONY : PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/rule
@@ -1156,6 +1170,30 @@ src/window/text/text_layout.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/text/text_layout.cpp.s
 .PHONY : src/window/text/text_layout.cpp.s
 
+test/html_export_tests.o: test/html_export_tests.cpp.o
+.PHONY : test/html_export_tests.o
+
+# target to build an object file
+test/html_export_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/test/html_export_tests.cpp.o
+.PHONY : test/html_export_tests.cpp.o
+
+test/html_export_tests.i: test/html_export_tests.cpp.i
+.PHONY : test/html_export_tests.i
+
+# target to preprocess a source file
+test/html_export_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/test/html_export_tests.cpp.i
+.PHONY : test/html_export_tests.cpp.i
+
+test/html_export_tests.s: test/html_export_tests.cpp.s
+.PHONY : test/html_export_tests.s
+
+# target to generate assembly for a file
+test/html_export_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/test/html_export_tests.cpp.s
+.PHONY : test/html_export_tests.cpp.s
+
 test/html_scroll_tests.o: test/html_scroll_tests.cpp.o
 .PHONY : test/html_scroll_tests.o
 
@@ -1215,6 +1253,7 @@ help:
 	@echo "... plusstils_view_window_session_demo"
 	@echo "... plusstils_view_window_shell_backend_demo"
 	@echo "... plusstils_view_window_table_demo"
+	@echo "... plussview_html_export_tests"
 	@echo "... plussview_html_scroll_tests"
 	@echo "... plussview_macos_input_driver"
 	@echo "... examples/window/export_smoke_demo.o"
@@ -1313,6 +1352,9 @@ help:
 	@echo "... src/window/text/text_layout.o"
 	@echo "... src/window/text/text_layout.i"
 	@echo "... src/window/text/text_layout.s"
+	@echo "... test/html_export_tests.o"
+	@echo "... test/html_export_tests.i"
+	@echo "... test/html_export_tests.s"
 	@echo "... test/html_scroll_tests.o"
 	@echo "... test/html_scroll_tests.i"
 	@echo "... test/html_scroll_tests.s"

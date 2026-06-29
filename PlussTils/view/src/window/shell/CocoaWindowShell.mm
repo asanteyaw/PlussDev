@@ -30,14 +30,11 @@ void pump_app_events() {
   [NSApp updateWindows];
 }
 
-NSImage* image_from_canvas(const pluss::view::window::PixelCanvas& canvas) {
-  const auto size = canvas.size();
-  const auto bytes = canvas.bytes();
-  if (size.width <= 0 || size.height <= 0 || bytes.empty()) {
+NSBitmapImageRep* bitmap_rep_for_size(const pluss::view::window::SizeI size) {
+  if (size.width <= 0 || size.height <= 0) {
     return nil;
   }
-
-  NSBitmapImageRep* rep = [[NSBitmapImageRep alloc]
+  return [[NSBitmapImageRep alloc]
       initWithBitmapDataPlanes:nullptr
                     pixelsWide:size.width
                     pixelsHigh:size.height
@@ -49,25 +46,6 @@ NSImage* image_from_canvas(const pluss::view::window::PixelCanvas& canvas) {
                    bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
                     bytesPerRow:size.width * 4
                    bitsPerPixel:32];
-  if (rep == nil || [rep bitmapData] == nullptr) {
-    return nil;
-  }
-
-  auto* dst = [rep bitmapData];
-  const std::size_t row_bytes = static_cast<std::size_t>(size.width) * 4U;
-  for (int y = 0; y < size.height; ++y) {
-    const std::size_t src_row = static_cast<std::size_t>(y);
-    std::memcpy(dst + static_cast<std::size_t>(y) * row_bytes,
-                bytes.data() + src_row * row_bytes,
-                row_bytes);
-  }
-
-  NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(size.width, size.height)];
-  if (image == nil) {
-    return nil;
-  }
-  [image addRepresentation:rep];
-  return image;
 }
 
 NSString* shortcut_note_for_key_event(NSEvent* event) {
@@ -101,6 +79,18 @@ NSString* shortcut_note_for_key_event(NSEvent* event) {
   return nil;
 }
 
+bool event_targets_window(NSEvent* event, NSWindow* window) {
+  return event != nil && window != nil &&
+         (event.window == window || (event.window == nil && window.isKeyWindow));
+}
+
+NSPoint event_location_in_window(NSEvent* event, NSWindow* window) {
+  if (event != nil && event.window != nil) {
+    return [event locationInWindow];
+  }
+  return [window convertPointFromScreen:[NSEvent mouseLocation]];
+}
+
 } // namespace
 
 @interface PlussTilsViewCocoaShellDelegate : NSObject <NSWindowDelegate>
@@ -116,6 +106,8 @@ NSString* shortcut_note_for_key_event(NSEvent* event) {
 
 @interface PlussTilsViewCocoaShellHost : NSObject
 @property(nonatomic, strong) NSWindow* window;
+@property(nonatomic, strong) NSView* toolbar;
+@property(nonatomic, strong) NSPopUpButton* save_button;
 @property(nonatomic, strong) NSImageView* image_view;
 @property(nonatomic, strong) PlussTilsViewCocoaShellDelegate* delegate;
 @property(nonatomic, strong) NSMutableArray<NSDictionary*>* input_events;
@@ -124,9 +116,20 @@ NSString* shortcut_note_for_key_event(NSEvent* event) {
 @property(nonatomic, strong) id drag_monitor;
 @property(nonatomic, strong) id down_monitor;
 @property(nonatomic, strong) id up_monitor;
+- (void)saveAs:(id)sender;
 @end
 
 @implementation PlussTilsViewCocoaShellHost
+- (void)saveAs:(id)sender {
+  NSMenuItem* item = [sender isKindOfClass:[NSMenuItem class]] ? (NSMenuItem*)sender : nil;
+  NSString* extension = [item representedObject];
+  if (self.input_events != nil && extension != nil) {
+    [self.input_events addObject:@{
+      @"kind" : @"shortcut",
+      @"note" : [@"save_as:" stringByAppendingString:extension]
+    }];
+  }
+}
 @end
 
 namespace pluss::view::window {
@@ -137,6 +140,9 @@ class CocoaWindowShell final : public IWindowShell {
     @autoreleasepool {
       [NSApplication sharedApplication];
       [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+      if (![NSApp isRunning]) {
+        [NSApp finishLaunching];
+      }
 
       if (host_ == nil) {
         host_ = [PlussTilsViewCocoaShellHost new];
@@ -144,7 +150,9 @@ class CocoaWindowShell final : public IWindowShell {
 
       const CGFloat width = static_cast<CGFloat>(std::max(640, config.initial_size.width));
       const CGFloat height = static_cast<CGFloat>(std::max(420, config.initial_size.height));
-      const NSRect frame = NSMakeRect(0.0, 0.0, width, height);
+      const bool show_save_button = !config.save_formats.empty();
+      const CGFloat toolbar_height = show_save_button ? 46.0 : 0.0;
+      const NSRect frame = NSMakeRect(0.0, 0.0, width, height + toolbar_height);
       const NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                                       NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
 
@@ -171,7 +179,53 @@ class CocoaWindowShell final : public IWindowShell {
       host_.input_events = [NSMutableArray array];
 
       NSView* content = [host_.window contentView];
-      host_.image_view = [[NSImageView alloc] initWithFrame:[content bounds]];
+      const NSRect content_bounds = [content bounds];
+      if (show_save_button) {
+        host_.toolbar = [[NSView alloc]
+            initWithFrame:NSMakeRect(0.0,
+                                     content_bounds.size.height - toolbar_height,
+                                     content_bounds.size.width,
+                                     toolbar_height)];
+        [host_.toolbar setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
+        [host_.toolbar setWantsLayer:YES];
+        host_.toolbar.layer.backgroundColor = [[NSColor windowBackgroundColor] CGColor];
+        [content addSubview:host_.toolbar];
+
+        host_.save_button = [[NSPopUpButton alloc]
+            initWithFrame:NSMakeRect(
+                std::max<CGFloat>(12.0, content_bounds.size.width - 104.0), 8.0, 92.0, 30.0)
+                pullsDown:YES];
+        [host_.save_button setFrame:NSMakeRect(
+            std::max<CGFloat>(12.0, content_bounds.size.width - 104.0), 8.0, 92.0, 30.0)];
+        [host_.save_button setAutoresizingMask:NSViewMinXMargin];
+        [host_.save_button setBezelStyle:NSBezelStyleRounded];
+        [host_.save_button setFont:[NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold]];
+        [host_.save_button addItemWithTitle:@"Save As"];
+        [host_.toolbar addSubview:host_.save_button];
+        for (const auto& format : config.save_formats) {
+          NSString* label = [[NSString alloc] initWithBytes:format.label.data()
+                                                    length:format.label.size()
+                                                  encoding:NSUTF8StringEncoding];
+          NSString* extension = [[NSString alloc] initWithBytes:format.extension.data()
+                                                        length:format.extension.size()
+                                                      encoding:NSUTF8StringEncoding];
+          if (label == nil || extension == nil) {
+            continue;
+          }
+          NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:label
+                                                       action:@selector(saveAs:)
+                                                keyEquivalent:@""];
+          [item setTarget:host_];
+          [item setRepresentedObject:extension];
+          [[host_.save_button menu] addItem:item];
+        }
+      } else {
+        host_.toolbar = nil;
+        host_.save_button = nil;
+      }
+
+      host_.image_view = [[NSImageView alloc]
+          initWithFrame:NSMakeRect(0.0, 0.0, content_bounds.size.width, height)];
       [host_.image_view setImageScaling:NSImageScaleAxesIndependently];
       [host_.image_view setImageAlignment:NSImageAlignCenter];
       [host_.image_view setEditable:NO];
@@ -183,7 +237,8 @@ class CocoaWindowShell final : public IWindowShell {
       host_.key_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
                                                                  handler:^NSEvent* _Nullable(NSEvent* e) {
                                                                    PlussTilsViewCocoaShellHost* strong_host = weak_host;
-                                                                   if (strong_host == nil || e == nil || e.window != strong_host.window) {
+                                                                   if (strong_host == nil ||
+                                                                       !event_targets_window(e, strong_host.window)) {
                                                                      return e;
                                                                    }
                                                                    NSString* note = shortcut_note_for_key_event(e);
@@ -240,10 +295,12 @@ class CocoaWindowShell final : public IWindowShell {
       host_.scroll_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskScrollWheel
                                                                     handler:^NSEvent* _Nullable(NSEvent* e) {
                                                                       PlussTilsViewCocoaShellHost* strong_host = weak_host;
-                                                                      if (strong_host == nil || e == nil || e.window != strong_host.window) {
+                                                                      if (strong_host == nil ||
+                                                                          !event_targets_window(e, strong_host.window)) {
                                                                         return e;
                                                                       }
-                                                                      NSPoint in_window = [e locationInWindow];
+                                                                      NSPoint in_window =
+                                                                          event_location_in_window(e, strong_host.window);
                                                                       NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
                                                                       const NSRect bounds = [strong_host.image_view bounds];
                                                                       const double x = std::clamp(static_cast<double>(in_view.x),
@@ -270,10 +327,12 @@ class CocoaWindowShell final : public IWindowShell {
       host_.drag_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged
                                                                   handler:^NSEvent* _Nullable(NSEvent* e) {
                                                                     PlussTilsViewCocoaShellHost* strong_host = weak_host;
-                                                                    if (strong_host == nil || e == nil || e.window != strong_host.window) {
+                                                                    if (strong_host == nil ||
+                                                                        !event_targets_window(e, strong_host.window)) {
                                                                       return e;
                                                                     }
-                                                                    NSPoint in_window = [e locationInWindow];
+                                                                    NSPoint in_window =
+                                                                        event_location_in_window(e, strong_host.window);
                                                                     NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
                                                                     const NSRect bounds = [strong_host.image_view bounds];
                                                                     const double x = std::clamp(static_cast<double>(in_view.x),
@@ -296,12 +355,14 @@ class CocoaWindowShell final : public IWindowShell {
       host_.down_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown
                                                                   handler:^NSEvent* _Nullable(NSEvent* e) {
                                                                     PlussTilsViewCocoaShellHost* strong_host = weak_host;
-                                                                    if (strong_host == nil || e == nil || e.window != strong_host.window ||
+                                                                    if (strong_host == nil ||
+                                                                        !event_targets_window(e, strong_host.window) ||
                                                                         strong_host.window == nil ||
                                                                         strong_host.image_view == nil) {
                                                                       return e;
                                                                     }
-                                                                    NSPoint in_window = [e locationInWindow];
+                                                                    NSPoint in_window =
+                                                                        event_location_in_window(e, strong_host.window);
                                                                     NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
                                                                     const NSRect bounds = [strong_host.image_view bounds];
                                                                     const double x = std::clamp(static_cast<double>(in_view.x), 0.0, static_cast<double>(bounds.size.width));
@@ -319,12 +380,14 @@ class CocoaWindowShell final : public IWindowShell {
       host_.up_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp
                                                                handler:^NSEvent* _Nullable(NSEvent* e) {
                                                                  PlussTilsViewCocoaShellHost* strong_host = weak_host;
-                                                                 if (strong_host == nil || e == nil || e.window != strong_host.window ||
+                                                                 if (strong_host == nil ||
+                                                                     !event_targets_window(e, strong_host.window) ||
                                                                      strong_host.window == nil ||
                                                                      strong_host.image_view == nil) {
                                                                    return e;
                                                                  }
-                                                                 NSPoint in_window = [e locationInWindow];
+                                                                 NSPoint in_window =
+                                                                     event_location_in_window(e, strong_host.window);
                                                                  NSPoint in_view = [strong_host.image_view convertPoint:in_window fromView:nil];
                                                                  const NSRect bounds = [strong_host.image_view bounds];
                                                                  const double x = std::clamp(static_cast<double>(in_view.x),
@@ -343,7 +406,12 @@ class CocoaWindowShell final : public IWindowShell {
                                                                }];
 
       [host_.window makeKeyAndOrderFront:nil];
-      [NSApp activateIgnoringOtherApps:YES];
+      if (@available(macOS 14.0, *)) {
+        [NSApp activate];
+      } else {
+        [NSApp activateIgnoringOtherApps:YES];
+      }
+      [host_.window makeKeyWindow];
 
       open_ = true;
       last_size_ = SizeI{static_cast<int>(width), static_cast<int>(height)};
@@ -360,17 +428,30 @@ class CocoaWindowShell final : public IWindowShell {
         return false;
       }
 
-      NSImage* image = image_from_canvas(canvas);
-      if (image == nil) {
+      const auto canvas_size = canvas.size();
+      if (bitmap_rep_ == nil ||
+          [bitmap_rep_ pixelsWide] != canvas_size.width ||
+          [bitmap_rep_ pixelsHigh] != canvas_size.height) {
+        bitmap_rep_ = bitmap_rep_for_size(canvas_size);
+        canvas_image_ = [[NSImage alloc]
+            initWithSize:NSMakeSize(canvas_size.width, canvas_size.height)];
+        if (bitmap_rep_ != nil && canvas_image_ != nil) {
+          [canvas_image_ addRepresentation:bitmap_rep_];
+        }
+      }
+      if (bitmap_rep_ == nil || canvas_image_ == nil || [bitmap_rep_ bitmapData] == nullptr) {
         events_.push_back(ShellEvent{ShellEventKind::Error, last_size_, "cocoa_image_convert_failed"});
         return false;
       }
 
-      [host_.image_view setImage:image];
-      [host_.window makeKeyAndOrderFront:nil];
-      pump_app_events();
+      const auto bytes = canvas.bytes();
+      std::memcpy([bitmap_rep_ bitmapData], bytes.data(), bytes.size());
+      if ([host_.image_view image] != canvas_image_) {
+        [host_.image_view setImage:canvas_image_];
+      }
+      [host_.image_view setNeedsDisplay:YES];
 
-      const NSRect bounds = [[host_.window contentView] bounds];
+      const NSRect bounds = [host_.image_view bounds];
       last_size_ = SizeI{static_cast<int>(std::round(bounds.size.width)),
                          static_cast<int>(std::round(bounds.size.height))};
       events_.push_back(ShellEvent{ShellEventKind::Presented, last_size_, "cocoa_shell_presented"});
@@ -407,6 +488,8 @@ class CocoaWindowShell final : public IWindowShell {
         }
       }
       open_ = false;
+      bitmap_rep_ = nil;
+      canvas_image_ = nil;
       if (was_open) {
         events_.push_back(ShellEvent{ShellEventKind::Closed, last_size_, "cocoa_shell_closed"});
       }
@@ -424,7 +507,7 @@ class CocoaWindowShell final : public IWindowShell {
       }
 
       if (open_ && host_ != nil && host_.window != nil) {
-        const NSRect bounds = [[host_.window contentView] bounds];
+        const NSRect bounds = [host_.image_view bounds];
         const SizeI current{static_cast<int>(std::round(bounds.size.width)),
                             static_cast<int>(std::round(bounds.size.height))};
         if (current.width != last_size_.width || current.height != last_size_.height) {
@@ -535,6 +618,15 @@ class CocoaWindowShell final : public IWindowShell {
     };
   }
 
+  double backing_scale_factor() const noexcept override {
+    @autoreleasepool {
+      if (host_ == nil || host_.window == nil) {
+        return 1.0;
+      }
+      return std::clamp(static_cast<double>([host_.window backingScaleFactor]), 1.0, 2.0);
+    }
+  }
+
   bool set_clipboard_text(const std::string_view text) override {
     @autoreleasepool {
       NSString* value =
@@ -576,6 +668,11 @@ class CocoaWindowShell final : public IWindowShell {
           if (svg_type != nil) {
             [panel setAllowedContentTypes:@[svg_type]];
           }
+        } else {
+          UTType* type = [UTType typeWithFilenameExtension:ext];
+          if (type != nil) {
+            [panel setAllowedContentTypes:@[type]];
+          }
         }
       }
 
@@ -587,11 +684,27 @@ class CocoaWindowShell final : public IWindowShell {
     }
   }
 
+  bool save_canvas_pdf(const PixelCanvas& canvas, const std::string_view path) override {
+    (void)canvas;
+    @autoreleasepool {
+      if (host_ == nil || host_.image_view == nil || path.empty()) {
+        return false;
+      }
+      NSData* pdf = [host_.image_view dataWithPDFInsideRect:[host_.image_view bounds]];
+      NSString* output = [[NSString alloc] initWithBytes:path.data()
+                                                 length:path.size()
+                                               encoding:NSUTF8StringEncoding];
+      return pdf != nil && output != nil && [pdf writeToFile:output atomically:YES] == YES;
+    }
+  }
+
  private:
   bool open_{false};
   SizeI last_size_{};
   std::vector<ShellEvent> events_{};
   __strong PlussTilsViewCocoaShellHost* host_{nil};
+  __strong NSBitmapImageRep* bitmap_rep_{nil};
+  __strong NSImage* canvas_image_{nil};
 };
 
 std::unique_ptr<IWindowShell> make_cocoa_window_shell() {

@@ -14,16 +14,16 @@ This page documents the public plotting accessor returned by `DataFrame::plot()`
 #### Signature
 
 ```cpp
-pluss::pl::Studio act(self,  std::string_view feature, const ActPlotOptions& options =
+pluss::pl::Studio act(self,  std::string_view feature, const ActPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `options` : `const ActPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -66,13 +66,19 @@ Figure(act)
 #### Signature
 
 ```cpp
-pluss::pl::Studio andrews_curves(self,  pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio andrews_curves(self,  pluss::msharp::RangeView::Of<std::string_view> features = {}, std::optional<std::string_view> class_feature = std::nullopt, const AndrewsCurvesPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
+
+`class_feature` : `std::optional<std::string_view>`
+    See the signature for the supported argument form.
+
+`options` : `const AndrewsCurvesPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -185,7 +191,7 @@ pluss::pl::Studio area(self, pluss::msharp::RangeView::Of<std::string_view> y_fe
     See the signature for the supported argument form.
 
 `options` : `const AreaPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -306,7 +312,7 @@ pluss::pl::Studio area(self, std::initializer_list<std::string_view> y_features,
     See the signature for the supported argument form.
 
 `options` : `const AreaPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -427,7 +433,7 @@ pluss::pl::Studio area(self, std::string_view y_feature, std::optional<std::stri
     See the signature for the supported argument form.
 
 `options` : `const AreaPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -548,7 +554,7 @@ pluss::pl::Studio area_stacked(self, pluss::msharp::RangeView::Of<std::string_vi
     See the signature for the supported argument form.
 
 `options` : `const AreaStackedPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -665,7 +671,7 @@ pluss::pl::Studio area_stacked(self, std::initializer_list<std::string_view> y_f
     See the signature for the supported argument form.
 
 `options` : `const AreaStackedPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -713,7 +719,7 @@ Figure(area_stacked)
 #### Signature
 
 ```cpp
-pluss::pl::Studio auto_plot(self, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio auto_plot(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 ```
 
 #### Parameters
@@ -774,7 +780,7 @@ pluss::pl::Studio auto_plot(self, pluss::msharp::RangeView::Of<std::string_view>
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const AutoPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -787,7 +793,7 @@ Applies `auto_plot` to the current `DataFramePlotAccessor` object. Use the examp
 
 #### See also
 
-- `pluss::pl::Studio auto_plot(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio auto_plot(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 
 #### Examples
 
@@ -904,7 +910,7 @@ pluss::pl::Studio bar(self, pluss::msharp::RangeView::Of<std::string_view> y_fea
     See the signature for the supported argument form.
 
 `options` : `const BarPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1051,7 +1057,7 @@ pluss::pl::Studio bar(self, std::initializer_list<std::string_view> y_features, 
     See the signature for the supported argument form.
 
 `options` : `const BarPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1198,7 +1204,7 @@ pluss::pl::Studio bar(self, std::string_view y_feature, std::optional<std::strin
     See the signature for the supported argument form.
 
 `options` : `const BarPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1333,7 +1339,7 @@ pluss::pl::Studio bar_stacked(self, pluss::msharp::RangeView::Of<std::string_vie
     See the signature for the supported argument form.
 
 `options` : `const BarStackedPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1454,7 +1460,7 @@ pluss::pl::Studio bar_stacked(self, std::initializer_list<std::string_view> y_fe
     See the signature for the supported argument form.
 
 `options` : `const BarStackedPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1505,16 +1511,16 @@ Figure(bar_stacked)
 #### Signature
 
 ```cpp
-pluss::pl::Studio bootstrap(self,  std::string_view feature, const BootstrapPlotOptions& options =
+pluss::pl::Studio bootstrap(self,  std::string_view feature, const BootstrapPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `options` : `const BootstrapPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1558,7 +1564,7 @@ Figure(bootstrap)
 #### Signature
 
 ```cpp
-pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 ```
 
 #### Parameters
@@ -1620,7 +1626,7 @@ pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> featu
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const BoxPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1633,7 +1639,7 @@ Builds a box plot for one or more numeric features.
 
 #### See also
 
-- `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio box(self, std::initializer_list<std::string_view> features) const`
 - `pluss::pl::Studio box(self, std::initializer_list<std::string_view> features, const BoxPlotOptions& options) const`
 
@@ -1688,7 +1694,7 @@ Builds a box plot for one or more numeric features.
 
 #### See also
 
-- `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features, const BoxPlotOptions& options) const`
 - `pluss::pl::Studio box(self, std::initializer_list<std::string_view> features, const BoxPlotOptions& options) const`
 
@@ -1731,7 +1737,7 @@ pluss::pl::Studio box(self, std::initializer_list<std::string_view> features, co
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const BoxPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1744,7 +1750,7 @@ Builds a box plot for one or more numeric features.
 
 #### See also
 
-- `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio box(self, std::initializer_list<std::string_view> features) const`
 - `pluss::pl::Studio box(self, pluss::msharp::RangeView::Of<std::string_view> features, const BoxPlotOptions& options) const`
 
@@ -1780,13 +1786,16 @@ Figure(box)
 #### Signature
 
 ```cpp
-pluss::pl::Studio brief(self, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio brief(self, pluss::msharp::RangeView::Of<std::string_view> features = {}, const BriefPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
+
+`options` : `const BriefPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1799,7 +1808,7 @@ Builds a compact summary figure for one or more numeric features.
 
 #### See also
 
-- `pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::msharp::RangeView::Of<std::string_view> features = {}, const BriefPlotOptions& options = {}) const`
 
 #### Examples
 
@@ -1833,7 +1842,7 @@ Figure(summary)
 #### Signature
 
 ```cpp
-pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::msharp::RangeView::Of<std::string_view> features = {}, const BriefPlotOptions& options = {}) const
 ```
 
 #### Parameters
@@ -1843,6 +1852,9 @@ pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::msharp::RangeVi
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
+
+`options` : `const BriefPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1855,7 +1867,7 @@ Builds a compact summary figure for one or more numeric features.
 
 #### See also
 
-- `pluss::pl::Studio brief(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio brief(self, pluss::msharp::RangeView::Of<std::string_view> features = {}, const BriefPlotOptions& options = {}) const`
 
 #### Examples
 
@@ -1889,7 +1901,7 @@ Figure(summary)
 #### Signature
 
 ```cpp
-pluss::pl::Studio corr_heatmap(self, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio corr_heatmap(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 ```
 
 #### Parameters
@@ -1949,7 +1961,7 @@ pluss::pl::Studio corr_heatmap(self, pluss::msharp::RangeView::Of<std::string_vi
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const CorrHeatmapPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -1962,7 +1974,7 @@ Applies `corr_heatmap` to the current `DataFramePlotAccessor` object. Use the ex
 
 #### See also
 
-- `pluss::pl::Studio corr_heatmap(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio corr_heatmap(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 
 #### Examples
 
@@ -2005,7 +2017,7 @@ pluss::pl::Studio density(self, pluss::msharp::RangeView::Of<std::string_view> f
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const DensityPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2123,7 +2135,7 @@ pluss::pl::Studio density(self, std::initializer_list<std::string_view> features
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const DensityPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2238,10 +2250,10 @@ pluss::pl::Studio density(self, std::string_view feature, const DensityPlotOptio
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `options` : `const DensityPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2299,7 +2311,7 @@ pluss::pl::Studio density(self, std::string_view feature, std::int64_t points = 
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `points` : `std::int64_t`
     See the signature for the supported argument form.
@@ -2408,7 +2420,7 @@ pluss::pl::Studio heatmap(self, pluss::msharp::RangeView::Of<std::string_view> f
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const HeatmapPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2455,16 +2467,16 @@ pluss::pl::Studio heatmap(self, std::string_view case_feature, std::string_view 
 #### Parameters
 
 `case_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.
 
 `feature_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose distinct values become new output columns in pivot-style reshaping.
 
 `value_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose values populate pivot cells or grouped summaries.
 
 `op` : `DataFrame::GroupOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -2511,19 +2523,19 @@ pluss::pl::Studio heatmap(self, std::string_view case_feature, std::string_view 
 #### Parameters
 
 `case_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.
 
 `feature_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose distinct values become new output columns in pivot-style reshaping.
 
 `value_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose values populate pivot cells or grouped summaries.
 
 `op` : `DataFrame::GroupOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 `options` : `const HeatmapPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2570,7 +2582,7 @@ pluss::pl::Studio hist(self, const HistPlotOptions& options) const
 #### Parameters
 
 `options` : `const HistPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2624,7 +2636,7 @@ pluss::pl::Studio hist(self, pluss::msharp::RangeView::Of<std::string_view> feat
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const HistPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2678,7 +2690,7 @@ pluss::pl::Studio hist(self, pluss::msharp::RangeView::Of<std::string_view> feat
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `bins` : `std::int64_t`
-    See the signature for the supported argument form.
+    Strictly increasing interval edges used to define bucket boundaries.
 
 #### Returns
 
@@ -2732,7 +2744,7 @@ pluss::pl::Studio hist(self, std::initializer_list<std::string_view> features, c
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const HistPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2786,7 +2798,7 @@ pluss::pl::Studio hist(self, std::initializer_list<std::string_view> features, s
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `bins` : `std::int64_t`
-    See the signature for the supported argument form.
+    Strictly increasing interval edges used to define bucket boundaries.
 
 #### Returns
 
@@ -2837,7 +2849,7 @@ pluss::pl::Studio hist(self, std::int64_t bins = 20) const
 #### Parameters
 
 `bins` : `std::int64_t`
-    See the signature for the supported argument form.
+    Strictly increasing interval edges used to define bucket boundaries.
 
 #### Returns
 
@@ -2888,10 +2900,10 @@ pluss::pl::Studio hist(self, std::string_view feature, const HistPlotOptions& op
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `options` : `const HistPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2942,10 +2954,10 @@ pluss::pl::Studio hist(self, std::string_view feature, std::int64_t bins = 20) c
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `bins` : `std::int64_t`
-    See the signature for the supported argument form.
+    Strictly increasing interval edges used to define bucket boundaries.
 
 #### Returns
 
@@ -2990,16 +3002,16 @@ Figure(...)
 #### Signature
 
 ```cpp
-pluss::pl::Studio lag(self, std::string_view feature, const LagPlotOptions& options =
+pluss::pl::Studio lag(self, std::string_view feature, const LagPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the source feature used by the operation.
 
 `options` : `const LagPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3098,7 +3110,7 @@ pluss::pl::Studio line(self, pluss::msharp::RangeView::Of<std::string_view> y_fe
     See the signature for the supported argument form.
 
 `options` : `const LinePlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3205,7 +3217,7 @@ pluss::pl::Studio line(self, std::initializer_list<std::string_view> y_features,
     See the signature for the supported argument form.
 
 `options` : `const LinePlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3312,7 +3324,7 @@ pluss::pl::Studio line(self, std::string_view y_feature, std::optional<std::stri
     See the signature for the supported argument form.
 
 `options` : `const LinePlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3355,13 +3367,19 @@ Figure(...)
 #### Signature
 
 ```cpp
-pluss::pl::Studio parallel(self,  pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio parallel(self,  pluss::msharp::RangeView::Of<std::string_view> features = {}, std::optional<std::string_view> class_feature = std::nullopt, const ParallelPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
+
+`class_feature` : `std::optional<std::string_view>`
+    See the signature for the supported argument form.
+
+`options` : `const ParallelPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3402,7 +3420,7 @@ pluss::pl::Studio pie(self, std::string_view value_feature, std::optional<std::s
 #### Parameters
 
 `value_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose values populate pivot cells or grouped summaries.
 
 `label_feature` : `std::optional<std::string_view>`
     See the signature for the supported argument form.
@@ -3450,13 +3468,13 @@ pluss::pl::Studio pie(self, std::string_view value_feature, std::optional<std::s
 #### Parameters
 
 `value_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose values populate pivot cells or grouped summaries.
 
 `label_feature` : `std::optional<std::string_view>`
     See the signature for the supported argument form.
 
 `options` : `const PiePlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3495,13 +3513,19 @@ Figure(...)
 #### Signature
 
 ```cpp
-pluss::pl::Studio radviz(self,  pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio radviz(self,  pluss::msharp::RangeView::Of<std::string_view> features = {}, std::optional<std::string_view> class_feature = std::nullopt, const RadvizPlotOptions& options = {}) const
 ```
 
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
+
+`class_feature` : `std::optional<std::string_view>`
+    See the signature for the supported argument form.
+
+`options` : `const RadvizPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3602,7 +3626,7 @@ pluss::pl::Studio scatter(self, std::string_view x_feature, std::string_view y_f
     See the signature for the supported argument form.
 
 `options` : `const ScatterPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3641,7 +3665,7 @@ Figure(...)
 #### Signature
 
 ```cpp
-pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 ```
 
 #### Parameters
@@ -3696,7 +3720,7 @@ pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const ScatterMatrixPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3709,7 +3733,7 @@ Applies `scatter_matrix` to the current `DataFramePlotAccessor` object. Use the 
 
 #### See also
 
-- `pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features, ScatterMatrixTriangle triangle) const`
 
 #### Examples
@@ -3758,7 +3782,7 @@ Applies `scatter_matrix` to the current `DataFramePlotAccessor` object. Use the 
 
 #### See also
 
-- `pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio scatter_matrix(self, pluss::msharp::RangeView::Of<std::string_view> features, const ScatterMatrixPlotOptions& options) const`
 
 #### Examples
@@ -3849,7 +3873,7 @@ pluss::pl::Studio step(self, pluss::msharp::RangeView::Of<std::string_view> y_fe
     See the signature for the supported argument form.
 
 `options` : `const StepPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3956,7 +3980,7 @@ pluss::pl::Studio step(self, std::initializer_list<std::string_view> y_features,
     See the signature for the supported argument form.
 
 `options` : `const StepPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -4063,7 +4087,7 @@ pluss::pl::Studio step(self, std::string_view y_feature, std::optional<std::stri
     See the signature for the supported argument form.
 
 `options` : `const StepPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -4106,7 +4130,7 @@ Figure(...)
 #### Signature
 
 ```cpp
-pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features =
+pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 ```
 
 #### Parameters
@@ -4164,7 +4188,7 @@ pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> fe
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const ViolinPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -4177,7 +4201,7 @@ Applies `violin` to the current `DataFramePlotAccessor` object. Use the example 
 
 #### See also
 
-- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features, const ViolinPlotOptions& options) const`
 - `pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view group_feature) const`
@@ -4226,7 +4250,7 @@ Applies `violin` to the current `DataFramePlotAccessor` object. Use the example 
 
 #### See also
 
-- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features, const ViolinPlotOptions& options) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features, const ViolinPlotOptions& options) const`
 - `pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view group_feature) const`
@@ -4265,7 +4289,7 @@ pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features,
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `options` : `const ViolinPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -4278,7 +4302,7 @@ Applies `violin` to the current `DataFramePlotAccessor` object. Use the example 
 
 #### See also
 
-- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features) const`
 - `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features, const ViolinPlotOptions& options) const`
 - `pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view group_feature) const`
@@ -4314,7 +4338,7 @@ pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view 
 #### Parameters
 
 `value_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose values populate pivot cells or grouped summaries.
 
 `group_feature` : `std::string_view`
     See the signature for the supported argument form.
@@ -4330,7 +4354,7 @@ Applies `violin` to the current `DataFramePlotAccessor` object. Use the example 
 
 #### See also
 
-- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features) const`
 - `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features, const ViolinPlotOptions& options) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features, const ViolinPlotOptions& options) const`
@@ -4366,13 +4390,13 @@ pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view 
 #### Parameters
 
 `value_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose values populate pivot cells or grouped summaries.
 
 `group_feature` : `std::string_view`
     See the signature for the supported argument form.
 
 `options` : `const ViolinPlotOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -4385,7 +4409,7 @@ Applies `violin` to the current `DataFramePlotAccessor` object. Use the example 
 
 #### See also
 
-- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features =`
+- `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features) const`
 - `pluss::pl::Studio violin(self, pluss::msharp::RangeView::Of<std::string_view> features, const ViolinPlotOptions& options) const`
 - `pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features, const ViolinPlotOptions& options) const`

@@ -40,6 +40,7 @@ void expect(const bool condition, const std::string& message) {
     body { margin: 0; font-family: sans-serif; }
     .wide { width: 1500px; white-space: nowrap; padding: 8px; }
     table { height: 220px; border: 1px solid #cbd5e1; }
+    thead th { position: sticky; top: 0; }
     th, td { padding: 8px 12px; white-space: nowrap; }
     p { margin: 8px; }
   </style>
@@ -80,6 +81,8 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
   ViewerRuntime runtime(RuntimeConfig{viewport, Color::rgba(245, 248, 252, 255)});
   HtmlRenderConfig config{};
   config.render_stats = &stats;
+  std::vector<HtmlHitRegion> hit_regions;
+  config.hit_regions = &hit_regions;
   auto scene = build_html_document_scene(document, viewport, config);
   const auto text_x = [](const auto& rendered_scene, const std::string_view needle) {
     for (const auto& command : rendered_scene.commands()) {
@@ -92,6 +95,15 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
   };
   const int initial_case_x = text_x(scene, "case");
   expect(initial_case_x >= 0, "sticky case header should be present in the initial frame");
+  const auto sticky_hit = std::find_if(hit_regions.begin(), hit_regions.end(), [](const auto& hit) {
+    return hit.action == "table.sort.column" && hit.value == 0;
+  });
+  const auto regular_hit = std::find_if(hit_regions.begin(), hit_regions.end(), [](const auto& hit) {
+    return hit.action == "table.sort.column" && hit.value == 1;
+  });
+  expect(sticky_hit != hit_regions.end() && regular_hit != hit_regions.end() &&
+             sticky_hit->rect.width < regular_hit->rect.width,
+         "the sticky case rail should be narrower than ordinary data columns");
   expect(runtime.submit(scene), "initial scroll validation frame should render");
   const std::vector<std::uint8_t> initial_pixels(
       runtime.canvas().bytes().begin(), runtime.canvas().bytes().end());
@@ -109,6 +121,7 @@ void render_scroll_frames(const pluss::view::window::HtmlDocument& document,
   config.document_scroll_x_px = document_offset.x;
   config.document_scroll_y_px = document_offset.y;
   config.table_scroll_offsets = &table_offsets;
+  hit_regions.clear();
   scene = build_html_document_scene(document, viewport, config);
   expect(text_x(scene, "case") == initial_case_x,
          "the case column must remain fixed during horizontal table scrolling");
@@ -233,7 +246,7 @@ void test_layout_metrics_and_scroll_model() {
   HtmlRenderStats stats{};
   HtmlRenderConfig config{};
   config.render_stats = &stats;
-  (void)build_html_document_scene(document, viewport, config);
+  const auto visible_scrollbars = build_html_document_scene(document, viewport, config);
 
   expect(stats.document_max_scroll_x > 0,
          "wide document content should produce horizontal document overflow");
@@ -257,6 +270,44 @@ void test_layout_metrics_and_scroll_model() {
   expect(!table.vertical_track_rect.empty() && !table.vertical_thumb_rect.empty(),
          "table vertical scrollbar should be interactive");
 
+  HtmlScrollModel animated_model;
+  animated_model.update_metrics(stats);
+  const PointI animated_table_point = center(table.viewport_rect);
+  expect(animated_model.scroll_wheel(0.0, -120.0, animated_table_point, true, false, true),
+         "animated scrolling should accept a precise table delta");
+  expect(animated_model.snapshot().tables.at("ledger").y == 0 &&
+             animated_model.has_pending_animation(),
+         "animated scrolling should retain a target without jumping immediately");
+  expect(animated_model.advance_animation(0.016),
+         "animated scrolling should advance on a frame tick");
+  const int first_animated_y = animated_model.snapshot().tables.at("ledger").y;
+  expect(first_animated_y > 0 && first_animated_y < 120,
+         "the first animated frame should move partway toward the target");
+  for (int frame = 0; frame < 20; ++frame) {
+    (void)animated_model.advance_animation(0.016);
+  }
+  expect(animated_model.snapshot().tables.at("ledger").y == 120 &&
+             !animated_model.has_pending_animation(),
+         "animated scrolling should settle exactly on the requested offset");
+
+  config.draw_scrollbars = false;
+  const auto hidden_scrollbars = build_html_document_scene(document, viewport, config);
+  const auto scrollbar_paint_count = [](const auto& scene) {
+    return std::count_if(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
+      const auto* rounded = std::get_if<pluss::view::window::FillRoundedRectCommand>(&command);
+      if (rounded == nullptr) {
+        return false;
+      }
+      const auto color = rounded->color;
+      return (color.r == 218 && color.g == 224 && color.b == 231) ||
+             (color.r == 94 && color.g == 111 && color.b == 130);
+    });
+  };
+  expect(scrollbar_paint_count(visible_scrollbars) > 0,
+         "default rendering should paint published scrollbar geometry");
+  expect(scrollbar_paint_count(hidden_scrollbars) == 0,
+         "overlay-free rendering should hide scrollbar tracks and thumbs");
+
   HtmlScrollModel model;
   model.update_metrics(stats);
   const PointI table_point = center(table.viewport_rect);
@@ -268,21 +319,21 @@ void test_layout_metrics_and_scroll_model() {
   expect(model.scroll_wheel(0.0, -12.5, table_point, true, false),
          "precise vertical trackpad input should scroll the table under the pointer");
   auto snapshot = model.snapshot();
-  expect(snapshot.tables.at("ledger").y >= 21 && snapshot.tables.at("ledger").y <= 23,
-         "precise trackpad deltas should use responsive bounded acceleration");
+  expect(snapshot.tables.at("ledger").y == 13,
+         "precise trackpad deltas should preserve the platform-provided distance");
   expect(snapshot.document.y == 0,
          "table scrolling should not move the document before reaching a table edge");
 
   expect(model.scroll_wheel(-9.0, 0.0, table_point, true, false),
          "precise horizontal trackpad input should scroll a wide table");
   snapshot = model.snapshot();
-  expect(snapshot.tables.at("ledger").x >= 14 && snapshot.tables.at("ledger").x <= 16,
-         "horizontal table scrolling should use the same bounded acceleration");
+  expect(snapshot.tables.at("ledger").x == 9,
+         "horizontal trackpad input should preserve the platform-provided distance");
 
   expect(model.scroll_wheel(0.0, -1.0, table_point, false, true),
          "Shift+wheel should map vertical wheel input to horizontal scrolling");
   snapshot = model.snapshot();
-  expect(snapshot.tables.at("ledger").x >= 86,
+  expect(snapshot.tables.at("ledger").x == 49,
          "non-precise wheel input should use a stable line-sized step");
 
   const int document_before_chain = snapshot.document.y;
@@ -299,7 +350,7 @@ void test_layout_metrics_and_scroll_model() {
   expect(model.scroll_wheel(0.0, -1.0, document_point, false, false),
          "wheel input outside a table should scroll the document");
   snapshot = model.snapshot();
-  expect(snapshot.document.y == 72 && snapshot.tables.at("ledger").y == 0,
+  expect(snapshot.document.y == 40 && snapshot.tables.at("ledger").y == 0,
          "document routing should leave independent table offsets unchanged");
 
   model.reset();
@@ -349,7 +400,7 @@ void test_layout_metrics_and_scroll_model() {
          "dragging table content up and left should pan it down and right");
   model.pointer_up();
   snapshot = model.snapshot();
-  expect(snapshot.tables.at("ledger").x == 48 && snapshot.tables.at("ledger").y == 60,
+  expect(snapshot.tables.at("ledger").x == 24 && snapshot.tables.at("ledger").y == 30,
          "content drag should use responsive movement on both axes");
 
   model.reset();
@@ -369,19 +420,19 @@ void test_layout_metrics_and_scroll_model() {
   snapshot = model.snapshot();
   expect(snapshot.tables.at("ledger").x == 0 && snapshot.tables.at("ledger").y == 0,
          "scrolling the second table should not alter the first table");
-  expect(snapshot.tables.at("ledger-secondary").x >= 19 &&
-             snapshot.tables.at("ledger-secondary").y >= 32,
+  expect(snapshot.tables.at("ledger-secondary").x == 11 &&
+             snapshot.tables.at("ledger-secondary").y == 17,
          "the second table should retain its own two-axis offset");
 
   model.update_metrics(stats);
   snapshot = model.snapshot();
-  expect(snapshot.tables.at("ledger-secondary").x >= 19 &&
-             snapshot.tables.at("ledger-secondary").y >= 32,
+  expect(snapshot.tables.at("ledger-secondary").x == 11 &&
+             snapshot.tables.at("ledger-secondary").y == 17,
          "an off-screen table offset should remain available to the next render");
   model.update_metrics(multiple_metrics);
   snapshot = model.snapshot();
-  expect(snapshot.tables.at("ledger-secondary").x >= 19 &&
-             snapshot.tables.at("ledger-secondary").y >= 32,
+  expect(snapshot.tables.at("ledger-secondary").x == 11 &&
+             snapshot.tables.at("ledger-secondary").y == 17,
          "a temporarily off-screen table should retain its scroll position");
 
   HtmlRenderStats reduced_metrics = multiple_metrics;
@@ -430,14 +481,131 @@ void test_layout_metrics_and_scroll_model() {
   render_scroll_frames(document, model, viewport, stats);
 }
 
+void test_retina_scene_scaling() {
+  using namespace pluss::view::window;
+
+  Scene scene;
+  scene.add(FillRoundedRectCommand{
+      RectI{3, 5, 40, 20},
+      4,
+      Color::rgba(10, 20, 30, 255),
+  });
+  scene.add(TextCommand{
+      PointI{7, 11},
+      "Retina",
+      13,
+      Color::rgba(40, 50, 60, 255),
+  });
+
+  const auto scaled = scale_scene(scene, 2.0);
+  expect(scaled.commands().size() == 2, "Retina scaling should preserve scene command count");
+  const auto* box = std::get_if<FillRoundedRectCommand>(&scaled.commands()[0]);
+  const auto* text = std::get_if<TextCommand>(&scaled.commands()[1]);
+  expect(box != nullptr && box->rect.x == 6 && box->rect.y == 10 &&
+             box->rect.width == 80 && box->rect.height == 40 && box->radius == 8,
+         "Retina scaling should scale box geometry and corner radius");
+  expect(text != nullptr && text->anchor.x == 14 && text->anchor.y == 22 &&
+             text->pixel_size == 26,
+         "Retina scaling should scale text position and raster size");
+}
+
+void test_form_control_alignment_and_caret() {
+  using namespace pluss::view::window;
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>
+  .tools { display:flex; gap:1px; align-items:center; }
+  .tools input, .tools button {
+    margin:0; height:40px; min-height:40px; padding:0 12px;
+    border:1px solid #b9c7d5; text-align:center;
+  }
+  .tools input { width:260px; font-size:13px; }
+  .tools button { width:88px; font-size:13px; }
+</style></head><body>
+  <div class="tools">
+    <input id="table-search" placeholder="Search visible rows" />
+    <button id="reset-table-view">Reset</button>
+  </div>
+</body></html>
+)HTML");
+
+  std::vector<HtmlHitRegion> hits;
+  HtmlRenderConfig config{};
+  config.hit_regions = &hits;
+  config.active_input_target = "table-search";
+  const auto scene = build_html_document_scene(document, SizeI{640, 240}, config);
+  const auto input = std::find_if(hits.begin(), hits.end(), [](const auto& hit) {
+    return hit.action == "input.focus" && hit.target == "table-search";
+  });
+  const auto reset = std::find_if(hits.begin(), hits.end(), [](const auto& hit) {
+    return hit.action == "button.click" && hit.target == "reset-table-view";
+  });
+  expect(input != hits.end() && reset != hits.end(),
+         "search and reset controls should publish interaction geometry");
+  expect(input->rect.y == reset->rect.y && input->rect.height == reset->rect.height,
+         "search and reset controls should share the same top edge and height");
+
+  const auto caret = std::find_if(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
+    const auto* line = std::get_if<LineCommand>(&command);
+    return line != nullptr && line->color.r == 71 && line->color.g == 118 && line->color.b == 184;
+  });
+  expect(caret != scene.commands().end(), "focused search input should render a caret");
+  const auto* caret_line = std::get_if<LineCommand>(&*caret);
+  expect(caret_line != nullptr &&
+             std::abs(caret_line->start.x - (input->rect.x + input->rect.width / 2)) <= 1 &&
+             caret_line->end.y - caret_line->start.y <= 20,
+         "an empty centered search input should use a short centered caret");
+}
+
+void test_svg_styles_override_presentation_size() {
+  using namespace pluss::view::window;
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>
+  .frame { width:100%; overflow:auto; }
+  svg { display:block; width:100%; height:auto; min-height:320px; }
+</style></head><body>
+  <div class="frame">
+    <svg width="2292" height="2292" viewBox="0 0 2292 2292">
+      <rect x="0" y="0" width="2292" height="2292" fill="#ffffff" />
+      <text x="1146" y="80" text-anchor="middle">Centered plot</text>
+    </svg>
+  </div>
+</body></html>
+)HTML");
+
+  HtmlRenderStats stats{};
+  HtmlRenderConfig config{};
+  config.render_stats = &stats;
+  const auto scene = build_html_document_scene(document, SizeI{760, 520}, config);
+  expect(stats.document_max_scroll_x == 0,
+         "CSS width should override an SVG presentation width without document overflow");
+  const auto title = std::find_if(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
+    const auto* text = std::get_if<TextCommand>(&command);
+    return text != nullptr && text->text == "Centered plot";
+  });
+  expect(title != scene.commands().end(), "fitted SVG title should render");
+  const auto* text = std::get_if<TextCommand>(&*title);
+  expect(text != nullptr && text->anchor.x >= 0 && text->anchor.x < 760,
+         "fitted SVG title should remain inside the viewport");
+}
+
 } // namespace
 
 int main() {
   try {
     test_automatic_table_identity();
     test_layout_metrics_and_scroll_model();
+    test_retina_scene_scaling();
+    test_form_control_alignment_and_caret();
+    test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";
+    std::cout << "[PASS] retina_scene_scaling\n";
+    std::cout << "[PASS] form_control_alignment_and_caret\n";
+    std::cout << "[PASS] svg_styles_override_presentation_size\n";
     return 0;
   } catch (const std::exception& error) {
     std::cerr << "[FAIL] " << error.what() << '\n';

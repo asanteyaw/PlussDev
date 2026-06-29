@@ -52,7 +52,7 @@ pluss::Series all(self, bool skipna = true) const
 #### Parameters
 
 `skipna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
 #### Returns
 
@@ -82,7 +82,7 @@ pluss::Series any(self, bool skipna = true) const
 #### Parameters
 
 `skipna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
 #### Returns
 
@@ -759,16 +759,22 @@ auto january = ts.btw("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);
 #### Signature
 
 ```cpp
-Thread bucketize(self, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels =
+Thread bucketize(self, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const
 ```
 
 #### Parameters
 
 `bins` : `pluss::msharp::RangeView::Double`
-    See the signature for the supported argument form.
+    Strictly increasing interval edges used to define bucket boundaries.
 
 `labels` : `pluss::msharp::RangeView::Int`
-    See the signature for the supported argument form.
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+
+`right` : `bool`
+    When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.
+
+`include_lowest` : `bool`
+    When `true`, the first bucket also includes its left edge.
 
 #### Returns
 
@@ -1040,7 +1046,7 @@ Thread compare(self, const char* other, ThreadBinaryCompareOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1096,7 +1102,7 @@ Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1152,7 +1158,7 @@ Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1208,7 +1214,7 @@ Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) co
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1264,7 +1270,7 @@ Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) con
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1320,7 +1326,7 @@ Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1377,7 +1383,7 @@ Thread compare(self, scalar other, ThreadBinaryCompareOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1433,7 +1439,7 @@ Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryCompareOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -1736,7 +1742,7 @@ ThreadView describe(self, bool render = true) const
 #### Parameters
 
 `render` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 
@@ -2620,7 +2626,7 @@ ThreadView head(self, std::int64_t n = 5, bool render = true) const
     Number of rows, entries, or depth items to keep in the preview.
 
 `render` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 
@@ -3319,7 +3325,7 @@ Thread numeric_binary(self, const Thread& other, ThreadBinaryMathOp op) const
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryMathOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 #### Returns
 
@@ -3362,7 +3368,7 @@ Thread numeric_binary(self, scalar other, ThreadBinaryMathOp op, bool reverse = 
     See the signature for the supported argument form.
 
 `op` : `ThreadBinaryMathOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 `reverse` : `bool`
     See the signature for the supported argument form.
@@ -3394,6 +3400,1311 @@ auto out = thread.numeric_binary(10.0, pluss::table::ThreadBinaryMathOp::Add, fa
 [20.0, 30.0, 40.0]
 ```
 
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const pluss::Series& bool_mask, const char* value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`value` : `const char*`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const pluss::Series& bool_mask, const Thread& value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`value` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`value` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const pluss::Series& bool_mask, scalar value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`value` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const pluss::Series& bool_mask, std::string_view value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`value` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const Thread& bool_mask, const char* value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+`value` : `const char*`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const Thread& bool_mask, const Thread& value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+`value` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const Thread& bool_mask, pluss::null_t value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+`value` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const Thread& bool_mask, scalar value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+`value` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, std::string_view value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `put`
+
+#### Signature
+
+```cpp
+Thread put(self, const Thread& bool_mask, std::string_view value) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+`value` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `put` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `Thread put(self, const Thread& bool_mask, const Thread& value) const`
+- `Thread put(self, const Thread& bool_mask, scalar value) const`
+- `Thread put(self, const Thread& bool_mask, const char* value) const`
+- `Thread put(self, const Thread& bool_mask, pluss::null_t value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const Thread& value) const`
+- `Thread put(self, const pluss::Series& bool_mask, scalar value) const`
+- `Thread put(self, const pluss::Series& bool_mask, std::string_view value) const`
+- `Thread put(self, const pluss::Series& bool_mask, const char* value) const`
+- `Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.put();
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::Note& from, const pluss::Note& to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::Note&`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::Note&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::Note& from, pluss::null_t to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::Note&`
+    See the signature for the supported argument form.
+
+`to` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::Series& from, const pluss::Series& to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::Series& from, pluss::null_t to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+`to` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+`to` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const
+```
+
+#### Parameters
+
+`from` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+`to` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, pluss::null_t from, const pluss::Note& to) const
+```
+
+#### Parameters
+
+`from` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::Note&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, pluss::null_t from, const pluss::Series& to) const
+```
+
+#### Parameters
+
+`from` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const
+```
+
+#### Parameters
+
+`from` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const
+```
+
+#### Parameters
+
+`from` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+`to` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, pluss::null_t from, scalar to) const
+```
+
+#### Parameters
+
+`from` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+`to` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, scalar from, pluss::null_t to) const
+```
+
+#### Parameters
+
+`from` : `scalar`
+    See the signature for the supported argument form.
+
+`to` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
+### `replace`
+
+#### Signature
+
+```cpp
+Thread replace(self, scalar from, scalar to) const
+```
+
+#### Parameters
+
+`from` : `scalar`
+    See the signature for the supported argument form.
+
+`to` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, std::string_view from, std::string_view to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+#### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+
 ### `replace`
 
 #### Signature
@@ -3418,6 +4729,24 @@ Thread replace(self, std::string_view from, std::string_view to) const
 #### Notes
 
 This is part of the text-processing surface for note-backed or text-oriented data.
+
+#### See also
+
+- `Thread replace(self, scalar from, scalar to) const`
+- `Thread replace(self, scalar from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, scalar to) const`
+- `Thread replace(self, const pluss::Series& from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Series& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Series& to) const`
+- `Thread replace(self, const pluss::Note& from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Note& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Note& to) const`
+- `Thread replace(self, const pluss::Timeline& from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::Timeline& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::Timeline& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to) const`
+- `Thread replace(self, const pluss::TimeIndex& from, pluss::null_t to) const`
+- `Thread replace(self, pluss::null_t from, const pluss::TimeIndex& to) const`
 
 #### Examples
 
@@ -3512,6 +4841,734 @@ auto out = thread.rstrip("#");
 ["#203930", "##7788", "4455"]
 ```
 
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const char*`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)
+```
+
+#### Parameters
+
+`conditions` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `pluss::msharp::RangeView::Of<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const char*`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `pluss::null_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, std::string_view default_value)
+```
+
+#### Parameters
+
+`conditions` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`choices` : `std::initializer_list<Thread>`
+    See the signature for the supported argument form.
+
+`default_value` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### See also
+
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const Thread& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, scalar default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, std::string_view default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const char* default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(pluss::msharp::RangeView::Of<Thread> conditions, pluss::msharp::RangeView::Of<Thread> choices, pluss::null_t default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const Thread& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, scalar default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const char* default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::Timeline& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, const pluss::TimeIndex& default_value)`
+- `static Thread select(std::initializer_list<Thread> conditions, std::initializer_list<Thread> choices, pluss::null_t default_value)`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.select();
+```
+
 ### `shift`
 
 #### Signature
@@ -3547,13 +5604,13 @@ auto out = thread.shift();
 #### Signature
 
 ```cpp
-void show(self, const display::DisplayOptions& options =
+void show(self, const display::DisplayOptions& options = {}) const
 ```
 
 #### Parameters
 
 `options` : `const display::DisplayOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3566,7 +5623,7 @@ This renders a human-readable view for inspection instead of creating a new anal
 
 #### See also
 
-- `void show(self, std::ostream& os, const display::DisplayOptions& options =`
+- `void show(self, std::ostream& os, const display::DisplayOptions& options = {}) const`
 
 #### Examples
 
@@ -3587,7 +5644,7 @@ thread.show();
 #### Signature
 
 ```cpp
-void show(self, std::ostream& os, const display::DisplayOptions& options =
+void show(self, std::ostream& os, const display::DisplayOptions& options = {}) const
 ```
 
 #### Parameters
@@ -3596,7 +5653,7 @@ void show(self, std::ostream& os, const display::DisplayOptions& options =
     See the signature for the supported argument form.
 
 `options` : `const display::DisplayOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -3609,7 +5666,7 @@ This renders a human-readable view for inspection instead of creating a new anal
 
 #### See also
 
-- `void show(self, const display::DisplayOptions& options =`
+- `void show(self, const display::DisplayOptions& options = {}) const`
 
 #### Examples
 
@@ -3896,7 +5953,7 @@ ThreadView tail(self, std::int64_t n = 5, bool render = true) const
     Number of rows, entries, or depth items to keep in the preview.
 
 `render` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 
@@ -3975,7 +6032,7 @@ DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool rende
     See the signature for the supported argument form.
 
 `render` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 
@@ -4034,13 +6091,13 @@ auto out = thread.to_note_weekday();
 #### Signature
 
 ```cpp
-std::string to_string(self, const display::DisplayOptions& options =
+std::string to_string(self, const display::DisplayOptions& options = {}) const
 ```
 
 #### Parameters
 
 `options` : `const display::DisplayOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -4246,7 +6303,7 @@ ThreadView view(self, std::int64_t start, std::int64_t stop, bool render = true)
     Exclusive ending position of the slice.
 
 `render` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 
@@ -4279,7 +6336,7 @@ Thread window(self, std::int64_t window, ThreadWindowOp op, std::int64_t min_per
     See the signature for the supported argument form.
 
 `op` : `ThreadWindowOp`
-    See the signature for the supported argument form.
+    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
 `min_periods` : `std::int64_t`
     See the signature for the supported argument form.
@@ -4318,7 +6375,7 @@ Thread with_display_labels(self, const Thread& labels) const
 #### Parameters
 
 `labels` : `const Thread&`
-    See the signature for the supported argument form.
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
 #### Returns
 

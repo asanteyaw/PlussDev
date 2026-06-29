@@ -88,12 +88,23 @@
   }
 
   function buildMethodSidebar() {
-    const apiRoots = Array.from(document.querySelectorAll("section")).filter((section) => {
-      const h2 = section.querySelector(":scope > h2");
-      return h2 && text(h2).startsWith("API Reference Style");
+    const pageRoots = Array.from(document.querySelectorAll("div.body > section"));
+    const pageRoot = pageRoots.find((root) => {
+      return Array.from(root.children).some((node) => {
+        if (node.tagName !== "SECTION") {
+          return false;
+        }
+        const h2 = node.querySelector(":scope > h2");
+        if (!h2) {
+          return false;
+        }
+        return Array.from(node.children).some((child) => {
+          return child.tagName === "SECTION" && child.querySelector(":scope > h3");
+        });
+      });
     });
 
-    if (!apiRoots.length) {
+    if (!pageRoot) {
       return;
     }
 
@@ -103,14 +114,25 @@
       return;
     }
 
+    const groups = Array.from(pageRoot.children).filter((node) => {
+      if (node.tagName !== "SECTION") {
+        return false;
+      }
+      const h2 = node.querySelector(":scope > h2");
+      if (!h2) {
+        return false;
+      }
+      return Array.from(node.children).some((child) => {
+        return child.tagName === "SECTION" && child.querySelector(":scope > h3");
+      });
+    });
+
     const methodItems = [];
-    apiRoots.forEach((root) => {
-      const groupTitleNode = root.parentElement
-        ? root.parentElement.querySelector(":scope > h1, :scope > h2")
-        : null;
+    groups.forEach((groupRoot) => {
+      const groupTitleNode = groupRoot.querySelector(":scope > h2");
       const groupTitle = cleanHeadingText(text(groupTitleNode)) || "Methods";
 
-      const methodSections = Array.from(root.children).filter((node) => {
+      const methodSections = Array.from(groupRoot.children).filter((node) => {
         return node.tagName === "SECTION" && node.querySelector(":scope > h3");
       });
 
@@ -123,7 +145,7 @@
         const title = cleanHeadingText(text(codeTitle) || text(h3));
         const overloadLabel = extractOverloadLabel(section, title || "method");
         methodItems.push({
-          root,
+          root: groupRoot,
           section,
           id: section.id,
           title: title || "method",
@@ -138,36 +160,6 @@
     }
 
     document.body.classList.add("has-method-sidebar");
-
-    // Hide everything before the API root inside each container so API starts immediately.
-    apiRoots.forEach((root) => {
-      const parent = root.parentElement;
-      if (!parent) {
-        return;
-      }
-      let reachedRoot = false;
-      Array.from(parent.children).forEach((child) => {
-        if (child === root) {
-          reachedRoot = true;
-          return;
-        }
-        if (!reachedRoot) {
-          child.classList.add("pluss-pre-api-hidden");
-        }
-      });
-
-      // Hide API section chrome before first method (title/intro text) so method appears first.
-      let reachedMethod = false;
-      Array.from(root.children).forEach((child) => {
-        if (child.tagName === "SECTION" && child.querySelector(":scope > h3")) {
-          reachedMethod = true;
-          return;
-        }
-        if (!reachedMethod) {
-          child.classList.add("pluss-api-intro-hidden");
-        }
-      });
-    });
 
     const dupCount = new Map();
     methodItems.forEach((m) => {
@@ -216,21 +208,20 @@
 
     let activeIndex = 0;
     const listeners = [];
+    const applyVisibility = (idx) => {
+      methodItems.forEach((item, i) => {
+        item.root.classList.toggle("pluss-api-root-hidden", item.root !== methodItems[idx].root);
+        item.section.classList.toggle("pluss-method-hidden", i !== idx);
+      });
+    };
     const setActive = (idx, opts = {}) => {
-      const { updateHash = true, resetScroll = true } = opts;
+      const { updateHash = true, scrollIntoView = true } = opts;
       if (idx < 0 || idx >= methodItems.length) {
         return;
       }
       activeIndex = idx;
       const active = methodItems[idx];
-
-      apiRoots.forEach((root) => {
-        root.classList.toggle("pluss-api-root-hidden", root !== active.root);
-      });
-
-      methodItems.forEach((item, i) => {
-        item.section.classList.toggle("pluss-method-hidden", i !== idx);
-      });
+      applyVisibility(idx);
 
       links.forEach((a, i) => {
         a.classList.toggle("active", i === idx);
@@ -239,8 +230,11 @@
       if (updateHash) {
         history.replaceState(null, "", `#${active.id}`);
       }
-      if (resetScroll) {
-        bodywrapper.scrollTop = 0;
+      if (scrollIntoView) {
+        bodywrapper.scrollTo({
+          top: 0,
+          behavior: "auto",
+        });
       }
 
       listeners.forEach((fn) => fn(activeIndex));
@@ -250,7 +244,7 @@
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
         const idx = Number(a.dataset.methodIndex || "0");
-        setActive(idx, { updateHash: true, resetScroll: true });
+        setActive(idx, { updateHash: true, scrollIntoView: true });
       });
     });
 
@@ -261,20 +255,20 @@
       }
       return methodItems.findIndex((m) => m.id === hash);
     })();
-    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, resetScroll: false });
+    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, scrollIntoView: false });
 
     window.addEventListener("hashchange", () => {
       const hash = window.location.hash.replace(/^#/, "");
       const idx = methodItems.findIndex((m) => m.id === hash);
       if (idx >= 0 && idx !== activeIndex) {
-        setActive(idx, { updateHash: false, resetScroll: true });
+        setActive(idx, { updateHash: false, scrollIntoView: true });
       }
     });
 
     return {
       items: methodItems,
       getActiveIndex: () => activeIndex,
-      setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
+      setActive: (idx) => setActive(idx, { updateHash: true, scrollIntoView: true }),
       onChange: (fn) => {
         if (typeof fn === "function") {
           listeners.push(fn);
@@ -346,30 +340,35 @@
     documentRoot.appendChild(sidebar);
 
     let activeIndex = 0;
+    const sectionTop = (item) => {
+      const wrapperRect = bodywrapper.getBoundingClientRect();
+      const sectionRect = item.section.getBoundingClientRect();
+      return bodywrapper.scrollTop + (sectionRect.top - wrapperRect.top);
+    };
     const setActive = (idx, opts = {}) => {
-      const { updateHash = true, resetScroll = true } = opts;
+      const { updateHash = true, scrollIntoView = true } = opts;
       if (idx < 0 || idx >= items.length) {
         return;
       }
       activeIndex = idx;
-      items.forEach((item, i) => {
-        item.section.classList.toggle("pluss-method-hidden", i !== idx);
-      });
       links.forEach((a, i) => {
         a.classList.toggle("active", i === idx);
       });
       if (updateHash) {
         history.replaceState(null, "", `#${items[idx].id}`);
       }
-      if (resetScroll) {
-        bodywrapper.scrollTop = 0;
+      if (scrollIntoView) {
+        bodywrapper.scrollTo({
+          top: Math.max(0, sectionTop(items[idx]) - 8),
+          behavior: "auto",
+        });
       }
     };
 
     links.forEach((a) => {
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
-        setActive(Number(a.dataset.sectionIndex || "0"), { updateHash: true, resetScroll: true });
+        setActive(Number(a.dataset.sectionIndex || "0"), { updateHash: true, scrollIntoView: true });
       });
     });
 
@@ -377,12 +376,12 @@
       const hash = window.location.hash.replace(/^#/, "");
       return items.findIndex((item) => item.id === hash);
     })();
-    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, resetScroll: false });
+    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, scrollIntoView: false });
 
     return {
       items,
       getActiveIndex: () => activeIndex,
-      setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
+      setActive: (idx) => setActive(idx, { updateHash: true, scrollIntoView: true }),
     };
   }
 
@@ -430,7 +429,7 @@
 
         if (prevIdx >= 0) {
           prevLink.style.display = "";
-          prevTitle.textContent = methodNav.items[prevIdx].title;
+          prevTitle.textContent = methodNav.items[prevIdx].overloadLabel || methodNav.items[prevIdx].title;
           prevLink.href = `#${methodNav.items[prevIdx].id}`;
         } else {
           prevLink.style.display = "none";
@@ -438,7 +437,7 @@
 
         if (nextIdx < methodNav.items.length) {
           nextLink.style.display = "";
-          nextTitle.textContent = methodNav.items[nextIdx].title;
+          nextTitle.textContent = methodNav.items[nextIdx].overloadLabel || methodNav.items[nextIdx].title;
           nextLink.href = `#${methodNav.items[nextIdx].id}`;
         } else {
           nextLink.style.display = "none";
@@ -515,10 +514,31 @@
     wrap.classList.add("show");
   }
 
+  function decorateApiBlocks() {
+    const headings = Array.from(document.querySelectorAll("#api-reference-style h4"));
+    headings.forEach((heading) => {
+      const label = cleanHeadingText(text(heading));
+      if (label === "Output") {
+        heading.classList.add("pluss-output-heading");
+        let node = heading.nextElementSibling;
+        while (node && !node.matches("div.highlight, section, h3, h4")) {
+          node = node.nextElementSibling;
+        }
+        if (node && node.matches("div.highlight")) {
+          node.classList.add("pluss-output-block");
+        }
+      }
+      if (label === "Examples" || label === "Example") {
+        heading.classList.add("pluss-examples-heading");
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
     const methodNav = buildMethodSidebar();
     const sectionNav = methodNav ? null : buildSectionSidebar();
+    decorateApiBlocks();
 
     // Safety fallback: never leave the left rail empty.
     if (document.body.classList.contains("has-method-sidebar")) {

@@ -2325,6 +2325,19 @@ plussview_html_scroll_tests/fast:
 .PHONY : plussview_html_scroll_tests/fast
 
 #=============================================================================
+# Target rules for targets named plussview_html_export_tests
+
+# Build rule for target.
+plussview_html_export_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_html_export_tests
+.PHONY : plussview_html_export_tests
+
+# fast build rule for target.
+plussview_html_export_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_html_export_tests.dir/build
+.PHONY : plussview_html_export_tests/fast
+
+#=============================================================================
 # Target rules for targets named plussview_macos_input_driver
 
 # Build rule for target.
@@ -4561,6 +4574,19 @@ plussmic_dataframe_initial_demo/fast:
 .PHONY : plussmic_dataframe_initial_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_dataframe_ab_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_ab_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_ab_reference_demo
+.PHONY : plussmic_dataframe_ab_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_ab_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_ab_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_ab_reference_demo.dir/build
+.PHONY : plussmic_dataframe_ab_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_dataframe_view_demo
 
 # Build rule for target.
@@ -4624,6 +4650,45 @@ plussmic_dataframe_versatile_methods_demo: cmake_check_build_system
 plussmic_dataframe_versatile_methods_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_versatile_methods_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_versatile_methods_demo.dir/build
 .PHONY : plussmic_dataframe_versatile_methods_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_dataframe_e_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_e_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_e_reference_demo
+.PHONY : plussmic_dataframe_e_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_e_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_e_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_e_reference_demo.dir/build
+.PHONY : plussmic_dataframe_e_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_dataframe_efg_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_efg_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_efg_reference_demo
+.PHONY : plussmic_dataframe_efg_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_efg_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_efg_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_efg_reference_demo.dir/build
+.PHONY : plussmic_dataframe_efg_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_dataframe_hijk_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_hijk_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_hijk_reference_demo
+.PHONY : plussmic_dataframe_hijk_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_hijk_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_hijk_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_hijk_reference_demo.dir/build
+.PHONY : plussmic_dataframe_hijk_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_us_accidents_eda_verbs_demo
@@ -7551,7 +7616,11 @@ help:
 	@echo "... plussmic_bundle_model_demo"
 	@echo "... plussmic_bundle_model_tests"
 	@echo "... plussmic_csv_engine_bench"
+	@echo "... plussmic_dataframe_ab_reference_demo"
 	@echo "... plussmic_dataframe_describe_demo"
+	@echo "... plussmic_dataframe_e_reference_demo"
+	@echo "... plussmic_dataframe_efg_reference_demo"
+	@echo "... plussmic_dataframe_hijk_reference_demo"
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
 	@echo "... plussmic_dataframe_thread_values_demo"
@@ -7642,6 +7711,7 @@ help:
 	@echo "... plusstils_view_window_session_demo"
 	@echo "... plusstils_view_window_shell_backend_demo"
 	@echo "... plusstils_view_window_table_demo"
+	@echo "... plussview_html_export_tests"
 	@echo "... plussview_html_scroll_tests"
 	@echo "... plussview_macos_input_driver"
 	@echo "... poly_regression_test"

@@ -40,11 +40,16 @@ void HtmlScrollModel::update_metrics(const HtmlRenderStats& metrics) {
   metrics_ = metrics;
   document_.x = clamp_offset(document_.x, metrics_.document_max_scroll_x);
   document_.y = clamp_offset(document_.y, metrics_.document_max_scroll_y);
+  document_target_.x = clamp_offset(document_target_.x, metrics_.document_max_scroll_x);
+  document_target_.y = clamp_offset(document_target_.y, metrics_.document_max_scroll_y);
 
   for (const auto& region : metrics_.table_scroll_regions) {
     auto& offset = tables_[region.target];
     offset.x = clamp_offset(offset.x, region.max_scroll_x);
     offset.y = clamp_offset(offset.y, region.max_scroll_y);
+    auto& target = table_targets_[region.target];
+    target.x = clamp_offset(target.x, region.max_scroll_x);
+    target.y = clamp_offset(target.y, region.max_scroll_y);
   }
   if (scrollbar_drag_.surface == DragSurface::Document) {
     scrollbar_drag_.track = scrollbar_drag_.axis == DragAxis::Horizontal
@@ -73,7 +78,12 @@ void HtmlScrollModel::update_metrics(const HtmlRenderStats& metrics) {
 
 void HtmlScrollModel::reset() noexcept {
   document_ = Offset{};
+  document_target_ = Offset{};
   for (auto& [target, offset] : tables_) {
+    (void)target;
+    offset = Offset{};
+  }
+  for (auto& [target, offset] : table_targets_) {
     (void)target;
     offset = Offset{};
   }
@@ -86,7 +96,8 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
                                    double delta_y,
                                    const PointI location,
                                    const bool precise_delta,
-                                   const bool shift_modifier) {
+                                   const bool shift_modifier,
+                                   const bool animated) {
   if (!std::isfinite(delta_x) || !std::isfinite(delta_y)) {
     return false;
   }
@@ -97,9 +108,9 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
     delta_y = 0.0;
   }
 
-  const double dominant_delta = std::max(std::abs(delta_x), std::abs(delta_y));
-  const double scale =
-      precise_delta ? std::clamp(1.35 + dominant_delta / 30.0, 1.35, 2.0) : 72.0;
+  // Precise deltas already include the platform's acceleration and momentum.
+  // Scaling them again makes trackpad movement uneven and unlike native views.
+  const double scale = precise_delta ? 1.0 : 40.0;
   delta_x *= -scale;
   delta_y *= -scale;
 
@@ -111,6 +122,8 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
     }
   }
 
+  Offset& document_offset = animated ? document_target_ : document_;
+  auto& table_offsets = animated ? table_targets_ : tables_;
   bool changed = false;
   const auto apply_axis = [&](const bool horizontal, const double delta) {
     if (delta == 0.0) {
@@ -126,7 +139,7 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
       }
       const int limit = horizontal ? it->max_scroll_x : it->max_scroll_y;
       if (limit > 0) {
-        auto& offset = tables_[it->target];
+        auto& offset = table_offsets[it->target];
         double& value = horizontal ? offset.x : offset.y;
         const double before = value;
         remaining = apply_delta(value, limit, remaining);
@@ -138,7 +151,7 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
     const int document_limit =
         horizontal ? metrics_.document_max_scroll_x : metrics_.document_max_scroll_y;
     if (document_limit > 0 && std::abs(remaining) > 1e-9) {
-      double& value = horizontal ? document_.x : document_.y;
+      double& value = horizontal ? document_offset.x : document_offset.y;
       const double before = value;
       (void)apply_delta(value, document_limit, remaining);
       changed = changed || value != before;
@@ -147,10 +160,63 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
 
   apply_axis(true, delta_x);
   apply_axis(false, delta_y);
+  if (!animated) {
+    sync_targets_to_current();
+  }
   return changed;
 }
 
+bool HtmlScrollModel::advance_animation(const double elapsed_seconds) {
+  if (!std::isfinite(elapsed_seconds) || elapsed_seconds <= 0.0) {
+    return false;
+  }
+
+  const double dt = std::clamp(elapsed_seconds, 0.001, 0.05);
+  const double alpha = 1.0 - std::exp(-dt / 0.018);
+  bool changed = false;
+  const auto advance = [&](double& current, const double target) {
+    const double before = current;
+    const double remaining = target - current;
+    current = std::abs(remaining) < 0.05 ? target : current + remaining * alpha;
+    changed = changed || std::abs(current - before) > 1e-9;
+  };
+
+  advance(document_.x, document_target_.x);
+  advance(document_.y, document_target_.y);
+  for (auto& [target, offset] : tables_) {
+    const auto target_it = table_targets_.find(target);
+    if (target_it == table_targets_.end()) {
+      continue;
+    }
+    advance(offset.x, target_it->second.x);
+    advance(offset.y, target_it->second.y);
+  }
+  return changed;
+}
+
+bool HtmlScrollModel::has_pending_animation() const noexcept {
+  const auto differs = [](const Offset& current, const Offset& target) {
+    return std::abs(current.x - target.x) >= 0.05 || std::abs(current.y - target.y) >= 0.05;
+  };
+  if (differs(document_, document_target_)) {
+    return true;
+  }
+  for (const auto& [target, offset] : tables_) {
+    const auto target_it = table_targets_.find(target);
+    if (target_it != table_targets_.end() && differs(offset, target_it->second)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void HtmlScrollModel::sync_targets_to_current() {
+  document_target_ = document_;
+  table_targets_ = tables_;
+}
+
 bool HtmlScrollModel::pointer_down(const PointI location) {
+  sync_targets_to_current();
   last_pointer_ = location;
   pointer_is_down_ = true;
   scrollbar_drag_ = ScrollbarDrag{};
@@ -178,6 +244,7 @@ bool HtmlScrollModel::pointer_down(const PointI location) {
     const double page = std::max(1.0, static_cast<double>(viewport_span) * 0.9);
     const double delta = coordinate < thumb_start ? -page : (coordinate >= thumb_end ? page : 0.0);
     (void)apply_delta(offset, limit, delta);
+    sync_targets_to_current();
     suppress_content_drag_ = true;
     return true;
   };
@@ -261,6 +328,7 @@ bool HtmlScrollModel::pointer_drag(const double delta_x,
       double& value = horizontal ? document_.x : document_.y;
       const double before = value;
       (void)apply_delta(value, limit, movement * static_cast<double>(limit) / travel);
+      sync_targets_to_current();
       return value != before;
     }
 
@@ -277,6 +345,7 @@ bool HtmlScrollModel::pointer_drag(const double delta_x,
     double& value = horizontal ? offset.x : offset.y;
     const double before = value;
     (void)apply_delta(value, limit, movement * static_cast<double>(limit) / travel);
+    sync_targets_to_current();
     return value != before;
   }
 
@@ -366,6 +435,7 @@ bool HtmlScrollModel::command(const std::string_view command_name) {
     }
   }
   const bool target_changed = *value != before;
+  sync_targets_to_current();
   if (!targets_table) {
     return target_changed;
   }

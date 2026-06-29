@@ -298,6 +298,16 @@ section.pluss-api-root-hidden {
   padding: 0.75rem 0.9rem;
 }
 
+#api-reference-style h4.pluss-output-heading {
+  background: #dfead8;
+  color: #1f4d1d;
+}
+
+#api-reference-style div.pluss-output-block pre {
+  background: #fbfcfe;
+  border-left: 4px solid #6ea04b;
+}
+
 #api-reference-style dl {
   margin-bottom: 1rem;
   margin-top: 0.35rem;

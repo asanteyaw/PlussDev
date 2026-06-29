@@ -35,6 +35,8 @@ struct ResolvedStyle {
   int min_height{0};
   double explicit_width_ratio{0.0};
   double explicit_height_ratio{0.0};
+  bool explicit_width_set{false};
+  bool explicit_height_set{false};
   double min_width_ratio{0.0};
   double min_height_ratio{0.0};
   int border_radius{0};
@@ -53,6 +55,8 @@ struct ResolvedStyle {
   int shadow_blur{0};
   int sticky_left_px{0};
   int sticky_top_px{0};
+  bool sticky_left_set{false};
+  bool sticky_top_set{false};
   std::string font_family{};
   std::string position{"static"};
   bool has_background{false};
@@ -993,6 +997,7 @@ void apply_style_property(ResolvedStyle& style,
   } else if (property == "border-radius") {
     style.border_radius = clamp_nonneg(parse_css_length_px(first_token, style.font_size));
   } else if (property == "width") {
+    style.explicit_width_set = true;
     if (const auto ratio = parse_css_percent_ratio(first_token); ratio.has_value()) {
       style.explicit_width_ratio = *ratio;
       style.explicit_width = 0;
@@ -1001,6 +1006,7 @@ void apply_style_property(ResolvedStyle& style,
       style.explicit_width_ratio = 0.0;
     }
   } else if (property == "height") {
+    style.explicit_height_set = true;
     if (const auto ratio = parse_css_percent_ratio(first_token); ratio.has_value()) {
       style.explicit_height_ratio = *ratio;
       style.explicit_height = 0;
@@ -1010,8 +1016,10 @@ void apply_style_property(ResolvedStyle& style,
     }
   } else if (property == "left") {
     style.sticky_left_px = parse_css_length_px(first_token, style.font_size);
+    style.sticky_left_set = true;
   } else if (property == "top") {
     style.sticky_top_px = parse_css_length_px(first_token, style.font_size);
+    style.sticky_top_set = true;
   } else if (property == "min-width") {
     if (const auto ratio = parse_css_percent_ratio(first_token); ratio.has_value()) {
       style.min_width_ratio = *ratio;
@@ -1328,6 +1336,8 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   style.shadow_color = Color::rgba(22, 30, 42, 38);
   style.sticky_left_px = 0;
   style.sticky_top_px = 0;
+  style.sticky_left_set = false;
+  style.sticky_top_set = false;
   style.font_family.clear();
   style.position = "static";
   style.has_linear_gradient = false;
@@ -1388,16 +1398,22 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
 
   apply_inline_style_attribute(style, node, document.css_variables);
 
-  if (const HtmlAttribute* width_attr = find_attribute(node, "width"); width_attr != nullptr) {
-    const int width_px = clamp_nonneg(parse_css_length_px(width_attr->value, style.font_size));
-    if (width_px > 0) {
-      style.explicit_width = width_px;
+  if (!style.explicit_width_set) {
+    const HtmlAttribute* width_attr = find_attribute(node, "width");
+    if (width_attr != nullptr) {
+      const int width_px = clamp_nonneg(parse_css_length_px(width_attr->value, style.font_size));
+      if (width_px > 0) {
+        style.explicit_width = width_px;
+      }
     }
   }
-  if (const HtmlAttribute* height_attr = find_attribute(node, "height"); height_attr != nullptr) {
-    const int height_px = clamp_nonneg(parse_css_length_px(height_attr->value, style.font_size));
-    if (height_px > 0) {
-      style.explicit_height = height_px;
+  if (!style.explicit_height_set) {
+    const HtmlAttribute* height_attr = find_attribute(node, "height");
+    if (height_attr != nullptr) {
+      const int height_px = clamp_nonneg(parse_css_length_px(height_attr->value, style.font_size));
+      if (height_px > 0) {
+        style.explicit_height = height_px;
+      }
     }
   }
 
@@ -1552,10 +1568,21 @@ void collect_table_rows_recursive(const HtmlNode& node,
   }
 
   std::vector<int> desired(col_count, 112);
+  std::vector<bool> compact_sticky(col_count, false);
   constexpr std::size_t kSampleRows = 48;
   const int probe_cap_px = std::clamp(inner_width * 2, 540, 1600);
   const std::size_t sample = std::min(rows.size(), kSampleRows);
   for (std::size_t c = 0; c < col_count; ++c) {
+    for (std::size_t r = 0; r < sample; ++r) {
+      if (c < rows[r].cells.size() && node_has_class(rows[r].cells[c].node, "sticky-left")) {
+        compact_sticky[c] = true;
+        break;
+      }
+    }
+    if (compact_sticky[c]) {
+      desired[c] = 72;
+      continue;
+    }
     int max_w = 112;
     for (std::size_t r = 0; r < sample; ++r) {
       if (c >= rows[r].cells.size()) continue;
@@ -1571,7 +1598,9 @@ void collect_table_rows_recursive(const HtmlNode& node,
   const int min_col_w = 104;
   const int max_col_w = std::max(260, inner_width * 2);
   for (std::size_t c = 0; c < col_count; ++c) {
-    const int width = std::clamp(desired[c], min_col_w, max_col_w);
+    const int width = compact_sticky[c]
+                          ? std::clamp(desired[c], 56, 84)
+                          : std::clamp(desired[c], min_col_w, max_col_w);
     plan.source_indices.push_back(c);
     plan.widths.push_back(width);
   }
@@ -1587,9 +1616,18 @@ void collect_table_rows_recursive(const HtmlNode& node,
   }
   if (used < inner_width && !plan.widths.empty()) {
     int extra = inner_width - used;
+    std::vector<std::size_t> expandable;
+    for (std::size_t c = 0; c < plan.widths.size(); ++c) {
+      if (!compact_sticky[c]) {
+        expandable.push_back(c);
+      }
+    }
+    if (expandable.empty()) {
+      expandable.push_back(0);
+    }
     std::size_t cursor = 0;
     while (extra > 0) {
-      plan.widths[cursor % plan.widths.size()] += 1;
+      plan.widths[expandable[cursor % expandable.size()]] += 1;
       --extra;
       ++cursor;
     }
@@ -1719,7 +1757,9 @@ void collect_table_rows_recursive(const HtmlNode& node,
   }
 
   if (node.tag == "button") {
-    const int box_h = std::max(std::max(30, style.min_height), style.line_height + (padding * 2) + 8);
+    const int natural_h = style.line_height + (padding * 2) + 8;
+    const int box_h =
+        std::max(std::max(30, style.min_height), style.explicit_height > 0 ? style.explicit_height : natural_h);
     return (margin * 2) + (border * 2) + box_h;
   }
 
@@ -2528,7 +2568,7 @@ int render_table(Scene& scene,
           cell_lineage.push_back(rows[r].node);
         }
         const ResolvedStyle cell_style = resolve_style(document, *node_ptr, cell_lineage, &style, viewport_width);
-        if (cell_style.position == "sticky") {
+        if (cell_style.position == "sticky" && cell_style.sticky_left_set) {
           sticky = true;
           break;
         }
@@ -2749,7 +2789,7 @@ int render_table(Scene& scene,
                       cell_x + cell_padding,
                       row_y + cell_padding,
                       cell_style.line_height,
-                      "left",
+                      cell_style.text_align,
                       text_max_w);
       if (header_row && render_config.hit_regions != nullptr) {
         const int x0 = std::max(cell_x, scrollable_left);
@@ -2811,8 +2851,12 @@ int render_table(Scene& scene,
                         sticky_x + cell_padding,
                         row_y + cell_padding,
                         cell_style.line_height,
-                        "left",
+                        cell_style.text_align,
                         text_max_w);
+        scene.add(LineCommand{PointI{sticky_x, row_y},
+                              PointI{sticky_x + sticky_w, row_y},
+                              1,
+                              Color::rgba(216, 222, 228, 255)});
         if (header_row && render_config.hit_regions != nullptr) {
           render_config.hit_regions->push_back(HtmlHitRegion{
               .rect = RectI{sticky_x, row_y, sticky_w, row_h},
@@ -2905,7 +2949,9 @@ int render_table(Scene& scene,
     const int track_w = std::max(36, scrollable_view_w - 6);
     const int track_x = content_x + sticky_total_w + 3;
     horizontal_track = RectI{track_x, track_y, track_w, track_h};
-    draw_rect_fill(scene, horizontal_track, Color::rgba(218, 224, 231, 238), 5);
+    if (render_config.draw_scrollbars) {
+      draw_rect_fill(scene, horizontal_track, Color::rgba(218, 224, 231, 238), 5);
+    }
 
     const double ratio = static_cast<double>(scrollable_view_w) / static_cast<double>(std::max(1, scrollable_content_w));
     const int thumb_w =
@@ -2915,7 +2961,9 @@ int render_table(Scene& scene,
                                     static_cast<double>(scroll_x)) /
                                    static_cast<double>(max_scroll_x)));
     horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
-    draw_rect_fill(scene, horizontal_thumb, Color::rgba(94, 111, 130, 255), 5);
+    if (render_config.draw_scrollbars) {
+      draw_rect_fill(scene, horizontal_thumb, Color::rgba(94, 111, 130, 255), 5);
+    }
   }
   if (max_scroll_y > 0) {
     const int track_w = 10;
@@ -2923,7 +2971,9 @@ int render_table(Scene& scene,
     const int track_h = std::max(36, body_viewport_h - 6);
     const int track_y = content_y + header_h + 3;
     vertical_track = RectI{track_x, track_y, track_w, track_h};
-    draw_rect_fill(scene, vertical_track, Color::rgba(218, 224, 231, 238), 5);
+    if (render_config.draw_scrollbars) {
+      draw_rect_fill(scene, vertical_track, Color::rgba(218, 224, 231, 238), 5);
+    }
 
     const double ratio = static_cast<double>(body_viewport_h) / static_cast<double>(body_total_h);
     const int thumb_h =
@@ -2933,7 +2983,9 @@ int render_table(Scene& scene,
                                     static_cast<double>(scroll_y)) /
                                    static_cast<double>(max_scroll_y)));
     vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
-    draw_rect_fill(scene, vertical_thumb, Color::rgba(94, 111, 130, 255), 5);
+    if (render_config.draw_scrollbars) {
+      draw_rect_fill(scene, vertical_thumb, Color::rgba(94, 111, 130, 255), 5);
+    }
   }
   if (render_config.render_stats != nullptr) {
     render_config.render_stats->table_scroll_regions.push_back(HtmlScrollRegion{
@@ -3090,25 +3142,36 @@ int render_node(Scene& scene,
     const Color text_color = has_value ? style.text_color : Color::rgba(132, 141, 151, 255);
     const std::string transformed = apply_text_transform(text, style.text_transform);
     const std::string clipped = truncate_to_width(transformed, style.font_size, std::max(20, content_w - 12));
-    const int line_h = resolve_line_height_value(style.line_height, style.font_size);
-    const int box_h = std::max(24, outer_h - (padding + border) * 2);
-    const int baseline_y = content_y + std::max(2, (box_h - line_h) / 2);
+    const TextLayout text_layout = layout_math_text(clipped, style.font_size);
+    const int glyph_h = std::max(1, text_layout.ascent + text_layout.descent);
+    const int text_top = outer_y + std::max(0, (outer_h - glyph_h) / 2);
+    const int text_area_x = content_x + 6;
+    const int text_area_w = std::max(20, content_w - 12);
+    int text_x = text_area_x;
+    if (style.text_align == "center") {
+      text_x += std::max(0, (text_area_w - text_layout.width) / 2);
+    } else if (style.text_align == "right") {
+      text_x += std::max(0, text_area_w - text_layout.width);
+    }
     draw_text_lines(scene,
                     {clipped},
                     style.font_size,
                     style.font_weight,
                     style.font_family,
                     text_color,
-                    content_x + 6,
-                    baseline_y,
-                    line_h,
+                    text_area_x,
+                    text_top,
+                    glyph_h,
                     style.text_align,
-                    std::max(20, content_w - 12));
+                    text_area_w);
     if (focused) {
-      const int text_w = layout_math_text(clipped, style.font_size).width;
-      const int caret_x = std::min(content_x + std::max(8, content_w - 8), content_x + 8 + text_w);
-      const int caret_y0 = baseline_y + 3;
-      const int caret_y1 = baseline_y + std::max(10, line_h - 3);
+      const int caret_x = has_value
+                              ? std::min(content_x + std::max(8, content_w - 8),
+                                         text_x + text_layout.width + 1)
+                              : outer_x + outer_w / 2;
+      const int caret_h = std::max(12, glyph_h + 4);
+      const int caret_y0 = outer_y + std::max(1, (outer_h - caret_h) / 2);
+      const int caret_y1 = caret_y0 + caret_h;
       scene.add(LineCommand{
           PointI{caret_x, caret_y0},
           PointI{caret_x, caret_y1},
@@ -3133,9 +3196,9 @@ int render_node(Scene& scene,
     if (align == "left") {
       align = "center";
     }
-    const int line_h = resolve_line_height_value(style.line_height, style.font_size);
-    const int box_h = std::max(24, outer_h - (padding + border) * 2);
-    const int baseline_y = content_y + std::max(2, (box_h - line_h) / 2);
+    const TextLayout text_layout = layout_math_text(clipped, style.font_size);
+    const int glyph_h = std::max(1, text_layout.ascent + text_layout.descent);
+    const int text_top = outer_y + std::max(0, (outer_h - glyph_h) / 2);
     draw_text_lines(scene,
                     {clipped},
                     style.font_size,
@@ -3143,8 +3206,8 @@ int render_node(Scene& scene,
                     style.font_family,
                     style.text_color,
                     content_x + 6,
-                    baseline_y,
-                    line_h,
+                    text_top,
+                    glyph_h,
                     align,
                     std::max(20, content_w - 12));
     return total_h;
@@ -3366,7 +3429,9 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
     const int track_x = body_left + 3;
     const int track_w = std::max(40, body_width - (max_scroll_y > 0 ? 14 : 8));
     const RectI track{track_x, track_y, track_w, track_h};
-    draw_rect_fill(scene, track, Color::rgba(218, 224, 231, 238), 5);
+    if (config.draw_scrollbars) {
+      draw_rect_fill(scene, track, Color::rgba(218, 224, 231, 238), 5);
+    }
 
     const double ratio = static_cast<double>(body_width) / static_cast<double>(std::max(1, content_pref_w));
     const int thumb_w =
@@ -3376,7 +3441,9 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
                                     static_cast<double>(doc_scroll_x)) /
                                    static_cast<double>(max_scroll_x)));
     const RectI thumb{thumb_x, track_y, thumb_w, track_h};
-    draw_rect_fill(scene, thumb, Color::rgba(94, 111, 130, 255), 5);
+    if (config.draw_scrollbars) {
+      draw_rect_fill(scene, thumb, Color::rgba(94, 111, 130, 255), 5);
+    }
     if (config.render_stats != nullptr) {
       config.render_stats->document_horizontal_track_rect = track;
       config.render_stats->document_horizontal_thumb_rect = thumb;
@@ -3388,7 +3455,9 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
     const int track_y = body_top + 3;
     const int track_h = std::max(36, body_height - (max_scroll_x > 0 ? 14 : 6));
     const RectI track{track_x, track_y, track_w, track_h};
-    draw_rect_fill(scene, track, Color::rgba(218, 224, 231, 238), 5);
+    if (config.draw_scrollbars) {
+      draw_rect_fill(scene, track, Color::rgba(218, 224, 231, 238), 5);
+    }
 
     const double ratio = static_cast<double>(body_height) / static_cast<double>(std::max(1, content_height));
     const int thumb_h =
@@ -3398,7 +3467,9 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
                                     static_cast<double>(doc_scroll_y)) /
                                    static_cast<double>(max_scroll_y)));
     const RectI thumb{track_x, thumb_y, track_w, thumb_h};
-    draw_rect_fill(scene, thumb, Color::rgba(94, 111, 130, 255), 5);
+    if (config.draw_scrollbars) {
+      draw_rect_fill(scene, thumb, Color::rgba(94, 111, 130, 255), 5);
+    }
     if (config.render_stats != nullptr) {
       config.render_stats->document_vertical_track_rect = track;
       config.render_stats->document_vertical_thumb_rect = thumb;

@@ -69,7 +69,7 @@ Archive align_depth(self, const Stream& labels) const
 #### Parameters
 
 `labels` : `const Stream&`
-    See the signature for the supported argument form.
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
 #### Returns
 
@@ -471,7 +471,7 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-static Archive kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy& policy =
+static Archive kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy& policy = {})
 ```
 
 #### Parameters
@@ -721,7 +721,7 @@ Archive relabel_depth(self, const Stream& labels) const
 #### Parameters
 
 `labels` : `const Stream&`
-    See the signature for the supported argument form.
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
 #### Returns
 
@@ -902,7 +902,7 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-pluss::table::Atlas tabelize(self, const TabelizePolicy& policy =
+pluss::table::Atlas tabelize(self, const TabelizePolicy& policy = {}) const
 ```
 
 #### Parameters
@@ -1045,13 +1045,16 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-pluss::table::Atlas to_table(self, const TabelizePolicy& policy =
+pluss::table::Atlas to_table(self, const TabelizePolicy& policy = {}, bool render = true) const
 ```
 
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
     See the signature for the supported argument form.
+
+`render` : `bool`
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 

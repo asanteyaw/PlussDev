@@ -551,16 +551,140 @@ DataFrame DataFrame::drop(pluss::msharp::RangeView::Of<std::string_view> names) 
 
 DataFrame DataFrame::reorder(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto ordered = normalize_name_list(names);
-  const auto& src = impl_ref_();
+  if (ordered.empty()) {
+    return *this;
+  }
+  ReorderSpec spec;
+  spec.features = ordered;
+  spec.placement = ReorderPlacement::Front;
+  return reorder(spec);
+}
 
-  PLUSS_CHECK(ordered.size() == src.names_.size(), "DataFrame::reorder requires the full column set");
+DataFrame DataFrame::reorder(const ReorderSpec& spec) const {
+  const auto& src = impl_ref_();
   std::unordered_set<std::string> seen;
-  seen.reserve(ordered.size());
-  for (const auto& n : ordered) {
+  seen.reserve(spec.features.size());
+  std::vector<std::string> moved;
+  moved.reserve(spec.features.size());
+  for (const auto& raw : spec.features) {
+    const auto n = owned_name(raw);
+    PLUSS_CHECK(!n.empty(), "DataFrame::reorder: feature name cannot be empty");
     PLUSS_CHECK(seen.insert(n).second, "DataFrame::reorder contains duplicate column name '" + n + "'");
     PLUSS_CHECK(src.name_to_idx_.find(n) != src.name_to_idx_.end(), "DataFrame::reorder unknown column '" + n + "'");
+    moved.push_back(n);
   }
-  return select(names);
+  if (moved.empty()) {
+    return *this;
+  }
+
+  std::vector<std::string> remainder;
+  remainder.reserve(src.names_.size() - std::min(src.names_.size(), moved.size()));
+  for (const auto& name : src.names_) {
+    if (!seen.contains(name)) {
+      remainder.push_back(name);
+    }
+  }
+
+  std::vector<std::string> ordered;
+  ordered.reserve(src.names_.size());
+  switch (spec.placement) {
+    case ReorderPlacement::Front:
+      ordered.insert(ordered.end(), moved.begin(), moved.end());
+      ordered.insert(ordered.end(), remainder.begin(), remainder.end());
+      break;
+    case ReorderPlacement::Back:
+      ordered.insert(ordered.end(), remainder.begin(), remainder.end());
+      ordered.insert(ordered.end(), moved.begin(), moved.end());
+      break;
+    case ReorderPlacement::Before:
+    case ReorderPlacement::After: {
+      const auto anchor = owned_name(spec.anchor);
+      PLUSS_CHECK(!anchor.empty(), "DataFrame::reorder: anchor feature cannot be empty for before/after placement");
+      PLUSS_CHECK(src.name_to_idx_.find(anchor) != src.name_to_idx_.end(),
+                  "DataFrame::reorder: unknown anchor feature '" + anchor + "'");
+      PLUSS_CHECK(!seen.contains(anchor),
+                  "DataFrame::reorder: anchor feature '" + anchor + "' cannot also be one of the moved features");
+      bool inserted = false;
+      for (const auto& name : remainder) {
+        if (spec.placement == ReorderPlacement::Before && name == anchor) {
+          ordered.insert(ordered.end(), moved.begin(), moved.end());
+          inserted = true;
+        }
+        ordered.push_back(name);
+        if (spec.placement == ReorderPlacement::After && name == anchor) {
+          ordered.insert(ordered.end(), moved.begin(), moved.end());
+          inserted = true;
+        }
+      }
+      PLUSS_CHECK(inserted, "DataFrame::reorder: failed to place moved features relative to anchor");
+      break;
+    }
+  }
+
+  std::vector<std::string_view> views;
+  views.reserve(ordered.size());
+  for (const auto& name : ordered) {
+    views.push_back(name);
+  }
+  return select(pluss::msharp::RangeView::Of<std::string_view>(
+      std::span<const std::string_view>(views.data(), views.size())));
+}
+
+DataFrame DataFrame::bucketize(pluss::msharp::RangeView::Double bins,
+                               pluss::msharp::RangeView::Int labels,
+                               bool right,
+                               bool include_lowest) const {
+  const auto& src = impl_ref_();
+  std::vector<std::string_view> names;
+  names.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      names.push_back(src.names_[i]);
+    }
+  }
+  PLUSS_CHECK(!names.empty(), "DataFrame::bucketize: no numeric Series features available");
+  return bucketize(
+      pluss::msharp::RangeView::Of<std::string_view>(std::span<const std::string_view>(names.data(), names.size())),
+      bins,
+      labels,
+      right,
+      include_lowest);
+}
+
+DataFrame DataFrame::bucketize(std::string_view feature_name,
+                               pluss::msharp::RangeView::Double bins,
+                               pluss::msharp::RangeView::Int labels,
+                               bool right,
+                               bool include_lowest) const {
+  const auto one = std::array<std::string_view, 1>{feature_name};
+  return bucketize(
+      pluss::msharp::RangeView::Of<std::string_view>(std::span<const std::string_view>(one.data(), one.size())),
+      bins,
+      labels,
+      right,
+      include_lowest);
+}
+
+DataFrame DataFrame::bucketize(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                               pluss::msharp::RangeView::Double bins,
+                               pluss::msharp::RangeView::Int labels,
+                               bool right,
+                               bool include_lowest) const {
+  const auto selected = normalize_name_list(feature_names);
+  const auto& src = impl_ref_();
+  if (selected.empty()) {
+    return *this;
+  }
+
+  auto out_cols = src.columns_;
+  for (const auto& name : selected) {
+    const auto it = src.name_to_idx_.find(name);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::bucketize: unknown feature '" + name + "'");
+    out_cols[it->second] = src.columns_[it->second].bucketize(bins, labels, right, include_lowest);
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::add_prefix(std::string_view prefix) const {

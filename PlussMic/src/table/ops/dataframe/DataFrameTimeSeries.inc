@@ -77,6 +77,27 @@ std::string feature_suffix_(std::string_view feature, std::string_view tag) {
   return std::string(feature) + "_" + std::string(tag);
 }
 
+std::string_view resample_op_key_(pluss::subsp::stats::ts::ResampleOp op) {
+  using ResampleOp = pluss::subsp::stats::ts::ResampleOp;
+  switch (op) {
+    case ResampleOp::Mean:
+      return "mean";
+    case ResampleOp::Sum:
+      return "sum";
+    case ResampleOp::Min:
+      return "min";
+    case ResampleOp::Max:
+      return "max";
+    case ResampleOp::First:
+      return "first";
+    case ResampleOp::Last:
+      return "last";
+    case ResampleOp::Count:
+      return "count";
+  }
+  PLUSS_FAIL("DataFrameTsAccessor::resample: unsupported ResampleOp");
+}
+
 } // namespace
 
 DataFrameTsAccessor::DataFrameTsAccessor(DataFrame frame, std::vector<std::string> features)
@@ -266,19 +287,19 @@ DataFrame DataFrameTsAccessor::resample(std::string_view time_feature,
                                         std::string_view freq,
                                         pluss::subsp::stats::ts::ResampleOp op,
                                         std::int64_t step) const {
-  const auto ti = require_time_axis_index_(frame_, time_feature, "DataFrameTsAccessor::resample");
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(features_.size());
-  std::optional<pluss::Timeline> labels{};
+  std::vector<std::string_view> feature_views;
+  feature_views.reserve(features_.size());
   for (const auto& name : features_) {
-    const auto result = pluss::subsp::stats::ts::resample(ti, frame_.features(name).as_series(), freq, op, step);
-    if (!labels.has_value() && result.labels.has_value()) {
-      labels = result.labels;
-    }
-    out.emplace_back(name, Thread(result.values));
+    feature_views.push_back(name);
   }
-  PLUSS_CHECK(labels.has_value(), "DataFrameTsAccessor::resample: expected non-empty labels");
-  return make_frame_from_columns_(std::move(out), Thread(*labels));
+  return static_cast<DataFrame>(
+      frame_.resample(time_feature,
+                      pluss::msharp::RangeView::Of<std::string_view>(
+                          std::span<const std::string_view>(feature_views.data(), feature_views.size())),
+                      freq,
+                      resample_op_key_(op),
+                      step,
+                      false));
 }
 
 DataFrame DataFrameTsAccessor::asfreq(std::string_view time_feature,

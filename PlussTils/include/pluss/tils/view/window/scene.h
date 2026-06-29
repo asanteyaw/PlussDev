@@ -110,4 +110,6 @@ class Scene {
   std::vector<DrawCommand> commands_{};
 };
 
+[[nodiscard]] Scene scale_scene(const Scene& scene, double scale);
+
 } // namespace pluss::view::window

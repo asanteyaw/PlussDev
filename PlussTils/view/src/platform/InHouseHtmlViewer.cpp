@@ -20,6 +20,10 @@
 #include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/window.h"
 
+#if defined(PLUSSTILS_VIEW_HAVE_LIBZIP) && PLUSSTILS_VIEW_HAVE_LIBZIP
+#include <zip.h>
+#endif
+
 namespace pluss::view::detail {
 
 namespace {
@@ -69,15 +73,6 @@ void erase_last_utf8_codepoint(std::string& text) {
     --i;
   } while (i > 0 && (static_cast<unsigned char>(text[i]) & 0xC0U) == 0x80U);
   text.erase(i);
-}
-
-[[nodiscard]] std::string lowercase(std::string_view value) {
-  std::string out;
-  out.reserve(value.size());
-  for (const char ch : value) {
-    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
-  }
-  return out;
 }
 
 [[nodiscard]] const std::string* attribute_value(const window::HtmlNode& node,
@@ -141,6 +136,77 @@ void set_class(window::HtmlNode& node, const std::string_view class_name, const 
   }
 }
 
+void collect_plain_text(const window::HtmlNode& node, std::string& out);
+
+[[nodiscard]] std::optional<int> active_atlas_frame(const window::HtmlNode& node) {
+  if (has_class(node, "atlas-panel") && has_class(node, "active")) {
+    const auto* index = attribute_value(node, "data-frame-index");
+    if (index != nullptr) {
+      return std::atoi(index->c_str());
+    }
+  }
+  for (const auto& child : node.children) {
+    if (const auto active = active_atlas_frame(child); active.has_value()) {
+      return active;
+    }
+  }
+  return std::nullopt;
+}
+
+[[nodiscard]] int atlas_frame_count(const window::HtmlNode& node) {
+  int count = has_class(node, "atlas-panel") ? 1 : 0;
+  for (const auto& child : node.children) {
+    count += atlas_frame_count(child);
+  }
+  return count;
+}
+
+[[nodiscard]] std::string atlas_frame_label(const window::HtmlNode& node, const int frame) {
+  if (has_class(node, "atlas-panel")) {
+    const auto* index = attribute_value(node, "data-frame-index");
+    if (index != nullptr && std::atoi(index->c_str()) == frame) {
+      for (const auto& child : node.children) {
+        if (has_class(child, "atlas-frame-head")) {
+          for (const auto& heading : child.children) {
+            if (has_class(heading, "atlas-frame-title")) {
+              std::string label;
+              collect_plain_text(heading, label);
+              return label;
+            }
+          }
+        }
+      }
+    }
+  }
+  for (const auto& child : node.children) {
+    const std::string label = atlas_frame_label(child, frame);
+    if (!label.empty()) {
+      return label;
+    }
+  }
+  return {};
+}
+
+bool set_element_text(window::HtmlNode& node,
+                      const std::string_view element_id,
+                      const std::string_view text) {
+  const auto* id = attribute_value(node, "id");
+  if (id != nullptr && *id == element_id) {
+    window::HtmlNode text_node{};
+    text_node.kind = window::HtmlNodeKind::Text;
+    text_node.tag = "#text";
+    text_node.text = std::string(text);
+    node.children = {std::move(text_node)};
+    return true;
+  }
+  for (auto& child : node.children) {
+    if (set_element_text(child, element_id, text)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void set_atlas_frame_visibility(window::HtmlNode& node, const std::optional<int> active_frame) {
   if (has_class(node, "atlas-panel")) {
     const auto* index = attribute_value(node, "data-frame-index");
@@ -154,6 +220,18 @@ void set_atlas_frame_visibility(window::HtmlNode& node, const std::optional<int>
   for (auto& child : node.children) {
     set_atlas_frame_visibility(child, active_frame);
   }
+}
+
+void update_atlas_status(window::HtmlNode& root, const std::optional<int> active_frame) {
+  if (!active_frame.has_value()) {
+    (void)set_element_text(root, "atlas-current-frame", "All frames");
+    return;
+  }
+  const std::string label = atlas_frame_label(root, *active_frame);
+  (void)set_element_text(
+      root,
+      "atlas-current-frame",
+      label.empty() ? "Frame " + std::to_string(*active_frame) : label);
 }
 
 bool toggle_body_class(window::HtmlNode& node, const std::string_view class_name) {
@@ -170,202 +248,240 @@ bool toggle_body_class(window::HtmlNode& node, const std::string_view class_name
   return false;
 }
 
-bool cycle_body_theme(window::HtmlNode& node) {
-  if (node.tag == "body") {
-    constexpr std::string_view themes[] = {
-        "theme-midnight",
-        "theme-ocean",
-        "theme-violet",
-    };
-    int active = -1;
-    for (int index = 0; index < 3; ++index) {
-      if (has_class(node, themes[index])) {
-        active = index;
-      }
-      set_class(node, themes[index], false);
-    }
-    if (active + 1 < 3) {
-      set_class(node, themes[active + 1], true);
-    }
+using ExportTable = std::vector<std::vector<std::string>>;
+
+[[nodiscard]] bool contains_tag(const window::HtmlNode& node, const std::string_view tag) {
+  if (node.tag == tag) {
     return true;
   }
-  for (auto& child : node.children) {
-    if (cycle_body_theme(child)) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(node.children.begin(), node.children.end(), [&](const auto& child) {
+    return contains_tag(child, tag);
+  });
 }
 
-void collect_text(const window::HtmlNode& node, std::string& out) {
+void collect_plain_text(const window::HtmlNode& node, std::string& out) {
   if (node.kind == window::HtmlNodeKind::Text) {
-    if (!out.empty() && !std::isspace(static_cast<unsigned char>(out.back()))) {
-      out.push_back(' ');
-    }
     out += node.text;
     return;
   }
   for (const auto& child : node.children) {
-    collect_text(child, out);
+    collect_plain_text(child, out);
   }
 }
 
-[[nodiscard]] std::string node_text(const window::HtmlNode& node) {
-  std::string out;
-  collect_text(node, out);
-  while (!out.empty() && std::isspace(static_cast<unsigned char>(out.front()))) {
-    out.erase(out.begin());
-  }
-  while (!out.empty() && std::isspace(static_cast<unsigned char>(out.back()))) {
-    out.pop_back();
-  }
-  return out;
-}
-
-void collect_table_rows(const window::HtmlNode& node,
-                        std::vector<std::vector<std::string>>& rows,
-                        std::vector<std::string>& headers) {
+void collect_export_rows(const window::HtmlNode& node, ExportTable& table) {
   if (node.tag == "tr") {
-    std::vector<std::string> cells;
-    bool header = false;
+    std::vector<std::string> row;
     for (const auto& child : node.children) {
       if (child.tag != "th" && child.tag != "td") {
         continue;
       }
-      header = header || child.tag == "th";
-      cells.push_back(node_text(child));
+      std::string value;
+      collect_plain_text(child, value);
+      row.push_back(std::move(value));
     }
-    if (!cells.empty()) {
-      if (header && headers.empty()) {
-        headers = std::move(cells);
-      } else {
-        rows.push_back(std::move(cells));
-      }
+    if (!row.empty()) {
+      table.push_back(std::move(row));
     }
     return;
   }
   for (const auto& child : node.children) {
-    collect_table_rows(child, rows, headers);
+    collect_export_rows(child, table);
   }
 }
 
-[[nodiscard]] std::string table_target(const window::HtmlNode& node) {
-  if (const auto* id = attribute_value(node, "id"); id != nullptr && !id->empty()) {
-    return *id;
-  }
-  if (const auto* name = attribute_value(node, "name"); name != nullptr && !name->empty()) {
-    return *name;
-  }
-  return "table@" + std::to_string(reinterpret_cast<std::uintptr_t>(&node));
-}
-
-[[nodiscard]] std::optional<double> numeric_value(const std::string& value) {
-  char* end = nullptr;
-  const double parsed = std::strtod(value.c_str(), &end);
-  if (end == value.c_str() || *end != '\0' || !std::isfinite(parsed)) {
-    return std::nullopt;
-  }
-  return parsed;
-}
-
-void append_visible_tables(const window::HtmlNode& node,
-                           const bool visible,
-                           const std::string& filter,
-                           const std::string& sort_target,
-                           const int sort_column,
-                           const bool sort_ascending,
-                           std::vector<std::string>& blocks) {
-  const bool node_visible =
-      visible && !has_class(node, "hidden") &&
+void collect_export_tables(const window::HtmlNode& node,
+                           const bool ancestors_visible,
+                           std::vector<ExportTable>& tables) {
+  const bool visible =
+      ancestors_visible && !has_class(node, "hidden") &&
       (!has_class(node, "atlas-panel") || has_class(node, "active"));
-  if (!node_visible) {
+  if (!visible) {
     return;
   }
-
   if (node.tag == "table") {
-    std::vector<std::string> headers;
-    std::vector<std::vector<std::string>> rows;
-    collect_table_rows(node, rows, headers);
-    const std::string needle = lowercase(filter);
-    if (!needle.empty()) {
-      rows.erase(std::remove_if(rows.begin(), rows.end(), [&](const auto& row) {
-                   std::string haystack;
-                   for (const auto& cell : row) {
-                     haystack += lowercase(cell);
-                     haystack.push_back(' ');
-                   }
-                   return haystack.find(needle) == std::string::npos;
-                 }),
-                 rows.end());
+    ExportTable table;
+    collect_export_rows(node, table);
+    if (!table.empty()) {
+      tables.push_back(std::move(table));
     }
+    return;
+  }
+  for (const auto& child : node.children) {
+    collect_export_tables(child, visible, tables);
+  }
+}
 
-    if (sort_column >= 0 && table_target(node) == sort_target) {
-      std::stable_sort(rows.begin(), rows.end(), [&](const auto& lhs, const auto& rhs) {
-        const std::string left =
-            static_cast<std::size_t>(sort_column) < lhs.size() ? lhs[static_cast<std::size_t>(sort_column)] : "";
-        const std::string right =
-            static_cast<std::size_t>(sort_column) < rhs.size() ? rhs[static_cast<std::size_t>(sort_column)] : "";
-        const auto left_number = numeric_value(left);
-        const auto right_number = numeric_value(right);
-        if (left_number.has_value() && right_number.has_value()) {
-          if (*left_number == *right_number) {
-            return false;
-          }
-          return sort_ascending ? *left_number < *right_number : *right_number < *left_number;
-        }
-        const std::string left_text = lowercase(left);
-        const std::string right_text = lowercase(right);
-        if (left_text == right_text) {
-          return false;
-        }
-        return sort_ascending ? left_text < right_text : right_text < left_text;
-      });
+[[nodiscard]] std::string delimited_export(const window::HtmlDocument& document,
+                                           const char delimiter) {
+  std::vector<ExportTable> tables;
+  collect_export_tables(document.root, true, tables);
+  std::string output;
+  for (std::size_t table_index = 0; table_index < tables.size(); ++table_index) {
+    if (table_index > 0) {
+      output += "\n";
     }
-
-    std::string block;
-    const auto append_row = [&](const std::vector<std::string>& row) {
+    for (const auto& row : tables[table_index]) {
       for (std::size_t column = 0; column < row.size(); ++column) {
         if (column > 0) {
-          block.push_back('\t');
+          output.push_back(delimiter);
         }
-        block += row[column];
+        std::string value = row[column];
+        if (delimiter == ',') {
+          const bool quote = value.find_first_of(",\"\r\n") != std::string::npos;
+          if (quote) {
+            output.push_back('"');
+            for (const char ch : value) {
+              if (ch == '"') output.push_back('"');
+              output.push_back(ch);
+            }
+            output.push_back('"');
+          } else {
+            output += value;
+          }
+        } else {
+          std::replace(value.begin(), value.end(), '\t', ' ');
+          std::replace(value.begin(), value.end(), '\n', ' ');
+          std::replace(value.begin(), value.end(), '\r', ' ');
+          output += value;
+        }
       }
-      block.push_back('\n');
-    };
-    if (!headers.empty()) {
-      append_row(headers);
+      output.push_back('\n');
     }
-    for (const auto& row : rows) {
-      append_row(row);
-    }
-    if (!block.empty()) {
-      blocks.push_back(std::move(block));
-    }
-    return;
   }
-
-  for (const auto& child : node.children) {
-    append_visible_tables(
-        child, node_visible, filter, sort_target, sort_column, sort_ascending, blocks);
-  }
+  return output;
 }
 
-[[nodiscard]] std::string visible_table_text(const window::HtmlDocument& document,
-                                             const std::string& filter,
-                                             const std::string& sort_target,
-                                             const int sort_column,
-                                             const bool sort_ascending) {
-  std::vector<std::string> blocks;
-  append_visible_tables(
-      document.root, true, filter, sort_target, sort_column, sort_ascending, blocks);
-  std::string out;
-  for (const auto& block : blocks) {
-    if (!out.empty()) {
-      out.push_back('\n');
+[[nodiscard]] std::string xml_escape(std::string_view value) {
+  std::string output;
+  output.reserve(value.size() + 16);
+  for (const char ch : value) {
+    switch (ch) {
+      case '&': output += "&amp;"; break;
+      case '<': output += "&lt;"; break;
+      case '>': output += "&gt;"; break;
+      case '"': output += "&quot;"; break;
+      case '\'': output += "&apos;"; break;
+      default: output.push_back(ch); break;
     }
-    out += block;
   }
-  return out;
+  return output;
+}
+
+[[nodiscard]] std::string excel_column_name(std::size_t index) {
+  std::string name;
+  do {
+    name.insert(name.begin(), static_cast<char>('A' + (index % 26U)));
+    index = index / 26U;
+    if (index == 0) {
+      break;
+    }
+    --index;
+  } while (true);
+  return name;
+}
+
+[[nodiscard]] bool save_xlsx(const window::HtmlDocument& document, const std::string& path) {
+#if defined(PLUSSTILS_VIEW_HAVE_LIBZIP) && PLUSSTILS_VIEW_HAVE_LIBZIP
+  std::vector<ExportTable> tables;
+  collect_export_tables(document.root, true, tables);
+  if (tables.empty() || path.empty()) {
+    return false;
+  }
+
+  int error = 0;
+  zip_t* archive = zip_open(path.c_str(), ZIP_CREATE | ZIP_TRUNCATE, &error);
+  if (archive == nullptr) {
+    return false;
+  }
+
+  std::vector<std::string> payloads;
+  payloads.reserve(tables.size() + 4U);
+  const auto add_entry = [&](const std::string_view entry_path, std::string payload) {
+    payloads.push_back(std::move(payload));
+    const auto& stable = payloads.back();
+    zip_source_t* source = zip_source_buffer(archive, stable.data(), stable.size(), 0);
+    if (source == nullptr) {
+      return false;
+    }
+    if (zip_file_add(
+            archive, std::string(entry_path).c_str(), source, ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8) < 0) {
+      zip_source_free(source);
+      return false;
+    }
+    return true;
+  };
+
+  std::string content_types =
+      R"(<?xml version="1.0" encoding="UTF-8"?>)"
+      R"(<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">)"
+      R"(<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>)"
+      R"(<Default Extension="xml" ContentType="application/xml"/>)"
+      R"(<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>)";
+  std::string workbook =
+      R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)"
+      R"(<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" )"
+      R"(xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>)";
+  std::string workbook_relationships =
+      R"(<?xml version="1.0" encoding="UTF-8"?>)"
+      R"(<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">)";
+
+  for (std::size_t index = 0; index < tables.size(); ++index) {
+    const std::size_t sheet_number = index + 1U;
+    content_types +=
+        "<Override PartName=\"/xl/worksheets/sheet" + std::to_string(sheet_number) +
+        ".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>";
+    workbook += "<sheet name=\"Table " + std::to_string(sheet_number) + "\" sheetId=\"" +
+                std::to_string(sheet_number) + "\" r:id=\"rId" + std::to_string(sheet_number) + "\"/>";
+    workbook_relationships +=
+        "<Relationship Id=\"rId" + std::to_string(sheet_number) +
+        "\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" "
+        "Target=\"worksheets/sheet" + std::to_string(sheet_number) + ".xml\"/>";
+
+    std::string worksheet =
+        R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)"
+        R"(<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>)";
+    std::size_t row_number = 1;
+    for (const auto& row : tables[index]) {
+      worksheet += "<row r=\"" + std::to_string(row_number) + "\">";
+      for (std::size_t column = 0; column < row.size(); ++column) {
+        const std::string reference = excel_column_name(column) + std::to_string(row_number);
+        worksheet += "<c r=\"" + reference + "\" t=\"inlineStr\"><is><t>" +
+                     xml_escape(row[column]) + "</t></is></c>";
+      }
+      worksheet += "</row>";
+      ++row_number;
+    }
+    worksheet += "</sheetData></worksheet>";
+    if (!add_entry(
+            "xl/worksheets/sheet" + std::to_string(sheet_number) + ".xml", std::move(worksheet))) {
+      zip_discard(archive);
+      return false;
+    }
+  }
+  content_types += "</Types>";
+  workbook += "</sheets></workbook>";
+  workbook_relationships += "</Relationships>";
+
+  const std::string package_relationships =
+      R"(<?xml version="1.0" encoding="UTF-8"?>)"
+      R"(<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">)"
+      R"(<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>)"
+      R"(</Relationships>)";
+
+  if (!add_entry("[Content_Types].xml", std::move(content_types)) ||
+      !add_entry("_rels/.rels", package_relationships) ||
+      !add_entry("xl/workbook.xml", std::move(workbook)) ||
+      !add_entry("xl/_rels/workbook.xml.rels", std::move(workbook_relationships))) {
+    zip_discard(archive);
+    return false;
+  }
+  return zip_close(archive) == 0;
+#else
+  (void)document;
+  (void)path;
+  return false;
+#endif
 }
 
 [[nodiscard]] bool write_text_file(const std::string& path, const std::string& content) {
@@ -382,6 +498,14 @@ bool inhouse_html_viewer_available() {
   }
   auto shell = window::make_window_shell(window::ShellSelectionPolicy::NativeOnly);
   return static_cast<bool>(shell);
+}
+
+bool export_inhouse_table_xlsx(const std::string& html, const std::string& path) {
+  if (html.empty() || path.empty()) {
+    return false;
+  }
+  const auto document = window::parse_html_document(html, "Pluss table export");
+  return contains_tag(document.root, "table") && save_xlsx(document, path);
 }
 
 bool show_inhouse_html_window(const std::string& title,
@@ -413,6 +537,8 @@ bool show_inhouse_html_window(const std::string& title,
   const std::string& payload = html.empty() ? svg_payload : html;
   auto document = window::parse_html_document(payload, title.empty() ? std::string("PlussTilsView") : title);
   window::HtmlRenderConfig render_cfg{};
+  render_cfg.draw_top_bar = false;
+  render_cfg.draw_scrollbars = false;
   window::HtmlRenderStats render_stats{};
   window::HtmlScrollModel scroll_model;
   std::vector<window::HtmlHitRegion> hit_regions;
@@ -423,16 +549,33 @@ bool show_inhouse_html_window(const std::string& title,
   std::string active_input_target;
   std::unordered_map<std::string, std::string> input_values;
   double widget_scale = 1.0;
+  const bool has_table = contains_tag(document.root, "table");
+  std::vector<window::ShellSaveFormat> save_formats{
+      {"PNG image", "png"},
+      {"PDF document", "pdf"},
+  };
+  if (has_table) {
+    save_formats.push_back(window::ShellSaveFormat{"CSV data", "csv"});
+    save_formats.push_back(window::ShellSaveFormat{"Tab-delimited text", "txt"});
+    save_formats.push_back(window::ShellSaveFormat{"Excel workbook", "xlsx"});
+  }
 
-  if (!shell->open(window::ShellConfig{document.title, size})) {
+  if (!shell->open(window::ShellConfig{document.title, size, std::move(save_formats)})) {
     return false;
   }
+  const double backing_scale = shell->backing_scale_factor();
 
   auto render_current = [&](const window::SizeI target_size) -> bool {
     auto cfg = runtime_cfg;
-    cfg.canvas_size = target_size;
-    if (!runtime.configure(cfg)) {
-      return false;
+    cfg.canvas_size = window::SizeI{
+        std::max(1, static_cast<int>(std::lround(target_size.width * backing_scale))),
+        std::max(1, static_cast<int>(std::lround(target_size.height * backing_scale))),
+    };
+    const auto current_canvas_size = runtime.canvas().size();
+    if ((current_canvas_size.width != cfg.canvas_size.width ||
+         current_canvas_size.height != cfg.canvas_size.height) &&
+        !runtime.configure(cfg)) {
+        return false;
     }
     const auto document_offset = scroll_model.document_offset_px();
     const auto table_offsets = scroll_model.table_offsets_px();
@@ -462,8 +605,16 @@ bool show_inhouse_html_window(const std::string& title,
     render_cfg.hit_regions = &hit_regions;
     render_cfg.render_stats = &render_stats;
     const auto scene = window::build_html_document_scene(document, target_size, render_cfg);
+    if (has_table) {
+      render_stats.document_max_scroll_x = 0;
+      render_stats.document_max_scroll_y = 0;
+      render_stats.document_horizontal_track_rect = {};
+      render_stats.document_horizontal_thumb_rect = {};
+      render_stats.document_vertical_track_rect = {};
+      render_stats.document_vertical_thumb_rect = {};
+    }
     scroll_model.update_metrics(render_stats);
-    if (!runtime.submit(scene)) {
+    if (!runtime.submit(window::scale_scene(scene, backing_scale))) {
       return false;
     }
     return shell->present(runtime.canvas());
@@ -479,12 +630,31 @@ bool show_inhouse_html_window(const std::string& title,
   }
 
   bool closed = false;
-  const auto save_png = [&]() {
-    const std::string suggested =
-        snapshot_name.empty() ? std::string("pluss-view.png")
-                              : std::filesystem::path(snapshot_name).filename().string();
-    const std::string path = shell->choose_save_path(suggested, "png");
-    return !path.empty() && window::save_canvas(runtime.canvas(), path);
+  const auto save_as = [&](const std::string_view extension) {
+    std::filesystem::path suggested =
+        snapshot_name.empty() ? std::filesystem::path("pluss-view.png")
+                              : std::filesystem::path(snapshot_name).filename();
+    suggested.replace_extension(std::string(".") + std::string(extension));
+    const std::string path = shell->choose_save_path(suggested.string(), extension);
+    if (path.empty()) {
+      return false;
+    }
+    if (extension == "png") {
+      return window::save_canvas(runtime.canvas(), path);
+    }
+    if (extension == "pdf") {
+      return shell->save_canvas_pdf(runtime.canvas(), path);
+    }
+    if (extension == "csv") {
+      return write_text_file(path, delimited_export(document, ','));
+    }
+    if (extension == "txt") {
+      return write_text_file(path, delimited_export(document, '\t'));
+    }
+    if (extension == "xlsx") {
+      return save_xlsx(document, path);
+    }
+    return false;
   };
   const auto save_svg = [&]() {
     if (svg_payload.empty()) {
@@ -497,6 +667,7 @@ bool show_inhouse_html_window(const std::string& title,
     return !path.empty() && write_text_file(path, svg_payload);
   };
 
+  auto animation_clock = std::chrono::steady_clock::now();
   while (!closed) {
     bool resized = false;
     bool needs_render = false;
@@ -511,9 +682,11 @@ bool show_inhouse_html_window(const std::string& title,
         resized = true;
       } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
                  event.note == "save_snapshot") {
-        (void)save_png();
+        (void)save_as("png");
       } else if (event.kind == window::ShellEventKind::ShortcutCommand) {
-        if (event.note == "zoom_in") {
+        if (event.note.rfind("save_as:", 0) == 0) {
+          (void)save_as(event.note.substr(8));
+        } else if (event.note == "zoom_in") {
           widget_scale = std::min(3.0, widget_scale + 0.1);
           needs_render = true;
         } else if (event.note == "zoom_out") {
@@ -536,7 +709,8 @@ bool show_inhouse_html_window(const std::string& title,
                     static_cast<int>(std::lround(event.y)),
                 },
                 event.precise_delta,
-                event.shift_modifier) ||
+                event.shift_modifier,
+                !event.precise_delta) ||
             needs_render;
       } else if (event.kind == window::ShellEventKind::PointerDrag) {
         needs_render =
@@ -585,24 +759,10 @@ bool show_inhouse_html_window(const std::string& title,
               needs_render = true;
             } else if (hit.target == "toggle-bg") {
               needs_render = toggle_body_class(document.root, "dark") || needs_render;
-            } else if (hit.target == "toggle-theme") {
-              needs_render = cycle_body_theme(document.root) || needs_render;
             } else if (hit.target == "save-png") {
-              (void)save_png();
+              (void)save_as("png");
             } else if (hit.target == "download-svg") {
               (void)save_svg();
-            } else if (hit.target == "copy-visible") {
-              const std::string query = input_values.contains("table-search")
-                                            ? input_values.at("table-search")
-                                            : std::string{};
-              const std::string text = visible_table_text(document,
-                                                          query,
-                                                          table_sort_target,
-                                                          table_sort_column,
-                                                          table_sort_ascending);
-              if (!text.empty()) {
-                (void)shell->set_clipboard_text(text);
-              }
             } else if (hit.target == "reset-table-view") {
               input_values["table-search"].clear();
               active_input_target.clear();
@@ -613,12 +773,21 @@ bool show_inhouse_html_window(const std::string& title,
               needs_render = true;
             } else if (hit.target == "atlas-show-all") {
               set_atlas_frame_visibility(document.root, std::nullopt);
+              update_atlas_status(document.root, std::nullopt);
               scroll_model.reset();
               needs_render = true;
-            } else if (hit.target.rfind("atlas-tab-", 0) == 0) {
-              set_atlas_frame_visibility(document.root, hit.value);
-              scroll_model.reset();
-              needs_render = true;
+            } else if (hit.target == "atlas-previous" || hit.target == "atlas-next") {
+              const int count = atlas_frame_count(document.root);
+              if (count > 0) {
+                const int current = active_atlas_frame(document.root).value_or(
+                    hit.target == "atlas-previous" ? 0 : -1);
+                const int delta = hit.target == "atlas-previous" ? -1 : 1;
+                const int next = ((current + delta) % count + count) % count;
+                set_atlas_frame_visibility(document.root, next);
+                update_atlas_status(document.root, next);
+                scroll_model.reset();
+                needs_render = true;
+              }
             }
           } else if (hit.action == "input.focus") {
             active_input_target = hit.target;
@@ -658,6 +827,11 @@ bool show_inhouse_html_window(const std::string& title,
       size = next_size;
       needs_render = true;
     }
+    const auto animation_now = std::chrono::steady_clock::now();
+    const double animation_elapsed =
+        std::chrono::duration<double>(animation_now - animation_clock).count();
+    animation_clock = animation_now;
+    needs_render = scroll_model.advance_animation(animation_elapsed) || needs_render;
     if (needs_render) {
       if (!render_current(size)) {
         shell->close();
@@ -665,7 +839,11 @@ bool show_inhouse_html_window(const std::string& title,
       }
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    if (!needs_render && !scroll_model.has_pending_animation()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(4));
+    } else if (!needs_render) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
   }
 
   shell->close();
