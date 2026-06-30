@@ -21,7 +21,7 @@ DataFrame add(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -185,7 +185,7 @@ DataFrameView aggregate(self, pluss::msharp::RangeView::Of<SummarySpec> specs, b
 #### Parameters
 
 `specs` : `pluss::msharp::RangeView::Of<SummarySpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -395,7 +395,7 @@ DataFrame assign(self, pluss::msharp::RangeView::Of<std::pair<std::string, Threa
 #### Parameters
 
 `specs` : `pluss::msharp::RangeView::Of<DeriveSpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `assignments` : `pluss::msharp::RangeView::Of<std::pair<std::string, Thread>>`
     See the signature for the supported argument form.
@@ -959,7 +959,7 @@ DataFrame cast(self, pluss::msharp::RangeView::Of<CastSpec> specs) const
     See the signature for the supported argument form.
 
 `specs` : `pluss::msharp::RangeView::Of<CastSpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 #### Returns
 
@@ -1215,7 +1215,7 @@ DataFrame ceil_time(self, pluss::msharp::RangeView::Of<std::string_view> feature
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
-    See the signature for the supported argument form.
+    Temporal ceiling unit such as `"hour"`, `"day"`, or `"month"`.
 
 #### Returns
 
@@ -1243,8 +1243,9 @@ auto out = df.ceil_time({"ts"}, "hour");
 
 ```text
 ts
-2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z
+2024-01-01T10:00:00Z
+2024-01-01T11:00:00Z
 ```
 
 #### Practical Behavior
@@ -1325,7 +1326,7 @@ DataFrame combine(self, const DataFrame& other, const CombineSpec& spec) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `spec` : `const CombineSpec&`
     Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.
@@ -1407,7 +1408,7 @@ DataFrame compare(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -1479,7 +1480,7 @@ DataFrame conform_to(self, const DataFrame& other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -1699,10 +1700,10 @@ DataFrameView count_by(self, std::string_view feature, std::int64_t top_n = 0, b
     Name of the source feature used by the operation.
 
 `top_n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 `dropna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -1754,7 +1755,7 @@ DataFrameView count_distinct(self, pluss::msharp::RangeView::Of<std::string_view
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `dropna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -1934,7 +1935,7 @@ DataFrame div(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -1963,10 +1964,10 @@ auto out = left.div(right);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+id    sales
+0.5   0.909091
+1.0   1.090909
+0.75  0.9
 ```
 
 Example 2.
@@ -1983,9 +1984,9 @@ auto out = df.div(10);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi
 ```
 
 
@@ -2002,7 +2003,7 @@ DataFrame divide(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -2031,10 +2032,10 @@ auto out = left.divide(right);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+id    sales
+0.5   0.909091
+1.0   1.090909
+0.75  0.9
 ```
 
 Example 2.
@@ -2051,9 +2052,9 @@ auto out = df.divide(10);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi
 ```
 
 
@@ -2212,7 +2213,7 @@ DataFrame eq(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -2278,7 +2279,7 @@ bool equals(self, const DataFrame& other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -2388,6 +2389,10 @@ auto out = df.feature_ref("sales");
 #### API Signatures
 
 ```cpp
+DataFrame features(self, const NameRange& names)
+
+DataFrame features(self, const NameRange& names) const
+
 DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)
 
 DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const
@@ -2413,7 +2418,7 @@ Thread features(self, std::string_view name) const
 
 #### Parameters
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`names` : `const NameRange&`
     Collection of feature, slot, or stream names supplied in positional order.
 
 `name` : `std::string_view`
@@ -2445,6 +2450,22 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
+auto out = df.features();
+```
+
+```text
+[Thread(id), Thread(sales), Thread(city)]
+```
+
+Example 2.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
 auto out = df.features("sales");
 ```
 
@@ -2452,7 +2473,7 @@ auto out = df.features("sales");
 Thread([100.0, 120.0, 90.0])
 ```
 
-Example 2.
+Example 3.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2469,22 +2490,6 @@ id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
-```
-
-Example 3.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.features();
-```
-
-```text
-[Thread(id), Thread(sales), Thread(city)]
 ```
 
 
@@ -2558,7 +2563,7 @@ DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std:
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
@@ -2658,7 +2663,7 @@ DataFrame& fillna_(self, std::string_view value)
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2749,7 +2754,7 @@ DataFrame filter(self, const Thread& bool_mask) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 #### Returns
 
@@ -2796,7 +2801,7 @@ DataFrame floor_time(self, pluss::msharp::RangeView::Of<std::string_view> featur
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
-    See the signature for the supported argument form.
+    Temporal floor unit such as `"hour"`, `"day"`, or `"month"`.
 
 #### Returns
 
@@ -2825,6 +2830,7 @@ auto out = df.floor_time({"ts"}, "hour");
 ```text
 ts
 2024-01-01T09:00:00Z
+2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z
 ```
 
@@ -2842,7 +2848,7 @@ DataFrame floordiv(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -2891,9 +2897,9 @@ auto out = df.floordiv(10);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+0.0  10.0  Accra
+0.0  12.0  Tema
+0.0   9.0  Kumasi
 ```
 
 
@@ -2912,7 +2918,7 @@ DataFrame ge(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -3020,7 +3026,7 @@ DataFrameView group_by(self, pluss::msharp::RangeView::Of<std::string_view> keys
     Collection of slot or stream names to keep, drop, or rewrite together.
 
 `specs` : `pluss::msharp::RangeView::Of<GroupSpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `dropna_keys` : `bool`
     When `true`, rows with null pivot/group keys are excluded before reshaping.
@@ -3069,7 +3075,7 @@ DataFrame gt(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -3597,7 +3603,7 @@ DataFrame join(self, const DataFrame& other, std::string collision_suffix = "_ri
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `collision_suffix` : `std::string`
     Suffix added when a second frame contributes a feature name that already exists on the left-hand side.
@@ -3689,7 +3695,7 @@ DataFrame le(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -4346,7 +4352,7 @@ DataFrame lt(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -4597,16 +4603,16 @@ DataFrameView mean_by(self, std::string_view group_feature, std::string_view val
 #### Parameters
 
 `group_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.
 
 `value_feature` : `std::string_view`
     Feature whose values populate pivot cells or grouped summaries.
 
 `top_n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 `min_count` : `std::int64_t`
-    See the signature for the supported argument form.
+    Minimum non-null observations required before a grouped or rolling summary is considered valid.
 
 `dropna_group` : `bool`
     See the signature for the supported argument form.
@@ -4779,7 +4785,7 @@ DataFrame mod(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -4847,7 +4853,7 @@ DataFrame mul(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -4915,7 +4921,7 @@ DataFrame multiply(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -5023,7 +5029,7 @@ DataFrame ne(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -5304,7 +5310,7 @@ DataFrameView pivot(self, std::string_view case_feature, std::string_view featur
 #### Parameters
 
 `case_feature` : `std::string_view`
-    Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.
+    Feature whose distinct values become the output row groups in the pivoted result.
 
 `feature_feature` : `std::string_view`
     Feature whose distinct values become new output columns in pivot-style reshaping.
@@ -5357,7 +5363,7 @@ DataFrameView pivot_table(self, std::string_view case_feature, std::string_view 
 #### Parameters
 
 `case_feature` : `std::string_view`
-    Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.
+    Feature whose distinct values become the output row groups in the pivoted summary result.
 
 `feature_feature` : `std::string_view`
     Feature whose distinct values become new output columns in pivot-style reshaping.
@@ -5415,10 +5421,10 @@ DataFrame place(self, std::string_view name, std::string_view anchor_feature, bo
 #### Parameters
 
 `name` : `std::string`
-    See the signature for the supported argument form.
+    Feature name to insert or move.
 
 `feature` : `const Thread&`
-    Name of the source feature used by the operation.
+    Full thread payload to insert at the target position. Its length must match the frame case count.
 
 `anchor_feature` : `std::string_view`
     Reference feature used to place a newly inserted or moved feature before or after an existing column.
@@ -5433,7 +5439,7 @@ DataFrame place(self, std::string_view name, std::string_view anchor_feature, bo
 
 #### What It Does
 
-Applies `place` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Moves one existing feature relative to an anchor feature, or inserts a brand-new feature directly before or after that anchor.
 
 #### Examples
 
@@ -5446,15 +5452,40 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.place();
+auto out = df.place("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), "sales", true);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+id  sales  profit  city
+1   100.0  40.0    Accra
+2   120.0  35.0    Tema
+3    90.0  30.0    Kumasi
 ```
+
+Example 2.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.place("city", "id", false);
+```
+
+```text
+city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0
+```
+
+#### Practical Behavior
+
+- `place(name, feature, anchor, after)` inserts a brand-new feature relative to an existing anchor.
+- `place(name, anchor, after)` moves an existing feature without forcing you to restate the full feature order.
+- When `after=false`, placement happens before the anchor. When `after=true`, placement happens after the anchor.
 
 
 ### `plot`
@@ -5559,7 +5590,7 @@ DataFrame pow(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -5576,41 +5607,40 @@ Example 1.
 
 ```cpp
 auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"a", pluss::table::Thread(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({3.0, 2.0, 5.0}))},
 });
 auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
+    {"a", pluss::table::Thread(pluss::make_series({3.0, 2.0, 1.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 3.0, 2.0}))},
 });
 
 auto out = left.pow(right);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a    b
+8.0  9.0
+9.0  8.0
+4.0  25.0
 ```
 
 Example 2.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
-auto out = df.pow(10);
+auto out = df.pow(2);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a    b
+1.0  4.0
+4.0  16.0
+9.0  25.0
 ```
 
 
@@ -5675,10 +5705,10 @@ Thread prod(self, std::int64_t axis, bool skipna = true) const
 #### Parameters
 
 `render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
+    When `true`, the summary view can auto-render in temporary terminal contexts. Pass `false` when you want the summary object without implicit display.
 
 `axis` : `int`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+    Reduction axis. `0` computes one product per numeric feature, while `1` computes one product per row across numeric features.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
@@ -5693,7 +5723,7 @@ Thread prod(self, std::int64_t axis, bool skipna = true) const
 
 #### What It Does
 
-Applies `prod` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Computes per-feature or per-row products across numeric data.
 
 #### Examples
 
@@ -5701,20 +5731,39 @@ Example 1.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
-auto out = df.prod();
+auto out = df.prod(false);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+feature  value
+a        6.0
+b        40.0
 ```
+
+Example 2.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.prod(1, true);
+```
+
+```text
+[2.0, 8.0, 15.0]
+```
+
+#### Axis Rules
+
+- `prod(render=false)` returns a compact summary view with one product per numeric feature.
+- `prod(axis=0)` returns a numeric thread with one product per numeric feature.
+- `prod(axis=1)` returns a numeric thread with one product per row across numeric features.
 
 
 ### `put`
@@ -5746,13 +5795,13 @@ DataFrame put(self, std::string_view feature, const Thread& bool_mask, std::stri
 #### Parameters
 
 `feature` : `std::string_view`
-    Name of the source feature used by the operation.
+    Feature name to rewrite.
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement scalar, string, null, or thread written only where the mask is `true`.
 
 #### Returns
 
@@ -5761,7 +5810,7 @@ DataFrame put(self, std::string_view feature, const Thread& bool_mask, std::stri
 
 #### What It Does
 
-Applies `put` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Writes a replacement value only where a boolean mask is true and returns the updated frame.
 
 #### Examples
 
@@ -5774,15 +5823,22 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.put();
+auto mask = df.features("id") == 2.0;
+auto out = df.put("sales", mask, 999.0);
 ```
 
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
+2   999.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `put(feature, mask, value)` rewrites only the rows where the mask evaluates true.
+- The mask must match the frame case count.
+- Use `put(...)` when you want a new frame result, and `put_(...)` when you want the same rewrite in place.
 
 
 ### `put_`
@@ -5814,13 +5870,13 @@ DataFrame& put_(self, std::string_view feature, const Thread& bool_mask, std::st
 #### Parameters
 
 `feature` : `std::string_view`
-    Name of the source feature used by the operation.
+    Feature name to rewrite in place.
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement scalar, string, null, or thread written in place only where the mask is `true`.
 
 #### Returns
 
@@ -5829,7 +5885,7 @@ DataFrame& put_(self, std::string_view feature, const Thread& bool_mask, std::st
 
 #### What It Does
 
-Applies `put_` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Writes a replacement value only where a boolean mask is true and mutates the frame in place.
 
 #### Examples
 
@@ -5842,15 +5898,22 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.put_();
+auto mask = df.features("id") == 2.0;
+df.put_("city", mask, "Tamale");
 ```
 
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
+2   120.0  Tamale
 3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `put_(feature, mask, value)` rewrites only the rows where the mask evaluates true.
+- The mask must match the frame case count.
+- Use `put(...)` when you want a new frame result, and `put_(...)` when you want the same rewrite in place.
 
 
 ## Q
@@ -5866,7 +5929,7 @@ DataFrame query(self, std::string_view expression) const
 #### Parameters
 
 `expression` : `std::string_view`
-    See the signature for the supported argument form.
+    Boolean filter expression written against feature names, such as `"sales > 95"` or `"city == \"Accra\""`. Rows where the expression evaluates true are kept.
 
 #### Returns
 
@@ -5892,8 +5955,14 @@ auto out = df.query("sales > 95");
 ```text
 id  sales  city
 1   100.0  Accra
-3    90.0  Kumasi
+2   120.0  Tema
 ```
+
+#### Practical Behavior
+
+- `query(expression)` keeps rows where the expression evaluates true.
+- Feature names are referenced directly inside the expression string.
+- String comparisons should use quoted values, especially when feature names contain spaces.
 
 
 ## R
@@ -5909,7 +5978,7 @@ DataFrame radd(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -5924,19 +5993,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.radd(10);
 ```
 
 ```text
-id  sales  city
-11  110.0  Accra
-12  130.0  Tema
-13  100.0  Kumasi
+a    b
+11.0  12.0
+12.0  14.0
+13.0  15.0
 ```
 
 
@@ -5951,7 +6019,7 @@ DataFrame rdiv(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -5966,19 +6034,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rdiv(10);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a         b
+10.0      5.0
+5.0       2.5
+3.333333  2.0
 ```
 
 
@@ -6013,14 +6080,22 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
+df = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));
 auto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));
 auto out = df.reindex_cases(cases);
 ```
 
 ```text
+df.cases():
+["cs0", "cs1", "cs2"]
+
+out.cases():
+["cs1", "cs0", "cs2"]
+
+out.head():
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
+1   100.0  Accra
 3    90.0  Kumasi
 ```
 
@@ -6036,7 +6111,7 @@ DataFrame reindex_like(self, const DataFrame& other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6081,7 +6156,7 @@ DataFrame relabel_features(self, pluss::msharp::RangeView::Of<std::string_view> 
 #### Parameters
 
 `feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.
+    Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
 
 #### Returns
 
@@ -6123,10 +6198,10 @@ DataFrame rename(self, std::string_view old_name, std::string new_name) const
 #### Parameters
 
 `old_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Existing feature name to rename.
 
 `new_name` : `std::string`
-    See the signature for the supported argument form.
+    Replacement feature name.
 
 #### Returns
 
@@ -6168,10 +6243,10 @@ DataFrame& rename_(self, std::string_view old_name, std::string new_name)
 #### Parameters
 
 `old_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Existing feature name to rename in place.
 
 `new_name` : `std::string`
-    See the signature for the supported argument form.
+    Replacement feature name written back in place.
 
 #### Returns
 
@@ -6213,7 +6288,7 @@ DataFrame rename_features(self,  pluss::msharp::RangeView::Of<std::pair<std::str
 #### Parameters
 
 `renames` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Collection of `(old_name, new_name)` pairs applied in one rename pass.
 
 #### Returns
 
@@ -6283,16 +6358,17 @@ auto df = pluss::table::DataFrame({
 });
 
 pluss::table::DataFrame::ReorderSpec spec;
-spec.features = {"city"};
-spec.placement = pluss::table::DataFrame::ReorderPlacement::Front;
+spec.features = {"sales"};
+spec.placement = pluss::table::DataFrame::ReorderPlacement::After;
+spec.anchor = "city";
 auto out = df.reorder(spec);
 ```
 
 ```text
-city    id  sales
-Accra   1   100.0
-Tema    2   120.0
-Kumasi  3    90.0
+id  city    sales
+1   Accra   100.0
+2   Tema    120.0
+3   Kumasi   90.0
 ```
 
 Example 2.
@@ -6304,14 +6380,14 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.reorder({"sales", "id", "city"});
+auto out = df.reorder({"city"});
 ```
 
 ```text
-sales  id  city
-100.0  1  Accra
-120.0  2  Tema
-90.0   3  Kumasi
+city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0
 ```
 
 #### Practical Behavior
@@ -6352,8 +6428,14 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.repeated_cases();
+auto dup = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs0", "cs2"})));
+auto out = dup.repeated_cases();
 ```
+
+```text
+[false, true, false]
+```
+
 
 ### `replace`
 
@@ -6406,13 +6488,13 @@ DataFrame replace(self, std::string_view from, std::string_view to, pluss::mshar
 #### Parameters
 
 `from` : `const char*`
-    See the signature for the supported argument form.
+    Value to search for inside the selected compatible features. Its type decides which feature kinds participate.
 
 `to` : `const char*`
-    See the signature for the supported argument form.
+    Replacement value written anywhere `from` matches. Use `pluss::null` when you want matched cells to become missing.
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
+    Optional feature subset. Leave empty to apply the replacement across every compatible feature of the relevant kind.
 
 #### Returns
 
@@ -6421,7 +6503,7 @@ DataFrame replace(self, std::string_view from, std::string_view to, pluss::mshar
 
 #### What It Does
 
-This is part of the text-processing surface for note-backed or text-oriented data.
+Replaces matched scalar or pluss-typed values across selected compatible features and returns the updated frame.
 
 #### Examples
 
@@ -6429,59 +6511,46 @@ Example 1.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
 });
 
-auto out = df.replace();
+auto out = df.replace("Tema", "Tamale", {"city"});
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+midterm_1  midterm_2  city
+0.0        8.0        Accra
+12.0       0.0        Tamale
+0.0        15.0       Tamale
 ```
 
-
-### `requires`
-
-#### API Signatures
-
-```cpp
-template <class NameRange> requires(self, std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange& names)
-
-template <class NameRange> requires(self, std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange& names) const
-```
-
-#### Parameters
-
-`names` : `std::ranges::input_range<NameRange> && !std::is_convertible_v<NameRange, std::string_view> && !detail::IsInitializerListV<NameRange> && !std::same_as<std::remove_cvref_t<NameRange>, StackArray<std::string_view>> && std::convertible_to<std::remove_cvref_t<std::ranges::range_reference_t<NameRange>>, std::string_view>) DataFrame features(const NameRange&`
-    Collection of feature, slot, or stream names supplied in positional order.
-
-#### Returns
-
-`template <class NameRange>`
-    Value produced by this call.
-
-#### What It Does
-
-Applies `requires` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
-
-#### Examples
-
-Example 1.
+Example 2.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
 });
 
-auto out = df.requires();
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
 ```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+#### Practical Behavior
+
+- `replace(from, to, features)` dispatches by value type, so numeric replacements touch numeric series features while string replacements touch note features.
+- If `features` is empty, every compatible feature of the relevant kind participates automatically.
+- Use `pluss::null` as `to` when you want matched cells to become missing.
+
 
 ### `resample`
 
@@ -6560,7 +6629,7 @@ DataFrame reset_cases(self, std::string case_feature = "case") const
 #### Parameters
 
 `case_feature` : `std::string`
-    Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.
+    Name to use for the restored case-axis feature when the current cases are materialized back into ordinary columns.
 
 #### Returns
 
@@ -6661,7 +6730,7 @@ DataFrame rfloordiv(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6676,19 +6745,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rfloordiv(10);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a   b
+10  5
+5   2
+3   2
 ```
 
 
@@ -6703,7 +6771,7 @@ DataFrame rmod(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6718,19 +6786,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rmod(10);
 ```
 
 ```text
-id  sales  city
-1   0.0    Accra
-2   0.0    Tema
-3   0.0    Kumasi
+a    b
+0.0  0.0
+0.0  0.0
+0.0  0.0
 ```
 
 
@@ -6745,7 +6812,7 @@ DataFrame rmul(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6760,19 +6827,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rmul(10);
 ```
 
 ```text
-id  sales  city
-10  1000.0  Accra
-20  1200.0  Tema
-30   900.0  Kumasi
+a    b
+3.0  6.0
+6.0  12.0
+9.0  15.0
 ```
 
 
@@ -6787,10 +6853,10 @@ DataFrame rolling(self, pluss::msharp::RangeView::Of<WindowSpec> specs, bool kee
 #### Parameters
 
 `specs` : `pluss::msharp::RangeView::Of<WindowSpec>`
-    See the signature for the supported argument form.
+    Window specs that define the output name, source feature, rolling operation, window width, and minimum observation policy.
 
 `keep_input` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the original features stay in the output and rolling features are appended. When `false`, only the derived rolling outputs are returned.
 
 #### Returns
 
@@ -6810,15 +6876,21 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.rolling({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, true);
+auto out = df.rolling({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, false);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+sales_roll
+100.0
+110.0
+105.0
 ```
+
+#### Practical Behavior
+
+- `rolling(...)` is the frame-level window-engineering route, so one call can derive several rolling outputs at once.
+- `keep_input=true` appends rolling outputs to the original frame, while `keep_input=false` returns only the engineered outputs.
+- Each `WindowSpec` controls the output name, source feature, operation, window width, and minimum observation rule.
 
 
 ### `round_time`
@@ -6835,7 +6907,7 @@ DataFrame round_time(self, pluss::msharp::RangeView::Of<std::string_view> featur
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
-    See the signature for the supported argument form.
+    Temporal rounding unit such as `"hour"`, `"day"`, or `"month"`.
 
 #### Returns
 
@@ -6865,6 +6937,7 @@ auto out = df.round_time({"ts"}, "hour");
 ts
 2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z
+2024-01-01T10:00:00Z
 ```
 
 
@@ -6879,7 +6952,7 @@ DataFrame rpow(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6894,19 +6967,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rpow(10);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a      b
+10.0   100.0
+100.0  10000.0
+1000.0 100000.0
 ```
 
 
@@ -6921,7 +6993,7 @@ DataFrame rsub(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6936,19 +7008,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rsub(10);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a    b
+9.0  8.0
+8.0  6.0
+7.0  5.0
 ```
 
 
@@ -6963,7 +7034,7 @@ DataFrame rtruediv(self, scalar other) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -6978,19 +7049,18 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
 });
 
 auto out = df.rtruediv(10);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+a         b
+10.0      5.0
+5.0       2.5
+3.333333  2.0
 ```
 
 
@@ -7466,10 +7536,10 @@ DataFrame select_like(self, std::string_view needle, bool case_sensitive = true)
 #### Parameters
 
 `needle` : `std::string_view`
-    See the signature for the supported argument form.
+    Substring token used to match feature names.
 
 `case_sensitive` : `bool`
-    See the signature for the supported argument form.
+    When `true`, substring matching respects letter case. When `false`, feature names are matched case-insensitively.
 
 #### Returns
 
@@ -7478,26 +7548,33 @@ DataFrame select_like(self, std::string_view needle, bool case_sensitive = true)
 
 #### What It Does
 
-Applies `select_like` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Selects only the features whose names contain the requested substring.
 
 #### Examples
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"midterm_1", pluss::table::Thread(pluss::make_series({70.0, 80.0, 90.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({75.0, 85.0, 95.0}))},
+    {"final_points", pluss::table::Thread(pluss::make_series({88.0, 91.0, 94.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.select_like();
+auto out = df.select_like("midterm");
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+midterm_1  midterm_2
+70.0       75.0
+80.0       85.0
+90.0       95.0
 ```
+
+#### Practical Behavior
+
+- `select_like(...)` filters feature names, not row values.
+- The output keeps the original row order and case axis unchanged.
+- Use this when you want schema-driven feature selection without listing every matching feature manually.
 
 
 ### `select_regex`
@@ -7511,7 +7588,7 @@ DataFrame select_regex(self, std::string_view pattern) const
 #### Parameters
 
 `pattern` : `std::string_view`
-    See the signature for the supported argument form.
+    ECMAScript regular expression used to match feature names.
 
 #### Returns
 
@@ -7520,26 +7597,33 @@ DataFrame select_regex(self, std::string_view pattern) const
 
 #### What It Does
 
-Applies `select_regex` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Selects only the features whose names match the requested regular expression.
 
 #### Examples
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"midterm_1", pluss::table::Thread(pluss::make_series({70.0, 80.0, 90.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({75.0, 85.0, 95.0}))},
+    {"final_points", pluss::table::Thread(pluss::make_series({88.0, 91.0, 94.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.select_regex();
+auto out = df.select_regex("^midterm_[12]$");
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+midterm_1  midterm_2
+70.0       75.0
+80.0       85.0
+90.0       95.0
 ```
+
+#### Practical Behavior
+
+- `select_regex(...)` filters feature names, not row values.
+- The output keeps the original row order and case axis unchanged.
+- Use this when you want schema-driven feature selection without listing every matching feature manually.
 
 
 ### `series_features`
@@ -7653,7 +7737,7 @@ DataFrame set_axis(self, pluss::msharp::RangeView::Of<std::string_view> feature_
 #### Parameters
 
 `feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.
+    Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
 
 #### Returns
 
@@ -7750,7 +7834,7 @@ DataFrame set_feature_axis(self, pluss::msharp::RangeView::Of<std::string_view> 
 #### Parameters
 
 `feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.
+    Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
 
 #### Returns
 
@@ -7803,7 +7887,7 @@ DataFrame set_features(self, std::string_view name, const Thread& value) const
     See the signature for the supported argument form.
 
 `value` : `const Thread&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -7858,7 +7942,7 @@ DataFrame& set_features_(self, std::string_view name, const Thread& value)
     See the signature for the supported argument form.
 
 `value` : `const Thread&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -7907,7 +7991,7 @@ DataFrame shift(self, std::int64_t periods = 1) const
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `periods` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows to shift selected feature values. Positive values move values downward and introduce missing entries at the top; negative values move upward.
 
 #### Returns
 
@@ -7954,7 +8038,7 @@ DataFrame shift_time(self, pluss::msharp::RangeView::Of<std::string_view> featur
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `periods` : `int`
-    See the signature for the supported argument form.
+    Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.
 
 `freq` : `std::string_view`
     Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.
@@ -7985,8 +8069,9 @@ auto out = df.shift_time({"ts"}, 1, "hour");
 
 ```text
 ts
-2024-01-01T09:00:00Z
-2024-01-01T10:00:00Z
+2024-01-01T10:10:00Z
+2024-01-01T10:40:00Z
+2024-01-01T11:05:00Z
 ```
 
 
@@ -8087,10 +8172,10 @@ DataFrame sort_cases(self, bool ascending = true, bool nulls_last = true) const
 #### Parameters
 
 `ascending` : `bool`
-    See the signature for the supported argument form.
+    When `true`, case labels are sorted ascending. When `false`, they are sorted descending.
 
 `nulls_last` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null case labels are placed after observed labels. When `false`, they are placed first.
 
 #### Returns
 
@@ -8115,10 +8200,17 @@ auto out = with_cases.sort_cases(true, true);
 ```
 
 ```text
+with_cases.cases():
+["cs2", "cs0", "cs1"]
+
+out.cases():
+["cs0", "cs1", "cs2"]
+
+out.head():
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
+1   100.0  Accra
 ```
 
 
@@ -8135,10 +8227,10 @@ DataFrame sort_values(self, pluss::msharp::RangeView::Of<std::string_view> featu
 #### Parameters
 
 `specs` : `pluss::msharp::RangeView::Of<ArrangeSpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
+    Feature names used as sort keys when you want the same ascending/null policy for every key.
 
 `ascending` : `bool`
     See the signature for the supported argument form.
@@ -8171,8 +8263,8 @@ auto out = df.sort_values({{.feature = "sales", .ascending = false}});
 
 ```text
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
+1   100.0  Accra
 3    90.0  Kumasi
 ```
 
@@ -8190,8 +8282,8 @@ auto out = df.sort_values({"sales"}, false, true);
 
 ```text
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
+1   100.0  Accra
 3    90.0  Kumasi
 ```
 
@@ -8209,7 +8301,7 @@ DataFrameSqlAccessor sql(self, SqlOptions options) const
 #### Parameters
 
 `options` : `SqlOptions`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+    SQL execution options such as engine or binding policy for the returned SQL accessor.
 
 #### Returns
 
@@ -8235,8 +8327,16 @@ auto out = df.sql().execute("SELECT id, sales FROM self WHERE sales > 95");
 ```
 
 ```text
-SQL accessor / prepared statement created
+id  sales
+1   100.0
+2   120.0
 ```
+
+#### Practical Behavior
+
+- `sql()` returns the SQL accessor; it does not execute a statement by itself.
+- Call `.execute(...)` on the accessor when you want a result frame immediately.
+- Use `prepare_sql(...)` when the same query will be executed repeatedly with changing bindings.
 
 
 ### `std`
@@ -8316,22 +8416,22 @@ DataFrame stitch_on(self, std::string_view left_feature, const DataFrame& right,
 #### Parameters
 
 `left_features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    See the signature for the supported argument form.
+    Key features on the left frame used to build a composite match key against the right frame.
 
 `right` : `const DataFrame&`
     When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.
 
 `right_features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    See the signature for the supported argument form.
+    Matching key features on the right frame. Leave empty to reuse the left feature names in the same order.
 
 `right_suffix` : `std::string`
     Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.
 
 `left_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Key feature on the left frame used to match rows against the right frame.
 
 `right_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Matching key feature on the right frame. Leave empty to reuse the left feature name.
 
 #### Returns
 
@@ -8402,7 +8502,7 @@ DataFrame sub(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -8451,9 +8551,9 @@ auto out = df.sub(10);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+-9  90.0   Accra
+-8  110.0  Tema
+-7  80.0   Kumasi
 ```
 
 
@@ -8470,7 +8570,7 @@ DataFrame subtract(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -8519,9 +8619,9 @@ auto out = df.subtract(10);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+-9  90.0   Accra
+-8  110.0  Tema
+-7  80.0   Kumasi
 ```
 
 
@@ -8614,7 +8714,7 @@ static DataFrame tabelize(const pluss::kindle::Catalog& catalog, const pluss::ki
 
 #### What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts a Kindle `Catalog` into a tabular `DataFrame`, preserving stream alignment as rows.
 
 #### Examples
 
@@ -8627,11 +8727,33 @@ auto out = pluss::table::DataFrame::tabelize(catalog);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+sales
+10.0
+20.0
+30.0
 ```
+
+Example 2.
+
+```cpp
+using namespace pluss::kindle::literals;
+auto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});
+pluss::kindle::TabelizePolicy policy;
+auto out = pluss::table::DataFrame::tabelize(catalog, policy);
+```
+
+```text
+sales
+10.0
+20.0
+30.0
+```
+
+#### Practical Behavior
+
+- `tabelize(catalog)` is the explicit bridge from Kindle stream collections into the DataFrame model.
+- Aligned streams become DataFrame features, and stream position becomes row position.
+- Use the policy overload when you want explicit tabelization rules instead of the defaults.
 
 
 ### `tail`
@@ -8645,7 +8767,7 @@ DataFrameView tail(self, std::int64_t n = 5, bool render = true) const
 #### Parameters
 
 `n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
+    Number of trailing rows to keep from the bottom of the frame.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -8673,10 +8795,15 @@ auto out = df.tail(2, false);
 
 ```text
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `tail(n)` preserves the original feature order and returns the last `n` rows.
+- If `n` is larger than the frame height, the whole frame is returned.
+- The returned object is a `DataFrameView`, so it behaves like a lightweight preview slice rather than a deep copy.
 
 
 ### `take`
@@ -8739,10 +8866,10 @@ DataFrameView tally(self, std::string_view feature, std::int64_t top_n = 0, bool
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `top_n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 `dropna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -8805,19 +8932,25 @@ Returns only the timeline-backed features.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"start", pluss::table::Thread(pluss::make_timeline({
+        "2020-01-01T00:00:00Z",
+        "2020-01-02T08:00:00Z",
+    }))},
+    {"end", pluss::table::Thread(pluss::make_timeindex({
+        "2020-01-01T01:30:00Z",
+        "2020-01-02T09:00:00Z",
+    }))},
+    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema"}))},
 });
 
 auto out = df.timeline_features();
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+start                 end
+2020-01-01T00:00:00Z  2020-01-01T01:30:00Z
+2020-01-02T08:00:00Z  2020-01-02T09:00:00Z
 ```
 
 
@@ -8834,7 +8967,7 @@ std::string title(self) const
 #### Parameters
 
 `title` : `std::string`
-    See the signature for the supported argument form.
+    Human-readable title stamp to attach to the returned frame.
 
 #### Returns
 
@@ -8846,7 +8979,7 @@ std::string title(self) const
 
 #### What It Does
 
-Applies `title` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Gets the current frame title or returns a titled copy, depending on the overload.
 
 #### Examples
 
@@ -8859,15 +8992,42 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.title();
+auto out = df.title("sales_report");
 ```
 
 ```text
+out.title():
+sales_report
+
+out.head():
 id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+Example 2.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto titled = df.title("sales_report");
+auto out = titled.title();
+```
+
+```text
+sales_report
+```
+
+#### Practical Behavior
+
+- `title()` with no argument reads the current frame title.
+- `title("...")` returns a titled copy and leaves the source frame unchanged.
+- `title_("...")` mutates the current frame title in place.
 
 
 ### `title_`
@@ -8881,7 +9041,7 @@ DataFrame& title_(self, std::string title)
 #### Parameters
 
 `title` : `std::string`
-    See the signature for the supported argument form.
+    Human-readable title stamp written back onto the current frame.
 
 #### Returns
 
@@ -8890,7 +9050,7 @@ DataFrame& title_(self, std::string title)
 
 #### What It Does
 
-Applies `title_` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Overwrites the current frame title in place.
 
 #### Examples
 
@@ -8901,15 +9061,25 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.title_();
+df.title_("sales_report");
 ```
 
 ```text
+df.title():
+sales_report
+
+df.head():
 id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `title()` with no argument reads the current frame title.
+- `title("...")` returns a titled copy and leaves the source frame unchanged.
+- `title_("...")` mutates the current frame title in place.
 
 
 ### `to_string`
@@ -8965,7 +9135,7 @@ DataFrame to_utc(self, pluss::msharp::RangeView::Of<std::string_view> features) 
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
+    Temporal feature names to convert into UTC timezone representation.
 
 #### Returns
 
@@ -8974,27 +9144,29 @@ DataFrame to_utc(self, pluss::msharp::RangeView::Of<std::string_view> features) 
 
 #### What It Does
 
-This is part of the time-aware surface and expects timeline or time-index semantics.
+Converts selected temporal features into UTC timezone representation.
 
 #### Examples
 
 ```cpp
 auto df = pluss::table::DataFrame({
     {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
+        "2024-01-01 09:10:00",
+        "2024-01-01 09:40:00",
+        "2024-01-01 10:05:00",
     }))},
     {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.to_utc({"ts"});
+auto localized = df.tz_localize({"ts"}, "UTC");
+auto out = localized.to_utc({"ts"});
 ```
 
 ```text
 ts
-2024-01-01T09:00:00Z
-2024-01-01T10:00:00Z
+2024-01-01T09:10:00Z
+2024-01-01T09:40:00Z
+2024-01-01T10:05:00Z
 ```
 
 
@@ -9037,10 +9209,15 @@ auto out = df.top("sales", 2);
 
 ```text
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
-3    90.0  Kumasi
+1   100.0  Accra
 ```
+
+#### Practical Behavior
+
+- `top(feature, n)` sorts descending by the selected feature, keeps nulls last, then returns the first `n` rows.
+- The output rows stay aligned across every feature; this is not a single-column extraction.
+- Use `bottom(...)` when you want the smallest rows instead of the largest ones.
 
 
 ### `transform`
@@ -9060,13 +9237,13 @@ DataFrame transform(self, std::string_view feature, const std::function<Thread(c
 #### Parameters
 
 `fn` : `const std::function<Thread(const Thread&)>&`
-    See the signature for the supported argument form.
+    Thread-to-thread or frame-to-thread transform function, depending on the overload. The returned thread must match the frame case count.
 
 `specs` : `pluss::msharp::RangeView::Of<TransformSpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `feature` : `std::string_view`
-    Name of the source feature used by the operation.
+    Target feature name to rewrite, or output feature name when you use the frame-aware derive overload.
 
 #### Returns
 
@@ -9094,7 +9271,7 @@ auto out = df.transform([](const pluss::table::Thread& thread) { return thread.k
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
+2   110.0  Tema
 3    90.0  Kumasi
 ```
 
@@ -9113,11 +9290,30 @@ auto out = df.transform({{.feature = "sales", .expr = [](const pluss::table::Thr
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
+2   110.0  Tema
 3    90.0  Kumasi
 ```
 
 Example 3.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.transform("sales_plus_10", [](const pluss::table::DataFrame& frame) { return pluss::table::Thread(frame.features("sales").as_series().add(10.0)); });
+```
+
+```text
+id  sales  city    sales_plus_10
+1   100.0  Accra   110.0
+2   120.0  Tema    130.0
+3    90.0  Kumasi  100.0
+```
+
+Example 4.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9132,9 +9328,15 @@ auto out = df.transform("sales", [](const pluss::table::Thread& thread) { return
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
+2   110.0  Tema
 3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `transform(fn)` rewrites every feature with the same thread-level function.
+- `transform(feature, thread_fn)` rewrites one existing feature in place within the returned frame.
+- `transform(feature, frame_fn)` is the derive-style overload: it can create a new feature from the whole frame, as long as the returned thread matches the frame case count.
 
 
 ### `transpose`
@@ -9191,7 +9393,7 @@ DataFrame truediv(self, scalar other) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Scalar divisor or right-hand frame used for elementwise true division.
 
 #### Returns
 
@@ -9200,7 +9402,7 @@ DataFrame truediv(self, scalar other) const
 
 #### What It Does
 
-This applies arithmetic across the compatible numeric payloads in the current object.
+Applies elementwise true division to compatible numeric features.
 
 #### Examples
 
@@ -9220,10 +9422,10 @@ auto out = left.truediv(right);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+id    sales
+0.5   0.909091
+1.0   1.090909
+0.75  0.9
 ```
 
 Example 2.
@@ -9240,10 +9442,16 @@ auto out = df.truediv(10);
 
 ```text
 id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- Scalar `truediv(...)` divides every compatible numeric cell by the supplied scalar.
+- Frame-vs-frame `truediv(...)` divides aligned numeric features row by row.
+- Non-numeric features pass through unchanged in the scalar form and are excluded from numeric combination work.
 
 
 ### `ts`
@@ -9261,10 +9469,10 @@ DataFrameTsAccessor ts(self, std::string_view feature) const
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
+    Feature names to bind into the returned time-series accessor.
 
 `feature` : `std::string_view`
-    Name of the source feature used by the operation.
+    Feature name to bind into the returned time-series accessor.
 
 #### Returns
 
@@ -9273,7 +9481,7 @@ DataFrameTsAccessor ts(self, std::string_view feature) const
 
 #### What It Does
 
-Applies `ts` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Returns the time-series accessor bound to one or more selected features.
 
 #### Examples
 
@@ -9281,20 +9489,25 @@ Example 1.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"ts", pluss::table::Thread(pluss::make_timeline({
+        "2024-01-01T09:10:00Z",
+        "2024-01-01T09:40:00Z",
+        "2024-01-01T10:05:00Z",
+    }))},
+    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.ts();
+auto out = df.ts("load");
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+DataFrameTsAccessor(features=["load"])
 ```
+
+#### Practical Behavior
+
+- `ts(...)` does not materialize a new DataFrame by itself; it returns the time-series accessor bound to the selected features.
+- Use the accessor when you want downstream resampling, lag blocks, rolling blocks, or calendar features on those bound features.
 
 
 ### `tz_convert`
@@ -9311,7 +9524,7 @@ DataFrame tz_convert(self, pluss::msharp::RangeView::Of<std::string_view> featur
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `tz_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Destination timezone name such as `"UTC"` or `"America/Edmonton"`.
 
 #### Returns
 
@@ -9327,20 +9540,22 @@ This is part of the time-aware surface and expects timeline or time-index semant
 ```cpp
 auto df = pluss::table::DataFrame({
     {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
+        "2024-01-01 09:10:00",
+        "2024-01-01 09:40:00",
+        "2024-01-01 10:05:00",
     }))},
     {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.tz_convert({"ts"}, "America/Edmonton");
+auto localized = df.tz_localize({"ts"}, "UTC");
+auto out = localized.tz_convert({"ts"}, "UTC");
 ```
 
 ```text
 ts
-2024-01-01T09:00:00Z
-2024-01-01T10:00:00Z
+2024-01-01T09:10:00Z
+2024-01-01T09:40:00Z
+2024-01-01T10:05:00Z
 ```
 
 
@@ -9358,13 +9573,13 @@ DataFrame tz_localize(self, pluss::msharp::RangeView::Of<std::string_view> featu
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `tz_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Timezone name to attach to naive temporal values.
 
 `fold` : `int`
-    See the signature for the supported argument form.
+    Fold flag used when localizing ambiguous wall-clock times around a DST fall-back transition.
 
 `nonexistent` : `std::string_view`
-    See the signature for the supported argument form.
+    Policy for nonexistent local times, such as `"raise"` or `"shift_forward"`.
 
 #### Returns
 
@@ -9380,20 +9595,21 @@ This is part of the time-aware surface and expects timeline or time-index semant
 ```cpp
 auto df = pluss::table::DataFrame({
     {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
+        "2024-01-01 09:10:00",
+        "2024-01-01 09:40:00",
+        "2024-01-01 10:05:00",
     }))},
     {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.tz_localize({"ts"}, "America/Edmonton", 0, "shift_forward");
+auto out = df.tz_localize({"ts"}, "UTC", 0, "shift_forward");
 ```
 
 ```text
 ts
-2024-01-01T09:00:00Z
-2024-01-01T10:00:00Z
+2024-01-01T09:10:00Z
+2024-01-01T09:40:00Z
+2024-01-01T10:05:00Z
 ```
 
 
@@ -9417,7 +9633,7 @@ DataFrame unify(self, std::string_view left_on, const DataFrame& right, std::str
     Key feature name(s) on the left frame used to match rows during `unify(...)`.
 
 `right` : `const DataFrame&`
-    When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.
+    Right-hand frame whose rows are matched against the left frame by the requested key features.
 
 `right_on` : `pluss::msharp::RangeView::Of<std::string_view>`
     Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.
@@ -9496,11 +9712,16 @@ auto out = left.unify(
 ```
 
 ```text
-OrgDefinedId  midterm  Final Points Grade
-10            71       null
-20            82       88
-30            93       99
+course   OrgDefinedId  midterm  course_code  Username  Final Points Grade
+STAT200  20            82       STAT200      20        88
+STAT300  30            93       STAT300      30        99
 ```
+
+#### Join Semantics
+
+- `unify(...)` matches rows by key values, not by current row order.
+- `how="left"` preserves the left frame row order and row count, while `how="inner"` keeps matched rows only.
+- When right-hand non-key names collide with left-hand names, `right_suffix` is applied only to the right-hand collisions.
 
 
 ### `unique`
@@ -9552,7 +9773,7 @@ DataFrame unique_cases(self, pluss::msharp::RangeView::Of<std::string_view> feat
 #### Parameters
 
 `features` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
+    Optional feature subset used to decide which rows count as duplicates. Leave empty to compare the full row payload.
 
 #### Returns
 
@@ -9567,20 +9788,25 @@ Keeps only the first occurrence of each case label and drops later duplicates.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"campus", pluss::table::Thread(pluss::make_note({"North", "North", "West"}))},
+    {"student", pluss::table::Thread(pluss::make_note({"Ada", "Kojo", "Esi"}))},
+    {"score", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0}))},
 });
 
-auto out = df.unique_cases();
+auto out = df.unique_cases({"campus"});
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+campus  student  score
+North   Ada      88.0
+West    Esi      84.0
 ```
+
+#### Practical Behavior
+
+- `unique_cases(features)` keeps only the first row for each distinct key combination defined by `features`.
+- With no feature list, the full row payload is used as the duplicate key.
+- This is the row-filtering companion to `repeated_cases(...)`.
 
 
 ### `unsqueeze`
@@ -9596,7 +9822,7 @@ Atlas unsqueeze(self, const Thread& depth_labels) const
 #### Parameters
 
 `depth_labels` : `const Thread&`
-    See the signature for the supported argument form.
+    Single depth label to attach to the one-frame atlas produced by `unsqueeze(...)`.
 
 #### Returns
 
@@ -9623,14 +9849,10 @@ auto out = df.unsqueeze();
 
 ```text
 frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
 ```
 
 Example 2.
@@ -9647,16 +9869,21 @@ auto out = df.unsqueeze(labels);
 ```
 
 ```text
-frame0:
-sales
-10.0
-20.0
+depth labels:
+["train"]
 
-frame1:
-sales
-30.0
-40.0
+frame0:
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
 ```
+
+#### Practical Behavior
+
+- `unsqueeze()` wraps one frame into a depth-1 `Atlas`.
+- The `depth_labels` overload lets you attach exactly one depth label to that one-frame atlas.
+- This is useful when downstream APIs expect atlas depth even though you currently have only one frame.
 
 
 ### `update`
@@ -9670,7 +9897,7 @@ DataFrame update(self, const DataFrame& other, bool overwrite = true) const
 #### Parameters
 
 `other` : `const DataFrame&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `overwrite` : `bool`
     When `true`, matching values from the right-hand side overwrite existing left-hand values during update-style operations.
@@ -9782,10 +10009,10 @@ DataFrameView view(self, std::int64_t start, std::int64_t stop, bool render = tr
 #### Parameters
 
 `start` : `std::int64_t`
-    Inclusive starting position of the slice.
+    Slice start position. Negative values count backward from the end of the frame.
 
 `stop` : `std::int64_t`
-    Exclusive ending position of the slice.
+    Slice stop position. Negative values count backward from the end, and `-1` includes the last row.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -9815,8 +10042,13 @@ auto out = df.view(0, 2, false);
 id  sales  city
 1   100.0  Accra
 2   120.0  Tema
-3    90.0  Kumasi
 ```
+
+#### Slice Semantics
+
+- `view(start, stop)` behaves like a positional row slice `[start, stop)`.
+- Negative `start` or `stop` values count backward from the end of the frame.
+- Unlike `slice(...)`, `view(...)` returns a `DataFrameView` wrapper intended for lightweight inspection.
 
 
 ## W
@@ -9834,7 +10066,7 @@ DataFrame where(self, const Thread& bool_mask) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. Rows where the mask is true are kept; rows where it is false are dropped.
 
 #### Returns
 
@@ -9866,6 +10098,12 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
+#### Practical Behavior
+
+- `where(mask)` keeps rows where the boolean mask is true and drops the rest.
+- The mask length must match the frame case count exactly.
+- Use `put(...)` when you want masked replacement inside one feature instead of masked row filtering.
+
 
 ### `window`
 
@@ -9878,10 +10116,10 @@ DataFrame window(self, pluss::msharp::RangeView::Of<WindowSpec> specs, bool keep
 #### Parameters
 
 `specs` : `pluss::msharp::RangeView::Of<WindowSpec>`
-    See the signature for the supported argument form.
+    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `keep_input` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the original input features are preserved and engineered window outputs are appended. When `false`, only the engineered outputs are returned.
 
 #### Returns
 
@@ -9901,15 +10139,21 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.window({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, true);
+auto out = df.window({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, false);
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+sales_roll
+100.0
+110.0
+105.0
 ```
+
+#### Practical Behavior
+
+- `window(...)` engineers one or more derived features from rolling/window operations described by `WindowSpec`.
+- `keep_input=false` returns only the engineered outputs, which is useful for model-matrix style pipelines.
+- `rolling(...)` is the alias that delegates to the same frame-level implementation.
 
 
 ### `with_cases`

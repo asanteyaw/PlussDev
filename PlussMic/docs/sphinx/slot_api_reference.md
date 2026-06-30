@@ -88,7 +88,7 @@ Slot concat(self, const Slot& other) const
 #### Parameters
 
 `other` : `const Slot&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -338,7 +338,7 @@ Slot push(self, const Value& value) const
 #### Parameters
 
 `value` : `const Value&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -374,7 +374,7 @@ Slot& push_(self, const Value& value)
 #### Parameters
 
 `value` : `const Value&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 

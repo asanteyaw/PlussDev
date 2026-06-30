@@ -5,7 +5,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cmath>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -540,6 +539,8 @@ bool show_inhouse_html_window(const std::string& title,
   render_cfg.draw_top_bar = false;
   render_cfg.draw_scrollbars = false;
   window::HtmlRenderStats render_stats{};
+  window::HtmlLayoutCache layout_cache;
+  render_cfg.layout_cache = &layout_cache;
   window::HtmlScrollModel scroll_model;
   std::vector<window::HtmlHitRegion> hit_regions;
   hit_regions.reserve(512);
@@ -564,8 +565,13 @@ bool show_inhouse_html_window(const std::string& title,
     return false;
   }
   const double backing_scale = shell->backing_scale_factor();
+  std::unordered_map<std::string, window::PointI> last_rendered_table_offsets;
 
-  auto render_current = [&](const window::SizeI target_size) -> bool {
+  auto render_current = [&](const window::SizeI target_size,
+                            const bool table_scroll_damage_only) -> bool {
+    if (!table_scroll_damage_only) {
+      layout_cache.clear();
+    }
     auto cfg = runtime_cfg;
     cfg.canvas_size = window::SizeI{
         std::max(1, static_cast<int>(std::lround(target_size.width * backing_scale))),
@@ -614,13 +620,73 @@ bool show_inhouse_html_window(const std::string& title,
       render_stats.document_vertical_thumb_rect = {};
     }
     scroll_model.update_metrics(render_stats);
-    if (!runtime.submit(window::scale_scene(scene, backing_scale))) {
+
+    std::optional<window::RectI> table_damage;
+    if (table_scroll_damage_only && has_table) {
+      for (const auto& region : render_stats.table_scroll_regions) {
+        const auto current = table_offsets.find(region.target);
+        const auto previous = last_rendered_table_offsets.find(region.target);
+        if (current == table_offsets.end() ||
+            (previous != last_rendered_table_offsets.end() &&
+             current->second.x == previous->second.x &&
+             current->second.y == previous->second.y)) {
+          continue;
+        }
+        window::RectI rect = region.viewport_rect;
+        rect.x = std::max(0, rect.x - 2);
+        rect.y = std::max(0, rect.y - 2);
+        rect.width = std::min(target_size.width - rect.x, rect.width + 4);
+        rect.height = std::min(target_size.height - rect.y, rect.height + 4);
+        if (rect.empty()) {
+          continue;
+        }
+        if (!table_damage.has_value()) {
+          table_damage = rect;
+        } else {
+          const int x0 = std::min(table_damage->x, rect.x);
+          const int y0 = std::min(table_damage->y, rect.y);
+          const int x1 = std::max(
+              table_damage->x + table_damage->width, rect.x + rect.width);
+          const int y1 = std::max(
+              table_damage->y + table_damage->height, rect.y + rect.height);
+          table_damage = window::RectI{x0, y0, x1 - x0, y1 - y0};
+        }
+      }
+    }
+
+    window::Scene damage_scene;
+    const window::Scene* scene_to_submit = &scene;
+    if (table_damage.has_value()) {
+      window::Color clear_color = runtime_cfg.background;
+      for (const auto& command : scene.commands()) {
+        if (const auto* clear = std::get_if<window::ClearCommand>(&command);
+            clear != nullptr) {
+          clear_color = clear->color;
+          break;
+        }
+      }
+      damage_scene.add(window::FillRectCommand{*table_damage, clear_color});
+      damage_scene.add(window::SetClipRectCommand{*table_damage});
+      for (const auto& command : scene.commands()) {
+        if (std::get_if<window::ClearCommand>(&command) == nullptr) {
+          damage_scene.add(command);
+        }
+      }
+      damage_scene.add(window::ClearClipRectCommand{});
+      scene_to_submit = &damage_scene;
+    }
+
+    if (!runtime.submit(window::scale_scene(*scene_to_submit, backing_scale))) {
       return false;
     }
-    return shell->present(runtime.canvas());
+    const bool presented = shell->present(runtime.canvas());
+    if (presented) {
+      last_rendered_table_offsets = table_offsets;
+    }
+    return presented;
   };
 
-  if (!render_current(size)) {
+  if (!render_current(size, false)) {
     shell->close();
     return false;
   }
@@ -671,6 +737,7 @@ bool show_inhouse_html_window(const std::string& title,
   while (!closed) {
     bool resized = false;
     bool needs_render = false;
+    bool table_scroll_damage_only = true;
     window::SizeI next_size = size;
 
     for (const auto& event : shell->poll_events()) {
@@ -680,10 +747,12 @@ bool show_inhouse_html_window(const std::string& title,
                  event.size.width > 0 && event.size.height > 0) {
         next_size = event.size;
         resized = true;
+        table_scroll_damage_only = false;
       } else if (event.kind == window::ShellEventKind::ShortcutCommand &&
                  event.note == "save_snapshot") {
         (void)save_as("png");
       } else if (event.kind == window::ShellEventKind::ShortcutCommand) {
+        table_scroll_damage_only = false;
         if (event.note.rfind("save_as:", 0) == 0) {
           (void)save_as(event.note.substr(8));
         } else if (event.note == "zoom_in") {
@@ -723,6 +792,7 @@ bool show_inhouse_html_window(const std::string& title,
                 }) ||
             needs_render;
       } else if (event.kind == window::ShellEventKind::PointerDown) {
+        table_scroll_damage_only = false;
         const int px = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.x)));
         const int py = clamp_nonneg_int64(static_cast<std::int64_t>(std::llround(event.y)));
         bool consumed = scroll_model.pointer_down(window::PointI{px, py});
@@ -804,6 +874,7 @@ bool show_inhouse_html_window(const std::string& title,
       } else if (event.kind == window::ShellEventKind::PointerUp) {
         scroll_model.pointer_up();
       } else if (event.kind == window::ShellEventKind::TextInput) {
+        table_scroll_damage_only = false;
         if (!active_input_target.empty()) {
           std::string& value = input_values[active_input_target];
           if (event.note == "__backspace__") {
@@ -833,7 +904,7 @@ bool show_inhouse_html_window(const std::string& title,
     animation_clock = animation_now;
     needs_render = scroll_model.advance_animation(animation_elapsed) || needs_render;
     if (needs_render) {
-      if (!render_current(size)) {
+      if (!render_current(size, table_scroll_damage_only)) {
         shell->close();
         return false;
       }

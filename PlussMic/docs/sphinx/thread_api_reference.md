@@ -1043,7 +1043,7 @@ Thread compare(self, const char* other, ThreadBinaryCompareOp op) const
 #### Parameters
 
 `other` : `const char*`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1099,7 +1099,7 @@ Thread compare(self, const pluss::Note& other, ThreadBinaryCompareOp op) const
 #### Parameters
 
 `other` : `const pluss::Note&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1155,7 +1155,7 @@ Thread compare(self, const pluss::Series& other, ThreadBinaryCompareOp op) const
 #### Parameters
 
 `other` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1211,7 +1211,7 @@ Thread compare(self, const pluss::TimeIndex& other, ThreadBinaryCompareOp op) co
 #### Parameters
 
 `other` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1267,7 +1267,7 @@ Thread compare(self, const pluss::Timeline& other, ThreadBinaryCompareOp op) con
 #### Parameters
 
 `other` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1323,7 +1323,7 @@ Thread compare(self, const Thread& other, ThreadBinaryCompareOp op) const
 #### Parameters
 
 `other` : `const Thread&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1380,7 +1380,7 @@ Thread compare(self, scalar other, ThreadBinaryCompareOp op) const
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1436,7 +1436,7 @@ Thread compare(self, std::string_view other, ThreadBinaryCompareOp op) const
 #### Parameters
 
 `other` : `std::string_view`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryCompareOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -1576,7 +1576,7 @@ scalar corr(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pea
 #### Parameters
 
 `other` : `const Thread&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `method` : `ThreadCorrMethod`
     See the signature for the supported argument form.
@@ -1874,7 +1874,7 @@ Thread distinct(self, bool dropna = true) const
 #### Parameters
 
 `dropna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 #### Returns
 
@@ -2069,7 +2069,7 @@ Thread fillna(self, const char* value) const
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2112,7 +2112,7 @@ Thread fillna(self, const pluss::TimeIndex& value) const
 #### Parameters
 
 `value` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2155,7 +2155,7 @@ Thread fillna(self, const pluss::Timeline& value) const
 #### Parameters
 
 `value` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2198,7 +2198,7 @@ Thread fillna(self, scalar value) const
 #### Parameters
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2241,7 +2241,7 @@ Thread fillna(self, std::string_view value) const
 #### Parameters
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2284,7 +2284,7 @@ Thread& fillna_(self, const char* value)
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2327,7 +2327,7 @@ Thread& fillna_(self, const pluss::TimeIndex& value)
 #### Parameters
 
 `value` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2370,7 +2370,7 @@ Thread& fillna_(self, const pluss::Timeline& value)
 #### Parameters
 
 `value` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2413,7 +2413,7 @@ Thread& fillna_(self, scalar value)
 #### Parameters
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2456,7 +2456,7 @@ Thread& fillna_(self, std::string_view value)
 #### Parameters
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2499,7 +2499,7 @@ Thread filter(self, const pluss::Series& bool_mask) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 #### Returns
 
@@ -3322,7 +3322,7 @@ Thread numeric_binary(self, const Thread& other, ThreadBinaryMathOp op) const
 #### Parameters
 
 `other` : `const Thread&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryMathOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -3365,7 +3365,7 @@ Thread numeric_binary(self, scalar other, ThreadBinaryMathOp op, bool reverse = 
 #### Parameters
 
 `other` : `scalar`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `op` : `ThreadBinaryMathOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
@@ -3411,10 +3411,10 @@ Thread put(self, const pluss::Series& bool_mask, const char* value) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3456,10 +3456,10 @@ Thread put(self, const pluss::Series& bool_mask, const Thread& value) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `const Thread&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3501,10 +3501,10 @@ Thread put(self, const pluss::Series& bool_mask, pluss::null_t value) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `pluss::null_t`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3546,10 +3546,10 @@ Thread put(self, const pluss::Series& bool_mask, scalar value) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3591,10 +3591,10 @@ Thread put(self, const pluss::Series& bool_mask, std::string_view value) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3636,10 +3636,10 @@ Thread put(self, const Thread& bool_mask, const char* value) const
 #### Parameters
 
 `bool_mask` : `const Thread&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3681,10 +3681,10 @@ Thread put(self, const Thread& bool_mask, const Thread& value) const
 #### Parameters
 
 `bool_mask` : `const Thread&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `const Thread&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3726,10 +3726,10 @@ Thread put(self, const Thread& bool_mask, pluss::null_t value) const
 #### Parameters
 
 `bool_mask` : `const Thread&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `pluss::null_t`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3771,10 +3771,10 @@ Thread put(self, const Thread& bool_mask, scalar value) const
 #### Parameters
 
 `bool_mask` : `const Thread&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3816,10 +3816,10 @@ Thread put(self, const Thread& bool_mask, std::string_view value) const
 #### Parameters
 
 `bool_mask` : `const Thread&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -5580,7 +5580,7 @@ Thread shift(self, std::int64_t periods = 1) const
 #### Parameters
 
 `periods` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.
 
 #### Returns
 
@@ -6026,10 +6026,10 @@ DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool rende
 #### Parameters
 
 `top_n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 `dropna` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.

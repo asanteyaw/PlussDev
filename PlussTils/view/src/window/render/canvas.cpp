@@ -1,5 +1,6 @@
 #include "pluss/tils/view/window/canvas.h"
 
+#include <algorithm>
 #include <limits>
 
 namespace pluss::view::window {
@@ -45,6 +46,62 @@ void PixelCanvas::clear(const Color color) noexcept {
     rgba_[index + 1] = color.g;
     rgba_[index + 2] = color.b;
     rgba_[index + 3] = color.a;
+  }
+}
+
+void PixelCanvas::fill_rect(RectI rect, const Color color) noexcept {
+  if (empty() || rect.empty()) {
+    return;
+  }
+  const int x0 = std::clamp(rect.x, 0, size_.width);
+  const int y0 = std::clamp(rect.y, 0, size_.height);
+  const int x1 = std::clamp(rect.x + rect.width, 0, size_.width);
+  const int y1 = std::clamp(rect.y + rect.height, 0, size_.height);
+  if (x1 <= x0 || y1 <= y0) {
+    return;
+  }
+
+  const std::size_t row_stride = static_cast<std::size_t>(size_.width) * kChannels;
+  const std::size_t start_x = static_cast<std::size_t>(x0) * kChannels;
+  const std::size_t span = static_cast<std::size_t>(x1 - x0) * kChannels;
+  if (color.a == 255) {
+    for (int y = y0; y < y1; ++y) {
+      std::uint8_t* pixel =
+          rgba_.data() + static_cast<std::size_t>(y) * row_stride + start_x;
+      std::uint8_t* const end = pixel + span;
+      while (pixel < end) {
+        pixel[0] = color.r;
+        pixel[1] = color.g;
+        pixel[2] = color.b;
+        pixel[3] = color.a;
+        pixel += kChannels;
+      }
+    }
+    return;
+  }
+
+  const auto src_a = static_cast<std::uint16_t>(color.a);
+  const auto inv_a = static_cast<std::uint16_t>(255 - color.a);
+  for (int y = y0; y < y1; ++y) {
+    std::uint8_t* pixel =
+        rgba_.data() + static_cast<std::size_t>(y) * row_stride + start_x;
+    std::uint8_t* const end = pixel + span;
+    while (pixel < end) {
+      pixel[0] = static_cast<std::uint8_t>(
+          (static_cast<std::uint16_t>(color.r) * src_a +
+           static_cast<std::uint16_t>(pixel[0]) * inv_a) /
+          255);
+      pixel[1] = static_cast<std::uint8_t>(
+          (static_cast<std::uint16_t>(color.g) * src_a +
+           static_cast<std::uint16_t>(pixel[1]) * inv_a) /
+          255);
+      pixel[2] = static_cast<std::uint8_t>(
+          (static_cast<std::uint16_t>(color.b) * src_a +
+           static_cast<std::uint16_t>(pixel[2]) * inv_a) /
+          255);
+      pixel[3] = 255;
+      pixel += kChannels;
+    }
   }
 }
 

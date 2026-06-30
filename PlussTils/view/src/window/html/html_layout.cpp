@@ -43,6 +43,7 @@ struct ResolvedStyle {
   int grid_min_column_width{0};
   std::string display{"block"};
   std::string flex_wrap{"nowrap"};
+  std::string justify_content{"flex-start"};
   std::string text_align{"left"};
   std::string white_space{"normal"};
   std::string text_transform{"none"};
@@ -57,6 +58,7 @@ struct ResolvedStyle {
   int sticky_top_px{0};
   bool sticky_left_set{false};
   bool sticky_top_set{false};
+  bool margin_left_auto{false};
   std::string font_family{};
   std::string position{"static"};
   bool has_background{false};
@@ -988,6 +990,8 @@ void apply_style_property(ResolvedStyle& style,
     style.font_weight = parse_font_weight(val, style.font_weight);
   } else if (property == "margin") {
     style.margin = clamp_nonneg(parse_css_length_px(first_token, style.font_size));
+  } else if (property == "margin-left") {
+    style.margin_left_auto = val == "auto";
   } else if (property == "padding") {
     style.padding = clamp_nonneg(parse_css_length_px(first_token, style.font_size));
   } else if (property == "gap" || property == "column-gap" || property == "row-gap") {
@@ -1042,6 +1046,8 @@ void apply_style_property(ResolvedStyle& style,
     style.position = val;
   } else if (property == "flex-wrap") {
     style.flex_wrap = val;
+  } else if (property == "justify-content") {
+    style.justify_content = val;
   } else if (property == "text-align") {
     style.text_align = val;
   } else if (property == "white-space") {
@@ -1136,7 +1142,7 @@ void apply_style_property(ResolvedStyle& style,
   } else if (property == "right" || property == "bottom" || property == "overflow" || property == "overflow-x" ||
              property == "overflow-y" || property == "cursor" || property == "z-index" ||
              property == "backdrop-filter" || property == "letter-spacing" || property == "user-select" ||
-             property == "font-variant-numeric" || property == "justify-content" || property == "align-items") {
+             property == "font-variant-numeric" || property == "align-items") {
     // Parsed/ignored for now.
   } else if (property.size() > 2 && property[0] == '-' && property[1] == '-') {
     // CSS custom property; handled through document-level variable store.
@@ -1338,6 +1344,7 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   style.sticky_top_px = 0;
   style.sticky_left_set = false;
   style.sticky_top_set = false;
+  style.margin_left_auto = false;
   style.font_family.clear();
   style.position = "static";
   style.has_linear_gradient = false;
@@ -1346,6 +1353,7 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   style.gradient_end = Color::rgba(245, 246, 248, 255);
   style.display = (node.kind == HtmlNodeKind::Text) ? "inline" : "block";
   style.flex_wrap = "nowrap";
+  style.justify_content = "flex-start";
   style.white_space = "normal";
   if (style.text_transform.empty()) style.text_transform = "none";
   style.border_color = Color::rgba(208, 215, 222, 255);
@@ -1425,6 +1433,7 @@ void apply_style_property(ResolvedStyle& style, std::string_view key, std::strin
   if (style.display.empty()) style.display = "block";
   if (style.position.empty()) style.position = "static";
   if (style.flex_wrap.empty()) style.flex_wrap = "nowrap";
+  if (style.justify_content.empty()) style.justify_content = "flex-start";
   if (style.white_space.empty()) style.white_space = "normal";
   if (style.text_transform.empty()) style.text_transform = "none";
   style.gap = std::max(0, style.gap);
@@ -1515,13 +1524,18 @@ void collect_table_rows_recursive(const HtmlNode& node,
     if (style.display == "flex") {
       const int gap = std::max(0, style.gap);
       int sum = 0;
-      for (std::size_t i = 0; i < node.children.size(); ++i) {
+      bool has_child = false;
+      for (const auto& child : node.children) {
+        if (child.kind == HtmlNodeKind::Text && trim_copy(child.text).empty()) {
+          continue;
+        }
         const int child_w =
-            estimate_node_preferred_width(document, node.children[i], lineage, &style, cap_width, viewport_width);
-        if (i > 0) {
+            estimate_node_preferred_width(document, child, lineage, &style, cap_width, viewport_width);
+        if (has_child) {
           sum += gap;
         }
         sum += child_w;
+        has_child = true;
       }
       preferred = style.flex_wrap == "nowrap" ? sum : std::min(sum, cap_width);
     } else {
@@ -1689,6 +1703,14 @@ void collect_table_rows_recursive(const HtmlNode& node,
   const int resolved_outer_width = std::max(min_width, explicit_width > 0 ? explicit_width : width);
   const int inner_width = std::max(40, resolved_outer_width - (margin + padding + border) * 2);
 
+  // A fixed-height scrolling table does not need every cell measured during
+  // the parent's height pass. The render pass computes its scroll geometry;
+  // measuring all rows here duplicated that work on every scroll frame.
+  if (style.explicit_height > 0) {
+    return (margin * 2) + (padding * 2) + (border * 2) +
+           std::max(style.explicit_height, style.min_height);
+  }
+
   const auto rows = extract_table_rows(node, lineage);
   if (rows.empty()) {
     const int empty_h = std::max(style.explicit_height, 40);
@@ -1801,14 +1823,23 @@ void collect_table_rows_recursive(const HtmlNode& node,
     } else if (style.display == "flex") {
       const int gap = std::max(0, style.gap);
       const bool wrap = style.flex_wrap != "nowrap";
+      std::vector<const HtmlNode*> flex_children;
+      flex_children.reserve(node.children.size());
+      for (const auto& child : node.children) {
+        if (child.kind != HtmlNodeKind::Text || !trim_copy(child.text).empty()) {
+          flex_children.push_back(&child);
+        }
+      }
 
       lineage.push_back(&node);
       int row_h = 0;
       int row_x = 0;
       int consumed_h = 0;
-      const int fallback_w = std::max(96, content_width / std::max(1, static_cast<int>(node.children.size())));
+      const int fallback_w =
+          std::max(96, content_width / std::max(1, static_cast<int>(flex_children.size())));
 
-      for (const auto& child : node.children) {
+      for (const HtmlNode* child_ptr : flex_children) {
+        const auto& child = *child_ptr;
         const ResolvedStyle child_style = resolve_style(document, child, lineage, &style, viewport_width);
         int child_w = resolve_length_px(child_style.explicit_width, child_style.explicit_width_ratio, content_width);
         if (child_w <= 0) child_w = resolve_length_px(child_style.min_width, child_style.min_width_ratio, content_width);
@@ -1886,6 +1917,61 @@ void draw_rect_fill(Scene& scene, const RectI rect, const Color color, const int
     scene.add(FillRoundedRectCommand{rect, radius, color});
   } else {
     scene.add(FillRectCommand{rect, color});
+  }
+}
+
+void mask_rounded_viewport_corners(Scene& scene,
+                                   const RectI rect,
+                                   const int radius,
+                                   const Color surround,
+                                   const bool top,
+                                   const bool bottom) {
+  const int r = std::max(0, std::min(radius, std::min(rect.width, rect.height) / 2));
+  if (rect.empty() || r <= 0 || (!top && !bottom)) {
+    return;
+  }
+
+  constexpr double kHalfPi = 1.57079632679489661923;
+  constexpr int kSegments = 8;
+  const int right = rect.x + rect.width;
+  const int lower = rect.y + rect.height;
+  const auto corner = [&](const PointI outer,
+                          const PointI center,
+                          const double start_angle,
+                          const double angle_delta) {
+    std::vector<PointI> points;
+    points.reserve(kSegments + 2);
+    points.push_back(outer);
+    for (int step = 0; step <= kSegments; ++step) {
+      const double progress = static_cast<double>(step) / static_cast<double>(kSegments);
+      const double angle = start_angle + angle_delta * progress;
+      points.push_back(PointI{
+          center.x + static_cast<int>(std::lround(std::cos(angle) * r)),
+          center.y + static_cast<int>(std::lround(std::sin(angle) * r)),
+      });
+    }
+    scene.add(FillPolygonCommand{std::move(points), surround});
+  };
+
+  if (top) {
+    corner(PointI{rect.x, rect.y},
+           PointI{rect.x + r, rect.y + r},
+           -kHalfPi,
+           -kHalfPi);
+    corner(PointI{right, rect.y},
+           PointI{right - r, rect.y + r},
+           -kHalfPi,
+           kHalfPi);
+  }
+  if (bottom) {
+    corner(PointI{rect.x, lower},
+           PointI{rect.x + r, lower - r},
+           kHalfPi,
+           kHalfPi);
+    corner(PointI{right, lower},
+           PointI{right - r, lower - r},
+           kHalfPi,
+           -kHalfPi);
   }
 }
 
@@ -2537,7 +2623,53 @@ int render_table(Scene& scene,
   const int content_x = outer_x + border + padding;
   const int content_y = outer_y + border + padding;
   const int content_w = std::max(40, outer_w - (border + padding) * 2);
-  const TableColumnPlan plan = build_table_column_plan(rows, style, content_w);
+  std::size_t column_count = 0;
+  for (const auto& row : rows) {
+    column_count = std::max(column_count, row.cells.size());
+  }
+
+  TableColumnPlan plan;
+  std::vector<int> row_heights;
+  bool geometry_cache_hit = false;
+  if (render_config.layout_cache != nullptr) {
+    const auto cached = render_config.layout_cache->tables.find(table_target);
+    if (cached != render_config.layout_cache->tables.end()) {
+      const auto& entry = cached->second;
+      geometry_cache_hit =
+          entry.node_identity == reinterpret_cast<std::uintptr_t>(&node) &&
+          entry.viewport_width == viewport_width &&
+          entry.content_width == content_w &&
+          entry.row_count == rows.size() &&
+          entry.column_count == column_count &&
+          entry.row_heights.size() == rows.size();
+      if (geometry_cache_hit) {
+        plan.source_indices = entry.source_indices;
+        plan.widths = entry.column_widths;
+        row_heights = entry.row_heights;
+      }
+    }
+  }
+  if (!geometry_cache_hit) {
+    plan = build_table_column_plan(rows, style, content_w);
+    row_heights.reserve(rows.size());
+    for (const auto& row : rows) {
+      row_heights.push_back(
+          measure_table_row_height(document, row, plan, style, viewport_width));
+    }
+    if (render_config.layout_cache != nullptr) {
+      render_config.layout_cache->tables[table_target] =
+          HtmlTableGeometryCacheEntry{
+              .node_identity = reinterpret_cast<std::uintptr_t>(&node),
+              .viewport_width = viewport_width,
+              .content_width = content_w,
+              .row_count = rows.size(),
+              .column_count = column_count,
+              .source_indices = plan.source_indices,
+              .column_widths = plan.widths,
+              .row_heights = row_heights,
+          };
+    }
+  }
   int row_total_w = 0;
   for (const int w : plan.widths) row_total_w += w;
   row_total_w = std::max(40, row_total_w);
@@ -2592,12 +2724,12 @@ int render_table(Scene& scene,
 
   const int viewport_h = std::max(24, outer_h - (border + padding) * 2);
   const RectI viewport_clip{content_x, content_y, content_w, viewport_h};
-  std::vector<int> row_heights;
-  row_heights.reserve(rows.size());
+  const Color viewport_surround =
+      parent_style != nullptr && parent_style->has_background
+          ? parent_style->background_color
+          : style.background_color;
   int content_total_h = 0;
-  for (const auto& row : rows) {
-    const int row_h = measure_table_row_height(document, row, plan, style, viewport_width);
-    row_heights.push_back(row_h);
+  for (const int row_h : row_heights) {
     content_total_h += row_h;
   }
   const bool has_header_row =
@@ -2744,7 +2876,15 @@ int render_table(Scene& scene,
     const Color fill = header_row ? Color::rgba(235, 240, 246, 255)
                                   : ((r % 2 == 0) ? Color::rgba(255, 255, 255, 255)
                                                   : Color::rgba(248, 250, 252, 255));
-    scene.add(FillRectCommand{RectI{table_origin_x, row_y, row_total_w, row_h}, fill});
+    if (header_row && row_y == content_y) {
+      const int header_radius = std::max(0, std::min(style.border_radius, row_h / 2));
+      draw_rect_fill(scene, RectI{content_x, row_y, content_w, row_h}, fill, header_radius);
+      if (header_radius > 0 && row_h > header_radius) {
+        scene.add(FillRectCommand{RectI{content_x, row_y + header_radius, content_w, row_h - header_radius}, fill});
+      }
+    } else {
+      scene.add(FillRectCommand{RectI{table_origin_x, row_y, row_total_w, row_h}, fill});
+    }
     scene.add(LineCommand{PointI{table_origin_x, row_y},
                           PointI{table_origin_x + row_total_w, row_y},
                           1,
@@ -2780,6 +2920,11 @@ int render_table(Scene& scene,
       if (cell_style.has_background) {
         draw_style_fill(scene, RectI{cell_x + 1, row_y + 1, std::max(1, cell_w - 2), std::max(1, row_h - 2)}, cell_style);
       }
+      const int text_block_h =
+          std::max(1, static_cast<int>(wrapped.size())) * cell_style.line_height;
+      const int text_y = header_row
+                             ? row_y + cell_padding
+                             : row_y + std::max(cell_padding, (row_h - text_block_h) / 2);
       draw_text_lines(scene,
                       wrapped,
                       cell_style.font_size,
@@ -2787,7 +2932,7 @@ int render_table(Scene& scene,
                       cell_style.font_family,
                       cell_style.text_color,
                       cell_x + cell_padding,
-                      row_y + cell_padding,
+                      text_y,
                       cell_style.line_height,
                       cell_style.text_align,
                       text_max_w);
@@ -2842,6 +2987,11 @@ int render_table(Scene& scene,
               RectI{sticky_x + 1, row_y + 1, std::max(1, sticky_w - 2), std::max(1, row_h - 2)},
               cell_style);
         }
+        const int text_block_h =
+            std::max(1, static_cast<int>(wrapped.size())) * cell_style.line_height;
+        const int text_y = header_row
+                               ? row_y + cell_padding
+                               : row_y + std::max(cell_padding, (row_h - text_block_h) / 2);
         draw_text_lines(scene,
                         wrapped,
                         cell_style.font_size,
@@ -2849,7 +2999,7 @@ int render_table(Scene& scene,
                         cell_style.font_family,
                         cell_style.text_color,
                         sticky_x + cell_padding,
-                        row_y + cell_padding,
+                        text_y,
                         cell_style.line_height,
                         cell_style.text_align,
                         text_max_w);
@@ -2869,8 +3019,8 @@ int render_table(Scene& scene,
       }
       scene.add(LineCommand{PointI{content_x + sticky_total_w, row_y},
                             PointI{content_x + sticky_total_w, row_y + row_h},
-                            1,
-                            Color::rgba(184, 193, 204, 255)});
+                            2,
+                            Color::rgba(79, 137, 148, 255)});
     }
   };
 
@@ -2879,6 +3029,8 @@ int render_table(Scene& scene,
       scene.add(SetClipRectCommand{RectI{content_x, content_y, content_w, header_h}});
     }
     render_row(0, content_y);
+    mask_rounded_viewport_corners(
+        scene, viewport_clip, style.border_radius, viewport_surround, true, false);
     if (render_config.clip_table_viewport) {
       scene.add(ClearClipRectCommand{});
     }
@@ -2927,6 +3079,8 @@ int render_table(Scene& scene,
         cursor_y += row_h;
       }
     }
+    mask_rounded_viewport_corners(
+        scene, viewport_clip, style.border_radius, viewport_surround, false, true);
     if (render_config.clip_table_viewport) {
       scene.add(ClearClipRectCommand{});
     }
@@ -3263,28 +3417,85 @@ int render_node(Scene& scene,
   } else if (style.display == "flex") {
     const int gap = std::max(0, style.gap);
     const bool wrap = style.flex_wrap != "nowrap";
-    const int fallback_w = std::max(96, content_w / std::max(1, static_cast<int>(node.children.size())));
-
-    int row_x = 0;
-    int row_y = content_y;
-    int row_h = 0;
+    std::vector<const HtmlNode*> flex_children;
+    flex_children.reserve(node.children.size());
     for (const auto& child : node.children) {
-      const ResolvedStyle child_style = resolve_style(document, child, lineage, &style, viewport_width);
-      int child_w = resolve_length_px(child_style.explicit_width, child_style.explicit_width_ratio, content_w);
-      if (child_w <= 0) child_w = resolve_length_px(child_style.min_width, child_style.min_width_ratio, content_w);
+      if (child.kind != HtmlNodeKind::Text || !trim_copy(child.text).empty()) {
+        flex_children.push_back(&child);
+      }
+    }
+    const int fallback_w =
+        std::max(96, content_w / std::max(1, static_cast<int>(flex_children.size())));
+
+    std::vector<int> child_widths;
+    std::vector<bool> child_auto_left;
+    child_widths.reserve(flex_children.size());
+    child_auto_left.reserve(flex_children.size());
+    int total_child_width = 0;
+    bool has_auto_left = false;
+    for (const HtmlNode* child_ptr : flex_children) {
+      const auto& child = *child_ptr;
+      const ResolvedStyle child_style =
+          resolve_style(document, child, lineage, &style, viewport_width);
+      int child_w =
+          resolve_length_px(child_style.explicit_width, child_style.explicit_width_ratio, content_w);
       if (child_w <= 0) {
-        child_w = estimate_node_preferred_width(document, child, lineage, &style, content_w, viewport_width);
+        child_w =
+            resolve_length_px(child_style.min_width, child_style.min_width_ratio, content_w);
+      }
+      if (child_w <= 0) {
+        child_w = estimate_node_preferred_width(
+            document, child, lineage, &style, content_w, viewport_width);
       }
       if (child_w <= 0) child_w = fallback_w;
       child_w = std::max(80, child_w);
       if (wrap) {
         child_w = std::min(child_w, std::max(80, content_w));
       }
+      child_widths.push_back(child_w);
+      child_auto_left.push_back(child_style.margin_left_auto);
+      has_auto_left = has_auto_left || child_style.margin_left_auto;
+      total_child_width += child_w;
+    }
+
+    int resolved_gap = gap;
+    int leading_space = 0;
+    const int base_gap_total =
+        gap * std::max(0, static_cast<int>(flex_children.size()) - 1);
+    int free_space = std::max(0, content_w - total_child_width - base_gap_total);
+    if (!wrap && !has_auto_left) {
+      if (style.justify_content == "flex-end" || style.justify_content == "end") {
+        leading_space = free_space;
+      } else if (style.justify_content == "center") {
+        leading_space = free_space / 2;
+      } else if (style.justify_content == "space-between" && flex_children.size() > 1) {
+        resolved_gap =
+            gap + free_space / (static_cast<int>(flex_children.size()) - 1);
+        free_space = 0;
+      }
+    }
+
+    int row_x = 0;
+    int row_y = content_y;
+    int row_h = 0;
+    for (std::size_t index = 0; index < flex_children.size(); ++index) {
+      const auto& child = *flex_children[index];
+      const int child_w = child_widths[index];
 
       if (wrap && row_x > 0 && row_x + child_w > content_w) {
-        row_y += row_h + gap;
+        row_y += row_h + resolved_gap;
         row_x = 0;
         row_h = 0;
+      }
+      if (wrap && child_auto_left[index]) {
+        row_x = std::max(row_x, content_w - child_w);
+      }
+      if (!wrap && index == 0) {
+        row_x += leading_space;
+      }
+      if (!wrap && child_auto_left[index]) {
+        row_x += free_space;
+        free_space = 0;
       }
 
       const int child_h = measure_node_height(document, child, child_w, lineage, &style, viewport_width);
@@ -3300,7 +3511,7 @@ int render_node(Scene& scene,
                         &style,
                         viewport_width);
       row_h = std::max(row_h, child_h);
-      row_x += child_w + gap;
+      row_x += child_w + resolved_gap;
       if (row_y + row_h >= bottom) {
         break;
       }

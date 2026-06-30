@@ -275,16 +275,7 @@ void fill_rect(PixelCanvas& canvas, const RectI rect, const Color color, const s
     return;
   }
 
-  const bool opaque = color.a == 255;
-  for (int y = bounded.y; y < (bounded.y + bounded.height); ++y) {
-    for (int x = bounded.x; x < (bounded.x + bounded.width); ++x) {
-      if (opaque) {
-        canvas.set_pixel(PointI{x, y}, color);
-      } else {
-        canvas.blend_pixel(PointI{x, y}, color, color.a);
-      }
-    }
-  }
+  canvas.fill_rect(bounded, color);
 }
 
 [[nodiscard]] constexpr int clamp_corner_radius(const RectI rect, const int radius) {
@@ -362,8 +353,46 @@ void fill_rounded_rect(PixelCanvas& canvas,
   }
 
   const int r = clamp_corner_radius(rect, radius);
-  for (int y = bounded.y; y < (bounded.y + bounded.height); ++y) {
-    for (int x = bounded.x; x < (bounded.x + bounded.width); ++x) {
+  if (r <= 0) {
+    canvas.fill_rect(bounded, color);
+    return;
+  }
+
+  // The vast majority of a rounded rectangle has full coverage. Fill its
+  // three disjoint rectangular bands in bulk and supersample only the four
+  // small corner squares.
+  const RectI middle{
+      rect.x,
+      rect.y + r,
+      rect.width,
+      std::max(0, rect.height - r * 2),
+  };
+  const RectI top_middle{
+      rect.x + r,
+      rect.y,
+      std::max(0, rect.width - r * 2),
+      r,
+  };
+  const RectI bottom_middle{
+      rect.x + r,
+      rect.y + rect.height - r,
+      std::max(0, rect.width - r * 2),
+      r,
+  };
+  canvas.fill_rect(intersect_rect(middle, bounded), color);
+  canvas.fill_rect(intersect_rect(top_middle, bounded), color);
+  canvas.fill_rect(intersect_rect(bottom_middle, bounded), color);
+
+  const std::array<RectI, 4> corners{{
+      RectI{rect.x, rect.y, r, r},
+      RectI{rect.x + rect.width - r, rect.y, r, r},
+      RectI{rect.x, rect.y + rect.height - r, r, r},
+      RectI{rect.x + rect.width - r, rect.y + rect.height - r, r, r},
+  }};
+  for (const RectI corner : corners) {
+    const RectI corner_bounded = intersect_rect(corner, bounded);
+    for (int y = corner_bounded.y; y < corner_bounded.y + corner_bounded.height; ++y) {
+      for (int x = corner_bounded.x; x < corner_bounded.x + corner_bounded.width; ++x) {
       const std::uint8_t coverage = rounded_rect_coverage(rect, r, x, y);
       if (coverage == 0) {
         continue;
@@ -379,6 +408,7 @@ void fill_rounded_rect(PixelCanvas& canvas,
         canvas.blend_pixel(PointI{x, y}, color, alpha);
       }
     }
+  }
   }
 }
 
@@ -430,6 +460,10 @@ void fill_linear_gradient(PixelCanvas& canvas,
   }
 }
 
+void stroke_rect(PixelCanvas& canvas,
+                 const StrokeRectCommand& command,
+                 const std::optional<RectI>& clip);
+
 void stroke_rounded_rect(PixelCanvas& canvas,
                          const RectI rect,
                          const int radius,
@@ -442,6 +476,13 @@ void stroke_rounded_rect(PixelCanvas& canvas,
   const int t = clamp_thickness(thickness);
   const RectI outer = rect;
   const int outer_radius = clamp_corner_radius(outer, radius);
+  if (outer_radius <= 0) {
+    stroke_rect(
+        canvas,
+        StrokeRectCommand{.rect = rect, .thickness = t, .color = color},
+        clip);
+    return;
+  }
 
   const RectI inner{
       outer.x + t,
@@ -458,29 +499,64 @@ void stroke_rounded_rect(PixelCanvas& canvas,
     return;
   }
 
-  for (int y = bounded.y; y < (bounded.y + bounded.height); ++y) {
-    for (int x = bounded.x; x < (bounded.x + bounded.width); ++x) {
-      const std::uint8_t cov_outer = rounded_rect_coverage(outer, outer_radius, x, y);
-      if (cov_outer == 0) {
-        continue;
-      }
-      std::uint8_t cov_inner = 0;
-      if (!inner.empty()) {
-        cov_inner = rounded_rect_coverage(inner, inner_radius, x, y);
-      }
-      if (cov_outer <= cov_inner) {
-        continue;
-      }
-      const std::uint8_t ring_cov = static_cast<std::uint8_t>(cov_outer - cov_inner);
-      const std::uint8_t alpha = static_cast<std::uint8_t>(
-          (static_cast<std::uint16_t>(ring_cov) * static_cast<std::uint16_t>(color.a)) / 255U);
-      if (alpha == 0) {
-        continue;
-      }
-      if (alpha == 255) {
-        canvas.set_pixel(PointI{x, y}, color);
-      } else {
-        canvas.blend_pixel(PointI{x, y}, color, alpha);
+  const std::array<RectI, 4> edges{{
+      RectI{outer.x + outer_radius,
+            outer.y,
+            std::max(0, outer.width - outer_radius * 2),
+            t},
+      RectI{outer.x + outer_radius,
+            outer.y + outer.height - t,
+            std::max(0, outer.width - outer_radius * 2),
+            t},
+      RectI{outer.x,
+            outer.y + outer_radius,
+            t,
+            std::max(0, outer.height - outer_radius * 2)},
+      RectI{outer.x + outer.width - t,
+            outer.y + outer_radius,
+            t,
+            std::max(0, outer.height - outer_radius * 2)},
+  }};
+  for (const RectI edge : edges) {
+    canvas.fill_rect(intersect_rect(edge, bounded), color);
+  }
+
+  const std::array<RectI, 4> corners{{
+      RectI{outer.x, outer.y, outer_radius, outer_radius},
+      RectI{outer.x + outer.width - outer_radius, outer.y, outer_radius, outer_radius},
+      RectI{outer.x, outer.y + outer.height - outer_radius, outer_radius, outer_radius},
+      RectI{outer.x + outer.width - outer_radius,
+            outer.y + outer.height - outer_radius,
+            outer_radius,
+            outer_radius},
+  }};
+  for (const RectI corner : corners) {
+    const RectI corner_bounded = intersect_rect(corner, bounded);
+    for (int y = corner_bounded.y; y < corner_bounded.y + corner_bounded.height; ++y) {
+      for (int x = corner_bounded.x; x < corner_bounded.x + corner_bounded.width; ++x) {
+        const std::uint8_t cov_outer =
+            rounded_rect_coverage(outer, outer_radius, x, y);
+        if (cov_outer == 0) {
+          continue;
+        }
+        std::uint8_t cov_inner = 0;
+        if (!inner.empty()) {
+          cov_inner = rounded_rect_coverage(inner, inner_radius, x, y);
+        }
+        if (cov_outer <= cov_inner) {
+          continue;
+        }
+        const std::uint8_t ring_cov =
+            static_cast<std::uint8_t>(cov_outer - cov_inner);
+        const std::uint8_t alpha = static_cast<std::uint8_t>(
+            (static_cast<std::uint16_t>(ring_cov) *
+             static_cast<std::uint16_t>(color.a)) /
+            255U);
+        if (alpha == 255) {
+          canvas.set_pixel(PointI{x, y}, color);
+        } else if (alpha > 0) {
+          canvas.blend_pixel(PointI{x, y}, color, alpha);
+        }
       }
     }
   }

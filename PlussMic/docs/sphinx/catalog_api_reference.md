@@ -1353,7 +1353,7 @@ Catalog extract_keywords(self, std::string_view field, int top_n = 10) const
     Name of the target stream in the catalog.
 
 `top_n` : `int`
-    See the signature for the supported argument form.
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 #### Returns
 
@@ -1454,7 +1454,7 @@ Catalog fillna(self, const char* value, std::initializer_list<std::string_view> 
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1509,7 +1509,7 @@ Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::s
 #### Parameters
 
 `value` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1564,7 +1564,7 @@ Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::st
 #### Parameters
 
 `value` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1619,7 +1619,7 @@ Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys 
 #### Parameters
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1674,7 +1674,7 @@ Catalog fillna(self, std::string_view value, std::initializer_list<std::string_v
 #### Parameters
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -3009,7 +3009,7 @@ Catalog merge(self, const Catalog& other, std::string_view on, std::string_view 
 #### Parameters
 
 `other` : `const Catalog&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `on` : `std::string_view`
     See the signature for the supported argument form.
@@ -4285,7 +4285,7 @@ Catalog set(self, std::string_view key, const Stream& value) const
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4338,7 +4338,7 @@ Catalog& set_(self, std::string_view key, const Stream& value)
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4377,7 +4377,7 @@ Catalog set_stream(self, std::string_view key, const Stream& value) const
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4430,7 +4430,7 @@ Catalog& set_stream_(self, std::string_view key, const Stream& value)
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 

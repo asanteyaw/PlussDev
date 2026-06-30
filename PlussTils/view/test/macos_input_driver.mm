@@ -3,6 +3,7 @@
 #import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -75,7 +76,8 @@ void post_text(const pid_t owner_pid, const std::string& text) {
 
 int main(int argc, char** argv) {
   if (argc < 5) {
-    std::cerr << "usage: macos_input_driver <click|click-text|scroll> <window-title> <x-ratio> <y-ratio> [args]\n";
+    std::cerr << "usage: macos_input_driver <click|click-text|scroll> <window-title> "
+                 "<x-ratio> <y-ratio> [args]\n";
     return 2;
   }
   const std::string action = argv[1];
@@ -111,14 +113,46 @@ int main(int argc, char** argv) {
     post_mouse(owner_pid, kCGEventMouseMoved, point);
     const std::int32_t dx = static_cast<std::int32_t>(std::strtol(argv[5], nullptr, 10));
     const std::int32_t dy = static_cast<std::int32_t>(std::strtol(argv[6], nullptr, 10));
-    CGEventRef event =
-        CGEventCreateScrollWheelEvent(nullptr, kCGScrollEventUnitPixel, 2, dy, dx);
-    if (event == nullptr) {
-      return 4;
+    const int count = argc >= 8 ? std::max(1, std::atoi(argv[7])) : 1;
+    const int interval_ms = argc >= 9 ? std::max(1, std::atoi(argv[8])) : 8;
+    for (int index = 0; index < count; ++index) {
+      CGEventRef event =
+          CGEventCreateScrollWheelEvent(nullptr, kCGScrollEventUnitPixel, 2, dy, dx);
+      if (event == nullptr) {
+        return 4;
+      }
+      CGEventSetIntegerValueField(event, kCGScrollWheelEventIsContinuous, 1);
+      CGEventSetIntegerValueField(event, kCGScrollWheelEventPointDeltaAxis1, dy);
+      CGEventSetIntegerValueField(event, kCGScrollWheelEventPointDeltaAxis2, dx);
+      CGEventSetDoubleValueField(event, kCGScrollWheelEventFixedPtDeltaAxis1, dy);
+      CGEventSetDoubleValueField(event, kCGScrollWheelEventFixedPtDeltaAxis2, dx);
+      CGEventSetDoubleValueField(event, kCGScrollWheelEventAcceleratedDeltaAxis1, dy);
+      CGEventSetDoubleValueField(event, kCGScrollWheelEventAcceleratedDeltaAxis2, dx);
+      CGEventSetDoubleValueField(event, kCGScrollWheelEventRawDeltaAxis1, dy);
+      CGEventSetDoubleValueField(event, kCGScrollWheelEventRawDeltaAxis2, dx);
+      CGEventSetIntegerValueField(
+          event,
+          kCGScrollWheelEventScrollPhase,
+          index == 0 ? kCGScrollPhaseBegan : kCGScrollPhaseChanged);
+      CGEventSetIntegerValueField(event, kCGScrollWheelEventMomentumPhase, kCGMomentumScrollPhaseNone);
+      CGEventSetIntegerValueField(event, kCGScrollWheelEventScrollCount, index + 1);
+      CGEventSetLocation(event, point);
+      CGEventPost(kCGSessionEventTap, event);
+      CFRelease(event);
+      if (index + 1 < count) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
+      }
     }
-    CGEventSetLocation(event, point);
-    CGEventPost(kCGHIDEventTap, event);
-    CFRelease(event);
+    CGEventRef end =
+        CGEventCreateScrollWheelEvent(nullptr, kCGScrollEventUnitPixel, 2, 0, 0);
+    if (end != nullptr) {
+      CGEventSetIntegerValueField(end, kCGScrollWheelEventIsContinuous, 1);
+      CGEventSetIntegerValueField(end, kCGScrollWheelEventScrollPhase, kCGScrollPhaseEnded);
+      CGEventSetIntegerValueField(end, kCGScrollWheelEventMomentumPhase, kCGMomentumScrollPhaseNone);
+      CGEventSetLocation(end, point);
+      CGEventPost(kCGSessionEventTap, end);
+      CFRelease(end);
+    }
     return 0;
   }
 

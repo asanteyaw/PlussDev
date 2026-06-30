@@ -560,7 +560,7 @@ Registry combine(self, const Registry& other, std::string suffix = "_other") con
 #### Parameters
 
 `other` : `const Registry&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `suffix` : `std::string`
     See the signature for the supported argument form.
@@ -619,7 +619,7 @@ Registry concat_values(self, std::string_view key, const Slot& other) const
     Name of the target slot or stream.
 
 `other` : `const Slot&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -673,7 +673,7 @@ Registry& concat_values_(self, std::string_view key, const Slot& other)
     Name of the target slot or stream.
 
 `other` : `const Slot&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 
@@ -2429,7 +2429,7 @@ Registry push(self, std::string_view key, const Slot::Value& value) const
     Name of the target slot or stream.
 
 `value` : `const Slot::Value&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2477,7 +2477,7 @@ Registry& push_(self, std::string_view key, const Slot::Value& value)
     Name of the target slot or stream.
 
 `value` : `const Slot::Value&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2510,7 +2510,7 @@ Registry push_all(self, const Slot::Value& value) const
 #### Parameters
 
 `value` : `const Slot::Value&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2555,7 +2555,7 @@ Registry& push_all_(self, const Slot::Value& value)
 #### Parameters
 
 `value` : `const Slot::Value&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3470,7 +3470,7 @@ Registry set_slot(self, std::string_view key, const Slot& value) const
     Name of the target slot or stream.
 
 `value` : `const Slot&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -3518,7 +3518,7 @@ Registry& set_slot_(self, std::string_view key, const Slot& value)
     Name of the target slot or stream.
 
 `value` : `const Slot&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 

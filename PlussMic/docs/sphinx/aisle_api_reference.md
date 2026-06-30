@@ -117,7 +117,7 @@ Aisle concat_depth(self, const Aisle& other) const
 #### Parameters
 
 `other` : `const Aisle&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 #### Returns
 

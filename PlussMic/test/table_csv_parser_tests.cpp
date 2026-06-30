@@ -536,16 +536,20 @@ void test_atlas_html_display_renderer() {
   const auto html = pluss::table::display::render_html(atlas, opts);
 
   expect(html.find("Frames") != std::string::npos, "atlas html should include frame navigation label");
-  expect(html.find("atlas-show-all") != std::string::npos, "atlas html should include all-frames mode");
-  expect(html.find("atlas-tab-0") != std::string::npos, "atlas html should assign stable frame control ids");
-  expect(html.find("atlas-tab-1") != std::string::npos, "atlas html should assign every frame a control id");
-  expect(html.find("atlas-tab active") != std::string::npos, "atlas html should mark the initial frame tab active");
+  expect(html.find("atlas-previous") != std::string::npos, "atlas html should include previous-frame navigation");
+  expect(html.find("atlas-next") != std::string::npos, "atlas html should include next-frame navigation");
+  expect(html.find("atlas-show-all") == std::string::npos, "atlas html should not include the all-frames button");
+  expect(html.find("atlas-current-frame") == std::string::npos,
+         "atlas html should not duplicate the current frame label in the navigation");
   expect(html.find("weekdays") != std::string::npos, "atlas html should surface depth labels");
-  expect(html.find("weekends") != std::string::npos, "atlas html should include all frame selectors");
+  expect(html.find("weekends") != std::string::npos, "atlas html should include all frame contents");
   expect(html.find("atlas-panel active") != std::string::npos, "atlas html should include a visible frame panel");
   expect(html.find("plussmic-table-0") != std::string::npos, "atlas html should embed per-frame tables");
   expect(html.find("Edmonton") != std::string::npos, "atlas html should include the first frame contents");
   expect(html.find("Banff") != std::string::npos, "atlas html should include the second frame contents");
+  expect(html.find("table-scroll") != std::string::npos, "atlas html should wrap tables in a clipping scroll container");
+  expect(html.find("border-right: 2px solid var(--success);") != std::string::npos,
+         "atlas html should color the sticky case divider with the success accent");
 }
 
 void test_describe_numeric_summary() {

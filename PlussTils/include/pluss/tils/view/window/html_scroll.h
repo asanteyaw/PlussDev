@@ -65,8 +65,10 @@ class HtmlScrollModel {
   HtmlRenderStats metrics_{};
   Offset document_{};
   Offset document_target_{};
+  Offset document_velocity_{};
   std::unordered_map<std::string, Offset> tables_{};
   std::unordered_map<std::string, Offset> table_targets_{};
+  std::unordered_map<std::string, Offset> table_velocities_{};
   PointI last_pointer_{-1, -1};
   ScrollbarDrag scrollbar_drag_{};
   bool pointer_is_down_{false};

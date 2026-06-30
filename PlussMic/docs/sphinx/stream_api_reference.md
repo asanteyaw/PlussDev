@@ -809,7 +809,7 @@ Stream fillna(self, const char* value) const
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -852,7 +852,7 @@ Stream fillna(self, const pluss::TimeIndex& value) const
 #### Parameters
 
 `value` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -895,7 +895,7 @@ Stream fillna(self, const pluss::Timeline& value) const
 #### Parameters
 
 `value` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -938,7 +938,7 @@ Stream fillna(self, scalar value) const
 #### Parameters
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -981,7 +981,7 @@ Stream fillna(self, std::string_view value) const
 #### Parameters
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -1024,7 +1024,7 @@ Stream filter(self, const pluss::Series& bool_mask) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 #### Returns
 
@@ -2192,7 +2192,7 @@ Stream with_meta(self, std::string key, std::string value) const
     Name of the target slot or stream.
 
 `value` : `std::string`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2269,7 +2269,7 @@ Stream& with_meta_(self, std::string key, std::string value)
     Name of the target slot or stream.
 
 `value` : `std::string`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 

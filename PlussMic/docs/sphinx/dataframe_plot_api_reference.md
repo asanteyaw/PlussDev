@@ -4341,7 +4341,7 @@ pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view 
     Feature whose values populate pivot cells or grouped summaries.
 
 `group_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.
 
 #### Returns
 
@@ -4393,7 +4393,7 @@ pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view 
     Feature whose values populate pivot cells or grouped summaries.
 
 `group_feature` : `std::string_view`
-    See the signature for the supported argument form.
+    Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.
 
 `options` : `const ViolinPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.

@@ -41,12 +41,44 @@ if(PkgConfig_FOUND)
 endif()
 
 set(PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE 0)
-if(PLUSSTILS_VIEW_LIBZIP_FOUND)
+set(PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIR "")
+set(PLUSSTILS_VIEW_LIBZIP_LIBRARY "")
+
+if(DEFINED PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIRS AND PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIRS)
+    list(GET PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIRS 0 PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIR)
+endif()
+
+if(DEFINED pkgcfg_lib_PLUSSTILS_VIEW_LIBZIP_zip AND EXISTS "${pkgcfg_lib_PLUSSTILS_VIEW_LIBZIP_zip}")
+    set(PLUSSTILS_VIEW_LIBZIP_LIBRARY "${pkgcfg_lib_PLUSSTILS_VIEW_LIBZIP_zip}")
+endif()
+
+if(NOT PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIR)
+    find_path(PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIR zip.h
+        HINTS
+            ${PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIRS}
+            $ENV{CONDA_PREFIX}/include
+    )
+endif()
+
+if(NOT PLUSSTILS_VIEW_LIBZIP_LIBRARY)
+    find_library(PLUSSTILS_VIEW_LIBZIP_LIBRARY
+        NAMES zip libzip
+        HINTS
+            ${PLUSSTILS_VIEW_LIBZIP_LIBRARY_DIRS}
+            $ENV{CONDA_PREFIX}/lib
+    )
+endif()
+
+if(PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIR AND PLUSSTILS_VIEW_LIBZIP_LIBRARY)
     set(PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE 1)
-    target_include_directories(PlussTilsView SYSTEM PRIVATE ${PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIRS})
-    target_link_directories(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_LIBRARY_DIRS})
+    target_include_directories(PlussTilsView SYSTEM PRIVATE ${PLUSSTILS_VIEW_LIBZIP_INCLUDE_DIR})
     target_compile_options(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_CFLAGS_OTHER})
-    target_link_libraries(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_LIBRARIES})
+    pluss_register_sdk_zip_link("${PLUSSTILS_VIEW_LIBZIP_LIBRARY}")
+    if(TARGET pluss_sdk_zip_link)
+        target_link_libraries(PlussTilsView PUBLIC pluss_sdk_zip_link)
+    else()
+        target_link_libraries(PlussTilsView PRIVATE ${PLUSSTILS_VIEW_LIBZIP_LIBRARY})
+    endif()
 endif()
 
 set(PLUSSTILS_VIEW_HAVE_GTK_WEBKIT_VALUE 0)
@@ -336,7 +368,7 @@ if(BUILD_TESTING)
     )
     add_test(NAME plussview_html_scroll_tests COMMAND plussview_html_scroll_tests)
 
-    if(PLUSSTILS_VIEW_LIBZIP_FOUND)
+    if(PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE)
         add_executable(plussview_html_export_tests
             ${CMAKE_CURRENT_SOURCE_DIR}/test/html_export_tests.cpp
         )

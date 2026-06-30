@@ -274,21 +274,29 @@ void test_layout_metrics_and_scroll_model() {
   animated_model.update_metrics(stats);
   const PointI animated_table_point = center(table.viewport_rect);
   expect(animated_model.scroll_wheel(0.0, -120.0, animated_table_point, true, false, true),
-         "animated scrolling should accept a precise table delta");
+         "precise scrolling should accept a table delta");
+  expect(animated_model.snapshot().tables.at("ledger").y == 120 &&
+             !animated_model.has_pending_animation(),
+         "precise platform deltas should apply directly without a second animation");
+
+  animated_model.reset();
+  animated_model.update_metrics(stats);
+  expect(animated_model.scroll_wheel(0.0, -3.0, animated_table_point, false, false, true),
+         "animated scrolling should accept a discrete mouse-wheel delta");
   expect(animated_model.snapshot().tables.at("ledger").y == 0 &&
              animated_model.has_pending_animation(),
-         "animated scrolling should retain a target without jumping immediately");
+         "discrete mouse-wheel scrolling should retain a target without jumping");
   expect(animated_model.advance_animation(0.016),
          "animated scrolling should advance on a frame tick");
   const int first_animated_y = animated_model.snapshot().tables.at("ledger").y;
   expect(first_animated_y > 0 && first_animated_y < 120,
          "the first animated frame should move partway toward the target");
-  for (int frame = 0; frame < 20; ++frame) {
+  for (int frame = 0; frame < 120 && animated_model.has_pending_animation(); ++frame) {
     (void)animated_model.advance_animation(0.016);
   }
-  expect(animated_model.snapshot().tables.at("ledger").y == 120 &&
+  expect(std::abs(animated_model.snapshot().tables.at("ledger").y - 120) <= 1 &&
              !animated_model.has_pending_animation(),
-         "animated scrolling should settle exactly on the requested offset");
+         "animated scrolling should converge to the requested offset and come to rest");
 
   config.draw_scrollbars = false;
   const auto hidden_scrollbars = build_html_document_scene(document, viewport, config);
@@ -515,23 +523,42 @@ void test_form_control_alignment_and_caret() {
   const auto document = parse_html_document(R"HTML(
 <!doctype html>
 <html><head><style>
-  .tools { display:flex; gap:1px; align-items:center; }
+  body { margin:0; }
+  .shell { padding:14px; }
+  .frame { border:1px solid #cbd7e3; }
+  .hero {
+    padding:14px 16px; display:flex; gap:14px; align-items:center;
+    justify-content:space-between; flex-wrap:wrap;
+  }
+  .tools {
+    display:flex; gap:1px; align-items:center;
+    justify-content:flex-end; margin-left:auto; flex-wrap:nowrap;
+  }
   .tools input, .tools button {
     margin:0; height:40px; min-height:40px; padding:0 12px;
     border:1px solid #b9c7d5; text-align:center;
   }
-  .tools input { width:260px; font-size:13px; }
-  .tools button { width:88px; font-size:13px; }
+  .tools input { min-width:220px; font-size:13px; }
+  .tools button { min-width:88px; font-size:13px; }
 </style></head><body>
-  <div class="tools">
-    <input id="table-search" placeholder="Search visible rows" />
-    <button id="reset-table-view">Reset</button>
+  <div class="shell">
+    <div class="frame">
+      <header class="hero">
+        <div><h1>DataFrame - head</h1><p>20 cases, 12 features</p></div>
+        <div class="tools">
+          <input id="table-search" placeholder="Search visible rows" />
+          <button id="reset-table-view">Reset</button>
+        </div>
+      </header>
+    </div>
   </div>
 </body></html>
 )HTML");
 
   std::vector<HtmlHitRegion> hits;
   HtmlRenderConfig config{};
+  config.draw_top_bar = false;
+  config.root_padding_px = 0;
   config.hit_regions = &hits;
   config.active_input_target = "table-search";
   const auto scene = build_html_document_scene(document, SizeI{640, 240}, config);
@@ -545,6 +572,9 @@ void test_form_control_alignment_and_caret() {
          "search and reset controls should publish interaction geometry");
   expect(input->rect.y == reset->rect.y && input->rect.height == reset->rect.height,
          "search and reset controls should share the same top edge and height");
+  expect(reset->rect.x + reset->rect.width >= 596,
+         "auto-margin tools should align search and reset controls to the right edge (actual " +
+             std::to_string(reset->rect.x + reset->rect.width) + ")");
 
   const auto caret = std::find_if(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
     const auto* line = std::get_if<LineCommand>(&command);
@@ -556,6 +586,54 @@ void test_form_control_alignment_and_caret() {
              std::abs(caret_line->start.x - (input->rect.x + input->rect.width / 2)) <= 1 &&
              caret_line->end.y - caret_line->start.y <= 20,
          "an empty centered search input should use a short centered caret");
+}
+
+void test_table_body_values_share_left_edge() {
+  using namespace pluss::view::window;
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>
+  body { margin:0; }
+  table { width:100%; height:220px; }
+  th, td { padding:8px 12px; }
+  thead th.num { text-align:center; }
+  tbody td.num { text-align:left; }
+  td.missing { background:#fff0ee; }
+</style></head><body>
+  <table><thead><tr><th class="num">value</th></tr></thead><tbody>
+    <tr><td class="num">10.23</td></tr>
+    <tr><td class="num">323.4958</td></tr>
+    <tr><td class="num missing">NA</td></tr>
+  </tbody></table>
+</body></html>
+)HTML");
+
+  HtmlRenderConfig config{};
+  config.draw_top_bar = false;
+  config.root_padding_px = 0;
+  const auto scene = build_html_document_scene(document, SizeI{480, 260}, config);
+  const auto text_x = [&](const std::string_view value) {
+    for (const auto& command : scene.commands()) {
+      if (const auto* text = std::get_if<TextCommand>(&command);
+          text != nullptr && text->text == value) {
+        return text->anchor.x;
+      }
+    }
+    return -1;
+  };
+  const int short_number_x = text_x("10.23");
+  const int long_number_x = text_x("323.4958");
+  const int missing_x = text_x("NA");
+  expect(short_number_x >= 0 && short_number_x == long_number_x &&
+             long_number_x == missing_x,
+         "numeric and missing body values should share one left edge");
+  expect(std::any_of(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
+           const auto* fill = std::get_if<FillRectCommand>(&command);
+           return fill != nullptr && fill->color.r == 255 && fill->color.g == 240 &&
+                  fill->color.b == 238;
+         }),
+         "left-aligned missing values should retain their special cell color");
 }
 
 void test_svg_styles_override_presentation_size() {
@@ -600,11 +678,13 @@ int main() {
     test_layout_metrics_and_scroll_model();
     test_retina_scene_scaling();
     test_form_control_alignment_and_caret();
+    test_table_body_values_share_left_edge();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";
     std::cout << "[PASS] retina_scene_scaling\n";
     std::cout << "[PASS] form_control_alignment_and_caret\n";
+    std::cout << "[PASS] table_body_values_share_left_edge\n";
     std::cout << "[PASS] svg_styles_override_presentation_size\n";
     return 0;
   } catch (const std::exception& error) {

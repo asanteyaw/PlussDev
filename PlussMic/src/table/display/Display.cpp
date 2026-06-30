@@ -873,7 +873,7 @@ std::string html_shell_(std::string_view title,
       --accent: #007f86;
       --accent-2: #ef5b3f;
       --accent-3: #6757d9;
-      --success: #159a67;
+      --success: #4f8994;
       --panel: #ffffff;
       --shadow: none;
     }}
@@ -996,17 +996,23 @@ std::string html_shell_(std::string_view title,
       font-weight: 700;
     }}
     .table-wrap {{
-      overflow: auto;
-      max-height: calc(100vh - 300px);
       margin-top: 4px;
       border: 1px solid #c8d4df;
       border-radius: 7px;
       background: #ffffff;
+      overflow: hidden;
+    }}
+    .table-scroll {{
+      overflow: auto;
+      max-height: calc(100vh - 300px);
+      border-radius: inherit;
     }}
     table {{
       width: 100%;
       height: 400px;
       border-collapse: collapse;
+      border-radius: 6px;
+      overflow: hidden;
       font-size: 0.86rem;
     }}
     thead th {{
@@ -1046,14 +1052,14 @@ std::string html_shell_(std::string_view title,
       max-width: 72px;
       z-index: 1;
       background: #edf6f7;
-      border-right: 2px solid #8bbfc0;
+      border-right: 2px solid var(--success);
     }}
     thead .sticky-left {{
       z-index: 3;
       background: #cce8e6;
     }}
     .num {{
-      text-align: right;
+      text-align: left;
       font-variant-numeric: tabular-nums;
     }}
     thead th.num {{
@@ -1108,17 +1114,6 @@ std::string html_shell_(std::string_view title,
       border-color: #5141bd;
       color: #ffffff;
       font-weight: 600;
-    }}
-    .atlas-current-frame {{
-      min-width: 150px;
-      padding: 8px 12px;
-      border: 1px solid #9eb2c3;
-      border-radius: 7px;
-      background: #edf6f7;
-      color: #163b47;
-      text-align: center;
-      font-weight: 700;
-      white-space: nowrap;
     }}
     .atlas-panel {{
       display: none;
@@ -1241,15 +1236,10 @@ std::string html_shell_(std::string_view title,
       }});
     }});
     const atlasPanels = Array.from(document.querySelectorAll('.atlas-panel'));
-    const atlasCurrentFrame = document.getElementById('atlas-current-frame');
     function showAtlasFrame(index) {{
       if (atlasPanels.length === 0) return;
       const wrapped = ((index % atlasPanels.length) + atlasPanels.length) % atlasPanels.length;
       atlasPanels.forEach((panel, panelIndex) => panel.classList.toggle('active', panelIndex === wrapped));
-      if (atlasCurrentFrame) {{
-        atlasCurrentFrame.textContent =
-          atlasPanels[wrapped].querySelector('.atlas-frame-title')?.textContent || ('Frame ' + wrapped);
-      }}
       if (enableSearch) filterTables(searchInput.value || '');
     }}
     document.getElementById('atlas-previous')?.addEventListener('click', () => {{
@@ -1259,11 +1249,6 @@ std::string html_shell_(std::string_view title,
     document.getElementById('atlas-next')?.addEventListener('click', () => {{
       const active = atlasPanels.findIndex((panel) => panel.classList.contains('active'));
       showAtlasFrame((active < 0 ? -1 : active) + 1);
-    }});
-    document.getElementById('atlas-show-all')?.addEventListener('click', () => {{
-      atlasPanels.forEach((panel) => panel.classList.add('active'));
-      if (atlasCurrentFrame) atlasCurrentFrame.textContent = 'All frames';
-      if (enableSearch) filterTables(searchInput.value || '');
     }});
   </script>
 </body>
@@ -1281,7 +1266,7 @@ std::string render_html_pre_(std::string_view title,
                              const std::string& content,
                              const DisplayOptions& options) {
   const auto body = fmt::format(
-      R"HTML(<div class="table-wrap"><pre style="margin:0; padding:16px; font-family:'IBM Plex Mono', 'SFMono-Regular', monospace; white-space:pre-wrap;">{}</pre></div>)HTML",
+      R"HTML(<div class="table-wrap"><div class="table-scroll"><pre style="margin:0; padding:16px; font-family:'IBM Plex Mono', 'SFMono-Regular', monospace; white-space:pre-wrap;">{}</pre></div></div>)HTML",
       escape_html_(content));
   return html_shell_(title, subtitle, body, options);
 }
@@ -1310,7 +1295,7 @@ std::string render_html_table_body_(const DataFrame& frame,
       escape_html_(logical_dtype_name(frame.cases())));
   body += "</div>";
 
-  body += "<div class=\"table-wrap\">";
+  body += "<div class=\"table-wrap\"><div class=\"table-scroll\">";
   body += fmt::format("<table id=\"{}\" data-filterable=\"true\"><thead><tr>", escape_html_(table_id));
 
   std::size_t column_index = 0;
@@ -1356,7 +1341,7 @@ std::string render_html_table_body_(const DataFrame& frame,
     body += "</tr>";
   }
 
-  body += "</tbody></table></div>";
+  body += "</tbody></table></div></div>";
   return body;
 }
 
@@ -1388,7 +1373,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += "</div>";
 
   if (atlas.depth() == 0) {
-    body += "<div class=\"table-wrap\"><div style=\"padding:18px;\" class=\"muted\">Atlas is empty.</div></div>";
+    body += "<div class=\"table-wrap\"><div class=\"table-scroll\"><div style=\"padding:18px;\" class=\"muted\">Atlas is empty.</div></div></div>";
     return html_shell_(document_title_("Atlas", options),
                        "0 frames",
                        body,
@@ -1398,16 +1383,8 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += "<div class=\"section-label\">Frames</div>";
   body += "<div class=\"atlas-nav\">";
   const bool show_all_frames = false;
-  std::string initial_label = "Frame 0";
-  if (display_axis0.has_value()) {
-    initial_label = thread_value_at(*display_axis0, 0);
-  }
   body += "<button id=\"atlas-previous\" type=\"button\" class=\"atlas-tab\">Previous</button>";
-  body += fmt::format("<span id=\"atlas-current-frame\" class=\"atlas-current-frame\">{}</span>",
-                      escape_html_(initial_label));
   body += "<button id=\"atlas-next\" type=\"button\" class=\"atlas-tab\">Next</button>";
-  body += fmt::format("<button id=\"atlas-show-all\" type=\"button\" class=\"atlas-tab{}\">All frames</button>",
-                      show_all_frames ? " active" : "");
   body += "</div>";
 
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
@@ -1472,7 +1449,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
   body += "</div>";
 
   body +=
-      "<div style=\"padding:8px 6px 0;\"><span class=\"pill\">Feature inventory</span></div><div class=\"table-wrap\">";
+      "<div style=\"padding:8px 6px 0;\"><span class=\"pill\">Feature inventory</span></div><div class=\"table-wrap\"><div class=\"table-scroll\">";
   body += "<table id=\"plussmic-table\" data-filterable=\"true\"><thead><tr>";
   body += "<th class=\"sortable\" data-column-index=\"0\" data-kind=\"numeric\">#</th>";
   body += "<th class=\"sortable sticky-left\" data-column-index=\"1\" data-kind=\"text\">Feature</th>";
@@ -1493,7 +1470,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
         escape_html_(dtype));
   }
 
-  body += "</tbody></table></div>";
+  body += "</tbody></table></div></div>";
   return html_shell_(document_title_("DataFrame Info", options),
                      fmt::format("{} cases, {} features", frame.ncases(), frame.nfeats()),
                      body,

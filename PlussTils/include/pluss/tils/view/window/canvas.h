@@ -16,6 +16,7 @@ class PixelCanvas {
 
   [[nodiscard]] bool resize(SizeI size);
   void clear(Color color) noexcept;
+  void fill_rect(RectI rect, Color color) noexcept;
   void set_pixel(PointI pixel, Color color) noexcept;
   void blend_pixel(PointI pixel, Color color, std::uint8_t alpha) noexcept;
 

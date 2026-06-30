@@ -1909,6 +1909,6 @@ MPS 0 0
 MPS 0 1
 MPS 0 0
 Linear 0 0
-plussview_html_scroll_tests 13 0.00795849
-plussview_html_export_tests 3 0.13441
+plussview_html_scroll_tests 21 0.0224474
+plussview_html_export_tests 6 0.047883
 ---

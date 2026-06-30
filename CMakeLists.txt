@@ -10,6 +10,34 @@ if(PkgConfig_FOUND)
     pkg_check_modules(LIBZIP QUIET libzip)
 endif()
 
+function(pluss_register_sdk_zip_link ZIP_LIBRARY)
+    if(TARGET pluss_sdk_zip_link)
+        return()
+    endif()
+
+    if(NOT ZIP_LIBRARY OR NOT EXISTS "${ZIP_LIBRARY}")
+        message(WARNING
+            "pluss_register_sdk_zip_link called without a concrete libzip path. "
+            "SDK export will not package libzip automatically.")
+        return()
+    endif()
+
+    add_library(pluss_sdk_zip_link INTERFACE)
+    target_link_libraries(pluss_sdk_zip_link INTERFACE
+        $<BUILD_INTERFACE:${ZIP_LIBRARY}>
+    )
+
+    get_filename_component(_pluss_zip_realpath "${ZIP_LIBRARY}" REALPATH)
+    get_filename_component(_pluss_zip_filename "${_pluss_zip_realpath}" NAME)
+    install(FILES "${_pluss_zip_realpath}"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    target_link_libraries(pluss_sdk_zip_link INTERFACE
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${_pluss_zip_filename}>
+    )
+    install(TARGETS pluss_sdk_zip_link EXPORT PlussTargets)
+endfunction()
+
 # On macOS, prefer the cpp_env LLVM toolchain for C/C++ compilation when the
 # user has not explicitly pinned compilers. This keeps modern C++20 support
 # while still allowing explicit override via -DCMAKE_{C,CXX}_COMPILER.

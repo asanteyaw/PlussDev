@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -43,6 +45,25 @@ struct HtmlRenderStats {
   bool has_table{false};
 };
 
+struct HtmlTableGeometryCacheEntry {
+  std::uintptr_t node_identity{0};
+  int viewport_width{0};
+  int content_width{0};
+  std::size_t row_count{0};
+  std::size_t column_count{0};
+  std::vector<std::size_t> source_indices{};
+  std::vector<int> column_widths{};
+  std::vector<int> row_heights{};
+};
+
+struct HtmlLayoutCache {
+  std::unordered_map<std::string, HtmlTableGeometryCacheEntry> tables{};
+
+  void clear() noexcept {
+    tables.clear();
+  }
+};
+
 struct HtmlRenderConfig {
   int root_padding_px{18};
   int top_bar_height_px{54};
@@ -65,6 +86,7 @@ struct HtmlRenderConfig {
   std::string active_input_value{};
   std::vector<HtmlHitRegion>* hit_regions{nullptr};
   HtmlRenderStats* render_stats{nullptr};
+  HtmlLayoutCache* layout_cache{nullptr};
 };
 
 [[nodiscard]] Scene build_html_document_scene(const HtmlDocument& document,

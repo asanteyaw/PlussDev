@@ -190,6 +190,22 @@ def parse_signature(sig: str, class_name: str) -> Method | None:
     sig = sig.rstrip(';').strip()
     sig = re.sub(r'\{\s*$', '', sig).strip()
     sig = sig.replace(' noexcept', '')
+    if sig.startswith('template ') and ' requires(' in sig:
+        req_idx = sig.find(' requires(')
+        if req_idx != -1:
+            depth = 0
+            end_idx = -1
+            for i in range(req_idx + 1, len(sig)):
+                ch = sig[i]
+                if ch == '(':
+                    depth += 1
+                elif ch == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end_idx = i
+                        break
+            if end_idx != -1:
+                sig = sig[end_idx + 1:].strip()
     if not sig or '(' not in sig:
         return None
     before, rest = sig.split('(', 1)
@@ -198,7 +214,7 @@ def parse_signature(sig: str, class_name: str) -> Method | None:
     name = before.split()[-1]
     if name == class_name or name == f'~{class_name}':
         return None
-    if name.startswith('operator'):
+    if name.startswith('operator') or name == 'requires':
         return None
     static = before.startswith('static ')
     return_type = before[: before.rfind(name)].strip()
@@ -354,7 +370,7 @@ def returns_doc(ret: str) -> str:
     return f'`{base}`\n    {desc}'
 
 
-def params_doc(params: list[tuple[str, str]]) -> str:
+def params_doc(params: list[tuple[str, str]], class_name: str | None = None, method_name: str | None = None) -> str:
     if not params:
         return '`None`'
     param_notes = {
@@ -393,13 +409,17 @@ def params_doc(params: list[tuple[str, str]]) -> str:
         'feature_index': 'Zero-based output column position used by structural methods such as `insert(...)`.',
         'feature_feature': 'Feature whose distinct values become new output columns in pivot-style reshaping.',
         'value_feature': 'Feature whose values populate pivot cells or grouped summaries.',
+        'group_feature': 'Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.',
         'time_feature': 'Name of the Timeline or TimeIndex feature that defines the resampling, alignment, or calendar axis.',
         'value_features': 'Feature name(s) to aggregate inside each resampling bin. Leave empty when you want PlussMic to infer compatible value features.',
         'bins': 'Strictly increasing interval edges used to define bucket boundaries.',
         'labels': 'Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.',
         'right': 'When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.',
         'include_lowest': 'When `true`, the first bucket also includes its left edge.',
+        'bool_mask': 'Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.',
+        'value': 'Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.',
         'spec': 'Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.',
+        'specs': 'Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.',
         'anchor': 'Anchor feature used by partial reordering when placement is `Before` or `After`.',
         'anchor_feature': 'Reference feature used to place a newly inserted or moved feature before or after an existing column.',
         'after': 'When `false`, placement happens before the anchor. When `true`, placement happens after the anchor.',
@@ -415,6 +435,7 @@ def params_doc(params: list[tuple[str, str]]) -> str:
         'keys': 'Collection of slot or stream names to keep, drop, or rewrite together.',
         'names': 'Collection of feature, slot, or stream names supplied in positional order.',
         'features': 'Feature name(s) that select the target DataFrame columns for the operation.',
+        'other': 'Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.',
         'n': 'Number of rows, entries, or depth items to keep in the preview.',
         'axis': 'Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.',
         'skipna': 'When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.',
@@ -424,15 +445,142 @@ def params_doc(params: list[tuple[str, str]]) -> str:
         'step': 'Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.',
         'render': 'When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.',
         'dropna_keys': 'When `true`, rows with null pivot/group keys are excluded before reshaping.',
+        'dropna': 'When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.',
+        'top_n': 'Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.',
+        'min_count': 'Minimum non-null observations required before a grouped or rolling summary is considered valid.',
+        'periods': 'Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.',
         'statement': 'SQL statement text to prepare against the current frame.',
         'arg2': 'Pass `nullptr` here to request a multi-sheet Excel load result that includes every sheet.',
         'start': 'Inclusive starting position of the slice.',
         'stop': 'Exclusive ending position of the slice.',
     }
+    method_param_notes = {
+        ('DataFrame', 'pivot', 'case_feature'):
+            'Feature whose distinct values become the output row groups in the pivoted result.',
+        ('DataFrame', 'pivot_table', 'case_feature'):
+            'Feature whose distinct values become the output row groups in the pivoted summary result.',
+        ('DataFrame', 'reset_cases', 'case_feature'):
+            'Name to use for the restored case-axis feature when the current cases are materialized back into ordinary columns.',
+        ('DataFrame', 'place', 'name'):
+            'Feature name to insert or move.',
+        ('DataFrame', 'place', 'feature'):
+            'Full thread payload to insert at the target position. Its length must match the frame case count.',
+        ('DataFrame', 'put', 'feature'):
+            'Feature name to rewrite.',
+        ('DataFrame', 'put_', 'feature'):
+            'Feature name to rewrite in place.',
+        ('DataFrame', 'put', 'value'):
+            'Replacement scalar, string, null, or thread written only where the mask is `true`.',
+        ('DataFrame', 'put_', 'value'):
+            'Replacement scalar, string, null, or thread written in place only where the mask is `true`.',
+        ('DataFrame', 'query', 'expression'):
+            'Boolean filter expression written against feature names, such as `"sales > 95"` or `"city == \\"Accra\\""`. Rows where the expression evaluates true are kept.',
+        ('DataFrame', 'rename', 'old_name'):
+            'Existing feature name to rename.',
+        ('DataFrame', 'rename', 'new_name'):
+            'Replacement feature name.',
+        ('DataFrame', 'rename_', 'old_name'):
+            'Existing feature name to rename in place.',
+        ('DataFrame', 'rename_', 'new_name'):
+            'Replacement feature name written back in place.',
+        ('DataFrame', 'rename_features', 'renames'):
+            'Collection of `(old_name, new_name)` pairs applied in one rename pass.',
+        ('DataFrame', 'relabel_features', 'feature_names'):
+            'Full replacement feature-label list in final left-to-right order. The count must match the current number of features.',
+        ('DataFrame', 'set_axis', 'feature_names'):
+            'Full replacement feature-label list in final left-to-right order. The count must match the current number of features.',
+        ('DataFrame', 'set_feature_axis', 'feature_names'):
+            'Full replacement feature-label list in final left-to-right order. The count must match the current number of features.',
+        ('DataFrame', 'replace', 'from'):
+            'Value to search for inside the selected compatible features. Its type decides which feature kinds participate.',
+        ('DataFrame', 'replace', 'to'):
+            'Replacement value written anywhere `from` matches. Use `pluss::null` when you want matched cells to become missing.',
+        ('DataFrame', 'replace', 'features'):
+            'Optional feature subset. Leave empty to apply the replacement across every compatible feature of the relevant kind.',
+        ('DataFrame', 'rolling', 'specs'):
+            'Window specs that define the output name, source feature, rolling operation, window width, and minimum observation policy.',
+        ('DataFrame', 'rolling', 'keep_input'):
+            'When `true`, the original features stay in the output and rolling features are appended. When `false`, only the derived rolling outputs are returned.',
+        ('DataFrame', 'select_like', 'needle'):
+            'Substring token used to match feature names.',
+        ('DataFrame', 'select_like', 'case_sensitive'):
+            'When `true`, substring matching respects letter case. When `false`, feature names are matched case-insensitively.',
+        ('DataFrame', 'select_regex', 'pattern'):
+            'ECMAScript regular expression used to match feature names.',
+        ('DataFrame', 'prod', 'axis'):
+            'Reduction axis. `0` computes one product per numeric feature, while `1` computes one product per row across numeric features.',
+        ('DataFrame', 'prod', 'render'):
+            'When `true`, the summary view can auto-render in temporary terminal contexts. Pass `false` when you want the summary object without implicit display.',
+        ('DataFrame', 'sql', 'options'):
+            'SQL execution options such as engine or binding policy for the returned SQL accessor.',
+        ('DataFrame', 'sort_values', 'features'):
+            'Feature names used as sort keys when you want the same ascending/null policy for every key.',
+        ('DataFrame', 'sort_cases', 'ascending'):
+            'When `true`, case labels are sorted ascending. When `false`, they are sorted descending.',
+        ('DataFrame', 'sort_cases', 'nulls_last'):
+            'When `true`, null case labels are placed after observed labels. When `false`, they are placed first.',
+        ('DataFrame', 'stitch_on', 'left_feature'):
+            'Key feature on the left frame used to match rows against the right frame.',
+        ('DataFrame', 'stitch_on', 'left_features'):
+            'Key features on the left frame used to build a composite match key against the right frame.',
+        ('DataFrame', 'stitch_on', 'right_feature'):
+            'Matching key feature on the right frame. Leave empty to reuse the left feature name.',
+        ('DataFrame', 'stitch_on', 'right_features'):
+            'Matching key features on the right frame. Leave empty to reuse the left feature names in the same order.',
+        ('DataFrame', 'tail', 'n'):
+            'Number of trailing rows to keep from the bottom of the frame.',
+        ('DataFrame', 'title', 'title'):
+            'Human-readable title stamp to attach to the returned frame.',
+        ('DataFrame', 'title_', 'title'):
+            'Human-readable title stamp written back onto the current frame.',
+        ('DataFrame', 'to_utc', 'features'):
+            'Temporal feature names to convert into UTC timezone representation.',
+        ('DataFrame', 'shift', 'periods'):
+            'Number of rows to shift selected feature values. Positive values move values downward and introduce missing entries at the top; negative values move upward.',
+        ('DataFrame', 'transform', 'fn'):
+            'Thread-to-thread or frame-to-thread transform function, depending on the overload. The returned thread must match the frame case count.',
+        ('DataFrame', 'transform', 'feature'):
+            'Target feature name to rewrite, or output feature name when you use the frame-aware derive overload.',
+        ('DataFrame', 'truediv', 'other'):
+            'Scalar divisor or right-hand frame used for elementwise true division.',
+        ('DataFrame', 'ts', 'feature'):
+            'Feature name to bind into the returned time-series accessor.',
+        ('DataFrame', 'ts', 'features'):
+            'Feature names to bind into the returned time-series accessor.',
+        ('DataFrame', 'tz_convert', 'tz_name'):
+            'Destination timezone name such as `"UTC"` or `"America/Edmonton"`.',
+        ('DataFrame', 'tz_localize', 'tz_name'):
+            'Timezone name to attach to naive temporal values.',
+        ('DataFrame', 'tz_localize', 'fold'):
+            'Fold flag used when localizing ambiguous wall-clock times around a DST fall-back transition.',
+        ('DataFrame', 'tz_localize', 'nonexistent'):
+            'Policy for nonexistent local times, such as `"raise"` or `"shift_forward"`.',
+        ('DataFrame', 'round_time', 'unit'):
+            'Temporal rounding unit such as `"hour"`, `"day"`, or `"month"`.',
+        ('DataFrame', 'floor_time', 'unit'):
+            'Temporal floor unit such as `"hour"`, `"day"`, or `"month"`.',
+        ('DataFrame', 'ceil_time', 'unit'):
+            'Temporal ceiling unit such as `"hour"`, `"day"`, or `"month"`.',
+        ('DataFrame', 'unify', 'right'):
+            'Right-hand frame whose rows are matched against the left frame by the requested key features.',
+        ('DataFrame', 'unique_cases', 'features'):
+            'Optional feature subset used to decide which rows count as duplicates. Leave empty to compare the full row payload.',
+        ('DataFrame', 'unsqueeze', 'depth_labels'):
+            'Single depth label to attach to the one-frame atlas produced by `unsqueeze(...)`.',
+        ('DataFrame', 'view', 'start'):
+            'Slice start position. Negative values count backward from the end of the frame.',
+        ('DataFrame', 'view', 'stop'):
+            'Slice stop position. Negative values count backward from the end, and `-1` includes the last row.',
+        ('DataFrame', 'where', 'bool_mask'):
+            'Boolean row mask. Rows where the mask is true are kept; rows where it is false are dropped.',
+        ('DataFrame', 'window', 'keep_input'):
+            'When `true`, the original input features are preserved and engineered window outputs are appended. When `false`, only the engineered outputs are returned.',
+    }
     lines = []
     for name, typ in params:
         label_type = typ.replace('double', 'scalar')
-        note = param_notes.get(name, 'See the signature for the supported argument form.')
+        note = method_param_notes.get((class_name, method_name, name),
+                                      param_notes.get(name, 'See the signature for the supported argument form.'))
         lines.append(f'`{name}` : `{label_type}`\n    {note}')
     return '\n\n'.join(lines)
 
@@ -473,6 +621,11 @@ def generic_note(class_name: str, method: Method) -> str:
             'note_features': 'Returns only the note-backed features.',
             'pivot': 'Reshapes long-form rows into a wider table indexed by one feature and expanded by another.',
             'pivot_table': 'Builds a pivoted summary table using an aggregation function when multiple rows map to the same cell.',
+            'place': 'Moves one existing feature relative to an anchor feature, or inserts a brand-new feature directly before or after that anchor.',
+            'prod': 'Computes per-feature or per-row products across numeric data.',
+            'put': 'Writes a replacement value only where a boolean mask is true and returns the updated frame.',
+            'put_': 'Writes a replacement value only where a boolean mask is true and mutates the frame in place.',
+            'query': 'Filters rows using an expression written against feature names.',
             'matrix': 'Packs same-kind features into matrix-shaped pluss blocks so lower-level numeric, text, or temporal kernels can consume them efficiently.',
             'relabel_features': 'Replaces the full feature label set with the supplied names in positional order.',
             'rename': 'Renames one feature without changing its values.',
@@ -480,6 +633,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'rename_features': 'Renames several features in one call.',
             'reorder': 'Moves selected features into a new relative position while preserving row data and the untouched feature order.',
             'repeated_cases': 'Returns the rows whose current case labels are duplicates of an earlier row.',
+            'replace': 'Replaces matched scalar or pluss-typed values across selected compatible features and returns the updated frame.',
             'rolling': 'Computes rolling-window features and returns them as a derived frame.',
             'sample': 'Returns a random sample of rows.',
             'save_csv': 'Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.',
@@ -488,6 +642,8 @@ def generic_note(class_name: str, method: Method) -> str:
             'save_parquet': 'Writes the frame to Parquet for compact typed storage.',
             'save_txt': 'Writes the frame to a plain-text table preview suitable for inspection or lightweight logging.',
             'save_as': 'Writes the frame using the explicitly supplied output format selector rather than a dedicated saver overload.',
+            'select_like': 'Selects only the features whose names contain the requested substring.',
+            'select_regex': 'Selects only the features whose names match the requested regular expression.',
             'series_features': 'Returns only the numeric series-backed features.',
             'assign': 'Adds or replaces derived features computed from the current frame. Use this when the new column depends on one or more existing columns.',
             'set': 'Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.',
@@ -503,10 +659,16 @@ def generic_note(class_name: str, method: Method) -> str:
             'tail': 'Returns the last `n` rows of the frame.',
             'take': 'Returns the rows at the requested integer positions.',
             'tally': 'Counts how many rows fall into each distinct value of the grouping feature.',
+            'tabelize': 'Converts a Kindle `Catalog` into a tabular `DataFrame`, preserving stream alignment as rows.',
             'timeline_features': 'Returns only the timeline-backed features.',
+            'title': 'Gets the current frame title or returns a titled copy, depending on the overload.',
+            'title_': 'Overwrites the current frame title in place.',
             'top': 'Returns the rows with the largest values in the selected feature.',
+            'to_utc': 'Converts selected temporal features into UTC timezone representation.',
             'transform': 'Rewrites one feature, several features, or all features by applying a user function to each targeted thread.',
             'transpose': 'Swaps rows and features so former feature names become row labels.',
+            'truediv': 'Applies elementwise true division to compatible numeric features.',
+            'ts': 'Returns the time-series accessor bound to one or more selected features.',
             'unique_cases': 'Keeps only the first occurrence of each case label and drops later duplicates.',
             'unify': 'Joins two frames by key values. Use `right_on=""` when both frames use the same key name, `how="left"` to preserve left rows, and `validate` when you want duplicate-key checks such as `"many_to_one"`.',
             'unsqueeze': 'Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.',
@@ -1061,10 +1223,10 @@ DF_FILTER_OUT = """id  sales  city
 1   100.0  Accra
 3    90.0  Kumasi"""
 
-DF_REORDER_OUT = """sales  id  city
-100.0  1  Accra
-120.0  2  Tema
-90.0   3  Kumasi"""
+DF_REORDER_OUT = """city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0"""
 
 DF_DROP_OUT = """id  sales
 1   100.0
@@ -1312,12 +1474,22 @@ id  sales  city
 120.0    Tema      2
 90.0     Kumasi    3"""
             return DF_RENAME_OUT
-        if n in {'reorder'}:
-            if 'ReorderSpec' in method.signature:
-                return """city    id  sales
+        if n == 'place':
+            if 'const Thread& feature' in method.signature:
+                return """id  sales  profit  city
+1   100.0  40.0    Accra
+2   120.0  35.0    Tema
+3    90.0  30.0    Kumasi"""
+            return """city    id  sales
 Accra   1   100.0
 Tema    2   120.0
 Kumasi  3    90.0"""
+        if n in {'reorder'}:
+            if 'ReorderSpec' in method.signature:
+                return """id  city    sales
+1   Accra   100.0
+2   Tema    120.0
+3   Kumasi   90.0"""
             return DF_REORDER_OUT
         if n in {'drop'}:
             return DF_DROP_OUT
@@ -1343,14 +1515,51 @@ Kumasi"""
         if n == 'bottom':
             return DF_BOTTOM_OUT
         if n in {'head', 'tail', 'slice', 'take', 'sample', 'where', 'filter', 'query', 'top', 'unique_cases'}:
-            return DF_FILTER_OUT if n in {'where', 'filter', 'query', 'take'} else DF_BASE_OUT
+            if n == 'query':
+                return """id  sales  city
+1   100.0  Accra
+2   120.0  Tema"""
+            if n == 'tail':
+                return """id  sales  city
+2   120.0  Tema
+3    90.0  Kumasi"""
+            if n == 'top':
+                return """id  sales  city
+2   120.0  Tema
+1   100.0  Accra"""
+            if n == 'unique_cases':
+                return """campus  student  score
+North   Ada      88.0
+West    Esi      84.0"""
+            return DF_FILTER_OUT if n in {'where', 'filter', 'take'} else DF_BASE_OUT
         if n in {'set_cases'}:
             return DF_SET_CASES_OUT
         if n in {'reset_cases'}:
             return DF_RESET_CASES_OUT
         if n in {'align_cases'}:
             return DF_ALIGN_CASES_OUT
+        if n == 'repeated_cases':
+            return '[false, true, false]'
         if n in {'sort_values', 'sort_cases', 'reindex_like', 'reindex_cases', 'conform_to'}:
+            if n == 'sort_values':
+                return """id  sales  city
+2   120.0  Tema
+1   100.0  Accra
+3    90.0  Kumasi"""
+            if n == 'sort_cases':
+                return """with_cases.cases():
+["cs2", "cs0", "cs1"]
+
+out.cases():
+["cs0", "cs1", "cs2"]
+
+out.head():
+id  sales  city
+2   120.0  Tema
+3    90.0  Kumasi
+1   100.0  Accra"""
+            if n == 'reindex_cases':
+                return DF_ALIGN_CASES_OUT
             return DF_BASE_OUT
         if n in {'join', 'update', 'combine', 'stitch_on'}:
             return """id  sales  cost
@@ -1358,16 +1567,20 @@ Kumasi"""
 2   120.0  80.0
 3    90.0  55.0"""
         if n == 'unify':
+            if 'initializer_list<std::string_view> left_on' in method.signature:
+                return """course   OrgDefinedId  midterm  course_code  Username  Final Points Grade
+STAT200  20            82       STAT200      20        88
+STAT300  30            93       STAT300      30        99"""
             return """OrgDefinedId  midterm  Final Points Grade
 10            71       null
 20            82       88
 30            93       99"""
         if n == 'reorder':
             if 'ReorderSpec' in method.signature:
-                return """city    id  sales
-Accra   1   100.0
-Tema    2   120.0
-Kumasi  3    90.0"""
+                return """id  city    sales
+1   Accra   100.0
+2   Tema    120.0
+3   Kumasi   90.0"""
             return DF_REORDER_OUT
         if n in {'group_by'}:
             return DF_GROUP_OUT
@@ -1381,6 +1594,11 @@ Kumasi  3    90.0"""
             return DF_PIVOT_OUT
         if n in {'aggregate'}:
             return DF_SUMMARY_OUT
+        if n == 'select_like' or n == 'select_regex':
+            return """midterm_1  midterm_2
+70.0       75.0
+80.0       85.0
+90.0       95.0"""
         if n == 'corr':
             return DF_CORR_OUT
         if n in {'describe'}:
@@ -1389,6 +1607,12 @@ Kumasi  3    90.0"""
             return DF_TRANSPOSE_OUT
         if n == 'count':
             return DF_COUNT_OUT
+        if n == 'prod':
+            if 'axis' in method.signature:
+                return """[2.0, 8.0, 15.0]"""
+            return """feature  value
+a        6.0
+b        40.0"""
         if n == 'sum':
             return """feature  value
 id       6
@@ -1432,16 +1656,42 @@ true"""
             return """ts                   load
 2024-01-01T09:00:00Z  15.0
 2024-01-01T10:00:00Z  15.0"""
-        if n in {'tz_convert', 'tz_localize', 'to_utc', 'shift_time', 'floor_time', 'ceil_time', 'round_time'}:
+        if n in {'tz_convert', 'tz_localize', 'to_utc'}:
+            return """ts
+2024-01-01T09:10:00Z
+2024-01-01T09:40:00Z
+2024-01-01T10:05:00Z"""
+        if n == 'shift_time':
+            return """ts
+2024-01-01T10:10:00Z
+2024-01-01T10:40:00Z
+2024-01-01T11:05:00Z"""
+        if n == 'floor_time':
             return """ts
 2024-01-01T09:00:00Z
+2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z"""
-        if n in {'add', 'radd'}:
+        if n == 'ceil_time':
+            return """ts
+2024-01-01T10:00:00Z
+2024-01-01T10:00:00Z
+2024-01-01T11:00:00Z"""
+        if n == 'round_time':
+            return """ts
+2024-01-01T09:00:00Z
+2024-01-01T10:00:00Z
+2024-01-01T10:00:00Z"""
+        if n in {'add'}:
             return DF_PLUS10_OUT if 'const DataFrame&' not in method.signature else """id  sales
 3   210.0
 4   230.0
 7   190.0"""
-        if n in {'mul', 'multiply', 'rmul'}:
+        if n == 'radd':
+            return """a    b
+11.0  12.0
+12.0  14.0
+13.0  15.0"""
+        if n in {'mul', 'multiply'}:
             return """id  sales  city
 10  1000.0  Accra
 20  1200.0  Tema
@@ -1449,7 +1699,12 @@ true"""
 2   11000.0
 4   13200.0
 12   9000.0"""
-        if n in {'mod', 'rmod'}:
+        if n == 'rmul':
+            return """a    b
+3.0  6.0
+6.0  12.0
+9.0  15.0"""
+        if n in {'mod'}:
             return """id  sales  city
 1   0.0    Accra
 2   0.0    Tema
@@ -1457,8 +1712,59 @@ true"""
 1   100.0
 0    10.0
 3    90.0"""
-        if n in {'sub', 'subtract', 'rsub', 'div', 'divide', 'truediv', 'floordiv', 'rdiv', 'rtruediv', 'rfloordiv', 'pow', 'rpow'}:
-            return DF_BASE_OUT if 'const DataFrame&' in method.signature else DF_BASE_OUT
+        if n == 'rmod':
+            return """a    b
+0.0  0.0
+0.0  0.0
+0.0  0.0"""
+        if n in {'sub', 'subtract'}:
+            return """id  sales  city
+-9  90.0   Accra
+-8  110.0  Tema
+-7  80.0   Kumasi""" if 'const DataFrame&' not in method.signature else DF_BASE_OUT
+        if n in {'div', 'divide', 'truediv'}:
+            return """id  sales  city
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi""" if 'const DataFrame&' not in method.signature else """id    sales
+0.5   0.909091
+1.0   1.090909
+0.75  0.9"""
+        if n in {'floordiv'}:
+            return """id  sales  city
+0.0  10.0  Accra
+0.0  12.0  Tema
+0.0   9.0  Kumasi""" if 'const DataFrame&' not in method.signature else DF_BASE_OUT
+        if n == 'pow':
+            if 'const DataFrame&' in method.signature:
+                return """a    b
+8.0  9.0
+9.0  8.0
+4.0  25.0"""
+            return """a    b
+1.0  4.0
+4.0  16.0
+9.0  25.0"""
+        if n == 'rsub':
+            return """a    b
+9.0  8.0
+8.0  6.0
+7.0  5.0"""
+        if n in {'rdiv', 'rtruediv'}:
+            return """a         b
+10.0      5.0
+5.0       2.5
+3.333333  2.0"""
+        if n == 'rfloordiv':
+            return """a   b
+10  5
+5   2
+3   2"""
+        if n == 'rpow':
+            return """a      b
+10.0   100.0
+100.0  10000.0
+1000.0 100000.0"""
         if n in {'eq', 'ne', 'le', 'gt', 'ge', 'compare'}:
             return """id  sales
 1   true
@@ -1469,22 +1775,116 @@ true"""
 1   true
 2   false
 3   true"""
-        if n in {'copy', 'view'}:
+        if n == 'view':
+            return """id  sales  city
+1   100.0  Accra
+2   120.0  Tema"""
+        if n in {'copy'}:
             return DF_BASE_OUT
         if n == 'matrix':
             return """series blocks: 1
 note blocks: 1
 timeline blocks: 0
 timeindex blocks: 0"""
+        if n == 'timeline_features':
+            return """start                 end
+2020-01-01T00:00:00Z  2020-01-01T01:30:00Z
+2020-01-02T08:00:00Z  2020-01-02T09:00:00Z"""
+        if n == 'title':
+            if method.return_type.strip() == 'std::string':
+                return 'sales_report'
+            return """out.title():
+sales_report
+
+out.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
+        if n == 'title_':
+            return """df.title():
+sales_report
+
+df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
+        if n == 'ts':
+            return 'DataFrameTsAccessor(features=["load"])'
         if n in {'to_string', 'info_string'}:
             return DF_BASE_OUT
         if n in {'info'}:
             return "rows: 3\nfeatures: 3\nnumeric: id, sales\nnote: city"
+        if n in {'rolling', 'window'}:
+            return """sales_roll
+100.0
+110.0
+105.0"""
+        if n == 'replace':
+            if 'std::string_view from, std::string_view to' in method.signature or 'const char* from, const char* to' in method.signature:
+                return """midterm_1  midterm_2  city
+0.0        8.0        Accra
+12.0       0.0        Tamale
+0.0        15.0       Tamale"""
+            return """midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema"""
+        if n == 'put':
+            return """id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi"""
+        if n == 'put_':
+            return """id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi"""
+        if n == 'tabelize':
+            return """sales
+10.0
+20.0
+30.0"""
+        if n == 'transform':
+            if 'const std::function<Thread(const DataFrame&)>&' in method.signature:
+                return """id  sales  city    sales_plus_10
+1   100.0  Accra   110.0
+2   120.0  Tema    130.0
+3    90.0  Kumasi  100.0"""
+            return """id  sales  city
+1   100.0  Accra
+2   110.0  Tema
+3    90.0  Kumasi"""
+        if n in {'tz_convert', 'tz_localize', 'to_utc'}:
+            return """ts
+2024-01-01T09:10:00Z
+2024-01-01T09:40:00Z
+2024-01-01T10:05:00Z"""
+        if n == 'unsqueeze':
+            if 'depth_labels' in method.signature:
+                return """depth labels:
+["train"]
+
+frame0:
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
+            return """frame0:
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
         if n.startswith('save_') or n == 'save_as':
             return 'saved: out.*'
         if n == 'plot':
             return 'Figure(line/scatter/bar/hist)'
-        if n in {'sql', 'prepare_sql'}:
+        if n == 'sql':
+            return """id  sales
+1   100.0
+2   120.0"""
+        if n == 'prepare_sql':
             return 'SQL accessor / prepared statement created'
         if n in {'unsqueeze'}:
             return ATLAS_BASE_OUT
@@ -1861,6 +2261,25 @@ def df_time() -> str:
 });"""
 
 
+def df_time_naive() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"ts\", pluss::table::Thread(pluss::make_timeline({
+        \"2024-01-01 09:10:00\",\n        \"2024-01-01 09:40:00\",\n        \"2024-01-01 10:05:00\",\n    }))},
+    {\"load\", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+});"""
+
+
+def df_temporal_mixed() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"start\", pluss::table::Thread(pluss::make_timeline({
+        \"2020-01-01T00:00:00Z\",\n        \"2020-01-02T08:00:00Z\",\n    }))},
+    {\"end\", pluss::table::Thread(pluss::make_timeindex({
+        \"2020-01-01T01:30:00Z\",\n        \"2020-01-02T09:00:00Z\",\n    }))},
+    {\"load\", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Tema\"}))},
+});"""
+
+
 def df_two() -> str:
     return """auto left = pluss::table::DataFrame({
     {\"id\", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
@@ -1888,6 +2307,49 @@ def df_group() -> str:
     {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Accra\", \"Tema\", \"Tema\"}))},
     {\"product\", pluss::table::Thread(pluss::make_note({\"A\", \"B\", \"A\", \"B\"}))},
     {\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});"""
+
+
+def df_named_metrics() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"midterm_1\", pluss::table::Thread(pluss::make_series({70.0, 80.0, 90.0}))},
+    {\"midterm_2\", pluss::table::Thread(pluss::make_series({75.0, 85.0, 95.0}))},
+    {\"final_points\", pluss::table::Thread(pluss::make_series({88.0, 91.0, 94.0}))},
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
+});"""
+
+
+def df_small_numeric() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"a\", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {\"b\", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});"""
+
+
+def df_pow_pair() -> str:
+    return """auto left = pluss::table::DataFrame({
+    {\"a\", pluss::table::Thread(pluss::make_series({2.0, 3.0, 4.0}))},
+    {\"b\", pluss::table::Thread(pluss::make_series({3.0, 2.0, 5.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {\"a\", pluss::table::Thread(pluss::make_series({3.0, 2.0, 1.0}))},
+    {\"b\", pluss::table::Thread(pluss::make_series({2.0, 3.0, 2.0}))},
+});"""
+
+
+def df_replace_numeric() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"midterm_1\", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {\"midterm_2\", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Tema\", \"Tema\"}))},
+});"""
+
+
+def df_unique_subset() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"campus\", pluss::table::Thread(pluss::make_note({\"North\", \"North\", \"West\"}))},
+    {\"student\", pluss::table::Thread(pluss::make_note({\"Ada\", \"Kojo\", \"Esi\"}))},
+    {\"score\", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0}))},
 });"""
 
 
@@ -2062,6 +2524,8 @@ def example_for(class_name: str, method: Method) -> str:
                 path = GENERIC_TXT_PATH
             return f'auto out = pluss::table::DataFrame::{n}("{path}");'
         if n == 'tabelize':
+            if 'TabelizePolicy' in sig:
+                return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\npluss::kindle::TabelizePolicy policy;\nauto out = pluss::table::DataFrame::tabelize(catalog, policy);'
             return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\nauto out = pluss::table::DataFrame::tabelize(catalog);'
         if n == 'kindelize':
             return df_base() + '\n\nauto out = df.kindelize();'
@@ -2099,6 +2563,8 @@ def example_for(class_name: str, method: Method) -> str:
                 return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast_series({"sales"}, pluss::codem::ScalarType::Float64);'
             if n == 'cast_timeline':
                 return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_note({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\nauto out = df.cast_timeline({"ts"});'
+            if n == 'timeline_features':
+                return df_temporal_mixed() + '\n\nauto out = df.timeline_features();'
             return df_base() + f'\n\nauto out = df.{n}();' if n.endswith('_features') else df_base() + f'\n\nauto out = df.{n}({{"sales"}});'
         if n in {'astype','cast'}:
             if 'feature_dtypes' in sig:
@@ -2107,9 +2573,13 @@ def example_for(class_name: str, method: Method) -> str:
                 return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast({{.feature = "sales", .target = pluss::table::ThreadCastTarget::Series, .series_dtype = pluss::codem::ScalarType::Float64}});'
             if n == 'astype':
                 return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.astype({"sales"}, pluss::codem::ScalarType::Float64);'
-        if n in {'insert','drop','reorder','add_prefix','add_suffix','rename','rename_','rename_features','relabel_features','set_axis','set_feature_axis'}:
+        if n in {'insert','drop','reorder','add_prefix','add_suffix','rename','rename_','rename_features','relabel_features','set_axis','set_feature_axis','place'}:
             if n == 'insert':
                 return df_base() + '\n\nauto out = df.insert(1, "profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
+            if n == 'place':
+                if 'const Thread& feature' in sig:
+                    return df_base() + '\n\nauto out = df.place("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), "sales", true);'
+                return df_base() + '\n\nauto out = df.place("city", "id", false);'
             if n == 'drop':
                 return df_base() + '\n\nauto out = df.drop({"city"});'
             if n == 'reorder':
@@ -2118,11 +2588,12 @@ def example_for(class_name: str, method: Method) -> str:
                         df_base()
                         + '\n\n'
                         + 'pluss::table::DataFrame::ReorderSpec spec;\n'
-                        + 'spec.features = {"city"};\n'
-                        + 'spec.placement = pluss::table::DataFrame::ReorderPlacement::Front;\n'
+                        + 'spec.features = {"sales"};\n'
+                        + 'spec.placement = pluss::table::DataFrame::ReorderPlacement::After;\n'
+                        + 'spec.anchor = "city";\n'
                         + 'auto out = df.reorder(spec);'
                     )
-                return df_base() + '\n\nauto out = df.reorder({"sales", "id", "city"});'
+                return df_base() + '\n\nauto out = df.reorder({"city"});'
             if n == 'add_prefix':
                 return df_base() + '\n\nauto out = df.add_prefix("feat_");'
             if n == 'add_suffix':
@@ -2155,9 +2626,9 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'bottom':
                 return df_base() + '\n\nauto out = df.bottom("sales", 2);'
             if n == 'repeated_cases':
-                return df_base() + '\n\nauto out = df.repeated_cases();'
+                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.repeated_cases();'
             if n == 'unique_cases':
-                return df_base() + '\n\nauto out = df.unique_cases();'
+                return df_unique_subset() + '\n\nauto out = df.unique_cases({"campus"});'
             if n == 'set_cases':
                 return df_base() + '\n\nauto out = df.set_cases("city");'
             if n == 'reset_cases':
@@ -2168,7 +2639,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'conform_to' or n == 'reindex_like':
                 return df_two() + f'\n\nauto out = left.{n}(right);'
             if n == 'reindex_cases':
-                return df_base() + '\n\nauto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.reindex_cases(cases);'
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.reindex_cases(cases);'
             if n == 'stitch_on':
                 if 'initializer_list<std::string_view> left_features' in sig:
                     return df_two() + '\n\nauto out = left.stitch_on({"id"}, right, {"id"}, "_right");'
@@ -2249,6 +2720,18 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.sql().execute("SELECT id, sales FROM self WHERE sales > 95");'
         if n == 'prepare_sql':
             return df_base() + '\n\nauto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");'
+        if n == 'select_like':
+            return df_named_metrics() + '\n\nauto out = df.select_like("midterm");'
+        if n == 'select_regex':
+            return df_named_metrics() + '\n\nauto out = df.select_regex("^midterm_[12]$");'
+        if n == 'replace':
+            if 'std::string_view from, std::string_view to' in sig or 'const char* from, const char* to' in sig:
+                return df_replace_numeric() + '\n\nauto out = df.replace("Tema", "Tamale", {"city"});'
+            return df_replace_numeric() + '\n\nauto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});'
+        if n in {'put', 'put_'}:
+            if n == 'put':
+                return df_base() + '\n\nauto mask = df.features("id") == 2.0;\nauto out = df.put("sales", mask, 999.0);'
+            return df_base() + '\n\nauto mask = df.features("id") == 2.0;\ndf.put_("city", mask, "Tamale");'
         if n in {'head','tail','sample','slice','take','where','filter','query','assign','transform'}:
             if n == 'head':
                 return df_base() + '\n\nauto out = df.head(2, false);'
@@ -2263,12 +2746,14 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'where' or n == 'filter':
                 return df_base() + '\n\nauto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\nauto out = df.' + n + '(mask);'
             if n == 'query':
-                return df_base() + ('\n\nauto out = df.query("sales > 95");' if 'string_view' in sig else '\n\nauto out = df.query("sales > 95");')
+                return df_base() + '\n\nauto out = df.query("sales > 95");'
             if n == 'assign':
                 if 'pair<std::string, Thread>' in sig:
                     return df_base() + '\n\nauto out = df.assign({{"profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}))}});'
                 return df_base() + '\n\nauto out = df.assign({{.feature = "profit", .expr = [](const pluss::table::DataFrame& frame) { return pluss::table::Thread(frame.features("sales").as_series().sub(60)); }}});'
             if n == 'transform':
+                if 'const std::function<Thread(const DataFrame&)>&' in sig:
+                    return df_base() + '\n\nauto out = df.transform("sales_plus_10", [](const pluss::table::DataFrame& frame) { return pluss::table::Thread(frame.features("sales").as_series().add(10.0)); });'
                 if 'std::string_view feature' in sig:
                     return df_base() + '\n\nauto out = df.transform("sales", [](const pluss::table::Thread& thread) { return thread.clip(0.0, 110.0); });'
                 if 'TransformSpec' in sig:
@@ -2278,11 +2763,11 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'resample':
                 return df_time() + '\n\nauto out = df.resample("ts", {"load"}, "1h", "mean", 1, false);'
             if n == 'tz_convert':
-                return df_time() + '\n\nauto out = df.tz_convert({"ts"}, "America/Edmonton");'
+                return df_time_naive() + '\n\nauto localized = df.tz_localize({"ts"}, "UTC");\nauto out = localized.tz_convert({"ts"}, "UTC");'
             if n == 'tz_localize':
-                return df_time() + '\n\nauto out = df.tz_localize({"ts"}, "America/Edmonton", 0, "shift_forward");'
+                return df_time_naive() + '\n\nauto out = df.tz_localize({"ts"}, "UTC", 0, "shift_forward");'
             if n == 'to_utc':
-                return df_time() + '\n\nauto out = df.to_utc({"ts"});'
+                return df_time_naive() + '\n\nauto localized = df.tz_localize({"ts"}, "UTC");\nauto out = localized.to_utc({"ts"});'
             if n == 'shift_time':
                 return df_time() + '\n\nauto out = df.shift_time({"ts"}, 1, "hour");'
             if n == 'floor_time':
@@ -2310,15 +2795,25 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);'
         if n in {'add','sub','subtract','mul','multiply','div','divide','truediv','floordiv','mod','pow','eq','ne','lt','le','gt','ge','compare'}:
             if 'const DataFrame&' in sig:
+                if n == 'pow':
+                    return df_pow_pair() + '\n\nauto out = left.pow(right);'
+                if n == 'truediv':
+                    return df_pair_aligned() + '\n\nauto out = left.truediv(right);'
                 return df_pair_aligned() + f'\n\nauto out = left.{n}(right);'
+            if n == 'pow':
+                return df_small_numeric() + '\n\nauto out = df.pow(2);'
             if n == 'lt':
                 return df_base() + '\n\nauto out = df.lt(110);'
             return df_base() + f'\n\nauto out = df.{n}(10);'
         if n in {'radd','rsub','rmul','rdiv','rtruediv','rfloordiv','rmod','rpow'}:
-            return df_base() + f'\n\nauto out = df.{n}(10);'
-        if n in {'sum','mean','median','min','max','std','var','count','describe','transpose','tally','window','rolling','matrix'}:
+            return df_small_numeric() + f'\n\nauto out = df.{n}(10);'
+        if n in {'sum','mean','median','min','max','std','var','count','describe','transpose','tally','window','rolling','matrix','prod'}:
             if n == 'window' or n == 'rolling':
-                return df_base() + '\n\nauto out = df.' + n + '({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, true);'
+                return df_base() + '\n\nauto out = df.' + n + '({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, false);'
+            if n == 'prod':
+                if 'axis' in sig:
+                    return df_small_numeric() + '\n\nauto out = df.prod(1, true);'
+                return df_small_numeric() + '\n\nauto out = df.prod(false);'
             if n == 'transpose':
                 return df_base() + '\n\nauto out = df.transpose(false);'
             if n == 'matrix':
@@ -2415,8 +2910,16 @@ def example_for(class_name: str, method: Method) -> str:
                     'save_json': f'"{GENERIC_OUTPUT_JSON_PATH}"', 'save_parquet': f'"{GENERIC_OUTPUT_PARQUET_PATH}"', 'save_as': f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'
                 }[n]
                 return df_base() + f'\n\ndf.{n}({target});'
+        if n == 'title':
+            if method.return_type.strip() == 'std::string':
+                return df_base() + '\n\nauto titled = df.title("sales_report");\nauto out = titled.title();'
+            return df_base() + '\n\nauto out = df.title("sales_report");'
+        if n == 'title_':
+            return df_base() + '\n\ndf.title_("sales_report");'
         if n in {'defined','unique'}:
             return df_base() + f'\n\nauto out = df.{n}();'
+        if n == 'ts':
+            return df_time() + '\n\nauto out = df.ts("load");'
         if n == 'unsqueeze':
             return df_base() + ('\n\nauto out = df.unsqueeze();' if 'depth_labels' not in sig else '\n\nauto labels = pluss::table::Thread(pluss::make_note({"train"}));\nauto out = df.unsqueeze(labels);')
         return df_base() + f'\n\nauto out = df.{n}();'
@@ -3321,6 +3824,24 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'For fixed frequencies, bins are anchored from the start of the local day rather than from the first observation timestamp.',
                 'Numeric reductions such as `mean`, `sum`, `min`, `max`, `first`, and `last` require numeric Series features.',
             ])
+        if class_name == 'DataFrame' and n == 'tail':
+            return bullets('Practical Behavior', [
+                '`tail(n)` preserves the original feature order and returns the last `n` rows.',
+                'If `n` is larger than the frame height, the whole frame is returned.',
+                'The returned object is a `DataFrameView`, so it behaves like a lightweight preview slice rather than a deep copy.',
+            ])
+        if class_name == 'DataFrame' and n == 'tabelize':
+            return bullets('Practical Behavior', [
+                '`tabelize(catalog)` is the explicit bridge from Kindle stream collections into the DataFrame model.',
+                'Aligned streams become DataFrame features, and stream position becomes row position.',
+                'Use the policy overload when you want explicit tabelization rules instead of the defaults.',
+            ])
+        if class_name == 'DataFrame' and n in {'title', 'title_'}:
+            return bullets('Practical Behavior', [
+                '`title()` with no argument reads the current frame title.',
+                '`title("...")` returns a titled copy and leaves the source frame unchanged.',
+                '`title_("...")` mutates the current frame title in place.',
+            ])
         if class_name == 'DataFrame' and n == 'corr':
             return bullets('Practical Behavior', [
                 '`corr(...)` builds a correlation matrix across numeric features only.',
@@ -3412,11 +3933,118 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Use it to build masks before `filter(...)`, replacement policies, or diagnostic summaries.',
                 '`notna(...)` and `notnull(...)` are equivalent.',
             ])
+        if class_name == 'DataFrame' and n == 'place':
+            return bullets('Practical Behavior', [
+                '`place(name, feature, anchor, after)` inserts a brand-new feature relative to an existing anchor.',
+                '`place(name, anchor, after)` moves an existing feature without forcing you to restate the full feature order.',
+                'When `after=false`, placement happens before the anchor. When `after=true`, placement happens after the anchor.',
+            ])
+        if class_name == 'DataFrame' and n in {'put', 'put_'}:
+            return bullets('Practical Behavior', [
+                f'`{n}(feature, mask, value)` rewrites only the rows where the mask evaluates true.',
+                'The mask must match the frame case count.',
+                'Use `put(...)` when you want a new frame result, and `put_(...)` when you want the same rewrite in place.',
+            ])
+        if class_name == 'DataFrame' and n == 'prod':
+            return bullets('Axis Rules', [
+                '`prod(render=false)` returns a compact summary view with one product per numeric feature.',
+                '`prod(axis=0)` returns a numeric thread with one product per numeric feature.',
+                '`prod(axis=1)` returns a numeric thread with one product per row across numeric features.',
+            ])
+        if class_name == 'DataFrame' and n == 'query':
+            return bullets('Practical Behavior', [
+                '`query(expression)` keeps rows where the expression evaluates true.',
+                'Feature names are referenced directly inside the expression string.',
+                'String comparisons should use quoted values, especially when feature names contain spaces.',
+            ])
+        if class_name == 'DataFrame' and n == 'top':
+            return bullets('Practical Behavior', [
+                '`top(feature, n)` sorts descending by the selected feature, keeps nulls last, then returns the first `n` rows.',
+                'The output rows stay aligned across every feature; this is not a single-column extraction.',
+                'Use `bottom(...)` when you want the smallest rows instead of the largest ones.',
+            ])
         if class_name == 'DataFrame' and n == 'reorder':
             return bullets('Practical Behavior', [
                 '`reorder({"a", "b"})` now means “move these features together and preserve the relative order of everything else.”',
                 'Use `ReorderSpec` when you need to move a subset to the front, back, before an anchor, or after an anchor.',
                 'This avoids listing a 3000-feature schema just to reposition two columns.',
+            ])
+        if class_name == 'DataFrame' and n == 'replace':
+            return bullets('Practical Behavior', [
+                '`replace(from, to, features)` dispatches by value type, so numeric replacements touch numeric series features while string replacements touch note features.',
+                'If `features` is empty, every compatible feature of the relevant kind participates automatically.',
+                'Use `pluss::null` as `to` when you want matched cells to become missing.',
+            ])
+        if class_name == 'DataFrame' and n == 'rolling':
+            return bullets('Practical Behavior', [
+                '`rolling(...)` is the frame-level window-engineering route, so one call can derive several rolling outputs at once.',
+                '`keep_input=true` appends rolling outputs to the original frame, while `keep_input=false` returns only the engineered outputs.',
+                'Each `WindowSpec` controls the output name, source feature, operation, window width, and minimum observation rule.',
+            ])
+        if class_name == 'DataFrame' and n == 'transform':
+            return bullets('Practical Behavior', [
+                '`transform(fn)` rewrites every feature with the same thread-level function.',
+                '`transform(feature, thread_fn)` rewrites one existing feature in place within the returned frame.',
+                '`transform(feature, frame_fn)` is the derive-style overload: it can create a new feature from the whole frame, as long as the returned thread matches the frame case count.',
+            ])
+        if class_name == 'DataFrame' and n in {'select_like', 'select_regex'}:
+            return bullets('Practical Behavior', [
+                f'`{n}(...)` filters feature names, not row values.',
+                'The output keeps the original row order and case axis unchanged.',
+                'Use this when you want schema-driven feature selection without listing every matching feature manually.',
+            ])
+        if class_name == 'DataFrame' and n == 'sql':
+            return bullets('Practical Behavior', [
+                '`sql()` returns the SQL accessor; it does not execute a statement by itself.',
+                'Call `.execute(...)` on the accessor when you want a result frame immediately.',
+                'Use `prepare_sql(...)` when the same query will be executed repeatedly with changing bindings.',
+            ])
+        if class_name == 'DataFrame' and n == 'truediv':
+            return bullets('Practical Behavior', [
+                'Scalar `truediv(...)` divides every compatible numeric cell by the supplied scalar.',
+                'Frame-vs-frame `truediv(...)` divides aligned numeric features row by row.',
+                'Non-numeric features pass through unchanged in the scalar form and are excluded from numeric combination work.',
+            ])
+        if class_name == 'DataFrame' and n == 'ts':
+            return bullets('Practical Behavior', [
+                '`ts(...)` does not materialize a new DataFrame by itself; it returns the time-series accessor bound to the selected features.',
+                'Use the accessor when you want downstream resampling, lag blocks, rolling blocks, or calendar features on those bound features.',
+            ])
+        if class_name == 'DataFrame' and n == 'unique_cases':
+            return bullets('Practical Behavior', [
+                '`unique_cases(features)` keeps only the first row for each distinct key combination defined by `features`.',
+                'With no feature list, the full row payload is used as the duplicate key.',
+                'This is the row-filtering companion to `repeated_cases(...)`.',
+            ])
+        if class_name == 'DataFrame' and n == 'unify':
+            return bullets('Join Semantics', [
+                '`unify(...)` matches rows by key values, not by current row order.',
+                '`how="left"` preserves the left frame row order and row count, while `how="inner"` keeps matched rows only.',
+                'When right-hand non-key names collide with left-hand names, `right_suffix` is applied only to the right-hand collisions.',
+            ])
+        if class_name == 'DataFrame' and n == 'unsqueeze':
+            return bullets('Practical Behavior', [
+                '`unsqueeze()` wraps one frame into a depth-1 `Atlas`.',
+                'The `depth_labels` overload lets you attach exactly one depth label to that one-frame atlas.',
+                'This is useful when downstream APIs expect atlas depth even though you currently have only one frame.',
+            ])
+        if class_name == 'DataFrame' and n == 'view':
+            return bullets('Slice Semantics', [
+                '`view(start, stop)` behaves like a positional row slice `[start, stop)`.',
+                'Negative `start` or `stop` values count backward from the end of the frame.',
+                'Unlike `slice(...)`, `view(...)` returns a `DataFrameView` wrapper intended for lightweight inspection.',
+            ])
+        if class_name == 'DataFrame' and n == 'where':
+            return bullets('Practical Behavior', [
+                '`where(mask)` keeps rows where the boolean mask is true and drops the rest.',
+                'The mask length must match the frame case count exactly.',
+                'Use `put(...)` when you want masked replacement inside one feature instead of masked row filtering.',
+            ])
+        if class_name == 'DataFrame' and n == 'window':
+            return bullets('Practical Behavior', [
+                '`window(...)` engineers one or more derived features from rolling/window operations described by `WindowSpec`.',
+                '`keep_input=false` returns only the engineered outputs, which is useful for model-matrix style pipelines.',
+                '`rolling(...)` is the alias that delegates to the same frame-level implementation.',
             ])
         if class_name == 'Thread' and n == 'bfill':
             return [
@@ -3935,7 +4563,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 lines.append('')
                 lines.append('#### Parameters')
                 lines.append('')
-                lines.append(params_doc(merged_params(overloads)))
+                lines.append(params_doc(merged_params(overloads), class_name, overloads[0].name))
                 lines.append('')
                 lines.append('#### Returns')
                 lines.append('')
@@ -3991,7 +4619,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             lines.append('')
             lines.append('#### Parameters')
             lines.append('')
-            lines.append(params_doc(method.params))
+            lines.append(params_doc(method.params, class_name, method.name))
             lines.append('')
             lines.append('#### Returns')
             lines.append('')

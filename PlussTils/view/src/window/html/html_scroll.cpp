@@ -42,6 +42,8 @@ void HtmlScrollModel::update_metrics(const HtmlRenderStats& metrics) {
   document_.y = clamp_offset(document_.y, metrics_.document_max_scroll_y);
   document_target_.x = clamp_offset(document_target_.x, metrics_.document_max_scroll_x);
   document_target_.y = clamp_offset(document_target_.y, metrics_.document_max_scroll_y);
+  document_velocity_.x = std::isfinite(document_velocity_.x) ? document_velocity_.x : 0.0;
+  document_velocity_.y = std::isfinite(document_velocity_.y) ? document_velocity_.y : 0.0;
 
   for (const auto& region : metrics_.table_scroll_regions) {
     auto& offset = tables_[region.target];
@@ -50,6 +52,9 @@ void HtmlScrollModel::update_metrics(const HtmlRenderStats& metrics) {
     auto& target = table_targets_[region.target];
     target.x = clamp_offset(target.x, region.max_scroll_x);
     target.y = clamp_offset(target.y, region.max_scroll_y);
+    auto& velocity = table_velocities_[region.target];
+    velocity.x = std::isfinite(velocity.x) ? velocity.x : 0.0;
+    velocity.y = std::isfinite(velocity.y) ? velocity.y : 0.0;
   }
   if (scrollbar_drag_.surface == DragSurface::Document) {
     scrollbar_drag_.track = scrollbar_drag_.axis == DragAxis::Horizontal
@@ -79,6 +84,7 @@ void HtmlScrollModel::update_metrics(const HtmlRenderStats& metrics) {
 void HtmlScrollModel::reset() noexcept {
   document_ = Offset{};
   document_target_ = Offset{};
+  document_velocity_ = Offset{};
   for (auto& [target, offset] : tables_) {
     (void)target;
     offset = Offset{};
@@ -86,6 +92,10 @@ void HtmlScrollModel::reset() noexcept {
   for (auto& [target, offset] : table_targets_) {
     (void)target;
     offset = Offset{};
+  }
+  for (auto& [target, velocity] : table_velocities_) {
+    (void)target;
+    velocity = Offset{};
   }
   scrollbar_drag_ = ScrollbarDrag{};
   pointer_is_down_ = false;
@@ -122,8 +132,12 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
     }
   }
 
-  Offset& document_offset = animated ? document_target_ : document_;
-  auto& table_offsets = animated ? table_targets_ : tables_;
+  // WebKit treats precise deltas as NeverAnimate on macOS: the platform has
+  // already applied acceleration and supplies momentum as more wheel events.
+  // Only step-based mouse wheels need an interpolated scroll target.
+  const bool use_animation = animated && !precise_delta;
+  Offset& document_offset = use_animation ? document_target_ : document_;
+  auto& table_offsets = use_animation ? table_targets_ : tables_;
   bool changed = false;
   const auto apply_axis = [&](const bool horizontal, const double delta) {
     if (delta == 0.0) {
@@ -160,7 +174,7 @@ bool HtmlScrollModel::scroll_wheel(double delta_x,
 
   apply_axis(true, delta_x);
   apply_axis(false, delta_y);
-  if (!animated) {
+  if (!use_animation) {
     sync_targets_to_current();
   }
   return changed;
@@ -172,38 +186,80 @@ bool HtmlScrollModel::advance_animation(const double elapsed_seconds) {
   }
 
   const double dt = std::clamp(elapsed_seconds, 0.001, 0.05);
-  const double alpha = 1.0 - std::exp(-dt / 0.018);
   bool changed = false;
-  const auto advance = [&](double& current, const double target) {
-    const double before = current;
-    const double remaining = target - current;
-    current = std::abs(remaining) < 0.05 ? target : current + remaining * alpha;
-    changed = changed || std::abs(current - before) > 1e-9;
+  const auto advance = [&](double& current, const double target, double& velocity, const int limit) {
+    const int before_pixel = rounded_offset(current, limit);
+    const double clamped_target = clamp_offset(target, limit);
+    if (limit <= 0) {
+      current = 0.0;
+      velocity = 0.0;
+      return;
+    }
+
+    // Exact critically-damped integration. Retargeting changes only the
+    // destination, so the current velocity remains continuous across a burst
+    // of wheel events instead of restarting or snapping on each event.
+    constexpr double kAngularFrequency = 30.0;
+    const double displacement = current - clamped_target;
+    const double coefficient = velocity + kAngularFrequency * displacement;
+    const double decay = std::exp(-kAngularFrequency * dt);
+    const double next_displacement = (displacement + coefficient * dt) * decay;
+    const double next_velocity =
+        (velocity - kAngularFrequency * coefficient * dt) * decay;
+    current = clamp_offset(clamped_target + next_displacement, limit);
+    velocity = next_velocity;
+
+    if ((current <= 0.0 && velocity < 0.0) ||
+        (current >= static_cast<double>(limit) && velocity > 0.0)) {
+      velocity = 0.0;
+    }
+    if (std::abs(clamped_target - current) < 0.02 && std::abs(velocity) < 0.5) {
+      current = clamped_target;
+      velocity = 0.0;
+    }
+    changed = changed || rounded_offset(current, limit) != before_pixel;
   };
 
-  advance(document_.x, document_target_.x);
-  advance(document_.y, document_target_.y);
+  advance(document_.x, document_target_.x, document_velocity_.x, metrics_.document_max_scroll_x);
+  advance(document_.y, document_target_.y, document_velocity_.y, metrics_.document_max_scroll_y);
   for (auto& [target, offset] : tables_) {
     const auto target_it = table_targets_.find(target);
-    if (target_it == table_targets_.end()) {
+    const auto velocity_it = table_velocities_.find(target);
+    if (target_it == table_targets_.end() || velocity_it == table_velocities_.end()) {
       continue;
     }
-    advance(offset.x, target_it->second.x);
-    advance(offset.y, target_it->second.y);
+    const auto region_it = std::find_if(
+        metrics_.table_scroll_regions.begin(),
+        metrics_.table_scroll_regions.end(),
+        [&](const HtmlScrollRegion& region) { return region.target == target; });
+    const int limit_x = region_it == metrics_.table_scroll_regions.end() ? 0 : region_it->max_scroll_x;
+    const int limit_y = region_it == metrics_.table_scroll_regions.end() ? 0 : region_it->max_scroll_y;
+    advance(offset.x, target_it->second.x, velocity_it->second.x, limit_x);
+    advance(offset.y, target_it->second.y, velocity_it->second.y, limit_y);
   }
   return changed;
 }
 
 bool HtmlScrollModel::has_pending_animation() const noexcept {
   const auto differs = [](const Offset& current, const Offset& target) {
-    return std::abs(current.x - target.x) >= 0.05 || std::abs(current.y - target.y) >= 0.05;
+    return std::abs(current.x - target.x) >= 0.02 || std::abs(current.y - target.y) >= 0.02;
+  };
+  const auto moving = [](const Offset& velocity) {
+    return std::abs(velocity.x) >= 0.5 || std::abs(velocity.y) >= 0.5;
   };
   if (differs(document_, document_target_)) {
+    return true;
+  }
+  if (moving(document_velocity_)) {
     return true;
   }
   for (const auto& [target, offset] : tables_) {
     const auto target_it = table_targets_.find(target);
     if (target_it != table_targets_.end() && differs(offset, target_it->second)) {
+      return true;
+    }
+    const auto velocity_it = table_velocities_.find(target);
+    if (velocity_it != table_velocities_.end() && moving(velocity_it->second)) {
       return true;
     }
   }
@@ -213,6 +269,11 @@ bool HtmlScrollModel::has_pending_animation() const noexcept {
 void HtmlScrollModel::sync_targets_to_current() {
   document_target_ = document_;
   table_targets_ = tables_;
+  document_velocity_ = Offset{};
+  for (auto& [target, velocity] : table_velocities_) {
+    (void)target;
+    velocity = Offset{};
+  }
 }
 
 bool HtmlScrollModel::pointer_down(const PointI location) {
