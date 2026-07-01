@@ -89,22 +89,25 @@
 
   function buildMethodSidebar() {
     const pageRoots = Array.from(document.querySelectorAll("div.body > section"));
-    const pageRoot = pageRoots.find((root) => {
-      return Array.from(root.children).some((node) => {
-        if (node.tagName !== "SECTION") {
-          return false;
-        }
-        const h2 = node.querySelector(":scope > h2");
-        if (!h2) {
-          return false;
-        }
-        return Array.from(node.children).some((child) => {
-          return child.tagName === "SECTION" && child.querySelector(":scope > h3");
+    const pageRootGroups = pageRoots
+      .map((root) => {
+        const groups = Array.from(root.children).filter((node) => {
+          if (node.tagName !== "SECTION") {
+            return false;
+          }
+          const h2 = node.querySelector(":scope > h2");
+          if (!h2) {
+            return false;
+          }
+          return Array.from(node.children).some((child) => {
+            return child.tagName === "SECTION" && child.querySelector(":scope > h3");
+          });
         });
-      });
-    });
+        return { root, groups };
+      })
+      .filter((entry) => entry.groups.length > 0);
 
-    if (!pageRoot) {
+    if (!pageRootGroups.length) {
       return;
     }
 
@@ -114,18 +117,7 @@
       return;
     }
 
-    const groups = Array.from(pageRoot.children).filter((node) => {
-      if (node.tagName !== "SECTION") {
-        return false;
-      }
-      const h2 = node.querySelector(":scope > h2");
-      if (!h2) {
-        return false;
-      }
-      return Array.from(node.children).some((child) => {
-        return child.tagName === "SECTION" && child.querySelector(":scope > h3");
-      });
-    });
+    const groups = pageRootGroups.flatMap((entry) => entry.groups);
 
     const methodItems = [];
     groups.forEach((groupRoot) => {

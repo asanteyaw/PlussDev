@@ -81,6 +81,14 @@ Scene scale_scene(const Scene& scene, const double scale) {
           } else if constexpr (std::is_same_v<CommandT, TextCommand>) {
             scaled.anchor = point(source.anchor);
             scaled.pixel_size = positive(source.pixel_size);
+          } else if constexpr (std::is_same_v<CommandT, TextCaretCommand>) {
+            scaled.text_anchor = point(source.text_anchor);
+            scaled.pixel_size = positive(source.pixel_size);
+            scaled.fallback_width = scalar(source.fallback_width);
+            scaled.max_x = scalar(source.max_x);
+            scaled.y0 = scalar(source.y0);
+            scaled.y1 = scalar(source.y1);
+            scaled.thickness = positive(source.thickness);
           }
           out.add(std::move(scaled));
         },

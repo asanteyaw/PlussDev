@@ -216,7 +216,7 @@ Stream astype(self, pluss::codem::ScalarType dtype) const
 #### Parameters
 
 `dtype` : `pluss::codem::ScalarType`
-    See the signature for the supported argument form.
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -335,10 +335,10 @@ Stream cast(self, pluss::table::ThreadCastTarget target, std::optional<pluss::co
 #### Parameters
 
 `target` : `pluss::table::ThreadCastTarget`
-    See the signature for the supported argument form.
+    Target payload family chosen by this cast overload.
 
 `series_dtype` : `std::optional<pluss::codem::ScalarType>`
-    See the signature for the supported argument form.
+    Optional scalar dtype used when the cast target is a numeric `Series`.
 
 #### Returns
 
@@ -508,10 +508,10 @@ Stream clip(self, scalar min_value, scalar max_value) const
 #### Parameters
 
 `min_value` : `scalar`
-    See the signature for the supported argument form.
+    Lower/upper boundary used by this overload.
 
 `max_value` : `scalar`
-    See the signature for the supported argument form.
+    Lower/upper boundary used by this overload.
 
 #### Returns
 
@@ -809,7 +809,7 @@ Stream fillna(self, const char* value) const
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -852,7 +852,7 @@ Stream fillna(self, const pluss::TimeIndex& value) const
 #### Parameters
 
 `value` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -895,7 +895,7 @@ Stream fillna(self, const pluss::Timeline& value) const
 #### Parameters
 
 `value` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -938,7 +938,7 @@ Stream fillna(self, scalar value) const
 #### Parameters
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -981,7 +981,7 @@ Stream fillna(self, std::string_view value) const
 #### Parameters
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -1024,7 +1024,7 @@ Stream filter(self, const pluss::Series& bool_mask) const
 #### Parameters
 
 `bool_mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
 #### Returns
 
@@ -1061,7 +1061,7 @@ static Stream from_thread(const pluss::table::Thread& thread, std::optional<plus
 #### Parameters
 
 `thread` : `const pluss::table::Thread&`
-    See the signature for the supported argument form.
+    Thread payload supplied to this overload.
 
 `cases` : `std::optional<pluss::table::Thread>`
     Case-label thread to attach to the current object.
@@ -1569,7 +1569,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -1679,7 +1679,7 @@ Stream std(self, bool unbiased = true) const
 #### Parameters
 
 `unbiased` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -1786,7 +1786,7 @@ Stream take(self, std::span<const std::int64_t> indices) const
 #### Parameters
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -2045,7 +2045,7 @@ Stream var(self, bool unbiased = true) const
 #### Parameters
 
 `unbiased` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -2149,7 +2149,7 @@ Stream with_meta(self, std::initializer_list<std::pair<std::string_view, std::st
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -2192,7 +2192,7 @@ Stream with_meta(self, std::string key, std::string value) const
     Name of the target slot or stream.
 
 `value` : `std::string`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2232,7 +2232,7 @@ Stream& with_meta_(self, std::initializer_list<std::pair<std::string_view, std::
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -2269,7 +2269,7 @@ Stream& with_meta_(self, std::string key, std::string value)
     Name of the target slot or stream.
 
 `value` : `std::string`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -2303,7 +2303,7 @@ Stream with_validity_mask(self, const pluss::Series& mask) const
 #### Parameters
 
 `mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -2340,7 +2340,7 @@ Stream& with_validity_mask_(self, const pluss::Series& mask)
 #### Parameters
 
 `mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 

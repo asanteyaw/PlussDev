@@ -970,9 +970,11 @@ std::string html_shell_(std::string_view title,
       border-color: #075d68;
       color: #ffffff;
     }}
-    .tools button,
-    .tools input {{
+    .tools button {{
       text-align: center;
+    }}
+    .tools input {{
+      text-align: left;
     }}
     .content {{
       padding: 0 12px 12px;

@@ -133,30 +133,66 @@ def clean_space(s: str) -> str:
     return re.sub(r'\s+', ' ', s).strip()
 
 
+def public_cpp_type(text: str) -> str:
+    out = text
+    replacements = (
+        ('pluss::codem::ScalarType', 'pluss::ScalarType'),
+        ('pluss::msharp::RangeView::Int', 'pluss::RangeView<std::int64_t>'),
+        ('pluss::msharp::RangeView::Double', 'pluss::RangeView<double>'),
+        ('pluss::msharp::RangeView::Bool', 'pluss::RangeView<bool>'),
+        ('RangeView::Int', 'pluss::RangeView<std::int64_t>'),
+        ('RangeView::Double', 'pluss::RangeView<double>'),
+        ('RangeView::Bool', 'pluss::RangeView<bool>'),
+        ('pluss::msharp::RangeView::Of<', 'pluss::RangeView<'),
+        ('RangeView::Of<', 'pluss::RangeView<'),
+    )
+    for old, new in replacements:
+        out = out.replace(old, new)
+    return out
+
+
 def split_top_level(text: str) -> list[str]:
     out = []
     cur = []
     depth_angle = depth_paren = depth_brace = depth_brack = 0
+    in_single = False
+    in_double = False
+    escaped = False
     i = 0
     while i < len(text):
         ch = text[i]
-        if ch == '<':
+        if escaped:
+            cur.append(ch)
+            escaped = False
+            i += 1
+            continue
+        if ch == '\\':
+            cur.append(ch)
+            escaped = True
+            i += 1
+            continue
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif not in_single and not in_double and ch == '<':
             depth_angle += 1
-        elif ch == '>':
+        elif not in_single and not in_double and ch == '>':
             depth_angle = max(0, depth_angle - 1)
-        elif ch == '(':
+        elif not in_single and not in_double and ch == '(':
             depth_paren += 1
-        elif ch == ')':
+        elif not in_single and not in_double and ch == ')':
             depth_paren = max(0, depth_paren - 1)
-        elif ch == '{':
+        elif not in_single and not in_double and ch == '{':
             depth_brace += 1
-        elif ch == '}':
+        elif not in_single and not in_double and ch == '}':
             depth_brace = max(0, depth_brace - 1)
-        elif ch == '[':
+        elif not in_single and not in_double and ch == '[':
             depth_brack += 1
-        elif ch == ']':
+        elif not in_single and not in_double and ch == ']':
             depth_brack = max(0, depth_brack - 1)
-        elif ch == ',' and depth_angle == depth_paren == depth_brace == depth_brack == 0:
+        elif (not in_single and not in_double
+              and ch == ',' and depth_angle == depth_paren == depth_brace == depth_brack == 0):
             out.append(''.join(cur).strip())
             cur = []
             i += 1
@@ -169,6 +205,48 @@ def split_top_level(text: str) -> list[str]:
     return out
 
 
+def strip_default_value(part: str) -> str:
+    depth_angle = depth_paren = depth_brace = depth_brack = 0
+    in_single = False
+    in_double = False
+    escaped = False
+    out = []
+    for ch in part:
+        if escaped:
+            out.append(ch)
+            escaped = False
+            continue
+        if ch == '\\':
+            out.append(ch)
+            escaped = True
+            continue
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif not in_single and not in_double:
+            if ch == '<':
+                depth_angle += 1
+            elif ch == '>':
+                depth_angle = max(0, depth_angle - 1)
+            elif ch == '(':
+                depth_paren += 1
+            elif ch == ')':
+                depth_paren = max(0, depth_paren - 1)
+            elif ch == '{':
+                depth_brace += 1
+            elif ch == '}':
+                depth_brace = max(0, depth_brace - 1)
+            elif ch == '[':
+                depth_brack += 1
+            elif ch == ']':
+                depth_brack = max(0, depth_brack - 1)
+            elif ch == '=' and depth_angle == depth_paren == depth_brace == depth_brack == 0:
+                break
+        out.append(ch)
+    return ''.join(out).strip()
+
+
 def parse_params(text: str) -> list[tuple[str, str]]:
     text = text.strip()
     if not text or text == 'void':
@@ -176,7 +254,7 @@ def parse_params(text: str) -> list[tuple[str, str]]:
     params = []
     for part in split_top_level(text):
         part = clean_space(part)
-        part = re.sub(r'\s*=\s*.*$', '', part)
+        part = clean_space(strip_default_value(part))
         m = re.match(r'(.+?)\s+(\w+)$', part)
         if m:
             params.append((m.group(2), m.group(1)))
@@ -340,16 +418,18 @@ def extract_methods(class_name: str, header_path: pathlib.Path) -> list[Method]:
 
 
 def user_signature(method: Method, class_name: str) -> str:
-    sig = method.signature
+    sig = public_cpp_type(method.signature)
     sig = sig.replace('double', 'scalar')
+    ret = public_cpp_type(method.return_type)
     if not method.static:
-        sig = re.sub(rf'^{re.escape(method.return_type)}\s+{re.escape(method.name)}\(', f'{method.return_type} {method.name}(self, ', sig)
+        sig = re.sub(rf'^{re.escape(ret)}\s+{re.escape(method.name)}\(', f'{ret} {method.name}(self, ', sig)
         sig = sig.replace('(self, )', '(self)')
     return sig
 
 
 def returns_doc(ret: str) -> str:
-    base = ret.strip()
+    base = public_cpp_type(ret.strip())
+    base = re.sub(r'^template <.*>\s+requires\s+.*\s+([A-Za-z_:][A-Za-z0-9_:<>]*)$', r'\1', base)
     descriptions = {
         'bool': 'Boolean status or membership result.',
         'void': 'Performs the side effect and returns no value.',
@@ -368,6 +448,128 @@ def returns_doc(ret: str) -> str:
     }
     desc = descriptions.get(base, 'Value produced by this call.')
     return f'`{base}`\n    {desc}'
+
+
+def fallback_param_note(name: str, label_type: str) -> str:
+    if label_type == 'bool':
+        return 'Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.'
+    if label_type in {'std::ostream&', 'std::ostream'}:
+        return 'Destination output stream used instead of the default display or print target.'
+    if 'std::function<' in label_type:
+        return 'Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.'
+    if 'initializer_list' in label_type:
+        return 'Inline collection passed directly at the call site.'
+    if 'pluss::RangeView<std::string_view>' in label_type or 'RangeView<std::string_view>' in label_type:
+        return 'Feature or field names supplied as a lightweight view over several strings.'
+    if label_type in {'std::string_view', 'std::string'}:
+        string_name_notes = {
+            'name': 'Name used to identify the target object, field, feature, or slot for this overload.',
+            'filename': 'Filename or path-like string used by this overload.',
+            'field_name': 'Field name used to select the target text, stream, or grouping column.',
+            'field1': 'First named field used by this overload.',
+            'field2': 'Second named field used by this overload.',
+            'key_field': 'Field name that acts as the key for matching, grouping, or lookup.',
+            'by_field': 'Field name that controls the grouping or sorting basis of the operation.',
+            'on': 'Field name used as the match or join key for this overload.',
+            'where': 'Filter expression or selector string interpreted by this overload.',
+            'method': 'Method selector string understood by this overload.',
+            'pattern': 'Pattern string used for matching or extraction.',
+            'needle': 'Substring or token to search for.',
+            'prefix': 'Text prefix inserted ahead of the existing label or value.',
+            'suffix': 'Text suffix appended after the existing label or value.',
+            'stat_type': 'Statistic selector string understood by this overload.',
+            'target_type': 'Format or target selector string used by this overload.',
+        }
+        if name in string_name_notes:
+            return string_name_notes[name]
+    if label_type in {'std::int64_t', 'std::size_t', 'int'}:
+        integer_name_notes = {
+            'row': 'Zero-based row position used by this overload.',
+            'i': 'Zero-based positional index used by this overload.',
+            'index': 'Zero-based positional index used by this overload.',
+            'feature_idx': 'Zero-based feature position used by this overload.',
+            'lhs_row': 'Zero-based left-hand row position used in a row-wise comparison.',
+            'rhs_row': 'Zero-based right-hand row position used in a row-wise comparison.',
+            'label': 'Integer label or bucket code used by this overload.',
+        }
+        if name in integer_name_notes:
+            return integer_name_notes[name]
+    if name == 'os':
+        return 'Destination output stream used instead of the default display or print target.'
+    if name in {'fn', 'func', 'expr'}:
+        return 'Callable used to transform, map, or derive values in this overload.'
+    if name == 'predicate':
+        return 'Callable that must return `true` for entries you want to keep.'
+    if name in {'mask', 'condition'}:
+        return 'Boolean mask used by this overload to decide which rows, values, or items participate.'
+    if name in {'conditions', 'choices'}:
+        return 'Ordered collection used by a select-style overload. Each condition or choice is matched positionally with the others.'
+    if name == 'values':
+        return 'Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.'
+    if name == 'items':
+        return 'Items supplied in one batch to this overload.'
+    if name == 'mapping':
+        return 'Name-to-name mapping used by this overload.'
+    if name == 'indices':
+        return 'Integer positions used to select, reorder, or address entries.'
+    if name == 'row_span':
+        return 'Row span given as a `(start, stop)` pair.'
+    if name in {'from', 'to'}:
+        return 'Boundary or replacement value used by this overload. Its type determines which payload family participates.'
+    if name in {'a', 'b', 'lo', 'hi', 'min_value', 'max_value'}:
+        return 'Lower/upper boundary used by this overload.'
+    if name == 'default_value':
+        return 'Fallback value written anywhere the input is missing or unmatched.'
+    if name == 'validity_mask':
+        return 'Boolean validity mask attached to the payload. `true` marks observed entries and `false` marks missing entries.'
+    if name == 'dtype':
+        return 'Target scalar dtype used by this conversion overload.'
+    if name == 'series_dtype':
+        return 'Optional scalar dtype used when the cast target is a numeric `Series`.'
+    if name == 'target':
+        return 'Target payload family chosen by this cast overload.'
+    if name == 'thread':
+        return 'Thread payload supplied to this overload.'
+    if name == 'stream':
+        return 'Stream payload supplied to this overload.'
+    if name == 'frame':
+        return 'Frame payload supplied to this overload.'
+    if name == 'catalog':
+        return 'Catalog payload supplied to this overload.'
+    if name == 'archive':
+        return 'Archive payload supplied to this overload.'
+    if name == 'policy':
+        return 'Policy object that changes the structural behavior of this overload.'
+    if name == 'ascending':
+        return 'Sort-order switch. `true` means ascending order and `false` means descending order.'
+    if name == 'nulls_last':
+        return 'Null-order switch. `true` places nulls after observed values and `false` places them first.'
+    if name in {'inclusive', 'include_left', 'include_right'}:
+        return 'Boundary-inclusion switch controlling whether the interval endpoints are treated as closed or open.'
+    if name == 'unbiased':
+        return 'When `true`, use the sample-statistic form. When `false`, use the population-statistic form.'
+    if name == 'chars':
+        return 'Characters to trim from the edge of each text value.'
+    if name == 'field_names':
+        return 'Field names supplied together for this overload.'
+    if name in {'label', 'labels'}:
+        return 'Label or labels used by this overload.'
+    return 'Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.'
+
+
+def enum_note(intro: str, items: list[tuple[str, str]], heading: str = 'Supported values') -> str:
+    lines: list[str] = []
+    if intro:
+        lines.append(intro)
+        lines.append('')
+    lines.append(f'{heading}:')
+    for label, desc in items:
+        lines.append(f'- `{label}`: {desc}')
+    return '\n'.join(lines)
+
+
+def indent_note(note: str) -> str:
+    return '\n'.join(('    ' + line) if line else '    ' for line in note.splitlines())
 
 
 def params_doc(params: list[tuple[str, str]], class_name: str | None = None, method_name: str | None = None) -> str:
@@ -408,6 +610,12 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'feature_names': 'Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.',
         'feature_index': 'Zero-based output column position used by structural methods such as `insert(...)`.',
         'feature_feature': 'Feature whose distinct values become new output columns in pivot-style reshaping.',
+        'x_feature': 'Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.',
+        'y_feature': 'Single numeric feature to draw on the vertical axis or as the primary plotted measure.',
+        'y_features': 'Several numeric features plotted together on the same figure. Each selected feature usually becomes its own trace.',
+        'hue_feature': 'Optional feature whose distinct values split one plot into color-coded groups.',
+        'class_feature': 'Optional grouping or class label feature used to color, partition, or annotate multivariate plots.',
+        'label_feature': 'Optional feature that supplies slice labels or category labels in label-aware plots such as pie charts.',
         'value_feature': 'Feature whose values populate pivot cells or grouped summaries.',
         'group_feature': 'Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.',
         'time_feature': 'Name of the Timeline or TimeIndex feature that defines the resampling, alignment, or calendar axis.',
@@ -425,9 +633,17 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'after': 'When `false`, placement happens before the anchor. When `true`, placement happens after the anchor.',
         'left_on': 'Key feature name(s) on the left frame used to match rows during `unify(...)`.',
         'right_on': 'Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.',
-        'how': 'Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.',
+        'how': enum_note('Join mode for `DataFrame::unify(...)`.', [
+            ('inner', 'Keep only rows whose key values match on both sides.'),
+            ('left', 'Preserve the left frame row order and row count, attaching right-hand matches where they exist.'),
+        ]),
         'right_suffix': 'Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.',
-        'validate': 'Optional key-cardinality check for `unify(...)`: `"many_to_many"` (default), `"one_to_one"`, `"one_to_many"`, or `"many_to_one"`.',
+        'validate': enum_note('Optional key-cardinality check for `DataFrame::unify(...)`.', [
+            ('many_to_many', 'Allow duplicate key values on both sides. This is the default.'),
+            ('one_to_one', 'Require each key to appear at most once on both sides.'),
+            ('one_to_many', 'Require unique keys on the left and allow duplicates on the right.'),
+            ('many_to_one', 'Allow duplicates on the left and require unique keys on the right.'),
+        ]),
         'collision_suffix': 'Suffix added when a second frame contributes a feature name that already exists on the left-hand side.',
         'overwrite': 'When `true`, matching values from the right-hand side overwrite existing left-hand values during update-style operations.',
         'field': 'Name of the target stream in the catalog.',
@@ -450,11 +666,101 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'min_count': 'Minimum non-null observations required before a grouped or rolling summary is considered valid.',
         'periods': 'Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.',
         'statement': 'SQL statement text to prepare against the current frame.',
+        'figure': 'Existing figure object to add summary content into instead of creating a new figure.',
+        'triangle': 'Pair-plot triangle selection controlling whether the scatter matrix renders the upper, lower, or corner-only half.',
+        'points': 'Requested evaluation-point count for density-style plots. Higher values make smoother curves at higher compute cost.',
         'arg2': 'Pass `nullptr` here to request a multi-sheet Excel load result that includes every sheet.',
         'start': 'Inclusive starting position of the slice.',
         'stop': 'Exclusive ending position of the slice.',
     }
     method_param_notes = {
+        ('DataFrame', 'aggregate', 'specs'):
+            enum_note('Aggregation specs. Each `SummarySpec` has `output`, `feature`, and `op`.', [
+                ('Count', 'Count observed values in the selected feature.'),
+                ('Nunique', 'Count distinct observed values.'),
+                ('Sum', 'Compute the numeric sum.'),
+                ('Mean', 'Compute the arithmetic mean.'),
+                ('Median', 'Compute the median.'),
+                ('Min', 'Compute the minimum.'),
+                ('Max', 'Compute the maximum.'),
+                ('Std', 'Compute the standard deviation.'),
+                ('Var', 'Compute the variance.'),
+                ('Prod', 'Compute the numeric product.'),
+            ], heading='`op` supports'),
+        ('DataFrame', 'group_by', 'keys'):
+            'Feature names whose distinct value combinations define the output groups.',
+        ('DataFrame', 'group_by', 'specs'):
+            enum_note('Grouped aggregation specs. Each `GroupSpec` has `output`, `feature`, and `op`.', [
+                ('Count', 'Count observed values inside each group.'),
+                ('Nunique', 'Count distinct observed values inside each group.'),
+                ('Sum', 'Compute the numeric sum inside each group.'),
+                ('Mean', 'Compute the arithmetic mean inside each group.'),
+                ('Min', 'Compute the minimum inside each group.'),
+                ('Max', 'Compute the maximum inside each group.'),
+            ], heading='`op` supports'),
+        ('DataFrame', 'corr', 'method'):
+            enum_note('Correlation method.', [
+                ('Pearson', 'Ordinary linear correlation.'),
+                ('Spearman', 'Rank correlation.'),
+                ('KendallTau', 'Rank-concordance correlation.'),
+            ]),
+        ('DataFrame', 'case_study', 'row'):
+            'Zero-based row position to inspect.',
+        ('DataFrame', 'case_study', 'start'):
+            'Inclusive zero-based starting row position of the study window.',
+        ('DataFrame', 'case_study', 'stop'):
+            'Exclusive zero-based ending row position of the study window.',
+        ('DataFrame', 'case_study', 'feature_name'):
+            'Column label used for loc-style cell lookup once the row position has been chosen.',
+        ('DataFrame', 'observe', 'row'):
+            'Zero-based row position to preview as a one-row `DataFrameView`.',
+        ('DataFrame', 'observe', 'start'):
+            'Inclusive zero-based starting row position of the preview window.',
+        ('DataFrame', 'observe', 'stop'):
+            'Exclusive zero-based ending row position of the preview window.',
+        ('DataFrame', 'observe', 'render'):
+            'When `true`, the preview may auto-render in temporary terminal contexts. Pass `false` when you want to call `.show()` yourself.',
+        ('DataFrame', 'reorder', 'spec'):
+            'One partial-order move. Use this when one move instruction is enough.',
+        ('DataFrame', 'reorder', 'specs'):
+            'Several partial-order moves applied in the exact order you pass them. Each move sees the column order produced by the previous move.',
+        ('DataFrame', 'reorder', 'names'):
+            'Column names to move together to the front while preserving the relative order of every column not listed here.',
+        ('DataFrame', 'combine', 'spec'):
+            'Combine policy object. Use it when you want explicit control over feature-wise append/update behavior instead of the default combine route.',
+        ('DataFrame', 'sample', 'n'):
+            'Number of rows or features to draw from the selected axis.',
+        ('DataFrame', 'sample', 'frac'):
+            'Fraction of the selected axis to draw. Values above `1.0` require `replace=true`.',
+        ('DataFrame', 'sample', 'random_state'):
+            'Deterministic seed for reproducible sampling and shuffling.',
+        ('DataFrame', 'sample', 'replace'):
+            'When `true`, the same row may be drawn more than once. Feature sampling currently requires `replace=false`.',
+        ('DataFrame', 'sample', 'axis'):
+            'Sampling axis. Use `0` for rows and `1` for features.',
+        ('DataFrame', 'shuffle', 'random_state'):
+            'Deterministic seed for reproducible row shuffles.',
+        ('DataFrame', 'reshuffle', 'axis'):
+            'Shuffle axis. Use `0` to permute rows and `1` to permute feature order.',
+        ('DataFrame', 'reshuffle', 'random_state'):
+            'Deterministic seed for reproducible row or feature shuffles.',
+        ('DataFrame', 'load', 'on_bad_lines'):
+            enum_note('Malformed-line policy for delimited input.', [
+                ('Error', 'Stop immediately when a malformed row is encountered.'),
+                ('Warn', 'Continue while reporting the malformed row.'),
+                ('Skip', 'Ignore malformed rows silently.'),
+            ]),
+        ('DataFrame', 'load_csv', 'header'):
+            enum_note('CSV header mode.', [
+                ('infer', 'Read the first row as feature names.'),
+                ('none', 'Treat the file as headerless and auto-generate feature names such as `feat_0`, `feat_1`, and so on.'),
+            ], heading='Common values'),
+        ('DataFrame', 'load_csv', 'on_bad_lines'):
+            enum_note('Malformed-line policy for delimited input.', [
+                ('Error', 'Stop immediately when a malformed row is encountered.'),
+                ('Warn', 'Continue while reporting the malformed row.'),
+                ('Skip', 'Ignore malformed rows silently.'),
+            ]),
         ('DataFrame', 'pivot', 'case_feature'):
             'Feature whose distinct values become the output row groups in the pivoted result.',
         ('DataFrame', 'pivot_table', 'case_feature'):
@@ -507,6 +813,10 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'When `true`, substring matching respects letter case. When `false`, feature names are matched case-insensitively.',
         ('DataFrame', 'select_regex', 'pattern'):
             'ECMAScript regular expression used to match feature names.',
+        ('DataFrame', 'sort_values', 'ascending'):
+            'When you use the simple feature-list overload, this one switch applies to every sort key. `true` sorts ascending and `false` sorts descending.',
+        ('DataFrame', 'sort_values', 'nulls_last'):
+            'When `true`, null values are placed after observed values for every sort key in the simple overload. When `false`, nulls are placed first.',
         ('DataFrame', 'prod', 'axis'):
             'Reduction axis. `0` computes one product per numeric feature, while `1` computes one product per row across numeric features.',
         ('DataFrame', 'prod', 'render'):
@@ -557,6 +867,17 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Policy for nonexistent local times, such as `"raise"` or `"shift_forward"`.',
         ('DataFrame', 'round_time', 'unit'):
             'Temporal rounding unit such as `"hour"`, `"day"`, or `"month"`.',
+        ('DataFrame', 'resample', 'op'):
+            enum_note('Bin reduction to compute in each time bucket.', [
+                ('count', 'Count observed values within each bucket.'),
+                ('size', 'Count rows within each bucket, including missing values.'),
+                ('sum', 'Compute the numeric sum within each bucket.'),
+                ('mean', 'Compute the arithmetic mean within each bucket.'),
+                ('min', 'Compute the minimum within each bucket.'),
+                ('max', 'Compute the maximum within each bucket.'),
+                ('first', 'Take the first observed value within each bucket.'),
+                ('last', 'Take the last observed value within each bucket.'),
+            ]),
         ('DataFrame', 'floor_time', 'unit'):
             'Temporal floor unit such as `"hour"`, `"day"`, or `"month"`.',
         ('DataFrame', 'ceil_time', 'unit'):
@@ -575,13 +896,197 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Boolean row mask. Rows where the mask is true are kept; rows where it is false are dropped.',
         ('DataFrame', 'window', 'keep_input'):
             'When `true`, the original input features are preserved and engineered window outputs are appended. When `false`, only the engineered outputs are returned.',
+        ('ColumnRef', 'name', 'None'):
+            '',
+        ('ColumnRef', 'head', 'n'):
+            'Number of leading values to preview from the referenced feature.',
+        ('DataFramePlotAccessor', 'line', 'y_feature'):
+            'One numeric feature to draw as a single line trace.',
+        ('DataFramePlotAccessor', 'line', 'y_features'):
+            'Numeric features to overlay as separate line traces on the same axes.',
+        ('DataFramePlotAccessor', 'step', 'y_feature'):
+            'One numeric feature to draw as a step trace.',
+        ('DataFramePlotAccessor', 'step', 'y_features'):
+            'Numeric features to overlay as separate step traces on the same axes.',
+        ('DataFramePlotAccessor', 'area', 'y_feature'):
+            'One numeric feature to draw as a filled area.',
+        ('DataFramePlotAccessor', 'area', 'y_features'):
+            'Numeric features to draw as separate filled areas over the same axis positions.',
+        ('DataFramePlotAccessor', 'area_stacked', 'y_features'):
+            'Numeric features whose values should accumulate vertically at shared x positions.',
+        ('DataFramePlotAccessor', 'scatter', 'x_feature'):
+            'Numeric or ordered feature placed on the horizontal axis.',
+        ('DataFramePlotAccessor', 'scatter', 'y_feature'):
+            'Numeric feature placed on the vertical axis.',
+        ('DataFramePlotAccessor', 'bar', 'y_feature'):
+            'Single feature whose values become one bar series.',
+        ('DataFramePlotAccessor', 'bar', 'y_features'):
+            'Several features whose values become grouped or layered bar series, depending on the method variant.',
+        ('DataFramePlotAccessor', 'bar_stacked', 'y_features'):
+            'Several features whose values stack on top of each other at each x position.',
+        ('DataFramePlotAccessor', 'box', 'features'):
+            'Numeric features to summarize as box plots. Leave empty to let the accessor infer the numeric feature set.',
+        ('DataFramePlotAccessor', 'violin', 'features'):
+            'Numeric features to summarize as violin plots. Leave empty to let the accessor infer the numeric feature set.',
+        ('DataFramePlotAccessor', 'violin', 'value_feature'):
+            'Numeric feature whose distribution is shown inside each violin.',
+        ('DataFramePlotAccessor', 'violin', 'group_feature'):
+            'Categorical feature that splits the violin plot into separate groups.',
+        ('DataFramePlotAccessor', 'hist', 'bins'):
+            'Histogram bin count. Larger values create narrower bins; smaller values create coarser buckets.',
+        ('DataFramePlotAccessor', 'hist', 'feature'):
+            'One numeric feature to histogram.',
+        ('DataFramePlotAccessor', 'hist', 'features'):
+            'Several numeric features to histogram in the same figure.',
+        ('DataFramePlotAccessor', 'density', 'feature'):
+            'One numeric feature whose kernel density estimate should be drawn.',
+        ('DataFramePlotAccessor', 'density', 'features'):
+            'Several numeric features whose kernel density estimates should be drawn together.',
+        ('DataFramePlotAccessor', 'pie', 'value_feature'):
+            'Feature whose values determine each slice magnitude.',
+        ('DataFramePlotAccessor', 'pie', 'label_feature'):
+            'Optional feature that supplies the text label for each slice.',
+        ('DataFramePlotAccessor', 'heatmap', 'features'):
+            'Numeric features to render directly as a value heatmap. Each feature becomes one column in the heatmap matrix.',
+        ('DataFramePlotAccessor', 'heatmap', 'case_feature'):
+            'Feature whose distinct values define the output heatmap rows in grouped heatmap mode.',
+        ('DataFramePlotAccessor', 'heatmap', 'feature_feature'):
+            'Feature whose distinct values define the output heatmap columns in grouped heatmap mode.',
+        ('DataFramePlotAccessor', 'heatmap', 'value_feature'):
+            'Feature whose values are aggregated into each grouped heatmap cell.',
+        ('DataFramePlotAccessor', 'corr_heatmap', 'features'):
+            'Numeric features to correlate. Leave empty to let the accessor infer the numeric feature set.',
+        ('DataFramePlotAccessor', 'scatter_matrix', 'features'):
+            'Numeric features to place on the pairwise matrix axes. Leave empty to let the accessor infer them.',
+        ('DataFramePlotAccessor', 'parallel', 'features'):
+            'Numeric features to place on the parallel-coordinate axes. Leave empty to let the accessor infer them.',
+        ('DataFramePlotAccessor', 'andrews_curves', 'features'):
+            'Numeric features used to build each observation curve.',
+        ('DataFramePlotAccessor', 'radviz', 'features'):
+            'Numeric features used as anchors in the radial visualization.',
+        ('DataFramePlotAccessor', 'lag', 'feature'):
+            'Numeric feature whose lag relationship should be plotted against itself.',
+        ('DataFramePlotAccessor', 'act', 'feature'):
+            'Numeric feature whose autocorrelation-style lag structure should be plotted.',
+        ('DataFramePlotAccessor', 'bootstrap', 'feature'):
+            'Numeric feature to resample repeatedly for the bootstrap figure.',
+        ('DataFramePlotAccessor', 'brief', 'features'):
+            'Feature subset to summarize inside the compact figure. Leave empty to let the accessor choose a broad compatible set.',
+        ('DataFramePlotAccessor', 'auto_plot', 'features'):
+            'Feature subset to consider while the accessor chooses the plot family automatically.',
+        ('DataFrameSqlAccessor', 'execute', 'statement'):
+            'SQL query text run against the current frame. The frame is exposed to the statement as `self`.',
+        ('DataFrameSqlAccessor', 'prepare', 'statement'):
+            'Parameterized SQL statement template. Use placeholders such as `{min_sales}` when you plan to bind values later.',
+        ('DataFrameSqlPrepared', 'execute', 'params'):
+            'Named scalar bindings supplied to placeholders such as `{min_sales}` inside the prepared statement template.',
+        ('DataFrameSqlPrepared', 'execute', 'identifier_params'):
+            'Named identifier bindings used for placeholder substitution when a statement needs a dynamic SQL identifier such as a table alias.',
+    }
+    type_notes = {
+        'pluss::loader::BadLinePolicy':
+            enum_note('', [
+                ('Error', 'Stop on malformed lines.'),
+                ('Warn', 'Keep going while reporting the issue.'),
+                ('Skip', 'Silently ignore malformed lines.'),
+            ]),
+        'CorrMethod':
+            enum_note('', [
+                ('Pearson', 'Ordinary linear correlation.'),
+                ('Spearman', 'Rank correlation.'),
+                ('KendallTau', 'Rank-concordance correlation.'),
+            ]),
+        'SummaryOp':
+            enum_note('', [
+                ('Count', 'Count observed values.'),
+                ('Nunique', 'Count distinct observed values.'),
+                ('Sum', 'Compute the numeric sum.'),
+                ('Mean', 'Compute the arithmetic mean.'),
+                ('Median', 'Compute the median.'),
+                ('Min', 'Compute the minimum.'),
+                ('Max', 'Compute the maximum.'),
+                ('Std', 'Compute the standard deviation.'),
+                ('Var', 'Compute the variance.'),
+                ('Prod', 'Compute the numeric product.'),
+            ]),
+        'GroupOp':
+            enum_note('', [
+                ('Count', 'Count observed values in each group.'),
+                ('Nunique', 'Count distinct observed values in each group.'),
+                ('Sum', 'Compute the numeric sum in each group.'),
+                ('Mean', 'Compute the arithmetic mean in each group.'),
+                ('Min', 'Compute the minimum in each group.'),
+                ('Max', 'Compute the maximum in each group.'),
+            ]),
+        'MissingOp':
+            enum_note('', [
+                ('Fill', 'Replace missing values with a supplied fill value.'),
+                ('ForwardFill', 'Propagate the last observed value forward.'),
+                ('BackwardFill', 'Propagate the next observed value backward.'),
+                ('DropAny', 'Drop rows containing any missing value in the targeted features.'),
+                ('DropAll', 'Drop rows only when all targeted features are missing.'),
+                ('IsNull', 'Return a missingness mask.'),
+                ('NotNull', 'Return a non-missingness mask.'),
+            ]),
+        'CombineOp':
+            enum_note('', [
+                ('Features', 'Append compatible right-hand features onto the left frame.'),
+                ('Update', 'Overwrite matching left-hand values with right-hand values.'),
+            ]),
+        'ReorderPlacement':
+            enum_note('', [
+                ('Front', 'Move the selected features to the front.'),
+                ('Back', 'Move the selected features to the back.'),
+                ('Before', 'Move the selected features immediately before the anchor feature.'),
+                ('After', 'Move the selected features immediately after the anchor feature.'),
+            ]),
+        'ThreadWindowOp':
+            enum_note('', [
+                ('RollingSum', 'Compute a rolling sum.'),
+                ('RollingMean', 'Compute a rolling mean.'),
+                ('RollingMin', 'Compute a rolling minimum.'),
+                ('RollingMax', 'Compute a rolling maximum.'),
+            ]),
+        'ScatterMatrixTriangle':
+            enum_note('Selects which half of the pair plot to render.', [
+                ('Full', 'Render the full pairwise matrix.'),
+                ('Lower', 'Render only the lower triangle.'),
+                ('Upper', 'Render only the upper triangle.'),
+            ]),
+        'pluss::msharp::RangeView::Of<SummarySpec>':
+            'Collection of `SummarySpec` items. Each item provides `output`, `feature`, and `op`.',
+        'pluss::msharp::RangeView::Of<GroupSpec>':
+            'Collection of `GroupSpec` items. Each item provides `output`, `feature`, and `op`.',
+        'pluss::msharp::RangeView::Of<DeriveSpec>':
+            'Collection of `DeriveSpec` items. Each item provides the output feature name and a frame-aware expression that returns the derived thread.',
+        'pluss::msharp::RangeView::Of<CastSpec>':
+            'Collection of `CastSpec` items. Each item selects a feature, the target payload family, and any target Series dtype details needed for the cast.',
+        'pluss::msharp::RangeView::Of<TransformSpec>':
+            'Collection of `TransformSpec` items. Each item identifies one target feature and the thread-transform expression to apply to it.',
+        'pluss::msharp::RangeView::Of<ArrangeSpec>':
+            'Collection of `ArrangeSpec` items. Each item provides `feature`, `ascending`, and `nulls_last`.',
+        'pluss::RangeView<ReorderSpec>':
+            'Collection of `ReorderSpec` items applied sequentially from left to right. Use this overload when you want to move several column groups in one call while preserving every untouched column.',
+        'pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>':
+            'Collection of `(feature_name, dtype)` pairs used to cast several existing features to explicit scalar dtypes in one call.',
+        'pluss::msharp::RangeView::Of<std::pair<std::string, Thread>>':
+            'Collection of `(feature_name, thread)` pairs used to add or replace several features in one call.',
+        'const CombineSpec&':
+            'Structured combine policy object. It controls how the right-hand frame should be merged, appended, or used to update the left-hand frame.',
+        'const NameRange&':
+            'Reusable feature-name range object. Use it when the same projected column subset will be passed to several calls.',
+        'const ReorderSpec&':
+            'Structured partial-order instruction that moves only selected features and preserves the relative order of every untouched feature.',
     }
     lines = []
     for name, typ in params:
-        label_type = typ.replace('double', 'scalar')
+        label_type = public_cpp_type(typ).replace('double', 'scalar')
         note = method_param_notes.get((class_name, method_name, name),
-                                      param_notes.get(name, 'See the signature for the supported argument form.'))
-        lines.append(f'`{name}` : `{label_type}`\n    {note}')
+                                      param_notes.get(
+                                          name,
+                                          type_notes.get(typ, type_notes.get(label_type, fallback_param_note(name, label_type))),
+                                      ))
+        lines.append(f'`{name}` : `{label_type}`\n{indent_note(note)}')
     return '\n\n'.join(lines)
 
 
@@ -916,6 +1421,8 @@ def generic_note(class_name: str, method: Method) -> str:
             'mean': 'Computes the mean of the referenced numeric column.',
             'name': 'Returns the feature name associated with this column reference.',
             'thread': 'Returns the referenced column as a `Thread` object.',
+            'value': 'Returns one scalar-like wrapper for the first referenced value, which is useful when you need typed single-cell access.',
+            'values': 'Materializes the full referenced column as a standalone `Thread` so you can reuse it outside the parent frame.',
         },
         'ThreadValue': {
             'as_note': 'Converts the wrapped scalar-like value into a `pluss::Note`.',
@@ -930,14 +1437,29 @@ def generic_note(class_name: str, method: Method) -> str:
             'thread': 'Returns the wrapped single-value `Thread` object.',
         },
         'DataFramePlotAccessor': {
+            'act': 'Builds an autocorrelation-style lag plot for one numeric feature.',
+            'andrews_curves': 'Builds Andrews curves from several numeric features, optionally colored by a class feature.',
+            'area': 'Builds a filled area plot from one or more numeric features.',
+            'area_stacked': 'Builds a stacked area plot where several numeric features accumulate at shared x positions.',
+            'auto_plot': 'Chooses a plot family automatically from the selected feature set and frame shape.',
             'bar': 'Builds a bar chart from one feature, optionally using another feature as the x-axis.',
             'bar_stacked': 'Builds stacked bars so multiple y-features accumulate on the same axis positions.',
             'bootstrap': 'Builds a bootstrap summary plot for one numeric feature using the supplied resampling options.',
             'box': 'Builds a box plot for one or more numeric features.',
             'brief': 'Builds a compact summary figure for one or more numeric features.',
+            'corr_heatmap': 'Computes a correlation matrix across numeric features and renders it as a heatmap.',
+            'density': 'Builds one or more kernel-density curves from numeric features.',
+            'heatmap': 'Builds a heatmap either directly from numeric feature values or from grouped feature/value aggregations.',
             'hist': 'Builds a histogram for one feature using the requested number of bins.',
+            'lag': 'Builds a lag plot that compares one numeric feature against a shifted copy of itself.',
             'line': 'Builds a line chart for one or more y-features, optionally against a chosen x-feature.',
+            'parallel': 'Builds a parallel-coordinates plot from several numeric features, optionally grouped by a class feature.',
+            'pie': 'Builds a pie chart from one value feature, optionally using another feature for labels.',
+            'radviz': 'Builds a radial visualization from several numeric features, optionally grouped by a class feature.',
             'scatter': 'Builds a scatter plot using one feature for x and another for y.',
+            'scatter_matrix': 'Builds a scatter-matrix figure for several numeric features.',
+            'step': 'Builds a step chart for one or more y-features, optionally against a chosen x-feature.',
+            'violin': 'Builds violin plots for one or more numeric features or grouped distributions.',
         },
         'DataFrameSqlAccessor': {
             'execute': 'Runs a SQL query against the current frame and returns the result as a new `DataFrame`.',
@@ -1042,6 +1564,7 @@ def source_var_for(class_name: str) -> str:
 
 
 def normalize_user_names(class_name: str, text: str) -> str:
+    text = public_cpp_type(text)
     replacements = {
         'Catalog': {'catalog': 'ct'},
         'Registry': {'registry': 'rg'},
@@ -1146,6 +1669,442 @@ def inject_before_after(class_name: str, method: Method, code: str) -> str:
         return code + f'\n\n// Inspect the returned result.\n{out_inspect}'
 
     return code
+
+
+def example_caption(class_name: str, method: Method) -> str:
+    n = method.name
+    sig = method.signature
+
+    if class_name == 'DataFrame':
+        if n == 'assign':
+            if 'RangeView::Of<DeriveSpec>' in sig:
+                return 'Derive one or more columns inside the call from the current frame state.'
+            return 'Attach one or more already-computed threads by name.'
+        if n == 'astype':
+            if 'feature_dtypes' in sig:
+                return 'Convert several selected features at once by supplying a feature-to-dtype map.'
+            return 'Convert one or more selected features to a target numeric Series dtype.'
+        if n == 'cast':
+            if 'CastSpec' in sig:
+                return 'Cast selected features with explicit target-family and dtype control.'
+            return 'Cast selected features into another Pluss payload family.'
+        if n == 'cases':
+            if 'std::pair<std::int64_t, std::int64_t> row_span' in sig:
+                return 'Extract a contiguous row span by case position.'
+            if 'std::size_t feature_idx' in sig:
+                return 'Read one cell by row position and feature index.'
+            if 'std::string_view feature_name' in sig:
+                return 'Read one cell by row position and feature name.'
+            if 'std::int64_t row' in sig:
+                return 'Extract one row by case position.'
+            return 'Read the current case axis thread.'
+        if n == 'combine':
+            if 'const CombineSpec& spec' in sig:
+                return 'Combine two aligned frames with an explicit combine-policy object.'
+            return 'Combine two aligned frames with the default feature-wise policy.'
+        if n == 'load':
+            if 'ReadCsvOptions' in sig:
+                return 'Load a delimited file through the format-switched entry point while controlling parsing with a typed CSV options object.'
+            if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                return 'Load a runtime-selected source type while passing inline loader configuration entries.'
+            if 'const pluss::loader::Config&' in sig:
+                return 'Load a runtime-selected source type with a reusable loader configuration object.'
+            if 'RangeView::Of<std::string_view> usefeats' in sig:
+                return 'Load a runtime-selected delimited source while projecting only a selected feature subset from a lightweight string view.'
+            if 'std::vector<std::string> usefeats' in sig:
+                return 'Load a runtime-selected delimited source while overriding the separator, row limit, and projected feature list.'
+            return 'Load a runtime-selected source type with the default reader for that format.'
+        if n == 'load_csv':
+            if 'ReadCsvOptions' in sig:
+                return 'Load a CSV file with a typed options object so parsing rules live in one reusable config.'
+            if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                return 'Load a CSV file while supplying inline configuration entries such as row limits or projected features.'
+            if 'const pluss::loader::Config&' in sig:
+                return 'Load a CSV file with a reusable loader configuration object.'
+            if 'std::string_view header, std::string_view case_feature' in sig:
+                return 'Load a CSV file while explicitly controlling header inference, case-axis promotion, engine selection, and row limit.'
+            if 'std::string_view header, std::size_t ncases' in sig:
+                return 'Load a headerless CSV file and auto-generate feature names while limiting the number of rows read.'
+            if 'RangeView::Of<std::string_view> usefeats' in sig:
+                return 'Load a CSV file with an explicit separator, row limit, and projected feature subset from a lightweight string view.'
+            if 'std::vector<std::string> usefeats' in sig:
+                return 'Load a CSV file with an explicit separator, row limit, and projected feature subset from a standard string container.'
+            return 'Load a CSV file with the default parser settings.'
+        if n == 'load_excel':
+            if 'ReadExcelOptions' in sig:
+                return 'Load one Excel sheet with a typed Excel options object.'
+            if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                return 'Load an Excel workbook while supplying inline configuration entries instead of a named config object.'
+            if 'const pluss::loader::Config&' in sig:
+                return 'Load one Excel sheet with a reusable loader configuration object.'
+            if 'std::nullptr_t' in sig:
+                return 'Load every worksheet from an Excel workbook into one multi-sheet load bundle.'
+            if 'std::initializer_list<std::string_view> sheet_names' in sig:
+                return 'Load several worksheets by name using an inline list of sheet labels.'
+            if 'const std::vector<std::string>& sheet_names' in sig:
+                return 'Load several worksheets by name from a standard string container.'
+            if 'RangeView::Of<std::string_view> sheet_names' in sig:
+                return 'Load several worksheets by name from a lightweight string view.'
+            if 'std::initializer_list<std::int64_t> sheet_indices' in sig:
+                return 'Load several worksheets by zero-based sheet index using an inline integer list.'
+            if 'const std::vector<std::int64_t>& sheet_indices' in sig:
+                return 'Load several worksheets by zero-based sheet index from a standard integer container.'
+            if 'RangeView::Int sheet_indices' in sig:
+                return 'Load several worksheets by zero-based sheet index from a lightweight integer view.'
+            if 'std::string_view sheet_name' in sig:
+                return 'Load one worksheet by its sheet name.'
+            if 'std::int64_t sheet_index' in sig:
+                return 'Load one worksheet by its zero-based sheet index.'
+            return 'Load the default worksheet from an Excel workbook.'
+        if n in {'load_json', 'load_parquet', 'load_txt'}:
+            format_name = n.removeprefix('load_').upper()
+            if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                return f'Load a {format_name} source while supplying inline configuration entries.'
+            if 'const pluss::loader::Config&' in sig:
+                return f'Load a {format_name} source with a reusable loader configuration object.'
+            return f'Load a {format_name} source with the default reader for that format.'
+        if n == 'corr':
+            if 'pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method' in sig:
+                return 'Find the correlation between selected columns using a non-default correlation method.'
+            if 'pluss::msharp::RangeView::Of<std::string_view> features' in sig:
+                return 'Find the correlation for a selected subset of numeric columns.'
+            if 'CorrMethod method' in sig:
+                return 'Find the correlation across all numeric columns using a non-default correlation method.'
+            return 'Find the correlation across all numeric columns using the default correlation method.'
+        if n == 'case_study':
+            if 'std::string_view feature_name' in sig:
+                return 'Look up one cell using a row position and a column label.'
+            if 'std::int64_t start, std::int64_t stop' in sig:
+                return 'Study a contiguous row window by position.'
+            return 'Study one row by position.'
+        if n in {'sum', 'mean', 'median', 'min', 'max', 'std', 'var', 'count'}:
+            if 'std::int64_t axis' in sig or 'int axis' in sig:
+                return f'Compute `{n}` across rows instead of returning one summary value per numeric column.'
+            return f'Compute `{n}` for each numeric column in the frame.'
+        if n in {'all', 'any'}:
+            if 'std::int64_t axis' in sig:
+                return f'Evaluate `{n}` across rows using a selected boolean feature set.'
+            return f'Evaluate `{n}` down the selected boolean columns.'
+        if n in {'filter', 'where'}:
+            if 'const Thread& bool_mask' in sig:
+                return 'Filter rows using a boolean mask built from an existing frame expression.'
+            return 'Filter rows using an explicit boolean Series mask.'
+        if n in {'set_features', 'set_features_'}:
+            if 'RangeView::Of<std::string_view> names' in sig:
+                return 'Add or replace several columns in one call.'
+            return 'Add or replace one column by name.'
+        if n == 'sql':
+            if 'SqlOptions options' in sig:
+                return 'Create the SQL accessor with an explicit SQL options object before running a query.'
+            return 'Create the SQL accessor with default options and run a query immediately.'
+        if n == 'prepare_sql':
+            if 'SqlOptions options' in sig:
+                return 'Prepare a parameterized SQL statement with an explicit SQL options object.'
+            return 'Prepare a parameterized SQL statement with default SQL options.'
+        if n == 'ts':
+            if 'std::string_view feature' in sig:
+                return 'Bind the time-series accessor to one feature.'
+            if 'std::initializer_list<std::string_view>' in sig:
+                return 'Bind the time-series accessor by passing several feature names inline.'
+            return 'Bind the time-series accessor to a selected feature subset.'
+        if n == 'bucketize':
+            if 'std::string_view feature_name' in sig:
+                return 'Bucketize one numeric column into interval labels.'
+            if 'RangeView::Of<std::string_view> feature_names' in sig:
+                return 'Bucketize several selected numeric columns at once.'
+            return 'Bucketize every compatible numeric column in the frame.'
+        if n == 'features':
+            if 'const NameRange& names' in sig:
+                return 'Project a named feature subset from a reusable name-range container.'
+            if 'RangeView::Of<std::string_view> names' in sig:
+                return 'Project a named feature subset from a lightweight string view.'
+            if 'StackArray<std::string_view> names' in sig:
+                return 'Project a named feature subset from a fixed stack-allocated name list.'
+            if 'initializer_list<const char*>' in sig:
+                return 'Project a named feature subset from inline C-string feature names.'
+            if 'initializer_list<std::string_view>' in sig:
+                return 'Project a named feature subset from inline string-view feature names.'
+            if 'std::string_view name' in sig:
+                return 'Extract one feature thread by name.'
+            return 'Materialize every feature thread in left-to-right order.'
+        if n in {'fillna', 'fillna_'}:
+            mutate = 'Fill missing values in place' if n.endswith('_') else 'Fill missing values in a returned copy'
+            if 'RangeView::Of<std::string_view> features' in sig:
+                return f'{mutate} only within a selected feature subset.'
+            if 'TimeIndex' in sig:
+                return f'{mutate} with a TimeIndex scalar.'
+            if 'Timeline' in sig:
+                return f'{mutate} with a Timeline scalar.'
+            if 'const char* value' in sig or 'std::string_view value' in sig:
+                return f'{mutate} with a text scalar.'
+            return f'{mutate} with a numeric scalar.'
+        if n == 'observe':
+            if 'std::int64_t start, std::int64_t stop' in sig:
+                return 'Preview a contiguous row window without changing the underlying frame.'
+            return 'Preview one row without changing the underlying frame.'
+        if n == 'reorder':
+            if 'initializer_list<ReorderSpec>' in sig:
+                return 'Apply an inline multi-step reorder plan that moves only the columns you care about.'
+            if 'pluss::RangeView<ReorderSpec>' in sig:
+                return 'Apply a reusable multi-step reorder plan stored in a standard container.'
+            if 'ReorderSpec' in sig:
+                return 'Move selected columns to the front, back, or around an anchor while preserving the rest.'
+            return 'Move the named columns to the front while preserving the relative order of every untouched column.'
+        if n == 'sample':
+            if ' frac' in sig and 'std::uint64_t random_state' in sig:
+                return 'Sample a fraction of the selected axis with an explicit random seed.'
+            if ' frac' in sig:
+                return 'Sample a fraction of the selected axis without an explicit random seed.'
+            if 'std::uint64_t random_state' in sig:
+                return 'Sample rows or features with an explicit random seed.'
+            if 'bool replace, int axis' in sig:
+                return 'Sample rows or features while controlling replacement and axis directly.'
+            return 'Sample rows with the default settings.'
+        if n == 'shuffle':
+            return 'Shuffle row order while keeping the feature order unchanged.'
+        if n == 'reshuffle':
+            if 'axis = 1' in sig:
+                return 'Shuffle feature order instead of row order.'
+            return 'Shuffle rows or features depending on the selected axis.'
+        if n == 'shift':
+            if 'RangeView::Of<std::string_view> features' in sig:
+                return 'Shift only selected columns by a fixed number of rows.'
+            return 'Shift every compatible column by a fixed number of rows.'
+        if n == 'plot':
+            if 'DataFramePlotOptions' in sig:
+                return 'Create the plotting accessor with an explicit plot-options object.'
+            return 'Create the plotting accessor with default plot options.'
+        if n == 'plot3d':
+            if 'DataFramePlotOptions' in sig:
+                return 'Create the 3D plotting accessor with an explicit plot-options object.'
+            return 'Create the 3D plotting accessor with default plot options.'
+        if n == 'info':
+            if 'std::ostream& os' in sig:
+                return 'Write the frame summary to a caller-provided output stream.'
+            return 'Print the frame summary with the default output route.'
+        if n == 'show':
+            if 'std::ostream& os' in sig:
+                return 'Render the frame to a caller-provided output stream.'
+            return 'Render the frame using the default display route.'
+        if n in {'put', 'put_'}:
+            mask_source = 'a boolean Series mask' if 'const pluss::Series& bool_mask' in sig else 'a boolean Thread mask'
+            if 'const Thread& value' in sig:
+                value_kind = 'another full Thread as the replacement values'
+            elif 'pluss::null_t value' in sig:
+                value_kind = '`pluss::null` to mark the matched cells as missing'
+            elif 'std::string_view value' in sig or 'const char* value' in sig:
+                value_kind = 'a text literal as the replacement value'
+            else:
+                value_kind = 'a scalar numeric replacement value'
+            action = 'Rewrite rows in place' if n == 'put_' else 'Rewrite selected rows'
+            return f'{action} using {mask_source} and {value_kind}.'
+        if n.startswith('save_') or n == 'save_as':
+            if 'WriteCsvOptions' in sig or 'WriteExcelOptions' in sig:
+                return 'Save the frame with a typed writer-options object.'
+            if 'const pluss::loader::Config& config' in sig:
+                return 'Save the frame with an explicit loader-config object.'
+            if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                return 'Save the frame with inline configuration entries.'
+            if 'bool add_cases' in sig or 'std::string sheet_name' in sig:
+                return 'Save the frame while controlling case-axis export and file-format details explicitly.'
+            return 'Save the frame using the simplest filepath-only overload.'
+        if n == 'kindelize':
+            if 'KindelizePolicy' in sig:
+                return 'Convert the frame into a Kindle catalog using an explicit kindelization policy.'
+            return 'Convert the frame into a Kindle catalog using the default policy.'
+        if n == 'tally':
+            if 'std::string_view feature' in sig:
+                return 'Count the distinct values in one named feature.'
+            if 'RangeView::Of<std::string_view> features' in sig:
+                return 'Count distinct combinations across several features.'
+            return 'Count distinct row groups using the default tally target.'
+        if n == 'sort_values':
+            if 'ArrangeSpec' in sig:
+                return 'Sort rows using explicit per-column sort specifications.'
+            return 'Sort rows using one shared ascending and null-order policy for every selected sort key.'
+        if n == 'place':
+            if 'const Thread& feature' in sig:
+                return 'Insert a new feature relative to an anchor feature without rebuilding the whole schema.'
+            return 'Move one existing feature relative to an anchor feature.'
+        if n == 'prod':
+            if 'axis' in sig:
+                return 'Compute products across rows instead of returning one product per numeric feature.'
+            return 'Compute one product per numeric feature.'
+        if n == 'reorder':
+            if 'const ReorderSpec& spec' in sig:
+                return 'Move selected features with an explicit partial-order spec.'
+            return 'Move selected features together while preserving the relative order of everything else.'
+        if n == 'set':
+            if 'std::string_view name' in sig:
+                return 'Open the assignment helper for one feature name.'
+            if 'initializer_list<const char*>' in sig:
+                return 'Open the multi-feature assignment helper from inline C-string names.'
+            if 'initializer_list<std::string_view>' in sig:
+                return 'Open the multi-feature assignment helper from inline string-view names.'
+            return 'Open the multi-feature assignment helper from a reusable feature-name range.'
+        if n == 'tabelize':
+            if 'TabelizePolicy' in sig:
+                return 'Convert a Kindle catalog into a frame with an explicit tabelization policy.'
+            return 'Convert a Kindle catalog into a frame with the default tabelization policy.'
+        if n == 'title':
+            if 'std::string title' in sig:
+                return 'Return a titled copy of the current frame.'
+            return 'Read the current frame title string.'
+        if n == 'transform':
+            if 'const std::function<Thread(const Thread&)>& fn' in sig and 'std::string_view feature' not in sig:
+                return 'Rewrite every feature with the same thread-level transform.'
+            if 'RangeView::Of<TransformSpec>' in sig:
+                return 'Rewrite one or more selected features with structured transform specs.'
+            if 'std::string_view feature, const std::function<Thread(const DataFrame&)>& fn' in sig:
+                return 'Derive or replace one feature by computing it from the full frame.'
+            return 'Rewrite one named feature with a thread-level transform.'
+        if n == 'unify':
+            if 'std::string_view left_on' in sig:
+                return 'Join two frames on one key feature name.'
+            if 'initializer_list<std::string_view> left_on' in sig:
+                return 'Join two frames on several key features listed inline.'
+            return 'Join two frames on several key features supplied through a reusable string view.'
+        if n == 'stitch_on':
+            if 'initializer_list<std::string_view> left_features' in sig:
+                return 'Attach right-hand features by matching on several key features listed inline.'
+            return 'Attach right-hand features by matching on one key feature.'
+        if n == 'unsqueeze':
+            return 'Lift one frame into a one-layer atlas.'
+        if n in {'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'compare'}:
+            op_caption = {
+                'eq': 'Compare each compatible cell for equality',
+                'ne': 'Compare each compatible cell for inequality',
+                'lt': 'Compare each compatible cell using the `<` relation',
+                'le': 'Compare each compatible cell using the `<=` relation',
+                'gt': 'Compare each compatible cell using the `>` relation',
+                'ge': 'Compare each compatible cell using the `>=` relation',
+                'compare': 'Run the not-equal comparison alias',
+            }[n]
+            if 'const DataFrame& other' in sig:
+                return f'{op_caption} against another aligned frame.'
+            return f'{op_caption} against one broadcast scalar value.'
+        if n in {'add', 'sub', 'subtract', 'mul', 'multiply', 'div', 'divide', 'truediv', 'floordiv', 'mod', 'pow'}:
+            verbs = {
+                'add': 'Add',
+                'sub': 'Subtract',
+                'subtract': 'Subtract',
+                'mul': 'Multiply',
+                'multiply': 'Multiply',
+                'div': 'Divide',
+                'divide': 'Divide',
+                'truediv': 'Divide',
+                'floordiv': 'Divide',
+                'mod': 'Compute the modulus of',
+                'pow': 'Raise',
+            }
+            if 'const DataFrame& other' in sig:
+                return f'{verbs[n]} each compatible numeric cell against another aligned frame.'
+            return f'{verbs[n]} each compatible numeric cell against one broadcast scalar value.'
+
+    if class_name == 'DataFramePlotAccessor':
+        if n == 'area':
+            if 'AreaPlotOptions' in sig:
+                return 'Plot one or more y-features as an area chart with an explicit area-options object.'
+            return 'Plot one or more y-features as an area chart.'
+        if n == 'area_stacked':
+            return 'Plot several y-features as a stacked area chart.'
+        if n in {'bar', 'line'}:
+            plot_name = 'bar' if n == 'bar' else 'line'
+            if 'std::string_view y_feature' in sig and 'options' in sig:
+                return f'Plot one y-feature as a {plot_name} chart with an explicit plot-options object.'
+            if 'std::string_view y_feature' in sig:
+                return f'Plot one y-feature as a {plot_name} chart.'
+            if 'initializer_list<std::string_view> y_features' in sig and 'options' in sig:
+                return f'Plot several y-features listed inline as a shared {plot_name} chart with explicit plot options.'
+            if 'initializer_list<std::string_view> y_features' in sig:
+                return f'Plot several y-features listed inline as a shared {plot_name} chart.'
+            if 'RangeView::Of<std::string_view> y_features' in sig and 'options' in sig:
+                return f'Plot several y-features from a reusable string view as a shared {plot_name} chart with explicit plot options.'
+            return f'Plot several y-features from a reusable string view as a shared {plot_name} chart.'
+        if n == 'hist':
+            if 'std::string_view feature, const HistPlotOptions& options' in sig:
+                return 'Plot one numeric feature as a histogram with an explicit histogram-options object.'
+            if 'std::string_view feature, std::int64_t bins' in sig:
+                return 'Plot one numeric feature as a histogram with an explicit bin count.'
+            if 'initializer_list<std::string_view> features, const HistPlotOptions& options' in sig:
+                return 'Plot several numeric features listed inline as histograms with explicit histogram options.'
+            if 'initializer_list<std::string_view> features, std::int64_t bins' in sig:
+                return 'Plot several numeric features listed inline as histograms with an explicit shared bin count.'
+            if 'RangeView::Of<std::string_view> features, const HistPlotOptions& options' in sig:
+                return 'Plot several numeric features from a reusable string view as histograms with explicit histogram options.'
+            if 'RangeView::Of<std::string_view> features, std::int64_t bins' in sig:
+                return 'Plot several numeric features from a reusable string view as histograms with an explicit shared bin count.'
+            if 'const HistPlotOptions& options' in sig:
+                return 'Plot every compatible numeric feature as a histogram with an explicit histogram-options object.'
+            return 'Plot every compatible numeric feature as a histogram with a shared bin count.'
+        if n == 'scatter':
+            if 'ScatterPlotOptions' in sig:
+                return 'Plot one x/y feature pair as a scatter chart with an explicit scatter-options object.'
+            return 'Plot one x/y feature pair as a scatter chart.'
+        if n == 'pie':
+            if 'PiePlotOptions' in sig:
+                return 'Plot one value feature as a pie chart with an explicit pie-options object.'
+            return 'Plot one value feature as a pie chart.'
+        if n == 'bar_stacked':
+            return 'Plot several y-features as a stacked bar chart.'
+        if n == 'step':
+            if 'StepPlotOptions' in sig:
+                return 'Plot one or more y-features as a step chart with an explicit step-options object.'
+            return 'Plot one or more y-features as a step chart.'
+        if n == 'violin':
+            if 'ViolinPlotOptions' in sig:
+                return 'Plot one or more numeric features as violin distributions with an explicit violin-options object.'
+            return 'Plot one or more numeric features as violin distributions.'
+
+    if class_name == 'DataFrameSqlPrepared':
+        if n == 'execute':
+            if 'identifier_params' in sig:
+                return 'Run the prepared SQL statement while binding both scalar placeholders and SQL identifier placeholders.'
+            if 'params' in sig:
+                return 'Run the prepared SQL statement while binding named scalar placeholders.'
+            return 'Run the prepared SQL statement with no external parameter bindings.'
+
+    if 'std::ostream& os' in sig:
+        return 'Write the output to a caller-provided stream.'
+    if 'RangeView::Of<Thread>' in sig or 'initializer_list<Thread>' in sig:
+        return 'Pass several thread values together in one call.'
+    if 'RangeView::Of<std::string_view>' in sig and 'RangeView::Of<Thread>' in sig:
+        return 'Provide several names together with their matching values.'
+    if 'std::nullptr_t' in sig:
+        return 'Request the overload that targets every available item rather than naming them individually.'
+    if 'std::string_view filepath' in sig and 'ConfigEntry' not in sig and 'Config&' not in sig and 'Options&' not in sig:
+        return 'Use the simplest filepath-based overload.'
+    if 'std::initializer_list<pluss::loader::ConfigEntry>' in sig:
+        return 'Pass inline configuration entries instead of constructing a separate config object.'
+    if 'const pluss::loader::Config&' in sig:
+        return 'Pass an explicit loader or saver config object.'
+    if 'Write' in sig and 'Options& options' in sig:
+        return 'Pass a typed writer-options object to control file export details.'
+    if 'Read' in sig and 'Options& options' in sig:
+        return 'Pass a typed reader-options object to control file loading details.'
+    if 'bool render' in sig:
+        return 'Choose whether the returned object should auto-render in display contexts.'
+    if 'bool header' in sig:
+        return 'Control header handling explicitly for this overload.'
+    if 'std::initializer_list<std::string_view>' in sig:
+        return 'Pass several feature names inline.'
+    if 'std::vector<std::string>' in sig or 'const std::vector<std::string>&' in sig:
+        return 'Pass several names together from a standard string container.'
+    if 'std::vector<std::int64_t>' in sig or 'RangeView::Int' in sig or 'std::span<const std::int64_t>' in sig:
+        return 'Pass several integer positions together.'
+    if 'initializer_list<std::string_view>' in sig:
+        return 'Pass several feature names inline.'
+    if 'RangeView::Of<std::string_view> features' in sig:
+        return 'Work with a selected feature subset.'
+    if 'std::string_view feature' in sig:
+        return 'Work with one named feature.'
+    if 'Options& options' in sig:
+        return 'Pass an explicit options object to control the operation.'
+    if '(' in sig:
+        inside = sig.split('(', 1)[1].rsplit(')', 1)[0].strip()
+        if inside in {'self', ''}:
+            return 'Call the simplest overload.'
+    return 'Use this overload when its parameter combination matches the result shape or control level you need.'
 
 
 DF_BASE_OUT = """id  sales  city
@@ -1443,6 +2402,15 @@ Sheet2 -> [3 cs x 3 feat]"""
             return '[Thread(id), Thread(sales), Thread(city)]'
         if n in {'at', 'iat', 'cases'} and ('feature_name' in method.signature or 'feature_idx' in method.signature):
             return 'Accra' if 'feature_name' in method.signature else '1'
+        if n == 'case_study':
+            if 'feature_name' in method.signature:
+                return 'Tema'
+            if 'start, std::int64_t stop' in method.signature:
+                return """id  sales  city
+1   100.0  Accra
+2   120.0  Tema"""
+            return """id  sales  city
+2   120.0  Tema"""
         if n in {'get', 'column', 'features'} and 'string_view' in method.signature:
             return 'Thread([100.0, 120.0, 90.0])'
         if n in {'has_feature', 'equals'}:
@@ -1484,13 +2452,6 @@ id  sales  city
 Accra   1   100.0
 Tema    2   120.0
 Kumasi  3    90.0"""
-        if n in {'reorder'}:
-            if 'ReorderSpec' in method.signature:
-                return """id  city    sales
-1   Accra   100.0
-2   Tema    120.0
-3   Kumasi   90.0"""
-            return DF_REORDER_OUT
         if n in {'drop'}:
             return DF_DROP_OUT
         if n == 'dropna':
@@ -1514,7 +2475,7 @@ Kumasi"""
 3   1      Kumasi"""
         if n == 'bottom':
             return DF_BOTTOM_OUT
-        if n in {'head', 'tail', 'slice', 'take', 'sample', 'where', 'filter', 'query', 'top', 'unique_cases'}:
+        if n in {'head', 'tail', 'slice', 'take', 'sample', 'where', 'filter', 'query', 'top', 'unique_cases', 'observe'}:
             if n == 'query':
                 return """id  sales  city
 1   100.0  Accra
@@ -1523,10 +2484,36 @@ Kumasi"""
                 return """id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi"""
+            if n == 'observe':
+                if 'start, std::int64_t stop' in method.signature:
+                    return """id  sales  city
+1   100.0  Accra
+2   120.0  Tema"""
+                return """id  sales  city
+2   120.0  Tema"""
             if n == 'top':
                 return """id  sales  city
 2   120.0  Tema
 1   100.0  Accra"""
+            if n == 'sample':
+                if ' frac' in method.signature:
+                    return """id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi"""
+                if 'std::uint64_t random_state' not in method.signature and 'bool replace, int axis' not in method.signature:
+                    return """id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi"""
+                return """rows.head():
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+
+cols.head():
+sales  city
+100.0  Accra
+120.0  Tema
+90.0   Kumasi"""
             if n == 'unique_cases':
                 return """campus  student  score
 North   Ada      88.0
@@ -1576,12 +2563,42 @@ STAT300  30            93       STAT300      30        99"""
 20            82       88
 30            93       99"""
         if n == 'reorder':
+            if 'initializer_list<ReorderSpec>' in method.signature:
+                return """out.feature_names():
+["col_25", "col_10", "col_1", "col_2", "col_3", "col_4", "col_20", "col_5", "col_6", "col_7", "col_8", "col_15", "col_16", "col_17", "col_9", "col_21", "col_22", "col_23", "col_24"]
+
+out.head():
+col_25  col_10  col_1  col_2  col_3  col_4  col_20  col_5  col_6  col_7  col_8  col_15  col_16  col_17  col_9  col_21  col_22  col_23  col_24
+25.0    10.0    1.0    2.0    3.0    4.0    20.0    5.0    6.0    7.0    8.0    15.0    16.0    17.0    9.0    21.0    22.0    23.0    24.0
+125.0   110.0   101.0  102.0  103.0  104.0  120.0   105.0  106.0  107.0  108.0  115.0   116.0   117.0   109.0  121.0   122.0   123.0   124.0"""
+            if 'pluss::RangeView<ReorderSpec>' in method.signature:
+                return """city    sales  id
+Accra   100.0  1
+Tema    120.0  2
+Kumasi  90.0   3"""
             if 'ReorderSpec' in method.signature:
                 return """id  city    sales
 1   Accra   100.0
 2   Tema    120.0
 3   Kumasi   90.0"""
             return DF_REORDER_OUT
+        if n == 'shuffle':
+            return """id  sales  city
+3    90.0  Kumasi
+1   100.0  Accra
+2   120.0  Tema"""
+        if n == 'reshuffle':
+            return """rows.head():
+id  sales  city
+3    90.0  Kumasi
+1   100.0  Accra
+2   120.0  Tema
+
+cols.head():
+city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0"""
         if n in {'group_by'}:
             return DF_GROUP_OUT
         if n in {'count_by', 'tally'}:
@@ -1816,6 +2833,8 @@ id  sales  city
             return DF_BASE_OUT
         if n in {'info'}:
             return "rows: 3\nfeatures: 3\nnumeric: id, sales\nnote: city"
+        if n == 'show':
+            return DF_BASE_OUT
         if n in {'rolling', 'window'}:
             return """sales_roll
 100.0
@@ -1880,6 +2899,8 @@ id  sales  city
             return 'saved: out.*'
         if n == 'plot':
             return 'Figure(line/scatter/bar/hist)'
+        if n == 'plot3d':
+            return 'Figure(scatter3d/line3d)'
         if n == 'sql':
             return """id  sales
 1   100.0
@@ -1999,6 +3020,8 @@ id  sales  city
             return 'Figure(bar)'
         if n == 'bar_stacked':
             return 'Figure(bar_stacked)'
+        if n == 'heatmap':
+            return 'Figure(heatmap)'
         if n == 'density':
             return 'Figure(density)'
         if n == 'box':
@@ -2009,13 +3032,41 @@ id  sales  city
             return 'Figure(summary)'
         if n == 'corr_heatmap':
             return 'Figure(corr_heatmap)'
+        if n == 'hist':
+            return 'Figure(hist)'
+        if n == 'lag':
+            return 'Figure(lag)'
+        if n == 'line':
+            return 'Figure(line)'
+        if n == 'parallel':
+            return 'Figure(parallel)'
+        if n == 'pie':
+            return 'Figure(pie)'
+        if n == 'radviz':
+            return 'Figure(radviz)'
+        if n == 'scatter':
+            return 'Figure(scatter)'
+        if n == 'scatter_matrix':
+            return 'Figure(scatter_matrix)'
+        if n == 'step':
+            return 'Figure(step)'
+        if n == 'violin':
+            return 'Figure(violin)'
         return 'Figure(...)'
 
     if class_name == 'DataFrameSqlAccessor':
-        return DF_FILTER_OUT if n == 'execute' else 'Prepared statement ready'
+        if n == 'execute':
+            return """id  sales
+1   100.0
+2   120.0"""
+        return 'Prepared statement ready'
 
     if class_name == 'DataFrameSqlPrepared':
-        return DF_FILTER_OUT if n == 'execute' else ''
+        if n == 'execute':
+            return """id  sales
+1   100.0
+2   120.0"""
+        return ''
 
     if class_name == 'Atlas':
         if n in {'defined', 'unique'}:
@@ -2487,16 +3538,123 @@ def example_for(class_name: str, method: Method) -> str:
     # DataFrame
     if class_name == 'DataFrame':
         if n.startswith('load'):
-            if 'nullptr_t' in sig:
-                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", nullptr, true);'
-            if 'sheet_name' in sig:
-                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", "Sheet1", true);'
-            if 'sheet_index' in sig or 'sheet_index,' in sig:
-                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", 0, true);'
-            if 'ReadExcelOptions' in sig:
-                return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", options);'
-            if 'ReadCsvOptions' in sig:
-                return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", options);'
+            if n == 'load':
+                if 'ReadCsvOptions' in sig:
+                    return (
+                        'pluss::loader::ReadCsvOptions options;\n'
+                        'options.ncases = 8;\n'
+                        'options.case_col = "Agency Name";\n'
+                        f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}", options);'
+                    )
+                if 'const pluss::loader::Config&' in sig:
+                    return (
+                        'pluss::loader::Config config{\n'
+                        '    {"ncases", 8},\n'
+                        '    {"features", {"Agency Name", "State"}},\n'
+                        '};\n'
+                        f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}", config);'
+                    )
+                if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                    return (
+                        f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}", {{\n'
+                        '    {"ncases", 8},\n'
+                        '    {"features", {"Agency Name", "State"}},\n'
+                        '});'
+                    )
+                if 'RangeView::Of<std::string_view> usefeats' in sig:
+                    return (
+                        'std::array<std::string_view, 2> usefeats{"Agency Name", "State"};\n'
+                        f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}", \',\', 8, usefeats, std::nullopt);'
+                    )
+                if 'std::vector<std::string> usefeats' in sig:
+                    return (
+                        f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}", \',\', 8, '
+                        'std::vector<std::string>{"Agency Name", "State"}, std::nullopt);'
+                    )
+                return f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}");'
+            if n == 'load_csv':
+                if 'ReadCsvOptions' in sig:
+                    return (
+                        'pluss::loader::ReadCsvOptions options;\n'
+                        'options.ncases = 8;\n'
+                        'options.case_col = "Agency Name";\n'
+                        f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", options);'
+                    )
+                if 'const pluss::loader::Config&' in sig:
+                    return (
+                        'pluss::loader::Config config{\n'
+                        '    {"ncases", 8},\n'
+                        '    {"features", {"Agency Name", "State"}},\n'
+                        '};\n'
+                        f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", config);'
+                    )
+                if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                    return (
+                        f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", {{\n'
+                        '    {"ncases", 8},\n'
+                        '    {"features", {"Agency Name", "State"}},\n'
+                        '});'
+                    )
+                if 'std::string_view header, std::string_view case_feature' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", "infer", "Agency Name", "auto", 8);'
+                if 'std::string_view header, std::size_t ncases' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", "none", static_cast<std::size_t>(8));'
+                if 'RangeView::Of<std::string_view> usefeats' in sig:
+                    return (
+                        'std::array<std::string_view, 2> usefeats{"Agency Name", "State"};\n'
+                        f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", \',\', 8, usefeats, std::nullopt);'
+                    )
+                if 'std::vector<std::string> usefeats' in sig:
+                    return (
+                        f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", \',\', 8, '
+                        'std::vector<std::string>{"Agency Name", "State"}, std::nullopt);'
+                    )
+                return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}");'
+            if n == 'load_excel':
+                if 'nullptr_t' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", nullptr, true);'
+                if 'ReadExcelOptions' in sig:
+                    return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", options);'
+                if 'const pluss::loader::Config&' in sig:
+                    return (
+                        'pluss::loader::Config config{{"sheet_name", "Sheet 1"}};\n'
+                        f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", config);'
+                    )
+                if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                    return (
+                        f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", {{\n'
+                        '    {"sheet_name", "Sheet 1"},\n'
+                        '});'
+                    )
+                if 'std::initializer_list<std::string_view> sheet_names' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", {{"Sheet 1", "Sheet 2"}}, true);'
+                if 'const std::vector<std::string>& sheet_names' in sig:
+                    return (
+                        'std::vector<std::string> sheets{"Sheet 1", "Sheet 2"};\n'
+                        f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", sheets, true);'
+                    )
+                if 'RangeView::Of<std::string_view> sheet_names' in sig:
+                    return (
+                        'std::array<std::string_view, 2> sheets{"Sheet 1", "Sheet 2"};\n'
+                        f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", sheets, true);'
+                    )
+                if 'std::initializer_list<std::int64_t> sheet_indices' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", {{0, 1}}, true);'
+                if 'const std::vector<std::int64_t>& sheet_indices' in sig:
+                    return (
+                        'std::vector<std::int64_t> sheets{0, 1};\n'
+                        f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", sheets, true);'
+                    )
+                if 'RangeView::Int sheet_indices' in sig:
+                    return (
+                        'std::array<std::int64_t, 2> sheets{0, 1};\n'
+                        f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", sheets, true);'
+                    )
+                if 'sheet_name' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", "Sheet 1", true);'
+                if 'sheet_index' in sig or 'sheet_index,' in sig:
+                    return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", 0, true);'
+                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}");'
             if 'Config' in sig or 'ConfigEntry' in sig:
                 path = GENERIC_CSV_PATH
                 fn = n
@@ -2508,11 +3666,16 @@ def example_for(class_name: str, method: Method) -> str:
                     path = GENERIC_PARQUET_PATH
                 elif 'txt' in n:
                     path = GENERIC_TXT_PATH
-                return f'auto out = pluss::table::DataFrame::{fn}("{path}", {{"nrows", 16}});'
-            if 'char sep' in sig and 'usecols' in sig:
-                return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", \',\', 16, std::vector<std::string>{{"Agency Name"}}, std::nullopt);'
-            if 'source_type' in sig:
-                return f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}");'
+                if 'ConfigEntry' in sig:
+                    return (
+                        f'auto out = pluss::table::DataFrame::{fn}("{path}", {{\n'
+                        '    {"ncases", 8},\n'
+                        '});'
+                    )
+                return (
+                    'pluss::loader::Config config{{"ncases", 8}};\n'
+                    f'auto out = pluss::table::DataFrame::{fn}("{path}", config);'
+                )
             path = GENERIC_CSV_PATH
             if 'excel' in n:
                 path = GENERIC_XLSX_PATH
@@ -2528,6 +3691,13 @@ def example_for(class_name: str, method: Method) -> str:
                 return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\npluss::kindle::TabelizePolicy policy;\nauto out = pluss::table::DataFrame::tabelize(catalog, policy);'
             return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\nauto out = pluss::table::DataFrame::tabelize(catalog);'
         if n == 'kindelize':
+            if 'KindelizePolicy' in sig:
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'pluss::kindle::KindelizePolicy policy;\n'
+                    + 'auto out = df.kindelize(policy);'
+                )
             return df_base() + '\n\nauto out = df.kindelize();'
         if n in {'nrows','ncols','nfeatures','values','feature_names','cases_series'}:
             return df_base() + f'\n\nauto out = df.{n}();'
@@ -2583,14 +3753,53 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'drop':
                 return df_base() + '\n\nauto out = df.drop({"city"});'
             if n == 'reorder':
+                if 'initializer_list<ReorderSpec>' in sig:
+                    return (
+                        'auto df = pluss::table::DataFrame({\n'
+                        '    {"col_1", pluss::make_series({1.0, 101.0})},\n'
+                        '    {"col_2", pluss::make_series({2.0, 102.0})},\n'
+                        '    {"col_3", pluss::make_series({3.0, 103.0})},\n'
+                        '    {"col_4", pluss::make_series({4.0, 104.0})},\n'
+                        '    {"col_5", pluss::make_series({5.0, 105.0})},\n'
+                        '    {"col_6", pluss::make_series({6.0, 106.0})},\n'
+                        '    {"col_7", pluss::make_series({7.0, 107.0})},\n'
+                        '    {"col_8", pluss::make_series({8.0, 108.0})},\n'
+                        '    {"col_9", pluss::make_series({9.0, 109.0})},\n'
+                        '    {"col_10", pluss::make_series({10.0, 110.0})},\n'
+                        '    {"col_15", pluss::make_series({15.0, 115.0})},\n'
+                        '    {"col_16", pluss::make_series({16.0, 116.0})},\n'
+                        '    {"col_17", pluss::make_series({17.0, 117.0})},\n'
+                        '    {"col_20", pluss::make_series({20.0, 120.0})},\n'
+                        '    {"col_21", pluss::make_series({21.0, 121.0})},\n'
+                        '    {"col_22", pluss::make_series({22.0, 122.0})},\n'
+                        '    {"col_23", pluss::make_series({23.0, 123.0})},\n'
+                        '    {"col_24", pluss::make_series({24.0, 124.0})},\n'
+                        '    {"col_25", pluss::make_series({25.0, 125.0})},\n'
+                        '});\n\n'
+                        'using Move = pluss::table::DataFrame::ReorderSpec;\n'
+                        'auto out = df.reorder({\n'
+                        '    Move::move({"col_25", "col_10"}).first(),\n'
+                        '    Move::move("col_20").before("col_5"),\n'
+                        '    Move::move({"col_15", "col_16", "col_17"}).after("col_8"),\n'
+                        '    Move::move_regex("^col_2[1-4]$").last(),\n'
+                        '});'
+                    )
+                if 'pluss::RangeView<ReorderSpec>' in sig:
+                    return (
+                        df_base()
+                        + '\n\n'
+                        + 'using Move = pluss::table::DataFrame::ReorderSpec;\n'
+                        + 'std::vector<Move> plan{\n'
+                        + '    Move::move({"city", "sales"}).first(),\n'
+                        + '    Move::move("id").after("sales"),\n'
+                        + '};\n'
+                        + 'auto out = df.reorder(plan);'
+                    )
                 if 'ReorderSpec' in sig:
                     return (
                         df_base()
                         + '\n\n'
-                        + 'pluss::table::DataFrame::ReorderSpec spec;\n'
-                        + 'spec.features = {"sales"};\n'
-                        + 'spec.placement = pluss::table::DataFrame::ReorderPlacement::After;\n'
-                        + 'spec.anchor = "city";\n'
+                        + 'auto spec = pluss::table::DataFrame::ReorderSpec::move("sales").after("city");\n'
                         + 'auto out = df.reorder(spec);'
                     )
                 return df_base() + '\n\nauto out = df.reorder({"city"});'
@@ -2607,13 +3816,39 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'relabel_features' or n == 'set_axis' or n == 'set_feature_axis':
                 return df_base() + f'\n\nauto out = df.{n}({{"revenue", "location", "id_new"}});'
         if n == 'bucketize':
+            if 'pluss::msharp::RangeView::Of<std::string_view> feature_names' in sig:
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'std::vector<double> bins{0.0, 95.0, 110.0, 130.0};\n'
+                    + 'std::vector<std::int64_t> labels{1, 2, 3};\n'
+                    + 'auto out = df.bucketize({"id", "sales"}, bins, labels, true, true);'
+                )
+            if 'std::string_view feature_name' in sig:
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'std::vector<double> bins{0.0, 95.0, 110.0, 130.0};\n'
+                    + 'std::vector<std::int64_t> labels{1, 2, 3};\n'
+                    + 'auto out = df.bucketize("sales", bins, labels, true, true);'
+                )
             return (
                 df_base()
                 + '\n\n'
-                + 'std::vector<double> bins{0.0, 95.0, 110.0, 130.0};\n'
+                + 'std::vector<double> bins{0.0, 2.0, 3.0, 4.0};\n'
                 + 'std::vector<std::int64_t> labels{1, 2, 3};\n'
-                + 'auto out = df.bucketize("sales", bins, labels, true, true);'
+                + 'auto out = df.bucketize(bins, labels, true, true);'
             )
+        if n == 'case_study':
+            if 'std::string_view feature_name' in sig:
+                return df_base() + '\n\nauto value = df.case_study(1, "city");'
+            if 'std::int64_t start, std::int64_t stop' in sig:
+                return df_base() + '\n\nauto out = df.case_study(0, 2);'
+            return df_base() + '\n\nauto out = df.case_study(1);'
+        if n == 'observe':
+            if 'std::int64_t start, std::int64_t stop' in sig:
+                return df_base() + '\n\nauto preview = df.observe(0, 2, false);\npreview.show();'
+            return df_base() + '\n\nauto preview = df.observe(1, false);\npreview.show();'
         if n in {'sort_values','sort_cases','top','bottom','repeated_cases','unique_cases','set_cases','reset_cases','align_cases'}:
             if n == 'sort_values':
                 if 'ArrangeSpec' in sig:
@@ -2688,12 +3923,8 @@ def example_for(class_name: str, method: Method) -> str:
                 ');'
             )
         if n in {'set_features','set_features_','set'}:
-            if n == 'set_features':
-                return df_base() + '\n\nauto out = df.set_features("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
-            if n == 'set_features_':
-                return df_base() + '\n\ndf.set_features_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
             if n == 'set_features' or n == 'set_features_':
-                if 'initializer_list<std::string_view> names' in sig:
+                if 'pluss::msharp::RangeView::Of<std::string_view> names' in sig:
                     return df_base() + (
                         '\n\nauto out = df.set_features(\n'
                         '    {"profit", "cost"},\n'
@@ -2715,10 +3946,53 @@ def example_for(class_name: str, method: Method) -> str:
                     return df_base() + '\n\ndf.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};'
                 return df_base() + '\n\ndf.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));'
         if n == 'plot':
+            if 'DataFramePlotOptions' in sig:
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'pluss::table::DataFramePlotOptions options;\n'
+                    + 'options.default_x_feature = "id";\n'
+                    + 'auto fig = df.plot(options).line("sales");'
+                )
             return df_base() + '\n\nauto fig = df.plot().line("sales");'
+        if n == 'plot3d':
+            if 'DataFramePlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"x", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                    '    {"y", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                    '    {"z", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                    '});\n\n'
+                    'pluss::table::DataFramePlotOptions options;\n'
+                    'options.width = 900.0;\n'
+                    'auto fig = df.plot3d(options).scatter("x", "y", "z");'
+                )
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"x", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                '    {"y", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                '    {"z", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                '});\n\n'
+                'auto fig = df.plot3d().scatter("x", "y", "z");'
+            )
         if n == 'sql':
+            if 'SqlOptions options' in sig:
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'pluss::table::DataFrame::SqlOptions options;\n'
+                    + 'auto sql = df.sql(options);\n'
+                    + 'auto out = sql.execute("SELECT id, sales FROM self WHERE sales > 95");'
+                )
             return df_base() + '\n\nauto out = df.sql().execute("SELECT id, sales FROM self WHERE sales > 95");'
         if n == 'prepare_sql':
+            if 'SqlOptions options' in sig:
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'pluss::table::DataFrame::SqlOptions options;\n'
+                    + 'auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}", options);'
+                )
             return df_base() + '\n\nauto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");'
         if n == 'select_like':
             return df_named_metrics() + '\n\nauto out = df.select_like("midterm");'
@@ -2729,21 +4003,49 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_replace_numeric() + '\n\nauto out = df.replace("Tema", "Tamale", {"city"});'
             return df_replace_numeric() + '\n\nauto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});'
         if n in {'put', 'put_'}:
-            if n == 'put':
-                return df_base() + '\n\nauto mask = df.features("id") == 2.0;\nauto out = df.put("sales", mask, 999.0);'
-            return df_base() + '\n\nauto mask = df.features("id") == 2.0;\ndf.put_("city", mask, "Tamale");'
+            thread_mask = 'auto mask = df.features("id") == 2.0;'
+            series_mask = 'auto mask = pluss::make_series({false, true, false}, pluss::codem::ScalarType::Bool);'
+            if 'const pluss::Series& bool_mask' in sig and 'const char* value' in sig:
+                return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("city", mask, "Tamale");' if n == 'put' else 'df.put_("city", mask, "Tamale");')
+            if 'const pluss::Series& bool_mask' in sig and 'const Thread& value' in sig:
+                return df_base() + f'\n\n{series_mask}\nauto repl = pluss::table::Thread(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
+            if 'const pluss::Series& bool_mask' in sig and 'pluss::null_t value' in sig:
+                return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("sales", mask, pluss::null);' if n == 'put' else 'df.put_("sales", mask, pluss::null);')
+            if 'const pluss::Series& bool_mask' in sig and 'std::string_view value' in sig:
+                return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
+            if 'const pluss::Series& bool_mask' in sig:
+                return df_base() + f'\n\n{series_mask}\n' + ('auto out = df.put("sales", mask, 999.0);' if n == 'put' else 'df.put_("sales", mask, 999.0);')
+            if 'const Thread& bool_mask' in sig and 'const char* value' in sig:
+                return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("city", mask, "Tamale");' if n == 'put' else 'df.put_("city", mask, "Tamale");')
+            if 'const Thread& bool_mask' in sig and 'const Thread& value' in sig:
+                return df_base() + f'\n\n{thread_mask}\nauto repl = pluss::table::Thread(pluss::make_series({{500.0, 999.0, 500.0}}));\n' + ('auto out = df.put("sales", mask, repl);' if n == 'put' else 'df.put_("sales", mask, repl);')
+            if 'const Thread& bool_mask' in sig and 'pluss::null_t value' in sig:
+                return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("sales", mask, pluss::null);' if n == 'put' else 'df.put_("sales", mask, pluss::null);')
+            if 'const Thread& bool_mask' in sig and 'std::string_view value' in sig:
+                return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("city", mask, std::string_view("Tamale"));' if n == 'put' else 'df.put_("city", mask, std::string_view("Tamale"));')
+            return df_base() + f'\n\n{thread_mask}\n' + ('auto out = df.put("sales", mask, 999.0);' if n == 'put' else 'df.put_("sales", mask, 999.0);')
         if n in {'head','tail','sample','slice','take','where','filter','query','assign','transform'}:
             if n == 'head':
                 return df_base() + '\n\nauto out = df.head(2, false);'
             if n == 'tail':
                 return df_base() + '\n\nauto out = df.tail(2, false);'
             if n == 'sample':
-                return df_base() + '\n\nauto out = df.sample(2, 7);'
+                if ' frac' in sig and 'std::uint64_t random_state' in sig:
+                    return df_base() + '\n\nauto out = df.sample(0.67, 7, false, 0);'
+                if ' frac' in sig:
+                    return df_base() + '\n\nauto out = df.sample(0.67, false, 0);'
+                if 'std::uint64_t random_state' in sig:
+                    return df_base() + '\n\nauto rows = df.sample(2, 7, false, 0);\nauto cols = df.sample(2, 7, false, 1);'
+                if 'bool replace, int axis' in sig:
+                    return df_base() + '\n\nauto rows = df.sample(2, false, 0);\nauto cols = df.sample(2, false, 1);'
+                return df_base() + '\n\nauto out = df.sample(2);'
             if n == 'slice':
                 return df_base() + '\n\nauto out = df.slice(0, 2);'
             if n == 'take':
                 return df_base() + '\n\nstd::vector<std::int64_t> picks{0, 2};\nauto out = df.take(picks);'
             if n == 'where' or n == 'filter':
+                if 'const Thread& bool_mask' in sig:
+                    return df_base() + '\n\nauto mask = df.features("sales") >= 95.0;\nauto out = df.' + n + '(mask);'
                 return df_base() + '\n\nauto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\nauto out = df.' + n + '(mask);'
             if n == 'query':
                 return df_base() + '\n\nauto out = df.query("sales > 95");'
@@ -2759,6 +4061,14 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'TransformSpec' in sig:
                     return df_base() + '\n\nauto out = df.transform({{.feature = "sales", .expr = [](const pluss::table::Thread& thread) { return thread.clip(0.0, 110.0); }}});'
                 return df_base() + '\n\nauto out = df.transform([](const pluss::table::Thread& thread) { return thread.kind() == pluss::table::ThreadKind::Series ? thread.clip(0.0, 110.0) : thread; });'
+        if n == 'shift':
+            if 'pluss::msharp::RangeView::Of<std::string_view> features' in sig:
+                return df_base() + '\n\nauto out = df.shift({"sales"}, 2);'
+            return df_base() + '\n\nauto out = df.shift(2);'
+        if n == 'shuffle':
+            return df_base() + '\n\nauto out = df.shuffle(7);'
+        if n == 'reshuffle':
+            return df_base() + '\n\nauto rows = df.reshuffle(0, 7);\nauto cols = df.reshuffle(1, 7);'
         if n in {'tz_convert','tz_localize','to_utc','shift_time','floor_time','ceil_time','round_time','resample'}:
             if n == 'resample':
                 return df_time() + '\n\nauto out = df.resample("ts", {"load"}, "1h", "mean", 1, false);'
@@ -2792,7 +4102,13 @@ def example_for(class_name: str, method: Method) -> str:
         if n == 'count_distinct':
             return df_base() + '\n\nauto out = df.count_distinct({"id", "sales", "city"}, true, false);'
         if n == 'corr':
-            return df_base() + '\n\nauto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);'
+            if 'pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method' in sig:
+                return df_base() + '\n\nauto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::KendallTau, false);'
+            if 'pluss::msharp::RangeView::Of<std::string_view> features' in sig:
+                return df_base() + '\n\nauto out = df.corr({"id", "sales"}, false);'
+            if 'CorrMethod method' in sig:
+                return df_base() + '\n\nauto out = df.corr(pluss::table::DataFrame::CorrMethod::Spearman, false);'
+            return df_base() + '\n\nauto out = df.corr(false);'
         if n in {'add','sub','subtract','mul','multiply','div','divide','truediv','floordiv','mod','pow','eq','ne','lt','le','gt','ge','compare'}:
             if 'const DataFrame&' in sig:
                 if n == 'pow':
@@ -2829,18 +4145,34 @@ def example_for(class_name: str, method: Method) -> str:
                     + '    blocks.timeindex_span().size());'
                 )
             if n == 'tally':
-                return df_group() + '\n\nauto out = df.tally("city", 3, true, false);'
+                if 'pluss::msharp::RangeView::Of<std::string_view> features' in sig:
+                    return df_group() + '\n\nauto out = df.tally({"city", "product"}, 5, true, false);'
+                if 'std::string_view feature' in sig:
+                    return df_group() + '\n\nauto out = df.tally("city", 3, true, false);'
+                return df_group() + '\n\nauto out = df.tally(3, true, false);'
             if n == 'count':
+                if 'int axis' in sig:
+                    return df_small_numeric() + '\n\nauto out = df.count(1);'
+                if 'std::int64_t axis' in sig:
+                    return df_small_numeric() + '\n\nauto out = df.count(static_cast<std::int64_t>(1));'
                 return df_base() + '\n\nauto out = df.count(false);'
+            if n in {'sum', 'mean', 'median', 'min', 'max', 'std', 'var'}:
+                if 'int axis' in sig:
+                    return df_small_numeric() + f'\n\nauto out = df.{n}(1, true);'
+                if 'std::int64_t axis' in sig:
+                    return df_small_numeric() + f'\n\nauto out = df.{n}(static_cast<std::int64_t>(1), true);'
+                return df_base() + f'\n\nauto out = df.{n}(false);'
             return df_base() + f'\n\nauto out = df.{n}(false);'
         if n in {'all', 'any'}:
-            return (
+            base = (
                 'auto df = pluss::table::DataFrame({\n'
                 '    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},\n'
                 '    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},\n'
                 '});\n\n'
-                f'auto out = df.{n}(1, {{"passed_math", "passed_lab"}}, true);'
             )
+            if 'std::int64_t axis' in sig:
+                return base + f'auto out = df.{n}(1, {{"passed_math", "passed_lab"}}, true);'
+            return base + f'auto out = df.{n}({{"passed_math", "passed_lab"}}, true);'
         if n in {'isna','isnull','notna','notnull'}:
             if n in {'notna', 'notnull'}:
                 return (
@@ -2903,8 +4235,40 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'info_string':
                 return df_base() + '\n\nauto out = df.info_string();'
             if n == 'info':
+                if 'std::ostream& os' in sig:
+                    return df_base() + '\n\nstd::ostringstream os;\ndf.info(os);'
                 return df_base() + '\n\ndf.info();'
             if n.startswith('save_') or n == 'save_as':
+                if 'const pluss::loader::WriteCsvOptions& options' in sig:
+                    return df_base() + f'\n\npluss::loader::WriteCsvOptions options;\ndf.save_csv("{GENERIC_OUTPUT_CSV_PATH}", options);'
+                if 'const pluss::loader::WriteExcelOptions& options' in sig:
+                    return df_base() + f'\n\npluss::loader::WriteExcelOptions options;\ndf.save_excel("{GENERIC_OUTPUT_XLSX_PATH}", options);'
+                if 'const pluss::loader::Config& config' in sig:
+                    if n == 'save_as':
+                        return df_base() + f'\n\npluss::loader::Config config{{}};\ndf.save_as("json", "{GENERIC_OUTPUT_JSON_PATH}", config);'
+                    target = {
+                        'save_csv': GENERIC_OUTPUT_CSV_PATH,
+                        'save_excel': GENERIC_OUTPUT_XLSX_PATH,
+                        'save_txt': GENERIC_OUTPUT_TXT_PATH,
+                        'save_json': GENERIC_OUTPUT_JSON_PATH,
+                        'save_parquet': GENERIC_OUTPUT_PARQUET_PATH,
+                    }[n]
+                    return df_base() + f'\n\npluss::loader::Config config{{}};\ndf.{n}("{target}", config);'
+                if 'initializer_list<pluss::loader::ConfigEntry>' in sig:
+                    if n == 'save_as':
+                        return df_base() + f'\n\ndf.save_as("json", "{GENERIC_OUTPUT_JSON_PATH}", {{"indent", 2}});'
+                    target = {
+                        'save_csv': GENERIC_OUTPUT_CSV_PATH,
+                        'save_excel': GENERIC_OUTPUT_XLSX_PATH,
+                        'save_txt': GENERIC_OUTPUT_TXT_PATH,
+                        'save_json': GENERIC_OUTPUT_JSON_PATH,
+                        'save_parquet': GENERIC_OUTPUT_PARQUET_PATH,
+                    }[n]
+                    return df_base() + f'\n\ndf.{n}("{target}", {{"indent", 2}});'
+                if 'bool add_cases' in sig:
+                    return df_base() + f'\n\ndf.save_csv("{GENERIC_OUTPUT_CSV_PATH}", true, true, \',\', "NA", "case_id");'
+                if 'std::string sheet_name' in sig:
+                    return df_base() + f'\n\ndf.save_excel("{GENERIC_OUTPUT_XLSX_PATH}", "Sheet1", true, true, "NA", "case_id");'
                 target = {
                     'save_csv': f'"{GENERIC_OUTPUT_CSV_PATH}"', 'save_excel': f'"{GENERIC_OUTPUT_XLSX_PATH}"', 'save_txt': f'"{GENERIC_OUTPUT_TXT_PATH}"',
                     'save_json': f'"{GENERIC_OUTPUT_JSON_PATH}"', 'save_parquet': f'"{GENERIC_OUTPUT_PARQUET_PATH}"', 'save_as': f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'
@@ -2919,7 +4283,13 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'defined','unique'}:
             return df_base() + f'\n\nauto out = df.{n}();'
         if n == 'ts':
+            if 'std::initializer_list<std::string_view> features' in sig or 'pluss::msharp::RangeView::Of<std::string_view> features' in sig:
+                return df_time() + '\n\nauto out = df.ts({"load"});'
             return df_time() + '\n\nauto out = df.ts("load");'
+        if n == 'show':
+            if 'std::ostream& os' in sig:
+                return df_base() + '\n\nstd::ostringstream os;\ndf.show(os);'
+            return df_base() + '\n\ndf.show();'
         if n == 'unsqueeze':
             return df_base() + ('\n\nauto out = df.unsqueeze();' if 'depth_labels' not in sig else '\n\nauto labels = pluss::table::Thread(pluss::make_note({"train"}));\nauto out = df.unsqueeze(labels);')
         return df_base() + f'\n\nauto out = df.{n}();'
@@ -2955,6 +4325,24 @@ def example_for(class_name: str, method: Method) -> str:
             if 'initializer_list<std::string_view>' in sig:
                 return base + '\n\nauto fig = plot.line({"sales"}, std::nullopt);'
             return base + '\n\nauto fig = plot.line("sales");'
+        if n == 'step':
+            if 'StepPlotOptions' in sig:
+                return (
+                    base + '\n\npluss::table::StepPlotOptions options;\n'
+                    'options.line_width = 2.0;\n'
+                    'auto fig = plot.step("sales", "id", options);'
+                )
+            if 'initializer_list<std::string_view>' in sig or 'RangeView::Of<std::string_view> y_features' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},\n'
+                    '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                    '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'auto fig = plot.step({"sales", "cost"}, "month");'
+                )
+            return base + '\n\nauto fig = plot.step("sales", "id");'
         if n == 'area':
             if 'initializer_list<std::string_view>' in sig or 'RangeView::Of<std::string_view> y_features' in sig:
                 return (
@@ -2973,8 +4361,70 @@ def example_for(class_name: str, method: Method) -> str:
                     'auto fig = plot.area("sales", "id", options);'
                 )
             return base + '\n\nauto fig = plot.area("sales", "id");'
+        if n == 'area_stacked':
+            if 'AreaStackedPlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},\n'
+                    '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                    '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::AreaStackedPlotOptions options;\n'
+                    'options.alpha = 0.6;\n'
+                    'auto fig = plot.area_stacked({"sales", "cost"}, "month", options);'
+                )
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},\n'
+                '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.area_stacked({"sales", "cost"}, "month");'
+            )
         if n == 'scatter':
             return base + '\n\nauto fig = plot.scatter("id", "sales");'
+        if n == 'violin':
+            if 'value_feature, std::string_view group_feature' in sig and 'ViolinPlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"section", pluss::make_note({"A", "A", "B", "B"})},\n'
+                    '    {"score", pluss::make_series({71.0, 88.0, 79.0, 95.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::ViolinPlotOptions options;\n'
+                    'options.inner = pluss::pl::ViolinInner::Quartile;\n'
+                    'auto fig = plot.violin("score", "section", options);'
+                )
+            if 'value_feature, std::string_view group_feature' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"section", pluss::make_note({"A", "A", "B", "B"})},\n'
+                    '    {"score", pluss::make_series({71.0, 88.0, 79.0, 95.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'auto fig = plot.violin("score", "section");'
+                )
+            if 'ViolinPlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                    '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::ViolinPlotOptions options;\n'
+                    'options.width = 0.65;\n'
+                    'auto fig = plot.violin({"sales", "cost"}, options);'
+                )
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.violin({"sales", "cost"});'
+            )
         if n == 'density':
             if ('initializer_list<std::string_view> features' in sig or 'RangeView::Of<std::string_view> features' in sig) and 'DensityPlotOptions' in sig:
                 return (
@@ -3125,7 +4575,144 @@ def example_for(class_name: str, method: Method) -> str:
                 'auto fig = plot.auto_plot({"midterm", "final"});'
             )
         if n == 'hist':
+            if 'HistPlotOptions' in sig:
+                return (
+                    base + '\n\npluss::table::HistPlotOptions options;\n'
+                    'options.bins = 12;\n'
+                    'auto fig = plot.hist("sales", options);'
+                )
+            if 'RangeView::Of<std::string_view> features' in sig or 'initializer_list<std::string_view> features' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                    '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'auto fig = plot.hist({"sales", "cost"}, 12);'
+                )
             return base + '\n\nauto fig = plot.hist("sales", 12);'
+        if n == 'pie':
+            if 'PiePlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},\n'
+                    '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::PiePlotOptions options;\n'
+                    'options.show_value = true;\n'
+                    'auto fig = plot.pie("sales", "city", options);'
+                )
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},\n'
+                '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.pie("sales", "city");'
+            )
+        if n == 'heatmap':
+            if 'case_feature' in sig and 'HeatmapPlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"campus", pluss::make_note({"North", "North", "West", "West"})},\n'
+                    '    {"exam", pluss::make_note({"Midterm", "Final", "Midterm", "Final"})},\n'
+                    '    {"score", pluss::make_series({71.0, 88.0, 79.0, 95.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::HeatmapPlotOptions options;\n'
+                    'options.annotate_levels = true;\n'
+                    'auto fig = plot.heatmap("campus", "exam", "score", pluss::table::DataFrame::GroupOp::Mean, options);'
+                )
+            if 'case_feature' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"campus", pluss::make_note({"North", "North", "West", "West"})},\n'
+                    '    {"exam", pluss::make_note({"Midterm", "Final", "Midterm", "Final"})},\n'
+                    '    {"score", pluss::make_series({71.0, 88.0, 79.0, 95.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'auto fig = plot.heatmap("campus", "exam", "score", pluss::table::DataFrame::GroupOp::Mean);'
+                )
+            if 'HeatmapPlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                    '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::HeatmapPlotOptions options;\n'
+                    'options.annotate_levels = true;\n'
+                    'auto fig = plot.heatmap({"sales", "cost"}, options);'
+                )
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"sales", pluss::make_series({100.0, 120.0, 90.0})},\n'
+                '    {"cost", pluss::make_series({60.0, 80.0, 55.0})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.heatmap({"sales", "cost"});'
+            )
+        if n == 'scatter_matrix':
+            if 'ScatterMatrixTriangle triangle' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"x1", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                    '    {"x2", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                    '    {"x3", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'auto fig = plot.scatter_matrix({"x1", "x2", "x3"}, pluss::table::ScatterMatrixTriangle::Lower);'
+                )
+            if 'ScatterMatrixPlotOptions' in sig:
+                return (
+                    'auto df = pluss::table::DataFrame({\n'
+                    '    {"x1", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                    '    {"x2", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                    '    {"x3", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                    '});\n'
+                    'auto plot = df.plot();\n\n'
+                    'pluss::table::ScatterMatrixPlotOptions options;\n'
+                    'options.corner = true;\n'
+                    'auto fig = plot.scatter_matrix({"x1", "x2", "x3"}, options);'
+                )
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"x1", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                '    {"x2", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                '    {"x3", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.scatter_matrix({"x1", "x2", "x3"});'
+            )
+        if n == 'parallel':
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"x1", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                '    {"x2", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                '    {"x3", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                '    {"group", pluss::make_note({"A", "B", "A"})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.parallel({"x1", "x2", "x3"}, "group");'
+            )
+        if n == 'radviz':
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"x1", pluss::make_series({1.0, 2.0, 3.0})},\n'
+                '    {"x2", pluss::make_series({4.0, 3.0, 2.0})},\n'
+                '    {"x3", pluss::make_series({2.0, 5.0, 4.0})},\n'
+                '    {"group", pluss::make_note({"A", "B", "A"})},\n'
+                '});\n'
+                'auto plot = df.plot();\n\n'
+                'auto fig = plot.radviz({"x1", "x2", "x3"}, "group");'
+            )
+        if n == 'lag':
+            return (
+                base + '\n\npluss::table::LagPlotOptions options;\n'
+                'options.lag = 2;\n'
+                'auto fig = plot.lag("sales", options);'
+            )
         return base + f'\n\nauto out = plot.{n}();'
 
     if class_name == 'DataFrameSqlAccessor':
@@ -3143,7 +4730,15 @@ def example_for(class_name: str, method: Method) -> str:
                 return base + '\n\nauto out = stmt.execute({{"min_sales", 95.0}}, {{"table_name", "self"}});'
             if 'params)' in sig:
                 return base + '\n\nauto out = stmt.execute({{"min_sales", 95.0}});'
-            return base + '\n\nauto out = stmt.execute();'
+            return (
+                'auto df = pluss::table::DataFrame({\n'
+                '    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},\n'
+                '    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},\n'
+                '    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},\n'
+                '});\n'
+                'auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > 95");\n\n'
+                'auto out = stmt.execute();'
+            )
         return base + f'\n\nauto out = stmt.{n}();'
 
     if class_name == 'Thread':
@@ -3763,6 +5358,11 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`reshuffle(axis=1)` permutes feature order and keeps the row order unchanged.',
                 'Pass `random_state` when you need deterministic shuffling for docs, tests, or reproducible data splits.',
             ])
+        if class_name == 'DataFrame' and n == 'shuffle':
+            return bullets('Practical Behavior', [
+                '`shuffle(random_state)` is the row-order helper for the common case where you want to permute rows and leave the feature order alone.',
+                'It is equivalent to `reshuffle(axis=0, ...)`, but reads more directly in train/test split and stochastic preview workflows.',
+            ])
         if class_name == 'DataFrame' and n in {'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'cast'}:
             return bullets('Conversion Rules', [
                 'These methods rewrite only the selected features; unselected features are passed through unchanged.',
@@ -3788,11 +5388,16 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Only timeline/timeindex features are valid targets.',
                 'Use this when you want time-bucket labels that always round toward the next boundary.',
             ])
-        if class_name == 'DataFrame' and n == 'cloc':
+        if class_name == 'DataFrame' and n == 'case_study':
             return bullets('Practical Behavior', [
-                '`cloc(...)` is the case-axis row slice helper.',
-                'It is equivalent to slicing rows, not selecting by feature names.',
-                'Use it when you want row-position access in a method that reads like case-location.',
+                '`case_study(row)` and `case_study(start, stop)` study rows by position.',
+                '`case_study(row, feature_name)` gives positional-row plus label-column lookup in one method family.',
+                'For positional single-cell access, keep using `iat(...)`.',
+            ])
+        if class_name == 'DataFrame' and n == 'observe':
+            return bullets('Practical Behavior', [
+                '`observe(...)` returns a `DataFrameView`, so it is the preview-oriented row window helper alongside `head(...)` and `tail(...)`.',
+                'Use `observe(start, stop).show()` when you want a middle slice without materializing a bespoke helper or mutating the source frame.',
             ])
         if class_name == 'DataFrame' and n == 'combine':
             return bullets('Practical Behavior', [
@@ -3967,7 +5572,14 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`reorder({"a", "b"})` now means “move these features together and preserve the relative order of everything else.”',
                 'Use `ReorderSpec` when you need to move a subset to the front, back, before an anchor, or after an anchor.',
+                'Use the multi-spec overload when you want to apply several moves in one call from left to right.',
                 'This avoids listing a 3000-feature schema just to reposition two columns.',
+            ])
+        if class_name == 'DataFrame' and n == 'sample':
+            return bullets('Practical Behavior', [
+                '`sample(n, ...)` draws a fixed number of rows by default, or features when `axis=1`.',
+                '`sample(frac, ...)` draws a proportion of the selected axis.',
+                '`replace=true` enables sampling with replacement. For `frac > 1`, replacement is required.',
             ])
         if class_name == 'DataFrame' and n == 'replace':
             return bullets('Practical Behavior', [
@@ -4451,6 +6063,18 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '- Use this when you want a distribution summary instead of a per-row plot.',
                 '',
             ]
+        if class_name == 'DataFramePlotAccessor' and n == 'step':
+            return bullets('Practical Behavior', [
+                '`step(...)` uses the same feature selection pattern as `line(...)`, but the trace changes by steps instead of straight segments.',
+                'This is useful when the y-value should be interpreted as holding until the next x position.',
+                'If `x_feature` is omitted, the case axis is used.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'scatter':
+            return bullets('Practical Behavior', [
+                '`scatter(x_feature, y_feature, ...)` plots one point per row.',
+                'Use `hue_feature` when rows should be color-grouped by a categorical label.',
+                'This method is best when the relationship between two measures matters more than their order.',
+            ])
         if class_name == 'DataFramePlotAccessor' and n == 'bootstrap':
             return [
                 '#### Practical Behavior',
@@ -4494,6 +6118,87 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'The requested point count is clamped to a minimum of 16.',
                 'With many features, one density trace is drawn per feature on the same pane.',
             ])
+        if class_name == 'DataFramePlotAccessor' and n == 'hist':
+            return bullets('Practical Behavior', [
+                '`hist(...)` bins numeric values into frequency bars.',
+                'With several features, the selected features are rendered together in one figure for quick distribution comparison.',
+                'Use the options overload when you want explicit visual controls instead of just the bin count.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'heatmap':
+            return bullets('Practical Behavior', [
+                'The direct `heatmap(features)` form renders the selected numeric features as a matrix over the case axis.',
+                'The grouped `heatmap(case_feature, feature_feature, value_feature, ...)` form first aggregates long-form rows into a two-dimensional summary grid.',
+                'Use `annotate_levels=true` in the options when you want each cell to display its numeric value.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'line':
+            return bullets('Practical Behavior', [
+                '`line(...)` draws one continuous trace per selected y-feature.',
+                'Pass `x_feature` when the horizontal axis should come from a real feature instead of the case axis.',
+                'Use the options overload when you want to tune line alpha, width, or y-limit policy.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'lag':
+            return bullets('Practical Behavior', [
+                '`lag(feature, options)` compares one numeric feature against a lagged copy of itself.',
+                'Increase `LagPlotOptions::lag` when you want to inspect longer-gap autocorrelation structure.',
+                'This is useful for quick time-dependence diagnostics before formal modeling.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'parallel':
+            return bullets('Practical Behavior', [
+                '`parallel(...)` expects numeric features and draws one polyline per row across several aligned axes.',
+                'Use `class_feature` when rows should be colored by a grouping label.',
+                'This is useful for comparing multivariate profiles row by row.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'pie':
+            return bullets('Practical Behavior', [
+                '`pie(value_feature, label_feature, ...)` uses one row per slice.',
+                'The value feature determines slice magnitude, and the label feature controls the text shown for each slice.',
+                'This is best for small categorical summaries rather than large row counts.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'radviz':
+            return bullets('Practical Behavior', [
+                '`radviz(...)` expects numeric features and projects each row toward feature anchors around a circle.',
+                'Use `class_feature` when you want point colors to reflect group labels.',
+                'This is useful for quick multivariate separation checks between classes.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'scatter_matrix':
+            return bullets('Practical Behavior', [
+                '`scatter_matrix(...)` creates pairwise scatter panels for the selected numeric features.',
+                'Use the `triangle` overload when you want only the upper, lower, or corner half of the matrix.',
+                'Use the options overload when you want finer pair-plot rendering control.',
+            ])
+        if class_name == 'DataFramePlotAccessor' and n == 'violin':
+            return bullets('Practical Behavior', [
+                'The feature-list overload renders one violin per numeric feature.',
+                'The `(value_feature, group_feature)` overload renders one violin per group in the grouping feature.',
+                'Use this when you want full distribution shape rather than only quartiles or whiskers.',
+            ])
+        if class_name == 'ColumnRef' and n == 'thread':
+            return bullets('Practical Behavior', [
+                '`thread()` gives you the exact referenced column payload without copying it into a new frame.',
+                'Use this when you want to switch into `Thread` operations such as comparisons, casting, or text cleanup.',
+            ])
+        if class_name == 'ColumnRef' and n == 'value':
+            return bullets('Practical Behavior', [
+                '`value()` returns a `ThreadValue` wrapper over the first element of the referenced column.',
+                'Use this when you need typed scalar extraction rather than a whole-column thread.',
+            ])
+        if class_name == 'ColumnRef' and n == 'values':
+            return bullets('Practical Behavior', [
+                '`values()` materializes the referenced feature as a standalone `Thread`.',
+                'Use this when you want to pass the column into another API that expects a thread rather than a column reference.',
+            ])
+        if class_name == 'DataFrameSqlAccessor' and n == 'execute':
+            return bullets('Practical Behavior', [
+                '`execute(statement)` runs the SQL immediately against the current frame.',
+                'The current frame is exposed inside the statement as `self`.',
+                'Use this for one-off queries. Use `prepare(...)` when the same statement shape will be executed repeatedly with different parameter values.',
+            ])
+        if class_name == 'DataFrameSqlAccessor' and n == 'prepare':
+            return bullets('Practical Behavior', [
+                '`prepare(statement)` captures a parameterized SQL template and returns a reusable prepared helper.',
+                'Use placeholders such as `{min_sales}` for value parameters you will bind later.',
+                'Prepared execution is the better path when you want repeated queries without rebuilding the statement each time.',
+            ])
         return []
 
     def class_specific_intro_sections() -> list[str]:
@@ -4520,7 +6225,14 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         '',
     ]
     lines.extend(class_specific_intro_sections())
-    if class_name == 'DataFrame':
+    grouped_method_pages = {
+        'DataFrame',
+        'ColumnRef',
+        'DataFramePlotAccessor',
+        'DataFrameSqlAccessor',
+        'DataFrameSqlPrepared',
+    }
+    if class_name in grouped_method_pages:
         names_by_letter: dict[str, list[str]] = {}
         for name in sorted(grouped.keys(), key=str.lower):
             letter = name[0].upper()
@@ -4539,11 +6251,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         def merged_returns(overloads: list[Method]) -> str:
             seen: list[str] = []
             for overload in overloads:
-                if overload.return_type not in seen:
-                    seen.append(overload.return_type)
+                rendered = returns_doc(overload.return_type)
+                if rendered not in seen:
+                    seen.append(rendered)
             if len(seen) == 1:
-                return returns_doc(seen[0])
-            return '\n\n'.join(returns_doc(ret) for ret in seen)
+                return seen[0]
+            return '\n\n'.join(seen)
 
         for letter in sorted(names_by_letter.keys()):
             lines.append(f'## {letter}')
@@ -4573,14 +6286,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 lines.append('')
                 lines.append(generic_note(class_name, overloads[0]))
 
-                seen_examples: set[str] = set()
                 rendered_any = False
                 example_count = 0
                 for overload in overloads:
                     code = normalize_user_names(class_name, example_for(class_name, overload)).strip()
-                    if not code or code in seen_examples:
+                    if not code:
                         continue
-                    seen_examples.add(code)
                     example_count += 1
                     if not rendered_any:
                         lines.append('')
@@ -4588,7 +6299,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                         lines.append('')
                         rendered_any = True
                     if len(overloads) > 1:
-                        lines.append(f'Example {example_count}.')
+                        lines.append(f'Example {example_count}. {example_caption(class_name, overload)}')
                         lines.append('')
                     lines.append('```cpp')
                     lines.append(code)

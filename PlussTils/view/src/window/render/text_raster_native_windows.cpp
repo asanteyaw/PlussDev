@@ -72,6 +72,42 @@ namespace {
 
 } // namespace
 
+std::optional<int> measure_text_width_native(const TextCommand& command) {
+  if (command.text.empty() || command.pixel_size <= 0) {
+    return 0;
+  }
+  const std::wstring text = utf8_to_wide(command.text);
+  const std::wstring family =
+      utf8_to_wide(first_font_family(command.font_family));
+  if (text.empty()) {
+    return std::nullopt;
+  }
+  HDC dc = CreateCompatibleDC(nullptr);
+  if (dc == nullptr) {
+    return std::nullopt;
+  }
+  HFONT font = CreateFontW(
+      -command.pixel_size, 0, 0, 0,
+      std::clamp(command.font_weight, 100, 900), FALSE, FALSE, FALSE,
+      DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+      ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+      family.empty() ? L"Segoe UI" : family.c_str());
+  if (font == nullptr) {
+    DeleteDC(dc);
+    return std::nullopt;
+  }
+  HGDIOBJ old_font = SelectObject(dc, font);
+  SIZE extent{};
+  const bool measured =
+      GetTextExtentPoint32W(dc, text.data(), static_cast<int>(text.size()),
+                            &extent) != FALSE;
+  SelectObject(dc, old_font);
+  DeleteObject(font);
+  DeleteDC(dc);
+  return measured ? std::optional<int>(std::max(0L, extent.cx))
+                  : std::nullopt;
+}
+
 bool render_text_command_native(PixelCanvas& canvas, const TextCommand& command, const std::optional<RectI>& clip,
                                 std::vector<RenderEvent>& events) {
   (void)events;

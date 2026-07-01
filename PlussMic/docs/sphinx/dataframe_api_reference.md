@@ -34,7 +34,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Add each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -56,7 +56,7 @@ id  sales
 7   190.0
 ```
 
-Example 2.
+Example 2. Add each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -87,7 +87,7 @@ DataFrame add_prefix(self, std::string_view prefix) const
 #### Parameters
 
 `prefix` : `std::string_view`
-    See the signature for the supported argument form.
+    Text prefix inserted ahead of the existing label or value.
 
 #### Returns
 
@@ -136,7 +136,7 @@ DataFrame add_suffix(self, std::string_view suffix) const
 #### Parameters
 
 `suffix` : `std::string_view`
-    See the signature for the supported argument form.
+    Text suffix appended after the existing label or value.
 
 #### Returns
 
@@ -179,13 +179,25 @@ id_2024  sales_2024  city_2024
 #### API Signature
 
 ```cpp
-DataFrameView aggregate(self, pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = true) const
+DataFrameView aggregate(self, pluss::RangeView<SummarySpec> specs, bool render = true) const
 ```
 
 #### Parameters
 
-`specs` : `pluss::msharp::RangeView::Of<SummarySpec>`
-    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
+`specs` : `pluss::RangeView<SummarySpec>`
+    Aggregation specs. Each `SummarySpec` has `output`, `feature`, and `op`.
+    
+    `op` supports:
+    - `Count`: Count observed values in the selected feature.
+    - `Nunique`: Count distinct observed values.
+    - `Sum`: Compute the numeric sum.
+    - `Mean`: Compute the arithmetic mean.
+    - `Median`: Compute the median.
+    - `Min`: Compute the minimum.
+    - `Max`: Compute the maximum.
+    - `Std`: Compute the standard deviation.
+    - `Var`: Compute the variance.
+    - `Prod`: Compute the numeric product.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -285,14 +297,14 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-Thread all(self, pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const
+Thread all(self, pluss::RangeView<std::string_view> features = {}, bool skipna = true) const
 
-Thread all(self, std::int64_t axis, pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const
+Thread all(self, std::int64_t axis, pluss::RangeView<std::string_view> features = {}, bool skipna = true) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `skipna` : `bool`
@@ -312,12 +324,22 @@ Applies `all` to the current `DataFrame` object. Use the example and output toge
 
 #### Examples
 
-Example 1.
+Example 1. Evaluate `all` down the selected boolean columns.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},
-    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
+});
+
+auto out = df.all({"passed_math", "passed_lab"}, true);
+```
+Example 2. Evaluate `all` across rows using a selected boolean feature set.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
 });
 
 auto out = df.all(1, {"passed_math", "passed_lab"}, true);
@@ -336,14 +358,14 @@ auto out = df.all(1, {"passed_math", "passed_lab"}, true);
 #### API Signatures
 
 ```cpp
-Thread any(self, pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const
+Thread any(self, pluss::RangeView<std::string_view> features = {}, bool skipna = true) const
 
-Thread any(self, std::int64_t axis, pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const
+Thread any(self, std::int64_t axis, pluss::RangeView<std::string_view> features = {}, bool skipna = true) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `skipna` : `bool`
@@ -363,12 +385,22 @@ Applies `any` to the current `DataFrame` object. Use the example and output toge
 
 #### Examples
 
-Example 1.
+Example 1. Evaluate `any` down the selected boolean columns.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::codem::ScalarType::Bool))},
-    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::codem::ScalarType::Bool))},
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
+});
+
+auto out = df.any({"passed_math", "passed_lab"}, true);
+```
+Example 2. Evaluate `any` across rows using a selected boolean feature set.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"passed_math", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+    {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
 });
 
 auto out = df.any(1, {"passed_math", "passed_lab"}, true);
@@ -387,18 +419,18 @@ auto out = df.any(1, {"passed_math", "passed_lab"}, true);
 #### API Signatures
 
 ```cpp
-DataFrame assign(self, pluss::msharp::RangeView::Of<DeriveSpec> specs) const
+DataFrame assign(self, pluss::RangeView<DeriveSpec> specs) const
 
-DataFrame assign(self, pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const
+DataFrame assign(self, pluss::RangeView<std::pair<std::string, Thread>> assignments) const
 ```
 
 #### Parameters
 
-`specs` : `pluss::msharp::RangeView::Of<DeriveSpec>`
+`specs` : `pluss::RangeView<DeriveSpec>`
     Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
-`assignments` : `pluss::msharp::RangeView::Of<std::pair<std::string, Thread>>`
-    See the signature for the supported argument form.
+`assignments` : `pluss::RangeView<std::pair<std::string, Thread>>`
+    Collection of `(feature_name, thread)` pairs used to add or replace several features in one call.
 
 #### Returns
 
@@ -411,7 +443,7 @@ Adds or replaces derived features computed from the current frame. Use this when
 
 #### Examples
 
-Example 1.
+Example 1. Derive one or more columns inside the call from the current frame state.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -430,7 +462,7 @@ id  sales  city    profit
 3    90.0  Kumasi  30.0
 ```
 
-Example 2.
+Example 2. Attach one or more already-computed threads by name.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -461,21 +493,21 @@ id  sales  city    profit
 #### API Signatures
 
 ```cpp
-DataFrame astype(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const
+DataFrame astype(self,  pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>> feature_dtypes) const
 
-DataFrame astype(self, pluss::msharp::RangeView::Of<std::string_view> features, pluss::codem::ScalarType dtype) const
+DataFrame astype(self, pluss::RangeView<std::string_view> features, pluss::ScalarType dtype) const
 ```
 
 #### Parameters
 
-`feature_dtypes` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>`
-    See the signature for the supported argument form.
+`feature_dtypes` : `pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>>`
+    Collection of `(feature_name, dtype)` pairs used to cast several existing features to explicit scalar dtypes in one call.
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
-`dtype` : `pluss::codem::ScalarType`
-    See the signature for the supported argument form.
+`dtype` : `pluss::ScalarType`
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -488,12 +520,12 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### Examples
 
-Example 1.
+Example 1. Convert several selected features at once by supplying a feature-to-dtype map.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
 
-auto out = df.astype({{"sales", pluss::codem::ScalarType::Float64}});
+auto out = df.astype({{"sales", pluss::ScalarType::Float64}});
 ```
 
 ```text
@@ -503,12 +535,12 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Convert one or more selected features to a target numeric Series dtype.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
 
-auto out = df.astype({"sales"}, pluss::codem::ScalarType::Float64);
+auto out = df.astype({"sales"}, pluss::ScalarType::Float64);
 ```
 
 ```text
@@ -537,7 +569,7 @@ std::string at(self, std::int64_t row, std::string_view feature_name) const
 #### Parameters
 
 `row` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based row position used by this overload.
 
 `feature_name` : `std::string_view`
     Name of the target feature to read, rewrite, sort by, or promote to cases.
@@ -601,7 +633,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 auto score = pluss::table::Thread(pluss::make_series({71.0, 0.0, 88.0, 0.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));
+                 .with_validity_mask(pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool));
 auto df = pluss::table::DataFrame({
     {"score", score},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
@@ -701,19 +733,19 @@ auto out = df.sort_values({pluss::table::DataFrame::ArrangeSpec{"sales", true, t
 #### API Signatures
 
 ```cpp
-DataFrame bucketize(self, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const
+DataFrame bucketize(self, pluss::RangeView<scalar> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) const
 
-DataFrame bucketize(self, pluss::msharp::RangeView::Of<std::string_view> feature_names, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const
+DataFrame bucketize(self, pluss::RangeView<std::string_view> feature_names, pluss::RangeView<scalar> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) const
 
-DataFrame bucketize(self, std::string_view feature_name, pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const
+DataFrame bucketize(self, std::string_view feature_name, pluss::RangeView<scalar> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) const
 ```
 
 #### Parameters
 
-`bins` : `pluss::msharp::RangeView::Double`
+`bins` : `pluss::RangeView<scalar>`
     Strictly increasing interval edges used to define bucket boundaries.
 
-`labels` : `pluss::msharp::RangeView::Int`
+`labels` : `pluss::RangeView<std::int64_t>`
     Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
 `right` : `bool`
@@ -722,7 +754,7 @@ DataFrame bucketize(self, std::string_view feature_name, pluss::msharp::RangeVie
 `include_lowest` : `bool`
     When `true`, the first bucket also includes its left edge.
 
-`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`feature_names` : `pluss::RangeView<std::string_view>`
     Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.
 
 `feature_name` : `std::string_view`
@@ -739,7 +771,49 @@ Buckets numeric `Series` features into interval labels while preserving the rest
 
 #### Examples
 
-Example 1.
+Example 1. Bucketize every compatible numeric column in the frame.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+std::vector<double> bins{0.0, 2.0, 3.0, 4.0};
+std::vector<std::int64_t> labels{1, 2, 3};
+auto out = df.bucketize(bins, labels, true, true);
+```
+
+```text
+id  sales  city
+1   2      Accra
+2   3      Tema
+3   1      Kumasi
+```
+
+Example 2. Bucketize several selected numeric columns at once.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+std::vector<double> bins{0.0, 95.0, 110.0, 130.0};
+std::vector<std::int64_t> labels{1, 2, 3};
+auto out = df.bucketize({"id", "sales"}, bins, labels, true, true);
+```
+
+```text
+id  sales  city
+1   2      Accra
+2   3      Tema
+3   1      Kumasi
+```
+
+Example 3. Bucketize one numeric column into interval labels.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -770,6 +844,104 @@ id  sales  city
 
 ## C
 
+### `case_study`
+
+#### API Signatures
+
+```cpp
+DataFrame case_study(self, std::int64_t row) const
+
+DataFrame case_study(self, std::int64_t start, std::int64_t stop) const
+
+std::string case_study(self, std::int64_t row, std::string_view feature_name) const
+```
+
+#### Parameters
+
+`row` : `std::int64_t`
+    Zero-based row position to inspect.
+
+`start` : `std::int64_t`
+    Inclusive zero-based starting row position of the study window.
+
+`stop` : `std::int64_t`
+    Exclusive zero-based ending row position of the study window.
+
+`feature_name` : `std::string_view`
+    Column label used for loc-style cell lookup once the row position has been chosen.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+`std::string`
+    Rendered string result.
+
+#### What It Does
+
+Applies `case_study` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+Example 1. Study one row by position.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.case_study(1);
+```
+
+```text
+id  sales  city
+2   120.0  Tema
+```
+
+Example 2. Study a contiguous row window by position.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.case_study(0, 2);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+```
+
+Example 3. Look up one cell using a row position and a column label.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto value = df.case_study(1, "city");
+```
+
+```text
+Tema
+```
+
+#### Practical Behavior
+
+- `case_study(row)` and `case_study(start, stop)` study rows by position.
+- `case_study(row, feature_name)` gives positional-row plus label-column lookup in one method family.
+- For positional single-cell access, keep using `iat(...)`.
+
+
 ### `cases`
 
 #### API Signatures
@@ -789,13 +961,13 @@ std::string cases(self, std::int64_t row, std::string_view feature_name) const
 #### Parameters
 
 `row` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based row position used by this overload.
 
 `row_span` : `std::pair<std::int64_t, std::int64_t>`
-    See the signature for the supported argument form.
+    Row span given as a `(start, stop)` pair.
 
 `feature_idx` : `std::size_t`
-    See the signature for the supported argument form.
+    Zero-based feature position used by this overload.
 
 `feature_name` : `std::string_view`
     Name of the target feature to read, rewrite, sort by, or promote to cases.
@@ -817,7 +989,7 @@ Fetches one value, member, or slice from the current object without changing the
 
 #### Examples
 
-Example 1.
+Example 1. Read the current case axis thread.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -828,7 +1000,7 @@ auto df = pluss::table::DataFrame({
 
 auto out = df.cases();
 ```
-Example 2.
+Example 2. Extract one row by case position.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -847,7 +1019,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 3. Extract a contiguous row span by case position.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -866,7 +1038,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 4.
+Example 4. Read one cell by row position and feature index.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -882,7 +1054,7 @@ auto out = df.cases(0, 0);
 1
 ```
 
-Example 5.
+Example 5. Read one cell by row position and feature name.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -948,17 +1120,17 @@ auto out = df.cases_series();
 #### API Signatures
 
 ```cpp
-DataFrame cast(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const
+DataFrame cast(self,  pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>> feature_dtypes) const
 
-DataFrame cast(self, pluss::msharp::RangeView::Of<CastSpec> specs) const
+DataFrame cast(self, pluss::RangeView<CastSpec> specs) const
 ```
 
 #### Parameters
 
-`feature_dtypes` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>`
-    See the signature for the supported argument form.
+`feature_dtypes` : `pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>>`
+    Collection of `(feature_name, dtype)` pairs used to cast several existing features to explicit scalar dtypes in one call.
 
-`specs` : `pluss::msharp::RangeView::Of<CastSpec>`
+`specs` : `pluss::RangeView<CastSpec>`
     Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 #### Returns
@@ -972,12 +1144,12 @@ This changes the semantic or numeric type so later operations route through the 
 
 #### Examples
 
-Example 1.
+Example 1. Cast selected features into another Pluss payload family.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
 
-auto out = df.astype({{"sales", pluss::codem::ScalarType::Float64}});
+auto out = df.astype({{"sales", pluss::ScalarType::Float64}});
 ```
 
 ```text
@@ -987,12 +1159,12 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Cast selected features with explicit target-family and dtype control.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
 
-auto out = df.cast({{.feature = "sales", .target = pluss::table::ThreadCastTarget::Series, .series_dtype = pluss::codem::ScalarType::Float64}});
+auto out = df.cast({{.feature = "sales", .target = pluss::table::ThreadCastTarget::Series, .series_dtype = pluss::ScalarType::Float64}});
 ```
 
 ```text
@@ -1015,12 +1187,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame cast_note(self, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame cast_note(self, pluss::RangeView<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -1064,16 +1236,16 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame cast_series(self, pluss::msharp::RangeView::Of<std::string_view> features, std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const
+DataFrame cast_series(self, pluss::RangeView<std::string_view> features, std::optional<pluss::ScalarType> dtype = std::nullopt) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
-`dtype` : `std::optional<pluss::codem::ScalarType>`
-    See the signature for the supported argument form.
+`dtype` : `std::optional<pluss::ScalarType>`
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -1089,7 +1261,7 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
 
-auto out = df.cast_series({"sales"}, pluss::codem::ScalarType::Float64);
+auto out = df.cast_series({"sales"}, pluss::ScalarType::Float64);
 ```
 
 ```text
@@ -1112,12 +1284,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame cast_timeindex(self, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame cast_timeindex(self, pluss::RangeView<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -1161,12 +1333,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame cast_timeline(self, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame cast_timeline(self, pluss::RangeView<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -1206,12 +1378,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame ceil_time(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view unit) const
+DataFrame ceil_time(self, pluss::RangeView<std::string_view> features, std::string_view unit) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
@@ -1255,64 +1427,6 @@ ts
 - Use this when you want time-bucket labels that always round toward the next boundary.
 
 
-### `cloc`
-
-#### API Signatures
-
-```cpp
-DataFrame cloc(self, std::int64_t row) const
-
-DataFrame cloc(self, std::int64_t start, std::int64_t stop) const
-```
-
-#### Parameters
-
-`row` : `std::int64_t`
-    See the signature for the supported argument form.
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::int64_t`
-    Exclusive ending position of the slice.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### What It Does
-
-Applies `cloc` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
-
-#### Examples
-
-Example 1.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.cloc();
-```
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-#### Practical Behavior
-
-- `cloc(...)` is the case-axis row slice helper.
-- It is equivalent to slicing rows, not selecting by feature names.
-- Use it when you want row-position access in a method that reads like case-location.
-
-
 ### `combine`
 
 #### API Signatures
@@ -1329,7 +1443,7 @@ DataFrame combine(self, const DataFrame& other, const CombineSpec& spec) const
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `spec` : `const CombineSpec&`
-    Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.
+    Combine policy object. Use it when you want explicit control over feature-wise append/update behavior instead of the default combine route.
 
 #### Returns
 
@@ -1342,7 +1456,7 @@ Combines this frame with another frame according to the supplied combine policy,
 
 #### Examples
 
-Example 1.
+Example 1. Combine two aligned frames with the default feature-wise policy.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -1364,7 +1478,7 @@ id  sales  cost
 3    90.0  55.0
 ```
 
-Example 2.
+Example 2. Combine two aligned frames with an explicit combine-policy object.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -1421,7 +1535,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Run the not-equal comparison alias against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -1443,7 +1557,7 @@ id  sales
 3   false
 ```
 
-Example 2.
+Example 2. Run the not-equal comparison alias against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1575,9 +1689,9 @@ DataFrameView corr(self, bool render = false) const
 
 DataFrameView corr(self, CorrMethod method, bool render = false) const
 
-DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const
+DataFrameView corr(self, pluss::RangeView<std::string_view> features, bool render = false) const
 
-DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const
+DataFrameView corr(self, pluss::RangeView<std::string_view> features, CorrMethod method, bool render = false) const
 ```
 
 #### Parameters
@@ -1586,9 +1700,14 @@ DataFrameView corr(self, pluss::msharp::RangeView::Of<std::string_view> features
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 `method` : `CorrMethod`
-    See the signature for the supported argument form.
+    Correlation method.
+    
+    Supported values:
+    - `Pearson`: Ordinary linear correlation.
+    - `Spearman`: Rank correlation.
+    - `KendallTau`: Rank-concordance correlation.
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -1602,7 +1721,7 @@ Applies `corr` to the current `DataFrame` object. Use the example and output tog
 
 #### Examples
 
-Example 1.
+Example 1. Find the correlation across all numeric columns using the default correlation method.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1611,7 +1730,61 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::Pearson, false);
+auto out = df.corr(false);
+```
+
+```text
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
+```
+
+Example 2. Find the correlation across all numeric columns using a non-default correlation method.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr(pluss::table::DataFrame::CorrMethod::Spearman, false);
+```
+
+```text
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
+```
+
+Example 3. Find the correlation for a selected subset of numeric columns.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr({"id", "sales"}, false);
+```
+
+```text
+feature  id      sales
+id       1.0000  0.3273
+sales    0.3273  1.0000
+```
+
+Example 4. Find the correlation between selected columns using a non-default correlation method.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr({"id", "sales"}, pluss::table::DataFrame::CorrMethod::KendallTau, false);
 ```
 
 ```text
@@ -1661,7 +1834,7 @@ Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `count` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1671,6 +1844,42 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.count(false);
+```
+
+```text
+feature  value
+id       3
+sales    3
+city     3
+```
+
+Example 2. Compute `count` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.count(1);
+```
+
+```text
+feature  value
+id       3
+sales    3
+city     3
+```
+
+Example 3. Compute `count` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.count(static_cast<std::int64_t>(1));
 ```
 
 ```text
@@ -1746,12 +1955,12 @@ Tema    2
 #### API Signature
 
 ```cpp
-DataFrameView count_distinct(self, pluss::msharp::RangeView::Of<std::string_view> features = {}, bool dropna = true, bool render = true) const
+DataFrameView count_distinct(self, pluss::RangeView<std::string_view> features = {}, bool dropna = true, bool render = true) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `dropna` : `bool`
@@ -1948,7 +2157,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Divide each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -1970,7 +2179,7 @@ id    sales
 0.75  0.9
 ```
 
-Example 2.
+Example 2. Divide each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2016,7 +2225,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Divide each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -2038,7 +2247,7 @@ id    sales
 0.75  0.9
 ```
 
-Example 2.
+Example 2. Divide each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2063,12 +2272,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame drop(self, pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame drop(self, pluss::RangeView<std::string_view> names) const
 ```
 
 #### Parameters
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`names` : `pluss::RangeView<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
@@ -2130,7 +2339,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
+                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 auto df = pluss::table::DataFrame({
     {"id", pluss::make_series({1, 2, 3})},
     {"sales", sales},
@@ -2157,12 +2366,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame dropna_all(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame dropna_all(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -2226,7 +2435,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Compare each compatible cell for equality against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -2248,7 +2457,7 @@ id  sales
 3   false
 ```
 
-Example 2.
+Example 2. Compare each compatible cell for equality against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2361,7 +2570,7 @@ ColumnRef feature_ref(self, std::string_view name) const
 #### Parameters
 
 `name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
 #### Returns
 
@@ -2393,9 +2602,9 @@ DataFrame features(self, const NameRange& names)
 
 DataFrame features(self, const NameRange& names) const
 
-DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names)
+DataFrame features(self, pluss::RangeView<std::string_view> names)
 
-DataFrame features(self, pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame features(self, pluss::RangeView<std::string_view> names) const
 
 DataFrame features(self, StackArray<std::string_view> names)
 
@@ -2422,7 +2631,7 @@ Thread features(self, std::string_view name) const
     Collection of feature, slot, or stream names supplied in positional order.
 
 `name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
 #### Returns
 
@@ -2441,7 +2650,7 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 
 #### Examples
 
-Example 1.
+Example 1. Project a named feature subset from a reusable name-range container.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2457,7 +2666,23 @@ auto out = df.features();
 [Thread(id), Thread(sales), Thread(city)]
 ```
 
-Example 2.
+Example 2. Project a named feature subset from a reusable name-range container.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features();
+```
+
+```text
+[Thread(id), Thread(sales), Thread(city)]
+```
+
+Example 3. Project a named feature subset from a lightweight string view.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2473,7 +2698,55 @@ auto out = df.features("sales");
 Thread([100.0, 120.0, 90.0])
 ```
 
-Example 3.
+Example 4. Project a named feature subset from a lightweight string view.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+Example 5. Project a named feature subset from a fixed stack-allocated name list.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+Example 6. Project a named feature subset from a fixed stack-allocated name list.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+Example 7. Project a named feature subset from inline C-string feature names.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2490,6 +2763,105 @@ id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
+```
+
+Example 8. Project a named feature subset from inline C-string feature names.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features({"id", "sales"});
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 9. Project a named feature subset from inline string-view feature names.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features({"id", "sales"});
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+Example 10. Project a named feature subset from inline string-view feature names.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features({"id", "sales"});
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+Example 11. Materialize every feature thread in left-to-right order.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features();
+```
+
+```text
+[Thread(id), Thread(sales), Thread(city)]
+```
+
+Example 12. Extract one feature thread by name.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
+```
+
+Example 13. Extract one feature thread by name.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.features("sales");
+```
+
+```text
+Thread([100.0, 120.0, 90.0])
 ```
 
 
@@ -2541,23 +2913,23 @@ id  sales  city
 ```cpp
 DataFrame fillna(self, const char* value) const
 
-DataFrame fillna(self, const char* value, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame fillna(self, const char* value, pluss::RangeView<std::string_view> features) const
 
 DataFrame fillna(self, const pluss::TimeIndex& value) const
 
-DataFrame fillna(self, const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame fillna(self, const pluss::TimeIndex& value, pluss::RangeView<std::string_view> features) const
 
 DataFrame fillna(self, const pluss::Timeline& value) const
 
-DataFrame fillna(self, const pluss::Timeline& value, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame fillna(self, const pluss::Timeline& value, pluss::RangeView<std::string_view> features) const
 
 DataFrame fillna(self, scalar value) const
 
-DataFrame fillna(self, scalar value, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame fillna(self, scalar value, pluss::RangeView<std::string_view> features) const
 
 DataFrame fillna(self, std::string_view value) const
 
-DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame fillna(self, std::string_view value, pluss::RangeView<std::string_view> features) const
 ```
 
 #### Parameters
@@ -2565,7 +2937,7 @@ DataFrame fillna(self, std::string_view value, pluss::msharp::RangeView::Of<std:
 `value` : `const char*`
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -2579,7 +2951,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1.
+Example 1. Fill missing values in a returned copy with a text scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
@@ -2594,7 +2966,22 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Fill missing values in a returned copy only within a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+auto out = df.fillna("Unknown");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 3. Fill missing values in a returned copy with a TimeIndex scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"idx", pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});
@@ -2609,7 +2996,22 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 4. Fill missing values in a returned copy only within a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+auto out = df.fillna("Unknown");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 5. Fill missing values in a returned copy with a Timeline scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});
@@ -2624,7 +3026,22 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 4.
+Example 6. Fill missing values in a returned copy only within a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+auto out = df.fillna("Unknown");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 7. Fill missing values in a returned copy with a numeric scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2634,6 +3051,51 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.fillna(0.0, {"sales"});
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 8. Fill missing values in a returned copy only within a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+auto out = df.fillna("Unknown");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 9. Fill missing values in a returned copy with a text scalar.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+auto out = df.fillna("Unknown");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 10. Fill missing values in a returned copy only within a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+auto out = df.fillna("Unknown");
 ```
 
 ```text
@@ -2676,7 +3138,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### Examples
 
-Example 1.
+Example 1. Fill missing values in place with a text scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
@@ -2691,7 +3153,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Fill missing values in place with a TimeIndex scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"idx", pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});
@@ -2706,7 +3168,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 3. Fill missing values in place with a Timeline scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});
@@ -2721,7 +3183,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 4.
+Example 4. Fill missing values in place with a numeric scalar.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2731,6 +3193,21 @@ auto df = pluss::table::DataFrame({
 });
 
 df.fillna_(0.0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 5. Fill missing values in place with a text scalar.
+
+```cpp
+auto df = pluss::table::DataFrame({{"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+
+df.fillna_("Unknown");
 ```
 
 ```text
@@ -2767,7 +3244,7 @@ Keeps only the rows where the supplied boolean mask is true.
 
 #### Examples
 
-Example 1.
+Example 1. Filter rows using an explicit boolean Series mask.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2776,7 +3253,26 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
+auto out = df.filter(mask);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+Example 2. Filter rows using a boolean mask built from an existing frame expression.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("sales") >= 95.0;
 auto out = df.filter(mask);
 ```
 
@@ -2792,12 +3288,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame floor_time(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view unit) const
+DataFrame floor_time(self, pluss::RangeView<std::string_view> features, std::string_view unit) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
@@ -2861,7 +3357,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Divide each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -2883,7 +3379,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Divide each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2931,7 +3427,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Compare each compatible cell using the `>=` relation against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -2953,7 +3449,7 @@ id  sales
 3   false
 ```
 
-Example 2.
+Example 2. Compare each compatible cell using the `>=` relation against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -3017,16 +3513,24 @@ Thread([100.0, 120.0, 90.0])
 #### API Signature
 
 ```cpp
-DataFrameView group_by(self, pluss::msharp::RangeView::Of<std::string_view> keys, pluss::msharp::RangeView::Of<GroupSpec> specs, bool dropna_keys = true, bool render = true) const
+DataFrameView group_by(self, pluss::RangeView<std::string_view> keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = true) const
 ```
 
 #### Parameters
 
-`keys` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
+`keys` : `pluss::RangeView<std::string_view>`
+    Feature names whose distinct value combinations define the output groups.
 
-`specs` : `pluss::msharp::RangeView::Of<GroupSpec>`
-    Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
+`specs` : `pluss::RangeView<GroupSpec>`
+    Grouped aggregation specs. Each `GroupSpec` has `output`, `feature`, and `op`.
+    
+    `op` supports:
+    - `Count`: Count observed values inside each group.
+    - `Nunique`: Count distinct observed values inside each group.
+    - `Sum`: Compute the numeric sum inside each group.
+    - `Mean`: Compute the arithmetic mean inside each group.
+    - `Min`: Compute the minimum inside each group.
+    - `Max`: Compute the maximum inside each group.
 
 `dropna_keys` : `bool`
     When `true`, rows with null pivot/group keys are excluded before reshaping.
@@ -3088,7 +3592,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Compare each compatible cell using the `>` relation against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -3110,7 +3614,7 @@ id  sales
 3   false
 ```
 
-Example 2.
+Example 2. Compare each compatible cell using the `>` relation against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -3143,7 +3647,7 @@ bool has_feature(self, std::string_view name) const
 #### Parameters
 
 `name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
 #### Returns
 
@@ -3262,10 +3766,10 @@ std::string iat(self, std::int64_t row, std::size_t feature_idx) const
 #### Parameters
 
 `row` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based row position used by this overload.
 
 `feature_idx` : `std::size_t`
-    See the signature for the supported argument form.
+    Zero-based feature position used by this overload.
 
 #### Returns
 
@@ -3383,7 +3887,7 @@ void info(self, std::ostream& os, const display::DisplayOptions& options = {}) c
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -3396,7 +3900,7 @@ This renders a human-readable view for inspection instead of creating a new anal
 
 #### Examples
 
-Example 1.
+Example 1. Print the frame summary with the default output route.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -3406,6 +3910,26 @@ auto df = pluss::table::DataFrame({
 });
 
 df.info();
+```
+
+```text
+rows: 3
+features: 3
+numeric: id, sales
+note: city
+```
+
+Example 2. Write the frame summary to a caller-provided output stream.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+std::ostringstream os;
+df.info(os);
 ```
 
 ```text
@@ -3472,7 +3996,7 @@ DataFrame insert(self, std::int64_t feature_index, std::string name, const Threa
     Zero-based output column position used by structural methods such as `insert(...)`.
 
 `name` : `std::string`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
 `feature` : `const Thread&`
     Name of the source feature used by the operation.
@@ -3511,12 +4035,12 @@ id  sales  city    profit
 #### API Signature
 
 ```cpp
-DataFrame isna(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame isna(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -3553,12 +4077,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame isnull(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame isnull(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -3655,7 +4179,7 @@ pluss::kindle::Catalog kindelize(self, const pluss::kindle::KindelizePolicy& pol
 #### Parameters
 
 `policy` : `const pluss::kindle::KindelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -3668,7 +4192,7 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 
 #### Examples
 
-Example 1.
+Example 1. Convert the frame into a Kindle catalog using the default policy.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -3678,6 +4202,18 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.kindelize();
+```
+Example 2. Convert the frame into a Kindle catalog using an explicit kindelization policy.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::kindle::KindelizePolicy policy;
+auto out = df.kindelize(policy);
 ```
 
 ## L
@@ -3708,7 +4244,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Compare each compatible cell using the `<=` relation against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -3730,7 +4266,7 @@ id  sales
 3   false
 ```
 
-Example 2.
+Example 2. Compare each compatible cell using the `<=` relation against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -3759,7 +4295,7 @@ static DataFrame load(std::string_view source_type, std::string_view filepath)
 
 static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats = {}, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 
-static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::RangeView<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 
 static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)
 
@@ -3789,7 +4325,12 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, s
     Optional source column that should become the DataFrame case axis while loading.
 
 `on_bad_lines` : `pluss::loader::BadLinePolicy`
-    Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.
+    Malformed-line policy for delimited input.
+    
+    Supported values:
+    - `Error`: Stop immediately when a malformed row is encountered.
+    - `Warn`: Continue while reporting the malformed row.
+    - `Skip`: Ignore malformed rows silently.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -3811,7 +4352,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 #### Examples
 
-Example 1.
+Example 1. Load a runtime-selected source type with the default reader for that format.
 
 ```cpp
 auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv");
@@ -3824,10 +4365,10 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Load a runtime-selected delimited source while overriding the separator, row limit, and projected feature list.
 
 ```cpp
-auto out = pluss::table::DataFrame::load("path/to/data.csv", {"nrows", 16});
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv", ',', 8, std::vector<std::string>{"Agency Name", "State"}, std::nullopt);
 ```
 
 ```text
@@ -3837,11 +4378,60 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 3. Load a runtime-selected delimited source while projecting only a selected feature subset from a lightweight string view.
+
+```cpp
+std::array<std::string_view, 2> usefeats{"Agency Name", "State"};
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv", ',', 8, usefeats, std::nullopt);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 4. Load a runtime-selected source type with a reusable loader configuration object.
+
+```cpp
+pluss::loader::Config config{
+    {"ncases", 8},
+    {"features", {"Agency Name", "State"}},
+};
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv", config);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 5. Load a delimited file through the format-switched entry point while controlling parsing with a typed CSV options object.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
-auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", options);
+options.ncases = 8;
+options.case_col = "Agency Name";
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv", options);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 6. Load a runtime-selected source type while passing inline loader configuration entries.
+
+```cpp
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv", {
+    {"ncases", 8},
+    {"features", {"Agency Name", "State"}},
+});
 ```
 
 ```text
@@ -3867,7 +4457,7 @@ static DataFrame load_csv(std::string_view filepath)
 
 static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats = {}, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 
-static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::msharp::RangeView::Of<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::RangeView<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 
 static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config& config)
 
@@ -3898,7 +4488,12 @@ static DataFrame load_csv(std::string_view filepath, std::string_view header, st
     Optional source column that should become the DataFrame case axis while loading.
 
 `on_bad_lines` : `pluss::loader::BadLinePolicy`
-    Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.
+    Malformed-line policy for delimited input.
+    
+    Supported values:
+    - `Error`: Stop immediately when a malformed row is encountered.
+    - `Warn`: Continue while reporting the malformed row.
+    - `Skip`: Ignore malformed rows silently.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -3910,7 +4505,11 @@ static DataFrame load_csv(std::string_view filepath, std::string_view header, st
     Inline configuration entries used to build a lightweight loader configuration without naming a separate config object.
 
 `header` : `std::string_view`
-    Controls whether feature names are written to, or expected from, the file header row.
+    CSV header mode.
+    
+    Common values:
+    - `infer`: Read the first row as feature names.
+    - `none`: Treat the file as headerless and auto-generate feature names such as `feat_0`, `feat_1`, and so on.
 
 `case_feature` : `std::string_view`
     Name to use for the restored case-axis feature when cases are materialized back into ordinary columns.
@@ -3929,7 +4528,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 #### Examples
 
-Example 1.
+Example 1. Load a CSV file with the default parser settings.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_csv("path/to/data.csv");
@@ -3942,10 +4541,10 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Load a CSV file with an explicit separator, row limit, and projected feature subset from a standard string container.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 8, std::vector<std::string>{"Agency Name", "State"}, std::nullopt);
 ```
 
 ```text
@@ -3955,11 +4554,86 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 3. Load a CSV file with an explicit separator, row limit, and projected feature subset from a lightweight string view.
+
+```cpp
+std::array<std::string_view, 2> usefeats{"Agency Name", "State"};
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 8, usefeats, std::nullopt);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 4. Load a CSV file with a reusable loader configuration object.
+
+```cpp
+pluss::loader::Config config{
+    {"ncases", 8},
+    {"features", {"Agency Name", "State"}},
+};
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", config);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 5. Load a CSV file with a typed options object so parsing rules live in one reusable config.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
+options.ncases = 8;
+options.case_col = "Agency Name";
 auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", options);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 6. Load a CSV file while supplying inline configuration entries such as row limits or projected features.
+
+```cpp
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {
+    {"ncases", 8},
+    {"features", {"Agency Name", "State"}},
+});
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 7. Load a headerless CSV file and auto-generate feature names while limiting the number of rows read.
+
+```cpp
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", "none", static_cast<std::size_t>(8));
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 8. Load a CSV file while explicitly controlling header inference, case-axis promotion, engine selection, and row limit.
+
+```cpp
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", "infer", "Agency Name", "auto", 8);
 ```
 
 ```text
@@ -3997,9 +4671,9 @@ static pluss::loader::LoadResult load_excel(std::string_view filepath, const std
 
 static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)
 
-static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Int sheet_indices, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::int64_t> sheet_indices, bool header = true)
 
-static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::msharp::RangeView::Of<std::string_view> sheet_names, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::string_view> sheet_names, bool header = true)
 
 static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)
 
@@ -4054,7 +4728,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 #### Examples
 
-Example 1.
+Example 1. Load the default worksheet from an Excel workbook.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx");
@@ -4067,10 +4741,11 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Load one Excel sheet with a reusable loader configuration object.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {"nrows", 16});
+pluss::loader::Config config{{"sheet_name", "Sheet 1"}};
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", config);
 ```
 
 ```text
@@ -4080,7 +4755,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 3. Load one Excel sheet with a typed Excel options object.
 
 ```cpp
 pluss::loader::ReadExcelOptions options;
@@ -4094,7 +4769,22 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 4.
+Example 4. Load an Excel workbook while supplying inline configuration entries instead of a named config object.
+
+```cpp
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {
+    {"sheet_name", "Sheet 1"},
+});
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 5. Load one worksheet by its zero-based sheet index.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", 0, true);
@@ -4107,10 +4797,10 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 5.
+Example 6. Load one worksheet by its sheet name.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet1", true);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet 1", true);
 ```
 
 ```text
@@ -4120,7 +4810,77 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 6.
+Example 7. Load several worksheets by zero-based sheet index from a standard integer container.
+
+```cpp
+std::vector<std::int64_t> sheets{0, 1};
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
+```
+
+```text
+Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]
+```
+
+Example 8. Load several worksheets by name from a standard string container.
+
+```cpp
+std::vector<std::string> sheets{"Sheet 1", "Sheet 2"};
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
+```
+
+```text
+Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]
+```
+
+Example 9. Load several worksheets by zero-based sheet index from a lightweight integer view.
+
+```cpp
+std::array<std::int64_t, 2> sheets{0, 1};
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
+```
+
+```text
+Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]
+```
+
+Example 10. Load several worksheets by name from a lightweight string view.
+
+```cpp
+std::array<std::string_view, 2> sheets{"Sheet 1", "Sheet 2"};
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", sheets, true);
+```
+
+```text
+Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]
+```
+
+Example 11. Load several worksheets by zero-based sheet index using an inline integer list.
+
+```cpp
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {0, 1}, true);
+```
+
+```text
+Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]
+```
+
+Example 12. Load several worksheets by name using an inline list of sheet labels.
+
+```cpp
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", {"Sheet 1", "Sheet 2"}, true);
+```
+
+```text
+Sheet1 -> [3 cs x 3 feat]
+Sheet2 -> [3 cs x 3 feat]
+```
+
+Example 13. Load every worksheet from an Excel workbook into one multi-sheet load bundle.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", nullptr, true);
@@ -4172,7 +4932,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 #### Examples
 
-Example 1.
+Example 1. Load a JSON source with the default reader for that format.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_json("path/to/data.json");
@@ -4185,10 +4945,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Load a JSON source with a reusable loader configuration object.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_json("path/to/data.json", {"nrows", 16});
+pluss::loader::Config config{{"ncases", 8}};
+auto out = pluss::table::DataFrame::load_json("path/to/data.json", config);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 3. Load a JSON source while supplying inline configuration entries.
+
+```cpp
+auto out = pluss::table::DataFrame::load_json("path/to/data.json", {
+    {"ncases", 8},
+});
 ```
 
 ```text
@@ -4239,7 +5015,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 #### Examples
 
-Example 1.
+Example 1. Load a PARQUET source with the default reader for that format.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_parquet("path/to/data.parquet");
@@ -4252,10 +5028,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Load a PARQUET source with a reusable loader configuration object.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_parquet("path/to/data.parquet", {"nrows", 16});
+pluss::loader::Config config{{"ncases", 8}};
+auto out = pluss::table::DataFrame::load_parquet("path/to/data.parquet", config);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 3. Load a PARQUET source while supplying inline configuration entries.
+
+```cpp
+auto out = pluss::table::DataFrame::load_parquet("path/to/data.parquet", {
+    {"ncases", 8},
+});
 ```
 
 ```text
@@ -4306,7 +5098,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 #### Examples
 
-Example 1.
+Example 1. Load a TXT source with the default reader for that format.
 
 ```cpp
 auto out = pluss::table::DataFrame::load_txt("path/to/data.txt");
@@ -4319,10 +5111,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Load a TXT source with a reusable loader configuration object.
 
 ```cpp
-auto out = pluss::table::DataFrame::load_txt("path/to/data.txt", {"nrows", 16});
+pluss::loader::Config config{{"ncases", 8}};
+auto out = pluss::table::DataFrame::load_txt("path/to/data.txt", config);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 3. Load a TXT source while supplying inline configuration entries.
+
+```cpp
+auto out = pluss::table::DataFrame::load_txt("path/to/data.txt", {
+    {"ncases", 8},
+});
 ```
 
 ```text
@@ -4365,7 +5173,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Compare each compatible cell using the `<` relation against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -4387,7 +5195,7 @@ id  sales
 3   true
 ```
 
-Example 2.
+Example 2. Compare each compatible cell using the `<` relation against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4505,7 +5313,7 @@ Computes per-feature maxima for the selected numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `max` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4515,6 +5323,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.max(false);
+```
+
+```text
+feature  value
+id       3
+sales    120.0
+```
+
+Example 2. Compute `max` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.max(1, true);
+```
+
+```text
+feature  value
+id       3
+sales    120.0
+```
+
+Example 3. Compute `max` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.max(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -4567,7 +5409,7 @@ Computes per-feature means for the selected numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `mean` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4577,6 +5419,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.mean(false);
+```
+
+```text
+feature  value
+id       2.0
+sales    103.333333333
+```
+
+Example 2. Compute `mean` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.mean(1, true);
+```
+
+```text
+feature  value
+id       2.0
+sales    103.333333333
+```
+
+Example 3. Compute `mean` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.mean(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -4615,7 +5491,7 @@ DataFrameView mean_by(self, std::string_view group_feature, std::string_view val
     Minimum non-null observations required before a grouped or rolling summary is considered valid.
 
 `dropna_group` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -4685,7 +5561,7 @@ Applies `median` to the current `DataFrame` object. Use the example and output t
 
 #### Examples
 
-Example 1.
+Example 1. Compute `median` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4695,6 +5571,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.median(false);
+```
+
+```text
+feature  value
+id       2.0
+sales    100.0
+```
+
+Example 2. Compute `median` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.median(1, true);
+```
+
+```text
+feature  value
+id       2.0
+sales    100.0
+```
+
+Example 3. Compute `median` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.median(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -4747,7 +5657,7 @@ Computes per-feature minima for the selected numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `min` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4757,6 +5667,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.min(false);
+```
+
+```text
+feature  value
+id       1
+sales    90.0
+```
+
+Example 2. Compute `min` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.min(1, true);
+```
+
+```text
+feature  value
+id       1
+sales    90.0
+```
+
+Example 3. Compute `min` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.min(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -4798,7 +5742,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Compute the modulus of each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -4820,7 +5764,7 @@ id  sales
 3    90.0
 ```
 
-Example 2.
+Example 2. Compute the modulus of each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4866,7 +5810,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Multiply each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -4888,7 +5832,7 @@ id  sales
 12   9000.0
 ```
 
-Example 2.
+Example 2. Multiply each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4934,7 +5878,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Multiply each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -4956,7 +5900,7 @@ id  sales
 12   9000.0
 ```
 
-Example 2.
+Example 2. Multiply each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5042,7 +5986,7 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 #### Examples
 
-Example 1.
+Example 1. Compare each compatible cell for inequality against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -5064,7 +6008,7 @@ id  sales
 3   false
 ```
 
-Example 2.
+Example 2. Compare each compatible cell for inequality against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5206,12 +6150,12 @@ Kumasi
 #### API Signature
 
 ```cpp
-DataFrame notna(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame notna(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -5227,7 +6171,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
+                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 auto df = pluss::table::DataFrame({
     {"sales", sales},
 });
@@ -5254,12 +6198,12 @@ true
 #### API Signature
 
 ```cpp
-DataFrame notnull(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame notnull(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -5275,7 +6219,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
+                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 auto df = pluss::table::DataFrame({
     {"sales", sales},
 });
@@ -5295,6 +6239,86 @@ true
 - `notnull(...)` returns a boolean-style frame marking which cells are observed rather than missing.
 - Use it to build masks before `filter(...)`, replacement policies, or diagnostic summaries.
 - `notna(...)` and `notnull(...)` are equivalent.
+
+
+## O
+
+### `observe`
+
+#### API Signatures
+
+```cpp
+DataFrameView observe(self, std::int64_t row, bool render = true) const
+
+DataFrameView observe(self, std::int64_t start, std::int64_t stop, bool render = true) const
+```
+
+#### Parameters
+
+`row` : `std::int64_t`
+    Zero-based row position to preview as a one-row `DataFrameView`.
+
+`render` : `bool`
+    When `true`, the preview may auto-render in temporary terminal contexts. Pass `false` when you want to call `.show()` yourself.
+
+`start` : `std::int64_t`
+    Inclusive zero-based starting row position of the preview window.
+
+`stop` : `std::int64_t`
+    Exclusive zero-based ending row position of the preview window.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### What It Does
+
+Applies `observe` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+Example 1. Preview one row without changing the underlying frame.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto preview = df.observe(1, false);
+preview.show();
+```
+
+```text
+id  sales  city
+2   120.0  Tema
+```
+
+Example 2. Preview a contiguous row window without changing the underlying frame.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto preview = df.observe(0, 2, false);
+preview.show();
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+```
+
+#### Practical Behavior
+
+- `observe(...)` returns a `DataFrameView`, so it is the preview-oriented row window helper alongside `head(...)` and `tail(...)`.
+- Use `observe(start, stop).show()` when you want a middle slice without materializing a bespoke helper or mutating the source frame.
 
 
 ## P
@@ -5443,7 +6467,7 @@ Moves one existing feature relative to an anchor feature, or inserts a brand-new
 
 #### Examples
 
-Example 1.
+Example 1. Insert a new feature relative to an anchor feature without rebuilding the whole schema.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5462,7 +6486,7 @@ id  sales  profit  city
 3    90.0  30.0    Kumasi
 ```
 
-Example 2.
+Example 2. Move one existing feature relative to an anchor feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5514,7 +6538,7 @@ This opens the plotting accessor for the current data object.
 
 #### Examples
 
-Example 1.
+Example 1. Create the plotting accessor with default plot options.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5524,6 +6548,24 @@ auto df = pluss::table::DataFrame({
 });
 
 auto fig = df.plot().line("sales");
+```
+
+```text
+Figure(line/scatter/bar/hist)
+```
+
+Example 2. Create the plotting accessor with an explicit plot-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::table::DataFramePlotOptions options;
+options.default_x_feature = "id";
+auto fig = df.plot(options).line("sales");
 ```
 
 ```text
@@ -5557,23 +6599,38 @@ Applies `plot3d` to the current `DataFrame` object. Use the example and output t
 
 #### Examples
 
-Example 1.
+Example 1. Create the 3D plotting accessor with default plot options.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"x", pluss::make_series({1.0, 2.0, 3.0})},
+    {"y", pluss::make_series({4.0, 3.0, 2.0})},
+    {"z", pluss::make_series({2.0, 5.0, 4.0})},
 });
 
-auto out = df.plot3d();
+auto fig = df.plot3d().scatter("x", "y", "z");
 ```
 
 ```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
+Figure(scatter3d/line3d)
+```
+
+Example 2. Create the 3D plotting accessor with an explicit plot-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"x", pluss::make_series({1.0, 2.0, 3.0})},
+    {"y", pluss::make_series({4.0, 3.0, 2.0})},
+    {"z", pluss::make_series({2.0, 5.0, 4.0})},
+});
+
+pluss::table::DataFramePlotOptions options;
+options.width = 900.0;
+auto fig = df.plot3d(options).scatter("x", "y", "z");
+```
+
+```text
+Figure(scatter3d/line3d)
 ```
 
 
@@ -5603,7 +6660,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Raise each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -5625,7 +6682,7 @@ a    b
 4.0  25.0
 ```
 
-Example 2.
+Example 2. Raise each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5673,7 +6730,7 @@ Use this when the transformation is easier to express as SQL than as a chained s
 
 #### Examples
 
-Example 1.
+Example 1. Prepare a parameterized SQL statement with default SQL options.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5683,6 +6740,23 @@ auto df = pluss::table::DataFrame({
 });
 
 auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+```
+
+```text
+SQL accessor / prepared statement created
+```
+
+Example 2. Prepare a parameterized SQL statement with an explicit SQL options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::table::DataFrame::SqlOptions options;
+auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}", options);
 ```
 
 ```text
@@ -5727,7 +6801,7 @@ Computes per-feature or per-row products across numeric data.
 
 #### Examples
 
-Example 1.
+Example 1. Compute one product per numeric feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5744,7 +6818,22 @@ a        6.0
 b        40.0
 ```
 
-Example 2.
+Example 2. Compute products across rows instead of returning one product per numeric feature.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.prod(1, true);
+```
+
+```text
+[2.0, 8.0, 15.0]
+```
+
+Example 3. Compute products across rows instead of returning one product per numeric feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5814,7 +6903,169 @@ Writes a replacement value only where a boolean mask is true and returns the upd
 
 #### Examples
 
-Example 1.
+Example 1. Rewrite selected rows using a boolean Series mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+auto out = df.put("city", mask, "Tamale");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 2. Rewrite selected rows using a boolean Series mask and another full Thread as the replacement values.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
+auto out = df.put("sales", mask, repl);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 3. Rewrite selected rows using a boolean Series mask and `pluss::null` to mark the matched cells as missing.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+auto out = df.put("sales", mask, pluss::null);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 4. Rewrite selected rows using a boolean Series mask and a scalar numeric replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+auto out = df.put("sales", mask, 999.0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 5. Rewrite selected rows using a boolean Series mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+auto out = df.put("city", mask, std::string_view("Tamale"));
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 6. Rewrite selected rows using a boolean Thread mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+auto out = df.put("city", mask, "Tamale");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 7. Rewrite selected rows using a boolean Thread mask and another full Thread as the replacement values.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
+auto out = df.put("sales", mask, repl);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 8. Rewrite selected rows using a boolean Thread mask and `pluss::null` to mark the matched cells as missing.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+auto out = df.put("sales", mask, pluss::null);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 9. Rewrite selected rows using a boolean Thread mask and a scalar numeric replacement value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5825,6 +7076,26 @@ auto df = pluss::table::DataFrame({
 
 auto mask = df.features("id") == 2.0;
 auto out = df.put("sales", mask, 999.0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   999.0  Tema
+3    90.0  Kumasi
+```
+
+Example 10. Rewrite selected rows using a boolean Thread mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+auto out = df.put("city", mask, std::string_view("Tamale"));
 ```
 
 ```text
@@ -5889,7 +7160,108 @@ Writes a replacement value only where a boolean mask is true and mutates the fra
 
 #### Examples
 
-Example 1.
+Example 1. Rewrite rows in place using a boolean Series mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+df.put_("city", mask, "Tamale");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 2. Rewrite rows in place using a boolean Series mask and another full Thread as the replacement values.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
+df.put_("sales", mask, repl);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 3. Rewrite rows in place using a boolean Series mask and `pluss::null` to mark the matched cells as missing.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+df.put_("sales", mask, pluss::null);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 4. Rewrite rows in place using a boolean Series mask and a scalar numeric replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+df.put_("sales", mask, 999.0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 5. Rewrite rows in place using a boolean Series mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({false, true, false}, pluss::ScalarType::Bool);
+df.put_("city", mask, std::string_view("Tamale"));
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 6. Rewrite rows in place using a boolean Thread mask and a text literal as the replacement value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -5900,6 +7272,87 @@ auto df = pluss::table::DataFrame({
 
 auto mask = df.features("id") == 2.0;
 df.put_("city", mask, "Tamale");
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 7. Rewrite rows in place using a boolean Thread mask and another full Thread as the replacement values.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+auto repl = pluss::table::Thread(pluss::make_series({500.0, 999.0, 500.0}));
+df.put_("sales", mask, repl);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 8. Rewrite rows in place using a boolean Thread mask and `pluss::null` to mark the matched cells as missing.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+df.put_("sales", mask, pluss::null);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 9. Rewrite rows in place using a boolean Thread mask and a scalar numeric replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+df.put_("sales", mask, 999.0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tamale
+3    90.0  Kumasi
+```
+
+Example 10. Rewrite rows in place using a boolean Thread mask and a text literal as the replacement value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("id") == 2.0;
+df.put_("city", mask, std::string_view("Tamale"));
 ```
 
 ```text
@@ -6150,12 +7603,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame relabel_features(self, pluss::msharp::RangeView::Of<std::string_view> feature_names) const
+DataFrame relabel_features(self, pluss::RangeView<std::string_view> feature_names) const
 ```
 
 #### Parameters
 
-`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`feature_names` : `pluss::RangeView<std::string_view>`
     Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
 
 #### Returns
@@ -6282,12 +7735,12 @@ id  revenue  city
 #### API Signature
 
 ```cpp
-DataFrame rename_features(self,  pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> renames) const
+DataFrame rename_features(self,  pluss::RangeView<std::pair<std::string_view, std::string_view>> renames) const
 ```
 
 #### Parameters
 
-`renames` : `pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>`
+`renames` : `pluss::RangeView<std::pair<std::string_view, std::string_view>>`
     Collection of `(old_name, new_name)` pairs applied in one rename pass.
 
 #### Returns
@@ -6326,16 +7779,23 @@ id  revenue  location
 ```cpp
 DataFrame reorder(self, const ReorderSpec& spec) const
 
-DataFrame reorder(self, pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame reorder(self, pluss::RangeView<ReorderSpec> specs) const
+
+DataFrame reorder(self, pluss::RangeView<std::string_view> names) const
+
+DataFrame reorder(self, std::initializer_list<ReorderSpec> specs) const
 ```
 
 #### Parameters
 
 `spec` : `const ReorderSpec&`
-    Structured reorder description. It lets you move a subset of features to the front, back, or relative to one anchor feature without listing the entire schema.
+    One partial-order move. Use this when one move instruction is enough.
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
-    Collection of feature, slot, or stream names supplied in positional order.
+`specs` : `pluss::RangeView<ReorderSpec>`
+    Several partial-order moves applied in the exact order you pass them. Each move sees the column order produced by the previous move.
+
+`names` : `pluss::RangeView<std::string_view>`
+    Column names to move together to the front while preserving the relative order of every column not listed here.
 
 #### Returns
 
@@ -6348,7 +7808,7 @@ Moves selected features into a new relative position while preserving row data a
 
 #### Examples
 
-Example 1.
+Example 1. Move selected columns to the front, back, or around an anchor while preserving the rest.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -6357,10 +7817,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-pluss::table::DataFrame::ReorderSpec spec;
-spec.features = {"sales"};
-spec.placement = pluss::table::DataFrame::ReorderPlacement::After;
-spec.anchor = "city";
+auto spec = pluss::table::DataFrame::ReorderSpec::move("sales").after("city");
 auto out = df.reorder(spec);
 ```
 
@@ -6371,7 +7828,31 @@ id  city    sales
 3   Kumasi   90.0
 ```
 
-Example 2.
+Example 2. Apply a reusable multi-step reorder plan stored in a standard container.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+using Move = pluss::table::DataFrame::ReorderSpec;
+std::vector<Move> plan{
+    Move::move({"city", "sales"}).first(),
+    Move::move("id").after("sales"),
+};
+auto out = df.reorder(plan);
+```
+
+```text
+city    sales  id
+Accra   100.0  1
+Tema    120.0  2
+Kumasi  90.0   3
+```
+
+Example 3. Move the named columns to the front while preserving the relative order of every untouched column.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -6390,10 +7871,55 @@ Tema    2   120.0
 Kumasi  3    90.0
 ```
 
+Example 4. Apply an inline multi-step reorder plan that moves only the columns you care about.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"col_1", pluss::make_series({1.0, 101.0})},
+    {"col_2", pluss::make_series({2.0, 102.0})},
+    {"col_3", pluss::make_series({3.0, 103.0})},
+    {"col_4", pluss::make_series({4.0, 104.0})},
+    {"col_5", pluss::make_series({5.0, 105.0})},
+    {"col_6", pluss::make_series({6.0, 106.0})},
+    {"col_7", pluss::make_series({7.0, 107.0})},
+    {"col_8", pluss::make_series({8.0, 108.0})},
+    {"col_9", pluss::make_series({9.0, 109.0})},
+    {"col_10", pluss::make_series({10.0, 110.0})},
+    {"col_15", pluss::make_series({15.0, 115.0})},
+    {"col_16", pluss::make_series({16.0, 116.0})},
+    {"col_17", pluss::make_series({17.0, 117.0})},
+    {"col_20", pluss::make_series({20.0, 120.0})},
+    {"col_21", pluss::make_series({21.0, 121.0})},
+    {"col_22", pluss::make_series({22.0, 122.0})},
+    {"col_23", pluss::make_series({23.0, 123.0})},
+    {"col_24", pluss::make_series({24.0, 124.0})},
+    {"col_25", pluss::make_series({25.0, 125.0})},
+});
+
+using Move = pluss::table::DataFrame::ReorderSpec;
+auto out = df.reorder({
+    Move::move({"col_25", "col_10"}).first(),
+    Move::move("col_20").before("col_5"),
+    Move::move({"col_15", "col_16", "col_17"}).after("col_8"),
+    Move::move_regex("^col_2[1-4]$").last(),
+});
+```
+
+```text
+out.feature_names():
+["col_25", "col_10", "col_1", "col_2", "col_3", "col_4", "col_20", "col_5", "col_6", "col_7", "col_8", "col_15", "col_16", "col_17", "col_9", "col_21", "col_22", "col_23", "col_24"]
+
+out.head():
+col_25  col_10  col_1  col_2  col_3  col_4  col_20  col_5  col_6  col_7  col_8  col_15  col_16  col_17  col_9  col_21  col_22  col_23  col_24
+25.0    10.0    1.0    2.0    3.0    4.0    20.0    5.0    6.0    7.0    8.0    15.0    16.0    17.0    9.0    21.0    22.0    23.0    24.0
+125.0   110.0   101.0  102.0  103.0  104.0  120.0   105.0  106.0  107.0  108.0  115.0   116.0   117.0   109.0  121.0   122.0   123.0   124.0
+```
+
 #### Practical Behavior
 
 - `reorder({"a", "b"})` now means “move these features together and preserve the relative order of everything else.”
 - Use `ReorderSpec` when you need to move a subset to the front, back, before an anchor, or after an anchor.
+- Use the multi-spec overload when you want to apply several moves in one call from left to right.
 - This avoids listing a 3000-feature schema just to reposition two columns.
 
 
@@ -6402,12 +7928,12 @@ Kumasi  3    90.0
 #### API Signature
 
 ```cpp
-pluss::Series repeated_cases(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+pluss::Series repeated_cases(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 #### Returns
@@ -6442,47 +7968,47 @@ auto out = dup.repeated_cases();
 #### API Signatures
 
 ```cpp
-DataFrame replace(self, const char* from, const char* to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const char* from, const char* to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const char* from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const char* from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::Note& from, const pluss::Note& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::Note& from, const pluss::Note& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::Note& from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::Note& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::Series& from, const pluss::Series& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::Series& from, const pluss::Series& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::Series& from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::Series& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::TimeIndex& from, const pluss::TimeIndex& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::TimeIndex& from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::TimeIndex& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::Timeline& from, const pluss::Timeline& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::Timeline& from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, const pluss::Timeline& from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, const pluss::Timeline& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, const char* to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, const char* to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, const pluss::Note& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, const pluss::Note& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, const pluss::Series& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, const pluss::Series& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, const pluss::TimeIndex& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, const pluss::TimeIndex& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, const pluss::Timeline& to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, scalar to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, scalar to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, pluss::null_t from, std::string_view to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, pluss::null_t from, std::string_view to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, scalar from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, scalar from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, scalar from, scalar to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, scalar from, scalar to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, std::string_view from, pluss::null_t to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, std::string_view from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame replace(self, std::string_view from, std::string_view to, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame replace(self, std::string_view from, std::string_view to, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
@@ -6493,7 +8019,7 @@ DataFrame replace(self, std::string_view from, std::string_view to, pluss::mshar
 `to` : `const char*`
     Replacement value written anywhere `from` matches. Use `pluss::null` when you want matched cells to become missing.
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Optional feature subset. Leave empty to apply the replacement across every compatible feature of the relevant kind.
 
 #### Returns
@@ -6507,7 +8033,7 @@ Replaces matched scalar or pluss-typed values across selected compatible feature
 
 #### Examples
 
-Example 1.
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -6526,7 +8052,7 @@ midterm_1  midterm_2  city
 0.0        15.0       Tamale
 ```
 
-Example 2.
+Example 2. Work with a selected feature subset.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -6545,6 +8071,367 @@ midterm_1  midterm_2  city
 5.0        15.0       Tema
 ```
 
+Example 3. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 4. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 5. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 6. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 7. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 8. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 9. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 10. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 11. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 12. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 13. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 14. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 15. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 16. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 17. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 18. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 19. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 20. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace(0.0, 5.0, {"midterm_1", "midterm_2"});
+```
+
+```text
+midterm_1  midterm_2  city
+5.0        8.0        Accra
+12.0       5.0        Tema
+5.0        15.0       Tema
+```
+
+Example 21. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"midterm_1", pluss::table::Thread(pluss::make_series({0.0, 12.0, 0.0}))},
+    {"midterm_2", pluss::table::Thread(pluss::make_series({8.0, 0.0, 15.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Tema"}))},
+});
+
+auto out = df.replace("Tema", "Tamale", {"city"});
+```
+
+```text
+midterm_1  midterm_2  city
+0.0        8.0        Accra
+12.0       0.0        Tamale
+0.0        15.0       Tamale
+```
+
 #### Practical Behavior
 
 - `replace(from, to, features)` dispatches by value type, so numeric replacements touch numeric series features while string replacements touch note features.
@@ -6557,7 +8444,7 @@ midterm_1  midterm_2  city
 #### API Signature
 
 ```cpp
-DataFrameView resample(self, std::string_view time_feature, pluss::msharp::RangeView::Of<std::string_view> value_features, std::string_view freq, std::string_view op = "mean", std::int64_t step = 1, bool render = true) const
+DataFrameView resample(self, std::string_view time_feature, pluss::RangeView<std::string_view> value_features, std::string_view freq, std::string_view op = "mean", std::int64_t step = 1, bool render = true) const
 ```
 
 #### Parameters
@@ -6565,14 +8452,24 @@ DataFrameView resample(self, std::string_view time_feature, pluss::msharp::Range
 `time_feature` : `std::string_view`
     Name of the Timeline or TimeIndex feature that defines the resampling, alignment, or calendar axis.
 
-`value_features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`value_features` : `pluss::RangeView<std::string_view>`
     Feature name(s) to aggregate inside each resampling bin. Leave empty when you want PlussMic to infer compatible value features.
 
 `freq` : `std::string_view`
     Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.
 
 `op` : `std::string_view`
-    Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
+    Bin reduction to compute in each time bucket.
+    
+    Supported values:
+    - `count`: Count observed values within each bucket.
+    - `size`: Count rows within each bucket, including missing values.
+    - `sum`: Compute the numeric sum within each bucket.
+    - `mean`: Compute the arithmetic mean within each bucket.
+    - `min`: Compute the minimum within each bucket.
+    - `max`: Compute the maximum within each bucket.
+    - `first`: Take the first observed value within each bucket.
+    - `last`: Take the last observed value within each bucket.
 
 `step` : `std::int64_t`
     Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.
@@ -6679,10 +8576,10 @@ DataFrame reshuffle(self, int axis = 0, std::optional<std::uint64_t> random_stat
 #### Parameters
 
 `axis` : `int`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+    Shuffle axis. Use `0` to permute rows and `1` to permute feature order.
 
 `random_state` : `std::optional<std::uint64_t>`
-    Optional seed used to make sampling or shuffling reproducible.
+    Deterministic seed for reproducible row or feature shuffles.
 
 #### Returns
 
@@ -6702,14 +8599,22 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.reshuffle();
+auto rows = df.reshuffle(0, 7);
+auto cols = df.reshuffle(1, 7);
 ```
 
 ```text
+rows.head():
 id  sales  city
+3    90.0  Kumasi
 1   100.0  Accra
 2   120.0  Tema
-3    90.0  Kumasi
+
+cols.head():
+city    id  sales
+Accra   1   100.0
+Tema    2   120.0
+Kumasi  3    90.0
 ```
 
 #### Practical Behavior
@@ -6847,12 +8752,12 @@ a    b
 #### API Signature
 
 ```cpp
-DataFrame rolling(self, pluss::msharp::RangeView::Of<WindowSpec> specs, bool keep_input = true) const
+DataFrame rolling(self, pluss::RangeView<WindowSpec> specs, bool keep_input = true) const
 ```
 
 #### Parameters
 
-`specs` : `pluss::msharp::RangeView::Of<WindowSpec>`
+`specs` : `pluss::RangeView<WindowSpec>`
     Window specs that define the output name, source feature, rolling operation, window width, and minimum observation policy.
 
 `keep_input` : `bool`
@@ -6898,12 +8803,12 @@ sales_roll
 #### API Signature
 
 ```cpp
-DataFrame round_time(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view unit) const
+DataFrame round_time(self, pluss::RangeView<std::string_view> features, std::string_view unit) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `unit` : `std::string_view`
@@ -7068,19 +8973,38 @@ a         b
 
 ### `sample`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
-DataFrame sample(self, std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const
+DataFrame sample(self, std::int64_t n) const
+
+DataFrame sample(self, std::int64_t n, bool replace, int axis) const
+
+DataFrame sample(self, std::int64_t n, std::uint64_t random_state, bool replace = false, int axis = 0) const
+
+template <class Float> requires std::floating_point<Float> DataFrame sample(self, Float frac) const
+
+template <class Float> requires std::floating_point<Float> DataFrame sample(self, Float frac, bool replace, int axis) const
+
+template <class Float> requires std::floating_point<Float> DataFrame sample(self, Float frac, std::uint64_t random_state, bool replace = false, int axis = 0) const
 ```
 
 #### Parameters
 
 `n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
+    Number of rows or features to draw from the selected axis.
 
-`random_state` : `std::optional<std::uint64_t>`
-    Optional seed used to make sampling or shuffling reproducible.
+`replace` : `bool`
+    When `true`, the same row may be drawn more than once. Feature sampling currently requires `replace=false`.
+
+`axis` : `int`
+    Sampling axis. Use `0` for rows and `1` for features.
+
+`random_state` : `std::uint64_t`
+    Deterministic seed for reproducible sampling and shuffling.
+
+`frac` : `Float`
+    Fraction of the selected axis to draw. Values above `1.0` require `replace=true`.
 
 #### Returns
 
@@ -7093,6 +9017,8 @@ Returns a random sample of rows.
 
 #### Examples
 
+Example 1. Sample rows with the default settings.
+
 ```cpp
 auto df = pluss::table::DataFrame({
     {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
@@ -7100,15 +9026,126 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.sample(2, 7);
+auto out = df.sample(2);
 ```
 
 ```text
 id  sales  city
 1   100.0  Accra
-2   120.0  Tema
 3    90.0  Kumasi
 ```
+
+Example 2. Sample rows or features while controlling replacement and axis directly.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto rows = df.sample(2, false, 0);
+auto cols = df.sample(2, false, 1);
+```
+
+```text
+rows.head():
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+
+cols.head():
+sales  city
+100.0  Accra
+120.0  Tema
+90.0   Kumasi
+```
+
+Example 3. Sample rows or features with an explicit random seed.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto rows = df.sample(2, 7, false, 0);
+auto cols = df.sample(2, 7, false, 1);
+```
+
+```text
+rows.head():
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+
+cols.head():
+sales  city
+100.0  Accra
+120.0  Tema
+90.0   Kumasi
+```
+
+Example 4. Sample a fraction of the selected axis without an explicit random seed.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.sample(0.67, false, 0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+Example 5. Sample a fraction of the selected axis without an explicit random seed.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.sample(0.67, false, 0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+Example 6. Sample a fraction of the selected axis with an explicit random seed.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.sample(0.67, 7, false, 0);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+#### Practical Behavior
+
+- `sample(n, ...)` draws a fixed number of rows by default, or features when `axis=1`.
+- `sample(frac, ...)` draws a proportion of the selected axis.
+- `replace=true` enables sampling with replacement. For `frac > 1`, replacement is required.
 
 
 ### `save_as`
@@ -7124,7 +9161,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, std:
 #### Parameters
 
 `target_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Format or target selector string used by this overload.
 
 `filepath` : `std::string_view`
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
@@ -7146,7 +9183,7 @@ Writes the frame using the explicitly supplied output format selector rather tha
 
 #### Examples
 
-Example 1.
+Example 1. Save the frame with an explicit loader-config object.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7155,7 +9192,24 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_as("json", "path/to/output.json");
+pluss::loader::Config config{};
+df.save_as("json", "path/to/output.json", config);
+```
+
+```text
+saved: out.*
+```
+
+Example 2. Save the frame with inline configuration entries.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_as("json", "path/to/output.json", {"indent", 2});
 ```
 
 ```text
@@ -7192,9 +9246,6 @@ void save_csv(self, std::string_view filepath, std::initializer_list<pluss::load
 
 `sep` : `char`
     Column separator used for delimited text files such as CSV.
-
-`arg5` : `'`
-    See the signature for the supported argument form.
 
 `na_rep` : `std::string`
     String written anywhere a null or missing value must be serialized.
@@ -7240,7 +9291,7 @@ Writes the frame to CSV. Set `add_cases=true` when you want the current case axi
 
 #### Examples
 
-Example 1.
+Example 1. Save the frame using the simplest filepath-only overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7250,6 +9301,72 @@ auto df = pluss::table::DataFrame({
 });
 
 df.save_csv("path/to/output.csv");
+```
+
+```text
+saved: out.*
+```
+
+Example 2. Save the frame while controlling case-axis export and file-format details explicitly.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_csv("path/to/output.csv", true, true, ',', "NA", "case_id");
+```
+
+```text
+saved: out.*
+```
+
+Example 3. Save the frame with an explicit loader-config object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::Config config{};
+df.save_csv("path/to/output.csv", config);
+```
+
+```text
+saved: out.*
+```
+
+Example 4. Save the frame with a typed writer-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::WriteCsvOptions options;
+df.save_csv("path/to/output.csv", options);
+```
+
+```text
+saved: out.*
+```
+
+Example 5. Save the frame with inline configuration entries.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_csv("path/to/output.csv", {"indent", 2});
 ```
 
 ```text
@@ -7313,7 +9430,7 @@ Writes the frame to an Excel sheet. Set `add_cases=true` when you want the curre
 
 #### Examples
 
-Example 1.
+Example 1. Save the frame using the simplest filepath-only overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7323,6 +9440,72 @@ auto df = pluss::table::DataFrame({
 });
 
 df.save_excel("path/to/output.xlsx");
+```
+
+```text
+saved: out.*
+```
+
+Example 2. Save the frame with an explicit loader-config object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::Config config{};
+df.save_excel("path/to/output.xlsx", config);
+```
+
+```text
+saved: out.*
+```
+
+Example 3. Save the frame with a typed writer-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::WriteExcelOptions options;
+df.save_excel("path/to/output.xlsx", options);
+```
+
+```text
+saved: out.*
+```
+
+Example 4. Save the frame with inline configuration entries.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_excel("path/to/output.xlsx", {"indent", 2});
+```
+
+```text
+saved: out.*
+```
+
+Example 5. Save the frame while controlling case-axis export and file-format details explicitly.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_csv("path/to/output.csv", true, true, ',', "NA", "case_id");
 ```
 
 ```text
@@ -7364,7 +9547,7 @@ Writes the frame to JSON using the table export route for later reload or interc
 
 #### Examples
 
-Example 1.
+Example 1. Save the frame using the simplest filepath-only overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7374,6 +9557,39 @@ auto df = pluss::table::DataFrame({
 });
 
 df.save_json("path/to/output.json");
+```
+
+```text
+saved: out.*
+```
+
+Example 2. Save the frame with an explicit loader-config object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::Config config{};
+df.save_json("path/to/output.json", config);
+```
+
+```text
+saved: out.*
+```
+
+Example 3. Save the frame with inline configuration entries.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_json("path/to/output.json", {"indent", 2});
 ```
 
 ```text
@@ -7415,7 +9631,7 @@ Writes the frame to Parquet for compact typed storage.
 
 #### Examples
 
-Example 1.
+Example 1. Save the frame using the simplest filepath-only overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7425,6 +9641,39 @@ auto df = pluss::table::DataFrame({
 });
 
 df.save_parquet("path/to/output.parquet");
+```
+
+```text
+saved: out.*
+```
+
+Example 2. Save the frame with an explicit loader-config object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::Config config{};
+df.save_parquet("path/to/output.parquet", config);
+```
+
+```text
+saved: out.*
+```
+
+Example 3. Save the frame with inline configuration entries.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_parquet("path/to/output.parquet", {"indent", 2});
 ```
 
 ```text
@@ -7466,7 +9715,7 @@ Writes the frame to a plain-text table preview suitable for inspection or lightw
 
 #### Examples
 
-Example 1.
+Example 1. Save the frame using the simplest filepath-only overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7482,18 +9731,51 @@ df.save_txt("path/to/output.txt");
 saved: out.*
 ```
 
+Example 2. Save the frame with an explicit loader-config object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::loader::Config config{};
+df.save_txt("path/to/output.txt", config);
+```
+
+```text
+saved: out.*
+```
+
+Example 3. Save the frame with inline configuration entries.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.save_txt("path/to/output.txt", {"indent", 2});
+```
+
+```text
+saved: out.*
+```
+
 
 ### `select`
 
 #### API Signature
 
 ```cpp
-DataFrame select(self, pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame select(self, pluss::RangeView<std::string_view> names) const
 ```
 
 #### Parameters
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`names` : `pluss::RangeView<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
@@ -7674,7 +9956,7 @@ id  sales  city
 ```cpp
 LetSlot set(self, std::string_view name)
 
-LetSlots set(self, pluss::msharp::RangeView::Of<std::string_view> names)
+LetSlots set(self, pluss::RangeView<std::string_view> names)
 
 LetSlots set(self, std::initializer_list<const char*> names)
 
@@ -7684,9 +9966,9 @@ LetSlots set(self, std::initializer_list<std::string_view> names)
 #### Parameters
 
 `name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`names` : `pluss::RangeView<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
@@ -7703,7 +9985,7 @@ Opens an assignment helper so you can write `df.set(...) = ...` and replace or c
 
 #### Examples
 
-Example 1.
+Example 1. Open the assignment helper for one feature name.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7714,7 +9996,29 @@ auto df = pluss::table::DataFrame({
 
 df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
 ```
-Example 2.
+Example 2. Open the multi-feature assignment helper from a reusable feature-name range.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.set("profit") = pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0}));
+```
+Example 3. Open the multi-feature assignment helper from inline C-string names.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})), pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0}))};
+```
+Example 4. Open the multi-feature assignment helper from inline string-view names.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7731,12 +10035,12 @@ df.set({"profit", "cost"}) = {pluss::table::Thread(pluss::make_series({40.0, 35.
 #### API Signature
 
 ```cpp
-DataFrame set_axis(self, pluss::msharp::RangeView::Of<std::string_view> feature_names) const
+DataFrame set_axis(self, pluss::RangeView<std::string_view> feature_names) const
 ```
 
 #### Parameters
 
-`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`feature_names` : `pluss::RangeView<std::string_view>`
     Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
 
 #### Returns
@@ -7828,12 +10132,12 @@ id  sales
 #### API Signature
 
 ```cpp
-DataFrame set_feature_axis(self, pluss::msharp::RangeView::Of<std::string_view> feature_names) const
+DataFrame set_feature_axis(self, pluss::RangeView<std::string_view> feature_names) const
 ```
 
 #### Parameters
 
-`feature_names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`feature_names` : `pluss::RangeView<std::string_view>`
     Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
 
 #### Returns
@@ -7870,21 +10174,21 @@ revenue  location  id_new
 #### API Signatures
 
 ```cpp
-DataFrame set_features(self, pluss::msharp::RangeView::Of<std::string_view> names, pluss::msharp::RangeView::Of<Thread> values) const
+DataFrame set_features(self, pluss::RangeView<std::string_view> names, pluss::RangeView<Thread> values) const
 
 DataFrame set_features(self, std::string_view name, const Thread& value) const
 ```
 
 #### Parameters
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`names` : `pluss::RangeView<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
-`values` : `pluss::msharp::RangeView::Of<Thread>`
-    See the signature for the supported argument form.
+`values` : `pluss::RangeView<Thread>`
+    Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
 
 `name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
 `value` : `const Thread&`
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
@@ -7900,7 +10204,31 @@ Returns a new frame with one added or replaced feature.
 
 #### Examples
 
-Example 1.
+Example 1. Add or replace several columns in one call.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.set_features(
+    {"profit", "cost"},
+    {
+        pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})),
+        pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0})),
+    });
+```
+
+```text
+id  sales  city    profit
+1   100.0  Accra   40.0
+2   120.0  Tema    35.0
+3    90.0  Kumasi  30.0
+```
+
+Example 2. Add or replace one column by name.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7925,21 +10253,21 @@ id  sales  city    profit
 #### API Signatures
 
 ```cpp
-DataFrame& set_features_(self, pluss::msharp::RangeView::Of<std::string_view> names, pluss::msharp::RangeView::Of<Thread> values)
+DataFrame& set_features_(self, pluss::RangeView<std::string_view> names, pluss::RangeView<Thread> values)
 
 DataFrame& set_features_(self, std::string_view name, const Thread& value)
 ```
 
 #### Parameters
 
-`names` : `pluss::msharp::RangeView::Of<std::string_view>`
+`names` : `pluss::RangeView<std::string_view>`
     Collection of feature, slot, or stream names supplied in positional order.
 
-`values` : `pluss::msharp::RangeView::Of<Thread>`
-    See the signature for the supported argument form.
+`values` : `pluss::RangeView<Thread>`
+    Value collection supplied to this overload. The ordering must match the corresponding names or positions expected by the method.
 
 `name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name used to identify the target object, field, feature, or slot for this overload.
 
 `value` : `const Thread&`
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
@@ -7955,7 +10283,31 @@ Adds or replaces one feature in place.
 
 #### Examples
 
-Example 1.
+Example 1. Add or replace several columns in one call.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+df.set_features_(
+    {"profit", "cost"},
+    {
+        pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})),
+        pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0})),
+    });
+```
+
+```text
+id  sales  city    profit
+1   100.0  Accra   40.0
+2   120.0  Tema    35.0
+3    90.0  Kumasi  30.0
+```
+
+Example 2. Add or replace one column by name.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7980,14 +10332,14 @@ id  sales  city    profit
 #### API Signatures
 
 ```cpp
-DataFrame shift(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods = 1) const
+DataFrame shift(self, pluss::RangeView<std::string_view> features, std::int64_t periods = 1) const
 
 DataFrame shift(self, std::int64_t periods = 1) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `periods` : `std::int64_t`
@@ -8004,7 +10356,7 @@ Applies `shift` to the current `DataFrame` object. Use the example and output to
 
 #### Examples
 
-Example 1.
+Example 1. Shift only selected columns by a fixed number of rows.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8013,7 +10365,26 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.shift();
+auto out = df.shift({"sales"}, 2);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 2. Shift every compatible column by a fixed number of rows.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.shift(2);
 ```
 
 ```text
@@ -8029,12 +10400,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame shift_time(self, pluss::msharp::RangeView::Of<std::string_view> features, int periods, std::string_view freq) const
+DataFrame shift_time(self, pluss::RangeView<std::string_view> features, int periods, std::string_view freq) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `periods` : `int`
@@ -8091,7 +10462,7 @@ void show(self, std::ostream& os, const display::DisplayOptions& options = {}) c
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -8104,7 +10475,7 @@ This renders a human-readable view for inspection instead of creating a new anal
 
 #### Examples
 
-Example 1.
+Example 1. Render the frame using the default display route.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8113,8 +10484,83 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.show();
+df.show();
 ```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+Example 2. Render the frame to a caller-provided output stream.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+std::ostringstream os;
+df.show(os);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+
+### `shuffle`
+
+#### API Signature
+
+```cpp
+DataFrame shuffle(self, std::optional<std::uint64_t> random_state = std::nullopt) const
+```
+
+#### Parameters
+
+`random_state` : `std::optional<std::uint64_t>`
+    Deterministic seed for reproducible row shuffles.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### What It Does
+
+Applies `shuffle` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.shuffle(7);
+```
+
+```text
+id  sales  city
+3    90.0  Kumasi
+1   100.0  Accra
+2   120.0  Tema
+```
+
+#### Practical Behavior
+
+- `shuffle(random_state)` is the row-order helper for the common case where you want to permute rows and leave the feature order alone.
+- It is equivalent to `reshuffle(axis=0, ...)`, but reads more directly in train/test split and stochastic preview workflows.
+
 
 ### `slice`
 
@@ -8219,24 +10665,24 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-DataFrame sort_values(self, pluss::msharp::RangeView::Of<ArrangeSpec> specs) const
+DataFrame sort_values(self, pluss::RangeView<ArrangeSpec> specs) const
 
-DataFrame sort_values(self, pluss::msharp::RangeView::Of<std::string_view> features, bool ascending = true, bool nulls_last = true) const
+DataFrame sort_values(self, pluss::RangeView<std::string_view> features, bool ascending = true, bool nulls_last = true) const
 ```
 
 #### Parameters
 
-`specs` : `pluss::msharp::RangeView::Of<ArrangeSpec>`
+`specs` : `pluss::RangeView<ArrangeSpec>`
     Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature names used as sort keys when you want the same ascending/null policy for every key.
 
 `ascending` : `bool`
-    See the signature for the supported argument form.
+    When you use the simple feature-list overload, this one switch applies to every sort key. `true` sorts ascending and `false` sorts descending.
 
 `nulls_last` : `bool`
-    See the signature for the supported argument form.
+    When `true`, null values are placed after observed values for every sort key in the simple overload. When `false`, nulls are placed first.
 
 #### Returns
 
@@ -8249,7 +10695,7 @@ Reorders rows using one or more feature values as sort keys.
 
 #### Examples
 
-Example 1.
+Example 1. Sort rows using explicit per-column sort specifications.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8268,7 +10714,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Sort rows using one shared ascending and null-order policy for every selected sort key.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8314,7 +10760,7 @@ Use this when the transformation is easier to express as SQL than as a chained s
 
 #### Examples
 
-Example 1.
+Example 1. Create the SQL accessor with default options and run a query immediately.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8324,6 +10770,26 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.sql().execute("SELECT id, sales FROM self WHERE sales > 95");
+```
+
+```text
+id  sales
+1   100.0
+2   120.0
+```
+
+Example 2. Create the SQL accessor with an explicit SQL options object before running a query.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+pluss::table::DataFrame::SqlOptions options;
+auto sql = df.sql(options);
+auto out = sql.execute("SELECT id, sales FROM self WHERE sales > 95");
 ```
 
 ```text
@@ -8376,7 +10842,7 @@ Computes per-feature standard deviations for the selected numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `std` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8386,6 +10852,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.std(false);
+```
+
+```text
+feature  value
+id       1.0
+sales    15.275252317
+```
+
+Example 2. Compute `std` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.std(1, true);
+```
+
+```text
+feature  value
+id       1.0
+sales    15.275252317
+```
+
+Example 3. Compute `std` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.std(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -8406,7 +10906,7 @@ sales    15.275252317
 #### API Signatures
 
 ```cpp
-DataFrame stitch_on(self, pluss::msharp::RangeView::Of<std::string_view> left_features, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_features = {}, std::string right_suffix = "_right") const
+DataFrame stitch_on(self, pluss::RangeView<std::string_view> left_features, const DataFrame& right, pluss::RangeView<std::string_view> right_features = {}, std::string right_suffix = "_right") const
 
 DataFrame stitch_on(self, std::initializer_list<std::string_view> left_features, const DataFrame& right, std::initializer_list<std::string_view> right_features = {}, std::string right_suffix = "_right") const
 
@@ -8415,13 +10915,13 @@ DataFrame stitch_on(self, std::string_view left_feature, const DataFrame& right,
 
 #### Parameters
 
-`left_features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`left_features` : `pluss::RangeView<std::string_view>`
     Key features on the left frame used to build a composite match key against the right frame.
 
 `right` : `const DataFrame&`
     When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.
 
-`right_features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`right_features` : `pluss::RangeView<std::string_view>`
     Matching key features on the right frame. Leave empty to reuse the left feature names in the same order.
 
 `right_suffix` : `std::string`
@@ -8444,7 +10944,7 @@ Matches rows from two frames using key features and appends the matched features
 
 #### Examples
 
-Example 1.
+Example 1. Attach right-hand features by matching on one key feature.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -8466,7 +10966,7 @@ id  sales  cost
 3    90.0  55.0
 ```
 
-Example 2.
+Example 2. Attach right-hand features by matching on several key features listed inline.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -8479,6 +10979,28 @@ auto right = pluss::table::DataFrame({
 });
 
 auto out = left.stitch_on({"id"}, right, {"id"}, "_right");
+```
+
+```text
+id  sales  cost
+1   100.0  60.0
+2   120.0  80.0
+3    90.0  55.0
+```
+
+Example 3. Attach right-hand features by matching on one key feature.
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
+});
+
+auto out = left.stitch_on("id", right, "id", "_right");
 ```
 
 ```text
@@ -8515,7 +11037,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Subtract each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -8537,7 +11059,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Subtract each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8583,7 +11105,7 @@ This applies arithmetic across the compatible numeric payloads in the current ob
 
 #### Examples
 
-Example 1.
+Example 1. Subtract each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -8605,7 +11127,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Subtract each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8662,7 +11184,7 @@ Computes per-feature sums for the selected numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `sum` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8672,6 +11194,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.sum(false);
+```
+
+```text
+feature  value
+id       6
+sales    310.0
+```
+
+Example 2. Compute `sum` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.sum(1, true);
+```
+
+```text
+feature  value
+id       6
+sales    310.0
+```
+
+Example 3. Compute `sum` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.sum(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -8702,10 +11258,10 @@ static DataFrame tabelize(const pluss::kindle::Catalog& catalog, const pluss::ki
 #### Parameters
 
 `catalog` : `const pluss::kindle::Catalog&`
-    See the signature for the supported argument form.
+    Catalog payload supplied to this overload.
 
 `policy` : `const pluss::kindle::TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -8718,7 +11274,7 @@ Converts a Kindle `Catalog` into a tabular `DataFrame`, preserving stream alignm
 
 #### Examples
 
-Example 1.
+Example 1. Convert a Kindle catalog into a frame with the default tabelization policy.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -8733,7 +11289,7 @@ sales
 30.0
 ```
 
-Example 2.
+Example 2. Convert a Kindle catalog into a frame with an explicit tabelization policy.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -8811,13 +11367,13 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame take(self, pluss::msharp::RangeView::Int indices) const
+DataFrame take(self, pluss::RangeView<std::int64_t> indices) const
 ```
 
 #### Parameters
 
-`indices` : `pluss::msharp::RangeView::Int`
-    See the signature for the supported argument form.
+`indices` : `pluss::RangeView<std::int64_t>`
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -8853,7 +11409,7 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-DataFrameView tally(self, pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
+DataFrameView tally(self, pluss::RangeView<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
 
 DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
 
@@ -8862,7 +11418,7 @@ DataFrameView tally(self, std::string_view feature, std::int64_t top_n = 0, bool
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `top_n` : `std::int64_t`
@@ -8888,7 +11444,43 @@ Counts how many rows fall into each distinct value of the grouping feature.
 
 #### Examples
 
-Example 1.
+Example 1. Count distinct combinations across several features.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto out = df.tally({"city", "product"}, 5, true, false);
+```
+
+```text
+city    count
+Accra   2
+Tema    2
+```
+
+Example 2. Count distinct row groups using the default tally target.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto out = df.tally(3, true, false);
+```
+
+```text
+city    count
+Accra   2
+Tema    2
+```
+
+Example 3. Count the distinct values in one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8983,7 +11575,7 @@ Gets the current frame title or returns a titled copy, depending on the overload
 
 #### Examples
 
-Example 1.
+Example 1. Return a titled copy of the current frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9006,7 +11598,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Return a titled copy of the current frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9129,12 +11721,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame to_utc(self, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrame to_utc(self, pluss::RangeView<std::string_view> features) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Temporal feature names to convert into UTC timezone representation.
 
 #### Returns
@@ -9227,7 +11819,7 @@ id  sales  city
 ```cpp
 DataFrame transform(self, const std::function<Thread(const Thread&)>& fn) const
 
-DataFrame transform(self, pluss::msharp::RangeView::Of<TransformSpec> specs) const
+DataFrame transform(self, pluss::RangeView<TransformSpec> specs) const
 
 DataFrame transform(self, std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const
 
@@ -9239,7 +11831,7 @@ DataFrame transform(self, std::string_view feature, const std::function<Thread(c
 `fn` : `const std::function<Thread(const Thread&)>&`
     Thread-to-thread or frame-to-thread transform function, depending on the overload. The returned thread must match the frame case count.
 
-`specs` : `pluss::msharp::RangeView::Of<TransformSpec>`
+`specs` : `pluss::RangeView<TransformSpec>`
     Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `feature` : `std::string_view`
@@ -9256,7 +11848,7 @@ Rewrites one feature, several features, or all features by applying a user funct
 
 #### Examples
 
-Example 1.
+Example 1. Rewrite every feature with the same thread-level transform.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9275,7 +11867,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Rewrite one or more selected features with structured transform specs.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9294,7 +11886,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 3.
+Example 3. Derive or replace one feature by computing it from the full frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9313,7 +11905,7 @@ id  sales  city    sales_plus_10
 3    90.0  Kumasi  100.0
 ```
 
-Example 4.
+Example 4. Rewrite one named feature with a thread-level transform.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9406,7 +11998,7 @@ Applies elementwise true division to compatible numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Divide each compatible numeric cell against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -9428,7 +12020,7 @@ id    sales
 0.75  0.9
 ```
 
-Example 2.
+Example 2. Divide each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9459,7 +12051,7 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-DataFrameTsAccessor ts(self, pluss::msharp::RangeView::Of<std::string_view> features) const
+DataFrameTsAccessor ts(self, pluss::RangeView<std::string_view> features) const
 
 DataFrameTsAccessor ts(self, std::initializer_list<std::string_view> features) const
 
@@ -9468,7 +12060,7 @@ DataFrameTsAccessor ts(self, std::string_view feature) const
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature names to bind into the returned time-series accessor.
 
 `feature` : `std::string_view`
@@ -9485,7 +12077,45 @@ Returns the time-series accessor bound to one or more selected features.
 
 #### Examples
 
-Example 1.
+Example 1. Bind the time-series accessor to a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"ts", pluss::table::Thread(pluss::make_timeline({
+        "2024-01-01T09:10:00Z",
+        "2024-01-01T09:40:00Z",
+        "2024-01-01T10:05:00Z",
+    }))},
+    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+});
+
+auto out = df.ts({"load"});
+```
+
+```text
+DataFrameTsAccessor(features=["load"])
+```
+
+Example 2. Bind the time-series accessor by passing several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"ts", pluss::table::Thread(pluss::make_timeline({
+        "2024-01-01T09:10:00Z",
+        "2024-01-01T09:40:00Z",
+        "2024-01-01T10:05:00Z",
+    }))},
+    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+});
+
+auto out = df.ts({"load"});
+```
+
+```text
+DataFrameTsAccessor(features=["load"])
+```
+
+Example 3. Bind the time-series accessor to one feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9515,12 +12145,12 @@ DataFrameTsAccessor(features=["load"])
 #### API Signature
 
 ```cpp
-DataFrame tz_convert(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name) const
+DataFrame tz_convert(self, pluss::RangeView<std::string_view> features, std::string_view tz_name) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `tz_name` : `std::string_view`
@@ -9564,12 +12194,12 @@ ts
 #### API Signature
 
 ```cpp
-DataFrame tz_localize(self, pluss::msharp::RangeView::Of<std::string_view> features, std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") const
+DataFrame tz_localize(self, pluss::RangeView<std::string_view> features, std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
 `tz_name` : `std::string_view`
@@ -9620,7 +12250,7 @@ ts
 #### API Signatures
 
 ```cpp
-DataFrame unify(self, pluss::msharp::RangeView::Of<std::string_view> left_on, const DataFrame& right, pluss::msharp::RangeView::Of<std::string_view> right_on = {}, std::string_view how = "inner", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
+DataFrame unify(self, pluss::RangeView<std::string_view> left_on, const DataFrame& right, pluss::RangeView<std::string_view> right_on = {}, std::string_view how = "inner", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
 
 DataFrame unify(self, std::initializer_list<std::string_view> left_on, const DataFrame& right, std::initializer_list<std::string_view> right_on = {}, std::string_view how = "inner", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
 
@@ -9629,23 +12259,33 @@ DataFrame unify(self, std::string_view left_on, const DataFrame& right, std::str
 
 #### Parameters
 
-`left_on` : `pluss::msharp::RangeView::Of<std::string_view>`
+`left_on` : `pluss::RangeView<std::string_view>`
     Key feature name(s) on the left frame used to match rows during `unify(...)`.
 
 `right` : `const DataFrame&`
     Right-hand frame whose rows are matched against the left frame by the requested key features.
 
-`right_on` : `pluss::msharp::RangeView::Of<std::string_view>`
+`right_on` : `pluss::RangeView<std::string_view>`
     Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.
 
 `how` : `std::string_view`
-    Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.
+    Join mode for `DataFrame::unify(...)`.
+    
+    Supported values:
+    - `inner`: Keep only rows whose key values match on both sides.
+    - `left`: Preserve the left frame row order and row count, attaching right-hand matches where they exist.
 
 `right_suffix` : `std::string`
     Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.
 
 `validate` : `std::string_view`
-    Optional key-cardinality check for `unify(...)`: `"many_to_many"` (default), `"one_to_one"`, `"one_to_many"`, or `"many_to_one"`.
+    Optional key-cardinality check for `DataFrame::unify(...)`.
+    
+    Supported values:
+    - `many_to_many`: Allow duplicate key values on both sides. This is the default.
+    - `one_to_one`: Require each key to appear at most once on both sides.
+    - `one_to_many`: Require unique keys on the left and allow duplicates on the right.
+    - `many_to_one`: Allow duplicates on the left and require unique keys on the right.
 
 #### Returns
 
@@ -9658,7 +12298,7 @@ Joins two frames by key values. Use `right_on=""` when both frames use the same 
 
 #### Examples
 
-Example 1.
+Example 1. Join two frames on several key features supplied through a reusable string view.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -9687,7 +12327,7 @@ OrgDefinedId  midterm  Final Points Grade
 30            93       99
 ```
 
-Example 2.
+Example 2. Join two frames on several key features listed inline.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -9715,6 +12355,35 @@ auto out = left.unify(
 course   OrgDefinedId  midterm  course_code  Username  Final Points Grade
 STAT200  20            82       STAT200      20        88
 STAT300  30            93       STAT300      30        99
+```
+
+Example 3. Join two frames on one key feature name.
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"OrgDefinedId", pluss::make_note({"10", "20", "30"})},
+    {"midterm", pluss::make_series({71, 82, 93})},
+});
+auto right = pluss::table::DataFrame({
+    {"OrgDefinedId", pluss::make_note({"20", "30"})},
+    {"Final Points Grade", pluss::make_series({88, 99})},
+});
+
+auto out = left.unify(
+    "OrgDefinedId",
+    right,
+    "",
+    "left",
+    "_right",
+    "many_to_one"
+);
+```
+
+```text
+OrgDefinedId  midterm  Final Points Grade
+10            71       null
+20            82       88
+30            93       99
 ```
 
 #### Join Semantics
@@ -9767,12 +12436,12 @@ true
 #### API Signature
 
 ```cpp
-DataFrame unique_cases(self, pluss::msharp::RangeView::Of<std::string_view> features = {}) const
+DataFrame unique_cases(self, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 #### Parameters
 
-`features` : `pluss::msharp::RangeView::Of<std::string_view>`
+`features` : `pluss::RangeView<std::string_view>`
     Optional feature subset used to decide which rows count as duplicates. Leave empty to compare the full row payload.
 
 #### Returns
@@ -9835,7 +12504,7 @@ Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame w
 
 #### Examples
 
-Example 1.
+Example 1. Lift one frame into a one-layer atlas.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9855,7 +12524,7 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-Example 2.
+Example 2. Lift one frame into a one-layer atlas.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9973,7 +12642,7 @@ Computes per-feature variances for the selected numeric features.
 
 #### Examples
 
-Example 1.
+Example 1. Compute `var` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -9983,6 +12652,40 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.var(false);
+```
+
+```text
+feature  value
+id       1.0
+sales    233.333333333
+```
+
+Example 2. Compute `var` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.var(1, true);
+```
+
+```text
+feature  value
+id       1.0
+sales    233.333333333
+```
+
+Example 3. Compute `var` across rows instead of returning one summary value per numeric column.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+});
+
+auto out = df.var(static_cast<std::int64_t>(1), true);
 ```
 
 ```text
@@ -10079,7 +12782,7 @@ Keeps only the rows where the supplied boolean mask is true.
 
 #### Examples
 
-Example 1.
+Example 1. Filter rows using an explicit boolean Series mask.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -10088,7 +12791,26 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
+auto out = df.where(mask);
+```
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+Example 2. Filter rows using a boolean mask built from an existing frame expression.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("sales") >= 95.0;
 auto out = df.where(mask);
 ```
 
@@ -10110,12 +12832,12 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame window(self, pluss::msharp::RangeView::Of<WindowSpec> specs, bool keep_input = true) const
+DataFrame window(self, pluss::RangeView<WindowSpec> specs, bool keep_input = true) const
 ```
 
 #### Parameters
 
-`specs` : `pluss::msharp::RangeView::Of<WindowSpec>`
+`specs` : `pluss::RangeView<WindowSpec>`
     Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 `keep_input` : `bool`

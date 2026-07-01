@@ -220,6 +220,45 @@ void draw_bitmap(PixelCanvas& canvas, const FT_Bitmap& bitmap, const PointI orig
 
 } // namespace
 
+std::optional<int> measure_text_width_native(const TextCommand& command) {
+  if (command.text.empty() || command.pixel_size <= 0) {
+    return 0;
+  }
+  const std::string path =
+      select_font_path(command.font_family, command.font_weight);
+  if (path.empty()) {
+    return std::nullopt;
+  }
+
+  FreeTypeState& state = free_type_state();
+  std::scoped_lock lock(state.mutex);
+  FT_Face face = load_face(state, path);
+  if (face == nullptr ||
+      FT_Set_Pixel_Sizes(face, 0, static_cast<FT_UInt>(command.pixel_size)) !=
+          0) {
+    return std::nullopt;
+  }
+
+  int width = 0;
+  FT_UInt previous = 0;
+  const bool has_kerning = FT_HAS_KERNING(face) != 0;
+  for (const std::uint32_t scalar : decode_utf8(command.text)) {
+    const FT_UInt glyph_index = FT_Get_Char_Index(face, scalar);
+    if (has_kerning && previous != 0 && glyph_index != 0) {
+      FT_Vector kerning{};
+      if (FT_Get_Kerning(face, previous, glyph_index, FT_KERNING_DEFAULT,
+                        &kerning) == 0) {
+        width += static_cast<int>(kerning.x >> 6);
+      }
+    }
+    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) == 0) {
+      width += static_cast<int>(face->glyph->advance.x >> 6);
+    }
+    previous = glyph_index;
+  }
+  return std::max(0, width);
+}
+
 bool render_text_command_native(PixelCanvas& canvas, const TextCommand& command, const std::optional<RectI>& clip,
                                 std::vector<RenderEvent>& events) {
   (void)events;

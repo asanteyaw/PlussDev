@@ -6,33 +6,40 @@
 
 This page documents the public prepared-statement helper returned by `DataFrame::prepare_sql()` or `DataFrameSqlAccessor::prepare()`.
 
+## E
+
 ### `execute`
 
-#### Signature
+#### API Signatures
 
 ```cpp
 DataFrame execute(self) const
+
+DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params) const
+
+DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params) const
 ```
 
 #### Parameters
 
-`None`
+`params` : `std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam>`
+    Named scalar bindings supplied to placeholders such as `{min_sales}` inside the prepared statement template.
+
+`identifier_params` : `std::unordered_map<std::string, std::string>`
+    Named identifier bindings used for placeholder substitution when a statement needs a dynamic SQL identifier such as a table alias.
 
 #### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
 Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
 
-#### See also
-
-- `DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params) const`
-- `DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params) const`
-
 #### Examples
+
+Example 1. Run the prepared SQL statement with no external parameter bindings.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -40,47 +47,18 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > 95");
 
 auto out = stmt.execute();
 ```
 
-#### Output
-
 ```text
-id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
+id  sales
+1   100.0
+2   120.0
 ```
 
-### `execute`
-
-#### Signature
-
-```cpp
-DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params) const
-```
-
-#### Parameters
-
-`params` : `std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam>`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
-
-#### See also
-
-- `DataFrame execute(self) const`
-- `DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params) const`
-
-#### Examples
+Example 2. Run the prepared SQL statement while binding named scalar placeholders.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -93,45 +71,13 @@ auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}
 auto out = stmt.execute({{"min_sales", 95.0}});
 ```
 
-#### Output
-
 ```text
-id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
+id  sales
+1   100.0
+2   120.0
 ```
 
-### `execute`
-
-#### Signature
-
-```cpp
-DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params) const
-```
-
-#### Parameters
-
-`params` : `std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam>`
-    See the signature for the supported argument form.
-
-`identifier_params` : `std::unordered_map<std::string, std::string>`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
-
-#### See also
-
-- `DataFrame execute(self) const`
-- `DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params) const`
-
-#### Examples
+Example 3. Run the prepared SQL statement while binding both scalar placeholders and SQL identifier placeholders.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -144,10 +90,9 @@ auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}
 auto out = stmt.execute({{"min_sales", 95.0}}, {{"table_name", "self"}});
 ```
 
-#### Output
-
 ```text
-id  sales  city
-1   100.0  Accra
-3    90.0  Kumasi
+id  sales
+1   100.0
+2   120.0
 ```
+

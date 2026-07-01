@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=705d315b" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=0e2bb6cf" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/layout.js?v=014eaf41"></script>
+    <script src="_static/layout.js?v=a19b3cd6"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Archive API Reference" href="archive_api_reference.html" />
@@ -114,7 +114,7 @@ text_word_count -&gt; Series([4, 3, 3])
 <p><code class="docutils literal notranslate"><span class="pre">field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target stream in the catalog.</p>
 <p><code class="docutils literal notranslate"><span class="pre">stat_type</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Statistic selector string understood by this overload.</p>
 </section>
 <section id="id3">
 <h4>Returns<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
@@ -168,7 +168,7 @@ Value produced by this call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target stream in the catalog.</p>
 <p><code class="docutils literal notranslate"><span class="pre">func</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id10">
 <h4>Returns<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
@@ -229,7 +229,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target stream in the catalog.</p>
 <p><code class="docutils literal notranslate"><span class="pre">func</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id18">
 <h4>Returns<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h4>
@@ -266,7 +266,7 @@ Value produced by this call.</p>
 <section id="id22">
 <h4>Parameters<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id23">
 <h4>Returns<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
@@ -325,7 +325,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id30">
 <h4>Parameters<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id31">
 <h4>Returns<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h4>
@@ -364,7 +364,7 @@ Value produced by this call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 <p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> : <code class="docutils literal notranslate"><span class="pre">pluss::codem::ScalarType</span></code>
-See the signature for the supported argument form.</p>
+Target scalar dtype used by this conversion overload.</p>
 </section>
 <section id="id36">
 <h4>Returns<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h4>
@@ -503,7 +503,7 @@ Value produced by this call.</p>
 <h3><code class="docutils literal notranslate"><span class="pre">bfill</span></code><a class="headerlink" href="#bfill" title="Link to this heading">¶</a></h3>
 <section id="id52">
 <h4>Signature<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">bfill</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">bfill</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -634,7 +634,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 <p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> : <code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::codem::ScalarType&gt;</span></code>
-See the signature for the supported argument form.</p>
+Target scalar dtype used by this conversion overload.</p>
 </section>
 <section id="id68">
 <h4>Returns<a class="headerlink" href="#id68" title="Link to this heading">¶</a></h4>
@@ -803,7 +803,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id88">
 <h4>Parameters<a class="headerlink" href="#id88" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">row</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Zero-based row position used by this overload.</p>
 </section>
 <section id="id89">
 <h4>Returns<a class="headerlink" href="#id89" title="Link to this heading">¶</a></h4>
@@ -905,11 +905,11 @@ Value produced by this call.</p>
 <section id="id102">
 <h4>Parameters<a class="headerlink" href="#id102" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">field1</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+First named field used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">field2</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Second named field used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">method</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Method selector string understood by this overload.</p>
 </section>
 <section id="id103">
 <h4>Returns<a class="headerlink" href="#id103" title="Link to this heading">¶</a></h4>
@@ -1105,7 +1105,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id129">
 <h4>Parameters<a class="headerlink" href="#id129" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">field_names</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Field names supplied together for this overload.</p>
 </section>
 <section id="id130">
 <h4>Returns<a class="headerlink" href="#id130" title="Link to this heading">¶</a></h4>
@@ -1234,7 +1234,7 @@ metric -&gt; Series([10.0, 20.0, 30.0])
 <section id="id147">
 <h4>Parameters<a class="headerlink" href="#id147" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">field_name</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Field name used to select the target text, stream, or grouping column.</p>
 </section>
 <section id="id148">
 <h4>Returns<a class="headerlink" href="#id148" title="Link to this heading">¶</a></h4>
@@ -1291,7 +1291,7 @@ metric -&gt; Series([10.0, 20.0, 30.0])
 <h3><code class="docutils literal notranslate"><span class="pre">dropna</span></code><a class="headerlink" href="#dropna" title="Link to this heading">¶</a></h3>
 <section id="id154">
 <h4>Signature<a class="headerlink" href="#id154" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">dropna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">dropna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -1437,7 +1437,7 @@ Value produced by this call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target stream in the catalog.</p>
 <p><code class="docutils literal notranslate"><span class="pre">top_n</span></code> : <code class="docutils literal notranslate"><span class="pre">int</span></code>
-See the signature for the supported argument form.</p>
+Optional cap on how many grouped rows to keep after sorting. Use <code class="docutils literal notranslate"><span class="pre">0</span></code> to keep every group.</p>
 </section>
 <section id="id174">
 <h4>Returns<a class="headerlink" href="#id174" title="Link to this heading">¶</a></h4>
@@ -1483,7 +1483,7 @@ count   -&gt; Series([1, 1, 1, 1, 1])
 <h3><code class="docutils literal notranslate"><span class="pre">ffill</span></code><a class="headerlink" href="#ffill" title="Link to this heading">¶</a></h3>
 <section id="id179">
 <h4>Signature<a class="headerlink" href="#id179" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">ffill</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">ffill</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -1534,14 +1534,14 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">fillna</span></code><a class="headerlink" href="#fillna" title="Link to this heading">¶</a></h3>
 <section id="id185">
 <h4>Signature<a class="headerlink" href="#id185" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id186">
 <h4>Parameters<a class="headerlink" href="#id186" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 </section>
@@ -1557,10 +1557,10 @@ Value produced by this call.</p>
 <section id="id189">
 <h4>See also<a class="headerlink" href="#id189" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
 <section id="id190">
@@ -1591,14 +1591,14 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">fillna</span></code><a class="headerlink" href="#id192" title="Link to this heading">¶</a></h3>
 <section id="id193">
 <h4>Signature<a class="headerlink" href="#id193" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id194">
 <h4>Parameters<a class="headerlink" href="#id194" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 </section>
@@ -1614,10 +1614,10 @@ Value produced by this call.</p>
 <section id="id197">
 <h4>See also<a class="headerlink" href="#id197" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
 <section id="id198">
@@ -1648,14 +1648,14 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">fillna</span></code><a class="headerlink" href="#id200" title="Link to this heading">¶</a></h3>
 <section id="id201">
 <h4>Signature<a class="headerlink" href="#id201" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id202">
 <h4>Parameters<a class="headerlink" href="#id202" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 </section>
@@ -1671,10 +1671,10 @@ Value produced by this call.</p>
 <section id="id205">
 <h4>See also<a class="headerlink" href="#id205" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
 <section id="id206">
@@ -1705,14 +1705,14 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">fillna</span></code><a class="headerlink" href="#id208" title="Link to this heading">¶</a></h3>
 <section id="id209">
 <h4>Signature<a class="headerlink" href="#id209" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id210">
 <h4>Parameters<a class="headerlink" href="#id210" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">scalar</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 </section>
@@ -1728,10 +1728,10 @@ Value produced by this call.</p>
 <section id="id213">
 <h4>See also<a class="headerlink" href="#id213" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">std::string_view</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
 <section id="id214">
@@ -1762,14 +1762,14 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">fillna</span></code><a class="headerlink" href="#id216" title="Link to this heading">¶</a></h3>
 <section id="id217">
 <h4>Signature<a class="headerlink" href="#id217" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">fillna</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id218">
 <h4>Parameters<a class="headerlink" href="#id218" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
 Collection of slot or stream names to keep, drop, or rewrite together.</p>
 </section>
@@ -1785,10 +1785,10 @@ Value produced by this call.</p>
 <section id="id221">
 <h4>See also<a class="headerlink" href="#id221" title="Link to this heading">¶</a></h4>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">scalar</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">char*</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Catalog</span> <span class="pre">fillna(self,</span> <span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span> <span class="pre">value,</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;</span> <span class="pre">keys</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
 <section id="id222">
@@ -1826,7 +1826,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id225">
 <h4>Parameters<a class="headerlink" href="#id225" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">condition</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code>
-See the signature for the supported argument form.</p>
+Boolean mask used by this overload to decide which rows, values, or items participate.</p>
 </section>
 <section id="id226">
 <h4>Returns<a class="headerlink" href="#id226" title="Link to this heading">¶</a></h4>
@@ -1880,7 +1880,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target stream in the catalog.</p>
 <p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Pattern string used for matching or extraction.</p>
 </section>
 <section id="id232">
 <h4>Returns<a class="headerlink" href="#id232" title="Link to this heading">¶</a></h4>
@@ -1933,7 +1933,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id237">
 <h4>Parameters<a class="headerlink" href="#id237" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">json_text</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
 </section>
 <section id="id238">
 <h4>Returns<a class="headerlink" href="#id238" title="Link to this heading">¶</a></h4>
@@ -2057,7 +2057,7 @@ Value produced by this call.</p>
 <section id="id255">
 <h4>Parameters<a class="headerlink" href="#id255" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">key_field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Field name that acts as the key for matching, grouping, or lookup.</p>
 </section>
 <section id="id256">
 <h4>Returns<a class="headerlink" href="#id256" title="Link to this heading">¶</a></h4>
@@ -2275,7 +2275,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">isnull</span></code><a class="headerlink" href="#isnull" title="Link to this heading">¶</a></h3>
 <section id="id284">
 <h4>Signature<a class="headerlink" href="#id284" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">isnull</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">isnull</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -2368,16 +2368,16 @@ Borrowed list of names.</p>
 <h3><code class="docutils literal notranslate"><span class="pre">kindelize</span></code><a class="headerlink" href="#kindelize" title="Link to this heading">¶</a></h3>
 <section id="id296">
 <h4>Signature<a class="headerlink" href="#id296" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">kindelize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">KindelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">kindelize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">KindelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
 </pre></div>
 </div>
 </section>
 <section id="id297">
 <h4>Parameters<a class="headerlink" href="#id297" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">frame</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::DataFrame&amp;</span></code>
-See the signature for the supported argument form.</p>
+Frame payload supplied to this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">KindelizePolicy&amp;</span></code>
-See the signature for the supported argument form.</p>
+Policy object that changes the structural behavior of this overload.</p>
 </section>
 <section id="id298">
 <h4>Returns<a class="headerlink" href="#id298" title="Link to this heading">¶</a></h4>
@@ -2471,7 +2471,7 @@ Storage format selector such as <code class="docutils literal notranslate"><span
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id312">
 <h4>Returns<a class="headerlink" href="#id312" title="Link to this heading">¶</a></h4>
@@ -2561,7 +2561,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::ReadCsvOptions&amp;</span></code>
-See the signature for the supported argument form.</p>
+Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
 <section id="id327">
 <h4>Returns<a class="headerlink" href="#id327" title="Link to this heading">¶</a></h4>
@@ -2599,7 +2599,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">load_csv_with_key</span></code><a class="headerlink" href="#load-csv-with-key" title="Link to this heading">¶</a></h3>
 <section id="id332">
 <h4>Signature<a class="headerlink" href="#id332" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">load_csv_with_key</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filepath</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key_field</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">ReadCsvOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">load_csv_with_key</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filepath</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key_field</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">ReadCsvOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
 </pre></div>
 </div>
 </section>
@@ -2608,9 +2608,9 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">key_field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Field name that acts as the key for matching, grouping, or lookup.</p>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::ReadCsvOptions&amp;</span></code>
-See the signature for the supported argument form.</p>
+Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
 <section id="id334">
 <h4>Returns<a class="headerlink" href="#id334" title="Link to this heading">¶</a></h4>
@@ -2694,7 +2694,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::ReadExcelOptions&amp;</span></code>
-See the signature for the supported argument form.</p>
+Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
 <section id="id348">
 <h4>Returns<a class="headerlink" href="#id348" title="Link to this heading">¶</a></h4>
@@ -2785,7 +2785,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id363">
 <h4>Returns<a class="headerlink" href="#id363" title="Link to this heading">¶</a></h4>
@@ -2875,7 +2875,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id378">
 <h4>Returns<a class="headerlink" href="#id378" title="Link to this heading">¶</a></h4>
@@ -2965,7 +2965,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 File location to read from or write to. Use a neutral project path such as <code class="docutils literal notranslate"><span class="pre">path/to/data.csv</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id393">
 <h4>Returns<a class="headerlink" href="#id393" title="Link to this heading">¶</a></h4>
@@ -3009,7 +3009,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id399">
 <h4>Parameters<a class="headerlink" href="#id399" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">mask</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code>
-See the signature for the supported argument form.</p>
+Boolean mask used by this overload to decide which rows, values, or items participate.</p>
 </section>
 <section id="id400">
 <h4>Returns<a class="headerlink" href="#id400" title="Link to this heading">¶</a></h4>
@@ -3147,11 +3147,16 @@ Value produced by this call.</p>
 <section id="id417">
 <h4>Parameters<a class="headerlink" href="#id417" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">other</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Catalog&amp;</span></code>
-See the signature for the supported argument form.</p>
+Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
 <p><code class="docutils literal notranslate"><span class="pre">on</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Field name used as the match or join key for this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">how</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-Join mode. <code class="docutils literal notranslate"><span class="pre">DataFrame::unify(...)</span></code> currently supports <code class="docutils literal notranslate"><span class="pre">&quot;inner&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;left&quot;</span></code>.</p>
+Join mode for <code class="docutils literal notranslate"><span class="pre">DataFrame::unify(...)</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Supported values:
+- `inner`: Keep only rows whose key values match on both sides.
+- `left`: Preserve the left frame row order and row count, attaching right-hand matches where they exist.
+</pre></div>
+</div>
 </section>
 <section id="id418">
 <h4>Returns<a class="headerlink" href="#id418" title="Link to this heading">¶</a></h4>
@@ -3332,7 +3337,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">notnull</span></code><a class="headerlink" href="#notnull" title="Link to this heading">¶</a></h3>
 <section id="id440">
 <h4>Signature<a class="headerlink" href="#id440" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">notnull</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">notnull</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -3432,7 +3437,7 @@ Integer count, size, or positional result.</p>
 <section id="id453">
 <h4>Parameters<a class="headerlink" href="#id453" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">QueryFn&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callable used to transform, map, or derive values in this overload.</p>
 </section>
 <section id="id454">
 <h4>Returns<a class="headerlink" href="#id454" title="Link to this heading">¶</a></h4>
@@ -3483,7 +3488,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id459">
 <h4>Parameters<a class="headerlink" href="#id459" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">mapping</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::unordered_map&lt;std::string,</span> <span class="pre">std::string&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Name-to-name mapping used by this overload.</p>
 </section>
 <section id="id460">
 <h4>Returns<a class="headerlink" href="#id460" title="Link to this heading">¶</a></h4>
@@ -3542,7 +3547,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id467">
 <h4>Parameters<a class="headerlink" href="#id467" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">mapping</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::pair&lt;std::string_view,</span> <span class="pre">std::string_view&gt;&gt;</span></code>
-See the signature for the supported argument form.</p>
+Inline collection passed directly at the call site.</p>
 </section>
 <section id="id468">
 <h4>Returns<a class="headerlink" href="#id468" title="Link to this heading">¶</a></h4>
@@ -3600,9 +3605,9 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id475">
 <h4>Parameters<a class="headerlink" href="#id475" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">from</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Boundary or replacement value used by this overload. Its type determines which payload family participates.</p>
 <p><code class="docutils literal notranslate"><span class="pre">to</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Boundary or replacement value used by this overload. Its type determines which payload family participates.</p>
 </section>
 <section id="id476">
 <h4>Returns<a class="headerlink" href="#id476" title="Link to this heading">¶</a></h4>
@@ -3660,9 +3665,9 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id483">
 <h4>Parameters<a class="headerlink" href="#id483" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">from</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Boundary or replacement value used by this overload. Its type determines which payload family participates.</p>
 <p><code class="docutils literal notranslate"><span class="pre">to</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Boundary or replacement value used by this overload. Its type determines which payload family participates.</p>
 </section>
 <section id="id484">
 <h4>Returns<a class="headerlink" href="#id484" title="Link to this heading">¶</a></h4>
@@ -3701,7 +3706,7 @@ Value produced by this call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
 Number of rows, entries, or depth items to keep in the preview.</p>
 <p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> : <code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::uint64_t&gt;</span></code>
-See the signature for the supported argument form.</p>
+Optional seed used to make sampling or shuffling reproducible.</p>
 </section>
 <section id="id489">
 <h4>Returns<a class="headerlink" href="#id489" title="Link to this heading">¶</a></h4>
@@ -3745,18 +3750,18 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">save_as</span></code><a class="headerlink" href="#save-as" title="Link to this heading">¶</a></h3>
 <section id="id493">
 <h4>Signature<a class="headerlink" href="#id493" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">save_as</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">target_type</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">Config</span><span class="o">&amp;</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">save_as</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">target_type</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">Config</span><span class="o">&amp;</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id494">
 <h4>Parameters<a class="headerlink" href="#id494" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">target_type</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Format or target selector string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id495">
 <h4>Returns<a class="headerlink" href="#id495" title="Link to this heading">¶</a></h4>
@@ -3799,7 +3804,7 @@ Performs the side effect and returns no value.</p>
 <section id="id500">
 <h4>Parameters<a class="headerlink" href="#id500" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 </section>
 <section id="id501">
 <h4>Returns<a class="headerlink" href="#id501" title="Link to this heading">¶</a></h4>
@@ -3848,9 +3853,9 @@ Performs the side effect and returns no value.</p>
 <section id="id508">
 <h4>Parameters<a class="headerlink" href="#id508" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id509">
 <h4>Returns<a class="headerlink" href="#id509" title="Link to this heading">¶</a></h4>
@@ -3899,7 +3904,7 @@ Performs the side effect and returns no value.</p>
 <section id="id515">
 <h4>Parameters<a class="headerlink" href="#id515" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 </section>
 <section id="id516">
 <h4>Returns<a class="headerlink" href="#id516" title="Link to this heading">¶</a></h4>
@@ -3948,9 +3953,9 @@ Performs the side effect and returns no value.</p>
 <section id="id523">
 <h4>Parameters<a class="headerlink" href="#id523" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id524">
 <h4>Returns<a class="headerlink" href="#id524" title="Link to this heading">¶</a></h4>
@@ -3999,7 +4004,7 @@ Performs the side effect and returns no value.</p>
 <section id="id530">
 <h4>Parameters<a class="headerlink" href="#id530" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 </section>
 <section id="id531">
 <h4>Returns<a class="headerlink" href="#id531" title="Link to this heading">¶</a></h4>
@@ -4048,9 +4053,9 @@ Performs the side effect and returns no value.</p>
 <section id="id538">
 <h4>Parameters<a class="headerlink" href="#id538" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id539">
 <h4>Returns<a class="headerlink" href="#id539" title="Link to this heading">¶</a></h4>
@@ -4099,7 +4104,7 @@ Performs the side effect and returns no value.</p>
 <section id="id545">
 <h4>Parameters<a class="headerlink" href="#id545" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 </section>
 <section id="id546">
 <h4>Returns<a class="headerlink" href="#id546" title="Link to this heading">¶</a></h4>
@@ -4148,9 +4153,9 @@ Performs the side effect and returns no value.</p>
 <section id="id553">
 <h4>Parameters<a class="headerlink" href="#id553" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id554">
 <h4>Returns<a class="headerlink" href="#id554" title="Link to this heading">¶</a></h4>
@@ -4199,7 +4204,7 @@ Performs the side effect and returns no value.</p>
 <section id="id560">
 <h4>Parameters<a class="headerlink" href="#id560" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 </section>
 <section id="id561">
 <h4>Returns<a class="headerlink" href="#id561" title="Link to this heading">¶</a></h4>
@@ -4248,9 +4253,9 @@ Performs the side effect and returns no value.</p>
 <section id="id568">
 <h4>Parameters<a class="headerlink" href="#id568" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">filename</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Filename or path-like string used by this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">config</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>
-See the signature for the supported argument form.</p>
+Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.</p>
 </section>
 <section id="id569">
 <h4>Returns<a class="headerlink" href="#id569" title="Link to this heading">¶</a></h4>
@@ -4299,7 +4304,7 @@ Performs the side effect and returns no value.</p>
 <section id="id575">
 <h4>Parameters<a class="headerlink" href="#id575" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">field_names</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Field names supplied together for this overload.</p>
 </section>
 <section id="id576">
 <h4>Returns<a class="headerlink" href="#id576" title="Link to this heading">¶</a></h4>
@@ -4357,7 +4362,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id583">
 <h4>Parameters<a class="headerlink" href="#id583" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">field_names</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
-See the signature for the supported argument form.</p>
+Inline collection passed directly at the call site.</p>
 </section>
 <section id="id584">
 <h4>Returns<a class="headerlink" href="#id584" title="Link to this heading">¶</a></h4>
@@ -4466,7 +4471,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">key</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target slot or stream.</p>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 </section>
 <section id="id597">
 <h4>Returns<a class="headerlink" href="#id597" title="Link to this heading">¶</a></h4>
@@ -4519,7 +4524,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">key</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target slot or stream.</p>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 </section>
 <section id="id604">
 <h4>Returns<a class="headerlink" href="#id604" title="Link to this heading">¶</a></h4>
@@ -4558,7 +4563,7 @@ Value produced by this call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">key</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target slot or stream.</p>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 </section>
 <section id="id609">
 <h4>Returns<a class="headerlink" href="#id609" title="Link to this heading">¶</a></h4>
@@ -4611,7 +4616,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">key</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target slot or stream.</p>
 <p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Replacement, fill, or write value used by mutation-style methods such as <code class="docutils literal notranslate"><span class="pre">put(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna(...)</span></code>, or <code class="docutils literal notranslate"><span class="pre">replace(...)</span></code>.</p>
 </section>
 <section id="id616">
 <h4>Returns<a class="headerlink" href="#id616" title="Link to this heading">¶</a></h4>
@@ -4648,7 +4653,7 @@ Value produced by this call.</p>
 <section id="id620">
 <h4>Parameters<a class="headerlink" href="#id620" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">items</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;NamedStream&gt;</span></code>
-See the signature for the supported argument form.</p>
+Inline collection passed directly at the call site.</p>
 </section>
 <section id="id621">
 <h4>Returns<a class="headerlink" href="#id621" title="Link to this heading">¶</a></h4>
@@ -4708,7 +4713,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id628">
 <h4>Parameters<a class="headerlink" href="#id628" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">items</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::pair&lt;std::string_view,</span> <span class="pre">Stream&gt;&gt;</span></code>
-See the signature for the supported argument form.</p>
+Inline collection passed directly at the call site.</p>
 </section>
 <section id="id629">
 <h4>Returns<a class="headerlink" href="#id629" title="Link to this heading">¶</a></h4>
@@ -4767,7 +4772,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id636">
 <h4>Parameters<a class="headerlink" href="#id636" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">items</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;NamedStream&gt;</span></code>
-See the signature for the supported argument form.</p>
+Inline collection passed directly at the call site.</p>
 </section>
 <section id="id637">
 <h4>Returns<a class="headerlink" href="#id637" title="Link to this heading">¶</a></h4>
@@ -4813,7 +4818,7 @@ Value produced by this call.</p>
 <section id="id643">
 <h4>Parameters<a class="headerlink" href="#id643" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">items</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::pair&lt;std::string_view,</span> <span class="pre">Stream&gt;&gt;</span></code>
-See the signature for the supported argument form.</p>
+Inline collection passed directly at the call site.</p>
 </section>
 <section id="id644">
 <h4>Returns<a class="headerlink" href="#id644" title="Link to this heading">¶</a></h4>
@@ -4858,7 +4863,7 @@ Value produced by this call.</p>
 <section id="id649">
 <h4>Parameters<a class="headerlink" href="#id649" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">os</span></code> : <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Destination output stream used instead of the default display or print target.</p>
 </section>
 <section id="id650">
 <h4>Returns<a class="headerlink" href="#id650" title="Link to this heading">¶</a></h4>
@@ -4948,9 +4953,9 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id660">
 <h4>Parameters<a class="headerlink" href="#id660" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">by_field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Field name that controls the grouping or sorting basis of the operation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ascending</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
-See the signature for the supported argument form.</p>
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="id661">
 <h4>Returns<a class="headerlink" href="#id661" title="Link to this heading">¶</a></h4>
@@ -4994,16 +4999,16 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">sort_by</span></code><a class="headerlink" href="#sort-by" title="Link to this heading">¶</a></h3>
 <section id="id665">
 <h4>Signature<a class="headerlink" href="#id665" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">sort_by</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fields</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="w"> </span><span class="n">sort_by</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fields</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id666">
 <h4>Parameters<a class="headerlink" href="#id666" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fields</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ascending</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;bool&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Sort-order switch. <code class="docutils literal notranslate"><span class="pre">true</span></code> means ascending order and <code class="docutils literal notranslate"><span class="pre">false</span></code> means descending order.</p>
 </section>
 <section id="id667">
 <h4>Returns<a class="headerlink" href="#id667" title="Link to this heading">¶</a></h4>
@@ -5175,14 +5180,14 @@ Value produced by this call.</p>
 <h3><code class="docutils literal notranslate"><span class="pre">tabelize</span></code><a class="headerlink" href="#tabelize" title="Link to this heading">¶</a></h3>
 <section id="id689">
 <h4>Signature<a class="headerlink" href="#id689" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">tabelize</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">tabelize</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id690">
 <h4>Parameters<a class="headerlink" href="#id690" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">TabelizePolicy&amp;</span></code>
-See the signature for the supported argument form.</p>
+Policy object that changes the structural behavior of this overload.</p>
 </section>
 <section id="id691">
 <h4>Returns<a class="headerlink" href="#id691" title="Link to this heading">¶</a></h4>
@@ -5281,7 +5286,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id702">
 <h4>Parameters<a class="headerlink" href="#id702" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">indices</span></code> : <code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::int64_t&gt;</span></code>
-See the signature for the supported argument form.</p>
+Integer positions used to select, reorder, or address entries.</p>
 </section>
 <section id="id703">
 <h4>Returns<a class="headerlink" href="#id703" title="Link to this heading">¶</a></h4>
@@ -5622,14 +5627,16 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <h3><code class="docutils literal notranslate"><span class="pre">to_table</span></code><a class="headerlink" href="#to-table" title="Link to this heading">¶</a></h3>
 <section id="id743">
 <h4>Signature<a class="headerlink" href="#id743" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">to_table</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">to_table</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id744">
 <h4>Parameters<a class="headerlink" href="#id744" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">TabelizePolicy&amp;</span></code>
-See the signature for the supported argument form.</p>
+Policy object that changes the structural behavior of this overload.</p>
+<p><code class="docutils literal notranslate"><span class="pre">render</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
+When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned view can auto-render in temporary terminal contexts. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> when you want explicit output control.</p>
 </section>
 <section id="id745">
 <h4>Returns<a class="headerlink" href="#id745" title="Link to this heading">¶</a></h4>
@@ -5677,7 +5684,7 @@ Value produced by this call.</p>
 <section id="id750">
 <h4>Parameters<a class="headerlink" href="#id750" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id751">
 <h4>Returns<a class="headerlink" href="#id751" title="Link to this heading">¶</a></h4>
@@ -5736,7 +5743,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <p><code class="docutils literal notranslate"><span class="pre">field</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Name of the target stream in the catalog.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Stream(const</span> <span class="pre">Stream&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id759">
 <h4>Returns<a class="headerlink" href="#id759" title="Link to this heading">¶</a></h4>
@@ -5835,7 +5842,7 @@ Boolean status or membership result.</p>
 <section id="id771">
 <h4>Parameters<a class="headerlink" href="#id771" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">condition</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code>
-See the signature for the supported argument form.</p>
+Boolean mask used by this overload to decide which rows, values, or items participate.</p>
 </section>
 <section id="id772">
 <h4>Returns<a class="headerlink" href="#id772" title="Link to this heading">¶</a></h4>

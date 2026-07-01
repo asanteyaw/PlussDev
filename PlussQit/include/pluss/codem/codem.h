@@ -461,6 +461,8 @@ inline codem::Series select(std::initializer_list<codem::Series> conditions,
   using Config = codem::Config;
   using ScalarType = codem::ScalarType;
   using Platform = codem::Platform;
+  template <class T>
+  using RangeView = msharp::RangeView::Of<T>;
   inline constexpr Platform pCPU = Platform::CPU;
   inline constexpr Platform pCUDA = Platform::CUDA;
   inline constexpr Platform pMPS = Platform::MPS;

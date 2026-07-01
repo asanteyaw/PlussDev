@@ -16,6 +16,7 @@ add_library(PlussTilsView STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/shell/null_shell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/shell/shell_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/render/canvas.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/window/render/async_compositor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/export/export.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/render/software_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window/render/text_raster.cpp
@@ -192,6 +193,8 @@ if(APPLE)
         "-framework CoreText"
         "-framework CoreFoundation"
         "-framework CoreGraphics"
+        "-framework CoreVideo"
+        "-framework Metal"
     )
 endif()
 
@@ -398,6 +401,20 @@ if(PLUSSTILS_VIEW_ENABLE_EXPERIMENTAL_NATIVE_SHOWCASE)
 endif()
 
 if(BUILD_TESTING)
+    add_executable(plussview_async_compositor_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/async_compositor_tests.cpp
+    )
+    target_link_libraries(plussview_async_compositor_tests PRIVATE PlussTilsView)
+    target_include_directories(plussview_async_compositor_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    set_target_properties(plussview_async_compositor_tests PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
+    add_test(NAME plussview_async_compositor_tests COMMAND plussview_async_compositor_tests)
+
     add_executable(plussview_html_scroll_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/test/html_scroll_tests.cpp
     )

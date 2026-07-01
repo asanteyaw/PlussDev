@@ -116,8 +116,18 @@ df.describe().show(opts);
 Notes:
 
 - `backend = DisplayBackend::Terminal` forces terminal rendering
-- `backend = DisplayBackend::NativeWebView` requests the GUI path when a native backend exists
+- the default `Auto` policy prefers the built-in `PlussWebView` renderer
+- `backend = DisplayBackend::NativeWebView` explicitly requests the platform web view
+- `backend = DisplayBackend::PlussWebView` explicitly requires the built-in renderer
 - `window_title` is available, but for most users the better pattern is to name the frame with `title(...)` or `title_(...)`
+
+Explicit native-renderer example:
+
+```cpp
+pluss::table::display::DisplayOptions opts;
+opts.backend = pluss::table::display::DisplayBackend::NativeWebView;
+df.show(opts);
+```
 
 ## DataFrame Titles
 
@@ -161,11 +171,13 @@ auto other = prices.title("derived"); // prices unchanged
 
 Current popup support is:
 
-- macOS: supported
-- Linux: supported
-- Windows: supported when WebView2 support is compiled in and the WebView2 Runtime is installed
+- macOS: built-in PlussWebView and native WebKit
+- Linux: built-in PlussWebView through X11/XWayland, with native WebKitGTK optional
+- Windows: built-in PlussWebView through Win32, with native WebView2 optional
 
-If the popup backend is unavailable, `.show()` falls back to the normal terminal rendering path.
+The default `Auto` policy tries PlussWebView first, then the available native
+platform backend. If neither popup backend is available, `.show()` falls back
+to the normal terminal rendering path.
 
 ## macOS Backend
 
@@ -186,53 +198,49 @@ Practical consequence:
 
 ## Linux Backend
 
-On Linux, the popup viewer uses:
+The default Linux popup uses the built-in renderer in a direct X11 or
+XWayland window. It does not require GTK or WebKitGTK. FreeType is used for
+native-quality text when it is available, and XInput2 provides high-resolution
+touchpad and mouse-wheel input when it is available.
 
-- `gtk+-3.0`
-- `webkit2gtk-4.1`
-- fallback to `webkit2gtk-4.0`
-
-Those are discovered through `pkg-config`.
-
-Typical system packages:
+Typical packages for building the staged SDK, or linking a downstream
+application to the current static SDK, are:
 
 Ubuntu:
 
 ```bash
-sudo apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+sudo apt install libx11-dev libxi-dev libfreetype-dev
 ```
 
 Fedora:
 
 ```bash
-sudo dnf install pkgconf-pkg-config gtk3-devel webkit2gtk4.1-devel
+sudo dnf install libX11-devel libXi-devel freetype-devel
 ```
 
-Linux Conda environments can often provide the GTK/WebKit pieces, but the most reliable path is still the system packages plus `pkg-config`.
+The staged application needs an X11 server or XWayland at runtime. A
+Wayland-only session with XWayland disabled cannot currently open the built-in
+window; `Auto` then tries the optional native backend before falling back to
+terminal output.
+
+GTK and WebKitGTK are needed only when building and explicitly selecting
+`DisplayBackend::NativeWebView`.
 
 ## Windows Status
 
-On Windows, the popup viewer uses:
-
-- native Win32 windowing
-- Microsoft Edge WebView2 for the embedded HTML table
-
-That means the host window is native Windows UI, and the table itself is still rendered from the same HTML/CSS/JavaScript payload used on the other platforms.
-
-There are two separate Windows requirements:
-
-- build-time requirement: the WebView2 SDK headers and loader library must be available when compiling PlussMic from source
-- runtime requirement: the Microsoft Edge WebView2 Runtime must be installed on the target machine
-
-If either one is missing, `.show()` falls back to terminal rendering.
+The default Windows popup uses the built-in renderer in a native Win32 window.
+It uses Windows system APIs for windowing, input, clipboard, saving, and text,
+so neither the WebView2 SDK nor the WebView2 Runtime is required for `.show()`.
 
 ## Windows Build Setup
 
-The Windows viewer backend is enabled when CMake can find the WebView2 SDK.
+No additional viewer SDK is required for the built-in Windows renderer. A
+normal staged Pluss SDK built for the target architecture includes it.
 
-PlussMic looks for:
+WebView2 remains an optional native web-view backend. To build it, Pluss looks
+for:
 
-- cache variable: `PLUSSMIC_WEBVIEW2_SDK_DIR`
+- cache variable: `PLUSSTILS_VIEW_WEBVIEW2_SDK_DIR`
 - environment variable: `WEBVIEW2_SDK_DIR`
 - common NuGet cache location under the user profile
 
@@ -240,13 +248,13 @@ Typical configure command:
 
 ```bash
 cmake -S . -B build ^
-  -DPLUSSMIC_WEBVIEW2_SDK_DIR="C:/path/to/Microsoft.Web.WebView2.<version>"
+  -DPLUSSTILS_VIEW_WEBVIEW2_SDK_DIR="C:/path/to/Microsoft.Web.WebView2.<version>"
 ```
 
-If you want to disable Windows popup support explicitly:
+Disabling WebView2 does not disable the built-in popup:
 
 ```bash
-cmake -S . -B build -DPLUSSMIC_ENABLE_WINDOWS_WEBVIEW2=OFF
+cmake -S . -B build -DPLUSSTILS_VIEW_ENABLE_WINDOWS_WEBVIEW2=OFF
 ```
 
 What the SDK directory should contain:
@@ -255,43 +263,27 @@ What the SDK directory should contain:
 - `build/native/x64/WebView2LoaderStatic.lib`
   or the equivalent `x86` / `arm64` loader library for the target architecture
 
-## Windows Runtime Setup
-
-Even if PlussMic builds with WebView2 support, the target machine still needs the WebView2 Runtime.
-
-That runtime is often already present on modern Windows systems, but it should still be treated as a requirement for popup viewing.
-
-If the runtime is missing:
-
-- `.show()` does not crash
-- it simply falls back to terminal rendering
-
 ## Conda On Windows
 
-Conda is not the source of the Windows popup backend.
-
-On Windows:
-
-- your Conda environment can still provide the compiler toolchain and normal build environment
-- the popup viewer itself comes from Windows + WebView2
-- users should not expect a Conda package to supply the full native popup stack
-
-So the practical rule is:
-
-- Conda can help with building
-- WebView2 SDK and Runtime are the Windows viewer requirements
+Conda can provide the compiler and normal dependencies. The default popup
+itself comes from the built-in renderer and Windows system APIs. WebView2 is
+relevant only when the optional native backend is requested.
 
 ## Are The Popup Windows Native
 
 Partly.
 
-The host window is native to the platform backend:
+The host window is native to the selected presentation backend:
 
-- macOS: native Cocoa window
-- Linux: GTK window
-- Windows: native Win32 window with embedded WebView2
+- built-in PlussWebView on macOS: Cocoa window with software-rendered content
+- built-in PlussWebView on Linux: X11/XWayland window with software-rendered content
+- built-in PlussWebView on Windows: Win32 window with software-rendered content
+- native macOS backend: Cocoa window with embedded WebKit
+- native Linux backend: GTK window with embedded WebKitGTK
+- native Windows backend: Win32 window with embedded WebView2
 
-The table content itself is rendered as HTML/CSS/JavaScript inside the embedded web view.
+PlussWebView parses and renders the supported HTML/CSS itself. Native backends
+render the same document inside the platform web view.
 
 So the actual behavior is:
 
@@ -305,9 +297,12 @@ Conda support differs by platform.
 - macOS:
   no GTK/WebKitGTK package is needed for the current implementation
 - Linux:
-  Conda may provide the needed GTK/WebKit packages, but system packages are usually simpler and more reliable
+  built-in PlussWebView needs the standard X11 runtime (or XWayland); FreeType
+  is used when available for native-quality fonts. GTK/WebKitGTK is needed only
+  when explicitly selecting the native web-view backend
 - Windows:
-  Conda does not provide the native viewer stack; use WebView2 SDK + Runtime
+  built-in PlussWebView uses Windows system APIs and does not require WebView2.
+  The WebView2 SDK and Runtime are needed only for the optional native backend
 
 ## Recommended User Guidance
 

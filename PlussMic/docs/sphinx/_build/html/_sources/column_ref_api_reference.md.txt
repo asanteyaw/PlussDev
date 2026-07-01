@@ -6,9 +6,11 @@
 
 This page documents the public `ColumnRef` helper returned by DataFrame column-reference calls.
 
+## H
+
 ### `head`
 
-#### Signature
+#### API Signature
 
 ```cpp
 Thread head(self, std::int64_t n) const
@@ -17,14 +19,14 @@ Thread head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
+    Number of leading values to preview from the referenced feature.
 
 #### Returns
 
 `Thread`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
 Returns the first `n` values from the referenced column as a thread.
 
@@ -41,15 +43,16 @@ auto ref = df.feature_ref("sales");
 auto out = ref.head(2);
 ```
 
-#### Output
-
 ```text
 [100.0, 120.0]
 ```
 
+
+## M
+
 ### `mean`
 
-#### Signature
+#### API Signature
 
 ```cpp
 pluss::Series mean(self) const
@@ -64,7 +67,7 @@ pluss::Series mean(self) const
 `pluss::Series`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
 Computes the mean of the referenced numeric column.
 
@@ -81,15 +84,16 @@ auto ref = df.feature_ref("sales");
 auto out = ref.mean();
 ```
 
-#### Output
-
 ```text
 103.3
 ```
 
+
+## N
+
 ### `name`
 
-#### Signature
+#### API Signature
 
 ```cpp
 const std::string& name(self) const
@@ -104,7 +108,7 @@ const std::string& name(self) const
 `const std::string&`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
 Returns the feature name associated with this column reference.
 
@@ -121,15 +125,16 @@ auto ref = df.feature_ref("sales");
 auto out = ref.name();
 ```
 
-#### Output
-
 ```text
 sales
 ```
 
+
+## T
+
 ### `thread`
 
-#### Signature
+#### API Signature
 
 ```cpp
 const Thread& thread(self) const
@@ -144,7 +149,7 @@ const Thread& thread(self) const
 `const Thread&`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
 Returns the referenced column as a `Thread` object.
 
@@ -161,15 +166,21 @@ auto ref = df.feature_ref("sales");
 auto out = ref.thread();
 ```
 
-#### Output
-
 ```text
 [10.0, 20.0, 30.0]
 ```
 
+#### Practical Behavior
+
+- `thread()` gives you the exact referenced column payload without copying it into a new frame.
+- Use this when you want to switch into `Thread` operations such as comparisons, casting, or text cleanup.
+
+
+## V
+
 ### `value`
 
-#### Signature
+#### API Signature
 
 ```cpp
 ThreadValue value(self) const
@@ -184,9 +195,9 @@ ThreadValue value(self) const
 `ThreadValue`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Returns one scalar-like wrapper for the first referenced value, which is useful when you need typed single-cell access.
 
 #### Examples
 
@@ -201,15 +212,19 @@ auto ref = df.feature_ref("sales");
 auto out = ref.value();
 ```
 
-#### Output
-
 ```text
 100.0
 ```
 
+#### Practical Behavior
+
+- `value()` returns a `ThreadValue` wrapper over the first element of the referenced column.
+- Use this when you need typed scalar extraction rather than a whole-column thread.
+
+
 ### `values`
 
-#### Signature
+#### API Signature
 
 ```cpp
 Thread values(self) const
@@ -224,9 +239,9 @@ Thread values(self) const
 `Thread`
     Value produced by this call.
 
-#### Notes
+#### What It Does
 
-Materializes the current members as a collection you can inspect or reuse elsewhere.
+Materializes the full referenced column as a standalone `Thread` so you can reuse it outside the parent frame.
 
 #### Examples
 
@@ -241,8 +256,12 @@ auto ref = df.feature_ref("sales");
 auto out = ref.values();
 ```
 
-#### Output
-
 ```text
 [10.0, 20.0, 30.0]
 ```
+
+#### Practical Behavior
+
+- `values()` materializes the referenced feature as a standalone `Thread`.
+- Use this when you want to pass the column into another API that expects a thread rather than a column reference.
+

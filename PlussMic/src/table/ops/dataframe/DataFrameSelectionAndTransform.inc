@@ -265,19 +265,111 @@ DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
   return DataFrameView(std::move(out), render, "tail", title());
 }
 
-DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_state) const {
-  const auto total = ncases();
-  PLUSS_CHECK(total >= 0, "DataFrame::sample: invalid case count");
-  PLUSS_CHECK(n >= 0, "DataFrame::sample: n must be >= 0");
-  const auto draw = std::min<std::int64_t>(n, total);
+DataFrameView DataFrame::observe(std::int64_t row, bool render) const {
+  const auto idx = normalize_row_index(row, ncases());
+  return observe(idx, idx + 1, render);
+}
 
-  std::vector<std::int64_t> idx(static_cast<std::size_t>(total));
+DataFrameView DataFrame::observe(std::int64_t start, std::int64_t stop, bool render) const {
+  auto out = slice(start, stop).title(title());
+  return DataFrameView(std::move(out), render, "observe", title());
+}
+
+namespace {
+
+std::vector<std::int64_t> sample_row_indices_(std::int64_t total,
+                                              std::int64_t draw,
+                                              bool replace,
+                                              std::mt19937_64& rng) {
+  std::vector<std::int64_t> idx;
+  idx.reserve(static_cast<std::size_t>(draw));
+  if (draw == 0 || total == 0) {
+    return idx;
+  }
+  if (replace) {
+    std::uniform_int_distribution<std::int64_t> dist(0, total - 1);
+    for (std::int64_t i = 0; i < draw; ++i) {
+      idx.push_back(dist(rng));
+    }
+    return idx;
+  }
+
+  idx.resize(static_cast<std::size_t>(total));
   std::iota(idx.begin(), idx.end(), 0);
-
-  std::mt19937_64 rng(random_state.value_or(std::random_device{}()));
   std::shuffle(idx.begin(), idx.end(), rng);
   idx.resize(static_cast<std::size_t>(draw));
-  return take(idx);
+  return idx;
+}
+
+std::vector<std::size_t> sample_feature_indices_(std::size_t total, std::size_t draw, std::mt19937_64& rng) {
+  std::vector<std::size_t> idx(total);
+  std::iota(idx.begin(), idx.end(), 0);
+  std::shuffle(idx.begin(), idx.end(), rng);
+  idx.resize(draw);
+  return idx;
+}
+
+} // namespace
+
+DataFrame DataFrame::sample(std::int64_t n) const {
+  return sample_impl_(n, std::nullopt, false, 0);
+}
+
+DataFrame DataFrame::sample(std::int64_t n, bool replace, int axis) const {
+  return sample_impl_(n, std::nullopt, replace, axis);
+}
+
+DataFrame DataFrame::sample(std::int64_t n, std::uint64_t random_state, bool replace, int axis) const {
+  return sample_impl_(n, random_state, replace, axis);
+}
+
+DataFrame DataFrame::sample_impl_(std::int64_t n,
+                                  std::optional<std::uint64_t> random_state,
+                                  bool replace,
+                                  int axis) const {
+  PLUSS_CHECK(axis == 0 || axis == 1, "DataFrame::sample: axis must be 0 (rows) or 1 (features)");
+  PLUSS_CHECK(n >= 0, "DataFrame::sample: n must be >= 0");
+  const auto& src = impl_ref_();
+  std::mt19937_64 rng(random_state.value_or(std::random_device{}()));
+
+  if (axis == 0) {
+    const auto total = ncases();
+    PLUSS_CHECK(total >= 0, "DataFrame::sample: invalid case count");
+    const auto draw = replace ? n : std::min<std::int64_t>(n, total);
+    return take(sample_row_indices_(total, draw, replace, rng));
+  }
+
+  PLUSS_CHECK(!replace, "DataFrame::sample: feature sampling with replacement is not supported");
+  const auto total = src.columns_.size();
+  const auto draw = std::min<std::size_t>(static_cast<std::size_t>(n), total);
+  const auto order = sample_feature_indices_(total, draw, rng);
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(draw);
+  out_cols.reserve(draw);
+  for (const auto idx : order) {
+    out_names.push_back(src.names_[idx]);
+    out_cols.push_back(src.columns_[idx]);
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_, src.title_));
+}
+
+DataFrame DataFrame::sample_fraction_(double frac,
+                                      std::optional<std::uint64_t> random_state,
+                                      bool replace,
+                                      int axis) const {
+  PLUSS_CHECK(axis == 0 || axis == 1, "DataFrame::sample: axis must be 0 (rows) or 1 (features)");
+  PLUSS_CHECK(std::isfinite(frac), "DataFrame::sample: frac must be finite");
+  PLUSS_CHECK(frac >= 0.0, "DataFrame::sample: frac must be >= 0");
+  PLUSS_CHECK(replace || frac <= 1.0, "DataFrame::sample: frac > 1 requires replace = true");
+  const auto total = axis == 0 ? ncases() : nfeats();
+  const auto draw = static_cast<std::int64_t>(std::llround(frac * static_cast<double>(total)));
+  return sample_impl_(draw, random_state, replace, axis);
+}
+
+DataFrame DataFrame::shuffle(std::optional<std::uint64_t> random_state) const {
+  return reshuffle(0, random_state);
 }
 
 DataFrame DataFrame::reshuffle(int axis, std::optional<std::uint64_t> random_state) const {

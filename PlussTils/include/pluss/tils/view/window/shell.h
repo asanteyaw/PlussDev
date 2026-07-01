@@ -85,6 +85,9 @@ class IWindowShell {
   [[nodiscard]] virtual double backing_scale_factor() const noexcept {
     return 1.0;
   }
+  [[nodiscard]] virtual bool presentation_frame_due() noexcept {
+    return true;
+  }
   virtual bool set_clipboard_text(std::string_view text) {
     (void)text;
     return false;

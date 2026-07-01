@@ -84,6 +84,7 @@ struct HtmlRenderConfig {
   std::string table_filter_target{};
   std::string active_input_target{};
   std::string active_input_value{};
+  bool show_input_caret{true};
   std::vector<HtmlHitRegion>* hit_regions{nullptr};
   HtmlRenderStats* render_stats{nullptr};
   HtmlLayoutCache* layout_cache{nullptr};

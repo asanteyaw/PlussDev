@@ -536,10 +536,10 @@ void test_form_control_alignment_and_caret() {
   }
   .tools input, .tools button {
     margin:0; height:40px; min-height:40px; padding:0 12px;
-    border:1px solid #b9c7d5; text-align:center;
+    border:1px solid #b9c7d5;
   }
-  .tools input { min-width:220px; font-size:13px; }
-  .tools button { min-width:88px; font-size:13px; }
+  .tools input { min-width:220px; font-size:13px; text-align:left; }
+  .tools button { min-width:88px; font-size:13px; text-align:center; }
 </style></head><body>
   <div class="shell">
     <div class="frame">
@@ -577,15 +577,125 @@ void test_form_control_alignment_and_caret() {
              std::to_string(reset->rect.x + reset->rect.width) + ")");
 
   const auto caret = std::find_if(scene.commands().begin(), scene.commands().end(), [](const auto& command) {
-    const auto* line = std::get_if<LineCommand>(&command);
-    return line != nullptr && line->color.r == 71 && line->color.g == 118 && line->color.b == 184;
+    return std::holds_alternative<TextCaretCommand>(command);
   });
   expect(caret != scene.commands().end(), "focused search input should render a caret");
-  const auto* caret_line = std::get_if<LineCommand>(&*caret);
-  expect(caret_line != nullptr &&
-             std::abs(caret_line->start.x - (input->rect.x + input->rect.width / 2)) <= 1 &&
-             caret_line->end.y - caret_line->start.y <= 20,
-         "an empty centered search input should use a short centered caret");
+  const auto* caret_command = std::get_if<TextCaretCommand>(&*caret);
+  expect(caret_command != nullptr &&
+             caret_command->text_anchor.x > input->rect.x &&
+             caret_command->text_anchor.x <= input->rect.x + 30 &&
+             caret_command->y1 - caret_command->y0 <= 20,
+         "an empty search input should use a short caret at its left inset");
+
+  config.show_input_caret = false;
+  const auto blink_off_scene =
+      build_html_document_scene(document, SizeI{640, 240}, config);
+  expect(std::none_of(
+             blink_off_scene.commands().begin(),
+             blink_off_scene.commands().end(),
+             [](const auto& command) {
+               return std::holds_alternative<TextCaretCommand>(command);
+             }),
+         "the blink-off phase should hide only the focused input caret");
+
+  config.show_input_caret = true;
+  config.active_input_value = "abc";
+  const auto text_scene =
+      build_html_document_scene(document, SizeI{640, 240}, config);
+  config.active_input_value = "abc ";
+  const auto spaced_scene =
+      build_html_document_scene(document, SizeI{640, 240}, config);
+  const auto caret_x = [](const Scene& candidate) {
+    for (const auto& command : candidate.commands()) {
+      const auto* caret = std::get_if<TextCaretCommand>(&command);
+      if (caret != nullptr) {
+        return caret->text_anchor.x + caret->fallback_width;
+      }
+    }
+    return -1;
+  };
+  expect(caret_x(text_scene) >= 0 &&
+             caret_x(spaced_scene) > caret_x(text_scene),
+         "an explicit trailing space should advance the caret");
+
+  config.active_input_value = "Nnor";
+  const auto exact_scene =
+      build_html_document_scene(document, SizeI{640, 240}, config);
+  const auto text_command = std::find_if(
+      exact_scene.commands().begin(), exact_scene.commands().end(),
+      [](const auto& command) {
+        const auto* text = std::get_if<TextCommand>(&command);
+        return text != nullptr && text->text == "Nnor";
+      });
+  const auto exact_caret = std::find_if(
+      exact_scene.commands().begin(), exact_scene.commands().end(),
+      [](const auto& command) {
+        return std::holds_alternative<TextCaretCommand>(command);
+      });
+  expect(text_command != exact_scene.commands().end() &&
+             exact_caret != exact_scene.commands().end(),
+         "typed input should publish paired text and device-scale caret commands");
+
+  Scene text_only;
+  text_only.add(*text_command);
+  Scene caret_only;
+  caret_only.add(*exact_caret);
+  text_only = scale_scene(text_only, 2.0);
+  caret_only = scale_scene(caret_only, 2.0);
+  PixelCanvas text_canvas(SizeI{1280, 480});
+  PixelCanvas caret_canvas(SizeI{1280, 480});
+  text_canvas.clear(Color::rgba(0, 0, 0, 0));
+  caret_canvas.clear(Color::rgba(0, 0, 0, 0));
+  SoftwareRenderer renderer;
+  std::vector<RenderEvent> events;
+  expect(renderer.render(text_only, text_canvas, events),
+         "typed input text should rasterize");
+  events.clear();
+  expect(renderer.render(caret_only, caret_canvas, events),
+         "typed input caret should rasterize");
+  const auto rightmost_alpha_x = [](const PixelCanvas& canvas) {
+    const auto size = canvas.size();
+    const auto bytes = canvas.bytes();
+    for (int x = size.width - 1; x >= 0; --x) {
+      for (int y = 0; y < size.height; ++y) {
+        const std::size_t alpha =
+            (static_cast<std::size_t>(y) *
+                 static_cast<std::size_t>(size.width) +
+             static_cast<std::size_t>(x)) *
+                4U +
+            3U;
+        if (bytes[alpha] != 0U) {
+          return x;
+        }
+      }
+    }
+    return -1;
+  };
+  const auto leftmost_alpha_x = [](const PixelCanvas& canvas) {
+    const auto size = canvas.size();
+    const auto bytes = canvas.bytes();
+    for (int x = 0; x < size.width; ++x) {
+      for (int y = 0; y < size.height; ++y) {
+        const std::size_t alpha =
+            (static_cast<std::size_t>(y) *
+                 static_cast<std::size_t>(size.width) +
+             static_cast<std::size_t>(x)) *
+                4U +
+            3U;
+        if (bytes[alpha] != 0U) {
+          return x;
+        }
+      }
+    }
+    return -1;
+  };
+  const int text_right = rightmost_alpha_x(text_canvas);
+  const int caret_left = leftmost_alpha_x(caret_canvas);
+  expect(text_right >= 0 && caret_left == text_right + 1,
+         "Retina caret should touch the final rendered glyph without a gap "
+         "(text right " +
+             std::to_string(text_right) + ", caret left " +
+             std::to_string(caret_left) + ")");
 }
 
 void test_table_body_values_share_left_edge() {

@@ -17,7 +17,7 @@ Catalog aggregate_over_catalogs(self, const std::function<Catalog(const std::vec
 #### Parameters
 
 `fn` : `const std::function<Catalog(const std::vector<Catalog>&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -121,7 +121,7 @@ Catalog catalog(self, std::int64_t i) const
 #### Parameters
 
 `i` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based positional index used by this overload.
 
 #### Returns
 
@@ -339,7 +339,7 @@ Catalog dloc(self, std::int64_t i) const
 #### Parameters
 
 `i` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based positional index used by this overload.
 
 #### Returns
 
@@ -477,10 +477,10 @@ static Archive kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy
 #### Parameters
 
 `atlas` : `const pluss::table::Atlas&`
-    See the signature for the supported argument form.
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 `policy` : `const KindelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -523,7 +523,7 @@ Catalog loc(self, const pluss::Timeline& label) const
 #### Parameters
 
 `label` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Label or labels used by this overload.
 
 #### Returns
 
@@ -574,7 +574,7 @@ Catalog loc(self, std::int64_t label) const
 #### Parameters
 
 `label` : `std::int64_t`
-    See the signature for the supported argument form.
+    Integer label or bucket code used by this overload.
 
 #### Returns
 
@@ -625,7 +625,7 @@ Catalog loc(self, std::string_view label) const
 #### Parameters
 
 `label` : `std::string_view`
-    See the signature for the supported argument form.
+    Label or labels used by this overload.
 
 #### Returns
 
@@ -676,7 +676,7 @@ Archive map_catalogs(self, const std::function<Catalog(const Catalog&)>& fn) con
 #### Parameters
 
 `fn` : `const std::function<Catalog(const Catalog&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -767,7 +767,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -860,10 +860,10 @@ Archive sort_depth(self, bool ascending = true, bool nulls_last = true) const
 #### Parameters
 
 `ascending` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 `nulls_last` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -908,7 +908,7 @@ pluss::table::Atlas tabelize(self, const TabelizePolicy& policy = {}) const
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -1051,7 +1051,7 @@ pluss::table::Atlas to_table(self, const TabelizePolicy& policy = {}, bool rende
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.

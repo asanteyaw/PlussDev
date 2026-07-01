@@ -112,12 +112,16 @@ pluss::Series DataFrame::cases_series() const {
   return cases().as_series();
 }
 
-DataFrame DataFrame::cloc(std::int64_t row) const {
+DataFrame DataFrame::case_study(std::int64_t row) const {
   return cases(row);
 }
 
-DataFrame DataFrame::cloc(std::int64_t start, std::int64_t stop) const {
+DataFrame DataFrame::case_study(std::int64_t start, std::int64_t stop) const {
   return slice(start, stop);
+}
+
+std::string DataFrame::case_study(std::int64_t row, std::string_view feature_name) const {
+  return cases(row, feature_name);
 }
 
 std::string DataFrame::iat(std::int64_t row, std::size_t feature_idx) const {
@@ -560,58 +564,95 @@ DataFrame DataFrame::reorder(pluss::msharp::RangeView::Of<std::string_view> name
   return reorder(spec);
 }
 
-DataFrame DataFrame::reorder(const ReorderSpec& spec) const {
-  const auto& src = impl_ref_();
-  std::unordered_set<std::string> seen;
-  seen.reserve(spec.features.size());
+namespace {
+
+std::vector<std::string> resolve_reorder_move_names_(
+    const detail::DataFrameImpl& src,
+    const std::vector<std::string>& current_order,
+    const DataFrame::ReorderSpec& spec) {
+  const auto pattern = owned_name(spec.pattern);
+  PLUSS_CHECK(
+      !spec.features.empty() || !pattern.empty(),
+      "DataFrame::reorder: each ReorderSpec must provide feature names or a regex pattern");
+  PLUSS_CHECK(spec.features.empty() || pattern.empty(),
+              "DataFrame::reorder: provide either explicit feature names or a regex pattern, not both");
+
   std::vector<std::string> moved;
-  moved.reserve(spec.features.size());
-  for (const auto& raw : spec.features) {
-    const auto n = owned_name(raw);
-    PLUSS_CHECK(!n.empty(), "DataFrame::reorder: feature name cannot be empty");
-    PLUSS_CHECK(seen.insert(n).second, "DataFrame::reorder contains duplicate column name '" + n + "'");
-    PLUSS_CHECK(src.name_to_idx_.find(n) != src.name_to_idx_.end(), "DataFrame::reorder unknown column '" + n + "'");
-    moved.push_back(n);
-  }
-  if (moved.empty()) {
-    return *this;
+  if (!pattern.empty()) {
+    std::regex re;
+    try {
+      re = std::regex(pattern, std::regex::ECMAScript);
+    } catch (const std::regex_error& e) {
+      PLUSS_FAIL("DataFrame::reorder: invalid regex '" + pattern + "': " + std::string(e.what()));
+    }
+    moved.reserve(current_order.size());
+    for (const auto& name : current_order) {
+      if (std::regex_search(name, re)) {
+        moved.push_back(name);
+      }
+    }
+    PLUSS_CHECK(!moved.empty(), "DataFrame::reorder: regex '" + pattern + "' did not match any features");
+    return moved;
   }
 
+  std::unordered_set<std::string> seen;
+  seen.reserve(spec.features.size());
+  moved.reserve(spec.features.size());
+  for (const auto& raw : spec.features) {
+    const auto name = owned_name(raw);
+    PLUSS_CHECK(!name.empty(), "DataFrame::reorder: feature name cannot be empty");
+    PLUSS_CHECK(seen.insert(name).second, "DataFrame::reorder contains duplicate column name '" + name + "'");
+    PLUSS_CHECK(src.name_to_idx_.find(name) != src.name_to_idx_.end(), "DataFrame::reorder unknown column '" + name + "'");
+    moved.push_back(name);
+  }
+  return moved;
+}
+
+std::vector<std::string> apply_reorder_step_(
+    const detail::DataFrameImpl& src,
+    const std::vector<std::string>& current_order,
+    const DataFrame::ReorderSpec& spec) {
+  const auto moved = resolve_reorder_move_names_(src, current_order, spec);
+  if (moved.empty()) {
+    return current_order;
+  }
+
+  std::unordered_set<std::string> moved_set(moved.begin(), moved.end());
   std::vector<std::string> remainder;
-  remainder.reserve(src.names_.size() - std::min(src.names_.size(), moved.size()));
-  for (const auto& name : src.names_) {
-    if (!seen.contains(name)) {
+  remainder.reserve(current_order.size() - std::min(current_order.size(), moved.size()));
+  for (const auto& name : current_order) {
+    if (!moved_set.contains(name)) {
       remainder.push_back(name);
     }
   }
 
   std::vector<std::string> ordered;
-  ordered.reserve(src.names_.size());
+  ordered.reserve(current_order.size());
   switch (spec.placement) {
-    case ReorderPlacement::Front:
+    case DataFrame::ReorderPlacement::Front:
       ordered.insert(ordered.end(), moved.begin(), moved.end());
       ordered.insert(ordered.end(), remainder.begin(), remainder.end());
       break;
-    case ReorderPlacement::Back:
+    case DataFrame::ReorderPlacement::Back:
       ordered.insert(ordered.end(), remainder.begin(), remainder.end());
       ordered.insert(ordered.end(), moved.begin(), moved.end());
       break;
-    case ReorderPlacement::Before:
-    case ReorderPlacement::After: {
+    case DataFrame::ReorderPlacement::Before:
+    case DataFrame::ReorderPlacement::After: {
       const auto anchor = owned_name(spec.anchor);
       PLUSS_CHECK(!anchor.empty(), "DataFrame::reorder: anchor feature cannot be empty for before/after placement");
       PLUSS_CHECK(src.name_to_idx_.find(anchor) != src.name_to_idx_.end(),
                   "DataFrame::reorder: unknown anchor feature '" + anchor + "'");
-      PLUSS_CHECK(!seen.contains(anchor),
+      PLUSS_CHECK(!moved_set.contains(anchor),
                   "DataFrame::reorder: anchor feature '" + anchor + "' cannot also be one of the moved features");
       bool inserted = false;
       for (const auto& name : remainder) {
-        if (spec.placement == ReorderPlacement::Before && name == anchor) {
+        if (spec.placement == DataFrame::ReorderPlacement::Before && name == anchor) {
           ordered.insert(ordered.end(), moved.begin(), moved.end());
           inserted = true;
         }
         ordered.push_back(name);
-        if (spec.placement == ReorderPlacement::After && name == anchor) {
+        if (spec.placement == DataFrame::ReorderPlacement::After && name == anchor) {
           ordered.insert(ordered.end(), moved.begin(), moved.end());
           inserted = true;
         }
@@ -619,6 +660,24 @@ DataFrame DataFrame::reorder(const ReorderSpec& spec) const {
       PLUSS_CHECK(inserted, "DataFrame::reorder: failed to place moved features relative to anchor");
       break;
     }
+  }
+  return ordered;
+}
+
+} // namespace
+
+DataFrame DataFrame::reorder(const ReorderSpec& spec) const {
+  return reorder(pluss::RangeView<ReorderSpec>(std::span<const ReorderSpec>(&spec, 1)));
+}
+
+DataFrame DataFrame::reorder(pluss::RangeView<ReorderSpec> specs) const {
+  if (specs.empty()) {
+    return *this;
+  }
+  const auto& src = impl_ref_();
+  auto ordered = src.names_;
+  for (const auto& spec : specs) {
+    ordered = apply_reorder_step_(src, ordered, spec);
   }
 
   std::vector<std::string_view> views;

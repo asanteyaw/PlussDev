@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=705d315b" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=0e2bb6cf" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/layout.js?v=014eaf41"></script>
+    <script src="_static/layout.js?v=a19b3cd6"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Bundle Model Guide" href="bundle.html" />
@@ -54,7 +54,7 @@
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Catalog(const</span> <span class="pre">std::vector&lt;Catalog&gt;&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
@@ -108,7 +108,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id2">
 <h4>Parameters<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">labels</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>.</p>
 </section>
 <section id="id3">
 <h4>Returns<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
@@ -162,7 +162,7 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <section id="id9">
 <h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">i</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Zero-based positional index used by this overload.</p>
 </section>
 <section id="id10">
 <h4>Returns<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
@@ -385,7 +385,7 @@ Value produced by this call.</p>
 <section id="id39">
 <h4>Parameters<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">i</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Zero-based positional index used by this overload.</p>
 </section>
 <section id="id40">
 <h4>Returns<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h4>
@@ -520,16 +520,16 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <h3><code class="docutils literal notranslate"><span class="pre">kindelize</span></code><a class="headerlink" href="#kindelize" title="Link to this heading">¶</a></h3>
 <section id="id57">
 <h4>Signature<a class="headerlink" href="#id57" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Archive</span><span class="w"> </span><span class="n">kindelize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="o">&amp;</span><span class="w"> </span><span class="n">atlas</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">KindelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Archive</span><span class="w"> </span><span class="n">kindelize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="o">&amp;</span><span class="w"> </span><span class="n">atlas</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">KindelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
 </pre></div>
 </div>
 </section>
 <section id="id58">
 <h4>Parameters<a class="headerlink" href="#id58" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">atlas</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Atlas&amp;</span></code>
-See the signature for the supported argument form.</p>
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">KindelizePolicy&amp;</span></code>
-See the signature for the supported argument form.</p>
+Policy object that changes the structural behavior of this overload.</p>
 </section>
 <section id="id59">
 <h4>Returns<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h4>
@@ -573,7 +573,7 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <section id="id64">
 <h4>Parameters<a class="headerlink" href="#id64" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">label</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code>
-See the signature for the supported argument form.</p>
+Label or labels used by this overload.</p>
 </section>
 <section id="id65">
 <h4>Returns<a class="headerlink" href="#id65" title="Link to this heading">¶</a></h4>
@@ -627,7 +627,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id71">
 <h4>Parameters<a class="headerlink" href="#id71" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">label</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Integer label or bucket code used by this overload.</p>
 </section>
 <section id="id72">
 <h4>Returns<a class="headerlink" href="#id72" title="Link to this heading">¶</a></h4>
@@ -681,7 +681,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id79">
 <h4>Parameters<a class="headerlink" href="#id79" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">label</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Label or labels used by this overload.</p>
 </section>
 <section id="id80">
 <h4>Returns<a class="headerlink" href="#id80" title="Link to this heading">¶</a></h4>
@@ -735,7 +735,7 @@ city   -&gt; Note([&quot;Accra&quot;, &quot;Tema&quot;, &quot;Kumasi&quot;])
 <section id="id86">
 <h4>Parameters<a class="headerlink" href="#id86" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Catalog(const</span> <span class="pre">Catalog&amp;)&gt;&amp;</span></code>
-See the signature for the supported argument form.</p>
+Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.</p>
 </section>
 <section id="id87">
 <h4>Returns<a class="headerlink" href="#id87" title="Link to this heading">¶</a></h4>
@@ -781,7 +781,7 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <section id="id92">
 <h4>Parameters<a class="headerlink" href="#id92" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">labels</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>.</p>
 </section>
 <section id="id93">
 <h4>Returns<a class="headerlink" href="#id93" title="Link to this heading">¶</a></h4>
@@ -828,7 +828,7 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <section id="id98">
 <h4>Parameters<a class="headerlink" href="#id98" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">os</span></code> : <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
-See the signature for the supported argument form.</p>
+Destination output stream used instead of the default display or print target.</p>
 </section>
 <section id="id99">
 <h4>Returns<a class="headerlink" href="#id99" title="Link to this heading">¶</a></h4>
@@ -922,9 +922,9 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <section id="id110">
 <h4>Parameters<a class="headerlink" href="#id110" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ascending</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
-See the signature for the supported argument form.</p>
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
-See the signature for the supported argument form.</p>
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="id111">
 <h4>Returns<a class="headerlink" href="#id111" title="Link to this heading">¶</a></h4>
@@ -963,14 +963,14 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <h3><code class="docutils literal notranslate"><span class="pre">tabelize</span></code><a class="headerlink" href="#tabelize" title="Link to this heading">¶</a></h3>
 <section id="id115">
 <h4>Signature<a class="headerlink" href="#id115" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="n">tabelize</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="n">tabelize</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id116">
 <h4>Parameters<a class="headerlink" href="#id116" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">TabelizePolicy&amp;</span></code>
-See the signature for the supported argument form.</p>
+Policy object that changes the structural behavior of this overload.</p>
 </section>
 <section id="id117">
 <h4>Returns<a class="headerlink" href="#id117" title="Link to this heading">¶</a></h4>
@@ -1109,14 +1109,16 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <h3><code class="docutils literal notranslate"><span class="pre">to_table</span></code><a class="headerlink" href="#to-table" title="Link to this heading">¶</a></h3>
 <section id="id133">
 <h4>Signature<a class="headerlink" href="#id133" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="n">to_table</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="n">to_table</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="id134">
 <h4>Parameters<a class="headerlink" href="#id134" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">TabelizePolicy&amp;</span></code>
-See the signature for the supported argument form.</p>
+Policy object that changes the structural behavior of this overload.</p>
+<p><code class="docutils literal notranslate"><span class="pre">render</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
+When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned view can auto-render in temporary terminal contexts. Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> when you want explicit output control.</p>
 </section>
 <section id="id135">
 <h4>Returns<a class="headerlink" href="#id135" title="Link to this heading">¶</a></h4>

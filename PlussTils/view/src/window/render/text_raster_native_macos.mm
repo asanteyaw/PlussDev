@@ -1,5 +1,6 @@
 #if defined(__APPLE__)
 
+#import <Foundation/Foundation.h>
 #include "text_raster.h"
 
 #include <algorithm>
@@ -9,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreText/CoreText.h>
 
@@ -67,10 +67,22 @@ std::vector<std::string> split_font_family_list(const std::string& css_value) {
   return out;
 }
 
-NSFont* font_from_family_list(const std::string& family_list, const CGFloat size) {
-  if (family_list.empty()) {
-    return nil;
+CTFontRef apply_font_weight(CTFontRef font, const int weight) {
+  if (font == nullptr || weight < 600) {
+    return font;
   }
+  CTFontRef bold = CTFontCreateCopyWithSymbolicTraits(
+      font, 0.0, nullptr, kCTFontBoldTrait, kCTFontBoldTrait);
+  if (bold != nullptr) {
+    CFRelease(font);
+    return bold;
+  }
+  return font;
+}
+
+CTFontRef font_from_family_list(const std::string& family_list,
+                                const CGFloat size,
+                                const int weight) {
   const auto families = split_font_family_list(family_list);
   for (const auto& family : families) {
     if (family.empty()) {
@@ -83,28 +95,162 @@ NSFont* font_from_family_list(const std::string& family_list, const CGFloat size
     }
 
     if (lower == "system-ui" || lower == "sans-serif" || lower == "ui-sans-serif") {
-      return [NSFont systemFontOfSize:size];
+      return apply_font_weight(
+          CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, size, nullptr),
+          weight);
     }
     if (lower == "serif" || lower == "ui-serif") {
-      return [NSFont fontWithName:@"Times New Roman" size:size];
+      return apply_font_weight(
+          CTFontCreateWithName(CFSTR("Times New Roman"), size, nullptr),
+          weight);
     }
     if (lower == "monospace" || lower == "ui-monospace") {
-      return [NSFont fontWithName:@"Menlo-Regular" size:size];
+      return apply_font_weight(
+          CTFontCreateWithName(CFSTR("Menlo"), size, nullptr),
+          weight);
     }
 
     NSString* ns_name = [NSString stringWithUTF8String:family.c_str()];
     if (ns_name == nil) {
       continue;
     }
-    NSFont* named = [NSFont fontWithName:ns_name size:size];
-    if (named != nil) {
-      return named;
+    CTFontRef named =
+        CTFontCreateWithName((__bridge CFStringRef)ns_name, size, nullptr);
+    if (named != nullptr) {
+      return apply_font_weight(named, weight);
     }
   }
-  return nil;
+  return apply_font_weight(
+      CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, size, nullptr),
+      weight);
 }
 
 } // namespace
+
+std::optional<int> measure_text_width_native(const TextCommand& command) {
+  if (command.text.empty() || command.pixel_size <= 0) {
+    return 0;
+  }
+  @autoreleasepool {
+    NSString* text = [NSString stringWithUTF8String:command.text.c_str()];
+    CTFontRef font =
+        font_from_family_list(command.font_family,
+                              static_cast<CGFloat>(command.pixel_size),
+                              command.font_weight);
+    if (text == nil || font == nullptr) {
+      if (font != nullptr) {
+        CFRelease(font);
+      }
+      return std::nullopt;
+    }
+    NSDictionary* attrs = @{
+      (id)kCTFontAttributeName : (__bridge id)font,
+    };
+    NSAttributedString* attributed =
+        [[NSAttributedString alloc] initWithString:text attributes:attrs];
+    CTLineRef line =
+        attributed != nil
+            ? CTLineCreateWithAttributedString(
+                  (__bridge CFAttributedStringRef)attributed)
+            : nullptr;
+    if (line == nullptr) {
+      CFRelease(font);
+      return std::nullopt;
+    }
+    const double full_advance =
+        CTLineGetTypographicBounds(line, nullptr, nullptr, nullptr);
+    NSUInteger ink_length = text.length;
+    NSCharacterSet* whitespace =
+        [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    while (ink_length > 0 &&
+           [whitespace characterIsMember:
+                           [text characterAtIndex:ink_length - 1]]) {
+      --ink_length;
+    }
+    NSString* ink_text = [text substringToIndex:ink_length];
+    double ink_advance = 0.0;
+    int ink_right_exclusive = 0;
+    if (ink_text != nil && ink_text.length > 0) {
+      NSAttributedString* ink_attributed =
+          [[NSAttributedString alloc] initWithString:ink_text attributes:attrs];
+      CTLineRef ink_line =
+          ink_attributed != nil
+              ? CTLineCreateWithAttributedString(
+                    (__bridge CFAttributedStringRef)ink_attributed)
+              : nullptr;
+      if (ink_line != nullptr) {
+        CGFloat ascent = 0.0;
+        CGFloat descent = 0.0;
+        CGFloat leading = 0.0;
+        ink_advance = CTLineGetTypographicBounds(
+            ink_line, &ascent, &descent, &leading);
+        const int bitmap_w =
+            std::max(1, static_cast<int>(std::ceil(ink_advance)) + 8);
+        const int bitmap_h = std::max(
+            1, static_cast<int>(std::ceil(ascent + descent + leading)) + 8);
+        std::vector<std::uint8_t> bitmap(
+            static_cast<std::size_t>(bitmap_w) *
+                static_cast<std::size_t>(bitmap_h) * 4U,
+            0U);
+        CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+        const CGBitmapInfo bitmap_info =
+            static_cast<CGBitmapInfo>(kCGImageAlphaPremultipliedLast) |
+            static_cast<CGBitmapInfo>(kCGBitmapByteOrder32Big);
+        CGContextRef context =
+            color_space != nullptr
+                ? CGBitmapContextCreate(
+                      bitmap.data(), static_cast<std::size_t>(bitmap_w),
+                      static_cast<std::size_t>(bitmap_h), 8,
+                      static_cast<std::size_t>(bitmap_w) * 4U, color_space,
+                      bitmap_info)
+                : nullptr;
+        if (context != nullptr) {
+          CGContextSetShouldAntialias(context, true);
+          CGContextSetAllowsAntialiasing(context, true);
+          CGContextTranslateCTM(context, 0.0,
+                                static_cast<CGFloat>(bitmap_h));
+          CGContextScaleCTM(context, 1.0, -1.0);
+          CGContextSetTextPosition(context, 3.0, 2.0 + descent);
+          CTLineDraw(ink_line, context);
+          CGContextFlush(context);
+          for (int x = bitmap_w - 1; x >= 0 && ink_right_exclusive == 0; --x) {
+            for (int y = 0; y < bitmap_h; ++y) {
+              const std::size_t alpha =
+                  (static_cast<std::size_t>(y) *
+                       static_cast<std::size_t>(bitmap_w) +
+                   static_cast<std::size_t>(x)) *
+                      4U +
+                  3U;
+              if (bitmap[alpha] != 0U) {
+                ink_right_exclusive = x + 1;
+                break;
+              }
+            }
+          }
+          CGContextRelease(context);
+        }
+        if (color_space != nullptr) {
+          CGColorSpaceRelease(color_space);
+        }
+        CFRelease(ink_line);
+      }
+    }
+    // This is the exact right edge of the same padded CoreText bitmap used by
+    // render_text_command_native. Only explicit trailing whitespace advances
+    // the caret beyond the final painted pixel.
+    const double trailing_advance = std::max(0.0, full_advance - ink_advance);
+    const int width =
+        ink_right_exclusive > 0
+            ? std::max(0, static_cast<int>(
+                              std::ceil(ink_right_exclusive +
+                                        trailing_advance)))
+            : std::max(
+                  0, static_cast<int>(std::ceil(full_advance)));
+    CFRelease(line);
+    CFRelease(font);
+    return width;
+  }
+}
 
 bool render_text_command_native(PixelCanvas& canvas,
                                 const TextCommand& command,
@@ -121,43 +267,10 @@ bool render_text_command_native(PixelCanvas& canvas,
       return false;
     }
 
-    CGFloat weight = NSFontWeightRegular;
-    if (command.font_weight >= 700) {
-      weight = NSFontWeightSemibold;
-    } else if (command.font_weight >= 600) {
-      weight = NSFontWeightMedium;
-    } else if (command.font_weight <= 300) {
-      weight = NSFontWeightLight;
-    }
-
-    NSFont* font = nil;
-    NSFont* family_font = font_from_family_list(command.font_family, static_cast<CGFloat>(command.pixel_size));
-    if (family_font != nil) {
-      font = family_font;
-    }
-    if ([NSFont respondsToSelector:@selector(systemFontOfSize:weight:)]) {
-      if (font == nil) {
-        font = [NSFont systemFontOfSize:static_cast<CGFloat>(command.pixel_size) weight:weight];
-      } else {
-        NSFontManager* mgr = [NSFontManager sharedFontManager];
-        const NSInteger traits =
-            (command.font_weight >= 700) ? NSBoldFontMask : ((command.font_weight <= 300) ? NSUnboldFontMask : 0);
-        if (traits != 0) {
-          NSFont* converted = [mgr convertFont:font toHaveTrait:traits];
-          if (converted != nil) {
-            font = converted;
-          }
-        }
-      }
-    }
-    if (font == nil) {
-      font = [NSFont systemFontOfSize:static_cast<CGFloat>(command.pixel_size)];
-    }
-    if (font == nil) {
-      return false;
-    }
-
-    CTFontRef ct_font = CTFontCreateWithName((__bridge CFStringRef)[font fontName], static_cast<CGFloat>(command.pixel_size), nullptr);
+    CTFontRef ct_font =
+        font_from_family_list(command.font_family,
+                              static_cast<CGFloat>(command.pixel_size),
+                              command.font_weight);
     if (ct_font == nullptr) {
       return false;
     }
@@ -234,6 +347,7 @@ bool render_text_command_native(PixelCanvas& canvas,
     const int spp = 4;
     const int top = command.anchor.y - static_cast<int>(std::ceil(ascent));
     const int left = command.anchor.x;
+    std::size_t coverage_pixels = 0;
     for (int y = 0; y < bitmap_h; ++y) {
       const int src_y = (bitmap_h - 1) - y;
       const auto* row = bitmap.data() + static_cast<std::size_t>(src_y) * static_cast<std::size_t>(bytes_per_row);
@@ -249,6 +363,7 @@ bool render_text_command_native(PixelCanvas& canvas,
         if (coverage == 0) {
           continue;
         }
+        ++coverage_pixels;
         const PointI target{left + x, top + y};
         if (clip.has_value()) {
           const RectI rect = *clip;
@@ -266,7 +381,20 @@ bool render_text_command_native(PixelCanvas& canvas,
     CGColorRelease(white);
     CGColorSpaceRelease(color_space);
     CFRelease(ct_font);
-    return true;
+    const std::size_t visible_characters =
+        static_cast<std::size_t>(std::count_if(
+            command.text.begin(), command.text.end(),
+            [](const char ch) {
+              return std::isspace(static_cast<unsigned char>(ch)) == 0 &&
+                     (static_cast<unsigned char>(ch) & 0xC0U) != 0x80U;
+            }));
+    const std::size_t minimum_coverage =
+        visible_characters *
+        static_cast<std::size_t>(std::max(2, command.pixel_size / 2));
+    // CoreText occasionally reports a line before its glyph raster is ready
+    // on a background thread. Let the deterministic software glyph path
+    // render this command instead of publishing missing or partial text.
+    return coverage_pixels >= minimum_coverage;
   }
 }
 

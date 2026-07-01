@@ -3319,19 +3319,25 @@ int render_node(Scene& scene,
                     style.text_align,
                     text_area_w);
     if (focused) {
-      const int caret_x = has_value
-                              ? std::min(content_x + std::max(8, content_w - 8),
-                                         text_x + text_layout.width + 1)
-                              : outer_x + outer_w / 2;
       const int caret_h = std::max(12, glyph_h + 4);
       const int caret_y0 = outer_y + std::max(1, (outer_h - caret_h) / 2);
       const int caret_y1 = caret_y0 + caret_h;
-      scene.add(LineCommand{
-          PointI{caret_x, caret_y0},
-          PointI{caret_x, caret_y1},
-          1,
-          Color::rgba(71, 118, 184, 255),
-      });
+      if (render_config.show_input_caret) {
+        scene.add(TextCaretCommand{
+            .text_anchor = PointI{has_value ? text_x : text_area_x,
+                                  text_top + text_layout.ascent},
+            .text = has_value ? clipped : std::string{},
+            .pixel_size = style.font_size,
+            .font_weight = style.font_weight,
+            .font_family = style.font_family,
+            .fallback_width = has_value ? text_layout.width : 0,
+            .max_x = content_x + std::max(8, content_w - 8),
+            .y0 = caret_y0,
+            .y1 = caret_y1,
+            .thickness = 1,
+            .color = Color::rgba(71, 118, 184, 255),
+        });
+      }
       scene.add(StrokeRoundedRectCommand{
           outer_rect,
           std::max(0, style.border_radius),

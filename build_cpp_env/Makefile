@@ -2312,6 +2312,19 @@ plusstils_view_plussmic_inhouse_showcase/fast:
 .PHONY : plusstils_view_plussmic_inhouse_showcase/fast
 
 #=============================================================================
+# Target rules for targets named plussview_async_compositor_tests
+
+# Build rule for target.
+plussview_async_compositor_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussview_async_compositor_tests
+.PHONY : plussview_async_compositor_tests
+
+# fast build rule for target.
+plussview_async_compositor_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build
+.PHONY : plussview_async_compositor_tests/fast
+
+#=============================================================================
 # Target rules for targets named plussview_html_scroll_tests
 
 # Build rule for target.
@@ -7711,6 +7724,7 @@ help:
 	@echo "... plusstils_view_window_session_demo"
 	@echo "... plusstils_view_window_shell_backend_demo"
 	@echo "... plusstils_view_window_table_demo"
+	@echo "... plussview_async_compositor_tests"
 	@echo "... plussview_html_export_tests"
 	@echo "... plussview_html_scroll_tests"
 	@echo "... plussview_macos_input_driver"

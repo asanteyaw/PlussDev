@@ -352,6 +352,11 @@ void draw_glyph(PixelCanvas& canvas,
 
 #if !defined(__APPLE__) && !defined(_WIN32) && \
     !(defined(PLUSSTILS_VIEW_HAVE_FREETYPE) && PLUSSTILS_VIEW_HAVE_FREETYPE)
+std::optional<int> measure_text_width_native(const TextCommand& command) {
+  (void)command;
+  return std::nullopt;
+}
+
 bool render_text_command_native(PixelCanvas& canvas,
                                 const TextCommand& command,
                                 const std::optional<RectI>& clip,
@@ -368,11 +373,28 @@ void render_text_command(PixelCanvas& canvas,
                          const TextCommand& command,
                          const std::optional<RectI>& clip,
                          std::vector<RenderEvent>& events) {
+  const TextLayout layout = layout_math_text(command.text, command.pixel_size);
+  if (clip.has_value()) {
+    const RectI text_bounds{
+        command.anchor.x - 2,
+        command.anchor.y - layout.ascent - 2,
+        std::max(1, layout.width + 6),
+        std::max(1, layout.ascent + layout.descent + 6),
+    };
+    const int left = std::max(text_bounds.x, clip->x);
+    const int top = std::max(text_bounds.y, clip->y);
+    const int right =
+        std::min(text_bounds.x + text_bounds.width, clip->x + clip->width);
+    const int bottom =
+        std::min(text_bounds.y + text_bounds.height, clip->y + clip->height);
+    if (right <= left || bottom <= top) {
+      return;
+    }
+  }
+
   if (render_text_command_native(canvas, command, clip, events)) {
     return;
   }
-
-  const TextLayout layout = layout_math_text(command.text, command.pixel_size);
 
   for (const auto& warning : layout.warnings) {
     events.push_back(RenderEvent{RenderEventKind::UnsupportedCommand, warning});

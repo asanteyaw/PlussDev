@@ -361,6 +361,20 @@ plusstils_view_plussmic_inhouse_showcase/fast:
 .PHONY : plusstils_view_plussmic_inhouse_showcase/fast
 
 # Convenience name for target.
+PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/rule
+.PHONY : PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/rule
+
+# Convenience name for target.
+plussview_async_compositor_tests: PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/rule
+.PHONY : plussview_async_compositor_tests
+
+# fast build rule for target.
+plussview_async_compositor_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build
+.PHONY : plussview_async_compositor_tests/fast
+
+# Convenience name for target.
 PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule
 .PHONY : PlussTils/view/CMakeFiles/plussview_html_scroll_tests.dir/rule
@@ -938,6 +952,30 @@ src/window/html/html_scroll.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/html/html_scroll.cpp.s
 .PHONY : src/window/html/html_scroll.cpp.s
 
+src/window/render/async_compositor.o: src/window/render/async_compositor.cpp.o
+.PHONY : src/window/render/async_compositor.o
+
+# target to build an object file
+src/window/render/async_compositor.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/render/async_compositor.cpp.o
+.PHONY : src/window/render/async_compositor.cpp.o
+
+src/window/render/async_compositor.i: src/window/render/async_compositor.cpp.i
+.PHONY : src/window/render/async_compositor.i
+
+# target to preprocess a source file
+src/window/render/async_compositor.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/render/async_compositor.cpp.i
+.PHONY : src/window/render/async_compositor.cpp.i
+
+src/window/render/async_compositor.s: src/window/render/async_compositor.cpp.s
+.PHONY : src/window/render/async_compositor.s
+
+# target to generate assembly for a file
+src/window/render/async_compositor.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/render/async_compositor.cpp.s
+.PHONY : src/window/render/async_compositor.cpp.s
+
 src/window/render/canvas.o: src/window/render/canvas.cpp.o
 .PHONY : src/window/render/canvas.o
 
@@ -1170,6 +1208,30 @@ src/window/text/text_layout.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/PlussTilsView.dir/build.make PlussTils/view/CMakeFiles/PlussTilsView.dir/src/window/text/text_layout.cpp.s
 .PHONY : src/window/text/text_layout.cpp.s
 
+test/async_compositor_tests.o: test/async_compositor_tests.cpp.o
+.PHONY : test/async_compositor_tests.o
+
+# target to build an object file
+test/async_compositor_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/test/async_compositor_tests.cpp.o
+.PHONY : test/async_compositor_tests.cpp.o
+
+test/async_compositor_tests.i: test/async_compositor_tests.cpp.i
+.PHONY : test/async_compositor_tests.i
+
+# target to preprocess a source file
+test/async_compositor_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/test/async_compositor_tests.cpp.i
+.PHONY : test/async_compositor_tests.cpp.i
+
+test/async_compositor_tests.s: test/async_compositor_tests.cpp.s
+.PHONY : test/async_compositor_tests.s
+
+# target to generate assembly for a file
+test/async_compositor_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/build.make PlussTils/view/CMakeFiles/plussview_async_compositor_tests.dir/test/async_compositor_tests.cpp.s
+.PHONY : test/async_compositor_tests.cpp.s
+
 test/html_export_tests.o: test/html_export_tests.cpp.o
 .PHONY : test/html_export_tests.o
 
@@ -1253,6 +1315,7 @@ help:
 	@echo "... plusstils_view_window_session_demo"
 	@echo "... plusstils_view_window_shell_backend_demo"
 	@echo "... plusstils_view_window_table_demo"
+	@echo "... plussview_async_compositor_tests"
 	@echo "... plussview_html_export_tests"
 	@echo "... plussview_html_scroll_tests"
 	@echo "... plussview_macos_input_driver"
@@ -1323,6 +1386,9 @@ help:
 	@echo "... src/window/html/html_scroll.o"
 	@echo "... src/window/html/html_scroll.i"
 	@echo "... src/window/html/html_scroll.s"
+	@echo "... src/window/render/async_compositor.o"
+	@echo "... src/window/render/async_compositor.i"
+	@echo "... src/window/render/async_compositor.s"
 	@echo "... src/window/render/canvas.o"
 	@echo "... src/window/render/canvas.i"
 	@echo "... src/window/render/canvas.s"
@@ -1352,6 +1418,9 @@ help:
 	@echo "... src/window/text/text_layout.o"
 	@echo "... src/window/text/text_layout.i"
 	@echo "... src/window/text/text_layout.s"
+	@echo "... test/async_compositor_tests.o"
+	@echo "... test/async_compositor_tests.i"
+	@echo "... test/async_compositor_tests.s"
 	@echo "... test/html_export_tests.o"
 	@echo "... test/html_export_tests.i"
 	@echo "... test/html_export_tests.s"

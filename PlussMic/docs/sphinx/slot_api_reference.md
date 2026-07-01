@@ -52,7 +52,7 @@ const Value& at(self, std::int64_t i) const
 #### Parameters
 
 `i` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based positional index used by this overload.
 
 #### Returns
 
@@ -195,7 +195,7 @@ Slot filter(self, const std::function<bool(const Value&)>& predicate) const
 #### Parameters
 
 `predicate` : `const std::function<bool(const Value&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -231,7 +231,7 @@ static Slot from_kindle(const pluss::kindle::Stream& stream)
 #### Parameters
 
 `stream` : `const pluss::kindle::Stream&`
-    See the signature for the supported argument form.
+    Stream payload supplied to this overload.
 
 #### Returns
 
@@ -410,7 +410,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -556,7 +556,7 @@ Slot take(self, std::span<const std::int64_t> indices) const
 #### Parameters
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -698,7 +698,7 @@ Slot transform(self, const std::function<Value(const Value&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Value(const Value&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 

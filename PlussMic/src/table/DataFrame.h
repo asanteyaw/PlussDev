@@ -229,8 +229,67 @@ public:
 
   struct ReorderSpec {
     std::vector<std::string> features{};
+    std::string pattern{};
     ReorderPlacement placement{ReorderPlacement::Front};
     std::string anchor{};
+
+    static ReorderSpec move(std::string_view feature_name) {
+      ReorderSpec spec;
+      spec.features.emplace_back(feature_name);
+      return spec;
+    }
+
+    static ReorderSpec move(std::initializer_list<std::string_view> feature_names) {
+      ReorderSpec spec;
+      spec.features.reserve(feature_names.size());
+      for (const auto name : feature_names) {
+        spec.features.emplace_back(name);
+      }
+      return spec;
+    }
+
+    static ReorderSpec move(pluss::RangeView<std::string_view> feature_names) {
+      ReorderSpec spec;
+      spec.features.reserve(feature_names.size());
+      for (const auto name : feature_names) {
+        spec.features.emplace_back(name);
+      }
+      return spec;
+    }
+
+    static ReorderSpec move_regex(std::string_view regex_pattern) {
+      ReorderSpec spec;
+      spec.pattern = std::string(regex_pattern);
+      return spec;
+    }
+
+    [[nodiscard]] ReorderSpec first() const {
+      auto out = *this;
+      out.placement = ReorderPlacement::Front;
+      out.anchor.clear();
+      return out;
+    }
+
+    [[nodiscard]] ReorderSpec last() const {
+      auto out = *this;
+      out.placement = ReorderPlacement::Back;
+      out.anchor.clear();
+      return out;
+    }
+
+    [[nodiscard]] ReorderSpec before(std::string_view feature_name) const {
+      auto out = *this;
+      out.placement = ReorderPlacement::Before;
+      out.anchor = std::string(feature_name);
+      return out;
+    }
+
+    [[nodiscard]] ReorderSpec after(std::string_view feature_name) const {
+      auto out = *this;
+      out.placement = ReorderPlacement::After;
+      out.anchor = std::string(feature_name);
+      return out;
+    }
   };
 
   struct CastSpec {
@@ -428,8 +487,9 @@ public:
   std::string cases(std::int64_t row, std::size_t feature_idx) const;
   std::string cases(std::int64_t row, std::string_view feature_name) const;
   pluss::Series cases_series() const;
-  DataFrame cloc(std::int64_t row) const;
-  DataFrame cloc(std::int64_t start, std::int64_t stop) const;
+  DataFrame case_study(std::int64_t row) const;
+  DataFrame case_study(std::int64_t start, std::int64_t stop) const;
+  std::string case_study(std::int64_t row, std::string_view feature_name) const;
   std::string iat(std::int64_t row, std::size_t feature_idx) const;
   std::string at(std::int64_t row, std::string_view feature_name) const;
   std::optional<Thread> get(std::string_view feature_name) const;
@@ -494,6 +554,10 @@ public:
   DataFrame drop(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame reorder(pluss::msharp::RangeView::Of<std::string_view> names) const;
   DataFrame reorder(const ReorderSpec& spec) const;
+  DataFrame reorder(pluss::RangeView<ReorderSpec> specs) const;
+  DataFrame reorder(std::initializer_list<ReorderSpec> specs) const {
+    return reorder(pluss::RangeView<ReorderSpec>(specs));
+  }
   DataFrame bucketize(pluss::msharp::RangeView::Double bins,
                       pluss::msharp::RangeView::Int labels = {},
                       bool right = true,
@@ -519,6 +583,8 @@ public:
   DataFrame bottom(std::string_view feature, std::int64_t n) const;
   pluss::Series repeated_cases(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame unique_cases(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrameView observe(std::int64_t row, bool render = true) const;
+  DataFrameView observe(std::int64_t start, std::int64_t stop, bool render = true) const;
   DataFrame set_cases(std::string_view feature_name, bool drop_feature = true) const;
   DataFrame reset_cases(std::string case_feature = "case") const;
   DataFrame align_cases(const Thread& new_cases) const;
@@ -592,7 +658,25 @@ public:
 
   DataFrameView head(std::int64_t n = 5, bool render = true) const;
   DataFrameView tail(std::int64_t n = 5, bool render = true) const;
-  DataFrame sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
+  DataFrame sample(std::int64_t n) const;
+  DataFrame sample(std::int64_t n, bool replace, int axis) const;
+  DataFrame sample(std::int64_t n, std::uint64_t random_state, bool replace = false, int axis = 0) const;
+  template <class Float>
+    requires std::floating_point<Float>
+  DataFrame sample(Float frac) const {
+    return sample_fraction_(static_cast<double>(frac), std::nullopt, false, 0);
+  }
+  template <class Float>
+    requires std::floating_point<Float>
+  DataFrame sample(Float frac, bool replace, int axis) const {
+    return sample_fraction_(static_cast<double>(frac), std::nullopt, replace, axis);
+  }
+  template <class Float>
+    requires std::floating_point<Float>
+  DataFrame sample(Float frac, std::uint64_t random_state, bool replace = false, int axis = 0) const {
+    return sample_fraction_(static_cast<double>(frac), random_state, replace, axis);
+  }
+  DataFrame shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame reshuffle(int axis = 0, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame shift(std::int64_t periods = 1) const;
   DataFrame shift(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods = 1) const;
@@ -993,6 +1077,14 @@ private:
   DataFrame arrange(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const;
   DataFrame query(const pluss::Series& bool_mask) const;
   DataFrame query(const QueryFn& predicate) const;
+  DataFrame sample_impl_(std::int64_t n,
+                         std::optional<std::uint64_t> random_state,
+                         bool replace,
+                         int axis) const;
+  DataFrame sample_fraction_(double frac,
+                             std::optional<std::uint64_t> random_state,
+                             bool replace,
+                             int axis) const;
   DataFrame summarize_specs(const std::vector<SummarySpec>& specs, bool render = true) const;
   DataFrameView tally_impl(const std::vector<std::string>& feature_names,
                            std::int64_t top_n,

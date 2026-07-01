@@ -210,13 +210,13 @@ Timeline([...])
 #### Signature
 
 ```cpp
-Stream astype(self, pluss::codem::ScalarType dtype) const
+Stream astype(self, pluss::ScalarType dtype) const
 ```
 
 #### Parameters
 
-`dtype` : `pluss::codem::ScalarType`
-    See the signature for the supported argument form.
+`dtype` : `pluss::ScalarType`
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -232,7 +232,7 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.astype(pluss::codem::ScalarType::Float64);
+auto out = stream.astype(pluss::ScalarType::Float64);
 ```
 
 #### Output
@@ -272,7 +272,7 @@ Backward-fills one stream while preserving its case labels and stream-level stru
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0, 0.0}));
-stream = stream.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));
+stream = stream.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool));
 
 auto out = stream.bfill();
 ```
@@ -329,16 +329,16 @@ auto out = stream.cases();
 #### Signature
 
 ```cpp
-Stream cast(self, pluss::table::ThreadCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const
+Stream cast(self, pluss::table::ThreadCastTarget target, std::optional<pluss::ScalarType> series_dtype = std::nullopt) const
 ```
 
 #### Parameters
 
 `target` : `pluss::table::ThreadCastTarget`
-    See the signature for the supported argument form.
+    Target payload family chosen by this cast overload.
 
-`series_dtype` : `std::optional<pluss::codem::ScalarType>`
-    See the signature for the supported argument form.
+`series_dtype` : `std::optional<pluss::ScalarType>`
+    Optional scalar dtype used when the cast target is a numeric `Series`.
 
 #### Returns
 
@@ -354,7 +354,7 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"1.0", "2.0", "3.0"}));
 
-auto out = stream.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+auto out = stream.cast(pluss::table::ThreadCastTarget::Series, pluss::ScalarType::Float64);
 ```
 
 #### Output
@@ -508,10 +508,10 @@ Stream clip(self, scalar min_value, scalar max_value) const
 #### Parameters
 
 `min_value` : `scalar`
-    See the signature for the supported argument form.
+    Lower/upper boundary used by this overload.
 
 `max_value` : `scalar`
-    See the signature for the supported argument form.
+    Lower/upper boundary used by this overload.
 
 #### Returns
 
@@ -676,7 +676,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}));
-stream = stream.with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
+stream = stream.with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 
 auto out = stream.dropna();
 ```
@@ -1040,7 +1040,7 @@ Keeps only the entries where the supplied boolean mask is true.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = stream.filter(mask);
 ```
 
@@ -1061,7 +1061,7 @@ static Stream from_thread(const pluss::table::Thread& thread, std::optional<plus
 #### Parameters
 
 `thread` : `const pluss::table::Thread&`
-    See the signature for the supported argument form.
+    Thread payload supplied to this overload.
 
 `cases` : `std::optional<pluss::table::Thread>`
     Case-label thread to attach to the current object.
@@ -1569,7 +1569,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -1679,7 +1679,7 @@ Stream std(self, bool unbiased = true) const
 #### Parameters
 
 `unbiased` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -1786,7 +1786,7 @@ Stream take(self, std::span<const std::int64_t> indices) const
 #### Parameters
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -2045,7 +2045,7 @@ Stream var(self, bool unbiased = true) const
 #### Parameters
 
 `unbiased` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -2149,7 +2149,7 @@ Stream with_meta(self, std::initializer_list<std::pair<std::string_view, std::st
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -2232,7 +2232,7 @@ Stream& with_meta_(self, std::initializer_list<std::pair<std::string_view, std::
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -2303,7 +2303,7 @@ Stream with_validity_mask(self, const pluss::Series& mask) const
 #### Parameters
 
 `mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -2317,7 +2317,7 @@ Returns a new stream with the supplied validity mask attached.
 #### Examples
 
 ```cpp
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
 auto out = stream.with_validity_mask(mask);
@@ -2340,7 +2340,7 @@ Stream& with_validity_mask_(self, const pluss::Series& mask)
 #### Parameters
 
 `mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -2354,7 +2354,7 @@ Attaches the supplied validity mask in place.
 #### Examples
 
 ```cpp
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
 stream.with_validity_mask_(mask);

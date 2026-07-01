@@ -20,7 +20,7 @@ Aisle apply_slot(self, std::string_view key, const std::function<Slot(const Slot
     Name of the target slot or stream.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -291,7 +291,7 @@ static Aisle from_kindle(const pluss::kindle::Archive& archive)
 #### Parameters
 
 `archive` : `const pluss::kindle::Archive&`
-    See the signature for the supported argument form.
+    Archive payload supplied to this overload.
 
 #### Returns
 
@@ -462,7 +462,7 @@ Aisle map(self, const std::function<Registry(const Registry&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Registry(const Registry&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -546,7 +546,7 @@ Registry registry(self, std::int64_t i) const
 #### Parameters
 
 `i` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based positional index used by this overload.
 
 #### Returns
 
@@ -632,7 +632,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 

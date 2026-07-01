@@ -9,15 +9,15 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=705d315b" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=0e2bb6cf" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/layout.js?v=014eaf41"></script>
+    <script src="_static/layout.js?v=a19b3cd6"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="DataFrame API Reference" href="dataframe_api_reference.html" />
-    <link rel="prev" title="DataFrame Guide" href="dataframe.html" />
+    <link rel="prev" title="Time-Series Accessor Guide" href="time_series_accessor_guide.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -140,9 +140,17 @@ If <code class="docutils literal notranslate"><span class="pre">.show()</span></
 <p>Notes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">DisplayBackend::Terminal</span></code> forces terminal rendering</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">DisplayBackend::NativeWebView</span></code> requests the GUI path when a native backend exists</p></li>
+<li><p>the default <code class="docutils literal notranslate"><span class="pre">Auto</span></code> policy prefers the built-in <code class="docutils literal notranslate"><span class="pre">PlussWebView</span></code> renderer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">DisplayBackend::NativeWebView</span></code> explicitly requests the platform web view</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">DisplayBackend::PlussWebView</span></code> explicitly requires the built-in renderer</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">window_title</span></code> is available, but for most users the better pattern is to name the frame with <code class="docutils literal notranslate"><span class="pre">title(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">title_(...)</span></code></p></li>
 </ul>
+<p>Explicit native-renderer example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="w"> </span><span class="n">opts</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">display</span><span class="o">::</span><span class="n">DisplayBackend</span><span class="o">::</span><span class="n">NativeWebView</span><span class="p">;</span>
+<span class="n">df</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">opts</span><span class="p">);</span>
+</pre></div>
+</div>
 </section>
 <section id="dataframe-titles">
 <h2>DataFrame Titles<a class="headerlink" href="#dataframe-titles" title="Link to this heading">¶</a></h2>
@@ -179,11 +187,13 @@ If <code class="docutils literal notranslate"><span class="pre">.show()</span></
 <h2>OS Support<a class="headerlink" href="#os-support" title="Link to this heading">¶</a></h2>
 <p>Current popup support is:</p>
 <ul class="simple">
-<li><p>macOS: supported</p></li>
-<li><p>Linux: supported</p></li>
-<li><p>Windows: supported when WebView2 support is compiled in and the WebView2 Runtime is installed</p></li>
+<li><p>macOS: built-in PlussWebView and native WebKit</p></li>
+<li><p>Linux: built-in PlussWebView through X11/XWayland, with native WebKitGTK optional</p></li>
+<li><p>Windows: built-in PlussWebView through Win32, with native WebView2 optional</p></li>
 </ul>
-<p>If the popup backend is unavailable, <code class="docutils literal notranslate"><span class="pre">.show()</span></code> falls back to the normal terminal rendering path.</p>
+<p>The default <code class="docutils literal notranslate"><span class="pre">Auto</span></code> policy tries PlussWebView first, then the available native
+platform backend. If neither popup backend is available, <code class="docutils literal notranslate"><span class="pre">.show()</span></code> falls back
+to the normal terminal rendering path.</p>
 </section>
 <section id="macos-backend">
 <h2>macOS Backend<a class="headerlink" href="#macos-backend" title="Link to this heading">¶</a></h2>
@@ -204,55 +214,51 @@ It uses OS-provided frameworks.</p>
 </section>
 <section id="linux-backend">
 <h2>Linux Backend<a class="headerlink" href="#linux-backend" title="Link to this heading">¶</a></h2>
-<p>On Linux, the popup viewer uses:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">gtk+-3.0</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">webkit2gtk-4.1</span></code></p></li>
-<li><p>fallback to <code class="docutils literal notranslate"><span class="pre">webkit2gtk-4.0</span></code></p></li>
-</ul>
-<p>Those are discovered through <code class="docutils literal notranslate"><span class="pre">pkg-config</span></code>.</p>
-<p>Typical system packages:</p>
+<p>The default Linux popup uses the built-in renderer in a direct X11 or
+XWayland window. It does not require GTK or WebKitGTK. FreeType is used for
+native-quality text when it is available, and XInput2 provides high-resolution
+touchpad and mouse-wheel input when it is available.</p>
+<p>Typical packages for building the staged SDK, or linking a downstream
+application to the current static SDK, are:</p>
 <p>Ubuntu:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>pkg-config<span class="w"> </span>libgtk-3-dev<span class="w"> </span>libwebkit2gtk-4.1-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libx11-dev<span class="w"> </span>libxi-dev<span class="w"> </span>libfreetype-dev
 </pre></div>
 </div>
 <p>Fedora:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>pkgconf-pkg-config<span class="w"> </span>gtk3-devel<span class="w"> </span>webkit2gtk4.1-devel
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>libX11-devel<span class="w"> </span>libXi-devel<span class="w"> </span>freetype-devel
 </pre></div>
 </div>
-<p>Linux Conda environments can often provide the GTK/WebKit pieces, but the most reliable path is still the system packages plus <code class="docutils literal notranslate"><span class="pre">pkg-config</span></code>.</p>
+<p>The staged application needs an X11 server or XWayland at runtime. A
+Wayland-only session with XWayland disabled cannot currently open the built-in
+window; <code class="docutils literal notranslate"><span class="pre">Auto</span></code> then tries the optional native backend before falling back to
+terminal output.</p>
+<p>GTK and WebKitGTK are needed only when building and explicitly selecting
+<code class="docutils literal notranslate"><span class="pre">DisplayBackend::NativeWebView</span></code>.</p>
 </section>
 <section id="windows-status">
 <h2>Windows Status<a class="headerlink" href="#windows-status" title="Link to this heading">¶</a></h2>
-<p>On Windows, the popup viewer uses:</p>
-<ul class="simple">
-<li><p>native Win32 windowing</p></li>
-<li><p>Microsoft Edge WebView2 for the embedded HTML table</p></li>
-</ul>
-<p>That means the host window is native Windows UI, and the table itself is still rendered from the same HTML/CSS/JavaScript payload used on the other platforms.</p>
-<p>There are two separate Windows requirements:</p>
-<ul class="simple">
-<li><p>build-time requirement: the WebView2 SDK headers and loader library must be available when compiling PlussMic from source</p></li>
-<li><p>runtime requirement: the Microsoft Edge WebView2 Runtime must be installed on the target machine</p></li>
-</ul>
-<p>If either one is missing, <code class="docutils literal notranslate"><span class="pre">.show()</span></code> falls back to terminal rendering.</p>
+<p>The default Windows popup uses the built-in renderer in a native Win32 window.
+It uses Windows system APIs for windowing, input, clipboard, saving, and text,
+so neither the WebView2 SDK nor the WebView2 Runtime is required for <code class="docutils literal notranslate"><span class="pre">.show()</span></code>.</p>
 </section>
 <section id="windows-build-setup">
 <h2>Windows Build Setup<a class="headerlink" href="#windows-build-setup" title="Link to this heading">¶</a></h2>
-<p>The Windows viewer backend is enabled when CMake can find the WebView2 SDK.</p>
-<p>PlussMic looks for:</p>
+<p>No additional viewer SDK is required for the built-in Windows renderer. A
+normal staged Pluss SDK built for the target architecture includes it.</p>
+<p>WebView2 remains an optional native web-view backend. To build it, Pluss looks
+for:</p>
 <ul class="simple">
-<li><p>cache variable: <code class="docutils literal notranslate"><span class="pre">PLUSSMIC_WEBVIEW2_SDK_DIR</span></code></p></li>
+<li><p>cache variable: <code class="docutils literal notranslate"><span class="pre">PLUSSTILS_VIEW_WEBVIEW2_SDK_DIR</span></code></p></li>
 <li><p>environment variable: <code class="docutils literal notranslate"><span class="pre">WEBVIEW2_SDK_DIR</span></code></p></li>
 <li><p>common NuGet cache location under the user profile</p></li>
 </ul>
 <p>Typical configure command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>^
-<span class="w">  </span>-DPLUSSMIC_WEBVIEW2_SDK_DIR<span class="o">=</span><span class="s2">&quot;C:/path/to/Microsoft.Web.WebView2.&lt;version&gt;&quot;</span>
+<span class="w">  </span>-DPLUSSTILS_VIEW_WEBVIEW2_SDK_DIR<span class="o">=</span><span class="s2">&quot;C:/path/to/Microsoft.Web.WebView2.&lt;version&gt;&quot;</span>
 </pre></div>
 </div>
-<p>If you want to disable Windows popup support explicitly:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DPLUSSMIC_ENABLE_WINDOWS_WEBVIEW2<span class="o">=</span>OFF
+<p>Disabling WebView2 does not disable the built-in popup:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DPLUSSTILS_VIEW_ENABLE_WINDOWS_WEBVIEW2<span class="o">=</span>OFF
 </pre></div>
 </div>
 <p>What the SDK directory should contain:</p>
@@ -262,41 +268,26 @@ It uses OS-provided frameworks.</p>
 or the equivalent <code class="docutils literal notranslate"><span class="pre">x86</span></code> / <code class="docutils literal notranslate"><span class="pre">arm64</span></code> loader library for the target architecture</p></li>
 </ul>
 </section>
-<section id="windows-runtime-setup">
-<h2>Windows Runtime Setup<a class="headerlink" href="#windows-runtime-setup" title="Link to this heading">¶</a></h2>
-<p>Even if PlussMic builds with WebView2 support, the target machine still needs the WebView2 Runtime.</p>
-<p>That runtime is often already present on modern Windows systems, but it should still be treated as a requirement for popup viewing.</p>
-<p>If the runtime is missing:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">.show()</span></code> does not crash</p></li>
-<li><p>it simply falls back to terminal rendering</p></li>
-</ul>
-</section>
 <section id="conda-on-windows">
 <h2>Conda On Windows<a class="headerlink" href="#conda-on-windows" title="Link to this heading">¶</a></h2>
-<p>Conda is not the source of the Windows popup backend.</p>
-<p>On Windows:</p>
-<ul class="simple">
-<li><p>your Conda environment can still provide the compiler toolchain and normal build environment</p></li>
-<li><p>the popup viewer itself comes from Windows + WebView2</p></li>
-<li><p>users should not expect a Conda package to supply the full native popup stack</p></li>
-</ul>
-<p>So the practical rule is:</p>
-<ul class="simple">
-<li><p>Conda can help with building</p></li>
-<li><p>WebView2 SDK and Runtime are the Windows viewer requirements</p></li>
-</ul>
+<p>Conda can provide the compiler and normal dependencies. The default popup
+itself comes from the built-in renderer and Windows system APIs. WebView2 is
+relevant only when the optional native backend is requested.</p>
 </section>
 <section id="are-the-popup-windows-native">
 <h2>Are The Popup Windows Native<a class="headerlink" href="#are-the-popup-windows-native" title="Link to this heading">¶</a></h2>
 <p>Partly.</p>
-<p>The host window is native to the platform backend:</p>
+<p>The host window is native to the selected presentation backend:</p>
 <ul class="simple">
-<li><p>macOS: native Cocoa window</p></li>
-<li><p>Linux: GTK window</p></li>
-<li><p>Windows: native Win32 window with embedded WebView2</p></li>
+<li><p>built-in PlussWebView on macOS: Cocoa window with software-rendered content</p></li>
+<li><p>built-in PlussWebView on Linux: X11/XWayland window with software-rendered content</p></li>
+<li><p>built-in PlussWebView on Windows: Win32 window with software-rendered content</p></li>
+<li><p>native macOS backend: Cocoa window with embedded WebKit</p></li>
+<li><p>native Linux backend: GTK window with embedded WebKitGTK</p></li>
+<li><p>native Windows backend: Win32 window with embedded WebView2</p></li>
 </ul>
-<p>The table content itself is rendered as HTML/CSS/JavaScript inside the embedded web view.</p>
+<p>PlussWebView parses and renders the supported HTML/CSS itself. Native backends
+render the same document inside the platform web view.</p>
 <p>So the actual behavior is:</p>
 <ul class="simple">
 <li><p>window chrome feels native to the OS/toolkit</p></li>
@@ -310,9 +301,12 @@ or the equivalent <code class="docutils literal notranslate"><span class="pre">x
 <li><p>macOS:
 no GTK/WebKitGTK package is needed for the current implementation</p></li>
 <li><p>Linux:
-Conda may provide the needed GTK/WebKit packages, but system packages are usually simpler and more reliable</p></li>
+built-in PlussWebView needs the standard X11 runtime (or XWayland); FreeType
+is used when available for native-quality fonts. GTK/WebKitGTK is needed only
+when explicitly selecting the native web-view backend</p></li>
 <li><p>Windows:
-Conda does not provide the native viewer stack; use WebView2 SDK + Runtime</p></li>
+built-in PlussWebView uses Windows system APIs and does not require WebView2.
+The WebView2 SDK and Runtime are needed only for the optional native backend</p></li>
 </ul>
 </section>
 <section id="recommended-user-guidance">
@@ -395,9 +389,11 @@ https://packages.fedoraproject.org/pkgs/gtk3/gtk3-devel</p></li>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">DataFrame Display And Popup Viewer</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#which-methods-support-show">Which Methods Support <code class="docutils literal notranslate"><span class="pre">.show()</span></code></a></li>
@@ -410,7 +406,6 @@ https://packages.fedoraproject.org/pkgs/gtk3/gtk3-devel</p></li>
 <li class="toctree-l2"><a class="reference internal" href="#linux-backend">Linux Backend</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#windows-status">Windows Status</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#windows-build-setup">Windows Build Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#windows-runtime-setup">Windows Runtime Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#conda-on-windows">Conda On Windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#are-the-popup-windows-native">Are The Popup Windows Native</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#conda-notes">Conda Notes</a></li>
@@ -457,7 +452,7 @@ https://packages.fedoraproject.org/pkgs/gtk3/gtk3-devel</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="dataframe.html" title="previous chapter">DataFrame Guide</a></li>
+      <li>Previous: <a href="time_series_accessor_guide.html" title="previous chapter">Time-Series Accessor Guide</a></li>
       <li>Next: <a href="dataframe_api_reference.html" title="next chapter">DataFrame API Reference</a></li>
   </ul></li>
 </ul>

@@ -18,6 +18,7 @@
 
 #include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/window.h"
+#include "window/render/async_compositor.h"
 
 #if defined(PLUSSTILS_VIEW_HAVE_LIBZIP) && PLUSSTILS_VIEW_HAVE_LIBZIP
 #include <zip.h>
@@ -531,7 +532,6 @@ bool show_inhouse_html_window(const std::string& title,
   window::RuntimeConfig runtime_cfg{};
   runtime_cfg.canvas_size = size;
   runtime_cfg.background = window::Color::rgba(245, 248, 252, 255);
-  window::ViewerRuntime runtime(runtime_cfg);
 
   const std::string& payload = html.empty() ? svg_payload : html;
   auto document = window::parse_html_document(payload, title.empty() ? std::string("PlussTilsView") : title);
@@ -565,24 +565,33 @@ bool show_inhouse_html_window(const std::string& title,
     return false;
   }
   const double backing_scale = shell->backing_scale_factor();
-  std::unordered_map<std::string, window::PointI> last_rendered_table_offsets;
+  window::detail::AsyncSoftwareCompositor compositor;
+  window::PixelCanvas presented_canvas;
+  std::uint64_t last_submitted_frame_id = 0;
+  std::uint64_t last_presented_frame_id = 0;
+  constexpr auto caret_blink_interval = std::chrono::milliseconds(530);
+  bool caret_visible = true;
+  auto next_caret_blink =
+      std::chrono::steady_clock::now() + caret_blink_interval;
 
-  auto render_current = [&](const window::SizeI target_size,
-                            const bool table_scroll_damage_only) -> bool {
-    if (!table_scroll_damage_only) {
-      layout_cache.clear();
-    }
+  const auto restart_caret_blink = [&]() {
+    caret_visible = true;
+    next_caret_blink =
+        std::chrono::steady_clock::now() + caret_blink_interval;
+  };
+
+  auto enqueue_current = [&](const window::SizeI target_size,
+                             const bool table_scroll_damage_only) -> bool {
+    (void)table_scroll_damage_only;
+    // Every asynchronous request is a self-contained recovery frame. Cached
+    // scroll-damage layouts intentionally omit static paint commands and are
+    // therefore not valid when rendering into a freshly cleared back buffer.
+    layout_cache.clear();
     auto cfg = runtime_cfg;
     cfg.canvas_size = window::SizeI{
         std::max(1, static_cast<int>(std::lround(target_size.width * backing_scale))),
         std::max(1, static_cast<int>(std::lround(target_size.height * backing_scale))),
     };
-    const auto current_canvas_size = runtime.canvas().size();
-    if ((current_canvas_size.width != cfg.canvas_size.width ||
-         current_canvas_size.height != cfg.canvas_size.height) &&
-        !runtime.configure(cfg)) {
-        return false;
-    }
     const auto document_offset = scroll_model.document_offset_px();
     const auto table_offsets = scroll_model.table_offsets_px();
     render_cfg.document_scroll_x_px = document_offset.x;
@@ -595,6 +604,7 @@ bool show_inhouse_html_window(const std::string& title,
     render_cfg.table_sort_ascending = table_sort_ascending;
     render_cfg.table_sort_target = table_sort_target;
     render_cfg.active_input_target = active_input_target;
+    render_cfg.show_input_caret = caret_visible;
     if (!active_input_target.empty()) {
       const auto it = input_values.find(active_input_target);
       render_cfg.active_input_value = (it != input_values.end()) ? it->second : std::string{};
@@ -610,7 +620,7 @@ bool show_inhouse_html_window(const std::string& title,
     hit_regions.clear();
     render_cfg.hit_regions = &hit_regions;
     render_cfg.render_stats = &render_stats;
-    const auto scene = window::build_html_document_scene(document, target_size, render_cfg);
+    auto scene = window::build_html_document_scene(document, target_size, render_cfg);
     if (has_table) {
       render_stats.document_max_scroll_x = 0;
       render_stats.document_max_scroll_y = 0;
@@ -621,82 +631,61 @@ bool show_inhouse_html_window(const std::string& title,
     }
     scroll_model.update_metrics(render_stats);
 
-    std::optional<window::RectI> table_damage;
-    if (table_scroll_damage_only && has_table) {
-      for (const auto& region : render_stats.table_scroll_regions) {
-        const auto current = table_offsets.find(region.target);
-        const auto previous = last_rendered_table_offsets.find(region.target);
-        if (current == table_offsets.end() ||
-            (previous != last_rendered_table_offsets.end() &&
-             current->second.x == previous->second.x &&
-             current->second.y == previous->second.y)) {
-          continue;
-        }
-        window::RectI rect = region.viewport_rect;
-        rect.x = std::max(0, rect.x - 2);
-        rect.y = std::max(0, rect.y - 2);
-        rect.width = std::min(target_size.width - rect.x, rect.width + 4);
-        rect.height = std::min(target_size.height - rect.y, rect.height + 4);
-        if (rect.empty()) {
-          continue;
-        }
-        if (!table_damage.has_value()) {
-          table_damage = rect;
-        } else {
-          const int x0 = std::min(table_damage->x, rect.x);
-          const int y0 = std::min(table_damage->y, rect.y);
-          const int x1 = std::max(
-              table_damage->x + table_damage->width, rect.x + rect.width);
-          const int y1 = std::max(
-              table_damage->y + table_damage->height, rect.y + rect.height);
-          table_damage = window::RectI{x0, y0, x1 - x0, y1 - y0};
-        }
-      }
-    }
-
-    window::Scene damage_scene;
-    const window::Scene* scene_to_submit = &scene;
-    if (table_damage.has_value()) {
-      window::Color clear_color = runtime_cfg.background;
-      for (const auto& command : scene.commands()) {
-        if (const auto* clear = std::get_if<window::ClearCommand>(&command);
-            clear != nullptr) {
-          clear_color = clear->color;
-          break;
-        }
-      }
-      damage_scene.add(window::FillRectCommand{*table_damage, clear_color});
-      damage_scene.add(window::SetClipRectCommand{*table_damage});
-      for (const auto& command : scene.commands()) {
-        if (std::get_if<window::ClearCommand>(&command) == nullptr) {
-          damage_scene.add(command);
-        }
-      }
-      damage_scene.add(window::ClearClipRectCommand{});
-      scene_to_submit = &damage_scene;
-    }
-
-    if (!runtime.submit(window::scale_scene(*scene_to_submit, backing_scale))) {
-      return false;
-    }
-    const bool presented = shell->present(runtime.canvas());
-    if (presented) {
-      last_rendered_table_offsets = table_offsets;
-    }
-    return presented;
+    const std::uint64_t base_frame_id = last_submitted_frame_id;
+    const std::uint64_t frame_id = ++last_submitted_frame_id;
+    window::detail::AsyncCompositorRequest request{
+        .frame_id = frame_id,
+        .base_frame_id = base_frame_id,
+        .canvas_size = cfg.canvas_size,
+        .background = cfg.background,
+        .full_scene = window::scale_scene(scene, backing_scale),
+    };
+    compositor.submit(std::move(request));
+    return !compositor.failed();
   };
 
-  if (!render_current(size, false)) {
+  const auto present_frame =
+      [&](window::detail::AsyncCompositorFrame frame) -> bool {
+    last_presented_frame_id = frame.frame_id;
+    presented_canvas = std::move(frame.canvas);
+    return shell->present(presented_canvas);
+  };
+
+  const auto present_latest = [&](const bool wait_for_latest,
+                                  const bool presentation_due = true) -> bool {
+    std::optional<window::detail::AsyncCompositorFrame> frame;
+    if (wait_for_latest) {
+      frame = compositor.wait_for_frame(last_submitted_frame_id,
+                                        std::chrono::seconds(5));
+    } else {
+      if (!presentation_due) {
+        return !compositor.failed();
+      }
+      frame = compositor.take_latest();
+    }
+    if (!frame.has_value()) {
+      return !compositor.failed() &&
+             (!wait_for_latest ||
+              last_presented_frame_id >= last_submitted_frame_id);
+    }
+    return present_frame(std::move(*frame));
+  };
+
+  if (!enqueue_current(size, false) || !present_latest(true)) {
     shell->close();
     return false;
   }
 
   if (!snapshot_name.empty()) {
-    (void)window::save_canvas(runtime.canvas(), snapshot_name);
+    (void)window::save_canvas(presented_canvas, snapshot_name);
   }
 
   bool closed = false;
   const auto save_as = [&](const std::string_view extension) {
+    if (last_presented_frame_id < last_submitted_frame_id &&
+        !present_latest(true)) {
+      return false;
+    }
     std::filesystem::path suggested =
         snapshot_name.empty() ? std::filesystem::path("pluss-view.png")
                               : std::filesystem::path(snapshot_name).filename();
@@ -706,10 +695,10 @@ bool show_inhouse_html_window(const std::string& title,
       return false;
     }
     if (extension == "png") {
-      return window::save_canvas(runtime.canvas(), path);
+      return window::save_canvas(presented_canvas, path);
     }
     if (extension == "pdf") {
-      return shell->save_canvas_pdf(runtime.canvas(), path);
+      return shell->save_canvas_pdf(presented_canvas, path);
     }
     if (extension == "csv") {
       return write_text_file(path, delimited_export(document, ','));
@@ -734,6 +723,8 @@ bool show_inhouse_html_window(const std::string& title,
   };
 
   auto animation_clock = std::chrono::steady_clock::now();
+  bool render_pending = false;
+  bool pending_damage_only = true;
   while (!closed) {
     bool resized = false;
     bool needs_render = false;
@@ -864,6 +855,7 @@ bool show_inhouse_html_window(const std::string& title,
             if (!input_values.contains(active_input_target)) {
               input_values.emplace(active_input_target, std::string{});
             }
+            restart_caret_blink();
             needs_render = true;
           }
         }
@@ -879,12 +871,15 @@ bool show_inhouse_html_window(const std::string& title,
           std::string& value = input_values[active_input_target];
           if (event.note == "__backspace__") {
             erase_last_utf8_codepoint(value);
+            restart_caret_blink();
             needs_render = true;
           } else if (event.note == "__clear__") {
             value.clear();
+            restart_caret_blink();
             needs_render = true;
           } else if (!event.note.empty() && value.size() < 512) {
             value += event.note;
+            restart_caret_blink();
             needs_render = true;
           }
         }
@@ -903,16 +898,39 @@ bool show_inhouse_html_window(const std::string& title,
         std::chrono::duration<double>(animation_now - animation_clock).count();
     animation_clock = animation_now;
     needs_render = scroll_model.advance_animation(animation_elapsed) || needs_render;
+    if (!active_input_target.empty() && animation_now >= next_caret_blink) {
+      do {
+        next_caret_blink += caret_blink_interval;
+      } while (animation_now >= next_caret_blink);
+      caret_visible = !caret_visible;
+      table_scroll_damage_only = false;
+      needs_render = true;
+    }
     if (needs_render) {
-      if (!render_current(size, table_scroll_damage_only)) {
+      pending_damage_only =
+          render_pending ? (pending_damage_only && table_scroll_damage_only)
+                         : table_scroll_damage_only;
+      render_pending = true;
+    }
+
+    const bool presentation_due = shell->presentation_frame_due();
+    if (render_pending && presentation_due) {
+      if (!enqueue_current(size, pending_damage_only)) {
         shell->close();
         return false;
       }
+      render_pending = false;
+      pending_damage_only = true;
+    }
+    if (!present_latest(false, presentation_due)) {
+      shell->close();
+      return false;
     }
 
-    if (!needs_render && !scroll_model.has_pending_animation()) {
+    if (!render_pending && !scroll_model.has_pending_animation() &&
+        !compositor.has_pending_work()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(4));
-    } else if (!needs_render) {
+    } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }

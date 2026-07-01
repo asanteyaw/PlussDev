@@ -735,6 +735,23 @@ bool SoftwareRenderer::render(const Scene& scene, PixelCanvas& canvas, std::vect
             }
           } else if constexpr (std::is_same_v<CommandT, TextCommand>) {
             detail::render_text_command(canvas, cmd, clip, events);
+          } else if constexpr (std::is_same_v<CommandT, TextCaretCommand>) {
+            const int width =
+                detail::measure_text_width_native(TextCommand{
+                    .anchor = cmd.text_anchor,
+                    .text = cmd.text,
+                    .pixel_size = cmd.pixel_size,
+                    .font_weight = cmd.font_weight,
+                    .font_family = cmd.font_family,
+                }).value_or(cmd.fallback_width);
+            const int caret_x = std::clamp(
+                cmd.text_anchor.x + width +
+                    clamp_thickness(cmd.thickness) / 2,
+                cmd.text_anchor.x,
+                std::max(cmd.text_anchor.x, cmd.max_x));
+            draw_line(canvas, PointI{caret_x, cmd.y0},
+                      PointI{caret_x, cmd.y1},
+                      clamp_thickness(cmd.thickness), cmd.color, clip);
           }
         },
         command);

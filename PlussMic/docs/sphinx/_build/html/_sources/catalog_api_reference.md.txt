@@ -76,7 +76,7 @@ Catalog aggregate_text_stats(self, std::string_view field, std::string_view stat
     Name of the target stream in the catalog.
 
 `stat_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Statistic selector string understood by this overload.
 
 #### Returns
 
@@ -129,7 +129,7 @@ Catalog apply(self, std::string_view field, const std::function<Stream(const Str
     Name of the target stream in the catalog.
 
 `func` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -189,7 +189,7 @@ Catalog& apply_(self, std::string_view field, const std::function<Stream(const S
     Name of the target stream in the catalog.
 
 `func` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -225,7 +225,7 @@ Catalog apply_all(self, const std::function<Stream(const Stream&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -282,7 +282,7 @@ Catalog& apply_all_(self, const std::function<Stream(const Stream&)>& fn)
 #### Parameters
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -321,7 +321,7 @@ Catalog astype(self, std::initializer_list<std::string_view> keys, pluss::codem:
     Collection of slot or stream names to keep, drop, or rewrite together.
 
 `dtype` : `pluss::codem::ScalarType`
-    See the signature for the supported argument form.
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -456,7 +456,7 @@ for (const auto& key : ct) {
 #### Signature
 
 ```cpp
-Catalog bfill(self, std::initializer_list<std::string_view> keys =
+Catalog bfill(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -583,7 +583,7 @@ Catalog cast_series(self, std::initializer_list<std::string_view> keys, std::opt
     Collection of slot or stream names to keep, drop, or rewrite together.
 
 `dtype` : `std::optional<pluss::codem::ScalarType>`
-    See the signature for the supported argument form.
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -746,7 +746,7 @@ Catalog cloc(self, std::int64_t row) const
 #### Parameters
 
 `row` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based row position used by this overload.
 
 #### Returns
 
@@ -841,13 +841,13 @@ Catalog compute_similarity(self, std::string_view field1, std::string_view field
 #### Parameters
 
 `field1` : `std::string_view`
-    See the signature for the supported argument form.
+    First named field used by this overload.
 
 `field2` : `std::string_view`
-    See the signature for the supported argument form.
+    Second named field used by this overload.
 
 `method` : `std::string_view`
-    See the signature for the supported argument form.
+    Method selector string understood by this overload.
 
 #### Returns
 
@@ -1036,7 +1036,7 @@ Catalog drop(self, const std::vector<std::string>& field_names) const
 #### Parameters
 
 `field_names` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Field names supplied together for this overload.
 
 #### Returns
 
@@ -1157,7 +1157,7 @@ Catalog drop(self, std::string_view field_name) const
 #### Parameters
 
 `field_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name used to select the target text, stream, or grouping column.
 
 #### Returns
 
@@ -1211,7 +1211,7 @@ metric -> Series([10.0, 20.0, 30.0])
 #### Signature
 
 ```cpp
-Catalog dropna(self, std::initializer_list<std::string_view> keys =
+Catalog dropna(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1353,7 +1353,7 @@ Catalog extract_keywords(self, std::string_view field, int top_n = 10) const
     Name of the target stream in the catalog.
 
 `top_n` : `int`
-    See the signature for the supported argument form.
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
 #### Returns
 
@@ -1398,7 +1398,7 @@ count   -> Series([1, 1, 1, 1, 1])
 #### Signature
 
 ```cpp
-Catalog ffill(self, std::initializer_list<std::string_view> keys =
+Catalog ffill(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -1448,13 +1448,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
 
 `value` : `const char*`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1470,10 +1470,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1503,13 +1503,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
 
 `value` : `const pluss::TimeIndex&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1525,10 +1525,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1558,13 +1558,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
 
 `value` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1580,10 +1580,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1613,13 +1613,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
 
 `value` : `scalar`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1635,10 +1635,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1668,13 +1668,13 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys =
+Catalog fillna(self, std::string_view value, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
 
 `value` : `std::string_view`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
@@ -1690,10 +1690,10 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 #### See also
 
-- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys =`
-- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys =`
+- `Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const char* value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const`
+- `Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const`
 
 #### Examples
 
@@ -1729,7 +1729,7 @@ Catalog filter(self, const pluss::Series& condition) const
 #### Parameters
 
 `condition` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -1783,7 +1783,7 @@ Catalog filter_by_text(self, std::string_view field, std::string_view pattern) c
     Name of the target stream in the catalog.
 
 `pattern` : `std::string_view`
-    See the signature for the supported argument form.
+    Pattern string used for matching or extraction.
 
 #### Returns
 
@@ -1835,7 +1835,7 @@ static Catalog from_json(std::string_view json_text)
 #### Parameters
 
 `json_text` : `std::string_view`
-    See the signature for the supported argument form.
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 #### Returns
 
@@ -1956,7 +1956,7 @@ std::unordered_map<std::string, Catalog> group_by(self, std::string_view key_fie
 #### Parameters
 
 `key_field` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name that acts as the key for matching, grouping, or lookup.
 
 #### Returns
 
@@ -2170,7 +2170,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog isnull(self, std::initializer_list<std::string_view> keys =
+Catalog isnull(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -2261,16 +2261,16 @@ auto out = ct.keys();
 #### Signature
 
 ```cpp
-static Catalog kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy =
+static Catalog kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy = {})
 ```
 
 #### Parameters
 
 `frame` : `const pluss::table::DataFrame&`
-    See the signature for the supported argument form.
+    Frame payload supplied to this overload.
 
 `policy` : `const KindelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -2363,7 +2363,7 @@ static Catalog load(std::string_view source_type, std::string_view filepath, con
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2448,7 +2448,7 @@ static Catalog load_csv(std::string_view filepath, const pluss::loader::ReadCsvO
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2484,7 +2484,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-static Catalog load_csv_with_key(std::string_view filepath, std::string_view key_field, const pluss::loader::ReadCsvOptions& options =
+static Catalog load_csv_with_key(std::string_view filepath, std::string_view key_field, const pluss::loader::ReadCsvOptions& options = {})
 ```
 
 #### Parameters
@@ -2493,10 +2493,10 @@ static Catalog load_csv_with_key(std::string_view filepath, std::string_view key
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `key_field` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name that acts as the key for matching, grouping, or lookup.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2577,7 +2577,7 @@ static Catalog load_excel(std::string_view filepath, const pluss::loader::ReadEx
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadExcelOptions&`
-    See the signature for the supported argument form.
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Returns
 
@@ -2663,7 +2663,7 @@ static Catalog load_json(std::string_view filepath, const pluss::loader::Config&
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2748,7 +2748,7 @@ static Catalog load_parquet(std::string_view filepath, const pluss::loader::Conf
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2833,7 +2833,7 @@ static Catalog load_txt(std::string_view filepath, const pluss::loader::Config& 
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -2874,7 +2874,7 @@ Catalog masked_select(self, const pluss::Series& mask) const
 #### Parameters
 
 `mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -3009,13 +3009,17 @@ Catalog merge(self, const Catalog& other, std::string_view on, std::string_view 
 #### Parameters
 
 `other` : `const Catalog&`
-    See the signature for the supported argument form.
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `on` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name used as the match or join key for this overload.
 
 `how` : `std::string_view`
-    Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.
+    Join mode for `DataFrame::unify(...)`.
+    
+    Supported values:
+    - `inner`: Keep only rows whose key values match on both sides.
+    - `left`: Preserve the left frame row order and row count, attaching right-hand matches where they exist.
 
 #### Returns
 
@@ -3193,7 +3197,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog notnull(self, std::initializer_list<std::string_view> keys =
+Catalog notnull(self, std::initializer_list<std::string_view> keys = {}) const
 ```
 
 #### Parameters
@@ -3290,7 +3294,7 @@ Catalog query(self, const QueryFn& fn) const
 #### Parameters
 
 `fn` : `const QueryFn&`
-    See the signature for the supported argument form.
+    Callable used to transform, map, or derive values in this overload.
 
 #### Returns
 
@@ -3340,7 +3344,7 @@ Catalog rename(self, const std::unordered_map<std::string, std::string>& mapping
 #### Parameters
 
 `mapping` : `const std::unordered_map<std::string, std::string>&`
-    See the signature for the supported argument form.
+    Name-to-name mapping used by this overload.
 
 #### Returns
 
@@ -3396,7 +3400,7 @@ Catalog rename(self, std::initializer_list<std::pair<std::string_view, std::stri
 #### Parameters
 
 `mapping` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -3451,10 +3455,10 @@ Catalog rename(self, std::string_view from, std::string_view to) const
 #### Parameters
 
 `from` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 `to` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 #### Returns
 
@@ -3509,10 +3513,10 @@ Catalog& rename_(self, std::string_view from, std::string_view to)
 #### Parameters
 
 `from` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 `to` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 #### Returns
 
@@ -3551,7 +3555,7 @@ Catalog sample(self, std::int64_t n, std::optional<std::uint64_t> random_state =
     Number of rows, entries, or depth items to keep in the preview.
 
 `random_state` : `std::optional<std::uint64_t>`
-    See the signature for the supported argument form.
+    Optional seed used to make sampling or shuffling reproducible.
 
 #### Returns
 
@@ -3595,19 +3599,19 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-void save_as(self, std::string_view target_type, std::string_view filename, const pluss::loader::Config& config =
+void save_as(self, std::string_view target_type, std::string_view filename, const pluss::loader::Config& config = {}) const
 ```
 
 #### Parameters
 
 `target_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Format or target selector string used by this overload.
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3649,7 +3653,7 @@ void save_csv(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3695,10 +3699,10 @@ void save_csv(self, std::string_view filename, const pluss::loader::Config& conf
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3744,7 +3748,7 @@ void save_excel(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3790,10 +3794,10 @@ void save_excel(self, std::string_view filename, const pluss::loader::Config& co
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3839,7 +3843,7 @@ void save_json(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3885,10 +3889,10 @@ void save_json(self, std::string_view filename, const pluss::loader::Config& con
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -3934,7 +3938,7 @@ void save_parquet(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3980,10 +3984,10 @@ void save_parquet(self, std::string_view filename, const pluss::loader::Config& 
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -4029,7 +4033,7 @@ void save_txt(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -4075,10 +4079,10 @@ void save_txt(self, std::string_view filename, const pluss::loader::Config& conf
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
-    See the signature for the supported argument form.
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
 #### Returns
 
@@ -4124,7 +4128,7 @@ Catalog select(self, const std::vector<std::string>& field_names) const
 #### Parameters
 
 `field_names` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Field names supplied together for this overload.
 
 #### Returns
 
@@ -4179,7 +4183,7 @@ Catalog select(self, std::initializer_list<std::string_view> field_names) const
 #### Parameters
 
 `field_names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4285,7 +4289,7 @@ Catalog set(self, std::string_view key, const Stream& value) const
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4338,7 +4342,7 @@ Catalog& set_(self, std::string_view key, const Stream& value)
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4377,7 +4381,7 @@ Catalog set_stream(self, std::string_view key, const Stream& value) const
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4430,7 +4434,7 @@ Catalog& set_stream_(self, std::string_view key, const Stream& value)
     Name of the target slot or stream.
 
 `value` : `const Stream&`
-    See the signature for the supported argument form.
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
 #### Returns
 
@@ -4466,7 +4470,7 @@ Catalog set_streams(self, std::initializer_list<NamedStream> items) const
 #### Parameters
 
 `items` : `std::initializer_list<NamedStream>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4523,7 +4527,7 @@ Catalog set_streams(self, std::initializer_list<std::pair<std::string_view, Stre
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, Stream>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4579,7 +4583,7 @@ Catalog& set_streams_(self, std::initializer_list<NamedStream> items)
 #### Parameters
 
 `items` : `std::initializer_list<NamedStream>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4622,7 +4626,7 @@ Catalog& set_streams_(self, std::initializer_list<std::pair<std::string_view, St
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, Stream>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4664,7 +4668,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -4753,10 +4757,10 @@ Catalog sort(self, std::string_view by_field, bool ascending = true) const
 #### Parameters
 
 `by_field` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name that controls the grouping or sorting basis of the operation.
 
 `ascending` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -4800,16 +4804,16 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog sort_by(self, const std::vector<std::string>& fields, const std::vector<bool>& ascending =
+Catalog sort_by(self, const std::vector<std::string>& fields, const std::vector<bool>& ascending = {}) const
 ```
 
 #### Parameters
 
 `fields` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 `ascending` : `const std::vector<bool>&`
-    See the signature for the supported argument form.
+    Sort-order switch. `true` means ascending order and `false` means descending order.
 
 #### Returns
 
@@ -4978,13 +4982,13 @@ Series([20.0])
 #### Signature
 
 ```cpp
-pluss::table::DataFrame tabelize(self, const TabelizePolicy& policy =
+pluss::table::DataFrame tabelize(self, const TabelizePolicy& policy = {}) const
 ```
 
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -5081,7 +5085,7 @@ Catalog take(self, std::span<const std::int64_t> indices) const
 #### Parameters
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -5416,13 +5420,16 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-pluss::table::DataFrame to_table(self, const TabelizePolicy& policy =
+pluss::table::DataFrame to_table(self, const TabelizePolicy& policy = {}, bool render = true) const
 ```
 
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
+
+`render` : `bool`
+    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Returns
 
@@ -5469,7 +5476,7 @@ Catalog transform(self, const std::function<Stream(const Stream&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -5526,7 +5533,7 @@ Catalog transform(self, std::string_view field, const std::function<Stream(const
     Name of the target stream in the catalog.
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -5621,7 +5628,7 @@ Catalog where(self, const pluss::Series& condition) const
 #### Parameters
 
 `condition` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 

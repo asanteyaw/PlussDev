@@ -1,11 +1,16 @@
 #if defined(__APPLE__)
 
 #import <Cocoa/Cocoa.h>
+#import <CoreVideo/CoreVideo.h>
+#import <Metal/Metal.h>
+#import <QuartzCore/QuartzCore.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -136,6 +141,8 @@ namespace pluss::view::window {
 
 class CocoaWindowShell final : public IWindowShell {
  public:
+  ~CocoaWindowShell() override { close(); }
+
   bool open(const ShellConfig& config) override {
     @autoreleasepool {
       [NSApplication sharedApplication];
@@ -230,8 +237,21 @@ class CocoaWindowShell final : public IWindowShell {
       [host_.image_view setImageAlignment:NSImageAlignCenter];
       [host_.image_view setEditable:NO];
       [host_.image_view setAnimates:NO];
+      [host_.image_view setWantsLayer:YES];
+      // The bitmap storage is reused by present(). Keep the NSImageView draw
+      // synchronous with the AppKit thread so Core Animation never uploads a
+      // buffer while the next frame is being copied into it.
+      host_.image_view.layer.drawsAsynchronously = NO;
+      host_.image_view.layer.minificationFilter = kCAFilterLinear;
+      host_.image_view.layer.magnificationFilter = kCAFilterLinear;
       [host_.image_view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
       [content addSubview:host_.image_view];
+      const char* experimental_metal =
+          std::getenv("PLUSSTILS_VIEW_EXPERIMENTAL_METAL");
+      if (experimental_metal != nullptr &&
+          std::string_view(experimental_metal) == "1") {
+        (void)setup_metal_();
+      }
 
       __weak PlussTilsViewCocoaShellHost* weak_host = host_;
       host_.key_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
@@ -266,6 +286,7 @@ class CocoaWindowShell final : public IWindowShell {
                                                                      return e;
                                                                    }
 
+                                                                   bool consumed = false;
                                                                    for (NSUInteger i = 0; i < [chars length]; ++i) {
                                                                      const unichar ch = [chars characterAtIndex:i];
                                                                      if (ch == NSDeleteCharacter || ch == NSBackspaceCharacter ||
@@ -274,6 +295,7 @@ class CocoaWindowShell final : public IWindowShell {
                                                                          @"kind" : @"text_input",
                                                                          @"note" : @"__backspace__"
                                                                        }];
+                                                                       consumed = true;
                                                                        continue;
                                                                      }
                                                                      if (ch < 0x20 || ch == NSTabCharacter ||
@@ -288,8 +310,12 @@ class CocoaWindowShell final : public IWindowShell {
                                                                        @"kind" : @"text_input",
                                                                        @"note" : scalar
                                                                      }];
+                                                                     consumed = true;
                                                                    }
-                                                                   return e;
+                                                                   // The software input owns accepted text. Passing the same event
+                                                                   // to NSImageView makes AppKit reject it with NSBeep; users with
+                                                                   // visual alerts enabled see that rejection as a screen flash.
+                                                                   return consumed ? nil : e;
                                                                  }];
 
       host_.scroll_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskScrollWheel
@@ -414,6 +440,7 @@ class CocoaWindowShell final : public IWindowShell {
       [host_.window makeKeyWindow];
 
       open_ = true;
+      start_display_link_();
       last_size_ = SizeI{static_cast<int>(width), static_cast<int>(height)};
       events_.push_back(ShellEvent{ShellEventKind::Opened, last_size_, "cocoa_shell_opened"});
       pump_app_events();
@@ -428,28 +455,43 @@ class CocoaWindowShell final : public IWindowShell {
         return false;
       }
 
-      const auto canvas_size = canvas.size();
-      if (bitmap_rep_ == nil ||
-          [bitmap_rep_ pixelsWide] != canvas_size.width ||
-          [bitmap_rep_ pixelsHigh] != canvas_size.height) {
-        bitmap_rep_ = bitmap_rep_for_size(canvas_size);
-        canvas_image_ = [[NSImage alloc]
-            initWithSize:NSMakeSize(canvas_size.width, canvas_size.height)];
-        if (bitmap_rep_ != nil && canvas_image_ != nil) {
-          [canvas_image_ addRepresentation:bitmap_rep_];
-        }
+      if (metal_ready_ && present_metal_(canvas)) {
+        const NSRect bounds = [host_.image_view bounds];
+        last_size_ = SizeI{static_cast<int>(std::round(bounds.size.width)),
+                           static_cast<int>(std::round(bounds.size.height))};
+        events_.push_back(ShellEvent{
+            ShellEventKind::Presented, last_size_, "cocoa_metal_presented"});
+        return true;
       }
-      if (bitmap_rep_ == nil || canvas_image_ == nil || [bitmap_rep_ bitmapData] == nullptr) {
+
+      const auto canvas_size = canvas.size();
+      if (bitmap_size_.width != canvas_size.width ||
+          bitmap_size_.height != canvas_size.height) {
+        for (std::size_t index = 0; index < kFrameBufferCount; ++index) {
+          bitmap_reps_[index] = bitmap_rep_for_size(canvas_size);
+          canvas_images_[index] = [[NSImage alloc]
+              initWithSize:NSMakeSize(canvas_size.width, canvas_size.height)];
+          if (bitmap_reps_[index] != nil && canvas_images_[index] != nil) {
+            [canvas_images_[index] addRepresentation:bitmap_reps_[index]];
+          }
+        }
+        bitmap_size_ = canvas_size;
+        frame_slot_ = 0;
+      }
+      frame_slot_ = (frame_slot_ + 1U) % kFrameBufferCount;
+      NSBitmapImageRep* bitmap_rep = bitmap_reps_[frame_slot_];
+      NSImage* canvas_image = canvas_images_[frame_slot_];
+      if (bitmap_rep == nil || canvas_image == nil ||
+          [bitmap_rep bitmapData] == nullptr) {
         events_.push_back(ShellEvent{ShellEventKind::Error, last_size_, "cocoa_image_convert_failed"});
         return false;
       }
 
       const auto bytes = canvas.bytes();
-      std::memcpy([bitmap_rep_ bitmapData], bytes.data(), bytes.size());
-      if ([host_.image_view image] != canvas_image_) {
-        [host_.image_view setImage:canvas_image_];
-      }
+      std::memcpy([bitmap_rep bitmapData], bytes.data(), bytes.size());
+      [host_.image_view setImage:canvas_image];
       [host_.image_view setNeedsDisplay:YES];
+      [host_.image_view displayIfNeeded];
 
       const NSRect bounds = [host_.image_view bounds];
       last_size_ = SizeI{static_cast<int>(std::round(bounds.size.width)),
@@ -462,6 +504,7 @@ class CocoaWindowShell final : public IWindowShell {
   void close() noexcept override {
     @autoreleasepool {
       const bool was_open = open_;
+      stop_display_link_();
       if (host_ != nil && host_.window != nil) {
         if (host_.key_monitor != nil) {
           [NSEvent removeMonitor:host_.key_monitor];
@@ -488,8 +531,20 @@ class CocoaWindowShell final : public IWindowShell {
         }
       }
       open_ = false;
-      bitmap_rep_ = nil;
-      canvas_image_ = nil;
+      if (metal_layer_ != nil) {
+        [metal_layer_ removeFromSuperlayer];
+      }
+      metal_layer_ = nil;
+      metal_pipeline_ = nil;
+      metal_queue_ = nil;
+      metal_device_ = nil;
+      metal_ready_ = false;
+      for (std::size_t index = 0; index < kFrameBufferCount; ++index) {
+        bitmap_reps_[index] = nil;
+        canvas_images_[index] = nil;
+      }
+      bitmap_size_ = {};
+      frame_slot_ = 0;
       if (was_open) {
         events_.push_back(ShellEvent{ShellEventKind::Closed, last_size_, "cocoa_shell_closed"});
       }
@@ -627,6 +682,13 @@ class CocoaWindowShell final : public IWindowShell {
     }
   }
 
+  bool presentation_frame_due() noexcept override {
+    if (display_link_ == nullptr) {
+      return true;
+    }
+    return frame_due_.exchange(false, std::memory_order_acq_rel);
+  }
+
   bool set_clipboard_text(const std::string_view text) override {
     @autoreleasepool {
       NSString* value =
@@ -699,12 +761,240 @@ class CocoaWindowShell final : public IWindowShell {
   }
 
  private:
+  static constexpr std::size_t kFrameBufferCount = 3;
+
+  bool setup_metal_() {
+    if (host_ == nil || host_.image_view == nil) {
+      return false;
+    }
+    metal_device_ = MTLCreateSystemDefaultDevice();
+    if (metal_device_ == nil) {
+      return false;
+    }
+    metal_queue_ = [metal_device_ newCommandQueue];
+    if (metal_queue_ == nil) {
+      metal_device_ = nil;
+      return false;
+    }
+
+    static constexpr char shader_source_utf8[] = R"METAL(
+      #include <metal_stdlib>
+      using namespace metal;
+
+      struct RasterVertex {
+        float4 position [[position]];
+        float2 uv;
+      };
+
+      vertex RasterVertex pluss_vertex(uint vertex_id [[vertex_id]]) {
+        const float2 positions[3] = {
+          float2(-1.0, -1.0),
+          float2( 3.0, -1.0),
+          float2(-1.0,  3.0)
+        };
+        const float2 coordinates[3] = {
+          float2(0.0, 1.0),
+          float2(2.0, 1.0),
+          float2(0.0, -1.0)
+        };
+        RasterVertex output;
+        output.position = float4(positions[vertex_id], 0.0, 1.0);
+        output.uv = coordinates[vertex_id];
+        return output;
+      }
+
+      fragment float4 pluss_fragment(
+          RasterVertex input [[stage_in]],
+          texture2d<float> raster [[texture(0)]]) {
+        constexpr sampler sample_filter(
+            mag_filter::linear, min_filter::linear,
+            address::clamp_to_edge);
+        return raster.sample(sample_filter, input.uv);
+      }
+    )METAL";
+    NSString* shader_source =
+        [NSString stringWithUTF8String:shader_source_utf8];
+    if (shader_source == nil) {
+      metal_queue_ = nil;
+      metal_device_ = nil;
+      return false;
+    }
+
+    NSError* library_error = nil;
+    id<MTLLibrary> library =
+        [metal_device_ newLibraryWithSource:shader_source
+                                   options:nil
+                                     error:&library_error];
+    if (library == nil) {
+      metal_queue_ = nil;
+      metal_device_ = nil;
+      return false;
+    }
+    id<MTLFunction> vertex = [library newFunctionWithName:@"pluss_vertex"];
+    id<MTLFunction> fragment =
+        [library newFunctionWithName:@"pluss_fragment"];
+    if (vertex == nil || fragment == nil) {
+      metal_queue_ = nil;
+      metal_device_ = nil;
+      return false;
+    }
+
+    MTLRenderPipelineDescriptor* descriptor =
+        [[MTLRenderPipelineDescriptor alloc] init];
+    descriptor.vertexFunction = vertex;
+    descriptor.fragmentFunction = fragment;
+    descriptor.colorAttachments[0].pixelFormat =
+        MTLPixelFormatBGRA8Unorm_sRGB;
+    NSError* pipeline_error = nil;
+    metal_pipeline_ =
+        [metal_device_ newRenderPipelineStateWithDescriptor:descriptor
+                                                      error:&pipeline_error];
+    if (metal_pipeline_ == nil) {
+      metal_queue_ = nil;
+      metal_device_ = nil;
+      return false;
+    }
+
+    metal_layer_ = [CAMetalLayer layer];
+    metal_layer_.device = metal_device_;
+    metal_layer_.pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    metal_layer_.framebufferOnly = YES;
+    metal_layer_.opaque = YES;
+    metal_layer_.contentsScale =
+        host_.window != nil ? host_.window.backingScaleFactor : 1.0;
+    metal_layer_.frame = host_.image_view.bounds;
+    metal_layer_.autoresizingMask =
+        kCALayerWidthSizable | kCALayerHeightSizable;
+    [host_.image_view.layer addSublayer:metal_layer_];
+    metal_ready_ = true;
+    return true;
+  }
+
+  bool present_metal_(const PixelCanvas& canvas) {
+    if (!metal_ready_ || metal_layer_ == nil || metal_device_ == nil ||
+        metal_queue_ == nil || metal_pipeline_ == nil || canvas.empty()) {
+      return false;
+    }
+    const SizeI canvas_size = canvas.size();
+    metal_layer_.frame = host_.image_view.bounds;
+    metal_layer_.drawableSize =
+        CGSizeMake(static_cast<CGFloat>(canvas_size.width),
+                   static_cast<CGFloat>(canvas_size.height));
+
+    MTLTextureDescriptor* texture_descriptor =
+        [MTLTextureDescriptor
+            texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm_sRGB
+                                         width:static_cast<NSUInteger>(
+                                                   canvas_size.width)
+                                        height:static_cast<NSUInteger>(
+                                                   canvas_size.height)
+                                     mipmapped:NO];
+    texture_descriptor.usage = MTLTextureUsageShaderRead;
+    texture_descriptor.storageMode = MTLStorageModeShared;
+    id<MTLTexture> raster_texture =
+        [metal_device_ newTextureWithDescriptor:texture_descriptor];
+    if (raster_texture == nil) {
+      return false;
+    }
+    const auto bytes = canvas.bytes();
+    [raster_texture
+        replaceRegion:MTLRegionMake2D(
+                          0, 0, static_cast<NSUInteger>(canvas_size.width),
+                          static_cast<NSUInteger>(canvas_size.height))
+           mipmapLevel:0
+             withBytes:bytes.data()
+           bytesPerRow:static_cast<NSUInteger>(canvas_size.width) * 4U];
+
+    id<CAMetalDrawable> drawable = [metal_layer_ nextDrawable];
+    id<MTLCommandBuffer> command_buffer = [metal_queue_ commandBuffer];
+    if (drawable == nil || command_buffer == nil) {
+      return true;
+    }
+    MTLRenderPassDescriptor* pass =
+        [MTLRenderPassDescriptor renderPassDescriptor];
+    pass.colorAttachments[0].texture = drawable.texture;
+    pass.colorAttachments[0].loadAction = MTLLoadActionClear;
+    pass.colorAttachments[0].storeAction = MTLStoreActionStore;
+    pass.colorAttachments[0].clearColor = MTLClearColorMake(1.0, 1.0, 1.0, 1.0);
+    id<MTLRenderCommandEncoder> encoder =
+        [command_buffer renderCommandEncoderWithDescriptor:pass];
+    if (encoder == nil) {
+      return false;
+    }
+    [encoder setRenderPipelineState:metal_pipeline_];
+    [encoder setFragmentTexture:raster_texture atIndex:0];
+    [encoder drawPrimitives:MTLPrimitiveTypeTriangle
+                vertexStart:0
+                vertexCount:3];
+    [encoder endEncoding];
+    [command_buffer presentDrawable:drawable];
+    [command_buffer commit];
+    // Keep at most one drawable transition in flight. The CPU raster work is
+    // already isolated on its worker; waiting here prevents WindowServer
+    // capture/composition from observing a drawable before its upload has
+    // completed.
+    [command_buffer waitUntilCompleted];
+    return command_buffer.status == MTLCommandBufferStatusCompleted;
+  }
+
+  static CVReturn display_link_callback_(CVDisplayLinkRef,
+                                         const CVTimeStamp*,
+                                         const CVTimeStamp*,
+                                         CVOptionFlags,
+                                         CVOptionFlags*,
+                                         void* context) {
+    auto* shell = static_cast<CocoaWindowShell*>(context);
+    if (shell != nullptr) {
+      shell->frame_due_.store(true, std::memory_order_release);
+    }
+    return kCVReturnSuccess;
+  }
+
+  void start_display_link_() {
+    stop_display_link_();
+    frame_due_.store(true, std::memory_order_release);
+    CVDisplayLinkRef link = nullptr;
+    if (CVDisplayLinkCreateWithActiveCGDisplays(&link) != kCVReturnSuccess ||
+        link == nullptr) {
+      return;
+    }
+    if (CVDisplayLinkSetOutputCallback(
+            link, &CocoaWindowShell::display_link_callback_, this) !=
+            kCVReturnSuccess ||
+        CVDisplayLinkStart(link) != kCVReturnSuccess) {
+      CVDisplayLinkRelease(link);
+      return;
+    }
+    display_link_ = link;
+  }
+
+  void stop_display_link_() noexcept {
+    CVDisplayLinkRef link = display_link_;
+    display_link_ = nullptr;
+    if (link != nullptr) {
+      if (CVDisplayLinkIsRunning(link)) {
+        (void)CVDisplayLinkStop(link);
+      }
+      CVDisplayLinkRelease(link);
+    }
+    frame_due_.store(true, std::memory_order_release);
+  }
+
   bool open_{false};
   SizeI last_size_{};
+  SizeI bitmap_size_{};
+  std::size_t frame_slot_{0};
   std::vector<ShellEvent> events_{};
   __strong PlussTilsViewCocoaShellHost* host_{nil};
-  __strong NSBitmapImageRep* bitmap_rep_{nil};
-  __strong NSImage* canvas_image_{nil};
+  __strong NSBitmapImageRep* bitmap_reps_[kFrameBufferCount]{};
+  __strong NSImage* canvas_images_[kFrameBufferCount]{};
+  CVDisplayLinkRef display_link_{nullptr};
+  std::atomic_bool frame_due_{true};
+  bool metal_ready_{false};
+  __strong id<MTLDevice> metal_device_{nil};
+  __strong id<MTLCommandQueue> metal_queue_{nil};
+  __strong id<MTLRenderPipelineState> metal_pipeline_{nil};
+  __strong CAMetalLayer* metal_layer_{nil};
 };
 
 std::unique_ptr<IWindowShell> make_cocoa_window_shell() {

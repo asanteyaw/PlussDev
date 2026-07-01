@@ -137,8 +137,8 @@ loaded from a feature.
 
 ```cpp
 auto cases = df.cases();
-auto first_case = df.cloc(0);
-auto first_ten = df.cloc(0, 10);
+auto first_case = df.case_study(0);
+auto first_ten = df.case_study(0, 10);
 
 auto indexed = df.set_cases("id", true);
 auto reset = indexed.reset_cases("id");

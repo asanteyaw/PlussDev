@@ -17,7 +17,7 @@ DataFrame aggregate_over_frames(self, const std::function<DataFrame(const std::v
 #### Parameters
 
 `fn` : `const std::function<DataFrame(const std::vector<DataFrame>&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -288,7 +288,7 @@ DataFrame dloc(self, std::int64_t index) const
 #### Parameters
 
 `index` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based positional index used by this overload.
 
 #### Returns
 
@@ -379,7 +379,7 @@ DataFrame frame(self, std::int64_t index) const
 #### Parameters
 
 `index` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based positional index used by this overload.
 
 #### Returns
 
@@ -560,7 +560,7 @@ pluss::kindle::Archive kindelize(self, const pluss::kindle::KindelizePolicy& pol
 #### Parameters
 
 `policy` : `const pluss::kindle::KindelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -607,7 +607,7 @@ DataFrame loc(self, const pluss::Timeline& label) const
 #### Parameters
 
 `label` : `const pluss::Timeline&`
-    See the signature for the supported argument form.
+    Label or labels used by this overload.
 
 #### Returns
 
@@ -657,7 +657,7 @@ DataFrame loc(self, std::int64_t label) const
 #### Parameters
 
 `label` : `std::int64_t`
-    See the signature for the supported argument form.
+    Integer label or bucket code used by this overload.
 
 #### Returns
 
@@ -707,7 +707,7 @@ DataFrame loc(self, std::string_view label) const
 #### Parameters
 
 `label` : `std::string_view`
-    See the signature for the supported argument form.
+    Label or labels used by this overload.
 
 #### Returns
 
@@ -757,7 +757,7 @@ Atlas map_frames(self, const std::function<DataFrame(const DataFrame&)>& fn) con
 #### Parameters
 
 `fn` : `const std::function<DataFrame(const DataFrame&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -1073,7 +1073,7 @@ void show(self, std::ostream& os, const display::DisplayOptions& options = {}) c
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 `options` : `const display::DisplayOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
@@ -1183,10 +1183,10 @@ Atlas sort_depth(self, bool ascending = true, bool nulls_last = true) const
 #### Parameters
 
 `ascending` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 `nulls_last` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -1280,7 +1280,7 @@ static Atlas tabelize(const pluss::kindle::Archive& archive)
 #### Parameters
 
 `archive` : `const pluss::kindle::Archive&`
-    See the signature for the supported argument form.
+    Archive payload supplied to this overload.
 
 #### Returns
 
@@ -1330,10 +1330,10 @@ static Atlas tabelize(const pluss::kindle::Archive& archive, const pluss::kindle
 #### Parameters
 
 `archive` : `const pluss::kindle::Archive&`
-    See the signature for the supported argument form.
+    Archive payload supplied to this overload.
 
 `policy` : `const pluss::kindle::TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 

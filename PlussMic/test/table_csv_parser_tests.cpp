@@ -1359,10 +1359,10 @@ void test_versatile_dataframe_families() {
   expect(masked_cmp.validity_mask()->to_vec<bool>() == std::vector<bool>({false, false, false}),
          "broadcasted scalar Thread validity mask should expand across the output rows");
 
-  const auto cloc_one = df.cloc(0);
-  expect(cloc_one.ncases() == 1, "cloc(row) should return exactly one case");
-  const auto cloc_span = df.cloc(2, 7);
-  expect(cloc_span.ncases() == 5, "cloc(start, stop) should return half-open row slice");
+  const auto one_case = df.case_study(0);
+  expect(one_case.ncases() == 1, "case_study(row) should return exactly one case");
+  const auto row_span = df.case_study(2, 7);
+  expect(row_span.ncases() == 5, "case_study(start, stop) should return half-open row slice");
   expect(!df.iat(0, 1).empty(), "iat should return a scalar cell string");
   expect(!df.at(0, "job").empty(), "at should return a scalar cell string by feature name");
   expect(df.get("job").has_value() && !df.get("not_a_feature").has_value(),

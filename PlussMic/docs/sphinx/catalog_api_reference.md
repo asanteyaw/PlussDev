@@ -76,7 +76,7 @@ Catalog aggregate_text_stats(self, std::string_view field, std::string_view stat
     Name of the target stream in the catalog.
 
 `stat_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Statistic selector string understood by this overload.
 
 #### Returns
 
@@ -129,7 +129,7 @@ Catalog apply(self, std::string_view field, const std::function<Stream(const Str
     Name of the target stream in the catalog.
 
 `func` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -189,7 +189,7 @@ Catalog& apply_(self, std::string_view field, const std::function<Stream(const S
     Name of the target stream in the catalog.
 
 `func` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -225,7 +225,7 @@ Catalog apply_all(self, const std::function<Stream(const Stream&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -282,7 +282,7 @@ Catalog& apply_all_(self, const std::function<Stream(const Stream&)>& fn)
 #### Parameters
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -312,7 +312,7 @@ ct.apply_all_([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kin
 #### Signature
 
 ```cpp
-Catalog astype(self, std::initializer_list<std::string_view> keys, pluss::codem::ScalarType dtype) const
+Catalog astype(self, std::initializer_list<std::string_view> keys, pluss::ScalarType dtype) const
 ```
 
 #### Parameters
@@ -320,8 +320,8 @@ Catalog astype(self, std::initializer_list<std::string_view> keys, pluss::codem:
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-`dtype` : `pluss::codem::ScalarType`
-    See the signature for the supported argument form.
+`dtype` : `pluss::ScalarType`
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -343,7 +343,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.astype({"metric"}, pluss::codem::ScalarType::Float64);
+auto out = ct.astype({"metric"}, pluss::ScalarType::Float64);
 ```
 
 #### Output
@@ -478,8 +478,8 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({
-    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, 0.0, 88.0, 0.0})).with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool)),
-    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, 0.0, 75.0, 91.0})).with_validity_mask(pluss::make_series({true, false, true, true}, pluss::codem::ScalarType::Bool)),
+    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, 0.0, 88.0, 0.0})).with_validity_mask(pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool)),
+    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, 0.0, 75.0, 91.0})).with_validity_mask(pluss::make_series({true, false, true, true}, pluss::ScalarType::Bool)),
     "Name"_k = pluss::kindle::Stream(pluss::make_note({"A", "B", "C", "D"})),
 });
 
@@ -574,7 +574,7 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog cast_series(self, std::initializer_list<std::string_view> keys, std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const
+Catalog cast_series(self, std::initializer_list<std::string_view> keys, std::optional<pluss::ScalarType> dtype = std::nullopt) const
 ```
 
 #### Parameters
@@ -582,8 +582,8 @@ Catalog cast_series(self, std::initializer_list<std::string_view> keys, std::opt
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-`dtype` : `std::optional<pluss::codem::ScalarType>`
-    See the signature for the supported argument form.
+`dtype` : `std::optional<pluss::ScalarType>`
+    Target scalar dtype used by this conversion overload.
 
 #### Returns
 
@@ -600,7 +600,7 @@ This changes the semantic or numeric type so later operations route through the 
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});
 
-auto out = ct.cast_series({"metric"}, pluss::codem::ScalarType::Float64);
+auto out = ct.cast_series({"metric"}, pluss::ScalarType::Float64);
 ```
 
 #### Output
@@ -746,7 +746,7 @@ Catalog cloc(self, std::int64_t row) const
 #### Parameters
 
 `row` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based row position used by this overload.
 
 #### Returns
 
@@ -841,13 +841,13 @@ Catalog compute_similarity(self, std::string_view field1, std::string_view field
 #### Parameters
 
 `field1` : `std::string_view`
-    See the signature for the supported argument form.
+    First named field used by this overload.
 
 `field2` : `std::string_view`
-    See the signature for the supported argument form.
+    Second named field used by this overload.
 
 `method` : `std::string_view`
-    See the signature for the supported argument form.
+    Method selector string understood by this overload.
 
 #### Returns
 
@@ -1036,7 +1036,7 @@ Catalog drop(self, const std::vector<std::string>& field_names) const
 #### Parameters
 
 `field_names` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Field names supplied together for this overload.
 
 #### Returns
 
@@ -1157,7 +1157,7 @@ Catalog drop(self, std::string_view field_name) const
 #### Parameters
 
 `field_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name used to select the target text, stream, or grouping column.
 
 #### Returns
 
@@ -1233,7 +1233,7 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 auto metric = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));
+                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 auto ct = pluss::kindle::Catalog({
     "metric"_k = metric,
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
@@ -1729,7 +1729,7 @@ Catalog filter(self, const pluss::Series& condition) const
 #### Parameters
 
 `condition` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -1751,7 +1751,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = ct.filter(mask);
 ```
 
@@ -1783,7 +1783,7 @@ Catalog filter_by_text(self, std::string_view field, std::string_view pattern) c
     Name of the target stream in the catalog.
 
 `pattern` : `std::string_view`
-    See the signature for the supported argument form.
+    Pattern string used for matching or extraction.
 
 #### Returns
 
@@ -1835,7 +1835,7 @@ static Catalog from_json(std::string_view json_text)
 #### Parameters
 
 `json_text` : `std::string_view`
-    See the signature for the supported argument form.
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 #### Returns
 
@@ -1956,7 +1956,7 @@ std::unordered_map<std::string, Catalog> group_by(self, std::string_view key_fie
 #### Parameters
 
 `key_field` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name that acts as the key for matching, grouping, or lookup.
 
 #### Returns
 
@@ -2267,10 +2267,10 @@ static Catalog kindelize(const pluss::table::DataFrame& frame, const KindelizePo
 #### Parameters
 
 `frame` : `const pluss::table::DataFrame&`
-    See the signature for the supported argument form.
+    Frame payload supplied to this overload.
 
 `policy` : `const KindelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -2493,7 +2493,7 @@ static Catalog load_csv_with_key(std::string_view filepath, std::string_view key
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `key_field` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name that acts as the key for matching, grouping, or lookup.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
@@ -2874,7 +2874,7 @@ Catalog masked_select(self, const pluss::Series& mask) const
 #### Parameters
 
 `mask` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -2896,7 +2896,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = ct.masked_select(mask);
 ```
 
@@ -3012,10 +3012,14 @@ Catalog merge(self, const Catalog& other, std::string_view on, std::string_view 
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `on` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name used as the match or join key for this overload.
 
 `how` : `std::string_view`
-    Join mode. `DataFrame::unify(...)` currently supports `"inner"` and `"left"`.
+    Join mode for `DataFrame::unify(...)`.
+    
+    Supported values:
+    - `inner`: Keep only rows whose key values match on both sides.
+    - `left`: Preserve the left frame row order and row count, attaching right-hand matches where they exist.
 
 #### Returns
 
@@ -3290,7 +3294,7 @@ Catalog query(self, const QueryFn& fn) const
 #### Parameters
 
 `fn` : `const QueryFn&`
-    See the signature for the supported argument form.
+    Callable used to transform, map, or derive values in this overload.
 
 #### Returns
 
@@ -3340,7 +3344,7 @@ Catalog rename(self, const std::unordered_map<std::string, std::string>& mapping
 #### Parameters
 
 `mapping` : `const std::unordered_map<std::string, std::string>&`
-    See the signature for the supported argument form.
+    Name-to-name mapping used by this overload.
 
 #### Returns
 
@@ -3396,7 +3400,7 @@ Catalog rename(self, std::initializer_list<std::pair<std::string_view, std::stri
 #### Parameters
 
 `mapping` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -3451,10 +3455,10 @@ Catalog rename(self, std::string_view from, std::string_view to) const
 #### Parameters
 
 `from` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 `to` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 #### Returns
 
@@ -3509,10 +3513,10 @@ Catalog& rename_(self, std::string_view from, std::string_view to)
 #### Parameters
 
 `from` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 `to` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 #### Returns
 
@@ -3601,10 +3605,10 @@ void save_as(self, std::string_view target_type, std::string_view filename, cons
 #### Parameters
 
 `target_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Format or target selector string used by this overload.
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -3649,7 +3653,7 @@ void save_csv(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3695,7 +3699,7 @@ void save_csv(self, std::string_view filename, const pluss::loader::Config& conf
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -3744,7 +3748,7 @@ void save_excel(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3790,7 +3794,7 @@ void save_excel(self, std::string_view filename, const pluss::loader::Config& co
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -3839,7 +3843,7 @@ void save_json(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3885,7 +3889,7 @@ void save_json(self, std::string_view filename, const pluss::loader::Config& con
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -3934,7 +3938,7 @@ void save_parquet(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -3980,7 +3984,7 @@ void save_parquet(self, std::string_view filename, const pluss::loader::Config& 
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -4029,7 +4033,7 @@ void save_txt(self, std::string_view filename) const
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 #### Returns
 
@@ -4075,7 +4079,7 @@ void save_txt(self, std::string_view filename, const pluss::loader::Config& conf
 #### Parameters
 
 `filename` : `std::string_view`
-    See the signature for the supported argument form.
+    Filename or path-like string used by this overload.
 
 `config` : `const pluss::loader::Config&`
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
@@ -4124,7 +4128,7 @@ Catalog select(self, const std::vector<std::string>& field_names) const
 #### Parameters
 
 `field_names` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Field names supplied together for this overload.
 
 #### Returns
 
@@ -4179,7 +4183,7 @@ Catalog select(self, std::initializer_list<std::string_view> field_names) const
 #### Parameters
 
 `field_names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4466,7 +4470,7 @@ Catalog set_streams(self, std::initializer_list<NamedStream> items) const
 #### Parameters
 
 `items` : `std::initializer_list<NamedStream>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4523,7 +4527,7 @@ Catalog set_streams(self, std::initializer_list<std::pair<std::string_view, Stre
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, Stream>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4579,7 +4583,7 @@ Catalog& set_streams_(self, std::initializer_list<NamedStream> items)
 #### Parameters
 
 `items` : `std::initializer_list<NamedStream>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4622,7 +4626,7 @@ Catalog& set_streams_(self, std::initializer_list<std::pair<std::string_view, St
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, Stream>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -4664,7 +4668,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -4753,10 +4757,10 @@ Catalog sort(self, std::string_view by_field, bool ascending = true) const
 #### Parameters
 
 `by_field` : `std::string_view`
-    See the signature for the supported argument form.
+    Field name that controls the grouping or sorting basis of the operation.
 
 `ascending` : `bool`
-    See the signature for the supported argument form.
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Returns
 
@@ -4806,10 +4810,10 @@ Catalog sort_by(self, const std::vector<std::string>& fields, const std::vector<
 #### Parameters
 
 `fields` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 `ascending` : `const std::vector<bool>&`
-    See the signature for the supported argument form.
+    Sort-order switch. `true` means ascending order and `false` means descending order.
 
 #### Returns
 
@@ -4984,7 +4988,7 @@ pluss::table::DataFrame tabelize(self, const TabelizePolicy& policy = {}) const
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 #### Returns
 
@@ -5081,7 +5085,7 @@ Catalog take(self, std::span<const std::int64_t> indices) const
 #### Parameters
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -5422,7 +5426,7 @@ pluss::table::DataFrame to_table(self, const TabelizePolicy& policy = {}, bool r
 #### Parameters
 
 `policy` : `const TabelizePolicy&`
-    See the signature for the supported argument form.
+    Policy object that changes the structural behavior of this overload.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -5472,7 +5476,7 @@ Catalog transform(self, const std::function<Stream(const Stream&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -5529,7 +5533,7 @@ Catalog transform(self, std::string_view field, const std::function<Stream(const
     Name of the target stream in the catalog.
 
 `fn` : `const std::function<Stream(const Stream&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -5624,7 +5628,7 @@ Catalog where(self, const pluss::Series& condition) const
 #### Parameters
 
 `condition` : `const pluss::Series&`
-    See the signature for the supported argument form.
+    Boolean mask used by this overload to decide which rows, values, or items participate.
 
 #### Returns
 
@@ -5646,7 +5650,7 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = ct.where(mask);
 ```
 

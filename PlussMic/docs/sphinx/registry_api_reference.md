@@ -20,7 +20,7 @@ Registry apply(self, std::initializer_list<std::string_view> keys, const std::fu
     Collection of slot or stream names to keep, drop, or rewrite together.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -79,7 +79,7 @@ Registry apply(self, std::string_view key, const std::function<Slot(const Slot&)
     Name of the target slot or stream.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -138,7 +138,7 @@ Registry& apply_(self, std::initializer_list<std::string_view> keys, const std::
     Collection of slot or stream names to keep, drop, or rewrite together.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -178,7 +178,7 @@ Registry& apply_(self, std::string_view key, const std::function<Slot(const Slot
     Name of the target slot or stream.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -215,7 +215,7 @@ Registry apply_all(self, const std::function<Slot(const Slot&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -473,7 +473,7 @@ Registry cloc(self, std::int64_t row) const
 #### Parameters
 
 `row` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based row position used by this overload.
 
 #### Returns
 
@@ -563,7 +563,7 @@ Registry combine(self, const Registry& other, std::string suffix = "_other") con
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
 `suffix` : `std::string`
-    See the signature for the supported argument form.
+    Text suffix appended after the existing label or value.
 
 #### Returns
 
@@ -582,7 +582,7 @@ auto rg = pluss::bundle::Registry({
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto other = pluss::bundle::Registry({{"flag", pluss::bundle::Slot({pluss::make_series(true, pluss::codem::ScalarType::Bool), pluss::make_series(false, pluss::codem::ScalarType::Bool), pluss::make_series(true, pluss::codem::ScalarType::Bool)})}});
+auto other = pluss::bundle::Registry({{"flag", pluss::bundle::Slot({pluss::make_series(true, pluss::ScalarType::Bool), pluss::make_series(false, pluss::ScalarType::Bool), pluss::make_series(true, pluss::ScalarType::Bool)})}});
 auto out = rg.combine(other, "_rhs");
 ```
 
@@ -1074,7 +1074,7 @@ void ensure_stream_compatible(self, std::string_view where = "Registry") const
 #### Parameters
 
 `where` : `std::string_view`
-    See the signature for the supported argument form.
+    Filter expression or selector string interpreted by this overload.
 
 #### Returns
 
@@ -1154,7 +1154,7 @@ Registry filter_values(self, std::string_view key, const std::function<bool(cons
     Name of the target slot or stream.
 
 `predicate` : `const std::function<bool(const Slot::Value&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -1202,7 +1202,7 @@ Registry& filter_values_(self, std::string_view key, const std::function<bool(co
     Name of the target slot or stream.
 
 `predicate` : `const std::function<bool(const Slot::Value&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -1235,7 +1235,7 @@ static Registry from_kindle(const pluss::kindle::Catalog& catalog)
 #### Parameters
 
 `catalog` : `const pluss::kindle::Catalog&`
-    See the signature for the supported argument form.
+    Catalog payload supplied to this overload.
 
 #### Returns
 
@@ -2272,7 +2272,7 @@ Registry map(self, const std::function<Slot(const Slot&)>& fn) const
 #### Parameters
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -2317,7 +2317,7 @@ Registry& map_(self, const std::function<Slot(const Slot&)>& fn)
 #### Parameters
 
 `fn` : `const std::function<Slot(const Slot&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -2588,7 +2588,7 @@ Registry rename(self, const std::unordered_map<std::string, std::string>& mappin
 #### Parameters
 
 `mapping` : `const std::unordered_map<std::string, std::string>&`
-    See the signature for the supported argument form.
+    Name-to-name mapping used by this overload.
 
 #### Returns
 
@@ -2639,7 +2639,7 @@ Registry rename(self, std::initializer_list<std::pair<std::string_view, std::str
 #### Parameters
 
 `mapping` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -2689,10 +2689,10 @@ Registry rename(self, std::string_view from, std::string_view to) const
 #### Parameters
 
 `from` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 `to` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 #### Returns
 
@@ -2742,10 +2742,10 @@ Registry& rename_(self, std::string_view from, std::string_view to)
 #### Parameters
 
 `from` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 `to` : `std::string_view`
-    See the signature for the supported argument form.
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
 #### Returns
 
@@ -2826,7 +2826,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, cons
 #### Parameters
 
 `target_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Format or target selector string used by this overload.
 
 `filepath` : `std::string_view`
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
@@ -3551,7 +3551,7 @@ Registry set_slots(self, std::initializer_list<std::pair<std::string, Slot>> ite
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string, Slot>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -3602,7 +3602,7 @@ Registry set_slots(self, std::initializer_list<std::pair<std::string_view, Slot>
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, Slot>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -3653,7 +3653,7 @@ Registry& set_slots_(self, std::initializer_list<std::pair<std::string, Slot>> i
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string, Slot>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -3692,7 +3692,7 @@ Registry& set_slots_(self, std::initializer_list<std::pair<std::string_view, Slo
 #### Parameters
 
 `items` : `std::initializer_list<std::pair<std::string_view, Slot>>`
-    See the signature for the supported argument form.
+    Inline collection passed directly at the call site.
 
 #### Returns
 
@@ -3731,7 +3731,7 @@ void show(self, std::ostream& os) const
 #### Parameters
 
 `os` : `std::ostream&`
-    See the signature for the supported argument form.
+    Destination output stream used instead of the default display or print target.
 
 #### Returns
 
@@ -3980,7 +3980,7 @@ Registry take(self, const std::vector<std::int64_t>& indices) const
 #### Parameters
 
 `indices` : `const std::vector<std::int64_t>&`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -4030,7 +4030,7 @@ Registry take(self, std::span<const std::int64_t> indices) const
 #### Parameters
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -4083,7 +4083,7 @@ Registry take_values(self, std::string_view key, std::span<const std::int64_t> i
     Name of the target slot or stream.
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -4132,7 +4132,7 @@ Registry& take_values_(self, std::string_view key, std::span<const std::int64_t>
     Name of the target slot or stream.
 
 `indices` : `std::span<const std::int64_t>`
-    See the signature for the supported argument form.
+    Integer positions used to select, reorder, or address entries.
 
 #### Returns
 
@@ -4289,7 +4289,7 @@ Registry transform_values(self, std::string_view key, const std::function<Slot::
     Name of the target slot or stream.
 
 `fn` : `const std::function<Slot::Value(const Slot::Value&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
@@ -4337,7 +4337,7 @@ Registry& transform_values_(self, std::string_view key, const std::function<Slot
     Name of the target slot or stream.
 
 `fn` : `const std::function<Slot::Value(const Slot::Value&)>&`
-    See the signature for the supported argument form.
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
 #### Returns
 
