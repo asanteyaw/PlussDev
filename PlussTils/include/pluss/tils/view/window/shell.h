@@ -28,6 +28,8 @@ enum class ShellBackend : std::uint8_t {
   None = 0,
   Null = 1,
   Cocoa = 2,
+  X11 = 3,
+  Win32 = 4,
 };
 
 enum class ShellSelectionPolicy : std::uint8_t {

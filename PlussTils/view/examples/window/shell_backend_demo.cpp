@@ -19,6 +19,10 @@ namespace {
       return "Null";
     case ShellBackend::Cocoa:
       return "Cocoa";
+    case ShellBackend::X11:
+      return "X11";
+    case ShellBackend::Win32:
+      return "Win32";
   }
   return "Unknown";
 }

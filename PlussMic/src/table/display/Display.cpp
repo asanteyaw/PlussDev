@@ -766,6 +766,10 @@ bool native_webview_backend_available_() {
   return pluss::view::native_backend_available();
 }
 
+bool pluss_webview_backend_available_() {
+  return pluss::view::pluss_webview_backend_available();
+}
+
 bool runtime_gui_env_available_() {
   return pluss::view::runtime_gui_environment_available();
 }
@@ -778,8 +782,10 @@ DisplayBackend resolve_backend_(const DisplayOptions& options) {
   }
 
   if (configured == DisplayBackend::Auto) {
-    // Default remains native-webview first for best fidelity, with in-house fallback.
-    return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::PlussWebView;
+    if (pluss_webview_backend_available_()) {
+      return DisplayBackend::PlussWebView;
+    }
+    return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::Terminal;
   }
 
   if (configured == DisplayBackend::NativeWebView) {
@@ -787,7 +793,7 @@ DisplayBackend resolve_backend_(const DisplayOptions& options) {
   }
 
   if (configured == DisplayBackend::PlussWebView) {
-    return DisplayBackend::PlussWebView;
+    return pluss_webview_backend_available_() ? DisplayBackend::PlussWebView : DisplayBackend::Terminal;
   }
 
   return configured;

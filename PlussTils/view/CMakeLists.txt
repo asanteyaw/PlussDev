@@ -84,6 +84,40 @@ endif()
 set(PLUSSTILS_VIEW_HAVE_GTK_WEBKIT_VALUE 0)
 set(PLUSSTILS_VIEW_HAVE_MAC_WEBKIT_VALUE 0)
 set(PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2_VALUE 0)
+set(PLUSSTILS_VIEW_HAVE_X11_SHELL_VALUE 0)
+
+if(UNIX AND NOT APPLE)
+    option(PLUSSTILS_VIEW_ENABLE_X11_SHELL
+           "Enable the dependency-light X11/XWayland shell for the built-in PlussWebView renderer"
+           ON)
+    if(PLUSSTILS_VIEW_ENABLE_X11_SHELL)
+        find_package(X11 QUIET)
+        if(X11_FOUND)
+            set(PLUSSTILS_VIEW_HAVE_X11_SHELL_VALUE 1)
+            target_sources(PlussTilsView PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/window/shell/X11WindowShell.cpp
+            )
+            target_link_libraries(PlussTilsView PRIVATE X11::X11)
+            if(TARGET X11::Xi)
+                target_link_libraries(PlussTilsView PRIVATE X11::Xi)
+                target_compile_definitions(PlussTilsView PRIVATE
+                    PLUSSTILS_VIEW_HAVE_XINPUT2=1
+                )
+            endif()
+        endif()
+    endif()
+
+    find_package(Freetype QUIET)
+    if(Freetype_FOUND)
+        target_sources(PlussTilsView PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/window/render/text_raster_native_freetype.cpp
+        )
+        target_link_libraries(PlussTilsView PRIVATE Freetype::Freetype)
+        target_compile_definitions(PlussTilsView PRIVATE
+            PLUSSTILS_VIEW_HAVE_FREETYPE=1
+        )
+    endif()
+endif()
 
 if(UNIX AND NOT APPLE AND PLUSSTILS_VIEW_ENABLE_GTK_VIEWER AND PkgConfig_FOUND)
     pkg_check_modules(PLUSSTILS_VIEW_GTK3 QUIET gtk+-3.0)
@@ -162,6 +196,12 @@ if(APPLE)
 endif()
 
 if(WIN32)
+    target_sources(PlussTilsView PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/window/shell/Win32WindowShell.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/window/render/text_raster_native_windows.cpp
+    )
+    target_link_libraries(PlussTilsView PRIVATE user32 gdi32 comdlg32 shell32)
+
     option(PLUSSTILS_VIEW_ENABLE_WINDOWS_WEBVIEW2 "Enable WebView2 HTML window support in PlussTilsView" ON)
     set(PLUSSTILS_VIEW_WEBVIEW2_SDK_DIR "" CACHE PATH "Path to the Microsoft.Web.WebView2 SDK root")
 
@@ -215,6 +255,7 @@ target_compile_definitions(PlussTilsView PUBLIC
     PLUSSTILS_VIEW_HAVE_GTK_WEBKIT=${PLUSSTILS_VIEW_HAVE_GTK_WEBKIT_VALUE}
     PLUSSTILS_VIEW_HAVE_MAC_WEBKIT=${PLUSSTILS_VIEW_HAVE_MAC_WEBKIT_VALUE}
     PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2=${PLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2_VALUE}
+    PLUSSTILS_VIEW_HAVE_X11_SHELL=${PLUSSTILS_VIEW_HAVE_X11_SHELL_VALUE}
 )
 target_compile_definitions(PlussTilsView PRIVATE
     PLUSSTILS_VIEW_HAVE_LIBZIP=${PLUSSTILS_VIEW_HAVE_LIBZIP_VALUE}

@@ -515,7 +515,7 @@ void test_html_display_renderers_and_backend_config() {
          "info html should honor the resolved display title");
 
   expect(pluss::table::display::default_backend() == pluss::table::display::DisplayBackend::Auto,
-         "display backend should default to smart auto mode");
+         "automatic display policy should prefer PlussWebView while retaining platform fallback");
 }
 
 void test_atlas_html_display_renderer() {

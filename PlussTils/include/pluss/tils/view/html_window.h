@@ -24,6 +24,7 @@ struct HtmlWindowOptions {
 
 [[nodiscard]] bool runtime_gui_environment_available() noexcept;
 [[nodiscard]] bool native_backend_available() noexcept;
+[[nodiscard]] bool pluss_webview_backend_available() noexcept;
 [[nodiscard]] bool show_html_window(const std::string& html,
                                     const HtmlWindowOptions& options = {});
 

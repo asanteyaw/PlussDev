@@ -19,10 +19,10 @@ constexpr auto kNativeWebViewPriority = std::to_array<SessionBackend>({
 });
 
 constexpr auto kAutoBackendPriority = std::to_array<SessionBackend>({
+    SessionBackend::PlussWebView,
     SessionBackend::GtkWebKit,
     SessionBackend::MacWebKit,
     SessionBackend::WinWebView2,
-    SessionBackend::PlussWebView,
 });
 
 constexpr auto kPlussWebViewPreferredPriority = std::to_array<SessionBackend>({

@@ -18,6 +18,10 @@ bool native_backend_available() noexcept {
   return native_host_capabilities().available;
 }
 
+bool pluss_webview_backend_available() noexcept {
+  return query_host_capabilities(SessionBackend::PlussWebView).available;
+}
+
 bool show_html_window(const std::string& html, const HtmlWindowOptions& options) {
   if (html.empty()) {
     return false;

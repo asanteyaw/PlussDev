@@ -8,6 +8,10 @@ namespace pluss::view::window {
 
 #if defined(__APPLE__)
 [[nodiscard]] std::unique_ptr<IWindowShell> make_cocoa_window_shell();
+#elif defined(_WIN32)
+[[nodiscard]] std::unique_ptr<IWindowShell> make_win32_window_shell();
+#elif defined(PLUSSTILS_VIEW_HAVE_X11_SHELL) && PLUSSTILS_VIEW_HAVE_X11_SHELL
+[[nodiscard]] std::unique_ptr<IWindowShell> make_x11_window_shell();
 #endif
 
 namespace {
@@ -52,10 +56,20 @@ namespace {
 std::unique_ptr<IWindowShell> make_platform_window_shell() {
   return make_cocoa_window_shell();
 }
-#else
+#elif defined(_WIN32)
 std::unique_ptr<IWindowShell> make_platform_window_shell() {
-  return {};
+  return make_win32_window_shell();
 }
+#elif defined(PLUSSTILS_VIEW_HAVE_X11_SHELL) && PLUSSTILS_VIEW_HAVE_X11_SHELL
+std::unique_ptr<IWindowShell> make_platform_window_shell() {
+  const char* display = std::getenv("DISPLAY");
+  if (display == nullptr || display[0] == '\0') {
+    return {};
+  }
+  return make_x11_window_shell();
+}
+#else
+std::unique_ptr<IWindowShell> make_platform_window_shell() { return {}; }
 #endif
 
 } // namespace

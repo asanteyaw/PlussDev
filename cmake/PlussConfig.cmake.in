@@ -11,6 +11,8 @@ endif()
 string(FIND "${_pluss_targets_content}" "Arrow::arrow" _pluss_needs_arrow)
 string(FIND "${_pluss_targets_content}" "Parquet::parquet" _pluss_needs_parquet)
 string(FIND "${_pluss_targets_content}" "CURL::libcurl" _pluss_needs_curl)
+string(FIND "${_pluss_targets_content}" "X11::X11" _pluss_needs_x11)
+string(FIND "${_pluss_targets_content}" "Freetype::Freetype" _pluss_needs_freetype)
 
 if(NOT _pluss_needs_arrow EQUAL -1)
   find_dependency(Arrow CONFIG QUIET)
@@ -36,6 +38,14 @@ endif()
 
 if(NOT _pluss_needs_curl EQUAL -1)
   find_dependency(CURL QUIET)
+endif()
+
+if(NOT _pluss_needs_x11 EQUAL -1)
+  find_dependency(X11)
+endif()
+
+if(NOT _pluss_needs_freetype EQUAL -1)
+  find_dependency(Freetype)
 endif()
 
 if(NOT _pluss_needs_arrow EQUAL -1 AND NOT TARGET Arrow::arrow AND NOT TARGET Arrow::arrow_shared)

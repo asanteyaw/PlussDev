@@ -350,7 +350,8 @@ void draw_glyph(PixelCanvas& canvas,
 
 } // namespace
 
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(_WIN32) && \
+    !(defined(PLUSSTILS_VIEW_HAVE_FREETYPE) && PLUSSTILS_VIEW_HAVE_FREETYPE)
 bool render_text_command_native(PixelCanvas& canvas,
                                 const TextCommand& command,
                                 const std::optional<RectI>& clip,
