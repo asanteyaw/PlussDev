@@ -1,0 +1,7 @@
+plussmic_kindle_catalog 1 198.386
+plussmic_bundle_model 1 147.733
+plussmic_table_dataframe_plot_api 1 11.0675
+plussmic_table_ts_accessor 1 0.364966
+plussmic_table_axis_match 1 16.7458
+plussmic_table_statistics_window 1 32.9397
+---

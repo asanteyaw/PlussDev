@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <numeric>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -42,6 +44,107 @@ std::string unique_feature_name(std::string candidate,
 pluss::Note note_from_strings(const std::vector<std::string>& values) {
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(values.size())};
   return pluss::make_note(values, shape);
+}
+
+pluss::codem::Platform reshape_thread_platform(const Thread& thread) {
+  switch (thread.kind()) {
+    case ThreadKind::Series:
+      return thread.as_series().platform();
+    case ThreadKind::Timeline:
+      return thread.as_timeline().epoch_nanos().platform();
+    case ThreadKind::TimeIndex:
+      return thread.as_timeindex().timeline().epoch_nanos().platform();
+    case ThreadKind::Note:
+      return pluss::codem::Platform::CPU;
+  }
+  PLUSS_FAIL("DataFrame::lengthen: unsupported Thread kind");
+}
+
+pluss::Series reshape_validity(
+    const std::vector<Thread>& blocks,
+    const pluss::codem::Platform platform) {
+  std::vector<pluss::Series> masks;
+  masks.reserve(blocks.size());
+  for (const auto& block : blocks) {
+    auto mask = block.has_validity_mask()
+        ? *block.validity_mask()
+        : pluss::Series::ones(
+              {block.size()},
+              pluss::codem::ScalarType::Bool,
+              platform);
+    if (mask.platform() != platform) {
+      mask = mask.to(platform);
+    }
+    masks.push_back(std::move(mask));
+  }
+  std::vector<pluss::Series> tail(masks.begin() + 1, masks.end());
+  return masks.front().unite(tail, 0);
+}
+
+Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
+  PLUSS_CHECK(!blocks.empty(), "DataFrame::lengthen: no value features selected");
+  const auto kind = blocks.front().kind();
+  const auto platform = reshape_thread_platform(blocks.front());
+  const bool any_missing = std::any_of(
+      blocks.begin(),
+      blocks.end(),
+      [](const Thread& block) { return block.has_validity_mask(); });
+  for (const auto& block : blocks) {
+    PLUSS_CHECK(
+        block.kind() == kind,
+        "DataFrame::lengthen: value features must use the same Thread kind");
+    PLUSS_CHECK(
+        reshape_thread_platform(block) == platform,
+        "DataFrame::lengthen: value features must use the same platform");
+  }
+
+  Thread output;
+  switch (kind) {
+    case ThreadKind::Series: {
+      const auto dtype = blocks.front().as_series().scalar_type();
+      std::vector<pluss::Series> tail;
+      tail.reserve(blocks.size() - 1);
+      for (std::size_t i = 1; i < blocks.size(); ++i) {
+        PLUSS_CHECK(
+            blocks[i].as_series().scalar_type() == dtype,
+            "DataFrame::lengthen: numeric value features must use the same dtype");
+        tail.push_back(blocks[i].as_series());
+      }
+      output = Thread(blocks.front().as_series().unite(tail, 0));
+      break;
+    }
+    case ThreadKind::Note: {
+      std::vector<std::string> values;
+      values.reserve(static_cast<std::size_t>(
+          blocks.front().size() * static_cast<std::int64_t>(blocks.size())));
+      for (const auto& block : blocks) {
+        for (const auto value : block.as_note().vector()) {
+          values.emplace_back(value);
+        }
+      }
+      output = Thread(pluss::make_note(values));
+      break;
+    }
+    case ThreadKind::Timeline: {
+      auto values = blocks.front().as_timeline();
+      for (std::size_t i = 1; i < blocks.size(); ++i) {
+        values = values.concat(blocks[i].as_timeline());
+      }
+      output = Thread(values);
+      break;
+    }
+    case ThreadKind::TimeIndex: {
+      auto values = blocks.front().as_timeindex().timeline();
+      for (std::size_t i = 1; i < blocks.size(); ++i) {
+        values = values.concat(blocks[i].as_timeindex().timeline());
+      }
+      output = Thread(values.to_timeindex(false));
+      break;
+    }
+  }
+  return any_missing
+      ? output.with_validity_mask(reshape_validity(blocks, platform))
+      : output;
 }
 
 std::string normalize_case_label(std::string raw) {
@@ -139,6 +242,99 @@ DataFrameView DataFrame::transpose(bool render) const {
   Thread out_cases(note_from_strings(feature_names()));
   auto out = DataFrame(std::move(out_cols), std::move(out_cases));
   return DataFrameView(std::move(out), render, "transpose", title());
+}
+
+DataFrame DataFrame::lengthen(
+    pluss::msharp::RangeView::Of<std::string_view> id_features,
+    pluss::msharp::RangeView::Of<std::string_view> value_features,
+    std::string feature_name,
+    std::string value_name,
+    const bool fresh_cases) const {
+  PLUSS_CHECK(defined(), "DataFrame::lengthen: frame is undefined");
+  PLUSS_CHECK(!feature_name.empty(), "DataFrame::lengthen: feature_name cannot be empty");
+  PLUSS_CHECK(!value_name.empty(), "DataFrame::lengthen: value_name cannot be empty");
+  PLUSS_CHECK(
+      feature_name != value_name,
+      "DataFrame::lengthen: feature_name and value_name must differ");
+
+  std::vector<std::string> ids;
+  ids.reserve(id_features.size());
+  std::unordered_set<std::string> selected;
+  selected.reserve(feature_names().size() + 2);
+  for (const auto id : id_features) {
+    const std::string name(id);
+    PLUSS_CHECK(has_feature(name), "DataFrame::lengthen: unknown id feature '" + name + "'");
+    PLUSS_CHECK(selected.insert(name).second,
+                "DataFrame::lengthen: duplicate id feature '" + name + "'");
+    ids.push_back(name);
+  }
+
+  std::vector<std::string> values;
+  values.reserve(value_features.size());
+  if (value_features.empty()) {
+    for (const auto& name : feature_names()) {
+      if (!selected.contains(name)) {
+        values.push_back(name);
+      }
+    }
+  } else {
+    for (const auto value : value_features) {
+      const std::string name(value);
+      PLUSS_CHECK(has_feature(name), "DataFrame::lengthen: unknown value feature '" + name + "'");
+      PLUSS_CHECK(!selected.contains(name),
+                  "DataFrame::lengthen: a feature cannot be both id and value: '" + name + "'");
+      PLUSS_CHECK(
+          std::find(values.begin(), values.end(), name) == values.end(),
+          "DataFrame::lengthen: duplicate value feature '" + name + "'");
+      values.push_back(name);
+    }
+  }
+  PLUSS_CHECK(!values.empty(), "DataFrame::lengthen: no value features selected");
+  PLUSS_CHECK(!selected.contains(feature_name) && !selected.contains(value_name),
+              "DataFrame::lengthen: output names collide with id features");
+
+  const auto block_count = static_cast<std::int64_t>(values.size());
+  std::vector<std::int64_t> tiled_rows(
+      static_cast<std::size_t>(ncases() * block_count));
+  for (std::int64_t block = 0; block < block_count; ++block) {
+    std::iota(
+        tiled_rows.begin() + block * ncases(),
+        tiled_rows.begin() + (block + 1) * ncases(),
+        std::int64_t{0});
+  }
+
+  std::vector<std::pair<std::string, Thread>> output;
+  output.reserve(ids.size() + 2);
+  for (const auto& id : ids) {
+    output.emplace_back(id, features(id).take(tiled_rows));
+  }
+
+  std::vector<std::string> feature_values;
+  feature_values.reserve(tiled_rows.size());
+  for (const auto& name : values) {
+    feature_values.insert(
+        feature_values.end(),
+        static_cast<std::size_t>(ncases()),
+        name);
+  }
+  output.emplace_back(feature_name, Thread(pluss::make_note(feature_values)));
+
+  std::vector<Thread> value_blocks;
+  value_blocks.reserve(values.size());
+  for (const auto& name : values) {
+    value_blocks.push_back(features(name));
+  }
+  output.emplace_back(value_name, concatenate_reshape_threads(value_blocks));
+
+  Thread output_cases = fresh_cases
+      ? Thread(pluss::Series::arange(
+            0.0,
+            static_cast<double>(tiled_rows.size()),
+            1.0,
+            pluss::codem::ScalarType::Int64,
+            pluss::codem::Platform::CPU))
+      : cases().take(tiled_rows);
+  return DataFrame(std::move(output), output_cases).title(title());
 }
 
 } // namespace pluss::table

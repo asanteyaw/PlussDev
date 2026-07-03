@@ -718,10 +718,17 @@ ReduceMatrix_ numeric_reduce_matrix_(
     const detail::DataFrameImpl& src,
     std::string_view where) {
   const auto indices = resolve_numeric_reduce_indices_(src, where);
+  const auto platform = src.columns_[indices.front()].as_series().platform();
+  const auto compute_type =
+      platform == pluss::codem::Platform::CPU
+          ? pluss::codem::ScalarType::Float64
+          : pluss::codem::ScalarType::Float32;
   std::vector<pluss::Series> columns;
   columns.reserve(indices.size());
   std::transform(indices.begin(), indices.end(), std::back_inserter(columns), [&](const auto idx) {
-    return src.columns_[idx].as_series().reshape({src.nrows_}).to(pluss::codem::ScalarType::Float64);
+    PLUSS_CHECK(src.columns_[idx].as_series().platform() == platform,
+                std::string(where) + ": numeric features must share a platform");
+    return src.columns_[idx].as_series().reshape({src.nrows_}).to(compute_type);
   });
   return ReduceMatrix_{
       pack_series_columns(columns, where, true),

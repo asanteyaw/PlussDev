@@ -11,21 +11,25 @@ This page documents the public scalar-like `ThreadValue` wrapper returned by thr
 #### Signature
 
 ```cpp
-pluss::Note as_note(self) const
+ThreadValue::as_note() -> pluss::Note
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::Note`
-    Value produced by this call.
 
 #### Notes
 
 Converts the wrapped scalar-like value into a `pluss::Note`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::Note`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -36,7 +40,7 @@ auto value = thread.value();
 auto out = value.as_note();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 ["Accra"]
@@ -47,21 +51,25 @@ auto out = value.as_note();
 #### Signature
 
 ```cpp
-pluss::Series as_series(self) const
+ThreadValue::as_series() -> pluss::Series
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::Series`
-    Value produced by this call.
 
 #### Notes
 
 Converts the wrapped scalar-like value into a `pluss::Series`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::Series`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -72,7 +80,7 @@ auto value = thread.value();
 auto out = value.as_series();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 [10.0]
@@ -83,21 +91,25 @@ auto out = value.as_series();
 #### Signature
 
 ```cpp
-pluss::TimeIndex as_timeindex(self) const
+ThreadValue::as_timeindex() -> pluss::TimeIndex
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::TimeIndex`
-    Value produced by this call.
 
 #### Notes
 
 Converts the wrapped scalar-like value into a `pluss::TimeIndex`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::TimeIndex`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -108,7 +120,7 @@ auto value = thread.value();
 auto out = value.as_timeindex();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 ["2024-01-01T09:10:00Z"]
@@ -119,21 +131,25 @@ auto out = value.as_timeindex();
 #### Signature
 
 ```cpp
-pluss::Timeline as_timeline(self) const
+ThreadValue::as_timeline() -> pluss::Timeline
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::Timeline`
-    Value produced by this call.
 
 #### Notes
 
 Converts the wrapped scalar-like value into a `pluss::Timeline`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::Timeline`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -144,7 +160,7 @@ auto value = thread.value();
 auto out = value.as_timeline();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 ["2024-01-01T09:10:00Z"]
@@ -155,21 +171,25 @@ auto out = value.as_timeline();
 #### Signature
 
 ```cpp
-bool defined(self) const
+ThreadValue::defined() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -180,7 +200,7 @@ auto value = thread.value();
 auto out = value.defined();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true
@@ -191,21 +211,25 @@ true
 #### Signature
 
 ```cpp
-ThreadKind kind(self) const
+ThreadValue::kind() -> ThreadKind
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`ThreadKind`
-    Value produced by this call.
 
 #### Notes
 
 Returns the underlying thread kind carried by this value wrapper.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`ThreadKind`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -216,7 +240,7 @@ auto value = thread.value();
 auto out = value.kind();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Series
@@ -227,21 +251,25 @@ Series
 #### Signature
 
 ```cpp
-Payload payload(self) const
+ThreadValue::payload() -> Payload
 ```
 
-#### Parameters
+#### Notes
+
+
+
+#### Inputs
 
 `None`
 
-#### Returns
+#### Output
 
 `Payload`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Applies `payload` to the current `ThreadValue` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -252,26 +280,36 @@ auto value = thread.value();
 auto out = value.payload();
 ```
 
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `pluss::Note`
 
 #### Signature
 
 ```cpp
-operator pluss::Note(self) const
+ThreadValue::pluss::Note() -> operator
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`operator`
-    Value produced by this call.
 
 #### Notes
 
 Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Note`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`operator`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -282,26 +320,36 @@ auto value = thread.value();
 auto out = value.pluss::Note();
 ```
 
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `pluss::Series`
 
 #### Signature
 
 ```cpp
-operator pluss::Series(self) const
+ThreadValue::pluss::Series() -> operator
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`operator`
-    Value produced by this call.
 
 #### Notes
 
 Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Series`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`operator`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -312,26 +360,36 @@ auto value = thread.value();
 auto out = value.pluss::Series();
 ```
 
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `pluss::TimeIndex`
 
 #### Signature
 
 ```cpp
-operator pluss::TimeIndex(self) const
+ThreadValue::pluss::TimeIndex() -> operator
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`operator`
-    Value produced by this call.
 
 #### Notes
 
 Uses the implicit conversion operator to materialize the wrapped value as a `pluss::TimeIndex`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`operator`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -342,26 +400,36 @@ auto value = thread.value();
 auto out = value.pluss::TimeIndex();
 ```
 
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `pluss::Timeline`
 
 #### Signature
 
 ```cpp
-operator pluss::Timeline(self) const
+ThreadValue::pluss::Timeline() -> operator
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`operator`
-    Value produced by this call.
 
 #### Notes
 
 Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Timeline`.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`operator`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -372,26 +440,36 @@ auto value = thread.value();
 auto out = value.pluss::Timeline();
 ```
 
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `thread`
 
 #### Signature
 
 ```cpp
-const Thread& thread(self) const
+ThreadValue::thread() -> const Thread&
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const Thread&`
-    Value produced by this call.
 
 #### Notes
 
 Returns the wrapped single-value `Thread` object.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`const Thread&`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -402,7 +480,7 @@ auto value = thread.value();
 auto out = value.thread();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 [10.0]

@@ -16,10 +16,14 @@ This page documents the public plotting accessor returned by `DataFrame::plot()`
 #### API Signature
 
 ```cpp
-pluss::pl::Studio act(self,  std::string_view feature, const ActPlotOptions& options = {}) const
+DataFramePlotAccessor::act(feature: std::string_view, options: const ActPlotOptions& = {}) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds an autocorrelation-style lag plot for one numeric feature.
+
+#### Inputs
 
 `feature` : `std::string_view`
     Numeric feature whose autocorrelation-style lag structure should be plotted.
@@ -27,16 +31,18 @@ pluss::pl::Studio act(self,  std::string_view feature, const ActPlotOptions& opt
 `options` : `const ActPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds an autocorrelation-style lag plot for one numeric feature.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -50,6 +56,8 @@ pluss::table::ActPlotOptions options;
 options.max_lag = 24;
 auto fig = plot.act("sales", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(act)
@@ -66,10 +74,14 @@ Figure(act)
 #### API Signature
 
 ```cpp
-pluss::pl::Studio andrews_curves(self,  pluss::RangeView<std::string_view> features = {}, std::optional<std::string_view> class_feature = std::nullopt, const AndrewsCurvesPlotOptions& options = {}) const
+DataFramePlotAccessor::andrews_curves(features: pluss::RangeView<std::string_view> = {}, class_feature: std::optional<std::string_view> = std::nullopt, options: const AndrewsCurvesPlotOptions& = {}) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds Andrews curves from several numeric features, optionally colored by a class feature.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features used to build each observation curve.
@@ -80,16 +92,18 @@ pluss::pl::Studio andrews_curves(self,  pluss::RangeView<std::string_view> featu
 `options` : `const AndrewsCurvesPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds Andrews curves from several numeric features, optionally colored by a class feature.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -102,6 +116,8 @@ auto plot = df.plot();
 
 auto fig = plot.andrews_curves({"x1", "x2", "x3"}, "group");
 ```
+
+##### Expected output
 
 ```text
 Figure(andrews_curves)
@@ -118,23 +134,27 @@ Figure(andrews_curves)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio area(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::area(y_feature: std::string_view, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio area(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature, const AreaPlotOptions& options) const
+DataFramePlotAccessor::area(y_feature: std::string_view, x_feature: std::optional<std::string_view>, options: const AreaPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio area(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::area(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio area(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature, const AreaPlotOptions& options) const
+DataFramePlotAccessor::area(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view>, options: const AreaPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio area(self, std::string_view y_feature, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::area(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio area(self, std::string_view y_feature, std::optional<std::string_view> x_feature, const AreaPlotOptions& options) const
+DataFramePlotAccessor::area(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view>, options: const AreaPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`y_features` : `pluss::RangeView<std::string_view>`
-    Numeric features to draw as separate filled areas over the same axis positions.
+Builds a filled area plot from one or more numeric features.
+
+#### Inputs
+
+`y_feature` : `std::string_view`
+    One numeric feature to draw as a filled area.
 
 `x_feature` : `std::optional<std::string_view>`
     Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.
@@ -142,89 +162,21 @@ pluss::pl::Studio area(self, std::string_view y_feature, std::optional<std::stri
 `options` : `const AreaPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-`y_feature` : `std::string_view`
-    One numeric feature to draw as a filled area.
+`y_features` : `pluss::RangeView<std::string_view>`
+    Numeric features to draw as separate filled areas over the same axis positions.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a filled area plot from one or more numeric features.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
 Example 1. Plot one or more y-features as an area chart.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.area({"sales", "cost"}, "month");
-```
-
-```text
-Figure(area)
-```
-
-Example 2. Plot one or more y-features as an area chart with an explicit area-options object.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.area({"sales", "cost"}, "month");
-```
-
-```text
-Figure(area)
-```
-
-Example 3. Plot one or more y-features as an area chart.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.area({"sales", "cost"}, "month");
-```
-
-```text
-Figure(area)
-```
-
-Example 4. Plot one or more y-features as an area chart with an explicit area-options object.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.area({"sales", "cost"}, "month");
-```
-
-```text
-Figure(area)
-```
-
-Example 5. Plot one or more y-features as an area chart.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -237,11 +189,12 @@ auto plot = df.plot();
 auto fig = plot.area("sales", "id");
 ```
 
+##### Expected output
+
 ```text
 Figure(area)
 ```
-
-Example 6. Plot one or more y-features as an area chart with an explicit area-options object.
+Example 2. Plot one or more y-features as an area chart with an explicit area-options object.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -255,6 +208,80 @@ pluss::table::AreaPlotOptions options;
 options.alpha = 0.6;
 auto fig = plot.area("sales", "id", options);
 ```
+
+##### Expected output
+
+```text
+Figure(area)
+```
+Example 3. Plot one or more y-features as an area chart.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.area({"sales", "cost"}, "month");
+```
+
+##### Expected output
+
+```text
+Figure(area)
+```
+Example 4. Plot one or more y-features as an area chart with an explicit area-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.area({"sales", "cost"}, "month");
+```
+
+##### Expected output
+
+```text
+Figure(area)
+```
+Example 5. Plot one or more y-features as an area chart.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.area({"sales", "cost"}, "month");
+```
+
+##### Expected output
+
+```text
+Figure(area)
+```
+Example 6. Plot one or more y-features as an area chart with an explicit area-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.area({"sales", "cost"}, "month");
+```
+
+##### Expected output
 
 ```text
 Figure(area)
@@ -272,16 +299,20 @@ Figure(area)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio area_stacked(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::area_stacked(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio area_stacked(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature, const AreaStackedPlotOptions& options) const
+DataFramePlotAccessor::area_stacked(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view>, options: const AreaStackedPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio area_stacked(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::area_stacked(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio area_stacked(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature, const AreaStackedPlotOptions& options) const
+DataFramePlotAccessor::area_stacked(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view>, options: const AreaStackedPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a stacked area plot where several numeric features accumulate at shared x positions.
+
+#### Inputs
 
 `y_features` : `pluss::RangeView<std::string_view>`
     Numeric features whose values should accumulate vertically at shared x positions.
@@ -292,14 +323,14 @@ pluss::pl::Studio area_stacked(self, std::initializer_list<std::string_view> y_f
 `options` : `const AreaStackedPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a stacked area plot where several numeric features accumulate at shared x positions.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -316,10 +347,11 @@ auto plot = df.plot();
 auto fig = plot.area_stacked({"sales", "cost"}, "month");
 ```
 
+##### Expected output
+
 ```text
 Figure(area_stacked)
 ```
-
 Example 2. Plot several y-features as a stacked area chart.
 
 ```cpp
@@ -335,10 +367,11 @@ options.alpha = 0.6;
 auto fig = plot.area_stacked({"sales", "cost"}, "month", options);
 ```
 
+##### Expected output
+
 ```text
 Figure(area_stacked)
 ```
-
 Example 3. Plot several y-features as a stacked area chart.
 
 ```cpp
@@ -352,10 +385,11 @@ auto plot = df.plot();
 auto fig = plot.area_stacked({"sales", "cost"}, "month");
 ```
 
+##### Expected output
+
 ```text
 Figure(area_stacked)
 ```
-
 Example 4. Plot several y-features as a stacked area chart.
 
 ```cpp
@@ -370,6 +404,8 @@ pluss::table::AreaStackedPlotOptions options;
 options.alpha = 0.6;
 auto fig = plot.area_stacked({"sales", "cost"}, "month", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(area_stacked)
@@ -387,12 +423,16 @@ Figure(area_stacked)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio auto_plot(self, pluss::RangeView<std::string_view> features = {}) const
+DataFramePlotAccessor::auto_plot(features: pluss::RangeView<std::string_view> = {}) -> pluss::pl::Studio
 
-pluss::pl::Studio auto_plot(self, pluss::RangeView<std::string_view> features, const AutoPlotOptions& options) const
+DataFramePlotAccessor::auto_plot(features: pluss::RangeView<std::string_view>, options: const AutoPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Chooses a plot family automatically from the selected feature set and frame shape.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Feature subset to consider while the accessor chooses the plot family automatically.
@@ -400,14 +440,14 @@ pluss::pl::Studio auto_plot(self, pluss::RangeView<std::string_view> features, c
 `options` : `const AutoPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Chooses a plot family automatically from the selected feature set and frame shape.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -424,10 +464,11 @@ auto plot = df.plot();
 auto fig = plot.auto_plot({"midterm", "final"});
 ```
 
+##### Expected output
+
 ```text
 Figure(auto_selected)
 ```
-
 Example 2. Work with a selected feature subset.
 
 ```cpp
@@ -440,6 +481,8 @@ auto plot = df.plot();
 
 auto fig = plot.auto_plot({"midterm", "final"});
 ```
+
+##### Expected output
 
 ```text
 Figure(auto_selected)
@@ -459,23 +502,27 @@ Figure(auto_selected)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio bar(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::bar(y_feature: std::string_view, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio bar(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature, const BarPlotOptions& options) const
+DataFramePlotAccessor::bar(y_feature: std::string_view, x_feature: std::optional<std::string_view>, options: const BarPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio bar(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::bar(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio bar(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature, const BarPlotOptions& options) const
+DataFramePlotAccessor::bar(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view>, options: const BarPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio bar(self, std::string_view y_feature, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::bar(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio bar(self, std::string_view y_feature, std::optional<std::string_view> x_feature, const BarPlotOptions& options) const
+DataFramePlotAccessor::bar(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view>, options: const BarPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`y_features` : `pluss::RangeView<std::string_view>`
-    Several features whose values become grouped or layered bar series, depending on the method variant.
+Builds a bar chart from one feature, optionally using another feature as the x-axis.
+
+#### Inputs
+
+`y_feature` : `std::string_view`
+    Single feature whose values become one bar series.
 
 `x_feature` : `std::optional<std::string_view>`
     Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.
@@ -483,89 +530,21 @@ pluss::pl::Studio bar(self, std::string_view y_feature, std::optional<std::strin
 `options` : `const BarPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-`y_feature` : `std::string_view`
-    Single feature whose values become one bar series.
+`y_features` : `pluss::RangeView<std::string_view>`
+    Several features whose values become grouped or layered bar series, depending on the method variant.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a bar chart from one feature, optionally using another feature as the x-axis.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
-Example 1. Plot several y-features from a reusable string view as a shared bar chart.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
-    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
-    {"final", pluss::make_series({88.0, 79.0, 95.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.bar({"midterm", "final"}, "student");
-```
-
-```text
-Figure(bar)
-```
-
-Example 2. Plot several y-features from a reusable string view as a shared bar chart with explicit plot options.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
-    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
-    {"final", pluss::make_series({88.0, 79.0, 95.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.bar({"midterm", "final"}, "student");
-```
-
-```text
-Figure(bar)
-```
-
-Example 3. Plot several y-features listed inline as a shared bar chart.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
-    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
-    {"final", pluss::make_series({88.0, 79.0, 95.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.bar({"midterm", "final"}, "student");
-```
-
-```text
-Figure(bar)
-```
-
-Example 4. Plot several y-features listed inline as a shared bar chart with explicit plot options.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
-    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
-    {"final", pluss::make_series({88.0, 79.0, 95.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.bar({"midterm", "final"}, "student");
-```
-
-```text
-Figure(bar)
-```
-
-Example 5. Plot one y-feature as a bar chart.
+Example 1. Plot one y-feature as a bar chart.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -578,11 +557,12 @@ auto plot = df.plot();
 auto fig = plot.bar("sales", "city");
 ```
 
+##### Expected output
+
 ```text
 Figure(bar)
 ```
-
-Example 6. Plot one y-feature as a bar chart with an explicit plot-options object.
+Example 2. Plot one y-feature as a bar chart with an explicit plot-options object.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -596,6 +576,80 @@ pluss::table::BarPlotOptions options;
 options.horizontal = true;
 auto fig = plot.bar("sales", "city", options);
 ```
+
+##### Expected output
+
+```text
+Figure(bar)
+```
+Example 3. Plot several y-features from a reusable string view as a shared bar chart.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
+    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
+    {"final", pluss::make_series({88.0, 79.0, 95.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.bar({"midterm", "final"}, "student");
+```
+
+##### Expected output
+
+```text
+Figure(bar)
+```
+Example 4. Plot several y-features from a reusable string view as a shared bar chart with explicit plot options.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
+    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
+    {"final", pluss::make_series({88.0, 79.0, 95.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.bar({"midterm", "final"}, "student");
+```
+
+##### Expected output
+
+```text
+Figure(bar)
+```
+Example 5. Plot several y-features listed inline as a shared bar chart.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
+    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
+    {"final", pluss::make_series({88.0, 79.0, 95.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.bar({"midterm", "final"}, "student");
+```
+
+##### Expected output
+
+```text
+Figure(bar)
+```
+Example 6. Plot several y-features listed inline as a shared bar chart with explicit plot options.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"student", pluss::make_note({"Laurel", "Kojo", "Ama"})},
+    {"midterm", pluss::make_series({71.0, 82.0, 93.0})},
+    {"final", pluss::make_series({88.0, 79.0, 95.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.bar({"midterm", "final"}, "student");
+```
+
+##### Expected output
 
 ```text
 Figure(bar)
@@ -626,16 +680,20 @@ auto horizontal = df.plot().bar("sales", "city", options);
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio bar_stacked(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::bar_stacked(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio bar_stacked(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature, const BarStackedPlotOptions& options) const
+DataFramePlotAccessor::bar_stacked(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view>, options: const BarStackedPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio bar_stacked(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::bar_stacked(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio bar_stacked(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature, const BarStackedPlotOptions& options) const
+DataFramePlotAccessor::bar_stacked(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view>, options: const BarStackedPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds stacked bars so multiple y-features accumulate on the same axis positions.
+
+#### Inputs
 
 `y_features` : `pluss::RangeView<std::string_view>`
     Several features whose values stack on top of each other at each x position.
@@ -646,14 +704,14 @@ pluss::pl::Studio bar_stacked(self, std::initializer_list<std::string_view> y_fe
 `options` : `const BarStackedPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds stacked bars so multiple y-features accumulate on the same axis positions.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -670,10 +728,11 @@ auto plot = df.plot();
 auto fig = plot.bar_stacked({"midterm", "final"}, "student");
 ```
 
+##### Expected output
+
 ```text
 Figure(bar_stacked)
 ```
-
 Example 2. Plot several y-features as a stacked bar chart.
 
 ```cpp
@@ -689,10 +748,11 @@ options.alpha = 0.85;
 auto fig = plot.bar_stacked({"midterm", "final"}, "student", options);
 ```
 
+##### Expected output
+
 ```text
 Figure(bar_stacked)
 ```
-
 Example 3. Plot several y-features as a stacked bar chart.
 
 ```cpp
@@ -706,10 +766,11 @@ auto plot = df.plot();
 auto fig = plot.bar_stacked({"midterm", "final"}, "student");
 ```
 
+##### Expected output
+
 ```text
 Figure(bar_stacked)
 ```
-
 Example 4. Plot several y-features as a stacked bar chart.
 
 ```cpp
@@ -724,6 +785,8 @@ pluss::table::BarStackedPlotOptions options;
 options.alpha = 0.85;
 auto fig = plot.bar_stacked({"midterm", "final"}, "student", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(bar_stacked)
@@ -742,10 +805,14 @@ Figure(bar_stacked)
 #### API Signature
 
 ```cpp
-pluss::pl::Studio bootstrap(self,  std::string_view feature, const BootstrapPlotOptions& options = {}) const
+DataFramePlotAccessor::bootstrap(feature: std::string_view, options: const BootstrapPlotOptions& = {}) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a bootstrap summary plot for one numeric feature using the supplied resampling options.
+
+#### Inputs
 
 `feature` : `std::string_view`
     Numeric feature to resample repeatedly for the bootstrap figure.
@@ -753,16 +820,18 @@ pluss::pl::Studio bootstrap(self,  std::string_view feature, const BootstrapPlot
 `options` : `const BootstrapPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a bootstrap summary plot for one numeric feature using the supplied resampling options.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -776,6 +845,8 @@ pluss::table::BootstrapPlotOptions options;
 options.samples = 1000;
 auto fig = plot.bootstrap("sales", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(bootstrap)
@@ -793,16 +864,20 @@ Figure(bootstrap)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio box(self, pluss::RangeView<std::string_view> features = {}) const
+DataFramePlotAccessor::box(features: pluss::RangeView<std::string_view> = {}) -> pluss::pl::Studio
 
-pluss::pl::Studio box(self, pluss::RangeView<std::string_view> features, const BoxPlotOptions& options) const
+DataFramePlotAccessor::box(features: pluss::RangeView<std::string_view>, options: const BoxPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio box(self, std::initializer_list<std::string_view> features) const
+DataFramePlotAccessor::box(features: std::initializer_list<std::string_view>) -> pluss::pl::Studio
 
-pluss::pl::Studio box(self, std::initializer_list<std::string_view> features, const BoxPlotOptions& options) const
+DataFramePlotAccessor::box(features: std::initializer_list<std::string_view>, options: const BoxPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a box plot for one or more numeric features.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features to summarize as box plots. Leave empty to let the accessor infer the numeric feature set.
@@ -810,14 +885,14 @@ pluss::pl::Studio box(self, std::initializer_list<std::string_view> features, co
 `options` : `const BoxPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a box plot for one or more numeric features.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -833,10 +908,11 @@ auto plot = df.plot();
 auto fig = plot.box({"sales", "cost"});
 ```
 
+##### Expected output
+
 ```text
 Figure(box)
 ```
-
 Example 2. Work with a selected feature subset.
 
 ```cpp
@@ -851,10 +927,11 @@ options.line_width = 1.6;
 auto fig = plot.box({"sales", "cost"}, options);
 ```
 
+##### Expected output
+
 ```text
 Figure(box)
 ```
-
 Example 3. Pass several feature names inline.
 
 ```cpp
@@ -867,10 +944,11 @@ auto plot = df.plot();
 auto fig = plot.box({"sales", "cost"});
 ```
 
+##### Expected output
+
 ```text
 Figure(box)
 ```
-
 Example 4. Pass several feature names inline.
 
 ```cpp
@@ -884,6 +962,8 @@ pluss::table::BoxPlotOptions options;
 options.line_width = 1.6;
 auto fig = plot.box({"sales", "cost"}, options);
 ```
+
+##### Expected output
 
 ```text
 Figure(box)
@@ -901,12 +981,16 @@ Figure(box)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio brief(self, pluss::RangeView<std::string_view> features = {}, const BriefPlotOptions& options = {}) const
+DataFramePlotAccessor::brief(features: pluss::RangeView<std::string_view> = {}, options: const BriefPlotOptions& = {}) -> pluss::pl::Studio
 
-pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::RangeView<std::string_view> features = {}, const BriefPlotOptions& options = {}) const
+DataFramePlotAccessor::brief(figure: pluss::pl::Studio&, features: pluss::RangeView<std::string_view> = {}, options: const BriefPlotOptions& = {}) -> pluss::pl::Studio&
 ```
 
-#### Parameters
+#### Notes
+
+Builds a compact summary figure for one or more numeric features.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Feature subset to summarize inside the compact figure. Leave empty to let the accessor choose a broad compatible set.
@@ -917,7 +1001,7 @@ pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::RangeView<std::
 `figure` : `pluss::pl::Studio&`
     Existing figure object to add summary content into instead of creating a new figure.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
@@ -925,9 +1009,9 @@ pluss::pl::Studio& brief(self, pluss::pl::Studio& figure, pluss::RangeView<std::
 `pluss::pl::Studio&`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a compact summary figure for one or more numeric features.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -945,10 +1029,11 @@ options.max_cases = 6;
 auto fig = plot.brief({"sales", "cost"}, options);
 ```
 
+##### Expected output
+
 ```text
 Figure(summary)
 ```
-
 Example 2. Work with a selected feature subset.
 
 ```cpp
@@ -963,6 +1048,8 @@ pluss::table::BriefPlotOptions options;
 options.max_cases = 6;
 plot.brief(fig, {"sales"}, options);
 ```
+
+##### Expected output
 
 ```text
 Figure(summary)
@@ -982,12 +1069,16 @@ Figure(summary)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio corr_heatmap(self, pluss::RangeView<std::string_view> features = {}) const
+DataFramePlotAccessor::corr_heatmap(features: pluss::RangeView<std::string_view> = {}) -> pluss::pl::Studio
 
-pluss::pl::Studio corr_heatmap(self, pluss::RangeView<std::string_view> features, const CorrHeatmapPlotOptions& options) const
+DataFramePlotAccessor::corr_heatmap(features: pluss::RangeView<std::string_view>, options: const CorrHeatmapPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Computes a correlation matrix across numeric features and renders it as a heatmap.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features to correlate. Leave empty to let the accessor infer the numeric feature set.
@@ -995,14 +1086,14 @@ pluss::pl::Studio corr_heatmap(self, pluss::RangeView<std::string_view> features
 `options` : `const CorrHeatmapPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Computes a correlation matrix across numeric features and renders it as a heatmap.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -1019,10 +1110,11 @@ auto plot = df.plot();
 auto fig = plot.corr_heatmap({"x1", "x2", "x3"});
 ```
 
+##### Expected output
+
 ```text
 Figure(corr_heatmap)
 ```
-
 Example 2. Work with a selected feature subset.
 
 ```cpp
@@ -1037,6 +1129,8 @@ pluss::table::CorrHeatmapPlotOptions options;
 options.annotate_levels = true;
 auto fig = plot.corr_heatmap({"x1", "x2", "x3"}, options);
 ```
+
+##### Expected output
 
 ```text
 Figure(corr_heatmap)
@@ -1055,23 +1149,27 @@ Figure(corr_heatmap)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio density(self, pluss::RangeView<std::string_view> features, const DensityPlotOptions& options) const
+DataFramePlotAccessor::density(feature: std::string_view, options: const DensityPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio density(self, pluss::RangeView<std::string_view> features, std::int64_t points = 128) const
+DataFramePlotAccessor::density(feature: std::string_view, points: std::int64_t = 128) -> pluss::pl::Studio
 
-pluss::pl::Studio density(self, std::initializer_list<std::string_view> features, const DensityPlotOptions& options) const
+DataFramePlotAccessor::density(features: pluss::RangeView<std::string_view>, options: const DensityPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio density(self, std::initializer_list<std::string_view> features, std::int64_t points = 128) const
+DataFramePlotAccessor::density(features: pluss::RangeView<std::string_view>, points: std::int64_t = 128) -> pluss::pl::Studio
 
-pluss::pl::Studio density(self, std::string_view feature, const DensityPlotOptions& options) const
+DataFramePlotAccessor::density(features: std::initializer_list<std::string_view>, options: const DensityPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio density(self, std::string_view feature, std::int64_t points = 128) const
+DataFramePlotAccessor::density(features: std::initializer_list<std::string_view>, points: std::int64_t = 128) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`features` : `pluss::RangeView<std::string_view>`
-    Several numeric features whose kernel density estimates should be drawn together.
+Builds one or more kernel-density curves from numeric features.
+
+#### Inputs
+
+`feature` : `std::string_view`
+    One numeric feature whose kernel density estimate should be drawn.
 
 `options` : `const DensityPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
@@ -1079,89 +1177,21 @@ pluss::pl::Studio density(self, std::string_view feature, std::int64_t points = 
 `points` : `std::int64_t`
     Requested evaluation-point count for density-style plots. Higher values make smoother curves at higher compute cost.
 
-`feature` : `std::string_view`
-    One numeric feature whose kernel density estimate should be drawn.
+`features` : `pluss::RangeView<std::string_view>`
+    Several numeric features whose kernel density estimates should be drawn together.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds one or more kernel-density curves from numeric features.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-pluss::table::DensityPlotOptions options;
-options.points = 256;
-auto fig = plot.density({"sales", "cost"}, options);
-```
-
-```text
-Figure(density)
-```
-
-Example 2. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.density({"sales", "cost"}, 128);
-```
-
-```text
-Figure(density)
-```
-
-Example 3. Pass several feature names inline.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-pluss::table::DensityPlotOptions options;
-options.points = 256;
-auto fig = plot.density({"sales", "cost"}, options);
-```
-
-```text
-Figure(density)
-```
-
-Example 4. Pass several feature names inline.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.density({"sales", "cost"}, 128);
-```
-
-```text
-Figure(density)
-```
-
-Example 5. Work with one named feature.
+Example 1. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1176,11 +1206,12 @@ options.points = 256;
 auto fig = plot.density("sales", options);
 ```
 
+##### Expected output
+
 ```text
 Figure(density)
 ```
-
-Example 6. Work with one named feature.
+Example 2. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1192,6 +1223,80 @@ auto plot = df.plot();
 
 auto fig = plot.density("sales", 128);
 ```
+
+##### Expected output
+
+```text
+Figure(density)
+```
+Example 3. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+pluss::table::DensityPlotOptions options;
+options.points = 256;
+auto fig = plot.density({"sales", "cost"}, options);
+```
+
+##### Expected output
+
+```text
+Figure(density)
+```
+Example 4. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.density({"sales", "cost"}, 128);
+```
+
+##### Expected output
+
+```text
+Figure(density)
+```
+Example 5. Pass several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+pluss::table::DensityPlotOptions options;
+options.points = 256;
+auto fig = plot.density({"sales", "cost"}, options);
+```
+
+##### Expected output
+
+```text
+Figure(density)
+```
+Example 6. Pass several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.density({"sales", "cost"}, 128);
+```
+
+##### Expected output
 
 ```text
 Figure(density)
@@ -1211,22 +1316,20 @@ Figure(density)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio heatmap(self, pluss::RangeView<std::string_view> features) const
+DataFramePlotAccessor::heatmap(case_feature: std::string_view, feature_feature: std::string_view, value_feature: std::string_view, op: DataFrame::GroupOp = DataFrame::GroupOp::Mean) -> pluss::pl::Studio
 
-pluss::pl::Studio heatmap(self, pluss::RangeView<std::string_view> features, const HeatmapPlotOptions& options) const
+DataFramePlotAccessor::heatmap(case_feature: std::string_view, feature_feature: std::string_view, value_feature: std::string_view, op: DataFrame::GroupOp, options: const HeatmapPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio heatmap(self, std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, DataFrame::GroupOp op = DataFrame::GroupOp::Mean) const
+DataFramePlotAccessor::heatmap(features: pluss::RangeView<std::string_view>) -> pluss::pl::Studio
 
-pluss::pl::Studio heatmap(self, std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, DataFrame::GroupOp op, const HeatmapPlotOptions& options) const
+DataFramePlotAccessor::heatmap(features: pluss::RangeView<std::string_view>, options: const HeatmapPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`features` : `pluss::RangeView<std::string_view>`
-    Numeric features to render directly as a value heatmap. Each feature becomes one column in the heatmap matrix.
+Builds a heatmap either directly from numeric feature values or from grouped feature/value aggregations.
 
-`options` : `const HeatmapPlotOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+#### Inputs
 
 `case_feature` : `std::string_view`
     Feature whose distinct values define the output heatmap rows in grouped heatmap mode.
@@ -1240,52 +1343,24 @@ pluss::pl::Studio heatmap(self, std::string_view case_feature, std::string_view 
 `op` : `DataFrame::GroupOp`
     Operation key or enum that chooses the aggregation, comparison, or fill behavior for the call.
 
-#### Returns
+`options` : `const HeatmapPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+`features` : `pluss::RangeView<std::string_view>`
+    Numeric features to render directly as a value heatmap. Each feature becomes one column in the heatmap matrix.
+
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a heatmap either directly from numeric feature values or from grouped feature/value aggregations.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.heatmap({"sales", "cost"});
-```
-
-```text
-Figure(heatmap)
-```
-
-Example 2. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-pluss::table::HeatmapPlotOptions options;
-options.annotate_levels = true;
-auto fig = plot.heatmap({"sales", "cost"}, options);
-```
-
-```text
-Figure(heatmap)
-```
-
-Example 3. Work with one named feature.
+Example 1. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1298,11 +1373,12 @@ auto plot = df.plot();
 auto fig = plot.heatmap("campus", "exam", "score", pluss::table::DataFrame::GroupOp::Mean);
 ```
 
+##### Expected output
+
 ```text
 Figure(heatmap)
 ```
-
-Example 4. Work with one named feature.
+Example 2. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1316,6 +1392,44 @@ pluss::table::HeatmapPlotOptions options;
 options.annotate_levels = true;
 auto fig = plot.heatmap("campus", "exam", "score", pluss::table::DataFrame::GroupOp::Mean, options);
 ```
+
+##### Expected output
+
+```text
+Figure(heatmap)
+```
+Example 3. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.heatmap({"sales", "cost"});
+```
+
+##### Expected output
+
+```text
+Figure(heatmap)
+```
+Example 4. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+pluss::table::HeatmapPlotOptions options;
+options.annotate_levels = true;
+auto fig = plot.heatmap({"sales", "cost"}, options);
+```
+
+##### Expected output
 
 ```text
 Figure(heatmap)
@@ -1333,30 +1447,28 @@ Figure(heatmap)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio hist(self, const HistPlotOptions& options) const
+DataFramePlotAccessor::hist(bins: std::int64_t = 20) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, pluss::RangeView<std::string_view> features, const HistPlotOptions& options) const
+DataFramePlotAccessor::hist(feature: std::string_view, bins: std::int64_t = 20) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, pluss::RangeView<std::string_view> features, std::int64_t bins = 20) const
+DataFramePlotAccessor::hist(feature: std::string_view, options: const HistPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, std::initializer_list<std::string_view> features, const HistPlotOptions& options) const
+DataFramePlotAccessor::hist(features: pluss::RangeView<std::string_view>, bins: std::int64_t = 20) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, std::initializer_list<std::string_view> features, std::int64_t bins = 20) const
+DataFramePlotAccessor::hist(features: pluss::RangeView<std::string_view>, options: const HistPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, std::int64_t bins = 20) const
+DataFramePlotAccessor::hist(features: std::initializer_list<std::string_view>, bins: std::int64_t = 20) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, std::string_view feature, const HistPlotOptions& options) const
+DataFramePlotAccessor::hist(features: std::initializer_list<std::string_view>, options: const HistPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio hist(self, std::string_view feature, std::int64_t bins = 20) const
+DataFramePlotAccessor::hist(options: const HistPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`options` : `const HistPlotOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+Builds a histogram for one feature using the requested number of bins.
 
-`features` : `pluss::RangeView<std::string_view>`
-    Several numeric features to histogram in the same figure.
+#### Inputs
 
 `bins` : `std::int64_t`
     Histogram bin count. Larger values create narrower bins; smaller values create coarser buckets.
@@ -1364,107 +1476,24 @@ pluss::pl::Studio hist(self, std::string_view feature, std::int64_t bins = 20) c
 `feature` : `std::string_view`
     One numeric feature to histogram.
 
-#### Returns
+`options` : `const HistPlotOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+`features` : `pluss::RangeView<std::string_view>`
+    Several numeric features to histogram in the same figure.
+
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a histogram for one feature using the requested number of bins.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
-Example 1. Plot every compatible numeric feature as a histogram with an explicit histogram-options object.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-auto plot = df.plot();
-
-pluss::table::HistPlotOptions options;
-options.bins = 12;
-auto fig = plot.hist("sales", options);
-```
-
-```text
-Figure(hist)
-```
-
-Example 2. Plot several numeric features from a reusable string view as histograms with explicit histogram options.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-auto plot = df.plot();
-
-pluss::table::HistPlotOptions options;
-options.bins = 12;
-auto fig = plot.hist("sales", options);
-```
-
-```text
-Figure(hist)
-```
-
-Example 3. Plot several numeric features from a reusable string view as histograms with an explicit shared bin count.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.hist({"sales", "cost"}, 12);
-```
-
-```text
-Figure(hist)
-```
-
-Example 4. Plot several numeric features listed inline as histograms with explicit histogram options.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-auto plot = df.plot();
-
-pluss::table::HistPlotOptions options;
-options.bins = 12;
-auto fig = plot.hist("sales", options);
-```
-
-```text
-Figure(hist)
-```
-
-Example 5. Plot several numeric features listed inline as histograms with an explicit shared bin count.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
-});
-auto plot = df.plot();
-
-auto fig = plot.hist({"sales", "cost"}, 12);
-```
-
-```text
-Figure(hist)
-```
-
-Example 6. Plot every compatible numeric feature as a histogram with a shared bin count.
+Example 1. Plot every compatible numeric feature as a histogram with a shared bin count.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1477,11 +1506,30 @@ auto plot = df.plot();
 auto fig = plot.hist("sales", 12);
 ```
 
+##### Expected output
+
 ```text
 Figure(hist)
 ```
+Example 2. Plot one numeric feature as a histogram with an explicit bin count.
 
-Example 7. Plot one numeric feature as a histogram with an explicit histogram-options object.
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+auto plot = df.plot();
+
+auto fig = plot.hist("sales", 12);
+```
+
+##### Expected output
+
+```text
+Figure(hist)
+```
+Example 3. Plot one numeric feature as a histogram with an explicit histogram-options object.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1496,11 +1544,29 @@ options.bins = 12;
 auto fig = plot.hist("sales", options);
 ```
 
+##### Expected output
+
 ```text
 Figure(hist)
 ```
+Example 4. Plot several numeric features from a reusable string view as histograms with an explicit shared bin count.
 
-Example 8. Plot one numeric feature as a histogram with an explicit bin count.
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.hist({"sales", "cost"}, 12);
+```
+
+##### Expected output
+
+```text
+Figure(hist)
+```
+Example 5. Plot several numeric features from a reusable string view as histograms with explicit histogram options.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1510,8 +1576,69 @@ auto df = pluss::table::DataFrame({
 });
 auto plot = df.plot();
 
-auto fig = plot.hist("sales", 12);
+pluss::table::HistPlotOptions options;
+options.bins = 12;
+auto fig = plot.hist("sales", options);
 ```
+
+##### Expected output
+
+```text
+Figure(hist)
+```
+Example 6. Plot several numeric features listed inline as histograms with an explicit shared bin count.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+});
+auto plot = df.plot();
+
+auto fig = plot.hist({"sales", "cost"}, 12);
+```
+
+##### Expected output
+
+```text
+Figure(hist)
+```
+Example 7. Plot several numeric features listed inline as histograms with explicit histogram options.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+auto plot = df.plot();
+
+pluss::table::HistPlotOptions options;
+options.bins = 12;
+auto fig = plot.hist("sales", options);
+```
+
+##### Expected output
+
+```text
+Figure(hist)
+```
+Example 8. Plot every compatible numeric feature as a histogram with an explicit histogram-options object.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+auto plot = df.plot();
+
+pluss::table::HistPlotOptions options;
+options.bins = 12;
+auto fig = plot.hist("sales", options);
+```
+
+##### Expected output
 
 ```text
 Figure(hist)
@@ -1531,10 +1658,14 @@ Figure(hist)
 #### API Signature
 
 ```cpp
-pluss::pl::Studio lag(self, std::string_view feature, const LagPlotOptions& options = {}) const
+DataFramePlotAccessor::lag(feature: std::string_view, options: const LagPlotOptions& = {}) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a lag plot that compares one numeric feature against a shifted copy of itself.
+
+#### Inputs
 
 `feature` : `std::string_view`
     Numeric feature whose lag relationship should be plotted against itself.
@@ -1542,16 +1673,18 @@ pluss::pl::Studio lag(self, std::string_view feature, const LagPlotOptions& opti
 `options` : `const LagPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a lag plot that compares one numeric feature against a shifted copy of itself.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Work with one named feature.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1565,6 +1698,8 @@ pluss::table::LagPlotOptions options;
 options.lag = 2;
 auto fig = plot.lag("sales", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(lag)
@@ -1582,23 +1717,27 @@ Figure(lag)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio line(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::line(y_feature: std::string_view, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio line(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature, const LinePlotOptions& options) const
+DataFramePlotAccessor::line(y_feature: std::string_view, x_feature: std::optional<std::string_view>, options: const LinePlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio line(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::line(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio line(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature, const LinePlotOptions& options) const
+DataFramePlotAccessor::line(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view>, options: const LinePlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio line(self, std::string_view y_feature, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::line(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio line(self, std::string_view y_feature, std::optional<std::string_view> x_feature, const LinePlotOptions& options) const
+DataFramePlotAccessor::line(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view>, options: const LinePlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`y_features` : `pluss::RangeView<std::string_view>`
-    Numeric features to overlay as separate line traces on the same axes.
+Builds a line chart for one or more y-features, optionally against a chosen x-feature.
+
+#### Inputs
+
+`y_feature` : `std::string_view`
+    One numeric feature to draw as a single line trace.
 
 `x_feature` : `std::optional<std::string_view>`
     Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.
@@ -1606,21 +1745,21 @@ pluss::pl::Studio line(self, std::string_view y_feature, std::optional<std::stri
 `options` : `const LinePlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-`y_feature` : `std::string_view`
-    One numeric feature to draw as a single line trace.
+`y_features` : `pluss::RangeView<std::string_view>`
+    Numeric features to overlay as separate line traces on the same axes.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a line chart for one or more y-features, optionally against a chosen x-feature.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
-Example 1. Plot several y-features from a reusable string view as a shared line chart.
+Example 1. Plot one y-feature as a line chart.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1633,11 +1772,12 @@ auto plot = df.plot();
 auto fig = plot.line("sales");
 ```
 
+##### Expected output
+
 ```text
 Figure(line)
 ```
-
-Example 2. Plot several y-features from a reusable string view as a shared line chart with explicit plot options.
+Example 2. Plot one y-feature as a line chart with an explicit plot-options object.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1650,11 +1790,48 @@ auto plot = df.plot();
 auto fig = plot.line("sales");
 ```
 
+##### Expected output
+
 ```text
 Figure(line)
 ```
+Example 3. Plot several y-features from a reusable string view as a shared line chart.
 
-Example 3. Plot several y-features listed inline as a shared line chart.
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+auto plot = df.plot();
+
+auto fig = plot.line("sales");
+```
+
+##### Expected output
+
+```text
+Figure(line)
+```
+Example 4. Plot several y-features from a reusable string view as a shared line chart with explicit plot options.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+auto plot = df.plot();
+
+auto fig = plot.line("sales");
+```
+
+##### Expected output
+
+```text
+Figure(line)
+```
+Example 5. Plot several y-features listed inline as a shared line chart.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1667,11 +1844,12 @@ auto plot = df.plot();
 auto fig = plot.line({"sales"}, std::nullopt);
 ```
 
+##### Expected output
+
 ```text
 Figure(line)
 ```
-
-Example 4. Plot several y-features listed inline as a shared line chart with explicit plot options.
+Example 6. Plot several y-features listed inline as a shared line chart with explicit plot options.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1684,39 +1862,7 @@ auto plot = df.plot();
 auto fig = plot.line({"sales"}, std::nullopt);
 ```
 
-```text
-Figure(line)
-```
-
-Example 5. Plot one y-feature as a line chart.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-auto plot = df.plot();
-
-auto fig = plot.line("sales");
-```
-
-```text
-Figure(line)
-```
-
-Example 6. Plot one y-feature as a line chart with an explicit plot-options object.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-auto plot = df.plot();
-
-auto fig = plot.line("sales");
-```
+##### Expected output
 
 ```text
 Figure(line)
@@ -1736,10 +1882,14 @@ Figure(line)
 #### API Signature
 
 ```cpp
-pluss::pl::Studio parallel(self,  pluss::RangeView<std::string_view> features = {}, std::optional<std::string_view> class_feature = std::nullopt, const ParallelPlotOptions& options = {}) const
+DataFramePlotAccessor::parallel(features: pluss::RangeView<std::string_view> = {}, class_feature: std::optional<std::string_view> = std::nullopt, options: const ParallelPlotOptions& = {}) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a parallel-coordinates plot from several numeric features, optionally grouped by a class feature.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features to place on the parallel-coordinate axes. Leave empty to let the accessor infer them.
@@ -1750,16 +1900,18 @@ pluss::pl::Studio parallel(self,  pluss::RangeView<std::string_view> features = 
 `options` : `const ParallelPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a parallel-coordinates plot from several numeric features, optionally grouped by a class feature.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1772,6 +1924,8 @@ auto plot = df.plot();
 
 auto fig = plot.parallel({"x1", "x2", "x3"}, "group");
 ```
+
+##### Expected output
 
 ```text
 Figure(parallel)
@@ -1789,12 +1943,16 @@ Figure(parallel)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio pie(self, std::string_view value_feature, std::optional<std::string_view> label_feature = std::nullopt) const
+DataFramePlotAccessor::pie(value_feature: std::string_view, label_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio pie(self, std::string_view value_feature, std::optional<std::string_view> label_feature, const PiePlotOptions& options) const
+DataFramePlotAccessor::pie(value_feature: std::string_view, label_feature: std::optional<std::string_view>, options: const PiePlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a pie chart from one value feature, optionally using another feature for labels.
+
+#### Inputs
 
 `value_feature` : `std::string_view`
     Feature whose values determine each slice magnitude.
@@ -1805,14 +1963,14 @@ pluss::pl::Studio pie(self, std::string_view value_feature, std::optional<std::s
 `options` : `const PiePlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a pie chart from one value feature, optionally using another feature for labels.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -1828,10 +1986,11 @@ auto plot = df.plot();
 auto fig = plot.pie("sales", "city");
 ```
 
+##### Expected output
+
 ```text
 Figure(pie)
 ```
-
 Example 2. Plot one value feature as a pie chart with an explicit pie-options object.
 
 ```cpp
@@ -1845,6 +2004,8 @@ pluss::table::PiePlotOptions options;
 options.show_value = true;
 auto fig = plot.pie("sales", "city", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(pie)
@@ -1864,10 +2025,14 @@ Figure(pie)
 #### API Signature
 
 ```cpp
-pluss::pl::Studio radviz(self,  pluss::RangeView<std::string_view> features = {}, std::optional<std::string_view> class_feature = std::nullopt, const RadvizPlotOptions& options = {}) const
+DataFramePlotAccessor::radviz(features: pluss::RangeView<std::string_view> = {}, class_feature: std::optional<std::string_view> = std::nullopt, options: const RadvizPlotOptions& = {}) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a radial visualization from several numeric features, optionally grouped by a class feature.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features used as anchors in the radial visualization.
@@ -1878,16 +2043,18 @@ pluss::pl::Studio radviz(self,  pluss::RangeView<std::string_view> features = {}
 `options` : `const RadvizPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a radial visualization from several numeric features, optionally grouped by a class feature.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -1900,6 +2067,8 @@ auto plot = df.plot();
 
 auto fig = plot.radviz({"x1", "x2", "x3"}, "group");
 ```
+
+##### Expected output
 
 ```text
 Figure(radviz)
@@ -1919,12 +2088,16 @@ Figure(radviz)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio scatter(self, std::string_view x_feature, std::string_view y_feature, std::optional<std::string_view> hue_feature = std::nullopt) const
+DataFramePlotAccessor::scatter(x_feature: std::string_view, y_feature: std::string_view, hue_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio scatter(self, std::string_view x_feature, std::string_view y_feature, std::optional<std::string_view> hue_feature, const ScatterPlotOptions& options) const
+DataFramePlotAccessor::scatter(x_feature: std::string_view, y_feature: std::string_view, hue_feature: std::optional<std::string_view>, options: const ScatterPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a scatter plot using one feature for x and another for y.
+
+#### Inputs
 
 `x_feature` : `std::string_view`
     Numeric or ordered feature placed on the horizontal axis.
@@ -1938,14 +2111,14 @@ pluss::pl::Studio scatter(self, std::string_view x_feature, std::string_view y_f
 `options` : `const ScatterPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a scatter plot using one feature for x and another for y.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -1962,10 +2135,11 @@ auto plot = df.plot();
 auto fig = plot.scatter("id", "sales");
 ```
 
+##### Expected output
+
 ```text
 Figure(scatter)
 ```
-
 Example 2. Plot one x/y feature pair as a scatter chart with an explicit scatter-options object.
 
 ```cpp
@@ -1978,6 +2152,8 @@ auto plot = df.plot();
 
 auto fig = plot.scatter("id", "sales");
 ```
+
+##### Expected output
 
 ```text
 Figure(scatter)
@@ -1995,14 +2171,18 @@ Figure(scatter)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio scatter_matrix(self, pluss::RangeView<std::string_view> features = {}) const
+DataFramePlotAccessor::scatter_matrix(features: pluss::RangeView<std::string_view> = {}) -> pluss::pl::Studio
 
-pluss::pl::Studio scatter_matrix(self, pluss::RangeView<std::string_view> features, const ScatterMatrixPlotOptions& options) const
+DataFramePlotAccessor::scatter_matrix(features: pluss::RangeView<std::string_view>, options: const ScatterMatrixPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio scatter_matrix(self, pluss::RangeView<std::string_view> features, ScatterMatrixTriangle triangle) const
+DataFramePlotAccessor::scatter_matrix(features: pluss::RangeView<std::string_view>, triangle: ScatterMatrixTriangle) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds a scatter-matrix figure for several numeric features.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features to place on the pairwise matrix axes. Leave empty to let the accessor infer them.
@@ -2013,14 +2193,14 @@ pluss::pl::Studio scatter_matrix(self, pluss::RangeView<std::string_view> featur
 `triangle` : `ScatterMatrixTriangle`
     Pair-plot triangle selection controlling whether the scatter matrix renders the upper, lower, or corner-only half.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a scatter-matrix figure for several numeric features.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -2037,10 +2217,11 @@ auto plot = df.plot();
 auto fig = plot.scatter_matrix({"x1", "x2", "x3"});
 ```
 
+##### Expected output
+
 ```text
 Figure(scatter_matrix)
 ```
-
 Example 2. Work with a selected feature subset.
 
 ```cpp
@@ -2056,10 +2237,11 @@ options.corner = true;
 auto fig = plot.scatter_matrix({"x1", "x2", "x3"}, options);
 ```
 
+##### Expected output
+
 ```text
 Figure(scatter_matrix)
 ```
-
 Example 3. Work with a selected feature subset.
 
 ```cpp
@@ -2072,6 +2254,8 @@ auto plot = df.plot();
 
 auto fig = plot.scatter_matrix({"x1", "x2", "x3"}, pluss::table::ScatterMatrixTriangle::Lower);
 ```
+
+##### Expected output
 
 ```text
 Figure(scatter_matrix)
@@ -2089,23 +2273,27 @@ Figure(scatter_matrix)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio step(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::step(y_feature: std::string_view, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio step(self, pluss::RangeView<std::string_view> y_features, std::optional<std::string_view> x_feature, const StepPlotOptions& options) const
+DataFramePlotAccessor::step(y_feature: std::string_view, x_feature: std::optional<std::string_view>, options: const StepPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio step(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::step(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio step(self, std::initializer_list<std::string_view> y_features, std::optional<std::string_view> x_feature, const StepPlotOptions& options) const
+DataFramePlotAccessor::step(y_features: pluss::RangeView<std::string_view>, x_feature: std::optional<std::string_view>, options: const StepPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio step(self, std::string_view y_feature, std::optional<std::string_view> x_feature = std::nullopt) const
+DataFramePlotAccessor::step(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view> = std::nullopt) -> pluss::pl::Studio
 
-pluss::pl::Studio step(self, std::string_view y_feature, std::optional<std::string_view> x_feature, const StepPlotOptions& options) const
+DataFramePlotAccessor::step(y_features: std::initializer_list<std::string_view>, x_feature: std::optional<std::string_view>, options: const StepPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
 
-`y_features` : `pluss::RangeView<std::string_view>`
-    Numeric features to overlay as separate step traces on the same axes.
+Builds a step chart for one or more y-features, optionally against a chosen x-feature.
+
+#### Inputs
+
+`y_feature` : `std::string_view`
+    One numeric feature to draw as a step trace.
 
 `x_feature` : `std::optional<std::string_view>`
     Feature used on the horizontal axis of a plot. Leave it empty to let the plot use the case axis or the accessor default when that overload allows it.
@@ -2113,17 +2301,17 @@ pluss::pl::Studio step(self, std::string_view y_feature, std::optional<std::stri
 `options` : `const StepPlotOptions&`
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-`y_feature` : `std::string_view`
-    One numeric feature to draw as a step trace.
+`y_features` : `pluss::RangeView<std::string_view>`
+    Numeric features to overlay as separate step traces on the same axes.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds a step chart for one or more y-features, optionally against a chosen x-feature.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -2131,19 +2319,20 @@ Example 1. Plot one or more y-features as a step chart.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
-    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
-    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto plot = df.plot();
 
-auto fig = plot.step({"sales", "cost"}, "month");
+auto fig = plot.step("sales", "id");
 ```
+
+##### Expected output
 
 ```text
 Figure(step)
 ```
-
 Example 2. Plot one or more y-features as a step chart with an explicit step-options object.
 
 ```cpp
@@ -2159,10 +2348,11 @@ options.line_width = 2.0;
 auto fig = plot.step("sales", "id", options);
 ```
 
+##### Expected output
+
 ```text
 Figure(step)
 ```
-
 Example 3. Plot one or more y-features as a step chart.
 
 ```cpp
@@ -2176,10 +2366,11 @@ auto plot = df.plot();
 auto fig = plot.step({"sales", "cost"}, "month");
 ```
 
+##### Expected output
+
 ```text
 Figure(step)
 ```
-
 Example 4. Plot one or more y-features as a step chart with an explicit step-options object.
 
 ```cpp
@@ -2195,27 +2386,29 @@ options.line_width = 2.0;
 auto fig = plot.step("sales", "id", options);
 ```
 
+##### Expected output
+
 ```text
 Figure(step)
 ```
-
 Example 5. Plot one or more y-features as a step chart.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"month", pluss::make_note({"Jan", "Feb", "Mar"})},
+    {"sales", pluss::make_series({100.0, 120.0, 90.0})},
+    {"cost", pluss::make_series({60.0, 80.0, 55.0})},
 });
 auto plot = df.plot();
 
-auto fig = plot.step("sales", "id");
+auto fig = plot.step({"sales", "cost"}, "month");
 ```
+
+##### Expected output
 
 ```text
 Figure(step)
 ```
-
 Example 6. Plot one or more y-features as a step chart with an explicit step-options object.
 
 ```cpp
@@ -2230,6 +2423,8 @@ pluss::table::StepPlotOptions options;
 options.line_width = 2.0;
 auto fig = plot.step("sales", "id", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(step)
@@ -2249,20 +2444,24 @@ Figure(step)
 #### API Signatures
 
 ```cpp
-pluss::pl::Studio violin(self, pluss::RangeView<std::string_view> features = {}) const
+DataFramePlotAccessor::violin(features: pluss::RangeView<std::string_view> = {}) -> pluss::pl::Studio
 
-pluss::pl::Studio violin(self, pluss::RangeView<std::string_view> features, const ViolinPlotOptions& options) const
+DataFramePlotAccessor::violin(features: pluss::RangeView<std::string_view>, options: const ViolinPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features) const
+DataFramePlotAccessor::violin(features: std::initializer_list<std::string_view>) -> pluss::pl::Studio
 
-pluss::pl::Studio violin(self, std::initializer_list<std::string_view> features, const ViolinPlotOptions& options) const
+DataFramePlotAccessor::violin(features: std::initializer_list<std::string_view>, options: const ViolinPlotOptions&) -> pluss::pl::Studio
 
-pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view group_feature) const
+DataFramePlotAccessor::violin(value_feature: std::string_view, group_feature: std::string_view) -> pluss::pl::Studio
 
-pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view group_feature, const ViolinPlotOptions& options) const
+DataFramePlotAccessor::violin(value_feature: std::string_view, group_feature: std::string_view, options: const ViolinPlotOptions&) -> pluss::pl::Studio
 ```
 
-#### Parameters
+#### Notes
+
+Builds violin plots for one or more numeric features or grouped distributions.
+
+#### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Numeric features to summarize as violin plots. Leave empty to let the accessor infer the numeric feature set.
@@ -2276,14 +2475,14 @@ pluss::pl::Studio violin(self, std::string_view value_feature, std::string_view 
 `group_feature` : `std::string_view`
     Categorical feature that splits the violin plot into separate groups.
 
-#### Returns
+#### Output
 
 `pluss::pl::Studio`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Builds violin plots for one or more numeric features or grouped distributions.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -2299,10 +2498,11 @@ auto plot = df.plot();
 auto fig = plot.violin({"sales", "cost"});
 ```
 
+##### Expected output
+
 ```text
 Figure(violin)
 ```
-
 Example 2. Plot one or more numeric features as violin distributions with an explicit violin-options object.
 
 ```cpp
@@ -2317,10 +2517,11 @@ options.width = 0.65;
 auto fig = plot.violin({"sales", "cost"}, options);
 ```
 
+##### Expected output
+
 ```text
 Figure(violin)
 ```
-
 Example 3. Plot one or more numeric features as violin distributions.
 
 ```cpp
@@ -2333,10 +2534,11 @@ auto plot = df.plot();
 auto fig = plot.violin({"sales", "cost"});
 ```
 
+##### Expected output
+
 ```text
 Figure(violin)
 ```
-
 Example 4. Plot one or more numeric features as violin distributions with an explicit violin-options object.
 
 ```cpp
@@ -2351,10 +2553,11 @@ options.width = 0.65;
 auto fig = plot.violin({"sales", "cost"}, options);
 ```
 
+##### Expected output
+
 ```text
 Figure(violin)
 ```
-
 Example 5. Plot one or more numeric features as violin distributions.
 
 ```cpp
@@ -2367,10 +2570,11 @@ auto plot = df.plot();
 auto fig = plot.violin("score", "section");
 ```
 
+##### Expected output
+
 ```text
 Figure(violin)
 ```
-
 Example 6. Plot one or more numeric features as violin distributions with an explicit violin-options object.
 
 ```cpp
@@ -2384,6 +2588,8 @@ pluss::table::ViolinPlotOptions options;
 options.inner = pluss::pl::ViolinInner::Quartile;
 auto fig = plot.violin("score", "section", options);
 ```
+
+##### Expected output
 
 ```text
 Figure(violin)

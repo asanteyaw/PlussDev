@@ -1,0 +1,36 @@
+{
+  "rows": 1000000,
+  "pandas_version": "2.2.3",
+  "comparisons": {
+    "alignment": {
+      "pluss_ms": 1191.35,
+      "pandas_ms": 30.311375041492283,
+      "pluss_over_pandas": 39.30372668244837
+    },
+    "grouping": {
+      "pluss_ms": 95.7956,
+      "pandas_ms": 10.682165971957147,
+      "pluss_over_pandas": 8.967806739895531
+    },
+    "unification": {
+      "pluss_ms": 1055.48,
+      "pandas_ms": 290.34454096108675,
+      "pluss_over_pandas": 3.6352672466518325
+    },
+    "reshaping": {
+      "pluss_ms": 132.067,
+      "pandas_ms": 42.12245892267674,
+      "pluss_over_pandas": 3.135310790911624
+    },
+    "windows": {
+      "pluss_ms": 88.5137,
+      "pandas_ms": 33.92316703684628,
+      "pluss_over_pandas": 2.609240461064829
+    },
+    "statistics": {
+      "pluss_ms": 134.176,
+      "pandas_ms": 17.23087497521192,
+      "pluss_over_pandas": 7.786952211830426
+    }
+  }
+}

@@ -171,6 +171,48 @@ Atlas Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) co
   return Atlas(std::move(out_frames), src.axis0_labels_);
 }
 
+Atlas Atlas::map_elements(
+    const std::function<ThreadValue(const ThreadValue&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn),
+              "Atlas::map_elements: callback is empty");
+  return map_frames(
+      [&fn](const DataFrame& frame) {
+        return frame.map_elements(fn);
+      });
+}
+
+Atlas Atlas::moving(std::int64_t window,
+                    WindowStatistic statistic,
+                    const WindowOptions& options) const {
+  return map_frames(
+      [=](const DataFrame& frame) {
+        switch (statistic) {
+          case WindowStatistic::Sum:
+            return frame.moving_sum(window, options);
+          case WindowStatistic::Mean:
+            return frame.moving_mean(window, options);
+          case WindowStatistic::Minimum:
+            return frame.moving_minimum(window, options);
+          case WindowStatistic::Maximum:
+            return frame.moving_maximum(window, options);
+          case WindowStatistic::Variance:
+            return frame.moving_variance(window, options);
+          case WindowStatistic::Deviation:
+            return frame.moving_deviation(window, options);
+        }
+        PLUSS_FAIL("Atlas::moving: unsupported statistic");
+      });
+}
+
+Atlas Atlas::flow(
+    const std::function<Atlas(const Atlas&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn), "Atlas::flow: callback is empty");
+  auto result = fn(*this);
+  PLUSS_CHECK(result.defined(),
+              "Atlas::flow: callback returned an undefined Atlas");
+  return result;
+}
+
 DataFrame Atlas::aggregate_over_frames(
     const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn), "Atlas::aggregate_over_frames: reducer function is empty");

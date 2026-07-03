@@ -36,6 +36,9 @@ dataframe
 time_series_accessor_guide
 dataframe_display
 dataframe_api_reference
+statistics_window_api_reference
+advanced_thread_api_reference
+dataframe_benchmarks
 column_ref_api_reference
 dataframe_plot_api_reference
 dataframe_sql_accessor_api_reference

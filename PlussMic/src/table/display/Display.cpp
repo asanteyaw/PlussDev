@@ -9,11 +9,13 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -202,11 +204,8 @@ Thread display_thread(const Thread& t) {
 }
 
 std::string thread_value_at(const Thread& t, std::int64_t row) {
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
-    if (!valid[static_cast<std::size_t>(row)]) {
-      return "NA";
-    }
+  if (!t.is_valid(row)) {
+    return "NA";
   }
 
   switch (t.kind()) {
@@ -1353,6 +1352,137 @@ std::string render_html_table_body_(const DataFrame& frame,
   return body;
 }
 
+class DataFrameVirtualTableModel final
+    : public pluss::view::VirtualTableModel {
+ public:
+  explicit DataFrameVirtualTableModel(const DataFrame& frame)
+      : cases_(display_thread(frame.cases())),
+        columns_(frame.features()),
+        names_(frame.feature_names()),
+        rows_(frame.ncases()) {
+    numeric_.reserve(columns_.size());
+    search_columns_.reserve(columns_.size());
+    std::unordered_set<const void*> shared_numeric_payloads;
+    for (std::size_t index = 0; index < columns_.size(); ++index) {
+      auto& column = columns_[index];
+      column = display_thread(column);
+      numeric_.push_back(is_numeric_thread(column));
+      bool searchable = true;
+      if (column.kind() == ThreadKind::Series &&
+          !column.has_validity_mask()) {
+        const void* payload = column.as_series().raw_data();
+        searchable = shared_numeric_payloads.insert(payload).second;
+      }
+      if (searchable) {
+        search_columns_.push_back(index);
+      }
+    }
+  }
+
+  std::int64_t row_count() const noexcept override {
+    return rows_;
+  }
+
+  std::int64_t column_count() const noexcept override {
+    return static_cast<std::int64_t>(columns_.size());
+  }
+
+  std::string row_header() const override {
+    return "case";
+  }
+
+  std::string row_label(const std::int64_t row) const override {
+    return thread_value_at(cases_, row);
+  }
+
+  std::string column_name(const std::int64_t column) const override {
+    if (column < 0 ||
+        static_cast<std::size_t>(column) >= names_.size()) {
+      return {};
+    }
+    return names_[static_cast<std::size_t>(column)];
+  }
+
+  bool column_numeric(const std::int64_t column) const noexcept override {
+    return column >= 0 &&
+           static_cast<std::size_t>(column) < numeric_.size() &&
+           numeric_[static_cast<std::size_t>(column)];
+  }
+
+  pluss::view::VirtualTableCell cell(
+      const std::int64_t row,
+      const std::int64_t column) const override {
+    if (row < 0 || row >= rows_ || column < 0 ||
+        static_cast<std::size_t>(column) >= columns_.size()) {
+      return {};
+    }
+    const auto& source = columns_[static_cast<std::size_t>(column)];
+    const bool missing = !source.is_valid(row);
+    return pluss::view::VirtualTableCell{
+        .text = missing ? std::string("NA") : thread_value_at(source, row),
+        .missing = missing,
+    };
+  }
+
+  bool row_matches(const std::int64_t row,
+                   const std::string_view folded_query) const override {
+    if (row < 0 || row >= rows_ || folded_query.empty()) {
+      return folded_query.empty();
+    }
+    const auto contains_query = [&](const std::string& value) {
+      std::string folded;
+      folded.reserve(value.size());
+      for (const char ch : value) {
+        folded.push_back(static_cast<char>(
+            std::tolower(static_cast<unsigned char>(ch))));
+      }
+      return folded.find(folded_query) != std::string::npos;
+    };
+    if (contains_query(thread_value_at(cases_, row))) {
+      return true;
+    }
+    for (const std::size_t index : search_columns_) {
+      if (contains_query(thread_value_at(columns_[index], row))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+ private:
+  Thread cases_{};
+  std::vector<Thread> columns_{};
+  std::vector<std::string> names_{};
+  std::vector<bool> numeric_{};
+  std::vector<std::size_t> search_columns_{};
+  std::int64_t rows_{0};
+};
+
+std::string render_virtual_html_table_(const DataFrame& frame,
+                                       std::string_view title,
+                                       std::string_view subtitle,
+                                       const DisplayOptions& options) {
+  std::string body;
+  body += "<div class=\"summary-grid\">";
+  body += fmt::format(
+      "<div class=\"summary-card\"><div class=\"label\">Cases</div><div "
+      "class=\"value\">{}</div></div>",
+      frame.ncases());
+  body += fmt::format(
+      "<div class=\"summary-card\"><div class=\"label\">Features</div><div "
+      "class=\"value\">{}</div></div>",
+      frame.nfeats());
+  body += fmt::format(
+      "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div "
+      "class=\"value\">{}</div></div>",
+      escape_html_(logical_dtype_name(frame.cases())));
+  body += "</div>";
+  body +=
+      "<div class=\"table-wrap\"><div class=\"table-scroll\"><table "
+      "id=\"plussmic-table\" data-virtual-table=\"true\"></table></div></div>";
+  return html_shell_(title, subtitle, body, options);
+}
+
 std::string render_html_table_(const DataFrame& frame,
                                std::string_view title,
                                std::string_view subtitle,
@@ -1488,7 +1618,9 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
 bool show_html_window_(const std::string& html,
                        const DisplayOptions& options,
                        std::string_view title,
-                       const DisplayBackend backend) {
+                       const DisplayBackend backend,
+                       std::shared_ptr<const pluss::view::VirtualTableModel>
+                           virtual_table_model = {}) {
   if (backend == DisplayBackend::Terminal) {
     return false;
   }
@@ -1498,6 +1630,7 @@ bool show_html_window_(const std::string& html,
   window_opts.snapshot_name = "table-view.png";
   window_opts.width = std::max<std::int64_t>(640, options.viewer_width);
   window_opts.height = std::max<std::int64_t>(420, options.viewer_height);
+  window_opts.virtual_table_model = std::move(virtual_table_model);
   switch (backend) {
     case DisplayBackend::PlussWebView:
       window_opts.backend_preference = pluss::view::BackendPreference::PlussWebViewOnly;
@@ -1761,8 +1894,32 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    const auto html = render_html(frame, render_opts);
-    if (show_html_window_(html, render_opts, "Pluss DataFrame", backend)) {
+    const std::int64_t rows = std::max<std::int64_t>(0, frame.ncases());
+    const std::int64_t columns = std::max<std::int64_t>(0, frame.nfeats());
+    const bool use_virtual_table =
+        backend == DisplayBackend::PlussWebView &&
+        rows > 0 && columns > 0 &&
+        (rows > 10000 ||
+         columns > 256 ||
+         (rows <= std::numeric_limits<std::int64_t>::max() /
+                      std::max<std::int64_t>(1, columns) &&
+          rows * columns > 250000));
+    std::shared_ptr<const pluss::view::VirtualTableModel> virtual_model;
+    const auto html =
+        use_virtual_table
+            ? render_virtual_html_table_(
+                  frame,
+                  document_title_("DataFrame", render_opts),
+                  fmt::format("{} cases, {} features", frame.ncases(),
+                              frame.nfeats()),
+                  render_opts)
+            : render_html(frame, render_opts);
+    if (use_virtual_table) {
+      virtual_model =
+          std::make_shared<DataFrameVirtualTableModel>(frame);
+    }
+    if (show_html_window_(html, render_opts, "Pluss DataFrame", backend,
+                          std::move(virtual_model))) {
       return;
     }
   }

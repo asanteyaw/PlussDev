@@ -9,6 +9,10 @@
 #include "pluss/tils/view/window/html_document.h"
 #include "pluss/tils/view/window/scene.h"
 
+namespace pluss::view {
+class VirtualTableModel;
+}
+
 namespace pluss::view::window {
 
 struct HtmlHitRegion {
@@ -85,6 +89,8 @@ struct HtmlRenderConfig {
   std::string active_input_target{};
   std::string active_input_value{};
   bool show_input_caret{true};
+  const VirtualTableModel* virtual_table_model{nullptr};
+  const std::vector<std::int64_t>* virtual_row_order{nullptr};
   std::vector<HtmlHitRegion>* hit_regions{nullptr};
   HtmlRenderStats* render_stats{nullptr};
   HtmlLayoutCache* layout_cache{nullptr};

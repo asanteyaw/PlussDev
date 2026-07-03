@@ -11,21 +11,25 @@ This page documents the full public `Slot` surface for one-dimensional heterogen
 #### Signature
 
 ```cpp
-pluss::kindle::Stream as_kindle(self) const
+Slot::as_kindle() -> pluss::kindle::Stream
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::kindle::Stream`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::kindle::Stream`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -35,7 +39,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.as_kindle();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -46,22 +50,26 @@ Series([10.0, 20.0, 30.0])
 #### Signature
 
 ```cpp
-const Value& at(self, std::int64_t i) const
+Slot::at(i: std::int64_t) -> const Value&
 ```
-
-#### Parameters
-
-`i` : `std::int64_t`
-    Zero-based positional index used by this overload.
-
-#### Returns
-
-`const Value&`
-    Value produced by this call.
 
 #### Notes
 
 Fetches one value, member, or slice from the current object without changing the source object.
+
+#### Inputs
+
+`i` : `std::int64_t`
+    Zero-based positional index used by this overload.
+
+#### Output
+
+`const Value&`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -71,7 +79,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.at(0);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Series(1)
@@ -82,22 +90,26 @@ Series(1)
 #### Signature
 
 ```cpp
-Slot concat(self, const Slot& other) const
+Slot::concat(other: const Slot&) -> Slot
 ```
-
-#### Parameters
-
-`other` : `const Slot&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Appends the values from another slot and returns the combined slot.
+
+#### Inputs
+
+`other` : `const Slot&`
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -108,7 +120,7 @@ auto other = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)})
 auto out = slot.concat(other);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -119,21 +131,25 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-bool defined(self) const
+Slot::defined() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -143,7 +159,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.defined();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true
@@ -154,21 +170,25 @@ true
 #### Signature
 
 ```cpp
-bool empty(self) const
+Slot::empty() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object has no rows, entries, slots, or depth items.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -178,7 +198,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.empty();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 false
@@ -189,22 +209,26 @@ false
 #### Signature
 
 ```cpp
-Slot filter(self, const std::function<bool(const Value&)>& predicate) const
+Slot::filter(predicate: const std::function<bool(const Value&)>&) -> Slot
 ```
-
-#### Parameters
-
-`predicate` : `const std::function<bool(const Value&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Keeps only the slot values that satisfy the supplied predicate.
+
+#### Inputs
+
+`predicate` : `const std::function<bool(const Value&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -214,7 +238,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), 
 auto out = slot.filter([](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -225,22 +249,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-static Slot from_kindle(const pluss::kindle::Stream& stream)
+Slot::from_kindle(stream: const pluss::kindle::Stream&) -> Slot
 ```
-
-#### Parameters
-
-`stream` : `const pluss::kindle::Stream&`
-    Stream payload supplied to this overload.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`stream` : `const pluss::kindle::Stream&`
+    Stream payload supplied to this overload.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -250,7 +278,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = pluss::bundle::Slot::from_kindle(stream);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -261,22 +289,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-Slot head(self, std::int64_t n) const
+Slot::head(n: std::int64_t) -> Slot
 ```
-
-#### Parameters
-
-`n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Returns the first `n` values from the slot.
+
+#### Inputs
+
+`n` : `std::int64_t`
+    Number of rows, entries, or depth items to keep in the preview.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -286,7 +318,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.head(2);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -297,21 +329,25 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-pluss::kindle::Stream kindelize(self) const
+Slot::kindelize() -> pluss::kindle::Stream
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::kindle::Stream`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::kindle::Stream`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -321,7 +357,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.kindelize();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -332,22 +368,26 @@ Series([10.0, 20.0, 30.0])
 #### Signature
 
 ```cpp
-Slot push(self, const Value& value) const
+Slot::push(value: const Value&) -> Slot
 ```
-
-#### Parameters
-
-`value` : `const Value&`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Returns a new slot with one additional value appended.
+
+#### Inputs
+
+`value` : `const Value&`
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -357,7 +397,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.push(pluss::make_note("tail"));
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -368,22 +408,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-Slot& push_(self, const Value& value)
+Slot::push_(value: const Value&) -> Slot&
 ```
-
-#### Parameters
-
-`value` : `const Value&`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Returns
-
-`Slot&`
-    Value produced by this call.
 
 #### Notes
 
 Appends one additional value to the slot in place.
+
+#### Inputs
+
+`value` : `const Value&`
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+
+#### Output
+
+`Slot&`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -393,7 +437,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 slot.push_(pluss::make_note("tail"));
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -404,22 +448,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-void show(self, std::ostream& os) const
+Slot::show(os: std::ostream&) -> void
 ```
-
-#### Parameters
-
-`os` : `std::ostream&`
-    Destination output stream used instead of the default display or print target.
-
-#### Returns
-
-`void`
-    Performs the side effect and returns no value.
 
 #### Notes
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### Inputs
+
+`os` : `std::ostream&`
+    Destination output stream used instead of the default display or print target.
+
+#### Output
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -429,7 +477,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 slot.show(std::cout);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -440,21 +488,25 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-std::int64_t size(self) const
+Slot::size() -> std::int64_t
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
 
 #### Notes
 
 Returns a size/count summary for the current object without changing it.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -464,7 +516,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.size();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 3
@@ -475,10 +527,14 @@ auto out = slot.size();
 #### Signature
 
 ```cpp
-Slot slice(self, std::int64_t start, std::int64_t stop) const
+Slot::slice(start: std::int64_t, stop: std::int64_t) -> Slot
 ```
 
-#### Parameters
+#### Notes
+
+Returns a contiguous positional slice `[start, stop)` from the slot.
+
+#### Inputs
 
 `start` : `std::int64_t`
     Inclusive starting position of the slice.
@@ -486,14 +542,14 @@ Slot slice(self, std::int64_t start, std::int64_t stop) const
 `stop` : `std::int64_t`
     Exclusive ending position of the slice.
 
-#### Returns
+#### Output
 
 `Slot`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Returns a contiguous positional slice `[start, stop)` from the slot.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -503,7 +559,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.slice(0, 2);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -514,22 +570,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-Slot tail(self, std::int64_t n) const
+Slot::tail(n: std::int64_t) -> Slot
 ```
-
-#### Parameters
-
-`n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Returns the last `n` values from the slot.
+
+#### Inputs
+
+`n` : `std::int64_t`
+    Number of rows, entries, or depth items to keep in the preview.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -539,7 +599,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.tail(2);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -550,22 +610,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-Slot take(self, std::span<const std::int64_t> indices) const
+Slot::take(indices: std::span<const std::int64_t>) -> Slot
 ```
-
-#### Parameters
-
-`indices` : `std::span<const std::int64_t>`
-    Integer positions used to select, reorder, or address entries.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Returns the values at the requested integer positions.
+
+#### Inputs
+
+`indices` : `std::span<const std::int64_t>`
+    Integer positions used to select, reorder, or address entries.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -576,7 +640,7 @@ std::vector<std::int64_t> picks{0, 2};
 auto out = slot.take(picks);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -587,21 +651,25 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-std::string to_json(self) const
+Slot::to_json() -> std::string
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::string`
-    Rendered string result.
 
 #### Notes
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::string`
+    Rendered string result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -611,7 +679,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.to_json();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -622,21 +690,25 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-pluss::kindle::Stream to_kindle(self) const
+Slot::to_kindle() -> pluss::kindle::Stream
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::kindle::Stream`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::kindle::Stream`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -646,7 +718,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.to_kindle();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -657,21 +729,25 @@ Series([10.0, 20.0, 30.0])
 #### Signature
 
 ```cpp
-std::string to_string(self) const
+Slot::to_string() -> std::string
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::string`
-    Rendered string result.
 
 #### Notes
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::string`
+    Rendered string result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -681,7 +757,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.to_string();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -692,22 +768,26 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-Slot transform(self, const std::function<Value(const Value&)>& fn) const
+Slot::transform(fn: const std::function<Value(const Value&)>&) -> Slot
 ```
-
-#### Parameters
-
-`fn` : `const std::function<Value(const Value&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Returns
-
-`Slot`
-    Value produced by this call.
 
 #### Notes
 
 Applies a value-wise transform to each slot entry and returns the updated slot.
+
+#### Inputs
+
+`fn` : `const std::function<Value(const Value&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+#### Output
+
+`Slot`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -717,7 +797,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.transform([](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
@@ -728,21 +808,25 @@ Slot([Series(1), Series(2), Series(3)])
 #### Signature
 
 ```cpp
-std::unordered_map<std::string, std::int64_t> type_counts(self) const
+Slot::type_counts() -> std::unordered_map<std::string, std::int64_t>
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::unordered_map<std::string, std::int64_t>`
-    Value produced by this call.
 
 #### Notes
 
 Counts how many slot entries belong to each stored pluss type.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::unordered_map<std::string, std::int64_t>`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -752,7 +836,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), 
 auto out = slot.type_counts();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 {"Series": 2, "Note": 1}
@@ -763,21 +847,25 @@ auto out = slot.type_counts();
 #### Signature
 
 ```cpp
-bool unique(self) const
+Slot::unique() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -787,7 +875,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.unique();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true
@@ -798,21 +886,25 @@ true
 #### Signature
 
 ```cpp
-const std::vector<Value>& values(self) const
+Slot::values() -> const std::vector<Value>&
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::vector<Value>&`
-    Value produced by this call.
 
 #### Notes
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`const std::vector<Value>&`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -822,7 +914,7 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.values();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])

@@ -1,13 +1,17 @@
 #include "platform/PlatformHtmlViewer.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <memory>
+#include <mutex>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -74,6 +78,127 @@ void erase_last_utf8_codepoint(std::string& text) {
   } while (i > 0 && (static_cast<unsigned char>(text[i]) & 0xC0U) == 0x80U);
   text.erase(i);
 }
+
+class AsyncVirtualTableSearch {
+ public:
+  struct Result {
+    std::uint64_t generation{0};
+    std::string query{};
+    std::vector<std::int64_t> rows{};
+  };
+
+  explicit AsyncVirtualTableSearch(
+      std::shared_ptr<const VirtualTableModel> model)
+      : model_(std::move(model)) {
+    if (model_ != nullptr) {
+      worker_ = std::thread([this] { run_(); });
+    }
+  }
+
+  ~AsyncVirtualTableSearch() {
+    stopping_.store(true, std::memory_order_release);
+    {
+      const std::scoped_lock lock(mutex_);
+      ++pending_generation_;
+    }
+    wake_.notify_all();
+    if (worker_.joinable()) {
+      worker_.join();
+    }
+  }
+
+  AsyncVirtualTableSearch(const AsyncVirtualTableSearch&) = delete;
+  AsyncVirtualTableSearch& operator=(const AsyncVirtualTableSearch&) = delete;
+
+  void submit(std::string query) {
+    if (model_ == nullptr) {
+      return;
+    }
+    for (char& ch : query) {
+      ch = static_cast<char>(
+          std::tolower(static_cast<unsigned char>(ch)));
+    }
+    {
+      const std::scoped_lock lock(mutex_);
+      pending_query_ = std::move(query);
+      ++pending_generation_;
+      active_generation_.store(pending_generation_,
+                               std::memory_order_release);
+    }
+    wake_.notify_one();
+  }
+
+  [[nodiscard]] std::optional<Result> take_completed() {
+    const std::scoped_lock lock(mutex_);
+    if (!completed_.has_value()) {
+      return std::nullopt;
+    }
+    auto result = std::move(completed_);
+    completed_.reset();
+    return result;
+  }
+
+ private:
+  void run_() {
+    std::uint64_t processed_generation = 0;
+    while (!stopping_.load(std::memory_order_acquire)) {
+      std::string query;
+      std::uint64_t generation = 0;
+      {
+        std::unique_lock lock(mutex_);
+        wake_.wait(lock, [&] {
+          return stopping_.load(std::memory_order_acquire) ||
+                 pending_generation_ != processed_generation;
+        });
+        if (stopping_.load(std::memory_order_acquire)) {
+          return;
+        }
+        generation = pending_generation_;
+        query = pending_query_;
+        processed_generation = generation;
+      }
+
+      std::vector<std::int64_t> rows;
+      if (!query.empty()) {
+        const std::int64_t count =
+            std::max<std::int64_t>(0, model_->row_count());
+        rows.reserve(static_cast<std::size_t>(
+            std::min<std::int64_t>(count, 65536)));
+        for (std::int64_t row = 0; row < count; ++row) {
+          if ((row & 63) == 0 &&
+              (stopping_.load(std::memory_order_acquire) ||
+               active_generation_.load(std::memory_order_acquire) !=
+                   generation)) {
+            break;
+          }
+          if (model_->row_matches(row, query)) {
+            rows.push_back(row);
+          }
+        }
+      }
+
+      if (!stopping_.load(std::memory_order_acquire) &&
+          active_generation_.load(std::memory_order_acquire) == generation) {
+        const std::scoped_lock lock(mutex_);
+        completed_ = Result{
+            .generation = generation,
+            .query = std::move(query),
+            .rows = std::move(rows),
+        };
+      }
+    }
+  }
+
+  std::shared_ptr<const VirtualTableModel> model_{};
+  std::atomic<bool> stopping_{false};
+  std::atomic<std::uint64_t> active_generation_{0};
+  std::mutex mutex_{};
+  std::condition_variable wake_{};
+  std::uint64_t pending_generation_{0};
+  std::string pending_query_{};
+  std::optional<Result> completed_{};
+  std::thread worker_{};
+};
 
 [[nodiscard]] const std::string* attribute_value(const window::HtmlNode& node,
                                                  const std::string_view name) {
@@ -514,7 +639,9 @@ bool show_inhouse_html_window(const std::string& title,
                               const std::int64_t height,
                               const std::string& snapshot_name,
                               const std::string& svg_payload,
-                              const std::string& svg_snapshot_name) {
+                              const std::string& svg_snapshot_name,
+                              std::shared_ptr<const VirtualTableModel>
+                                  virtual_table_model) {
   if ((html.empty() && svg_payload.empty()) || !inhouse_html_viewer_available()) {
     return false;
   }
@@ -538,6 +665,7 @@ bool show_inhouse_html_window(const std::string& title,
   window::HtmlRenderConfig render_cfg{};
   render_cfg.draw_top_bar = false;
   render_cfg.draw_scrollbars = false;
+  render_cfg.virtual_table_model = virtual_table_model.get();
   window::HtmlRenderStats render_stats{};
   window::HtmlLayoutCache layout_cache;
   render_cfg.layout_cache = &layout_cache;
@@ -555,7 +683,7 @@ bool show_inhouse_html_window(const std::string& title,
       {"PNG image", "png"},
       {"PDF document", "pdf"},
   };
-  if (has_table) {
+  if (has_table && virtual_table_model == nullptr) {
     save_formats.push_back(window::ShellSaveFormat{"CSV data", "csv"});
     save_formats.push_back(window::ShellSaveFormat{"Tab-delimited text", "txt"});
     save_formats.push_back(window::ShellSaveFormat{"Excel workbook", "xlsx"});
@@ -566,6 +694,9 @@ bool show_inhouse_html_window(const std::string& title,
   }
   const double backing_scale = shell->backing_scale_factor();
   window::detail::AsyncSoftwareCompositor compositor;
+  AsyncVirtualTableSearch virtual_search(virtual_table_model);
+  std::shared_ptr<const std::vector<std::int64_t>> virtual_row_order;
+  std::string submitted_virtual_query;
   window::PixelCanvas presented_canvas;
   std::uint64_t last_submitted_frame_id = 0;
   std::uint64_t last_presented_frame_id = 0;
@@ -583,10 +714,9 @@ bool show_inhouse_html_window(const std::string& title,
   auto enqueue_current = [&](const window::SizeI target_size,
                              const bool table_scroll_damage_only) -> bool {
     (void)table_scroll_damage_only;
-    // Every asynchronous request is a self-contained recovery frame. Cached
-    // scroll-damage layouts intentionally omit static paint commands and are
-    // therefore not valid when rendering into a freshly cleared back buffer.
-    layout_cache.clear();
+    // Each request still paints a self-contained frame, but table geometry is
+    // immutable across scroll offsets. Reusing measured widths and row heights
+    // keeps ordinary HTML tables off the scroll-frame critical path.
     auto cfg = runtime_cfg;
     cfg.canvas_size = window::SizeI{
         std::max(1, static_cast<int>(std::lround(target_size.width * backing_scale))),
@@ -605,6 +735,8 @@ bool show_inhouse_html_window(const std::string& title,
     render_cfg.table_sort_target = table_sort_target;
     render_cfg.active_input_target = active_input_target;
     render_cfg.show_input_caret = caret_visible;
+    render_cfg.virtual_row_order =
+        virtual_row_order != nullptr ? virtual_row_order.get() : nullptr;
     if (!active_input_target.empty()) {
       const auto it = input_values.find(active_input_target);
       render_cfg.active_input_value = (it != input_values.end()) ? it->second : std::string{};
@@ -883,6 +1015,41 @@ bool show_inhouse_html_window(const std::string& title,
             needs_render = true;
           }
         }
+      }
+    }
+
+    if (virtual_table_model != nullptr) {
+      auto query_it = input_values.find("table-search");
+      if (query_it == input_values.end()) {
+        query_it = input_values.find("table_search");
+      }
+      std::string query =
+          query_it != input_values.end() ? query_it->second : std::string{};
+      for (char& ch : query) {
+        ch = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(ch)));
+      }
+      if (query != submitted_virtual_query) {
+        submitted_virtual_query = query;
+        virtual_row_order.reset();
+        virtual_search.submit(query);
+        scroll_model.reset();
+        table_scroll_damage_only = false;
+        needs_render = true;
+      }
+      if (auto result = virtual_search.take_completed();
+          result.has_value() &&
+          result->query == submitted_virtual_query) {
+        if (submitted_virtual_query.empty()) {
+          virtual_row_order.reset();
+        } else {
+          virtual_row_order =
+              std::make_shared<const std::vector<std::int64_t>>(
+                  std::move(result->rows));
+        }
+        scroll_model.reset();
+        table_scroll_damage_only = false;
+        needs_render = true;
       }
     }
 

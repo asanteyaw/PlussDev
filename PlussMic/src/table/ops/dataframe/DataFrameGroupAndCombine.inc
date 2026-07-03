@@ -47,234 +47,221 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
   const auto key_names = normalize_name_list(keys);
   std::unordered_set<std::string> key_seen;
   key_seen.reserve(key_names.size());
+  std::vector<Thread> key_columns;
+  key_columns.reserve(key_names.size());
   for (const auto& key : key_names) {
     PLUSS_CHECK(key_seen.insert(key).second, "DataFrame::group: duplicate key '" + key + "'");
+    key_columns.push_back(features(key));
   }
 
-  struct KeyInfo {
-    std::string name;
-    Thread col;
-    Thread value_col;
-    std::optional<std::vector<bool>> valid;
-  };
-  std::vector<KeyInfo> key_infos;
-  key_infos.reserve(key_names.size());
-  for (const auto& key : key_names) {
-    auto col = features(key);
-    auto value_col = col.has_validity_mask() ? col.clear_validity_mask() : col;
-    key_infos.push_back({
-        key,
-        col,
-        value_col,
-        col.has_validity_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->to_vec<bool>()) : std::nullopt,
-    });
-  }
-
-  struct SpecInfo {
-    GroupOp op{GroupOp::Count};
-    std::string out_name;
-    bool has_feature{false};
-    Thread col{};
-    Thread value_col{};
-    std::optional<std::vector<bool>> valid;
-    // Perf cache for numeric ops: convert once, reuse raw pointer in hot loop.
-    bool numeric_cached{false};
-    pluss::Series numeric_values{};
-    const double* numeric_ptr{nullptr};
-  };
-
-  std::vector<SpecInfo> spec_infos;
-  spec_infos.reserve(specs.size());
-  std::unordered_set<std::string> out_seen(key_names.begin(), key_names.end());
-  out_seen.reserve(key_names.size() + specs.size());
-
-  for (const auto& spec : specs) {
-    const auto has_feature = !spec.feature.empty();
-    if (spec.op != GroupOp::Count) {
-      PLUSS_CHECK(has_feature, "DataFrame::group: feature is required for non-count aggregations");
-    }
-
-    Thread col;
-    Thread value_col;
-    std::optional<std::vector<bool>> valid;
-    if (has_feature) {
-      col = features(spec.feature);
-      value_col = col.has_validity_mask() ? col.clear_validity_mask() : col;
-      valid = col.has_validity_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->to_vec<bool>())
-                                      : std::nullopt;
-
-      if (spec.op == GroupOp::Sum || spec.op == GroupOp::Mean || spec.op == GroupOp::Min || spec.op == GroupOp::Max) {
-        PLUSS_CHECK(col.kind() == ThreadKind::Series && is_number_series_type(col.as_series()),
-                    "DataFrame::group: numeric aggregations require numeric Series features");
+  auto composite_keys = make_unify_keys(key_columns, ncases());
+  std::vector<bool> included(static_cast<std::size_t>(ncases()), true);
+  if (dropna_keys) {
+    for (const auto& key : key_columns) {
+      if (!key.has_validity_mask()) {
+        continue;
       }
+      const auto valid = key.validity_mask()->to_vec<bool>();
+      std::transform(
+          included.begin(),
+          included.end(),
+          valid.begin(),
+          included.begin(),
+          std::logical_and<bool>{});
     }
-
-    auto out_name = spec.output;
-    if (out_name.empty()) {
-      if (spec.op == GroupOp::Count && !has_feature) {
-        out_name = "count";
-      } else if (has_feature) {
-        out_name = fmt::format("{}_{}", spec.feature, group_op_name(spec.op));
-      } else {
-        out_name = group_op_name(spec.op);
-      }
-    }
-    PLUSS_CHECK(out_seen.insert(out_name).second, "DataFrame::group: duplicate output feature '" + out_name + "'");
-
-    SpecInfo info{};
-    info.op = spec.op;
-    info.out_name = std::move(out_name);
-    info.has_feature = has_feature;
-    info.col = std::move(col);
-    info.value_col = std::move(value_col);
-    info.valid = std::move(valid);
-    if (has_feature
-        && (spec.op == GroupOp::Sum || spec.op == GroupOp::Mean || spec.op == GroupOp::Min || spec.op == GroupOp::Max)) {
-      info.numeric_values = info.col.as_series().to(pluss::codem::ScalarType::Float64);
-      info.numeric_ptr = reinterpret_cast<const double*>(info.numeric_values.raw_data());
-      info.numeric_cached = true;
-    }
-    spec_infos.push_back(std::move(info));
   }
 
-  struct AggState {
-    std::int64_t count{0};
-    double sum{0.0};
-    double min{0.0};
-    double max{0.0};
-    bool has_numeric{false};
-    std::unordered_set<std::string> uniq{};
-  };
-
-  struct GroupState {
-    std::vector<std::string> keys;
-    std::vector<AggState> agg;
-  };
-
-  std::vector<GroupState> groups;
-  groups.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 32)));
+  std::vector<std::int64_t> group_ids(static_cast<std::size_t>(ncases()), -1);
+  std::vector<std::int64_t> first_rows;
   std::unordered_map<std::string, std::size_t> index_by_key;
-  index_by_key.reserve(groups.capacity());
-
-  std::vector<std::string> key_vals(key_infos.size());
-  std::string composite;
-  composite.reserve(key_vals.size() * 16);
-  for (std::int64_t r = 0; r < ncases(); ++r) {
-    bool skip = false;
-    for (std::size_t k = 0; k < key_infos.size(); ++k) {
-      const auto& key_info = key_infos[k];
-      const bool valid = !key_info.valid.has_value() || (*key_info.valid)[static_cast<std::size_t>(r)];
-      if (!valid && dropna_keys) {
-        skip = true;
-        break;
-      }
-      key_vals[k] = valid ? thread_scalar_string_at(key_info.value_col, r) : "NA";
-    }
-    if (skip) {
+  index_by_key.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 8)));
+  for (std::int64_t row = 0; row < ncases(); ++row) {
+    if (!included[static_cast<std::size_t>(row)]) {
       continue;
     }
-
-    composite.clear();
-    for (std::size_t k = 0; k < key_vals.size(); ++k) {
-      if (k) {
-        composite.push_back('\x1f');
-      }
-      composite += key_vals[k];
-    }
-
-    const auto [it, inserted] = index_by_key.emplace(composite, groups.size());
+    const auto [found, inserted] = index_by_key.emplace(
+        composite_keys[static_cast<std::size_t>(row)],
+        first_rows.size());
     if (inserted) {
-      groups.push_back({key_vals, std::vector<AggState>(spec_infos.size())});
+      first_rows.push_back(row);
     }
-    auto& g = groups[it->second];
-
-    for (std::size_t s = 0; s < spec_infos.size(); ++s) {
-      const auto& spec = spec_infos[s];
-      auto& agg = g.agg[s];
-
-      if (spec.op == GroupOp::Count && !spec.has_feature) {
-        agg.count += 1;
-        continue;
-      }
-
-      const bool valid = !spec.valid.has_value() || (*spec.valid)[static_cast<std::size_t>(r)];
-      if (!valid) {
-        continue;
-      }
-
-      if (spec.op == GroupOp::Count) {
-        agg.count += 1;
-        continue;
-      }
-      if (spec.op == GroupOp::Nunique) {
-        agg.uniq.insert(thread_scalar_string_at(spec.value_col, r));
-        continue;
-      }
-
-      PLUSS_CHECK(spec.numeric_cached && spec.numeric_ptr != nullptr,
-                  "DataFrame::group: numeric cache unavailable for numeric aggregation");
-      const double x = spec.numeric_ptr[r];
-      agg.count += 1;
-      agg.sum += x;
-      if (!agg.has_numeric) {
-        agg.min = x;
-        agg.max = x;
-        agg.has_numeric = true;
-      } else {
-        agg.min = std::min(agg.min, x);
-        agg.max = std::max(agg.max, x);
-      }
-    }
+    group_ids[static_cast<std::size_t>(row)] =
+        static_cast<std::int64_t>(found->second);
   }
+
+  const auto group_count = static_cast<std::int64_t>(first_rows.size());
+  auto group_ids_cpu = pluss::Series::empty(
+      {ncases()},
+      pluss::codem::ScalarType::Int64,
+      pluss::codem::Platform::CPU);
+  if (!group_ids.empty()) {
+    std::memcpy(
+        group_ids_cpu.raw_data(),
+        group_ids.data(),
+        group_ids.size() * sizeof(std::int64_t));
+  }
+  const auto included_cpu =
+      bool_mask_from_values(included, pluss::codem::Platform::CPU);
 
   std::vector<std::pair<std::string, Thread>> out_cols;
-  out_cols.reserve(key_infos.size() + spec_infos.size());
-
-  for (std::size_t k = 0; k < key_infos.size(); ++k) {
-    std::vector<std::string> col;
-    col.reserve(groups.size());
-    for (const auto& g : groups) {
-      col.push_back(g.keys[k]);
-    }
-    out_cols.emplace_back(key_infos[k].name, make_note_thread(col));
+  out_cols.reserve(key_columns.size() + specs.size());
+  for (std::size_t key = 0; key < key_columns.size(); ++key) {
+    out_cols.emplace_back(
+        key_names[key],
+        key_columns[key].take(first_rows));
   }
 
-  for (std::size_t s = 0; s < spec_infos.size(); ++s) {
-    const auto& spec = spec_infos[s];
-    if (spec.op == GroupOp::Count || spec.op == GroupOp::Nunique) {
-      std::vector<std::int64_t> col;
-      col.reserve(groups.size());
-      for (const auto& g : groups) {
-        const auto& agg = g.agg[s];
-        if (spec.op == GroupOp::Count) {
-          col.push_back(agg.count);
-        } else {
-          col.push_back(static_cast<std::int64_t>(agg.uniq.size()));
+  std::unordered_set<std::string> out_seen(key_names.begin(), key_names.end());
+  out_seen.reserve(key_names.size() + specs.size());
+  for (const auto& spec : specs) {
+    const bool has_feature = !spec.feature.empty();
+    PLUSS_CHECK(
+        spec.op == GroupOp::Count || has_feature,
+        "DataFrame::group: feature is required for non-count aggregations");
+    const auto out_name =
+        !spec.output.empty()
+            ? spec.output
+            : (spec.op == GroupOp::Count && !has_feature
+                   ? std::string("count")
+                   : fmt::format("{}_{}", spec.feature, group_op_name(spec.op)));
+    PLUSS_CHECK(
+        out_seen.insert(out_name).second,
+        "DataFrame::group: duplicate output feature '" + out_name + "'");
+
+    Thread value_column;
+    if (has_feature) {
+      value_column = features(spec.feature);
+    }
+
+    if (spec.op == GroupOp::Nunique) {
+      const auto parts = unify_key_parts(value_column);
+      const auto valid = value_column.has_validity_mask()
+          ? value_column.validity_mask()->to_vec<bool>()
+          : std::vector<bool>(static_cast<std::size_t>(ncases()), true);
+      std::vector<std::int64_t> counts(
+          static_cast<std::size_t>(group_count),
+          0);
+      std::unordered_set<std::string> observed;
+      observed.reserve(static_cast<std::size_t>(ncases()));
+      for (std::int64_t row = 0; row < ncases(); ++row) {
+        if (!included[static_cast<std::size_t>(row)] ||
+            !valid[static_cast<std::size_t>(row)]) {
+          continue;
+        }
+        std::string key(
+            reinterpret_cast<const char*>(
+                &group_ids[static_cast<std::size_t>(row)]),
+            sizeof(std::int64_t));
+        key.append(parts[static_cast<std::size_t>(row)]);
+        if (observed.insert(std::move(key)).second) {
+          ++counts[static_cast<std::size_t>(
+              group_ids[static_cast<std::size_t>(row)])];
         }
       }
-      out_cols.emplace_back(spec.out_name, make_i64_thread(col));
+      out_cols.emplace_back(out_name, make_i64_thread(counts));
       continue;
     }
 
-    std::vector<double> col;
-    col.reserve(groups.size());
-    for (const auto& g : groups) {
-      const auto& agg = g.agg[s];
-      if (spec.op == GroupOp::Sum) {
-        col.push_back(agg.count > 0 ? agg.sum : std::numeric_limits<double>::quiet_NaN());
-      } else if (spec.op == GroupOp::Mean) {
-        col.push_back(agg.count > 0 ? (agg.sum / static_cast<double>(agg.count)) : std::numeric_limits<double>::quiet_NaN());
-      } else if (spec.op == GroupOp::Min) {
-        col.push_back(agg.has_numeric ? agg.min : std::numeric_limits<double>::quiet_NaN());
-      } else {
-        col.push_back(agg.has_numeric ? agg.max : std::numeric_limits<double>::quiet_NaN());
-      }
+    pluss::codem::Platform platform = pluss::codem::Platform::CPU;
+    if (has_feature && value_column.kind() == ThreadKind::Series) {
+      platform = value_column.as_series().platform();
     }
-    out_cols.emplace_back(spec.out_name, make_f64_thread(col));
+    auto active = platform == pluss::codem::Platform::CPU
+        ? included_cpu
+        : included_cpu.to(platform);
+    if (has_feature && value_column.has_validity_mask()) {
+      auto valid = *value_column.validity_mask();
+      if (valid.platform() != platform) {
+        valid = valid.to(platform);
+      }
+      active = active.logical_and(valid);
+    }
+    auto ids = platform == pluss::codem::Platform::CPU
+        ? group_ids_cpu
+        : group_ids_cpu.to(platform);
+    ids = ids.masked_select(active);
+
+    const auto compute_dtype =
+        platform == pluss::codem::Platform::CPU
+            ? pluss::codem::ScalarType::Float64
+            : pluss::codem::ScalarType::Float32;
+    auto counts = pluss::Series::zeros(
+        {group_count},
+        compute_dtype,
+        platform);
+    auto ones = pluss::Series::ones(
+        {ids.numel()},
+        compute_dtype,
+        platform);
+    counts = counts.scatter_add(0, ids, ones);
+
+    if (spec.op == GroupOp::Count) {
+      out_cols.emplace_back(
+          out_name,
+          Thread(counts.to(pluss::codem::ScalarType::Int64)));
+      continue;
+    }
+
+    PLUSS_CHECK(
+        value_column.kind() == ThreadKind::Series &&
+            is_numeric_series_type(value_column.as_series()),
+        "DataFrame::group: numeric aggregations require real numeric Series features");
+    auto values = value_column.as_series().to(compute_dtype).masked_select(active);
+    auto sums = pluss::Series::zeros(
+        {group_count},
+        compute_dtype,
+        platform).scatter_add(0, ids, values);
+    const auto any_value = counts.gt(0.0);
+
+    pluss::Series result;
+    pluss::Series result_validity = any_value;
+    switch (spec.op) {
+      case GroupOp::Sum:
+        result = sums;
+        break;
+      case GroupOp::Mean:
+        result = sums / counts;
+        break;
+      case GroupOp::Min:
+        result = pluss::Series::full(
+            {group_count},
+            std::numeric_limits<double>::infinity(),
+            compute_dtype,
+            platform).scatter_reduce(0, ids, values, "amin", true);
+        break;
+      case GroupOp::Max:
+        result = pluss::Series::full(
+            {group_count},
+            -std::numeric_limits<double>::infinity(),
+            compute_dtype,
+            platform).scatter_reduce(0, ids, values, "amax", true);
+        break;
+      case GroupOp::Std:
+      case GroupOp::Var: {
+        auto squared_sums = pluss::Series::zeros(
+            {group_count},
+            compute_dtype,
+            platform).scatter_add(0, ids, values * values);
+        result = (
+            (squared_sums - (sums * sums / counts)) /
+            (counts - 1.0)).clamp_min(0.0);
+        result_validity = counts.gt(1.0);
+        if (spec.op == GroupOp::Std) {
+          result = result.sqrt();
+        }
+        break;
+      }
+      case GroupOp::Count:
+      case GroupOp::Nunique:
+        PLUSS_FAIL("DataFrame::group: internal aggregation dispatch failure");
+    }
+    out_cols.emplace_back(
+        out_name,
+        Thread(result, result_validity));
   }
 
   (void)render;
-  return DataFrame(std::move(out_cols));
+  return DataFrame(std::move(out_cols)).title(title());
 }
 
 DataFrameView DataFrame::group_by(pluss::msharp::RangeView::Of<std::string_view> keys,
@@ -455,14 +442,20 @@ DataFrame DataFrame::combine(const DataFrame& other) const {
 }
 
 DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) const {
-  PLUSS_CHECK(ncases() == other.ncases(),
-              "DataFrame::combine: case count mismatch between left and right frames");
+  FrameMatchOptions match_options;
+  match_options.cases = spec.cases;
+  match_options.features = FrameMatchRule::Unite;
+  const auto matched = matched_with(other, match_options);
+  const auto& left = matched.left.impl_ref_();
 
-  const auto& left = impl_ref_();
-  const auto& right = other.impl_ref_();
-
-  std::vector<std::string> out_names = left.names_;
-  std::vector<Thread> out_cols = left.columns_;
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(feature_names().size() + other.feature_names().size());
+  out_cols.reserve(feature_names().size() + other.feature_names().size());
+  for (const auto& name : feature_names()) {
+    out_names.push_back(name);
+    out_cols.push_back(matched.left.features(name));
+  }
 
   std::unordered_map<std::string, std::size_t> out_index;
   out_index.reserve(out_names.size());
@@ -484,19 +477,21 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
     }
   };
 
-  for (std::size_t i = 0; i < right.names_.size(); ++i) {
-    const auto& right_name = right.names_[i];
-    const auto& right_col = right.columns_[i];
+  for (const auto& right_name : other.feature_names()) {
+    const auto right_col = matched.right.features(right_name);
 
     const auto it = out_index.find(right_name);
     if (spec.op == CombineOp::Update) {
       if (it == out_index.end()) {
         continue;
       }
-      if (!spec.overwrite) {
-        continue;
-      }
-      out_cols[it->second] = right_col;
+      const auto& left_col = out_cols[it->second];
+      const auto write_mask = spec.overwrite
+          ? right_col.notnull()
+          : Thread(
+                left_col.isnull().as_series().logical_and(
+                    right_col.notnull().as_series()));
+      out_cols[it->second] = left_col.put(write_mask, right_col);
       continue;
     }
 

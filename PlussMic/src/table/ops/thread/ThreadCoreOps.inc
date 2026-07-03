@@ -22,6 +22,9 @@ Thread::~Thread() = default;
 
 bool Thread::defined() const noexcept { return static_cast<bool>(impl_); }
 bool Thread::unique() const noexcept { return impl_.unique(); }
+bool Thread::shares_payload_with(const Thread& other) const noexcept {
+  return impl_.get() == other.impl_.get();
+}
 
 const detail::ThreadImpl& Thread::impl_ref_() const {
   PLUSS_CHECK(defined(), "Thread: undefined handle");
@@ -512,6 +515,17 @@ Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
                       pluss::null_t) {
   PLUSS_CHECK(!choices.empty(), "Thread::select(null): at least one choice is required");
   const auto& seed = choices[0];
+  if (seed.kind() == ThreadKind::Note) {
+    std::vector<std::string> empty_values(
+        static_cast<std::size_t>(seed.size()), std::string{});
+    auto empty = Thread(pluss::make_note(empty_values));
+    return select(
+        conditions,
+        choices,
+        empty.with_validity_mask(
+            pluss::Series::zeros(
+                {empty.size()}, pluss::codem::ScalarType::Bool)));
+  }
   return select(
       conditions,
       choices,
@@ -658,6 +672,9 @@ Thread Thread::take(std::span<const std::int64_t> indices) const {
         idx_norm.push_back(normalize_index(raw_idx, src.size_));
       }
       auto idx_series = int64_index_series(idx_norm);
+      if (idx_series.platform() != payload.platform()) {
+        idx_series = idx_series.to(payload.platform());
+      }
       return payload.take(idx_series);
     } else if constexpr (std::is_same_v<T, pluss::Note>) {
       const auto values = note_take_strings(payload, indices, src.size_);
@@ -693,6 +710,9 @@ Thread Thread::take(std::span<const std::int64_t> indices) const {
       idx_norm.push_back(normalize_index(raw_idx, src.size_));
     }
     auto idx_series = int64_index_series(idx_norm);
+    if (idx_series.platform() != src.validity_mask_->platform()) {
+      idx_series = idx_series.to(src.validity_mask_->platform());
+    }
     out_mask = src.validity_mask_->take(idx_series);
   }
 
@@ -1078,8 +1098,9 @@ ThreadView Thread::describe(bool render) const {
     std::string top_value = "NA";
     std::int64_t top_freq = 0;
     if (counts.ncases() > 0) {
-      top_value = counts.cases(0, "value");
-      top_freq = std::stoll(counts.cases(0, "count"));
+      const auto top = counts.case_study(pluss::table::pos(0), pluss::table::cols({"value", "count"}));
+      top_value = std::string(top.features("value").as_note().at(0));
+      top_freq = std::stoll(thread_scalar_string_at(top.features("count"), 0));
     }
 
     std::vector<std::string> summary_values{
@@ -1179,7 +1200,10 @@ pluss::Series Thread::mean() const {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
-    s = s.to(pluss::codem::ScalarType::Float64);
+    s = s.to(
+        s.platform() == pluss::codem::Platform::CPU
+            ? pluss::codem::ScalarType::Float64
+            : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::mean on an empty (all-null) selection");
   return s.mean();
@@ -1192,7 +1216,10 @@ pluss::Series Thread::median() const {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
-    s = s.to(pluss::codem::ScalarType::Float64);
+    s = s.to(
+        s.platform() == pluss::codem::Platform::CPU
+            ? pluss::codem::ScalarType::Float64
+            : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::median on an empty (all-null) selection");
   return s.median();
@@ -1225,7 +1252,10 @@ pluss::Series Thread::var(bool unbiased) const {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
-    s = s.to(pluss::codem::ScalarType::Float64);
+    s = s.to(
+        s.platform() == pluss::codem::Platform::CPU
+            ? pluss::codem::ScalarType::Float64
+            : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::var on an empty (all-null) selection");
   return s.var(unbiased);
@@ -1238,7 +1268,10 @@ pluss::Series Thread::std(bool unbiased) const {
     s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
-    s = s.to(pluss::codem::ScalarType::Float64);
+    s = s.to(
+        s.platform() == pluss::codem::Platform::CPU
+            ? pluss::codem::ScalarType::Float64
+            : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::std on an empty (all-null) selection");
   return s.std(unbiased);

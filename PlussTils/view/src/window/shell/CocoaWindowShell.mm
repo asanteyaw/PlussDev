@@ -246,10 +246,10 @@ class CocoaWindowShell final : public IWindowShell {
       host_.image_view.layer.magnificationFilter = kCAFilterLinear;
       [host_.image_view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
       [content addSubview:host_.image_view];
-      const char* experimental_metal =
-          std::getenv("PLUSSTILS_VIEW_EXPERIMENTAL_METAL");
-      if (experimental_metal != nullptr &&
-          std::string_view(experimental_metal) == "1") {
+      const char* disable_metal =
+          std::getenv("PLUSSTILS_VIEW_DISABLE_METAL");
+      if (disable_metal == nullptr ||
+          std::string_view(disable_metal) != "1") {
         (void)setup_metal_();
       }
 
@@ -537,6 +537,7 @@ class CocoaWindowShell final : public IWindowShell {
       metal_layer_ = nil;
       metal_pipeline_ = nil;
       metal_queue_ = nil;
+      metal_texture_ = nil;
       metal_device_ = nil;
       metal_ready_ = false;
       for (std::size_t index = 0; index < kFrameBufferCount; ++index) {
@@ -747,12 +748,26 @@ class CocoaWindowShell final : public IWindowShell {
   }
 
   bool save_canvas_pdf(const PixelCanvas& canvas, const std::string_view path) override {
-    (void)canvas;
     @autoreleasepool {
-      if (host_ == nil || host_.image_view == nil || path.empty()) {
+      if (canvas.empty() || path.empty()) {
         return false;
       }
-      NSData* pdf = [host_.image_view dataWithPDFInsideRect:[host_.image_view bounds]];
+      NSBitmapImageRep* bitmap = bitmap_rep_for_size(canvas.size());
+      if (bitmap == nil || [bitmap bitmapData] == nullptr) {
+        return false;
+      }
+      const auto bytes = canvas.bytes();
+      std::memcpy([bitmap bitmapData], bytes.data(), bytes.size());
+      NSImage* image = [[NSImage alloc]
+          initWithSize:NSMakeSize(canvas.size().width, canvas.size().height)];
+      [image addRepresentation:bitmap];
+      NSImageView* image_view = [[NSImageView alloc]
+          initWithFrame:NSMakeRect(0.0, 0.0, canvas.size().width,
+                                   canvas.size().height)];
+      [image_view setImageScaling:NSImageScaleAxesIndependently];
+      [image_view setImage:image];
+      NSData* pdf =
+          [image_view dataWithPDFInsideRect:[image_view bounds]];
       NSString* output = [[NSString alloc] initWithBytes:path.data()
                                                  length:path.size()
                                                encoding:NSUTF8StringEncoding];
@@ -807,7 +822,7 @@ class CocoaWindowShell final : public IWindowShell {
           RasterVertex input [[stage_in]],
           texture2d<float> raster [[texture(0)]]) {
         constexpr sampler sample_filter(
-            mag_filter::linear, min_filter::linear,
+            mag_filter::nearest, min_filter::nearest,
             address::clamp_to_edge);
         return raster.sample(sample_filter, input.uv);
       }
@@ -881,23 +896,27 @@ class CocoaWindowShell final : public IWindowShell {
         CGSizeMake(static_cast<CGFloat>(canvas_size.width),
                    static_cast<CGFloat>(canvas_size.height));
 
-    MTLTextureDescriptor* texture_descriptor =
-        [MTLTextureDescriptor
-            texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm_sRGB
-                                         width:static_cast<NSUInteger>(
-                                                   canvas_size.width)
-                                        height:static_cast<NSUInteger>(
-                                                   canvas_size.height)
-                                     mipmapped:NO];
-    texture_descriptor.usage = MTLTextureUsageShaderRead;
-    texture_descriptor.storageMode = MTLStorageModeShared;
-    id<MTLTexture> raster_texture =
-        [metal_device_ newTextureWithDescriptor:texture_descriptor];
-    if (raster_texture == nil) {
-      return false;
+    if (metal_texture_ == nil ||
+        metal_texture_.width != static_cast<NSUInteger>(canvas_size.width) ||
+        metal_texture_.height != static_cast<NSUInteger>(canvas_size.height)) {
+      MTLTextureDescriptor* texture_descriptor =
+          [MTLTextureDescriptor
+              texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm_sRGB
+                                           width:static_cast<NSUInteger>(
+                                                     canvas_size.width)
+                                          height:static_cast<NSUInteger>(
+                                                     canvas_size.height)
+                                       mipmapped:NO];
+      texture_descriptor.usage = MTLTextureUsageShaderRead;
+      texture_descriptor.storageMode = MTLStorageModeShared;
+      metal_texture_ =
+          [metal_device_ newTextureWithDescriptor:texture_descriptor];
+      if (metal_texture_ == nil) {
+        return false;
+      }
     }
     const auto bytes = canvas.bytes();
-    [raster_texture
+    [metal_texture_
         replaceRegion:MTLRegionMake2D(
                           0, 0, static_cast<NSUInteger>(canvas_size.width),
                           static_cast<NSUInteger>(canvas_size.height))
@@ -922,7 +941,7 @@ class CocoaWindowShell final : public IWindowShell {
       return false;
     }
     [encoder setRenderPipelineState:metal_pipeline_];
-    [encoder setFragmentTexture:raster_texture atIndex:0];
+    [encoder setFragmentTexture:metal_texture_ atIndex:0];
     [encoder drawPrimitives:MTLPrimitiveTypeTriangle
                 vertexStart:0
                 vertexCount:3];
@@ -994,6 +1013,7 @@ class CocoaWindowShell final : public IWindowShell {
   __strong id<MTLDevice> metal_device_{nil};
   __strong id<MTLCommandQueue> metal_queue_{nil};
   __strong id<MTLRenderPipelineState> metal_pipeline_{nil};
+  __strong id<MTLTexture> metal_texture_{nil};
   __strong CAMetalLayer* metal_layer_{nil};
 };
 

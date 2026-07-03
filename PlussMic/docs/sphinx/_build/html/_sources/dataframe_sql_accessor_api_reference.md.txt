@@ -13,24 +13,30 @@ This page documents the public SQL accessor returned by `DataFrame::sql()`.
 #### API Signature
 
 ```cpp
-DataFrame execute(self, std::string_view statement) const
+DataFrameSqlAccessor::execute(statement: std::string_view) -> DataFrame
 ```
 
-#### Parameters
+#### Notes
+
+Runs a SQL query against the current frame and returns the result as a new `DataFrame`.
+
+#### Inputs
 
 `statement` : `std::string_view`
     SQL query text run against the current frame. The frame is exposed to the statement as `self`.
 
-#### Returns
+#### Output
 
 `DataFrame`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Runs a SQL query against the current frame and returns the result as a new `DataFrame`.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -42,6 +48,8 @@ auto sql = df.sql();
 
 auto out = sql.execute("SELECT id, sales FROM self WHERE sales > 95");
 ```
+
+##### Expected output
 
 ```text
 id  sales
@@ -63,24 +71,30 @@ id  sales
 #### API Signature
 
 ```cpp
-DataFrameSqlPrepared prepare(self, std::string_view statement) const
+DataFrameSqlAccessor::prepare(statement: std::string_view) -> DataFrameSqlPrepared
 ```
 
-#### Parameters
+#### Notes
+
+Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.
+
+#### Inputs
 
 `statement` : `std::string_view`
     Parameterized SQL statement template. Use placeholders such as `{min_sales}` when you plan to bind values later.
 
-#### Returns
+#### Output
 
 `DataFrameSqlPrepared`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -92,6 +106,8 @@ auto sql = df.sql();
 
 auto out = sql.prepare("SELECT id, sales FROM self WHERE sales > {min_sales}");
 ```
+
+##### Expected output
 
 ```text
 Prepared statement ready

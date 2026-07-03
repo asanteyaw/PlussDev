@@ -48,14 +48,17 @@ auto city = df.features("city");
 auto sales = df.features("sales");
 auto case_axis = df.cases();
 
-auto first_row = df.iloc(0);
-auto first_value = df.at(0, "city");
+auto first_row = df.case_study(pluss::table::pos(0));
+auto first_value = df.case_study(
+    pluss::table::pos(0),
+    pluss::table::col("city"));
 ```
 
 Notes:
 
 - `features("name")` returns a typed `Thread`
 - `cases()` is the row axis, not just a display index
+- `case_study(...)` is the row/column selection surface
 - `describe()` is the fastest way to check whether numeric casts and missing values look right
 
 ## Common Everyday Tasks
@@ -175,6 +178,140 @@ auto sorted = df.sort_values({"sales"}, false);
 
 auto top3 = df.top("sales", 3);
 ```
+
+## Match Frames By Cases And Features
+
+Frame-to-frame arithmetic and comparisons match both axes automatically. The
+default is a stable union: left-side case and feature order is retained, then
+right-only labels are appended. A value present on only one side is null in the
+result.
+
+```cpp
+auto total = left.add(right);
+```
+
+Use `matched_with(...)` when you need the matched operands themselves or want a
+different rule:
+
+```cpp
+pluss::table::FrameMatchOptions rules;
+rules.cases = pluss::table::FrameMatchRule::Common;
+rules.features = pluss::table::FrameMatchRule::KeepLeft;
+
+auto matched = left.matched_with(right, rules);
+auto total = matched.left.add(matched.right);
+```
+
+Available case and feature rules are `Unite`, `Common`, `KeepLeft`, and
+`KeepRight`. Repeated cases pair by occurrence order; set
+`rules.repeated_cases = pluss::table::RepeatedCaseRule::Reject` when repeated
+case labels should fail instead.
+
+## Extend And Unify Frames
+
+Append cases vertically with feature-name matching:
+
+```cpp
+auto history = january.extend_cases(february);
+```
+
+The default feature rule is a stable union with nulls for one-sided features.
+Pass `FrameMatchRule::Common` to retain shared features only, or set
+`fresh_cases=true` for contiguous integer cases:
+
+```cpp
+auto compact = january.extend_cases(
+    february,
+    pluss::table::FrameMatchRule::Common,
+    true);
+```
+
+Use `unify(...)` for key-based case combinations:
+
+```cpp
+auto matched = grades.unify("student_id", roster);                  // common
+auto complete = grades.unify("student_id", roster, "", "unite");   // both sides
+auto absent = grades.unify("student_id", roster, "", "left_only");
+auto product = grades.unify("", roster, "", "cross");
+```
+
+The Pluss-native modes are `common`, `keep_left`, `keep_right`, `unite`,
+`cross`, `left_only`, and `right_only`. Repeated keys expand to all matching
+pairs. Use the `validate` argument when the relationship must be one-to-one,
+one-to-many, or many-to-one.
+
+## Grouped Reductions
+
+One call can compute several named reductions:
+
+```cpp
+auto summary = sales.group_by(
+    {"region"},
+    {
+        {"orders", "", pluss::table::DataFrame::GroupOp::Count},
+        {"revenue", "amount", pluss::table::DataFrame::GroupOp::Sum},
+        {"average", "amount", pluss::table::DataFrame::GroupOp::Mean},
+        {"volatility", "amount", pluss::table::DataFrame::GroupOp::Std},
+    },
+    true,
+    false);
+```
+
+Supported grouped operations are `Count`, `Nunique`, `Sum`, `Mean`, `Min`,
+`Max`, `Std`, and `Var`. Numeric reductions use Series scatter operations and
+stay on the payload platform. Group keys retain their original Thread type and
+first-seen order.
+
+## Wide-To-Long Reshape
+
+`lengthen(...)` stacks homogeneous value features while repeating identifier
+features:
+
+```cpp
+auto long_form = wide.lengthen(
+    {"student_id"},
+    {"midterm", "final"},
+    "assessment",
+    "score");
+```
+
+The result contains `student_id`, `assessment`, and `score`. Numeric value
+features must share dtype and platform; other value features must share a
+Thread kind. Missing masks are preserved. Leave the value-feature list empty
+to stack every non-identifier feature.
+
+## Low-Cardinality Encoding
+
+Use `catalogue(...)` when repeated labels should have compact integer codes:
+
+```cpp
+auto city = df.catalogue("city");
+auto codes = city.codes;
+auto levels = city.levels;
+auto restored = city.decode();
+```
+
+The encoding remains explicit so integer codes cannot be mistaken for measured
+numeric data. Missing values use payload code `-1` and retain an invalid mask.
+Levels preserve first-seen order unless `sort_levels=true`.
+
+## Stream Large CSV Files By Cases
+
+`CsvCaseReader` keeps the file open and parses only the next bounded case batch:
+
+```cpp
+pluss::loader::CsvCaseReader reader("path/to/large.csv", 100'000);
+pluss::table::DataFrame batch;
+
+while (reader.next(batch)) {
+    process(batch);
+}
+```
+
+The reader does not re-scan earlier records and does not materialize the whole
+file. `ReadCsvOptions::ncases` acts as a global cap. Direct `load_csv(...)`
+calls reject `chunksize` explicitly because a single `DataFrame` return value
+cannot represent several streamed batches.
 
 Notes:
 

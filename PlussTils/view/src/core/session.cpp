@@ -126,8 +126,9 @@ bool SessionController::open(const std::string& html) {
       options_.svg_snapshot_name.empty() ? std::string("view.svg") : options_.svg_snapshot_name;
 
   transition_(SessionState::Launching, "launch_backend");
-  const bool launched =
-      launch_on_backend_(backend_, html, title, width, height, snapshot_name, options_.svg_payload, svg_snapshot_name);
+  const bool launched = launch_on_backend_(
+      backend_, html, title, width, height, snapshot_name,
+      options_.svg_payload, svg_snapshot_name, options_.virtual_table_model);
   if (!launched) {
     transition_(SessionState::Failed, "launch_failed");
     return false;
@@ -205,7 +206,9 @@ bool SessionController::launch_on_backend_(SessionBackend backend,
                                            std::int64_t height,
                                            const std::string& snapshot_name,
                                            const std::string& svg_payload,
-                                           const std::string& svg_snapshot_name) const {
+                                           const std::string& svg_snapshot_name,
+                                           const std::shared_ptr<const VirtualTableModel>&
+                                               virtual_table_model) const {
   switch (backend) {
     case SessionBackend::GtkWebKit:
 #if defined(PLUSSTILS_VIEW_HAVE_GTK_WEBKIT) && PLUSSTILS_VIEW_HAVE_GTK_WEBKIT
@@ -238,7 +241,8 @@ bool SessionController::launch_on_backend_(SessionBackend backend,
                                               height,
                                               snapshot_name,
                                               svg_payload,
-                                              svg_snapshot_name);
+                                              svg_snapshot_name,
+                                              virtual_table_model);
     case SessionBackend::None:
       return false;
   }

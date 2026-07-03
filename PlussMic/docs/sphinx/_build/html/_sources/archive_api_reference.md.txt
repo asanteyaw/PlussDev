@@ -11,22 +11,26 @@ This page documents the full public `Archive` surface for depth-stacked catalogs
 #### Signature
 
 ```cpp
-Catalog aggregate_over_catalogs(self, const std::function<Catalog(const std::vector<Catalog>&)>& fn) const
+Archive::aggregate_over_catalogs(fn: const std::function<Catalog(const std::vector<Catalog>&)>&) -> Catalog
 ```
-
-#### Parameters
-
-`fn` : `const std::function<Catalog(const std::vector<Catalog>&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
 
 #### Notes
 
 Reduces the full catalog stack to one output by applying an aggregation function across the contained catalogs.
+
+#### Inputs
+
+`fn` : `const std::function<Catalog(const std::vector<Catalog>&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+#### Output
+
+`Catalog`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -44,7 +48,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.aggregate_over_catalogs([](const std::vector<pluss::kindle::Catalog>& catalogs) { return catalogs.front(); });
 ```
 
-#### Output
+#### Expected output
 
 ```text
 id     -> Series([1, 2, 3])
@@ -63,22 +67,26 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Archive align_depth(self, const Stream& labels) const
+Archive::align_depth(labels: const Stream&) -> Archive
 ```
-
-#### Parameters
-
-`labels` : `const Stream&`
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
 
 #### Notes
 
 Reorders catalogs so their depth labels match the supplied label order.
+
+#### Inputs
+
+`labels` : `const Stream&`
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+
+#### Output
+
+`Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -97,7 +105,7 @@ auto labels = pluss::kindle::Stream(pluss::make_note({"baseline", "stress"}));
 auto out = archive.align_depth(labels);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -115,22 +123,26 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Catalog catalog(self, std::int64_t i) const
+Archive::catalog(i: std::int64_t) -> Catalog
 ```
-
-#### Parameters
-
-`i` : `std::int64_t`
-    Zero-based positional index used by this overload.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
 
 #### Notes
 
 Fetches one value, member, or slice from the current object without changing the source object.
+
+#### Inputs
+
+`i` : `std::int64_t`
+    Zero-based positional index used by this overload.
+
+#### Output
+
+`Catalog`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -148,7 +160,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.catalog(0);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 id     -> Series([1, 2, 3])
@@ -161,21 +173,25 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-const std::vector<Catalog>& catalogs(self) const
+Archive::catalogs() -> const std::vector<Catalog>&
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::vector<Catalog>&`
-    Borrowed collection of catalogs.
 
 #### Notes
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`const std::vector<Catalog>&`
+    Borrowed collection of catalogs.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -193,7 +209,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.catalogs();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 [Catalog(train), Catalog(test)]
@@ -204,21 +220,25 @@ auto out = archive.catalogs();
 #### Signature
 
 ```cpp
-bool defined(self) const
+Archive::defined() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -236,7 +256,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.defined();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true
@@ -247,21 +267,25 @@ true
 #### Signature
 
 ```cpp
-std::int64_t depth(self) const
+Archive::depth() -> std::int64_t
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
 
 #### Notes
 
 Returns a size/count summary for the current object without changing it.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -279,7 +303,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.depth();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 2
@@ -290,21 +314,25 @@ auto out = archive.depth();
 #### Signature
 
 ```cpp
-const std::optional<Stream>& depth_labels(self) const
+Archive::depth_labels() -> const std::optional<Stream>&
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::optional<Stream>&`
-    Value produced by this call.
 
 #### Notes
 
 Returns the current labels used to address fields, slots, rows, or depth items.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`const std::optional<Stream>&`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -322,7 +350,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.depth_labels();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 ["train", "test"]
@@ -333,22 +361,26 @@ auto out = archive.depth_labels();
 #### Signature
 
 ```cpp
-Catalog dloc(self, std::int64_t i) const
+Archive::dloc(i: std::int64_t) -> Catalog
 ```
 
-#### Parameters
+#### Notes
+
+
+
+#### Inputs
 
 `i` : `std::int64_t`
     Zero-based positional index used by this overload.
 
-#### Returns
+#### Output
 
 `Catalog`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Applies `dloc` to the current `Archive` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -366,7 +398,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.dloc(1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 metric -> Series([30.0, 40.0])
@@ -383,21 +415,25 @@ metric -> Series([30.0, 40.0])
 #### Signature
 
 ```cpp
-bool empty(self) const
+Archive::empty() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object has no rows, entries, slots, or depth items.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -415,7 +451,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.empty();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 false
@@ -426,22 +462,26 @@ false
 #### Signature
 
 ```cpp
-Archive head(self, std::int64_t n = 5) const
+Archive::head(n: std::int64_t = 5) -> Archive
 ```
-
-#### Parameters
-
-`n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
 
 #### Notes
 
 Returns the first `n` catalogs from the archive depth axis.
+
+#### Inputs
+
+`n` : `std::int64_t`
+    Number of rows, entries, or depth items to keep in the preview.
+
+#### Output
+
+`Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -459,7 +499,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.head(1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -471,10 +511,14 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-static Archive kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy& policy = {})
+Archive::kindelize(atlas: const pluss::table::Atlas&, policy: const KindelizePolicy& = {}) -> Archive
 ```
 
-#### Parameters
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
 
 `atlas` : `const pluss::table::Atlas&`
     Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
@@ -482,14 +526,14 @@ static Archive kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy
 `policy` : `const KindelizePolicy&`
     Policy object that changes the structural behavior of this overload.
 
-#### Returns
+#### Output
 
 `Archive`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -505,7 +549,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = pluss::kindle::Archive::kindelize(atlas);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -517,27 +561,31 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Catalog loc(self, const pluss::Timeline& label) const
+Archive::loc(label: const pluss::Timeline&) -> Catalog
 ```
 
-#### Parameters
+#### Notes
+
+Fetches one value, member, or slice from the current object without changing the source object.
+
+#### Inputs
 
 `label` : `const pluss::Timeline&`
     Label or labels used by this overload.
 
-#### Returns
+#### Output
 
 `Catalog`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### See also
 
-- `Catalog loc(self, std::string_view label) const`
-- `Catalog loc(self, std::int64_t label) const`
+- `Archive::loc(label: std::string_view) -> Catalog`
+- `Archive::loc(label: std::int64_t) -> Catalog`
 
 #### Examples
 
@@ -555,7 +603,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.loc("test");
 ```
 
-#### Output
+#### Expected output
 
 ```text
 id     -> Series([1, 2, 3])
@@ -568,27 +616,31 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog loc(self, std::int64_t label) const
+Archive::loc(label: std::int64_t) -> Catalog
 ```
 
-#### Parameters
+#### Notes
+
+Fetches one value, member, or slice from the current object without changing the source object.
+
+#### Inputs
 
 `label` : `std::int64_t`
     Integer label or bucket code used by this overload.
 
-#### Returns
+#### Output
 
 `Catalog`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### See also
 
-- `Catalog loc(self, std::string_view label) const`
-- `Catalog loc(self, const pluss::Timeline& label) const`
+- `Archive::loc(label: std::string_view) -> Catalog`
+- `Archive::loc(label: const pluss::Timeline&) -> Catalog`
 
 #### Examples
 
@@ -606,7 +658,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.loc("test");
 ```
 
-#### Output
+#### Expected output
 
 ```text
 id     -> Series([1, 2, 3])
@@ -619,27 +671,31 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Catalog loc(self, std::string_view label) const
+Archive::loc(label: std::string_view) -> Catalog
 ```
-
-#### Parameters
-
-`label` : `std::string_view`
-    Label or labels used by this overload.
-
-#### Returns
-
-`Catalog`
-    Value produced by this call.
 
 #### Notes
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
+#### Inputs
+
+`label` : `std::string_view`
+    Label or labels used by this overload.
+
+#### Output
+
+`Catalog`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
 #### See also
 
-- `Catalog loc(self, std::int64_t label) const`
-- `Catalog loc(self, const pluss::Timeline& label) const`
+- `Archive::loc(label: std::int64_t) -> Catalog`
+- `Archive::loc(label: const pluss::Timeline&) -> Catalog`
 
 #### Examples
 
@@ -657,7 +713,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.loc("test");
 ```
 
-#### Output
+#### Expected output
 
 ```text
 id     -> Series([1, 2, 3])
@@ -670,22 +726,26 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 #### Signature
 
 ```cpp
-Archive map_catalogs(self, const std::function<Catalog(const Catalog&)>& fn) const
+Archive::map_catalogs(fn: const std::function<Catalog(const Catalog&)>&) -> Archive
 ```
-
-#### Parameters
-
-`fn` : `const std::function<Catalog(const Catalog&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
 
 #### Notes
 
 Applies the same function to each catalog and returns the transformed archive.
+
+#### Inputs
+
+`fn` : `const std::function<Catalog(const Catalog&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+#### Output
+
+`Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -703,7 +763,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.map_catalogs([](const pluss::kindle::Catalog& catalog) { return catalog.head(1); });
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -715,22 +775,26 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Archive relabel_depth(self, const Stream& labels) const
+Archive::relabel_depth(labels: const Stream&) -> Archive
 ```
-
-#### Parameters
-
-`labels` : `const Stream&`
-    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
 
 #### Notes
 
 Replaces the depth-label axis with the supplied labels while keeping catalog contents unchanged.
+
+#### Inputs
+
+`labels` : `const Stream&`
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+
+#### Output
+
+`Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -749,7 +813,7 @@ auto labels = pluss::kindle::Stream(pluss::make_note({"baseline", "stress"}));
 auto out = archive.relabel_depth(labels);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -761,22 +825,26 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-void show(self, std::ostream& os) const
+Archive::show(os: std::ostream&) -> void
 ```
-
-#### Parameters
-
-`os` : `std::ostream&`
-    Destination output stream used instead of the default display or print target.
-
-#### Returns
-
-`void`
-    Performs the side effect and returns no value.
 
 #### Notes
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### Inputs
+
+`os` : `std::ostream&`
+    Destination output stream used instead of the default display or print target.
+
+#### Output
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -794,7 +862,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 archive.show(std::cout);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -806,10 +874,14 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Archive slice_depth(self, std::int64_t start, std::int64_t stop) const
+Archive::slice_depth(start: std::int64_t, stop: std::int64_t) -> Archive
 ```
 
-#### Parameters
+#### Notes
+
+Returns a contiguous depth slice `[start, stop)` from the archive.
+
+#### Inputs
 
 `start` : `std::int64_t`
     Inclusive starting position of the slice.
@@ -817,14 +889,14 @@ Archive slice_depth(self, std::int64_t start, std::int64_t stop) const
 `stop` : `std::int64_t`
     Exclusive ending position of the slice.
 
-#### Returns
+#### Output
 
 `Archive`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Returns a contiguous depth slice `[start, stop)` from the archive.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -842,7 +914,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.slice_depth(0, 1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -854,10 +926,14 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Archive sort_depth(self, bool ascending = true, bool nulls_last = true) const
+Archive::sort_depth(ascending: bool = true, nulls_last: bool = true) -> Archive
 ```
 
-#### Parameters
+#### Notes
+
+Sorts catalogs by their current depth labels.
+
+#### Inputs
 
 `ascending` : `bool`
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
@@ -865,14 +941,14 @@ Archive sort_depth(self, bool ascending = true, bool nulls_last = true) const
 `nulls_last` : `bool`
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
-#### Returns
+#### Output
 
 `Archive`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Sorts catalogs by their current depth labels.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -890,7 +966,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.sort_depth(true, true);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -902,22 +978,26 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-pluss::table::Atlas tabelize(self, const TabelizePolicy& policy = {}) const
+Archive::tabelize(policy: const TabelizePolicy& = {}) -> pluss::table::Atlas
 ```
-
-#### Parameters
-
-`policy` : `const TabelizePolicy&`
-    Policy object that changes the structural behavior of this overload.
-
-#### Returns
-
-`pluss::table::Atlas`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`policy` : `const TabelizePolicy&`
+    Policy object that changes the structural behavior of this overload.
+
+#### Output
+
+`pluss::table::Atlas`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -937,7 +1017,7 @@ policy.align = pluss::kindle::AlignPolicy::Inner;
 auto out = archive.tabelize(policy);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 frame0:
@@ -956,22 +1036,26 @@ sales
 #### Signature
 
 ```cpp
-Archive tail(self, std::int64_t n = 5) const
+Archive::tail(n: std::int64_t = 5) -> Archive
 ```
-
-#### Parameters
-
-`n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
-
-#### Returns
-
-`Archive`
-    Value produced by this call.
 
 #### Notes
 
 Returns the last `n` catalogs from the archive depth axis.
+
+#### Inputs
+
+`n` : `std::int64_t`
+    Number of rows, entries, or depth items to keep in the preview.
+
+#### Output
+
+`Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -989,7 +1073,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.tail(1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -1001,21 +1085,25 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-std::string to_string(self) const
+Archive::to_string() -> std::string
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::string`
-    Rendered string result.
 
 #### Notes
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::string`
+    Rendered string result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -1033,7 +1121,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.to_string();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -1045,10 +1133,14 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-pluss::table::Atlas to_table(self, const TabelizePolicy& policy = {}, bool render = true) const
+Archive::to_table(policy: const TabelizePolicy& = {}, render: bool = true) -> pluss::table::Atlas
 ```
 
-#### Parameters
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
 
 `policy` : `const TabelizePolicy&`
     Policy object that changes the structural behavior of this overload.
@@ -1056,14 +1148,14 @@ pluss::table::Atlas to_table(self, const TabelizePolicy& policy = {}, bool rende
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
-#### Returns
+#### Output
 
 `pluss::table::Atlas`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -1083,7 +1175,7 @@ policy.align = pluss::kindle::AlignPolicy::Inner;
 auto out = archive.to_table(policy, true);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 frame0:
@@ -1102,21 +1194,25 @@ sales
 #### Signature
 
 ```cpp
-bool unique(self) const
+Archive::unique() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -1134,7 +1230,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = archive.unique();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true

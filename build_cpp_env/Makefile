@@ -4937,6 +4937,45 @@ plussmic_table_ts_accessor_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build
 .PHONY : plussmic_table_ts_accessor_tests/fast
 
+#=============================================================================
+# Target rules for targets named plussmic_table_axis_match_tests
+
+# Build rule for target.
+plussmic_table_axis_match_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_table_axis_match_tests
+.PHONY : plussmic_table_axis_match_tests
+
+# fast build rule for target.
+plussmic_table_axis_match_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build
+.PHONY : plussmic_table_axis_match_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_table_statistics_window_tests
+
+# Build rule for target.
+plussmic_table_statistics_window_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_table_statistics_window_tests
+.PHONY : plussmic_table_statistics_window_tests
+
+# fast build rule for target.
+plussmic_table_statistics_window_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build
+.PHONY : plussmic_table_statistics_window_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_table_gap_benchmark
+
+# Build rule for target.
+plussmic_table_gap_benchmark: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_table_gap_benchmark
+.PHONY : plussmic_table_gap_benchmark
+
+# fast build rule for target.
+plussmic_table_gap_benchmark/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build
+.PHONY : plussmic_table_gap_benchmark/fast
+
 PlussAI/NodeJ/classifiers/family_classifier.o: PlussAI/NodeJ/classifiers/family_classifier.cpp.o
 .PHONY : PlussAI/NodeJ/classifiers/family_classifier.o
 
@@ -7647,8 +7686,11 @@ help:
 	@echo "... plussmic_loader_saver_parity_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
+	@echo "... plussmic_table_axis_match_tests"
 	@echo "... plussmic_table_csv_tests"
 	@echo "... plussmic_table_dataframe_plot_api_tests"
+	@echo "... plussmic_table_gap_benchmark"
+	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
 	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"

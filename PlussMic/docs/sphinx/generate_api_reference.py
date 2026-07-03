@@ -418,13 +418,25 @@ def extract_methods(class_name: str, header_path: pathlib.Path) -> list[Method]:
 
 
 def user_signature(method: Method, class_name: str) -> str:
-    sig = public_cpp_type(method.signature)
-    sig = sig.replace('double', 'scalar')
+    declaration = clean_space(method.signature).rstrip(';')
+    params_text = declaration.split('(', 1)[1].rsplit(')', 1)[0]
+    rendered_params: list[str] = []
+    for index, raw_part in enumerate(split_top_level(params_text), start=1):
+        part = clean_space(raw_part)
+        without_default = clean_space(strip_default_value(part))
+        default = part[len(without_default):].strip()
+        match = re.match(r'(.+?)\s+(\w+)$', without_default)
+        if match:
+            typ = public_cpp_type(match.group(1))
+            name = match.group(2)
+        else:
+            typ = public_cpp_type(without_default)
+            name = f'arg{index}'
+        rendered_params.append(
+            f'{name}: {typ}' + (f' {default}' if default else '')
+        )
     ret = public_cpp_type(method.return_type)
-    if not method.static:
-        sig = re.sub(rf'^{re.escape(ret)}\s+{re.escape(method.name)}\(', f'{ret} {method.name}(self, ', sig)
-        sig = sig.replace('(self, )', '(self)')
-    return sig
+    return f'{class_name}::{method.name}({", ".join(rendered_params)}) -> {ret}'
 
 
 def returns_doc(ret: str) -> str:
@@ -437,6 +449,7 @@ def returns_doc(ret: str) -> str:
         'std::string': 'Rendered string result.',
         'MatrixValues': 'Grouped matrix blocks split by payload family (`Series`, `Note`, `Timeline`, and `TimeIndex`).',
         'DataFrame::MatrixValues': 'Grouped matrix blocks split by payload family (`Series`, `Note`, `Timeline`, and `TimeIndex`).',
+        'FrameMatch': 'Pair containing matched `left` and `right` frames with identical case and feature axes.',
         'pluss::loader::LoadResult': 'Multi-sheet Excel load bundle containing one frame per requested sheet.',
         'const std::vector<std::string>&': 'Borrowed list of names.',
         'std::vector<Thread>': 'Materialized collection of thread objects.',
@@ -569,7 +582,7 @@ def enum_note(intro: str, items: list[tuple[str, str]], heading: str = 'Supporte
 
 
 def indent_note(note: str) -> str:
-    return '\n'.join(('    ' + line) if line else '    ' for line in note.splitlines())
+    return '\n'.join(('    ' + line) if line else '' for line in note.splitlines())
 
 
 def params_doc(params: list[tuple[str, str]], class_name: str | None = None, method_name: str | None = None) -> str:
@@ -604,6 +617,31 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'on_bad_lines': 'Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.',
         'new_cases': 'Replacement case labels in the exact order you want the rows to follow.',
         'cases': 'Case-label thread to attach to the current object.',
+        'rows': enum_note(
+            'Selector describing which rows `case_study(...)` should return.',
+            [
+                ('`pluss::table::pos(row)`', 'One row by zero-based position. Negative positions count from the end.'),
+                ('`pluss::table::pos(start, stop)`', 'A half-open positional row slice `[start, stop)`.'),
+                ('`pluss::table::pos({r1, r2, ...})`', 'An explicit row-position list in the exact output order you want.'),
+                ('`pluss::table::label(value)`', 'Every row whose case label matches `value`.'),
+                ('`pluss::table::labels({...})`', 'Several case labels in requested order. If one label appears multiple times, every matching row is returned.'),
+                ('`pluss::table::label_range(start, stop)`', 'An inclusive case-label window from the first `start` match through the last `stop` match.'),
+                ('`pluss::table::mask(bool_thread)`', 'A boolean row mask, equivalent to filtering first and then projecting columns.'),
+            ],
+        ),
+        'rows_selector': 'Alias for the row selector used by `case_study(...)`.',
+        'features': enum_note(
+            'Selector describing which feature columns `case_study(...)` should keep after resolving the row selection.',
+            [
+                ('`pluss::table::all_features()`', 'Keep every feature in the same left-to-right order as the source frame.'),
+                ('`pluss::table::col("name")`', 'Keep one named feature.'),
+                ('`pluss::table::col(position)`', 'Keep one feature by zero-based position.'),
+                ('`pluss::table::cols({"a", "b"})`', 'Keep several named features in the requested order.'),
+                ('`pluss::table::cols({0, 2})`', 'Keep several feature positions in the requested order.'),
+                ('`pluss::table::cols(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
+                ('`pluss::table::col_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
+            ],
+        ),
         'drop_feature': 'When `true`, the feature promoted to cases is removed from the ordinary feature columns.',
         'feature': 'Name of the source feature used by the operation.',
         'feature_name': 'Name of the target feature to read, rewrite, sort by, or promote to cases.',
@@ -634,8 +672,13 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'left_on': 'Key feature name(s) on the left frame used to match rows during `unify(...)`.',
         'right_on': 'Key feature name(s) on the right frame used to match rows during `unify(...)`. Leave empty to reuse the same names as `left_on`.',
         'how': enum_note('Join mode for `DataFrame::unify(...)`.', [
-            ('inner', 'Keep only rows whose key values match on both sides.'),
-            ('left', 'Preserve the left frame row order and row count, attaching right-hand matches where they exist.'),
+            ('common', 'Keep only rows whose key values match on both sides.'),
+            ('keep_left', 'Preserve left keys and attach right-hand matches where they exist.'),
+            ('keep_right', 'Preserve right keys and attach left-hand matches where they exist.'),
+            ('unite', 'Keep the stable union of keys from both frames.'),
+            ('cross', 'Create the cartesian product; key feature arguments must be empty.'),
+            ('left_only', 'Keep left rows whose keys do not occur on the right.'),
+            ('right_only', 'Keep right rows whose keys do not occur on the left.'),
         ]),
         'right_suffix': 'Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.',
         'validate': enum_note('Optional key-cardinality check for `DataFrame::unify(...)`.', [
@@ -664,6 +707,18 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'dropna': 'When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.',
         'top_n': 'Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.',
         'min_count': 'Minimum non-null observations required before a grouped or rolling summary is considered valid.',
+        'ddof': 'Degrees of freedom subtracted from the observation count in variance-based denominators. Use `1` for sample statistics and `0` for population statistics.',
+        'ties': 'Tie policy for equal values: `Average`, `Lowest`, `Highest`, `First`, or `Dense`.',
+        'nulls': 'Null ranking policy: `Keep` leaves null ranks missing, `Top` ranks them first, and `Bottom` ranks them last.',
+        'percentage': 'When `true`, divide each rank by the number of ranked observations.',
+        'drop_nulls': 'When `true`, missing values do not participate while the most-frequent value is selected.',
+        'skip_nulls': 'When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.',
+        'window': 'Positive fixed case count in each moving window.',
+        'centered': 'When `true`, place each fixed-width result at the center case rather than the trailing case.',
+        'alpha': 'Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.',
+        'adjusted': 'When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.',
+        'bias_corrected': 'When `true`, apply finite-sample bias correction to exponentially weighted variance.',
+        'duration_nanos': 'Positive time-window width expressed in nanoseconds. The interval is open on the left and closed on the current observation.',
         'periods': 'Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.',
         'statement': 'SQL statement text to prepare against the current frame.',
         'figure': 'Existing figure object to add summary content into instead of creating a new figure.',
@@ -697,6 +752,8 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Mean', 'Compute the arithmetic mean inside each group.'),
                 ('Min', 'Compute the minimum inside each group.'),
                 ('Max', 'Compute the maximum inside each group.'),
+                ('Std', 'Compute the sample standard deviation inside each group.'),
+                ('Var', 'Compute the sample variance inside each group.'),
             ], heading='`op` supports'),
         ('DataFrame', 'corr', 'method'):
             enum_note('Correlation method.', [
@@ -704,14 +761,46 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Spearman', 'Rank correlation.'),
                 ('KendallTau', 'Rank-concordance correlation.'),
             ]),
-        ('DataFrame', 'case_study', 'row'):
-            'Zero-based row position to inspect.',
-        ('DataFrame', 'case_study', 'start'):
-            'Inclusive zero-based starting row position of the study window.',
-        ('DataFrame', 'case_study', 'stop'):
-            'Exclusive zero-based ending row position of the study window.',
-        ('DataFrame', 'case_study', 'feature_name'):
-            'Column label used for loc-style cell lookup once the row position has been chosen.',
+        ('DataFrame', 'covariance', 'options'):
+            '`StatisticOptions` controls `ddof` (denominator correction) and `min_count` (minimum pairwise-complete cases).',
+        ('DataFrame', 'mean_error', 'options'):
+            '`StatisticOptions` controls `ddof` and the minimum valid case count.',
+        ('DataFrame', 'growing_variance', 'options'):
+            '`StatisticOptions` controls `ddof` and the minimum valid case count.',
+        ('DataFrame', 'growing_deviation', 'options'):
+            '`StatisticOptions` controls `ddof` and the minimum valid case count.',
+        ('DataFrame', 'moving_sum', 'options'):
+            '`WindowOptions` controls `min_count`, `ddof`, and centered result placement.',
+        ('DataFrame', 'moving_mean', 'options'):
+            '`WindowOptions` controls `min_count`, `ddof`, and centered result placement.',
+        ('DataFrame', 'moving_minimum', 'options'):
+            '`WindowOptions` controls `min_count`, `ddof`, and centered result placement.',
+        ('DataFrame', 'moving_maximum', 'options'):
+            '`WindowOptions` controls `min_count`, `ddof`, and centered result placement.',
+        ('DataFrame', 'moving_variance', 'options'):
+            '`WindowOptions` controls `min_count`, `ddof`, and centered result placement.',
+        ('DataFrame', 'moving_deviation', 'options'):
+            '`WindowOptions` controls `min_count`, `ddof`, and centered result placement.',
+        ('DataFrame', 'case_study', 'rows'):
+            enum_note('Selector describing which rows `case_study(...)` should return.', [
+                ('`pluss::table::pos(row)`', 'One row by zero-based position. Negative positions count from the end.'),
+                ('`pluss::table::pos(start, stop)`', 'A half-open positional row slice `[start, stop)`.'),
+                ('`pluss::table::pos({r1, r2, ...})`', 'An explicit row-position list in the exact output order you want.'),
+                ('`pluss::table::label(value)`', 'Every row whose case label matches `value`.'),
+                ('`pluss::table::labels({...})`', 'Several case labels in requested order. If one label appears multiple times, every matching row is returned.'),
+                ('`pluss::table::label_range(start, stop)`', 'An inclusive case-label window from the first `start` match through the last `stop` match.'),
+                ('`pluss::table::mask(bool_thread)`', 'A boolean row mask, equivalent to filtering first and then projecting columns.'),
+            ]),
+        ('DataFrame', 'case_study', 'features'):
+            enum_note('Selector describing which feature columns `case_study(...)` should keep after resolving the row selection.', [
+                ('`pluss::table::all_features()`', 'Keep every feature in the same left-to-right order as the source frame.'),
+                ('`pluss::table::col("name")`', 'Keep one named feature.'),
+                ('`pluss::table::col(position)`', 'Keep one feature by zero-based position.'),
+                ('`pluss::table::cols({"a", "b"})`', 'Keep several named features in the requested order.'),
+                ('`pluss::table::cols({0, 2})`', 'Keep several feature positions in the requested order.'),
+                ('`pluss::table::cols(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
+                ('`pluss::table::col_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
+            ]),
         ('DataFrame', 'observe', 'row'):
             'Zero-based row position to preview as a one-row `DataFrameView`.',
         ('DataFrame', 'observe', 'start'):
@@ -728,6 +817,34 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Column names to move together to the front while preserving the relative order of every column not listed here.',
         ('DataFrame', 'combine', 'spec'):
             'Combine policy object. Use it when you want explicit control over feature-wise append/update behavior instead of the default combine route.',
+        ('DataFrame', 'matched_with', 'other'):
+            'Frame whose case labels and feature names should be matched with this frame.',
+        ('DataFrame', 'matched_with', 'options'):
+            'Matching policy for cases, features, and repeated case labels. Defaults to a stable union on both axes and occurrence-order pairing for repeats.',
+        ('DataFrame', 'extend_cases', 'other'):
+            'Frame whose cases should be appended beneath this frame.',
+        ('DataFrame', 'extend_cases', 'features'):
+            'Feature matching rule for the non-extension axis. `Unite` keeps the stable union; `Common` keeps shared features.',
+        ('DataFrame', 'extend_cases', 'fresh_cases'):
+            'When `true`, replace the appended case labels with contiguous integer cases starting at zero.',
+        ('DataFrame', 'extend_cases', 'reject_repeated_cases'):
+            'When `true`, fail if preserving the two case axes would produce repeated case labels.',
+        ('DataFrame', 'lengthen', 'id_features'):
+            'Features repeated unchanged for each selected value feature.',
+        ('DataFrame', 'lengthen', 'value_features'):
+            'Homogeneous features stacked into the output value feature. Leave empty to use every non-identifier feature.',
+        ('DataFrame', 'lengthen', 'feature_name'):
+            'Output name for the Note-backed feature that identifies each source value feature.',
+        ('DataFrame', 'lengthen', 'value_name'):
+            'Output name for the stacked typed values.',
+        ('DataFrame', 'lengthen', 'fresh_cases'):
+            'When `true`, create contiguous integer cases; when `false`, repeat the original case axis for every value feature.',
+        ('DataFrame', 'catalogue', 'feature'):
+            'Feature whose distinct observed values should become compact levels.',
+        ('DataFrame', 'catalogue', 'ordered'):
+            'Records whether level order is semantically meaningful.',
+        ('DataFrame', 'catalogue', 'sort_levels'):
+            'When `true`, sort levels before assigning integer codes; otherwise preserve first-seen order.',
         ('DataFrame', 'sample', 'n'):
             'Number of rows or features to draw from the selected axis.',
         ('DataFrame', 'sample', 'frac'):
@@ -1017,6 +1134,8 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Mean', 'Compute the arithmetic mean in each group.'),
                 ('Min', 'Compute the minimum in each group.'),
                 ('Max', 'Compute the maximum in each group.'),
+                ('Std', 'Compute the sample standard deviation in each group.'),
+                ('Var', 'Compute the sample variance in each group.'),
             ]),
         'MissingOp':
             enum_note('', [
@@ -1097,22 +1216,68 @@ def generic_note(class_name: str, method: Method) -> str:
             'aggregate': 'Builds a compact summary frame from one or more aggregation specs, so you can inspect computed metrics instead of the full row set.',
             'bottom': 'Returns the rows with the smallest values in the selected feature.',
             'bucketize': 'Buckets numeric `Series` features into interval labels while preserving the rest of the frame unchanged.',
+            'case_study': 'Selects rows and columns from a `DataFrame` using explicit positional, label-based, or boolean-mask selector objects. It is the single row/column indexing surface for table selection.',
+            'catalogue': 'Builds a compact level-and-code encoding for a low-cardinality feature while preserving missingness.',
+            'cases': 'Returns the current case axis itself. Use this when you want the row labels as data rather than selecting rows from the frame.',
             'cases_series': 'Returns the current case axis as a `Series`, which is useful when you need the row labels as data.',
             'combine': 'Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.',
+            'covariance': 'Computes the pairwise covariance matrix for numeric features using pairwise-complete observations.',
+            'percentiles': 'Computes requested numeric distribution points for every numeric feature.',
+            'most_frequent': 'Returns the most frequently occurring value in every supported feature.',
+            'ranks': 'Assigns numeric ranks while controlling tie, null, direction, and percentage behavior.',
+            'asymmetry': 'Computes bias-corrected sample skewness across cases or features.',
+            'tail_weight': 'Computes bias-corrected Fisher excess kurtosis across cases or features.',
+            'mean_error': 'Computes the standard error of the mean with configurable degrees of freedom and minimum observations.',
+            'running_sum': 'Computes a cumulative sum down each numeric feature.',
+            'running_product': 'Computes a cumulative product down each numeric feature.',
+            'running_minimum': 'Computes the minimum observed so far down each numeric feature.',
+            'running_maximum': 'Computes the maximum observed so far down each numeric feature.',
+            'correlate_with': 'Computes one aligned correlation value for every numeric feature shared with another frame.',
+            'matrix_product': 'Multiplies the numeric matrix represented by this frame with the numeric matrix represented by another frame.',
+            'moving_sum': 'Computes fixed-width trailing sums over every numeric feature.',
+            'moving_mean': 'Computes fixed-width trailing means over every numeric feature.',
+            'moving_minimum': 'Computes fixed-width trailing minima over every numeric feature.',
+            'moving_maximum': 'Computes fixed-width trailing maxima over every numeric feature.',
+            'moving_variance': 'Computes fixed-width trailing variance with configurable degrees of freedom.',
+            'moving_deviation': 'Computes fixed-width trailing standard deviation with configurable degrees of freedom.',
+            'moving_mean_error': 'Computes fixed-width trailing standard error with configurable degrees of freedom.',
+            'moving_asymmetry': 'Computes fixed-width bias-corrected skewness.',
+            'moving_tail_weight': 'Computes fixed-width bias-corrected Fisher excess kurtosis.',
+            'growing_sum': 'Computes sums over windows that grow from the first case through the current case.',
+            'growing_mean': 'Computes means over windows that grow from the first case through the current case.',
+            'growing_minimum': 'Computes minima over windows that grow from the first case through the current case.',
+            'growing_maximum': 'Computes maxima over windows that grow from the first case through the current case.',
+            'growing_variance': 'Computes variance over windows that grow from the first case through the current case.',
+            'growing_deviation': 'Computes standard deviation over windows that grow from the first case through the current case.',
+            'growing_mean_error': 'Computes standard error over windows that grow from the first case through the current case.',
+            'growing_asymmetry': 'Computes skewness over windows that grow from the first case through the current case.',
+            'growing_tail_weight': 'Computes excess kurtosis over windows that grow from the first case through the current case.',
+            'exponential_mean': 'Computes an exponentially weighted mean over each numeric feature.',
+            'exponential_variance': 'Computes exponentially weighted variance over each numeric feature.',
+            'exponential_deviation': 'Computes exponentially weighted standard deviation over each numeric feature.',
+            'grouped_moving_mean': 'Computes moving means independently within each group while preserving original case order.',
+            'grouped_moving': 'Computes a selected moving statistic independently within each group while preserving original case order.',
+            'time_moving_mean': 'Computes moving means over a nanosecond-duration window on a monotonic temporal feature.',
+            'time_moving': 'Computes a selected statistic over a nanosecond-duration window on a monotonic temporal feature.',
             'copy': 'Returns a detached copy of the frame so later edits to the result do not affect the source object.',
             'count_by': 'Groups by one feature and returns per-group row counts.',
             'count_null_rows': 'Counts how many rows contain at least one null value.',
             'describe': 'Returns descriptive summary statistics for the selected numeric features.',
             'drop': 'Removes one or more features and returns the remaining frame.',
+            'extend_cases': 'Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.',
             'equals': 'Checks whether two frames have the same structure, labels, and values.',
             'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'head': 'Returns the first `n` rows of the frame.',
+            'iat': 'Returns one cell as text using positional row and positional feature coordinates.',
             'with_cases': 'Replaces the current case axis with the supplied thread. The row values stay in the same order, but later case-aware operations now use the new labels.',
             'with_cases_': 'Replaces the current case axis in place. The row values stay in the same order, but later case-aware operations now use the new labels.',
             'insert': 'Inserts a new feature at the requested position and shifts the later features to the right.',
             'join': 'Adds compatible features from another frame, aligning rows by the shared case axis.',
+            'lengthen': 'Reshapes a wide frame into long form by tiling identifier features and stacking homogeneous value features.',
+            'matched_with': 'Returns a pair of frames whose cases and features have been matched according to explicit Pluss-native matching rules.',
+            'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
             'set_cases': 'Promotes one feature to become the case axis. With the default `drop_feature=true`, that feature stops being a normal column and becomes the row labels instead.',
             'reset_cases': 'Materializes the current case axis as a normal feature, then restores the default positional cases `0..n-1`.',
             'align_cases': 'Reorders rows so their case labels match the supplied `new_cases` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
@@ -1175,7 +1340,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'truediv': 'Applies elementwise true division to compatible numeric features.',
             'ts': 'Returns the time-series accessor bound to one or more selected features.',
             'unique_cases': 'Keeps only the first occurrence of each case label and drops later duplicates.',
-            'unify': 'Joins two frames by key values. Use `right_on=""` when both frames use the same key name, `how="left"` to preserve left rows, and `validate` when you want duplicate-key checks such as `"many_to_one"`.',
+            'unify': 'Combines two frames by key values. Use `right_on=""` when both frames use the same key name, Pluss-native modes such as `"common"` or `"unite"` to choose retained keys, and `validate` for duplicate-key checks.',
             'unsqueeze': 'Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.',
             'query': 'Keeps only the rows that satisfy the supplied filter expression or mask-producing query.',
             'where': 'Keeps only the rows where the supplied boolean mask is true.',
@@ -1526,7 +1691,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'This is part of the text-processing surface for note-backed or text-oriented data.'
     if name in {'year', 'month', 'day', 'hour', 'to_note_weekday', 'tz_convert', 'tz_localize', 'to_utc', 'shift_time', 'floor_time', 'ceil_time', 'round_time', 'resample'}:
         return 'This is part of the time-aware surface and expects timeline or time-index semantics.'
-    return f'Applies `{name}` to the current `{class_name}` object. Use the example and output together to see which part of the object changes and which structure is preserved.'
+    return ''
 
 
 STRUCTURED_TYPES = {
@@ -2253,6 +2418,145 @@ DF_TRANSPOSE_OUT = """feature  row0   row1   row2
 id       1      2      3
 sales    100.0  120.0  90.0"""
 
+
+def case_study_doc_base() -> str:
+    return """using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
+    {"region", pluss::make_note({"south", "south", "middle", "north"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
+    {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
+}).title("sales");
+
+auto labeled = sales.with_cases(
+    pluss::make_note({"A100", "B200", "B200", "D400"}));"""
+
+
+def case_study_examples() -> list[tuple[str, str, str]]:
+    base = case_study_doc_base()
+    return [
+        (
+            'Study one row by zero-based position.',
+            base + '\n\nauto out = sales.case_study(pos(1));',
+            """city  region  units  price
+Tema  south   7.0    4.0""",
+        ),
+        (
+            'Study a half-open positional row window.',
+            base + '\n\nauto out = sales.case_study(pos(1, 3));',
+            """city    region  units  price
+Tema    south   7.0    4.0
+Kumasi  middle  12.0   2.5""",
+        ),
+        (
+            'Reorder rows by explicit positions and keep only named features.',
+            base + '\n\nauto out = sales.case_study(pos({3, 0}), cols({"city", "price"}));',
+            """city    price
+Tamale  5.0
+Accra   3.0""",
+        ),
+        (
+            'Match every row whose case label equals one label.',
+            base + '\n\nauto out = labeled.case_study(label("B200"));',
+            """city    region  units  price
+Tema    south   7.0    4.0
+Kumasi  middle  12.0   2.5""",
+        ),
+        (
+            'Request several labels in your own order and project one feature subset.',
+            base + '\n\nauto out = labeled.case_study(labels({"D400", "A100"}), cols({"city", "units"}));',
+            """city    units
+Tamale  5.0
+Accra   10.0""",
+        ),
+        (
+            'Slice by case labels inclusively and slice features by name inclusively.',
+            base + '\n\nauto out = labeled.case_study(label_range("B200", "D400"), col_range("region", "price"));',
+            """region  units  price
+south   7.0    4.0
+middle  12.0   2.5
+north   5.0    5.0""",
+        ),
+        (
+            'Use a boolean mask just like a filter, then keep only the columns you care about.',
+            base + '\n\nauto out = sales.case_study(mask(sales.features("units") >= 10.0), cols({"city", "units"}));',
+            """city    units
+Accra   10.0
+Kumasi  12.0""",
+        ),
+        (
+            'Get a one-cell result without a separate scalar-only indexing method.',
+            base + '\n\nauto out = labeled.case_study(label("A100"), col("price"));',
+            """price
+3.0""",
+        ),
+    ]
+
+
+def render_case_study_page(overloads: list[Method], class_name: str) -> list[str]:
+    lines: list[str] = []
+    method = overloads[0]
+    seen: set[str] = set()
+    merged_params_list: list[tuple[str, str]] = []
+    for overload in overloads:
+        for name, typ in overload.params:
+            if name not in seen:
+                seen.add(name)
+                merged_params_list.append((name, typ))
+    lines.append('### `case_study`')
+    lines.append('')
+    lines.append('#### Signatures')
+    lines.append('')
+    lines.append('```cpp')
+    for overload in overloads:
+        lines.append(user_signature(overload, class_name))
+    lines.append('```')
+    lines.append('')
+    lines.append('#### Parameters')
+    lines.append('')
+    lines.append(params_doc(merged_params_list, class_name, method.name))
+    lines.append('')
+    lines.append('#### Returns')
+    lines.append('')
+    lines.append('`DataFrame`')
+    lines.append('    Always returns a `DataFrame`, even when the selection resolves to one row, one column, or one cell.')
+    lines.append('')
+    lines.append('#### What It Does')
+    lines.append('')
+    lines.append('`case_study(...)` is the unified DataFrame indexing surface. Use selector helpers to choose rows by position, by case label, or by boolean mask, then optionally project one or more features in the same call.')
+    lines.append('')
+    lines.append('#### Selector Rules')
+    lines.append('')
+    lines.append('- Positional row selectors use zero-based indexing. Negative positions count from the end.')
+    lines.append('- Positional row slices are half-open: `pos(start, stop)` means `[start, stop)`.')
+    lines.append('- Label selectors match against the current case axis returned by `cases()`.')
+    lines.append('- `label(value)` returns every matching row, so duplicate case labels are preserved instead of collapsed.')
+    lines.append('- `label_range(start, stop)` is inclusive on both ends and walks the current case-axis order.')
+    lines.append('- Feature-position slices are half-open, while `col_range(start, stop)` is inclusive on both ends.')
+    lines.append('- Because `case_study(...)` always returns a frame, you do not need separate `at(...)` or `iat(...)` methods for single-cell access.')
+    lines.append('')
+    lines.append('#### Examples')
+    lines.append('')
+    for idx, (caption, code, output) in enumerate(case_study_examples(), start=1):
+        lines.append(f'Example {idx}. {caption}')
+        lines.append('')
+        lines.append('```cpp')
+        lines.append(code)
+        lines.append('```')
+        lines.append('')
+        lines.append('```text')
+        lines.append(output)
+        lines.append('```')
+        lines.append('')
+    lines.append('#### Behavior Notes')
+    lines.append('')
+    lines.append('- `cases()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.')
+    lines.append('- When you only want to preview a row window instead of materializing a selection result for later work, use `observe(...)`.')
+    lines.append('- If you already know the final feature order and only need column projection, `features({...})` is still the lighter-weight feature-only path.')
+    lines.append('')
+    return lines
+
 THREAD_SERIES_OUT = "[10.0, 20.0, 30.0]"
 THREAD_NOTE_OUT = '["Accra", "Tema", "Kumasi"]'
 THREAD_TIME_OUT = '["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]'
@@ -2525,6 +2829,24 @@ West    Esi      84.0"""
             return DF_RESET_CASES_OUT
         if n in {'align_cases'}:
             return DF_ALIGN_CASES_OUT
+        if n == 'matched_with':
+            return """matched.left.cases():
+["A", "C", "B"]
+
+matched.left.feature_names():
+["x", "y", "z"]"""
+        if n == 'extend_cases':
+            return """case  x     y     z
+A     1.0   3.0   null
+C     2.0   4.0   null
+B     null  5.0   7.0
+A     null  6.0   8.0"""
+        if n == 'lengthen':
+            return """id  feature  value
+r1  a        1.0
+r2  a        2.0
+r1  b        3.0
+r2  b        4.0"""
         if n == 'repeated_cases':
             return '[false, true, false]'
         if n in {'sort_values', 'sort_cases', 'reindex_like', 'reindex_cases', 'conform_to'}:
@@ -3870,6 +4192,39 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\nauto with_cases = df.set_cases("city", true);\nauto out = with_cases.reset_cases("case");'
             if n == 'align_cases':
                 return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.align_cases(new_cases);'
+        if n == 'matched_with':
+            return (
+                'auto left = pluss::table::DataFrame(\n'
+                '    {{"x", pluss::make_series({1.0, 2.0})},\n'
+                '     {"y", pluss::make_series({10.0, 20.0})}},\n'
+                '    pluss::table::Thread(pluss::make_note({"A", "C"})));\n'
+                'auto right = pluss::table::DataFrame(\n'
+                '    {{"y", pluss::make_series({100.0, 200.0})},\n'
+                '     {"z", pluss::make_series({7.0, 8.0})}},\n'
+                '    pluss::table::Thread(pluss::make_note({"B", "A"})));\n'
+                'auto matched = left.matched_with(right);'
+            )
+        if n == 'extend_cases':
+            return (
+                'auto left = pluss::table::DataFrame(\n'
+                '    {{"x", pluss::make_series({1.0, 2.0})},\n'
+                '     {"y", pluss::make_series({3.0, 4.0})}},\n'
+                '    pluss::table::Thread(pluss::make_note({"A", "C"})));\n'
+                'auto right = pluss::table::DataFrame(\n'
+                '    {{"y", pluss::make_series({5.0, 6.0})},\n'
+                '     {"z", pluss::make_series({7.0, 8.0})}},\n'
+                '    pluss::table::Thread(pluss::make_note({"B", "A"})));\n'
+                'auto out = left.extend_cases(right);'
+            )
+        if n == 'lengthen':
+            return (
+                'auto wide = pluss::table::DataFrame({\n'
+                '    {"id", pluss::make_note({"r1", "r2"})},\n'
+                '    {"a", pluss::make_series({1.0, 2.0})},\n'
+                '    {"b", pluss::make_series({3.0, 4.0})},\n'
+                '});\n'
+                'auto out = wide.lengthen({"id"}, {"a", "b"});'
+            )
         if n in {'join','update','conform_to','reindex_like','reindex_cases','stitch_on','combine'}:
             if n == 'conform_to' or n == 'reindex_like':
                 return df_two() + f'\n\nauto out = left.{n}(right);'
@@ -5333,11 +5688,34 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Each `SummarySpec` chooses an output name, a source feature, and a summary operation.',
                 'Use this when you want one-row summary output such as totals, means, mins, maxes, or counts.',
             ])
+        if class_name == 'DataFrame' and n == 'group_by':
+            return bullets('Execution Model', [
+                '`group_by(...)` factorizes typed key combinations once in stable first-seen order.',
+                'Count, sum, mean, minimum, maximum, sample standard deviation, and sample variance use vectorized Series scatter reductions.',
+                'Numeric payloads and validity masks stay on their source platform; key hashing and arbitrary-value distinct counting require one bulk host materialization.',
+                'Output key features retain their original Thread kind and dtype.',
+            ])
         if class_name == 'DataFrame' and n == 'align_cases':
             return bullets('Practical Behavior', [
                 '`align_cases(new_cases)` reorders rows by matching the existing case labels against `new_cases`.',
                 'Every requested case label must already exist or the call throws.',
                 'The output case axis is rewritten to `new_cases`, so both the row order and the labels now follow that target order.',
+            ])
+        if class_name == 'DataFrame' and n == 'matched_with':
+            return bullets('Matching Rules', [
+                '`matched_with(other)` matches both case labels and feature names in one call.',
+                'The default `Unite` rule preserves the left order and appends labels found only on the right.',
+                '`Common`, `KeepLeft`, and `KeepRight` select the intersection or one side explicitly.',
+                'Repeated cases pair by occurrence order by default; choose `RepeatedCaseRule::Reject` when repeated labels should be an error.',
+                'Frame-to-frame arithmetic and comparisons use the same default matching behavior automatically.',
+                'Only case-key matching is materialized on the host; feature gathers and arithmetic remain on the source Series platform.',
+            ])
+        if class_name == 'DataFrame' and n == 'lengthen':
+            return bullets('Reshape Rules', [
+                '`lengthen(...)` tiles identifier features and stacks each value feature as one contiguous case block.',
+                'Value features must share a Thread kind; numeric value features must also share dtype and platform.',
+                'Payload concatenation and identifier tiling use Series/Thread bulk operations rather than cell-wise conversion.',
+                'Missing-value masks are concatenated with the payload and preserved.',
             ])
         if class_name == 'DataFrame' and n in {'all', 'any'}:
             return bullets('Axis Rules', [
@@ -5377,9 +5755,10 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Use this for quick single-cell inspection, not for typed column work.',
             ])
         if class_name == 'DataFrame' and n == 'cases':
-            return bullets('Overload Guide', [
-                '`cases(row)` and `cases(start, stop)` return row slices.',
-                '`cases(row, feature)` returns one scalar value from a row/feature intersection.',
+            return bullets('Practical Behavior', [
+                '`cases()` returns the current case axis exactly as it is stored on the frame.',
+                'The case axis can be numeric, note-based, timeline-based, or time-index based.',
+                'Use `case_study(...)` when you want row selection; use `cases()` when you want the row labels themselves.',
                 'Use `cases_series()` only when the case axis is actually Series-backed.',
             ])
         if class_name == 'DataFrame' and n == 'ceil_time':
@@ -5389,14 +5768,18 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Use this when you want time-bucket labels that always round toward the next boundary.',
             ])
         if class_name == 'DataFrame' and n == 'case_study':
-            return bullets('Practical Behavior', [
-                '`case_study(row)` and `case_study(start, stop)` study rows by position.',
-                '`case_study(row, feature_name)` gives positional-row plus label-column lookup in one method family.',
-                'For positional single-cell access, keep using `iat(...)`.',
+            return []
+        if class_name == 'DataFrame' and n == 'catalogue':
+            return bullets('Encoding Rules', [
+                '`catalogue(feature)` returns explicit `codes`, `levels`, and `ordered` fields instead of hiding codes inside an ordinary numeric feature.',
+                'Missing source values keep an invalid mask and use the conventional payload code `-1`.',
+                'Levels preserve first-seen order by default; `sort_levels=true` assigns codes from sorted levels.',
+                '`encoding.decode()` reconstructs the typed Thread and its validity mask.',
             ])
         if class_name == 'DataFrame' and n == 'observe':
             return bullets('Practical Behavior', [
                 '`observe(...)` returns a `DataFrameView`, so it is the preview-oriented row window helper alongside `head(...)` and `tail(...)`.',
+                'It uses positional row coordinates, not case-label lookup.',
                 'Use `observe(start, stop).show()` when you want a middle slice without materializing a bespoke helper or mutating the source frame.',
             ])
         if class_name == 'DataFrame' and n == 'combine':
@@ -5631,8 +6014,17 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         if class_name == 'DataFrame' and n == 'unify':
             return bullets('Join Semantics', [
                 '`unify(...)` matches rows by key values, not by current row order.',
-                '`how="left"` preserves the left frame row order and row count, while `how="inner"` keeps matched rows only.',
+                '`common`, `keep_left`, `keep_right`, and `unite` retain the corresponding key set while preserving stable input order.',
+                '`left_only` and `right_only` select unmatched keys; `cross` creates the cartesian case product without key features.',
+                'Repeated keys expand to every matching pair, and `validate` can enforce one-to-one or one-sided uniqueness.',
                 'When right-hand non-key names collide with left-hand names, `right_suffix` is applied only to the right-hand collisions.',
+            ])
+        if class_name == 'DataFrame' and n == 'extend_cases':
+            return bullets('Extension Rules', [
+                '`extend_cases(other)` appends cases vertically and matches features by name.',
+                'The default `Unite` feature rule preserves left feature order, appends right-only features, and null-fills one-sided payloads.',
+                'Matching numeric features must have the same dtype and platform; other matching features must have the same Thread kind.',
+                'Use `fresh_cases=true` for contiguous integer cases or `reject_repeated_cases=true` to require a unique preserved case axis.',
             ])
         if class_name == 'DataFrame' and n == 'unsqueeze':
             return bullets('Practical Behavior', [
@@ -6263,6 +6655,10 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             lines.append('')
             for name in names_by_letter[letter]:
                 overloads = sorted(grouped[name], key=lambda m: user_signature(m, class_name).lower())
+                if class_name == 'DataFrame' and name == 'case_study':
+                    lines.extend(render_case_study_page(overloads, class_name))
+                    lines.append('')
+                    continue
                 lines.append(f'### `{name}`')
                 lines.append('')
                 lines.append('#### API Signatures' if len(overloads) > 1 else '#### API Signature')
@@ -6274,17 +6670,23 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                     lines.append(user_signature(overload, class_name))
                 lines.append('```')
                 lines.append('')
-                lines.append('#### Parameters')
+                lines.append('#### Notes')
+                lines.append('')
+                note = generic_note(class_name, overloads[0]).strip()
+                lines.append(note or 'Use this method through the public contract shown above.')
+                lines.append('')
+                lines.append('#### Inputs')
                 lines.append('')
                 lines.append(params_doc(merged_params(overloads), class_name, overloads[0].name))
                 lines.append('')
-                lines.append('#### Returns')
+                lines.append('#### Output')
                 lines.append('')
                 lines.append(merged_returns(overloads))
                 lines.append('')
-                lines.append('#### What It Does')
+                lines.append('#### Options')
                 lines.append('')
-                lines.append(generic_note(class_name, overloads[0]))
+                lines.append('Option and enum values, when present, are listed with their effects under **Inputs**.')
+                lines.append('')
 
                 rendered_any = False
                 example_count = 0
@@ -6294,24 +6696,21 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                         continue
                     example_count += 1
                     if not rendered_any:
-                        lines.append('')
                         lines.append('#### Examples')
                         lines.append('')
                         rendered_any = True
-                    if len(overloads) > 1:
-                        lines.append(f'Example {example_count}. {example_caption(class_name, overload)}')
-                        lines.append('')
+                    lines.append(f'Example {example_count}. {example_caption(class_name, overload)}')
+                    lines.append('')
                     lines.append('```cpp')
                     lines.append(code)
                     lines.append('```')
                     preview = normalize_user_names(class_name, output_for(class_name, overload)).strip()
-                    if preview:
-                        lines.append('')
-                        lines.append('```text')
-                        lines.append(preview)
-                        lines.append('```')
-                        lines.append('')
-
+                    lines.append('')
+                    lines.append('##### Expected output')
+                    lines.append('')
+                    lines.append('```text')
+                    lines.append(preview or 'The call completes and returns the contract described under Output.')
+                    lines.append('```')
                 extra = extra_sections_for_method(overloads[0])
                 if extra:
                     if lines[-1] != '':
@@ -6328,17 +6727,21 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             lines.append(user_signature(method, class_name))
             lines.append('```')
             lines.append('')
-            lines.append('#### Parameters')
-            lines.append('')
-            lines.append(params_doc(method.params, class_name, method.name))
-            lines.append('')
-            lines.append('#### Returns')
-            lines.append('')
-            lines.append(returns_doc(method.return_type))
-            lines.append('')
             lines.append('#### Notes')
             lines.append('')
             lines.append(generic_note(class_name, method))
+            lines.append('')
+            lines.append('#### Inputs')
+            lines.append('')
+            lines.append(params_doc(method.params, class_name, method.name))
+            lines.append('')
+            lines.append('#### Output')
+            lines.append('')
+            lines.append(returns_doc(method.return_type))
+            lines.append('')
+            lines.append('#### Options')
+            lines.append('')
+            lines.append('Option and enum values, when present, are listed with their effects under **Inputs**.')
             if len(grouped[method.name]) > 1:
                 sibs = [m for m in grouped[method.name] if m.signature != method.signature]
                 if sibs:
@@ -6354,13 +6757,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             lines.append(normalize_user_names(class_name, example_for(class_name, method)))
             lines.append('```')
             preview = normalize_user_names(class_name, output_for(class_name, method))
-            if preview:
-                lines.append('')
-                lines.append('#### Output')
-                lines.append('')
-                lines.append('```text')
-                lines.append(preview)
-                lines.append('```')
+            lines.append('')
+            lines.append('#### Expected output')
+            lines.append('')
+            lines.append('```text')
+            lines.append(preview or 'The call completes and returns the contract described under Output.')
+            lines.append('```')
             extra = extra_sections_for_method(method)
             if extra:
                 lines.append('')

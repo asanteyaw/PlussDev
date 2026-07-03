@@ -1,8 +1,10 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "CodeH/core/TimeIndex.h"
@@ -11,12 +13,67 @@
 
 namespace pluss::codeh::_compat::detail {
 
-static std::int64_t unit_nanos_(std::string_view unit) {
-  if (unit == "S" || unit == "s" || unit == "sec") return 1'000'000'000LL;
-  if (unit == "min" || unit == "m") return 60LL * 1'000'000'000LL;
-  if (unit == "H" || unit == "h") return 3600LL * 1'000'000'000LL;
-  if (unit == "D" || unit == "d") return 86400LL * 1'000'000'000LL;
-  CODEM_FAIL("TimeIndex: unsupported freq (expected S/min/H/D)");
+struct ParsedResampleFreq {
+  enum class Kind : std::uint8_t {
+    Fixed = 0,
+    Week = 1,
+    Month = 2,
+    Year = 3,
+  };
+
+  Kind kind{Kind::Fixed};
+  std::int64_t multiplier{1};
+  std::int64_t unit_nanos{0};
+};
+
+static std::string lower_ascii_copy_(std::string_view s) {
+  std::string out(s);
+  for (auto& ch : out) {
+    if (ch >= 'A' && ch <= 'Z') ch = static_cast<char>(ch - 'A' + 'a');
+  }
+  return out;
+}
+
+static ParsedResampleFreq parse_resample_freq_(std::string_view raw_freq, std::int64_t step) {
+  CODEM_CHECK(step > 0, "resample_bins: step must be positive");
+  CODEM_CHECK(!raw_freq.empty(), "resample_bins: freq cannot be empty");
+
+  std::size_t pos = 0;
+  std::int64_t prefix = 0;
+  while (pos < raw_freq.size() && raw_freq[pos] >= '0' && raw_freq[pos] <= '9') {
+    prefix = prefix * 10 + static_cast<std::int64_t>(raw_freq[pos] - '0');
+    ++pos;
+  }
+  if (prefix == 0) prefix = 1;
+  const auto mult = prefix * step;
+  const auto unit = raw_freq.substr(pos);
+  CODEM_CHECK(!unit.empty(), "resample_bins: freq unit cannot be empty");
+  const auto unit_lower = lower_ascii_copy_(unit);
+
+  if (unit == "S" || unit_lower == "s" || unit_lower == "sec" || unit_lower == "second" || unit_lower == "seconds") {
+    return {ParsedResampleFreq::Kind::Fixed, mult, 1'000'000'000LL};
+  }
+  if (unit_lower == "min" || unit_lower == "minute" || unit_lower == "minutes" || unit_lower == "t" || unit == "m") {
+    return {ParsedResampleFreq::Kind::Fixed, mult, 60LL * 1'000'000'000LL};
+  }
+  if (unit == "H" || unit_lower == "h" || unit_lower == "hr" || unit_lower == "hour" || unit_lower == "hours") {
+    return {ParsedResampleFreq::Kind::Fixed, mult, 3600LL * 1'000'000'000LL};
+  }
+  if (unit == "D" || unit_lower == "d" || unit_lower == "day" || unit_lower == "days") {
+    return {ParsedResampleFreq::Kind::Fixed, mult, 86400LL * 1'000'000'000LL};
+  }
+  if (unit == "W" || unit_lower == "w" || unit_lower == "week" || unit_lower == "weeks") {
+    return {ParsedResampleFreq::Kind::Week, mult, 7LL * 86400LL * 1'000'000'000LL};
+  }
+  if (unit == "M" || unit == "MS" || unit_lower == "mo" || unit_lower == "mth"
+      || unit_lower == "month" || unit_lower == "months") {
+    return {ParsedResampleFreq::Kind::Month, mult, 0};
+  }
+  if (unit == "Y" || unit == "YS" || unit_lower == "y" || unit_lower == "yr"
+      || unit_lower == "year" || unit_lower == "years" || unit_lower == "annual") {
+    return {ParsedResampleFreq::Kind::Year, mult, 0};
+  }
+  CODEM_FAIL("TimeIndex: unsupported freq (expected fixed units like S/min/H/D, weekly W, monthly M, yearly Y)");
 }
 
 static Timeline parse_scalar_iso_(std::string_view s) {
@@ -355,8 +412,9 @@ struct Access {
   }
 
   static ::pluss::codeh::TimeIndex::ResampleBins resample_bins(const ::pluss::codeh::TimeIndex& self, std::string_view freq, std::int64_t step) {
-    CODEM_CHECK(step > 0, "resample_bins: step must be positive");
-    const auto q = unit_nanos_(freq) * step;
+    using namespace std::chrono;
+    const auto parsed = parse_resample_freq_(freq, step);
+    const auto fixed_span = parsed.unit_nanos * parsed.multiplier;
     const auto* x = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
     const auto n = self.size();
     if (n == 0) {
@@ -373,27 +431,87 @@ struct Access {
       const std::int64_t local = utc + (std::int64_t)off * 60LL * 1'000'000'000LL;
       min_local = std::min(min_local, local);
     }
-    constexpr std::int64_t kDayNanos = 86'400LL * 1'000'000'000LL;
-    const std::int64_t start_day_local = (min_local / kDayNanos) * kDayNanos;
-    const std::int64_t start_local = start_day_local;
-
     auto bin_id = pluss::codem::Series::empty({n}, pluss::codem::ScalarType::Int64);
     auto* bid = reinterpret_cast<std::int64_t*>(bin_id.raw_data());
     std::int64_t max_bin = 0;
+
+    constexpr std::int64_t kDayNanos = 86'400LL * 1'000'000'000LL;
+    const auto to_local_ymd_ = [](std::int64_t local_ns) {
+      const sys_time<nanoseconds> tp{nanoseconds(local_ns)};
+      const auto dp = floor<days>(tp);
+      const auto ymd = year_month_day(dp);
+      return std::tuple<int, unsigned, unsigned, std::int64_t>(
+          static_cast<int>(ymd.year()),
+          static_cast<unsigned>(ymd.month()),
+          static_cast<unsigned>(ymd.day()),
+          duration_cast<nanoseconds>(dp.time_since_epoch()).count());
+    };
+
+    std::int64_t anchor_local = 0;
+    int anchor_year = 1970;
+    unsigned anchor_month = 1;
+    if (parsed.kind == ParsedResampleFreq::Kind::Fixed) {
+      const std::int64_t start_day_local = (min_local / kDayNanos) * kDayNanos;
+      anchor_local = start_day_local;
+    } else if (parsed.kind == ParsedResampleFreq::Kind::Week) {
+      const auto [yy, mm, dd, day_floor] = to_local_ymd_(min_local);
+      (void)yy;
+      (void)mm;
+      (void)dd;
+      const sys_time<nanoseconds> tp{nanoseconds(day_floor)};
+      const auto dp = floor<days>(tp);
+      const int wd_sun0 = static_cast<int>(weekday(dp).c_encoding());
+      anchor_local = day_floor - static_cast<std::int64_t>(wd_sun0) * kDayNanos;
+    } else {
+      const auto [yy, mm, dd, day_floor] = to_local_ymd_(min_local);
+      (void)dd;
+      (void)day_floor;
+      anchor_year = yy;
+      anchor_month = mm;
+    }
+
     for (std::int64_t i = 0; i < n; ++i) {
       const auto utc = x[i];
       CODEM_CHECK(utc != ::pluss::codeh::Timeline::kNaT, "TimeIndex does not allow NaT");
       const int off = tz.offset_minutes_at_utc(utc);
       const std::int64_t local = utc + (std::int64_t)off * 60LL * 1'000'000'000LL;
-      const std::int64_t b = (local - start_local) / q;
+      std::int64_t b = 0;
+      if (parsed.kind == ParsedResampleFreq::Kind::Fixed || parsed.kind == ParsedResampleFreq::Kind::Week) {
+        b = (local - anchor_local) / fixed_span;
+      } else {
+        const auto [yy, mm, dd, day_floor] = to_local_ymd_(local);
+        (void)dd;
+        (void)day_floor;
+        if (parsed.kind == ParsedResampleFreq::Kind::Month) {
+          const auto month_index = static_cast<std::int64_t>(yy - anchor_year) * 12LL
+                                 + (static_cast<std::int64_t>(mm) - static_cast<std::int64_t>(anchor_month));
+          b = month_index / parsed.multiplier;
+        } else {
+          b = static_cast<std::int64_t>(yy - anchor_year) / parsed.multiplier;
+        }
+      }
       bid[i] = b;
       if (b > max_bin) max_bin = b;
     }
+
     const std::int64_t nbins = max_bin + 1;
     auto label_ticks = pluss::codem::Series::empty({nbins}, pluss::codem::ScalarType::Int64);
     auto* lt = reinterpret_cast<std::int64_t*>(label_ticks.raw_data());
     for (std::int64_t b = 0; b < nbins; ++b) {
-      const std::int64_t local = start_local + b * q;
+      std::int64_t local = 0;
+      if (parsed.kind == ParsedResampleFreq::Kind::Fixed || parsed.kind == ParsedResampleFreq::Kind::Week) {
+        local = anchor_local + b * fixed_span;
+      } else if (parsed.kind == ParsedResampleFreq::Kind::Month) {
+        const auto month_index = static_cast<std::int64_t>(anchor_month - 1) + b * parsed.multiplier;
+        const auto yy = anchor_year + static_cast<int>(month_index / 12LL);
+        const auto mm = static_cast<unsigned>(month_index % 12LL) + 1U;
+        const auto dp = sys_days(year(yy) / month(mm) / day(1));
+        local = duration_cast<nanoseconds>(dp.time_since_epoch()).count();
+      } else {
+        const auto yy = anchor_year + static_cast<int>(b * parsed.multiplier);
+        const auto dp = sys_days(year(yy) / month(1) / day(1));
+        local = duration_cast<nanoseconds>(dp.time_since_epoch()).count();
+      }
       const std::int64_t utc = tz.local_to_utc(local, /*fold=*/0, /*nonexistent=*/"shift_forward");
       lt[b] = utc;
     }

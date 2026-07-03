@@ -924,10 +924,17 @@ CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& r
 
 CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string>>& records,
                                        const ReadCsvOptions& options) {
+  PLUSS_CHECK(
+      !options.chunksize.has_value(),
+      "read_csv_records_raw_batch: chunksize is only valid for CsvCaseReader");
   return build_raw_batch_from_records(records, options, nullptr);
 }
 
 CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
+  PLUSS_CHECK(
+      !options.chunksize.has_value(),
+      "load_csv: chunksize requires CsvCaseReader because a DataFrame return "
+      "cannot represent several streamed batches");
   ReadCsvOptions resolved = options;
   auto source = detail::resolve_local_or_http_source(resolved.filepath, "load_csv");
   resolved.filepath = source.local_path();
@@ -1041,10 +1048,17 @@ CsvRawBatch read_csv_raw_batch(std::string_view filepath, const ReadCsvOptions& 
 
 CsvBatch read_csv_records_batch(const std::vector<std::vector<std::string>>& records,
                                 const ReadCsvOptions& options) {
+  PLUSS_CHECK(
+      !options.chunksize.has_value(),
+      "read_csv_records_batch: chunksize is only valid for CsvCaseReader");
   return build_batch_from_records(records, options, nullptr);
 }
 
 CsvBatch read_csv_batch(const ReadCsvOptions& options) {
+  PLUSS_CHECK(
+      !options.chunksize.has_value(),
+      "load_csv: chunksize requires CsvCaseReader because a DataFrame return "
+      "cannot represent several streamed batches");
   ReadCsvOptions resolved = options;
   auto source = detail::resolve_local_or_http_source(resolved.filepath, "load_csv");
   resolved.filepath = source.local_path();
@@ -1245,6 +1259,184 @@ void save_csv(const pluss::table::DataFrame& frame,
     }
     out << options.line_terminator;
   }
+}
+
+struct CsvCaseReader::Impl {
+  detail::ResolvedSource source;
+  ReadCsvOptions options;
+  std::ifstream input;
+  std::size_t batch_size{0};
+  std::size_t emitted{0};
+  std::vector<std::vector<std::string>> preamble;
+  std::vector<std::string> schema_names;
+  std::vector<pluss::table::ThreadKind> schema_kinds;
+  std::vector<std::optional<pluss::codem::ScalarType>> schema_series_types;
+
+  Impl(
+      const std::string_view filepath,
+      const std::size_t requested_batch_size,
+      const ReadCsvOptions& requested_options)
+      : source(detail::resolve_local_or_http_source(
+            filepath,
+            "CsvCaseReader")),
+        options(requested_options),
+        input(),
+        batch_size(requested_batch_size) {
+    PLUSS_CHECK(batch_size > 0, "CsvCaseReader: case_batch_size must be positive");
+    PLUSS_CHECK(options.skipcases.empty() && options.skipcases_first_n == 0,
+                "CsvCaseReader: skipcases policies are not supported by streaming reads");
+    PLUSS_CHECK(options.skipfooter == 0,
+                "CsvCaseReader: skipfooter is not supported by streaming reads");
+    options.filepath = source.local_path();
+    options.sep = detect_separator(options);
+    options.chunksize.reset();
+
+    input.open(options.filepath, std::ios::in | std::ios::binary);
+    PLUSS_CHECK(
+        input.is_open(),
+        "CsvCaseReader: failed to open file '" + options.filepath + "'");
+    if (options.header) {
+      preamble.reserve(static_cast<std::size_t>(options.header_row + 1));
+      std::vector<std::string> record;
+      for (std::int64_t row = 0; row <= options.header_row; ++row) {
+        PLUSS_CHECK(
+            parse_record(input, options, record),
+            "CsvCaseReader: file ended before the requested header row");
+        preamble.push_back(record);
+      }
+    }
+  }
+};
+
+CsvCaseReader::CsvCaseReader(
+    const std::string_view filepath,
+    const std::size_t case_batch_size)
+    : CsvCaseReader(filepath, case_batch_size, ReadCsvOptions{}) {}
+
+CsvCaseReader::CsvCaseReader(
+    const std::string_view filepath,
+    const std::size_t case_batch_size,
+    const ReadCsvOptions& options)
+    : impl_(std::make_unique<Impl>(filepath, case_batch_size, options)) {}
+
+CsvCaseReader::CsvCaseReader(CsvCaseReader&&) noexcept = default;
+CsvCaseReader& CsvCaseReader::operator=(CsvCaseReader&&) noexcept = default;
+CsvCaseReader::~CsvCaseReader() = default;
+
+bool CsvCaseReader::next(pluss::table::DataFrame& output) {
+  PLUSS_CHECK(impl_ != nullptr, "CsvCaseReader::next: reader was moved from");
+  if (impl_->options.ncases.has_value() &&
+      impl_->emitted >= *impl_->options.ncases) {
+    return false;
+  }
+
+  auto records = impl_->preamble;
+  const auto remaining = impl_->options.ncases.has_value()
+      ? *impl_->options.ncases - impl_->emitted
+      : impl_->batch_size;
+  const auto wanted = std::min(impl_->batch_size, remaining);
+  records.reserve(records.size() + wanted);
+
+  std::vector<std::string> record;
+  for (std::size_t row = 0; row < wanted; ++row) {
+    if (!parse_record(impl_->input, impl_->options, record)) {
+      break;
+    }
+    records.push_back(record);
+  }
+  const auto parsed = records.size() - impl_->preamble.size();
+  if (parsed == 0) {
+    return false;
+  }
+
+  auto batch_options = impl_->options;
+  batch_options.ncases.reset();
+  const auto batch = build_batch_from_records(records, batch_options, nullptr);
+  output = pluss::table::DataFrame(batch.features, batch.cases);
+  if (impl_->schema_names.empty()) {
+    impl_->schema_names = output.feature_names();
+    impl_->schema_kinds.reserve(static_cast<std::size_t>(output.nfeatures()));
+    impl_->schema_series_types.reserve(static_cast<std::size_t>(output.nfeatures()));
+    for (const auto& feature : impl_->schema_names) {
+      const auto column = output.features(feature);
+      impl_->schema_kinds.push_back(column.kind());
+      impl_->schema_series_types.push_back(
+          column.kind() == pluss::table::ThreadKind::Series
+              ? std::optional{column.as_series().scalar_type()}
+              : std::nullopt);
+    }
+  } else {
+    PLUSS_CHECK(
+        output.feature_names() == impl_->schema_names,
+        "CsvCaseReader::next: feature schema changed between batches");
+    auto columns = output.features();
+    bool converted_any = false;
+    for (std::size_t i = 0; i < impl_->schema_names.size(); ++i) {
+      const auto& column = columns[i];
+      const auto same_kind = column.kind() == impl_->schema_kinds[i];
+      const auto same_dtype =
+          column.kind() != pluss::table::ThreadKind::Series ||
+          column.as_series().scalar_type() == *impl_->schema_series_types[i];
+      if (same_kind && same_dtype) {
+        continue;
+      }
+
+      pluss::table::ThreadCastTarget target =
+          pluss::table::ThreadCastTarget::Series;
+      switch (impl_->schema_kinds[i]) {
+        case pluss::table::ThreadKind::Series:
+          target = pluss::table::ThreadCastTarget::Series;
+          break;
+        case pluss::table::ThreadKind::Note:
+          target = pluss::table::ThreadCastTarget::Note;
+          break;
+        case pluss::table::ThreadKind::Timeline:
+          target = pluss::table::ThreadCastTarget::Timeline;
+          break;
+        case pluss::table::ThreadKind::TimeIndex:
+          target = pluss::table::ThreadCastTarget::TimeIndex;
+          break;
+      }
+      const auto converted =
+          column.cast(target, impl_->schema_series_types[i]);
+      auto lost_observation =
+          column.notnull().as_series().logical_and(
+              converted.notnull().as_series().logical_not());
+      if (column.kind() == pluss::table::ThreadKind::Series &&
+          converted.kind() == pluss::table::ThreadKind::Series) {
+        const auto round_trip =
+            converted.as_series().to(column.as_series().scalar_type());
+        lost_observation = lost_observation.logical_or(
+            column.notnull().as_series().logical_and(
+                round_trip.eq(column.as_series()).logical_not()));
+      }
+      PLUSS_CHECK(
+          !lost_observation.any().item<bool>(),
+          "CsvCaseReader::next: inferred schema changed for feature '" +
+              impl_->schema_names[i] +
+              "' and conversion would discard an observed value; supply "
+              "ReadCsvOptions::dtype so every streamed batch has one explicit "
+              "schema");
+      columns[i] = converted;
+      converted_any = true;
+    }
+    if (converted_any) {
+      auto cases = output.cases();
+      std::vector<std::pair<std::string, pluss::table::Thread>> typed_columns;
+      typed_columns.reserve(columns.size());
+      for (std::size_t i = 0; i < columns.size(); ++i) {
+        typed_columns.emplace_back(impl_->schema_names[i], std::move(columns[i]));
+      }
+      output = pluss::table::DataFrame(
+          std::move(typed_columns), std::move(cases));
+    }
+  }
+  impl_->emitted += parsed;
+  return true;
+}
+
+std::size_t CsvCaseReader::cases_read() const noexcept {
+  return impl_ != nullptr ? impl_->emitted : 0;
 }
 
 } // namespace pluss::loader

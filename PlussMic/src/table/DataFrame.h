@@ -62,7 +62,35 @@ struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
 class DataFrameSqlPrepared;
 class DataFrameTsAccessor;
+class DataFrameTsResampler;
 class Atlas;
+struct FrameMatch;
+
+enum class FrameMatchRule : std::uint8_t {
+  Unite = 0,
+  Common = 1,
+  KeepLeft = 2,
+  KeepRight = 3,
+};
+
+enum class RepeatedCaseRule : std::uint8_t {
+  PairInOrder = 0,
+  Reject = 1,
+};
+
+struct FrameMatchOptions {
+  FrameMatchRule cases{FrameMatchRule::Unite};
+  FrameMatchRule features{FrameMatchRule::Unite};
+  RepeatedCaseRule repeated_cases{RepeatedCaseRule::PairInOrder};
+};
+
+struct CategoryEncoding {
+  Thread codes{};
+  Thread levels{};
+  bool ordered{false};
+
+  Thread decode() const;
+};
 
 class ColumnRef {
 public:
@@ -163,6 +191,8 @@ public:
     Mean = 3,
     Min = 4,
     Max = 5,
+    Std = 6,
+    Var = 7,
   };
 
   enum class CorrMethod : std::uint8_t {
@@ -292,6 +322,43 @@ public:
     }
   };
 
+  struct CaseSelector {
+    enum class Kind : std::uint8_t {
+      PositionScalar = 0,
+      PositionSlice = 1,
+      PositionList = 2,
+      LabelScalar = 3,
+      LabelSlice = 4,
+      LabelList = 5,
+      Mask = 6,
+    };
+
+    Kind kind{Kind::PositionSlice};
+    std::int64_t first{0};
+    std::int64_t second{0};
+    std::vector<std::int64_t> positions{};
+    std::vector<std::string> labels{};
+    Thread mask{};
+  };
+
+  struct FeatureSelector {
+    enum class Kind : std::uint8_t {
+      All = 0,
+      PositionScalar = 1,
+      PositionSlice = 2,
+      PositionList = 3,
+      NameScalar = 4,
+      NameSlice = 5,
+      NameList = 6,
+    };
+
+    Kind kind{Kind::All};
+    std::int64_t first{0};
+    std::int64_t second{0};
+    std::vector<std::int64_t> positions{};
+    std::vector<std::string> names{};
+  };
+
   struct CastSpec {
     std::string feature;
     ThreadCastTarget target{ThreadCastTarget::Series};
@@ -310,6 +377,7 @@ public:
     CombineOp op{CombineOp::Features};
     std::string collision_suffix{"_right"};
     bool overwrite{true};
+    FrameMatchRule cases{FrameMatchRule::Unite};
   };
 
   struct SqlOptions {
@@ -482,16 +550,9 @@ public:
   const std::vector<std::string>& feature_names() const;
   std::vector<Thread> features() const;
   const Thread& cases() const;
-  DataFrame cases(std::int64_t row) const;
-  DataFrame cases(std::pair<std::int64_t, std::int64_t> row_span) const;
-  std::string cases(std::int64_t row, std::size_t feature_idx) const;
-  std::string cases(std::int64_t row, std::string_view feature_name) const;
   pluss::Series cases_series() const;
-  DataFrame case_study(std::int64_t row) const;
-  DataFrame case_study(std::int64_t start, std::int64_t stop) const;
-  std::string case_study(std::int64_t row, std::string_view feature_name) const;
-  std::string iat(std::int64_t row, std::size_t feature_idx) const;
-  std::string at(std::int64_t row, std::string_view feature_name) const;
+  DataFrame case_study(const CaseSelector& rows) const;
+  DataFrame case_study(const CaseSelector& rows, const FeatureSelector& features) const;
   std::optional<Thread> get(std::string_view feature_name) const;
 
   DataFrame with_cases(const Thread& cases) const;
@@ -587,25 +648,27 @@ public:
   DataFrameView observe(std::int64_t start, std::int64_t stop, bool render = true) const;
   DataFrame set_cases(std::string_view feature_name, bool drop_feature = true) const;
   DataFrame reset_cases(std::string case_feature = "case") const;
+  FrameMatch matched_with(const DataFrame& other,
+                          const FrameMatchOptions& options = {}) const;
   DataFrame align_cases(const Thread& new_cases) const;
   DataFrame join(const DataFrame& other, std::string collision_suffix = "_right") const;
   DataFrame update(const DataFrame& other, bool overwrite = true) const;
   DataFrame unify(std::string_view left_on,
                   const DataFrame& right,
                   std::string_view right_on = "",
-                  std::string_view how = "inner",
+                  std::string_view how = "common",
                   std::string right_suffix = "_right",
                   std::string_view validate = "many_to_many") const;
   DataFrame unify(pluss::msharp::RangeView::Of<std::string_view> left_on,
                   const DataFrame& right,
                   pluss::msharp::RangeView::Of<std::string_view> right_on = {},
-                  std::string_view how = "inner",
+                  std::string_view how = "common",
                   std::string right_suffix = "_right",
                   std::string_view validate = "many_to_many") const;
   DataFrame unify(std::initializer_list<std::string_view> left_on,
                   const DataFrame& right,
                   std::initializer_list<std::string_view> right_on = {},
-                  std::string_view how = "inner",
+                  std::string_view how = "common",
                   std::string right_suffix = "_right",
                   std::string_view validate = "many_to_many") const;
 
@@ -689,6 +752,67 @@ public:
   DataFrame query(std::string_view expression) const;
   DataFrame assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const;
+  Thread map_cases(
+      const std::function<ThreadValue(const DataFrame&)>& fn) const;
+  DataFrame apply_cases(
+      const std::function<DataFrame(const DataFrame&)>& fn,
+      ResultShape shape = ResultShape::Infer) const;
+  DataFrame map_elements(
+      const std::function<ThreadValue(const ThreadValue&)>& fn,
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  Thread aggregate_with(
+      const std::function<Thread(const DataFrame&)>& fn,
+      ResultShape shape = ResultShape::Reduce) const;
+  DataFrame flow(
+      const std::function<DataFrame(const DataFrame&)>& fn) const;
+  DataFrame text_upper(
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_casefold(
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_title(
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_lengths(
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_starts_with(
+      std::string_view prefix,
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_ends_with(
+      std::string_view suffix,
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_matches(
+      std::string_view pattern,
+      bool full = false,
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_pad(
+      std::int64_t width,
+      TextAlign align = TextAlign::Left,
+      char fill = ' ',
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_slice(
+      std::int64_t start,
+      std::optional<std::int64_t> stop = std::nullopt,
+      std::int64_t step = 1,
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_normalize(
+      UnicodeForm form = UnicodeForm::NFC,
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame text_encode(
+      std::string_view encoding = "base64",
+      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame regex_groups(
+      std::string_view feature,
+      std::string_view pattern,
+      pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
+  DataFrame split_feature(std::string_view feature,
+                          std::string_view delimiter,
+                          std::int64_t limit = -1,
+                          std::string prefix = "part") const;
+  DataFrame partition_feature(std::string_view feature,
+                              std::string_view separator,
+                              std::string prefix = "part") const;
+  DataFrame text_indicators(std::string_view feature,
+                            std::string_view delimiter = "|",
+                            std::string prefix = "") const;
   DataFrame transform(const std::function<Thread(const Thread&)>& fn) const;
   DataFrame transform(std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const;
   DataFrame transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
@@ -754,6 +878,10 @@ public:
                             bool render = true) const;
   DataFrame combine(const DataFrame& other) const;
   DataFrame combine(const DataFrame& other, const CombineSpec& spec) const;
+  DataFrame extend_cases(const DataFrame& other,
+                         FrameMatchRule features = FrameMatchRule::Unite,
+                         bool fresh_cases = false,
+                         bool reject_repeated_cases = false) const;
   Atlas unsqueeze() const;
   Atlas unsqueeze(const Thread& depth_labels) const;
   DataFrameView count_by(std::string_view feature,
@@ -872,6 +1000,85 @@ public:
   DataFrameView corr(bool render = false) const;
   DataFrameView corr(pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const;
   DataFrameView corr(pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const;
+  DataFrameView covariance(const StatisticOptions& options = {}, bool render = false) const;
+  DataFrame percentiles(pluss::msharp::RangeView::Double points = {0.25, 0.5, 0.75},
+                        std::int64_t min_count = 1) const;
+  DataFrame most_frequent(bool drop_nulls = true) const;
+  DataFrame ranks(RankTieRule ties = RankTieRule::Average,
+                  RankNullRule nulls = RankNullRule::Keep,
+                  bool ascending = true,
+                  bool percentage = false) const;
+  Thread asymmetry(std::int64_t axis = 0, std::int64_t min_count = 3) const;
+  Thread tail_weight(std::int64_t axis = 0, std::int64_t min_count = 4) const;
+  Thread variance(std::int64_t axis = 0,
+                  const StatisticOptions& options = {}) const;
+  Thread deviation(std::int64_t axis = 0,
+                   const StatisticOptions& options = {}) const;
+  Thread mean_error(std::int64_t axis = 0,
+                    const StatisticOptions& options = {}) const;
+  DataFrame running_sum(bool skip_nulls = true) const;
+  DataFrame running_product(bool skip_nulls = true) const;
+  DataFrame running_minimum(bool skip_nulls = true) const;
+  DataFrame running_maximum(bool skip_nulls = true) const;
+  Thread correlate_with(const DataFrame& other,
+                        CorrMethod method = CorrMethod::Pearson,
+                        std::int64_t min_count = 1) const;
+  DataFrame matrix_product(const DataFrame& other) const;
+  DataFrame moving_sum(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_mean(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_minimum(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_maximum(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_variance(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_deviation(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_mean_error(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_asymmetry(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame moving_tail_weight(std::int64_t window, const WindowOptions& options = {}) const;
+  DataFrame weighted_moving(
+      pluss::msharp::RangeView::Double weights,
+      WindowStatistic statistic = WindowStatistic::Mean,
+      std::int64_t min_count = 1) const;
+  DataFrame indexed_moving(
+      const WindowBoundsFn& bounds,
+      WindowStatistic statistic = WindowStatistic::Mean,
+      const WindowOptions& options = {}) const;
+  DataFrame growing_sum(std::int64_t min_count = 1) const;
+  DataFrame growing_mean(std::int64_t min_count = 1) const;
+  DataFrame growing_minimum(std::int64_t min_count = 1) const;
+  DataFrame growing_maximum(std::int64_t min_count = 1) const;
+  DataFrame growing_variance(const StatisticOptions& options = {}) const;
+  DataFrame growing_deviation(const StatisticOptions& options = {}) const;
+  DataFrame growing_mean_error(const StatisticOptions& options = {}) const;
+  DataFrame growing_asymmetry(std::int64_t min_count = 3) const;
+  DataFrame growing_tail_weight(std::int64_t min_count = 4) const;
+  DataFrame exponential_mean(double alpha,
+                             bool adjusted = true,
+                             std::int64_t min_count = 1,
+                             bool ignore_nulls = false) const;
+  DataFrame exponential_variance(double alpha,
+                                 bool adjusted = true,
+                                 bool bias_corrected = true,
+                                 std::int64_t min_count = 1,
+                                 bool ignore_nulls = false) const;
+  DataFrame exponential_deviation(double alpha,
+                                  bool adjusted = true,
+                                  bool bias_corrected = true,
+                                  std::int64_t min_count = 1,
+                                  bool ignore_nulls = false) const;
+  DataFrame grouped_moving_mean(std::string_view group_feature,
+                                std::int64_t window,
+                                const WindowOptions& options = {}) const;
+  DataFrame grouped_moving(std::string_view group_feature,
+                           std::int64_t window,
+                           WindowStatistic statistic = WindowStatistic::Mean,
+                           const WindowOptions& options = {}) const;
+  DataFrame time_moving_mean(std::string_view time_feature,
+                             std::int64_t duration_nanos,
+                             std::int64_t min_count = 1) const;
+  DataFrame time_moving(std::string_view time_feature,
+                        std::int64_t duration_nanos,
+                        TimeWindowStatistic statistic = TimeWindowStatistic::Mean,
+                        const StatisticOptions& options = {},
+                        WindowClosure closure = WindowClosure::Right) const;
   DataFrame isna(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame isnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame notna(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
@@ -999,6 +1206,15 @@ public:
   std::int64_t count_null_rows() const;
   DataFrameView describe(bool render = true) const;
   DataFrameView transpose(bool render = false) const;
+  DataFrame lengthen(
+      pluss::msharp::RangeView::Of<std::string_view> id_features = {},
+      pluss::msharp::RangeView::Of<std::string_view> value_features = {},
+      std::string feature_name = "feature",
+      std::string value_name = "value",
+      bool fresh_cases = true) const;
+  CategoryEncoding catalogue(std::string_view feature,
+                             bool ordered = false,
+                             bool sort_levels = false) const;
   DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
   DataFrameView tally(pluss::msharp::RangeView::Of<std::string_view> features,
                       std::int64_t top_n = 0,
@@ -1105,6 +1321,11 @@ private:
   friend std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 };
 
+struct FrameMatch {
+  DataFrame left{};
+  DataFrame right{};
+};
+
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 void output_render(std::ostream& os, const DataFrame& frame);
 
@@ -1188,9 +1409,12 @@ class DataFrameTsAccessor {
   DataFrame fill_gaps(pluss::subsp::stats::ts::GapFillMode mode = pluss::subsp::stats::ts::GapFillMode::Forward,
                       std::optional<double> constant = std::nullopt) const;
 
+  DataFrameTsResampler resample(std::string_view time_feature,
+                                std::string_view freq,
+                                std::int64_t step = 1) const;
   DataFrame resample(std::string_view time_feature,
                      std::string_view freq,
-                     pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Mean,
+                     pluss::subsp::stats::ts::ResampleOp op,
                      std::int64_t step = 1) const;
   DataFrame asfreq(std::string_view time_feature,
                    std::string_view freq,
@@ -1219,6 +1443,69 @@ class DataFrameTsAccessor {
   DataFrame frame_{};
   std::vector<std::string> features_{};
 };
+
+class DataFrameTsResampler {
+ public:
+  DataFrameTsResampler(DataFrame frame,
+                       std::vector<std::string> features,
+                       std::string time_feature,
+                       std::string freq,
+                       std::int64_t step);
+
+  DataFrame mean() const;
+  DataFrame sum() const;
+  DataFrame min() const;
+  DataFrame max() const;
+  DataFrame first() const;
+  DataFrame last() const;
+  DataFrame count() const;
+
+  DataFrame asfreq(std::optional<double> fill_value = std::nullopt) const;
+  DataFrame ffill() const;
+  DataFrame bfill() const;
+  DataFrame nearest() const;
+
+ private:
+  DataFrame aggregate_(pluss::subsp::stats::ts::ResampleOp op) const;
+
+  DataFrame frame_{};
+  std::vector<std::string> features_{};
+  std::string time_feature_{};
+  std::string freq_{};
+  std::int64_t step_{1};
+};
+
+DataFrame::CaseSelector pos(std::int64_t row);
+DataFrame::CaseSelector pos(std::int64_t start, std::int64_t stop);
+DataFrame::CaseSelector pos(std::initializer_list<std::int64_t> rows);
+DataFrame::CaseSelector pos(pluss::RangeView<std::int64_t> rows);
+
+DataFrame::CaseSelector label(std::string_view value);
+DataFrame::CaseSelector label(const char* value);
+DataFrame::CaseSelector label(std::int64_t value);
+DataFrame::CaseSelector label(double value);
+DataFrame::CaseSelector labels(std::initializer_list<std::string_view> values);
+DataFrame::CaseSelector labels(pluss::RangeView<std::string_view> values);
+DataFrame::CaseSelector labels(std::initializer_list<std::int64_t> values);
+DataFrame::CaseSelector labels(pluss::RangeView<std::int64_t> values);
+DataFrame::CaseSelector labels(const Thread& values);
+DataFrame::CaseSelector label_range(std::string_view start, std::string_view stop);
+DataFrame::CaseSelector label_range(std::int64_t start, std::int64_t stop);
+DataFrame::CaseSelector label_range(double start, double stop);
+DataFrame::CaseSelector label_range(const Thread& start, const Thread& stop);
+DataFrame::CaseSelector mask(const Thread& values);
+DataFrame::CaseSelector mask(const pluss::Series& values);
+
+DataFrame::FeatureSelector all_features();
+DataFrame::FeatureSelector col(std::string_view name);
+DataFrame::FeatureSelector col(const char* name);
+DataFrame::FeatureSelector col(std::int64_t position);
+DataFrame::FeatureSelector cols(std::initializer_list<std::string_view> names);
+DataFrame::FeatureSelector cols(pluss::RangeView<std::string_view> names);
+DataFrame::FeatureSelector cols(std::initializer_list<std::int64_t> positions);
+DataFrame::FeatureSelector cols(pluss::RangeView<std::int64_t> positions);
+DataFrame::FeatureSelector cols(std::int64_t start, std::int64_t stop);
+DataFrame::FeatureSelector col_range(std::string_view start, std::string_view stop);
 
 } // namespace pluss::table
 

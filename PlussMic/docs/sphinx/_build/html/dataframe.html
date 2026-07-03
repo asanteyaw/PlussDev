@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=705d315b" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=0e2bb6cf" />
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/layout.js?v=014eaf41"></script>
+    <script src="_static/layout.js?v=a19b3cd6"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Time-Series Accessor Guide" href="time_series_accessor_guide.html" />
@@ -85,14 +85,17 @@ Use it when you want:</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">case_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cases</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">first_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">iloc</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">first_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">));</span>
 </pre></div>
 </div>
 <p>Notes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">features(&quot;name&quot;)</span></code> returns a typed <code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cases()</span></code> is the row axis, not just a display index</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> is the row/column selection surface</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">describe()</span></code> is the fastest way to check whether numeric casts and missing values look right</p></li>
 </ul>
 </section>
@@ -202,6 +205,122 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 <span class="k">auto</span><span class="w"> </span><span class="n">top3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">top</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
 </pre></div>
 </div>
+</section>
+<section id="match-frames-by-cases-and-features">
+<h2>Match Frames By Cases And Features<a class="headerlink" href="#match-frames-by-cases-and-features" title="Link to this heading">¶</a></h2>
+<p>Frame-to-frame arithmetic and comparisons match both axes automatically. The
+default is a stable union: left-side case and feature order is retained, then
+right-only labels are appended. A value present on only one side is null in the
+result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">matched_with(...)</span></code> when you need the matched operands themselves or want a
+different rule:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchOptions</span><span class="w"> </span><span class="n">rules</span><span class="p">;</span>
+<span class="n">rules</span><span class="p">.</span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">;</span>
+<span class="n">rules</span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">KeepLeft</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">matched_with</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">rules</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matched</span><span class="p">.</span><span class="n">left</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">matched</span><span class="p">.</span><span class="n">right</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Available case and feature rules are <code class="docutils literal notranslate"><span class="pre">Unite</span></code>, <code class="docutils literal notranslate"><span class="pre">Common</span></code>, <code class="docutils literal notranslate"><span class="pre">KeepLeft</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">KeepRight</span></code>. Repeated cases pair by occurrence order; set
+<code class="docutils literal notranslate"><span class="pre">rules.repeated_cases</span> <span class="pre">=</span> <span class="pre">pluss::table::RepeatedCaseRule::Reject</span></code> when repeated
+case labels should fail instead.</p>
+</section>
+<section id="extend-and-unify-frames">
+<h2>Extend And Unify Frames<a class="headerlink" href="#extend-and-unify-frames" title="Link to this heading">¶</a></h2>
+<p>Append cases vertically with feature-name matching:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">january</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span><span class="n">february</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The default feature rule is a stable union with nulls for one-sided features.
+Pass <code class="docutils literal notranslate"><span class="pre">FrameMatchRule::Common</span></code> to retain shared features only, or set
+<code class="docutils literal notranslate"><span class="pre">fresh_cases=true</span></code> for contiguous integer cases:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">january</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span>
+<span class="w">    </span><span class="n">february</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">unify(...)</span></code> for key-based case combinations:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span><span class="s">&quot;student_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">roster</span><span class="p">);</span><span class="w">                  </span><span class="c1">// common</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">complete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span><span class="s">&quot;student_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">roster</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;unite&quot;</span><span class="p">);</span><span class="w">   </span><span class="c1">// both sides</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">absent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span><span class="s">&quot;student_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">roster</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;left_only&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">roster</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cross&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The Pluss-native modes are <code class="docutils literal notranslate"><span class="pre">common</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_left</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_right</span></code>, <code class="docutils literal notranslate"><span class="pre">unite</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cross</span></code>, <code class="docutils literal notranslate"><span class="pre">left_only</span></code>, and <code class="docutils literal notranslate"><span class="pre">right_only</span></code>. Repeated keys expand to all matching
+pairs. Use the <code class="docutils literal notranslate"><span class="pre">validate</span></code> argument when the relationship must be one-to-one,
+one-to-many, or many-to-one.</p>
+</section>
+<section id="grouped-reductions">
+<h2>Grouped Reductions<a class="headerlink" href="#grouped-reductions" title="Link to this heading">¶</a></h2>
+<p>One call can compute several named reductions:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">group_by</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Count</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Sum</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;average&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;volatility&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">GroupOp</span><span class="o">::</span><span class="n">Std</span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">false</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Supported grouped operations are <code class="docutils literal notranslate"><span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Nunique</span></code>, <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Min</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Max</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>, and <code class="docutils literal notranslate"><span class="pre">Var</span></code>. Numeric reductions use Series scatter operations and
+stay on the payload platform. Group keys retain their original Thread type and
+first-seen order.</p>
+</section>
+<section id="wide-to-long-reshape">
+<h2>Wide-To-Long Reshape<a class="headerlink" href="#wide-to-long-reshape" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">lengthen(...)</span></code> stacks homogeneous value features while repeating identifier
+features:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">long_form</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wide</span><span class="p">.</span><span class="n">lengthen</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student_id&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="s">&quot;assessment&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;score&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The result contains <code class="docutils literal notranslate"><span class="pre">student_id</span></code>, <code class="docutils literal notranslate"><span class="pre">assessment</span></code>, and <code class="docutils literal notranslate"><span class="pre">score</span></code>. Numeric value
+features must share dtype and platform; other value features must share a
+Thread kind. Missing masks are preserved. Leave the value-feature list empty
+to stack every non-identifier feature.</p>
+</section>
+<section id="low-cardinality-encoding">
+<h2>Low-Cardinality Encoding<a class="headerlink" href="#low-cardinality-encoding" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">catalogue(...)</span></code> when repeated labels should have compact integer codes:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">catalogue</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city</span><span class="p">.</span><span class="n">codes</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city</span><span class="p">.</span><span class="n">levels</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city</span><span class="p">.</span><span class="n">decode</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The encoding remains explicit so integer codes cannot be mistaken for measured
+numeric data. Missing values use payload code <code class="docutils literal notranslate"><span class="pre">-1</span></code> and retain an invalid mask.
+Levels preserve first-seen order unless <code class="docutils literal notranslate"><span class="pre">sort_levels=true</span></code>.</p>
+</section>
+<section id="stream-large-csv-files-by-cases">
+<h2>Stream Large CSV Files By Cases<a class="headerlink" href="#stream-large-csv-files-by-cases" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CsvCaseReader</span></code> keeps the file open and parses only the next bounded case batch:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">CsvCaseReader</span><span class="w"> </span><span class="n">reader</span><span class="p">(</span><span class="s">&quot;path/to/large.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">100&#39;000</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">batch</span><span class="p">;</span>
+
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">batch</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">process</span><span class="p">(</span><span class="n">batch</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The reader does not re-scan earlier records and does not materialize the whole
+file. <code class="docutils literal notranslate"><span class="pre">ReadCsvOptions::ncases</span></code> acts as a global cap. Direct <code class="docutils literal notranslate"><span class="pre">load_csv(...)</span></code>
+calls reject <code class="docutils literal notranslate"><span class="pre">chunksize</span></code> explicitly because a single <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> return value
+cannot represent several streamed batches.</p>
 <p>Notes:</p>
 <ul class="simple">
 <li><p>use <code class="docutils literal notranslate"><span class="pre">filter(bool_mask)</span></code> when you already have a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
@@ -384,6 +503,12 @@ workflows, prefer <code class="docutils literal notranslate"><span class="pre">u
 <li class="toctree-l2"><a class="reference internal" href="#common-everyday-tasks">Common Everyday Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cast-and-derive-features">Cast And Derive Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#filter-query-and-sort">Filter, Query, And Sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#match-frames-by-cases-and-features">Match Frames By Cases And Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extend-and-unify-frames">Extend And Unify Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#grouped-reductions">Grouped Reductions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wide-to-long-reshape">Wide-To-Long Reshape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#low-cardinality-encoding">Low-Cardinality Encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stream-large-csv-files-by-cases">Stream Large CSV Files By Cases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#grouping-pivoting-and-summaries">Grouping, Pivoting, And Summaries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#missing-data-and-rolling-windows">Missing Data And Rolling Windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#join-and-combine">Join And Combine</a></li>

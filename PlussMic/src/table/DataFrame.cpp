@@ -9,6 +9,7 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <numeric>
 #include <optional>
 #include <random>
@@ -516,6 +517,10 @@ std::string group_op_name(DataFrame::GroupOp op) {
       return "min";
     case DataFrame::GroupOp::Max:
       return "max";
+    case DataFrame::GroupOp::Std:
+      return "std";
+    case DataFrame::GroupOp::Var:
+      return "var";
     default:
       return "group";
   }
@@ -1214,12 +1219,6 @@ Thread apply_cmp_thread_pair(const Thread& lhs, const Thread& rhs, BinaryCmpOp o
   return lhs.compare(rhs, mapped);
 }
 
-void validate_binary_frame_compat(const DataFrame& lhs, const DataFrame& rhs, std::string_view where) {
-  PLUSS_CHECK(lhs.ncases() == rhs.ncases(), fmt::format("{}: case count mismatch", where));
-  PLUSS_CHECK(lhs.feature_names() == rhs.feature_names(),
-              fmt::format("{}: features must match by name and order", where));
-}
-
 DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMathOp op, bool reverse) {
   const auto cols = frame.features();
   const auto& names = frame.feature_names();
@@ -1232,17 +1231,17 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
 }
 
 DataFrame dataframe_math_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryMathOp op) {
-  validate_binary_frame_compat(lhs, rhs, fmt::format("DataFrame::{}", math_op_name(op)));
-  const auto lhs_cols = lhs.features();
-  const auto rhs_cols = rhs.features();
-  const auto& names = lhs.feature_names();
+  const auto matched = lhs.matched_with(rhs);
+  const auto lhs_cols = matched.left.features();
+  const auto rhs_cols = matched.right.features();
+  const auto& names = matched.left.feature_names();
 
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(lhs_cols.size());
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     out.emplace_back(names[i], apply_math_thread_pair(lhs_cols[i], rhs_cols[i], op));
   }
-  return DataFrame(std::move(out), lhs.cases());
+  return DataFrame(std::move(out), matched.left.cases()).title(lhs.title());
 }
 
 DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp op) {
@@ -1257,17 +1256,17 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
 }
 
 DataFrame dataframe_cmp_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryCmpOp op) {
-  validate_binary_frame_compat(lhs, rhs, fmt::format("DataFrame::{}", cmp_op_name(op)));
-  const auto lhs_cols = lhs.features();
-  const auto rhs_cols = rhs.features();
-  const auto& names = lhs.feature_names();
+  const auto matched = lhs.matched_with(rhs);
+  const auto lhs_cols = matched.left.features();
+  const auto rhs_cols = matched.right.features();
+  const auto& names = matched.left.feature_names();
 
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(lhs_cols.size());
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     out.emplace_back(names[i], apply_cmp_thread_pair(lhs_cols[i], rhs_cols[i], op));
   }
-  return DataFrame(std::move(out), lhs.cases());
+  return DataFrame(std::move(out), matched.left.cases()).title(lhs.title());
 }
 
 DataFrame arrange_impl_frame(
@@ -1657,5 +1656,6 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::Dat
 #include "table/ops/dataframe/DataFrameTimeSeries.inc"
 #include "table/ops/dataframe/DataFrameGroupAndCombine.inc"
 #include "table/ops/dataframe/DataFrameMathMissingAndDescribe.inc"
+#include "table/ops/dataframe/DataFrameStatisticsAndWindows.inc"
 
 } // namespace pluss::table

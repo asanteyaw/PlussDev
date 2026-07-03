@@ -65,6 +65,12 @@ public:
   Atlas align_depth(const Thread& labels) const;
 
   Atlas map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const;
+  Atlas map_elements(
+      const std::function<ThreadValue(const ThreadValue&)>& fn) const;
+  Atlas moving(std::int64_t window,
+               WindowStatistic statistic = WindowStatistic::Mean,
+               const WindowOptions& options = {}) const;
+  Atlas flow(const std::function<Atlas(const Atlas&)>& fn) const;
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
   static Atlas tabelize(const pluss::kindle::Archive& archive);
   static Atlas tabelize(const pluss::kindle::Archive& archive,

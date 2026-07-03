@@ -66,6 +66,27 @@ pluss::table::DataFrame make_plot_frame() {
   }).title("Plot measures");
 }
 
+pluss::table::DataFrame make_scroll_stress_frame() {
+  constexpr std::int64_t rows = 50000;
+  constexpr std::int64_t columns = 1000;
+  std::vector<double> values;
+  values.reserve(static_cast<std::size_t>(rows));
+  for (std::int64_t row = 0; row < rows; ++row) {
+    values.push_back(static_cast<double>(row) * 1.125 +
+                     std::sin(static_cast<double>(row) * 0.031));
+  }
+  const auto shared_values = pluss::make_series(values);
+  std::vector<std::pair<std::string, pluss::table::Thread>> features;
+  features.reserve(static_cast<std::size_t>(columns));
+  for (std::int64_t column = 0; column < columns; ++column) {
+    features.emplace_back(
+        "feature_" + std::to_string(column),
+        pluss::table::Thread(shared_values));
+  }
+  return pluss::table::DataFrame(std::move(features))
+      .title("50,000 x 1,000 scroll stress");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -90,6 +111,12 @@ int main(int argc, char** argv) {
   options.backend = pluss::table::display::DisplayBackend::PlussWebView;
   options.viewer_width = 1180;
   options.viewer_height = 760;
+
+  if (mode == "stress") {
+    options.window_title = "Pluss Large DataFrame Stress";
+    make_scroll_stress_frame().show(options);
+    return 0;
+  }
 
   if (mode == "atlas") {
     options.window_title = "Pluss Atlas Workspace";

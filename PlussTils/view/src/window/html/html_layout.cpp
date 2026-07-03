@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -15,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/window/text_layout.h"
 
 namespace pluss::view::window {
@@ -1904,7 +1906,8 @@ void draw_text_lines(Scene& scene,
     } else if (text_align == "right") {
       text_x = x + std::max(0, content_width - layout.width);
     }
-    scene.add(TextCommand{PointI{text_x, y + layout.ascent}, line, font_size, color, font_weight, std::string(font_family)});
+    scene.add(TextCommand{PointI{text_x, y + layout.ascent}, line, font_size,
+                          color, font_weight, std::string(font_family)});
     y += line_height;
   }
 }
@@ -2580,6 +2583,395 @@ int render_node(Scene& scene,
                 const ResolvedStyle* parent_style,
                 const int viewport_width);
 
+int render_virtual_table(
+    Scene& scene,
+    const HtmlNode& node,
+    const int x,
+    const int y,
+    const int width,
+    const int bottom,
+    const ResolvedStyle& style,
+    const HtmlRenderConfig& render_config,
+    const ResolvedStyle* parent_style) {
+  const auto* model = render_config.virtual_table_model;
+  if (model == nullptr) {
+    return 0;
+  }
+
+  const int margin = style.margin;
+  const int padding = style.padding;
+  const int border = style.border;
+  const int content_height =
+      std::max({400, style.explicit_height, style.min_height});
+  const int total_h =
+      margin * 2 + padding * 2 + border * 2 + content_height;
+  if (y >= bottom) {
+    return total_h;
+  }
+
+  const int explicit_width =
+      resolve_length_px(style.explicit_width, style.explicit_width_ratio, width);
+  const int min_width =
+      resolve_length_px(style.min_width, style.min_width_ratio, width);
+  const int resolved_outer_w =
+      std::max(min_width, explicit_width > 0 ? explicit_width : width);
+  const int outer_x = x + margin;
+  const int outer_y = y + margin;
+  const int outer_w = std::max(20, resolved_outer_w - margin * 2);
+  const int outer_h = std::max(24, total_h - margin * 2);
+  const RectI outer{outer_x, outer_y, outer_w, outer_h};
+  draw_box_shadow(scene, outer, style);
+  draw_style_fill(scene, outer, style);
+  draw_rect_border(scene, outer, border, style.border_color,
+                   style.border_radius);
+
+  const int content_x = outer_x + border + padding;
+  const int content_y = outer_y + border + padding;
+  const int content_w = std::max(40, outer_w - (border + padding) * 2);
+  const int viewport_h = std::max(24, outer_h - (border + padding) * 2);
+  const RectI viewport_clip{content_x, content_y, content_w, viewport_h};
+  const Color viewport_surround =
+      parent_style != nullptr && parent_style->has_background
+          ? parent_style->background_color
+          : style.background_color;
+
+  constexpr int header_h = 42;
+  constexpr int row_h = 38;
+  constexpr int row_header_w = 84;
+  constexpr int min_text_column_w = 150;
+  constexpr int min_numeric_column_w = 132;
+  constexpr int max_column_w = 280;
+  const std::int64_t model_row_count =
+      std::max<std::int64_t>(0, model->row_count());
+  const auto* row_order = render_config.virtual_row_order;
+  const std::int64_t row_count =
+      row_order != nullptr
+          ? static_cast<std::int64_t>(row_order->size())
+          : model_row_count;
+  const std::int64_t column_count =
+      std::max<std::int64_t>(0, model->column_count());
+  const std::string table_target = node_instance_target(node, "table");
+
+  std::vector<int> column_widths;
+  std::int64_t data_width = 0;
+  bool cached_widths = false;
+  if (render_config.layout_cache != nullptr) {
+    const auto cached =
+        render_config.layout_cache->tables.find(table_target);
+    if (cached != render_config.layout_cache->tables.end()) {
+      const auto& entry = cached->second;
+      cached_widths =
+          entry.node_identity == reinterpret_cast<std::uintptr_t>(model) &&
+          entry.content_width == content_w &&
+          entry.column_count == static_cast<std::size_t>(column_count) &&
+          entry.column_widths.size() ==
+              static_cast<std::size_t>(column_count);
+      if (cached_widths) {
+        column_widths = entry.column_widths;
+      }
+    }
+  }
+  if (!cached_widths) {
+    column_widths.reserve(static_cast<std::size_t>(
+        std::min<std::int64_t>(column_count, 1000000)));
+    for (std::int64_t column = 0; column < column_count; ++column) {
+      const std::string name = model->column_name(column);
+      const int preferred =
+          layout_math_text(name, style.font_size).width + 24;
+      const int minimum = model->column_numeric(column)
+                              ? min_numeric_column_w
+                              : min_text_column_w;
+      column_widths.push_back(
+          std::clamp(preferred, minimum, max_column_w));
+    }
+    if (render_config.layout_cache != nullptr) {
+      render_config.layout_cache->tables[table_target] =
+          HtmlTableGeometryCacheEntry{
+              .node_identity = reinterpret_cast<std::uintptr_t>(model),
+              .viewport_width = content_w,
+              .content_width = content_w,
+              .row_count = static_cast<std::size_t>(model_row_count),
+              .column_count = static_cast<std::size_t>(column_count),
+              .column_widths = column_widths,
+          };
+    }
+  }
+  for (const int cell_w : column_widths) {
+    data_width = std::min<std::int64_t>(
+        static_cast<std::int64_t>(std::numeric_limits<int>::max()),
+        data_width + cell_w);
+  }
+
+  const int body_viewport_h = std::max(0, viewport_h - header_h);
+  const int scrollable_view_w = std::max(16, content_w - row_header_w);
+  const int max_scroll_x = static_cast<int>(std::max<std::int64_t>(
+      0, data_width - static_cast<std::int64_t>(scrollable_view_w)));
+  const std::int64_t body_height = std::min<std::int64_t>(
+      static_cast<std::int64_t>(std::numeric_limits<int>::max()),
+      row_count * static_cast<std::int64_t>(row_h));
+  const int max_scroll_y = static_cast<int>(std::max<std::int64_t>(
+      0, body_height - static_cast<std::int64_t>(body_viewport_h)));
+  int requested_scroll_x = render_config.table_scroll_x_px;
+  int requested_scroll_y = render_config.table_scroll_y_px;
+  if (render_config.table_scroll_offsets != nullptr) {
+    const auto offset =
+        render_config.table_scroll_offsets->find(table_target);
+    if (offset != render_config.table_scroll_offsets->end()) {
+      requested_scroll_x = offset->second.x;
+      requested_scroll_y = offset->second.y;
+    }
+  }
+  const int scroll_x = std::clamp(requested_scroll_x, 0, max_scroll_x);
+  const int scroll_y = std::clamp(requested_scroll_y, 0, max_scroll_y);
+
+  RectI interactive_viewport = viewport_clip;
+  if (render_config.render_stats != nullptr) {
+    auto& stats = *render_config.render_stats;
+    interactive_viewport =
+        intersect_rect(viewport_clip, stats.document_viewport_rect);
+    const int current_area =
+        stats.table_viewport_rect.width * stats.table_viewport_rect.height;
+    const int candidate_area =
+        interactive_viewport.width * interactive_viewport.height;
+    stats.has_table = true;
+    if (candidate_area >= current_area) {
+      stats.table_viewport_rect = interactive_viewport;
+      stats.table_max_scroll_x = max_scroll_x;
+      stats.table_max_scroll_y = max_scroll_y;
+      stats.table_body_row_height_px = row_h;
+    }
+  }
+
+  struct VisibleColumn {
+    std::int64_t index{0};
+    int x{0};
+    int width{0};
+  };
+  std::vector<VisibleColumn> visible_columns;
+  visible_columns.reserve(
+      static_cast<std::size_t>(std::max(2, content_w / min_numeric_column_w + 2)));
+  std::int64_t running_x = static_cast<std::int64_t>(content_x) +
+                           row_header_w - scroll_x;
+  const int scrollable_left = content_x + row_header_w;
+  const int scrollable_right = content_x + content_w;
+  for (std::int64_t column = 0; column < column_count; ++column) {
+    const int cell_w = column_widths[static_cast<std::size_t>(column)];
+    const std::int64_t x0 = running_x;
+    const std::int64_t x1 = x0 + cell_w;
+    if (x1 > scrollable_left && x0 < scrollable_right) {
+      visible_columns.push_back(VisibleColumn{
+          .index = column,
+          .x = static_cast<int>(x0),
+          .width = cell_w,
+      });
+    } else if (x0 >= scrollable_right) {
+      break;
+    }
+    running_x = x1;
+  }
+
+  const Color grid = Color::rgba(216, 222, 228, 255);
+  const Color header_fill = Color::rgba(220, 239, 238, 255);
+  const Color sticky_fill = Color::rgba(237, 246, 247, 255);
+  const Color sticky_header_fill = Color::rgba(204, 232, 230, 255);
+  const int font_size = std::max(10, style.font_size);
+  const int line_h = resolve_line_height_value(style.line_height, font_size);
+
+  const auto draw_cell_text =
+      [&](const std::string& source,
+          const int cell_x,
+          const int cell_y,
+          const int cell_w,
+          const bool header,
+          const bool missing) {
+        const int pad = 10;
+        const int text_w = std::max(16, cell_w - pad * 2);
+        const std::string text =
+            truncate_to_width(source, font_size, text_w);
+        const int text_y =
+            cell_y + std::max(2, ((header ? header_h : row_h) - line_h) / 2);
+        draw_text_lines(
+            scene, {text}, font_size, header ? 600 : 400, style.font_family,
+            missing ? Color::rgba(201, 54, 43, 255) : style.text_color,
+            cell_x + pad, text_y, line_h, header ? "center" : "left", text_w);
+      };
+
+  if (render_config.clip_table_viewport) {
+    scene.add(SetClipRectCommand{viewport_clip});
+  }
+  draw_rect_fill(scene,
+                 RectI{content_x, content_y, content_w, header_h},
+                 header_fill, std::min(style.border_radius, header_h / 2));
+  if (style.border_radius > 0) {
+    scene.add(FillRectCommand{
+        RectI{content_x, content_y + style.border_radius, content_w,
+              std::max(0, header_h - style.border_radius)},
+        header_fill});
+  }
+  for (const auto& column : visible_columns) {
+    scene.add(LineCommand{PointI{column.x, content_y},
+                          PointI{column.x, content_y + viewport_h}, 1, grid});
+    draw_cell_text(model->column_name(column.index), column.x, content_y,
+                   column.width, true, false);
+  }
+
+  const int body_y = content_y + header_h;
+  if (render_config.clip_table_viewport) {
+    scene.add(ClearClipRectCommand{});
+    scene.add(SetClipRectCommand{
+        RectI{content_x, body_y, content_w, body_viewport_h}});
+  }
+  const std::int64_t first_row =
+      row_h > 0 ? static_cast<std::int64_t>(scroll_y / row_h) : 0;
+  int row_y = body_y - (scroll_y % row_h);
+  const int body_bottom = body_y + body_viewport_h;
+  for (std::int64_t display_row = first_row;
+       display_row < row_count && row_y < body_bottom;
+       ++display_row, row_y += row_h) {
+    if (row_y + row_h <= body_y) {
+      continue;
+    }
+    const std::int64_t source_row =
+        row_order != nullptr
+            ? (*row_order)[static_cast<std::size_t>(display_row)]
+            : display_row;
+    const Color row_fill =
+        (display_row % 2 == 0) ? Color::rgba(255, 255, 255, 255)
+                               : Color::rgba(248, 250, 252, 255);
+    scene.add(FillRectCommand{
+        RectI{content_x, row_y, content_w, row_h}, row_fill});
+    scene.add(LineCommand{PointI{content_x, row_y},
+                          PointI{content_x + content_w, row_y}, 1, grid});
+    for (const auto& column : visible_columns) {
+      const VirtualTableCell value = model->cell(source_row, column.index);
+      if (value.missing) {
+        scene.add(FillRectCommand{
+            RectI{column.x + 1, row_y + 1,
+                  std::max(1, column.width - 2), std::max(1, row_h - 2)},
+            Color::rgba(255, 240, 238, 255)});
+      }
+      scene.add(LineCommand{PointI{column.x, row_y},
+                            PointI{column.x, row_y + row_h}, 1, grid});
+      draw_cell_text(value.text, column.x, row_y, column.width, false,
+                     value.missing);
+    }
+  }
+
+  row_y = body_y - (scroll_y % row_h);
+  for (std::int64_t display_row = first_row;
+       display_row < row_count && row_y < body_bottom;
+       ++display_row, row_y += row_h) {
+    if (row_y + row_h <= body_y) {
+      continue;
+    }
+    const std::int64_t source_row =
+        row_order != nullptr
+            ? (*row_order)[static_cast<std::size_t>(display_row)]
+            : display_row;
+    scene.add(FillRectCommand{
+        RectI{content_x, row_y, row_header_w, row_h}, sticky_fill});
+    scene.add(LineCommand{PointI{content_x, row_y},
+                          PointI{content_x + row_header_w, row_y}, 1, grid});
+    draw_cell_text(model->row_label(source_row), content_x, row_y,
+                   row_header_w, false, false);
+  }
+  if (row_count == 0) {
+    draw_text_lines(scene, {"No matching rows"}, font_size, 500,
+                    style.font_family, Color::rgba(99, 111, 124, 255),
+                    content_x + row_header_w + 12,
+                    body_y + std::max(6, (body_viewport_h - line_h) / 2),
+                    line_h, "left",
+                    std::max(20, content_w - row_header_w - 24));
+  }
+  if (render_config.clip_table_viewport) {
+    scene.add(ClearClipRectCommand{});
+    scene.add(SetClipRectCommand{viewport_clip});
+  }
+  scene.add(FillRectCommand{
+      RectI{content_x, content_y, row_header_w, header_h},
+      sticky_header_fill});
+  draw_cell_text(model->row_header(), content_x, content_y, row_header_w,
+                 true, false);
+  scene.add(LineCommand{
+      PointI{content_x + row_header_w, content_y},
+      PointI{content_x + row_header_w, content_y + viewport_h}, 2,
+      Color::rgba(79, 137, 148, 255)});
+  mask_rounded_viewport_corners(scene, viewport_clip, style.border_radius,
+                                viewport_surround, true, true);
+  if (render_config.clip_table_viewport) {
+    scene.add(ClearClipRectCommand{});
+  }
+
+  RectI horizontal_track{};
+  RectI horizontal_thumb{};
+  RectI vertical_track{};
+  RectI vertical_thumb{};
+  if (max_scroll_x > 0) {
+    const int track_h = 10;
+    const int track_y =
+        outer_y + outer_h - std::max(14, padding / 2 + track_h);
+    const int track_w = std::max(36, scrollable_view_w - 6);
+    const int track_x = content_x + row_header_w + 3;
+    horizontal_track = RectI{track_x, track_y, track_w, track_h};
+    const double ratio =
+        static_cast<double>(scrollable_view_w) /
+        static_cast<double>(std::max<std::int64_t>(1, data_width));
+    const int thumb_w =
+        std::min(track_w, std::max(24, static_cast<int>(
+            std::lround(static_cast<double>(track_w) * ratio))));
+    const int thumb_x =
+        track_x + static_cast<int>(std::lround(
+                      static_cast<double>(track_w - thumb_w) * scroll_x /
+                      std::max(1, max_scroll_x)));
+    horizontal_thumb = RectI{thumb_x, track_y, thumb_w, track_h};
+    if (render_config.draw_scrollbars) {
+      draw_rect_fill(scene, horizontal_track,
+                     Color::rgba(218, 224, 231, 238), 5);
+      draw_rect_fill(scene, horizontal_thumb,
+                     Color::rgba(94, 111, 130, 255), 5);
+    }
+  }
+  if (max_scroll_y > 0) {
+    const int track_w = 10;
+    const int track_x =
+        outer_x + outer_w - std::max(14, padding / 2 + track_w);
+    const int track_h = std::max(36, body_viewport_h - 6);
+    const int track_y = body_y + 3;
+    vertical_track = RectI{track_x, track_y, track_w, track_h};
+    const double ratio =
+        static_cast<double>(body_viewport_h) /
+        static_cast<double>(std::max<std::int64_t>(1, body_height));
+    const int thumb_h =
+        std::min(track_h, std::max(24, static_cast<int>(
+            std::lround(static_cast<double>(track_h) * ratio))));
+    const int thumb_y =
+        track_y + static_cast<int>(std::lround(
+                      static_cast<double>(track_h - thumb_h) * scroll_y /
+                      std::max(1, max_scroll_y)));
+    vertical_thumb = RectI{track_x, thumb_y, track_w, thumb_h};
+    if (render_config.draw_scrollbars) {
+      draw_rect_fill(scene, vertical_track,
+                     Color::rgba(218, 224, 231, 238), 5);
+      draw_rect_fill(scene, vertical_thumb,
+                     Color::rgba(94, 111, 130, 255), 5);
+    }
+  }
+  if (render_config.render_stats != nullptr) {
+    render_config.render_stats->table_scroll_regions.push_back(
+        HtmlScrollRegion{
+            .target = table_target,
+            .viewport_rect = interactive_viewport,
+            .max_scroll_x = max_scroll_x,
+            .max_scroll_y = max_scroll_y,
+            .horizontal_track_rect = horizontal_track,
+            .horizontal_thumb_rect = horizontal_thumb,
+            .vertical_track_rect = vertical_track,
+            .vertical_thumb_rect = vertical_thumb,
+        });
+  }
+  return total_h;
+}
+
 int render_table(Scene& scene,
                  const HtmlDocument& document,
                  const HtmlNode& node,
@@ -2592,6 +2984,10 @@ int render_table(Scene& scene,
                  const ResolvedStyle* parent_style,
                  const int viewport_width) {
   const ResolvedStyle style = resolve_style(document, node, lineage, parent_style, viewport_width);
+  if (render_config.virtual_table_model != nullptr) {
+    return render_virtual_table(scene, node, x, y, width, bottom, style,
+                                render_config, parent_style);
+  }
   const int total_h = measure_table_height(document, node, width, style, lineage, viewport_width);
   if (total_h <= 0 || y >= bottom) {
     return 0;

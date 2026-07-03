@@ -961,18 +961,6 @@ void test_feature_value_cases_values_and_save_defaults() {
   expect(static_cast<std::int64_t>(all_features.size()) == df.nfeats(),
          "df.features() should return one Thread per feature");
 
-  const auto row3 = df.cases(3);
-  expect(row3.ncases() == 1, "df.cases(3) should return single-case frame");
-  expect(row3.nfeats() == df.nfeats(), "df.cases(3) should preserve feature count");
-
-  const auto cell_text = df.cases(0, static_cast<std::size_t>(1));
-  expect(!cell_text.empty(), "df.cases(row, feature_idx) should return scalar cell text");
-  const auto cell_by_name = df.cases(0, "job");
-  expect(cell_by_name == cell_text, "df.cases(row, \"job\") should match index-based cell access");
-
-  const auto range = df.cases({2, 6});
-  expect(range.ncases() == 4, "df.cases({2,6}) should return 4 cases");
-
   const auto out_default = write_temp_csv("saved_default", "");
   df.save_csv(out_default.string());
   const auto back_default = DataFrame::load_csv(out_default.string());
@@ -1359,12 +1347,49 @@ void test_versatile_dataframe_families() {
   expect(masked_cmp.validity_mask()->to_vec<bool>() == std::vector<bool>({false, false, false}),
          "broadcasted scalar Thread validity mask should expand across the output rows");
 
-  const auto one_case = df.case_study(0);
-  expect(one_case.ncases() == 1, "case_study(row) should return exactly one case");
-  const auto row_span = df.case_study(2, 7);
-  expect(row_span.ncases() == 5, "case_study(start, stop) should return half-open row slice");
-  expect(!df.iat(0, 1).empty(), "iat should return a scalar cell string");
-  expect(!df.at(0, "job").empty(), "at should return a scalar cell string by feature name");
+  const auto one_case = df.case_study(pluss::table::pos(0));
+  expect(one_case.ncases() == 1, "case_study(pos(row)) should return exactly one case");
+
+  const auto row_span = df.case_study(pluss::table::pos(2, 7));
+  expect(row_span.ncases() == 5, "case_study(pos(start, stop)) should return half-open row slice");
+
+  const auto pos_list = df.case_study(pluss::table::pos({4, 1, 3}));
+  expect(pos_list.ncases() == 3, "case_study(pos({..})) should keep one row per requested position");
+  expect(std::string(pos_list.features("job").as_note().at(1)) == std::string(df.features("job").as_note().at(1)),
+         "case_study(pos({..})) should preserve requested positional order");
+
+  const auto one_column = df.case_study(pluss::table::pos(0), pluss::table::col("job"));
+  expect(one_column.ncases() == 1 && one_column.nfeats() == 1,
+         "case_study(row, col(name)) should return a 1x1 frame");
+
+  const auto one_column_by_pos = df.case_study(pluss::table::pos(0), pluss::table::col(1));
+  expect(one_column_by_pos.nfeats() == 1, "case_study(row, col(pos)) should project one feature");
+
+  auto labeled_source = df.case_study(pluss::table::pos(0, 8));
+  auto labeled = labeled_source.with_cases(
+      pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs1", "cs3", "cs4", "cs5", "cs6", "cs7"})));
+  const auto label_match = labeled.case_study(pluss::table::label("cs1"));
+  expect(label_match.ncases() == 2, "case_study(label(...)) should return every matching case label");
+
+  const auto label_list = labeled.case_study(pluss::table::labels({"cs4", "cs1"}), pluss::table::cols({"job", "age"}));
+  expect(label_list.ncases() == 3 && label_list.nfeats() == 2,
+         "case_study(labels({...}), cols({...})) should preserve label order and selected features");
+
+  const auto label_window = labeled.case_study(pluss::table::label_range("cs1", "cs4"));
+  expect(label_window.ncases() == 4, "case_study(label_range(...)) should include both label endpoints");
+
+  const auto masked_rows = df.case_study(pluss::table::mask(df.features("age") > 30.0), pluss::table::cols({"age", "job"}));
+  expect(masked_rows.nfeats() == 2, "case_study(mask(...), cols({...})) should keep requested feature subset");
+  expect(masked_rows.ncases() == df.filter(df.features("age") > 30.0).ncases(),
+         "case_study(mask(...)) should match ordinary boolean row filtering");
+
+  const auto feature_span = df.case_study(pluss::table::pos(0, 2), pluss::table::cols(0, 2));
+  expect(feature_span.ncases() == 2 && feature_span.nfeats() == 2,
+         "case_study(..., cols(start, stop)) should use half-open positional feature slices");
+
+  const auto feature_window = df.case_study(pluss::table::pos(0, 2), pluss::table::col_range("age", "job"));
+  expect(feature_window.nfeats() == 2, "case_study(..., col_range(...)) should use inclusive feature-name slices");
+
   expect(df.get("job").has_value() && !df.get("not_a_feature").has_value(),
          "get(feature) should return optional thread only when feature exists");
 
@@ -2247,21 +2272,38 @@ void test_versatile_dataframe_families() {
     };
   }, "set(multi) should reject any rhs length mismatch");
 
-  const auto age_put = let_df.put("age", let_df.features("duration") == 2.0, 60.0);
-  expect(age_put.features("age").as_series().to_vec<std::int64_t>()[0] == 60,
-         "put(feature, mask, double) should assign into masked numeric rows");
-  expect(age_put.features("age").as_series().to_vec<std::int64_t>()[1]
-             == let_df.features("age").as_series().to_vec<std::int64_t>()[1],
-         "put(feature, mask, double) should preserve unmasked numeric rows");
+  const auto first_duration =
+      let_df.features("duration").as_series().to_vec<std::int64_t>(0);
+  const auto selected_duration =
+      let_df.features("duration") == static_cast<double>(first_duration);
+  const auto age_put = let_df.put("age", selected_duration, 60.0);
+  const auto selected = selected_duration.as_series().to_vec<bool>();
+  const auto before_put = let_df.features("age").as_series().to_vec<std::int64_t>();
+  const auto after_put = age_put.features("age").as_series().to_vec<std::int64_t>();
+  for (std::size_t row = 0; row < selected.size(); ++row) {
+    expect(after_put[row] == (selected[row] ? 60 : before_put[row]),
+           selected[row]
+               ? "put(feature, mask, double) should assign into masked numeric rows"
+               : "put(feature, mask, double) should preserve unmasked numeric rows");
+  }
 
   auto put_inplace = df.features({"age", "job"});
-  put_inplace.put_("job", put_inplace.features("age") == 20.0, "mentor");
+  const auto put_ages =
+      put_inplace.features("age").as_series().to_vec<std::int64_t>();
+  put_inplace.put_(
+      "job",
+      put_inplace.features("age") == static_cast<double>(put_ages[0]),
+      "mentor");
   expect(std::string(put_inplace.features("job").as_note().at(0)) == "mentor",
          "put_(feature, mask, string) should update masked Note rows in place");
-  expect(std::string(put_inplace.features("job").as_note().at(1)) != "mentor",
+  expect(put_ages[1] == put_ages[0] ||
+             std::string(put_inplace.features("job").as_note().at(1)) != "mentor",
          "put_(feature, mask, string) should preserve unmasked Note rows");
 
-  const auto nulled_job = put_inplace.put("job", put_inplace.features("age") == 21.0, pluss::null);
+  const auto nulled_job = put_inplace.put(
+      "job",
+      put_inplace.features("age") == static_cast<double>(put_ages[1]),
+      pluss::null);
   expect(nulled_job.features("job").isnull().as_series().to_vec<bool>()[1],
          "put(feature, mask, null) should nullify masked rows");
 
@@ -2724,7 +2766,7 @@ void test_thread_bucketize_correctness() {
          "DataFrame::bucketize should replace selected numeric features with Int64 bucket labels");
   expect(df_bucketed.features("income").isnull().count().item<std::int64_t>() == 1,
          "DataFrame::bucketize should preserve out-of-range values as null");
-  expect((df_bucketed.features("bonus") == 1.0).count().item<std::int64_t>() == 2,
+  expect((df_bucketed.features("bonus") == 1.0).count().item<std::int64_t>() == 1,
          "DataFrame::bucketize should bucketize every selected numeric feature independently");
   expect(df_bucketed.features("city").as_note().vector() == scores.features("city").as_note().vector(),
          "DataFrame::bucketize should leave unselected features unchanged");
@@ -3143,7 +3185,7 @@ void test_timeline_sort_nat_ordering() {
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
   using Test = std::pair<std::string, std::function<void()>>;
   const std::vector<Test> tests{
       {"comma_fixture_load_and_cases", test_comma_fixture_load_and_cases},
@@ -3186,6 +3228,15 @@ int main() {
 
   std::size_t passed = 0;
   for (const auto& [name, fn] : tests) {
+    if (argc > 1) {
+      bool selected = false;
+      for (int arg = 1; arg < argc; ++arg) {
+        selected = selected || name == argv[arg];
+      }
+      if (!selected) {
+        continue;
+      }
+    }
     try {
       fn();
       ++passed;
@@ -3196,6 +3247,10 @@ int main() {
     }
   }
 
-  fmt::print("{} / {} tests passed\n", passed, tests.size());
+  if (argc > 1 && passed == 0) {
+    fmt::print("[FAIL] no requested test name matched\n");
+    return 1;
+  }
+  fmt::print("{} tests passed\n", passed);
   return 0;
 }

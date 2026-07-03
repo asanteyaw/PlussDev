@@ -9,11 +9,11 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
-    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=705d315b" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=0e2bb6cf" />
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/layout.js?v=014eaf41"></script>
+    <script src="../_static/layout.js?v=a19b3cd6"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part V: DataFrame Workflows" href="part05_dataframe_workflows.html" />
@@ -483,6 +483,109 @@ becomes a <code class="docutils literal notranslate"><span class="pre">DataFrame
 <p>Raw batches keep strings/notes close to file contents. Neutral batches carry
 <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values but do not own a frame.</p>
 </section>
+<section id="csvcasereader-next">
+<h2><code class="docutils literal notranslate"><span class="pre">CsvCaseReader::next</span></code><a class="headerlink" href="#csvcasereader-next" title="Link to this heading">¶</a></h2>
+<section id="api-signature">
+<h3>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CsvCaseReader::next(output: DataFrame&amp;) -&gt; bool
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<p>Reads the next bounded case batch. The first emitted batch establishes the
+inferred feature kinds and numeric dtypes. A later inferred schema change fails
+if conversion to that schema would discard an observed value; compatible batches,
+including all-null batches, are converted to the established schema. Supply
+<code class="docutils literal notranslate"><span class="pre">ReadCsvOptions::dtype</span></code> when a source column contains mixed lexical forms.</p>
+</section>
+<section id="inputs">
+<h3>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">output:</span> <span class="pre">DataFrame&amp;</span></code>
+Destination replaced with the next batch when the method returns <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> when a batch was emitted and <code class="docutils literal notranslate"><span class="pre">false</span></code> after the source is exhausted.</p>
+</section>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Constructor <code class="docutils literal notranslate"><span class="pre">case_batch_size</span></code> controls the maximum cases per batch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ReadCsvOptions::dtype</span></code> fixes feature types across every batch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ReadCsvOptions::ncases</span></code> limits the total cases emitted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skipcases</span></code> and <code class="docutils literal notranslate"><span class="pre">skipfooter</span></code> are rejected because they cannot be honored
+predictably by this streaming contract.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
+<p>Example 1: read every batch.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">CsvCaseReader</span><span class="w"> </span><span class="n">reader</span><span class="p">(</span><span class="s">&quot;data.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">batch</span><span class="p">;</span>
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">batch</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">batch</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="expected-output">
+<h4>Expected output<a class="headerlink" href="#expected-output" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Each successful iteration contains at most 4096 cases; the loop ends at EOF.
+</pre></div>
+</div>
+<p>Example 2: enforce a text schema.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">ReadCsvOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">dtype</span><span class="p">[</span><span class="s">&quot;account&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;string&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">CsvCaseReader</span><span class="w"> </span><span class="n">reader</span><span class="p">(</span><span class="s">&quot;data.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2048</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h4>Expected output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>account is Note-backed in every emitted batch.
+</pre></div>
+</div>
+<p>Example 3: enforce a numeric schema.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">ReadCsvOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">dtype</span><span class="p">[</span><span class="s">&quot;amount&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;float64&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">CsvCaseReader</span><span class="w"> </span><span class="n">reader</span><span class="p">(</span><span class="s">&quot;data.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2048</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h4>Expected output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>amount is Float64 Series-backed in every emitted batch.
+</pre></div>
+</div>
+<p>Example 4: stop after a global case limit.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">ReadCsvOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">ncases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10&#39;000</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">CsvCaseReader</span><span class="w"> </span><span class="n">reader</span><span class="p">(</span><span class="s">&quot;data.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h4>Expected output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>reader.cases_read() never exceeds 10000.
+</pre></div>
+</div>
+<p>Example 5: detect unsafe inference drift.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// value contains 1, 2, then &quot;three&quot; in a later batch.</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">CsvCaseReader</span><span class="w"> </span><span class="n">reader</span><span class="p">(</span><span class="s">&quot;mixed.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">batch</span><span class="p">;</span>
+<span class="n">reader</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">batch</span><span class="p">);</span>
+<span class="n">reader</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">batch</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h4>Expected output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The second call fails and asks for ReadCsvOptions::dtype.
+</pre></div>
+</div>
+</section>
+</section>
+</section>
 <section id="url-inputs">
 <h2>URL inputs<a class="headerlink" href="#url-inputs" title="Link to this heading">¶</a></h2>
 <p>When the SDK has URL loader support, <code class="docutils literal notranslate"><span class="pre">load_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">load_txt</span></code>, and <code class="docutils literal notranslate"><span class="pre">load_excel</span></code>
@@ -622,6 +725,9 @@ production exports should make these choices visible.</p>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics_window_api_reference.html">Stabilization, Statistics, and Window API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html">ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>

@@ -13,24 +13,30 @@ This page documents the public `ColumnRef` helper returned by DataFrame column-r
 #### API Signature
 
 ```cpp
-Thread head(self, std::int64_t n) const
+ColumnRef::head(n: std::int64_t) -> Thread
 ```
 
-#### Parameters
+#### Notes
+
+Returns the first `n` values from the referenced column as a thread.
+
+#### Inputs
 
 `n` : `std::int64_t`
     Number of leading values to preview from the referenced feature.
 
-#### Returns
+#### Output
 
 `Thread`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Returns the first `n` values from the referenced column as a thread.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -43,10 +49,11 @@ auto ref = df.feature_ref("sales");
 auto out = ref.head(2);
 ```
 
+##### Expected output
+
 ```text
 [100.0, 120.0]
 ```
-
 
 ## M
 
@@ -55,23 +62,29 @@ auto out = ref.head(2);
 #### API Signature
 
 ```cpp
-pluss::Series mean(self) const
+ColumnRef::mean() -> pluss::Series
 ```
 
-#### Parameters
+#### Notes
+
+Computes the mean of the referenced numeric column.
+
+#### Inputs
 
 `None`
 
-#### Returns
+#### Output
 
 `pluss::Series`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Computes the mean of the referenced numeric column.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -84,10 +97,11 @@ auto ref = df.feature_ref("sales");
 auto out = ref.mean();
 ```
 
+##### Expected output
+
 ```text
 103.3
 ```
-
 
 ## N
 
@@ -96,23 +110,29 @@ auto out = ref.mean();
 #### API Signature
 
 ```cpp
-const std::string& name(self) const
+ColumnRef::name() -> const std::string&
 ```
 
-#### Parameters
+#### Notes
+
+Returns the feature name associated with this column reference.
+
+#### Inputs
 
 `None`
 
-#### Returns
+#### Output
 
 `const std::string&`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Returns the feature name associated with this column reference.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -125,10 +145,11 @@ auto ref = df.feature_ref("sales");
 auto out = ref.name();
 ```
 
+##### Expected output
+
 ```text
 sales
 ```
-
 
 ## T
 
@@ -137,23 +158,29 @@ sales
 #### API Signature
 
 ```cpp
-const Thread& thread(self) const
+ColumnRef::thread() -> const Thread&
 ```
 
-#### Parameters
+#### Notes
+
+Returns the referenced column as a `Thread` object.
+
+#### Inputs
 
 `None`
 
-#### Returns
+#### Output
 
 `const Thread&`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Returns the referenced column as a `Thread` object.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -165,6 +192,8 @@ auto ref = df.feature_ref("sales");
 
 auto out = ref.thread();
 ```
+
+##### Expected output
 
 ```text
 [10.0, 20.0, 30.0]
@@ -183,23 +212,29 @@ auto out = ref.thread();
 #### API Signature
 
 ```cpp
-ThreadValue value(self) const
+ColumnRef::value() -> ThreadValue
 ```
 
-#### Parameters
+#### Notes
+
+Returns one scalar-like wrapper for the first referenced value, which is useful when you need typed single-cell access.
+
+#### Inputs
 
 `None`
 
-#### Returns
+#### Output
 
 `ThreadValue`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Returns one scalar-like wrapper for the first referenced value, which is useful when you need typed single-cell access.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -211,6 +246,8 @@ auto ref = df.feature_ref("sales");
 
 auto out = ref.value();
 ```
+
+##### Expected output
 
 ```text
 100.0
@@ -227,23 +264,29 @@ auto out = ref.value();
 #### API Signature
 
 ```cpp
-Thread values(self) const
+ColumnRef::values() -> Thread
 ```
 
-#### Parameters
+#### Notes
+
+Materializes the full referenced column as a standalone `Thread` so you can reuse it outside the parent frame.
+
+#### Inputs
 
 `None`
 
-#### Returns
+#### Output
 
 `Thread`
     Value produced by this call.
 
-#### What It Does
+#### Options
 
-Materializes the full referenced column as a standalone `Thread` so you can reuse it outside the parent frame.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -255,6 +298,8 @@ auto ref = df.feature_ref("sales");
 
 auto out = ref.values();
 ```
+
+##### Expected output
 
 ```text
 [10.0, 20.0, 30.0]

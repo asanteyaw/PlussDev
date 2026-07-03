@@ -461,6 +461,115 @@ auto batch = pluss::loader::read_csv_batch("data.csv", {{"ncases", 100}});
 Raw batches keep strings/notes close to file contents. Neutral batches carry
 `Thread` values but do not own a frame.
 
+## `CsvCaseReader::next`
+
+### API Signature
+
+```text
+CsvCaseReader::next(output: DataFrame&) -> bool
+```
+
+### Notes
+
+Reads the next bounded case batch. The first emitted batch establishes the
+inferred feature kinds and numeric dtypes. A later inferred schema change fails
+if conversion to that schema would discard an observed value; compatible batches,
+including all-null batches, are converted to the established schema. Supply
+`ReadCsvOptions::dtype` when a source column contains mixed lexical forms.
+
+### Inputs
+
+`output: DataFrame&`
+    Destination replaced with the next batch when the method returns `true`.
+
+### Output
+
+Returns `true` when a batch was emitted and `false` after the source is exhausted.
+
+### Options
+
+- Constructor `case_batch_size` controls the maximum cases per batch.
+- `ReadCsvOptions::dtype` fixes feature types across every batch.
+- `ReadCsvOptions::ncases` limits the total cases emitted.
+- `skipcases` and `skipfooter` are rejected because they cannot be honored
+  predictably by this streaming contract.
+
+### Examples
+
+Example 1: read every batch.
+
+```cpp
+pluss::loader::CsvCaseReader reader("data.csv", 4096);
+pluss::table::DataFrame batch;
+while (reader.next(batch)) {
+    batch.show();
+}
+```
+
+#### Expected output
+
+```text
+Each successful iteration contains at most 4096 cases; the loop ends at EOF.
+```
+
+Example 2: enforce a text schema.
+
+```cpp
+pluss::loader::ReadCsvOptions options;
+options.dtype["account"] = "string";
+pluss::loader::CsvCaseReader reader("data.csv", 2048, options);
+```
+
+#### Expected output
+
+```text
+account is Note-backed in every emitted batch.
+```
+
+Example 3: enforce a numeric schema.
+
+```cpp
+pluss::loader::ReadCsvOptions options;
+options.dtype["amount"] = "float64";
+pluss::loader::CsvCaseReader reader("data.csv", 2048, options);
+```
+
+#### Expected output
+
+```text
+amount is Float64 Series-backed in every emitted batch.
+```
+
+Example 4: stop after a global case limit.
+
+```cpp
+pluss::loader::ReadCsvOptions options;
+options.ncases = 10'000;
+pluss::loader::CsvCaseReader reader("data.csv", 1024, options);
+```
+
+#### Expected output
+
+```text
+reader.cases_read() never exceeds 10000.
+```
+
+Example 5: detect unsafe inference drift.
+
+```cpp
+// value contains 1, 2, then "three" in a later batch.
+pluss::loader::CsvCaseReader reader("mixed.csv", 2);
+pluss::table::DataFrame batch;
+reader.next(batch);
+reader.next(batch);
+```
+
+#### Expected output
+
+```text
+The second call fails and asks for ReadCsvOptions::dtype.
+```
+
 ## URL inputs
 
 When the SDK has URL loader support, `load_csv`, `load_txt`, and `load_excel`

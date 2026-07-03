@@ -11,10 +11,14 @@ This page documents the full public `Aisle` surface for depth-stacked registries
 #### Signature
 
 ```cpp
-Aisle apply_slot(self, std::string_view key, const std::function<Slot(const Slot&)>& fn) const
+Aisle::apply_slot(key: std::string_view, fn: const std::function<Slot(const Slot&)>&) -> Aisle
 ```
 
-#### Parameters
+#### Notes
+
+Applies a slot transform to one named key inside every registry and returns the updated aisle.
+
+#### Inputs
 
 `key` : `std::string_view`
     Name of the target slot or stream.
@@ -22,14 +26,14 @@ Aisle apply_slot(self, std::string_view key, const std::function<Slot(const Slot
 `fn` : `const std::function<Slot(const Slot&)>&`
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Returns
+#### Output
 
 `Aisle`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Applies a slot transform to one named key inside every registry and returns the updated aisle.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -45,7 +49,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.apply_slot("ids", [](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -63,21 +67,25 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-pluss::kindle::Archive as_kindle(self) const
+Aisle::as_kindle() -> pluss::kindle::Archive
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::kindle::Archive`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::kindle::Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -93,7 +101,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.as_kindle();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -111,22 +119,26 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-Aisle concat_depth(self, const Aisle& other) const
+Aisle::concat_depth(other: const Aisle&) -> Aisle
 ```
-
-#### Parameters
-
-`other` : `const Aisle&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Returns
-
-`Aisle`
-    Value produced by this call.
 
 #### Notes
 
 Appends the registries from another aisle onto the current depth axis.
+
+#### Inputs
+
+`other` : `const Aisle&`
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+#### Output
+
+`Aisle`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -142,7 +154,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.concat_depth(aisle);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -162,21 +174,25 @@ depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-bool defined(self) const
+Aisle::defined() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -192,7 +208,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.defined();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true
@@ -203,21 +219,25 @@ true
 #### Signature
 
 ```cpp
-std::int64_t depth(self) const
+Aisle::depth() -> std::int64_t
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
 
 #### Notes
 
 Returns a size/count summary for the current object without changing it.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -233,7 +253,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.depth();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 2
@@ -244,21 +264,25 @@ auto out = aisle.depth();
 #### Signature
 
 ```cpp
-bool empty(self) const
+Aisle::empty() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the current object has no rows, entries, slots, or depth items.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -274,7 +298,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.empty();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 false
@@ -285,22 +309,26 @@ false
 #### Signature
 
 ```cpp
-static Aisle from_kindle(const pluss::kindle::Archive& archive)
+Aisle::from_kindle(archive: const pluss::kindle::Archive&) -> Aisle
 ```
-
-#### Parameters
-
-`archive` : `const pluss::kindle::Archive&`
-    Archive payload supplied to this overload.
-
-#### Returns
-
-`Aisle`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`archive` : `const pluss::kindle::Archive&`
+    Archive payload supplied to this overload.
+
+#### Output
+
+`Aisle`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -318,7 +346,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = pluss::bundle::Aisle::from_kindle(archive);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -330,22 +358,26 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-Aisle head(self, std::int64_t n) const
+Aisle::head(n: std::int64_t) -> Aisle
 ```
-
-#### Parameters
-
-`n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
-
-#### Returns
-
-`Aisle`
-    Value produced by this call.
 
 #### Notes
 
 Returns the first `n` registries from the aisle depth axis.
+
+#### Inputs
+
+`n` : `std::int64_t`
+    Number of rows, entries, or depth items to keep in the preview.
+
+#### Output
+
+`Aisle`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -361,7 +393,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.head(1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -373,21 +405,25 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-pluss::kindle::Archive kindelize(self) const
+Aisle::kindelize() -> pluss::kindle::Archive
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::kindle::Archive`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::kindle::Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -403,7 +439,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.kindelize();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -415,21 +451,25 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-const std::optional<Slot>& labels(self) const
+Aisle::labels() -> const std::optional<Slot>&
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::optional<Slot>&`
-    Value produced by this call.
 
 #### Notes
 
 Returns the current labels used to address fields, slots, rows, or depth items.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`const std::optional<Slot>&`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -445,7 +485,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.labels();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 ["train", "test"]
@@ -456,22 +496,26 @@ auto out = aisle.labels();
 #### Signature
 
 ```cpp
-Aisle map(self, const std::function<Registry(const Registry&)>& fn) const
+Aisle::map(fn: const std::function<Registry(const Registry&)>&) -> Aisle
 ```
-
-#### Parameters
-
-`fn` : `const std::function<Registry(const Registry&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Returns
-
-`Aisle`
-    Value produced by this call.
 
 #### Notes
 
 Applies the same function to each registry and returns the transformed aisle.
+
+#### Inputs
+
+`fn` : `const std::function<Registry(const Registry&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+#### Output
+
+`Aisle`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -487,7 +531,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.map([](const pluss::bundle::Registry& registry) { return registry; });
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -499,21 +543,25 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-const std::vector<Registry>& registries(self) const
+Aisle::registries() -> const std::vector<Registry>&
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::vector<Registry>&`
-    Borrowed collection of registries.
 
 #### Notes
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`const std::vector<Registry>&`
+    Borrowed collection of registries.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -529,7 +577,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.registries();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 [Registry(depth0), Registry(depth1)]
@@ -540,22 +588,26 @@ auto out = aisle.registries();
 #### Signature
 
 ```cpp
-Registry registry(self, std::int64_t i) const
+Aisle::registry(i: std::int64_t) -> Registry
 ```
-
-#### Parameters
-
-`i` : `std::int64_t`
-    Zero-based positional index used by this overload.
-
-#### Returns
-
-`Registry`
-    Value produced by this call.
 
 #### Notes
 
 Fetches one value, member, or slice from the current object without changing the source object.
+
+#### Inputs
+
+`i` : `std::int64_t`
+    Zero-based positional index used by this overload.
+
+#### Output
+
+`Registry`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -571,7 +623,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.registry(0);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 ids  -> Slot([Series(1), Series(2), Series(3)])
@@ -583,22 +635,26 @@ city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 #### Signature
 
 ```cpp
-Aisle select(self, std::initializer_list<std::string_view> keys) const
+Aisle::select(keys: std::initializer_list<std::string_view>) -> Aisle
 ```
-
-#### Parameters
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Returns
-
-`Aisle`
-    Value produced by this call.
 
 #### Notes
 
 Keeps only the named keys inside every registry in the aisle.
+
+#### Inputs
+
+`keys` : `std::initializer_list<std::string_view>`
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+#### Output
+
+`Aisle`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -614,7 +670,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.select({"ids"});
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -626,22 +682,26 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-void show(self, std::ostream& os) const
+Aisle::show(os: std::ostream&) -> void
 ```
-
-#### Parameters
-
-`os` : `std::ostream&`
-    Destination output stream used instead of the default display or print target.
-
-#### Returns
-
-`void`
-    Performs the side effect and returns no value.
 
 #### Notes
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### Inputs
+
+`os` : `std::ostream&`
+    Destination output stream used instead of the default display or print target.
+
+#### Output
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -657,7 +717,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 aisle.show(std::cout);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -669,10 +729,14 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-Aisle slice(self, std::int64_t start, std::int64_t stop) const
+Aisle::slice(start: std::int64_t, stop: std::int64_t) -> Aisle
 ```
 
-#### Parameters
+#### Notes
+
+Returns a contiguous depth slice `[start, stop)` from the aisle.
+
+#### Inputs
 
 `start` : `std::int64_t`
     Inclusive starting position of the slice.
@@ -680,14 +744,14 @@ Aisle slice(self, std::int64_t start, std::int64_t stop) const
 `stop` : `std::int64_t`
     Exclusive ending position of the slice.
 
-#### Returns
+#### Output
 
 `Aisle`
     Value produced by this call.
 
-#### Notes
+#### Options
 
-Returns a contiguous depth slice `[start, stop)` from the aisle.
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -703,7 +767,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.slice(0, 1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -715,22 +779,26 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-Aisle tail(self, std::int64_t n) const
+Aisle::tail(n: std::int64_t) -> Aisle
 ```
-
-#### Parameters
-
-`n` : `std::int64_t`
-    Number of rows, entries, or depth items to keep in the preview.
-
-#### Returns
-
-`Aisle`
-    Value produced by this call.
 
 #### Notes
 
 Returns the last `n` registries from the aisle depth axis.
+
+#### Inputs
+
+`n` : `std::int64_t`
+    Number of rows, entries, or depth items to keep in the preview.
+
+#### Output
+
+`Aisle`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -746,7 +814,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.tail(1);
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -758,21 +826,25 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-std::string to_json(self) const
+Aisle::to_json() -> std::string
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::string`
-    Rendered string result.
 
 #### Notes
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::string`
+    Rendered string result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -788,7 +860,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.to_json();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -800,21 +872,25 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-pluss::kindle::Archive to_kindle(self) const
+Aisle::to_kindle() -> pluss::kindle::Archive
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::kindle::Archive`
-    Value produced by this call.
 
 #### Notes
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`pluss::kindle::Archive`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -830,7 +906,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.to_kindle();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -842,21 +918,25 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 #### Signature
 
 ```cpp
-std::string to_string(self) const
+Aisle::to_string() -> std::string
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::string`
-    Rendered string result.
 
 #### Notes
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::string`
+    Rendered string result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -872,7 +952,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.to_string();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -884,21 +964,25 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 #### Signature
 
 ```cpp
-bool unique(self) const
+Aisle::unique() -> bool
 ```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
 
 #### Notes
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -914,7 +998,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.unique();
 ```
 
-#### Output
+#### Expected output
 
 ```text
 true

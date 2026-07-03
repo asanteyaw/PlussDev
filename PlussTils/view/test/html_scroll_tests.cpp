@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "pluss/tils/view/html_window.h"
 #include "pluss/tils/view/window.h"
 
 namespace {
@@ -746,6 +748,101 @@ void test_table_body_values_share_left_edge() {
          "left-aligned missing values should retain their special cell color");
 }
 
+void test_virtual_table_only_materializes_viewport_cells() {
+  using namespace pluss::view;
+  using namespace pluss::view::window;
+
+  class CountingTable final : public VirtualTableModel {
+   public:
+    std::int64_t row_count() const noexcept override { return 5000000; }
+    std::int64_t column_count() const noexcept override { return 1000; }
+    std::string row_header() const override { return "case"; }
+    std::string row_label(const std::int64_t row) const override {
+      return "row-" + std::to_string(row);
+    }
+    std::string column_name(const std::int64_t column) const override {
+      return "feature_" + std::to_string(column);
+    }
+    bool column_numeric(std::int64_t) const noexcept override { return true; }
+    VirtualTableCell cell(const std::int64_t row,
+                          const std::int64_t column) const override {
+      ++cell_calls;
+      min_cell_row = std::min(min_cell_row, row);
+      max_cell_row = std::max(max_cell_row, row);
+      return VirtualTableCell{
+          .text = std::to_string(row * 1000 + column),
+          .missing = false,
+      };
+    }
+    bool row_matches(const std::int64_t row,
+                     const std::string_view query) const override {
+      return row_label(row).find(query) != std::string::npos;
+    }
+    mutable int cell_calls{0};
+    mutable std::int64_t min_cell_row{
+        std::numeric_limits<std::int64_t>::max()};
+    mutable std::int64_t max_cell_row{0};
+  } model;
+
+  const auto document = parse_html_document(R"HTML(
+<!doctype html>
+<html><head><style>
+  body { margin:0; }
+  table { width:100%; height:400px; border:1px solid #c8d4df; }
+</style></head><body>
+  <table id="stress-table" data-virtual-table="true"></table>
+</body></html>
+)HTML");
+
+  HtmlRenderStats stats{};
+  HtmlLayoutCache layout_cache{};
+  HtmlRenderConfig config{};
+  config.draw_top_bar = false;
+  config.root_padding_px = 0;
+  config.virtual_table_model = &model;
+  config.render_stats = &stats;
+  config.layout_cache = &layout_cache;
+  const auto first =
+      build_html_document_scene(document, SizeI{900, 520}, config);
+  expect(!first.commands().empty(), "virtual table should produce a scene");
+  expect(stats.table_max_scroll_x > 100000 &&
+             stats.table_max_scroll_y > 100000000,
+         "large virtual table should expose complete two-axis scroll ranges");
+  expect(model.cell_calls > 0 && model.cell_calls < 200,
+         "initial virtual table frame should format only viewport cells");
+
+  model.cell_calls = 0;
+  model.min_cell_row = std::numeric_limits<std::int64_t>::max();
+  config.table_scroll_x_px = 90000;
+  config.table_scroll_y_px = 100000000;
+  const auto scrolled =
+      build_html_document_scene(document, SizeI{900, 520}, config);
+  expect(!scrolled.commands().empty(),
+         "far virtual table scroll should produce a scene");
+  expect(model.cell_calls > 0 && model.cell_calls < 200,
+         "far virtual table frame should remain bounded by viewport cells");
+  expect(model.min_cell_row > 2000000,
+         "vertical virtualization should fetch rows near the requested offset");
+  expect(std::any_of(
+             scrolled.commands().begin(), scrolled.commands().end(),
+             [](const auto& command) {
+               const auto* text = std::get_if<TextCommand>(&command);
+               return text != nullptr &&
+                      text->text.rfind("feature_", 0) == 0;
+             }),
+         "cached virtual geometry should retain visible header labels");
+
+  const std::vector<std::int64_t> filtered_rows{4999999, 42};
+  model.cell_calls = 0;
+  model.max_cell_row = 0;
+  config.table_scroll_x_px = 0;
+  config.table_scroll_y_px = 0;
+  config.virtual_row_order = &filtered_rows;
+  (void)build_html_document_scene(document, SizeI{900, 520}, config);
+  expect(model.cell_calls > 0 && model.max_cell_row == 4999999,
+         "virtual search results should map display rows back to source rows");
+}
+
 void test_svg_styles_override_presentation_size() {
   using namespace pluss::view::window;
 
@@ -789,12 +886,14 @@ int main() {
     test_retina_scene_scaling();
     test_form_control_alignment_and_caret();
     test_table_body_values_share_left_edge();
+    test_virtual_table_only_materializes_viewport_cells();
     test_svg_styles_override_presentation_size();
     std::cout << "[PASS] automatic_table_identity\n";
     std::cout << "[PASS] html_layout_metrics_and_scroll_model\n";
     std::cout << "[PASS] retina_scene_scaling\n";
     std::cout << "[PASS] form_control_alignment_and_caret\n";
     std::cout << "[PASS] table_body_values_share_left_edge\n";
+    std::cout << "[PASS] virtual_table_only_materializes_viewport_cells\n";
     std::cout << "[PASS] svg_styles_override_presentation_size\n";
     return 0;
   } catch (const std::exception& error) {

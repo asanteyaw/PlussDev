@@ -98,6 +98,16 @@ std::string_view resample_op_key_(pluss::subsp::stats::ts::ResampleOp op) {
   PLUSS_FAIL("DataFrameTsAccessor::resample: unsupported ResampleOp");
 }
 
+Thread resample_target_axis_(const DataFrame& frame,
+                             std::string_view time_feature,
+                             std::string_view freq,
+                             std::int64_t step,
+                             std::string_view where) {
+  const auto source_ti = require_time_axis_index_(frame, time_feature, where);
+  const auto bins = source_ti.resample_bins(freq, step);
+  return Thread(bins.labels);
+}
+
 } // namespace
 
 DataFrameTsAccessor::DataFrameTsAccessor(DataFrame frame, std::vector<std::string> features)
@@ -283,6 +293,12 @@ DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mo
   return make_frame_from_columns_(std::move(out), frame_.cases());
 }
 
+DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view time_feature,
+                                                   std::string_view freq,
+                                                   std::int64_t step) const {
+  return DataFrameTsResampler(frame_, features_, owned_name(time_feature), owned_name(freq), step);
+}
+
 DataFrame DataFrameTsAccessor::resample(std::string_view time_feature,
                                         std::string_view freq,
                                         pluss::subsp::stats::ts::ResampleOp op,
@@ -350,6 +366,98 @@ DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Thr
     out.emplace_back(name, Thread(aligned));
   }
   return make_frame_from_columns_(std::move(out), axis);
+}
+
+DataFrameTsResampler::DataFrameTsResampler(DataFrame frame,
+                                           std::vector<std::string> features,
+                                           std::string time_feature,
+                                           std::string freq,
+                                           std::int64_t step)
+    : frame_(std::move(frame)),
+      features_(std::move(features)),
+      time_feature_(std::move(time_feature)),
+      freq_(std::move(freq)),
+      step_(step) {
+  PLUSS_CHECK(!features_.empty(), "DataFrameTsResampler: expected at least one feature");
+  PLUSS_CHECK(!time_feature_.empty(), "DataFrameTsResampler: time_feature cannot be empty");
+  PLUSS_CHECK(!freq_.empty(), "DataFrameTsResampler: freq cannot be empty");
+  PLUSS_CHECK(step_ > 0, "DataFrameTsResampler: step must be positive");
+}
+
+DataFrame DataFrameTsResampler::aggregate_(pluss::subsp::stats::ts::ResampleOp op) const {
+  return DataFrameTsAccessor(frame_, features_).resample(time_feature_, freq_, op, step_);
+}
+
+DataFrame DataFrameTsResampler::mean() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::Mean);
+}
+
+DataFrame DataFrameTsResampler::sum() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::Sum);
+}
+
+DataFrame DataFrameTsResampler::min() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::Min);
+}
+
+DataFrame DataFrameTsResampler::max() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::Max);
+}
+
+DataFrame DataFrameTsResampler::first() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::First);
+}
+
+DataFrame DataFrameTsResampler::last() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::Last);
+}
+
+DataFrame DataFrameTsResampler::count() const {
+  return aggregate_(pluss::subsp::stats::ts::ResampleOp::Count);
+}
+
+DataFrame DataFrameTsResampler::asfreq(std::optional<double> fill_value) const {
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::asfreq");
+  auto out = DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Exact);
+  if (!fill_value.has_value()) {
+    return out;
+  }
+  const auto source_ti = require_time_axis_index_(frame_, time_feature_, "DataFrameTsResampler::asfreq");
+  const auto target_ti = thread_to_timeindex_(target_axis, "DataFrameTsResampler::asfreq");
+  const auto n_source = source_ti.size();
+  const auto n_target = target_ti.size();
+  Series idx = pluss::full({n_target}, -1.0, ScalarType::Int64);
+  if (n_source > 0 && n_target > 0) {
+    idx = target_ti.join_asof(source_ti, pluss::TimeIndex::AsofDirection::Backward, nullptr, true);
+  }
+  auto exact = pluss::Series::zeros({n_target}, pluss::codem::ScalarType::Bool);
+  if (n_source > 0 && n_target > 0) {
+    const Series valid = idx.ge(0.0);
+    const Series source_ticks = source_ti.timeline().epoch_nanos().reshape({n_source});
+    const Series target_ticks = target_ti.timeline().epoch_nanos().reshape({n_target});
+    const Series safe_idx = idx.to(ScalarType::Float64).clamp(0.0, static_cast<double>(n_source - 1)).to(ScalarType::Int64);
+    const Series gathered_ticks = source_ticks.index_select(0, safe_idx);
+    exact = valid.logical_and(gathered_ticks.eq(target_ticks));
+  }
+  for (const auto& name : features_) {
+    out.set_features_(name, Thread(out.features(name).as_series().where(exact.logical_not(), *fill_value)));
+  }
+  return out;
+}
+
+DataFrame DataFrameTsResampler::ffill() const {
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::ffill");
+  return DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Backward);
+}
+
+DataFrame DataFrameTsResampler::bfill() const {
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::bfill");
+  return DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Forward);
+}
+
+DataFrame DataFrameTsResampler::nearest() const {
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::nearest");
+  return DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Nearest);
 }
 
 DataFrame DataFrameTsAccessor::reindex_time(std::string_view time_feature,

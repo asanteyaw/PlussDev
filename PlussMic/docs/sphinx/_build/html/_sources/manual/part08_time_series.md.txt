@@ -300,7 +300,8 @@ target axis.
 | `expanding_std(min_periods, epsilon)` | `DataFrame` | Expanding standard deviations. |
 | `zscore_rolling(window, min_periods, epsilon)` | `DataFrame` | Rolling z-scores. |
 | `fill_gaps(mode, constant)` | `DataFrame` | Fill numeric gaps in selected features. |
-| `resample(time_feature, freq, op, step)` | `DataFrame` | Aggregate selected features into time bins. |
+| `resample(time_feature, freq, step)` | `DataFrameTsResampler` | Build a time-series resampler object, then choose `.mean()`, `.max()`, `.asfreq()`, `.ffill()`, and related actions. |
+| `resample(time_feature, freq, op, step)` | `DataFrame` | Aggregate selected features into time bins immediately. |
 | `asfreq(time_feature, freq, step, fill_mode, constant, op)` | `DataFrame` | Resample, then fill gaps. |
 | `insert_gaps(time_feature, freq, step)` | `DataFrame` | Align to regular bins and insert gaps where exact observations are missing. |
 | `align_to(time_feature, target_axis, mode)` | `DataFrame` | Align selected features to a target time axis. |
@@ -311,7 +312,42 @@ target axis.
 
 ## Resampling
 
-Resampling groups observations into time bins and aggregates values:
+Resampling now has two surfaces on `df.ts(...)`.
+
+Use the resampler object when you want time-series semantics closer to a
+grouped pipeline:
+
+```cpp
+auto daily = df.ts({"close", "volume"}).resample("date", "D").mean();
+auto weekly_max = df.ts("close").resample("date", "W").max();
+auto hourly = df.ts("close").resample("date", "H").asfreq();
+auto hourly_filled = df.ts("close").resample("date", "H").ffill();
+```
+
+Arguments:
+
+| Argument | Meaning |
+| --- | --- |
+| `time_feature` | Name of a `Timeline` or `TimeIndex` feature. |
+| `freq` | Frequency key, such as `"D"` for daily bins. |
+| `step` | Positive frequency step. |
+
+The resampler object supports these materializers today:
+
+- `.mean()`
+- `.sum()`
+- `.min()`
+- `.max()`
+- `.first()`
+- `.last()`
+- `.count()`
+- `.asfreq(fill_value = std::nullopt)`
+- `.ffill()`
+- `.bfill()`
+- `.nearest()`
+
+When you already know the aggregation at the call site, the immediate overload
+still exists:
 
 ```cpp
 auto daily = df.ts({"close", "volume"}).resample(
@@ -321,23 +357,14 @@ auto daily = df.ts({"close", "volume"}).resample(
     1);
 ```
 
-Arguments:
-
-| Argument | Meaning |
-| --- | --- |
-| `time_feature` | Name of a `Timeline` or `TimeIndex` feature. |
-| `freq` | Frequency key, such as `"D"` for daily bins. |
-| `op` | Aggregation operation, such as mean or last. |
-| `step` | Positive frequency step. |
-
-The resulting DataFrame uses the resample labels as cases. In the verified
-example later in this chapter, four half-day observations become two daily
-rows.
+Both forms produce a `DataFrame` whose cases are the resample labels. In the
+verified example later in this chapter, four half-day observations become two
+daily rows.
 
 The older `DataFrame::resample(time_feature, value_features, freq, op, step,
-render)` API still exists and returns a `DataFrameView`. Prefer
-`df.ts(features).resample(...)` when you are writing pipeline code and want a
-plain `DataFrame`.
+render)` API still exists and returns a `DataFrameView`. That older helper is a
+frame-level bin-and-aggregate call. Prefer `df.ts(features).resample(...)` when
+you want the main time-series resampler surface.
 
 ## As-frequency conversion
 
@@ -658,14 +685,14 @@ return. Resample first when the calendar interval matters.
 This fails when `"date"` is not a `Timeline` or `TimeIndex`:
 
 ```cpp
-auto daily = df.ts("close").resample("date", "D");
+auto daily = df.ts("close").resample("date", "D").mean();
 ```
 
 Fix the schema first:
 
 ```cpp
 auto fixed = df.cast_timeline({"date"});
-auto daily = fixed.ts("close").resample("date", "D");
+auto daily = fixed.ts("close").resample("date", "D").mean();
 ```
 
 ### Rolling unsorted data

@@ -11,7 +11,10 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <numeric>
+#include <regex>
+#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -31,6 +34,7 @@ namespace pluss::table {
 
 #include "table/ops/thread/ThreadInternals.inc"
 #include "table/ops/thread/ThreadCoreOps.inc"
+#include "table/ops/thread/ThreadAdvancedOps.inc"
 #include "table/ops/thread/ThreadOperatorsAndValue.inc"
 
 } // namespace pluss::table

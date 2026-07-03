@@ -43,7 +43,8 @@ Output:
 - `expanding_std(min_periods: int64 = 1, epsilon: double = 1e-12) -> DataFrame`
 - `zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12) -> DataFrame`
 - `fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt) -> DataFrame`
-- `resample(time_feature: string_view, freq: string_view, op: ResampleOp = Mean, step: int64 = 1) -> DataFrame`
+- `resample(time_feature: string_view, freq: string_view, step: int64 = 1) -> DataFrameTsResampler`
+- `resample(time_feature: string_view, freq: string_view, op: ResampleOp, step: int64 = 1) -> DataFrame`
 - `asfreq(time_feature: string_view, freq: string_view, step: int64 = 1, fill_mode: GapFillMode = Forward, constant: optional<double> = nullopt, op: ResampleOp = Last) -> DataFrame`
 - `insert_gaps(time_feature: string_view, freq: string_view, step: int64 = 1) -> DataFrame`
 - `align_to(time_feature: string_view, target_axis: Thread, mode: TsAlignMode = Exact) -> DataFrame`
@@ -65,13 +66,16 @@ DataFrame df = DataFrame::load_csv("prices.csv")
 auto lr = df.ts("Adj Close").log_returns();
 auto lag = df.ts({"Adj Close", "Volume"}).lag_block({1, 2, 5});
 auto roll = df.ts({"Adj Close"}).rolling_mean(20, 5);
-auto daily = df.ts({"Adj Close", "Volume"}).resample(
-    "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean, 1);
+auto daily = df.ts({"Adj Close", "Volume"}).resample("date", "D").mean();
+auto weekly_last = df.ts("Adj Close").resample("date", "W").last();
+auto six_hour = df.ts("Adj Close").resample("date", "6H").asfreq();
+auto six_hour_ffill = df.ts("Adj Close").resample("date", "6H").ffill();
 ```
 
 ### Expected output
 
 - `lr`, `lag`, `roll`, and `daily` are all `DataFrame` objects.
+- `df.ts(...).resample("date", "D")` returns a resampler object, then `.mean()`, `.last()`, `.asfreq()`, `.ffill()`, and similar methods materialize the final `DataFrame`.
 - Selected features are transformed and returned with aligned cases/time axis.
 
 ## Thread Surface
@@ -122,4 +126,3 @@ auto rs = s.ts().resample(df.features("date"), "W", pluss::subsp::stats::ts::Res
 
 If you want a transformed **DataFrame**, use `df.ts(...)...`.  
 If you call `df.features(\"col\").ts()...`, you are on the **Thread** surface and the return type is `Thread`.
-

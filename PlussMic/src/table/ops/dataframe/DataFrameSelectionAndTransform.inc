@@ -1,5 +1,52 @@
 namespace {
 
+template <class Operation>
+DataFrame transform_text_features_(
+    const detail::DataFrameImpl& src,
+    pluss::msharp::RangeView::Of<std::string_view> features,
+    Operation&& operation,
+    std::string_view where) {
+  std::unordered_set<std::string> selected;
+  selected.reserve(features.size());
+  for (const auto name_view : features) {
+    const auto name = owned_name(name_view);
+    PLUSS_CHECK(!name.empty(),
+                std::string(where) + ": feature cannot be empty");
+    const auto it = src.name_to_idx_.find(name);
+    PLUSS_CHECK(it != src.name_to_idx_.end(),
+                std::string(where) + ": unknown feature '" + name + "'");
+    PLUSS_CHECK(src.columns_[it->second].kind() == ThreadKind::Note,
+                std::string(where) + ": feature '" + name +
+                    "' is not text");
+    PLUSS_CHECK(selected.insert(name).second,
+                std::string(where) + ": repeated feature '" + name + "'");
+  }
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& source = src.columns_[i];
+    const bool apply =
+        features.empty() ? source.kind() == ThreadKind::Note
+                         : selected.contains(src.names_[i]);
+    columns.emplace_back(
+        src.names_[i], apply ? operation(source) : source);
+  }
+  return DataFrame(std::move(columns), src.cases_).title(src.title_);
+}
+
+DataFrame expanded_text_result_(const DataFrame& expanded,
+                                const Thread& cases,
+                                std::string title) {
+  std::vector<std::pair<std::string, Thread>> columns;
+  const auto names = expanded.feature_names();
+  const auto values = expanded.features();
+  columns.reserve(names.size());
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    columns.emplace_back(names[i], values[i]);
+  }
+  return DataFrame(std::move(columns), cases).title(std::move(title));
+}
+
 bool is_time_like_thread_(ThreadKind kind) {
   return kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex;
 }
@@ -525,6 +572,338 @@ DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) cons
     out = out.set_features(spec.feature, spec.expr(out));
   }
   return out;
+}
+
+Thread DataFrame::map_cases(
+    const std::function<ThreadValue(const DataFrame&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn),
+              "DataFrame::map_cases: callback is empty");
+  std::vector<Thread> mapped;
+  mapped.reserve(static_cast<std::size_t>(ncases()));
+  for (std::int64_t row = 0; row < ncases(); ++row) {
+    auto value = fn(DataFrame(observe(row, false)));
+    PLUSS_CHECK(value.defined() && value.thread().size() == 1,
+                "DataFrame::map_cases: callback must return one value");
+    if (!mapped.empty()) {
+      PLUSS_CHECK(value.kind() == mapped.front().kind(),
+                  "DataFrame::map_cases: output kinds must be consistent");
+    }
+    mapped.push_back(value.thread());
+  }
+  if (mapped.empty()) {
+    return Thread(pluss::Series::empty(
+        {0}, pluss::codem::ScalarType::Float64));
+  }
+
+  std::vector<bool> validity;
+  validity.reserve(mapped.size());
+  for (const auto& value : mapped) {
+    validity.push_back(value.is_valid(0));
+  }
+  auto mask = bool_series_from_keep(validity);
+  if (mapped.front().kind() == ThreadKind::Series) {
+    std::vector<pluss::Series> values;
+    values.reserve(mapped.size());
+    for (const auto& value : mapped) {
+      values.push_back(value.as_series());
+    }
+    auto output = pluss::unite(values, 0, true);
+    if (output.platform() != pluss::codem::Platform::CPU) {
+      mask = mask.to(output.platform());
+    }
+    return Thread(output, mask);
+  }
+  if (mapped.front().kind() == ThreadKind::Note) {
+    std::vector<std::string> values;
+    values.reserve(mapped.size());
+    for (const auto& value : mapped) {
+      values.emplace_back(value.as_note().at(0));
+    }
+    return Thread(pluss::make_note(values), mask);
+  }
+  if (mapped.front().kind() == ThreadKind::Timeline) {
+    auto values = mapped.front().as_timeline();
+    for (std::size_t i = 1; i < mapped.size(); ++i) {
+      values = values.concat(mapped[i].as_timeline());
+    }
+    if (values.epoch_nanos().platform() !=
+        pluss::codem::Platform::CPU) {
+      mask = mask.to(values.epoch_nanos().platform());
+    }
+    return Thread(values, mask);
+  }
+  auto values = mapped.front().as_timeindex().timeline();
+  for (std::size_t i = 1; i < mapped.size(); ++i) {
+    values = values.concat(mapped[i].as_timeindex().timeline());
+  }
+  if (values.epoch_nanos().platform() !=
+      pluss::codem::Platform::CPU) {
+    mask = mask.to(values.epoch_nanos().platform());
+  }
+  return Thread(values.to_timeindex(false), mask);
+}
+
+DataFrame DataFrame::apply_cases(
+    const std::function<DataFrame(const DataFrame&)>& fn,
+    ResultShape shape) const {
+  PLUSS_CHECK(static_cast<bool>(fn),
+              "DataFrame::apply_cases: callback is empty");
+  DataFrame output;
+  std::int64_t callback_cases = -1;
+  std::vector<std::string> callback_features;
+  for (std::int64_t row = 0; row < ncases(); ++row) {
+    auto mapped = fn(DataFrame(observe(row, false)));
+    PLUSS_CHECK(mapped.defined(),
+                "DataFrame::apply_cases: callback returned undefined");
+    if (shape == ResultShape::Reduce ||
+        shape == ResultShape::Preserve) {
+      PLUSS_CHECK(
+          mapped.ncases() == 1,
+          "DataFrame::apply_cases: selected shape requires one output case");
+    }
+    if (shape == ResultShape::Expand) {
+      if (callback_cases < 0) {
+        callback_cases = mapped.ncases();
+        callback_features = mapped.feature_names();
+      }
+      PLUSS_CHECK(
+          mapped.ncases() == callback_cases,
+          "DataFrame::apply_cases: Expand requires a stable case count");
+      PLUSS_CHECK(
+          mapped.feature_names() == callback_features,
+          "DataFrame::apply_cases: Expand requires a stable feature schema");
+    }
+    if (shape == ResultShape::Preserve) {
+      PLUSS_CHECK(
+          mapped.feature_names() == feature_names(),
+          "DataFrame::apply_cases: Preserve requires the input feature schema");
+    }
+    output = output.defined()
+                 ? output.extend_cases(
+                       mapped, FrameMatchRule::Unite, true, false)
+                 : std::move(mapped);
+  }
+  if (!output.defined()) {
+    return DataFrame({}, Thread(pluss::Series::empty(
+                             {0}, pluss::codem::ScalarType::Int64)));
+  }
+  return output;
+}
+
+DataFrame DataFrame::map_elements(
+    const std::function<ThreadValue(const ThreadValue&)>& fn,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  PLUSS_CHECK(static_cast<bool>(fn),
+              "DataFrame::map_elements: callback is empty");
+  if (features.empty()) {
+    return transform(
+        [&fn](const Thread& feature) {
+          return feature.map_elements(fn);
+        });
+  }
+  std::vector<TransformSpec> specs;
+  specs.reserve(features.size());
+  for (const auto feature : features) {
+    specs.push_back(
+        TransformSpec{
+            .feature = owned_name(feature),
+            .expr = [&fn](const Thread& value) {
+              return value.map_elements(fn);
+            }});
+  }
+  return transform(specs);
+}
+
+Thread DataFrame::aggregate_with(
+    const std::function<Thread(const DataFrame&)>& fn,
+    ResultShape shape) const {
+  PLUSS_CHECK(static_cast<bool>(fn),
+              "DataFrame::aggregate_with: callback is empty");
+  auto result = fn(*this);
+  PLUSS_CHECK(result.defined(),
+              "DataFrame::aggregate_with: callback returned undefined");
+  if (shape == ResultShape::Reduce) {
+    PLUSS_CHECK(result.size() == 1,
+                "DataFrame::aggregate_with: Reduce requires one value");
+  } else if (shape == ResultShape::Preserve) {
+    PLUSS_CHECK(
+        result.size() == ncases(),
+        "DataFrame::aggregate_with: Preserve requires the case count");
+  }
+  return result;
+}
+
+DataFrame DataFrame::flow(
+    const std::function<DataFrame(const DataFrame&)>& fn) const {
+  PLUSS_CHECK(static_cast<bool>(fn),
+              "DataFrame::flow: callback is empty");
+  auto result = fn(*this);
+  PLUSS_CHECK(result.defined(),
+              "DataFrame::flow: callback returned undefined");
+  return result;
+}
+
+DataFrame DataFrame::text_upper(
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [](const Thread& value) { return value.upper(); },
+      "DataFrame::text_upper");
+}
+
+DataFrame DataFrame::text_casefold(
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [](const Thread& value) { return value.casefold(); },
+      "DataFrame::text_casefold");
+}
+
+DataFrame DataFrame::text_title(
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [](const Thread& value) { return value.title_case(); },
+      "DataFrame::text_title");
+}
+
+DataFrame DataFrame::text_lengths(
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [](const Thread& value) { return value.text_length(); },
+      "DataFrame::text_lengths");
+}
+
+DataFrame DataFrame::text_starts_with(
+    std::string_view prefix,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [prefix](const Thread& value) {
+        return value.starts_with(prefix);
+      },
+      "DataFrame::text_starts_with");
+}
+
+DataFrame DataFrame::text_ends_with(
+    std::string_view suffix,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [suffix](const Thread& value) {
+        return value.ends_with(suffix);
+      },
+      "DataFrame::text_ends_with");
+}
+
+DataFrame DataFrame::text_matches(
+    std::string_view pattern,
+    bool full,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [pattern, full](const Thread& value) {
+        return full ? value.regex_fullmatch(pattern)
+                    : value.regex_match(pattern);
+      },
+      "DataFrame::text_matches");
+}
+
+DataFrame DataFrame::text_pad(
+    std::int64_t width,
+    TextAlign align,
+    char fill,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [=](const Thread& value) {
+        return value.pad_text(width, align, fill);
+      },
+      "DataFrame::text_pad");
+}
+
+DataFrame DataFrame::text_slice(
+    std::int64_t start,
+    std::optional<std::int64_t> stop,
+    std::int64_t step,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [=](const Thread& value) {
+        return value.slice_text(start, stop, step);
+      },
+      "DataFrame::text_slice");
+}
+
+DataFrame DataFrame::text_normalize(
+    UnicodeForm form,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [form](const Thread& value) {
+        return value.normalize_text(form);
+      },
+      "DataFrame::text_normalize");
+}
+
+DataFrame DataFrame::text_encode(
+    std::string_view encoding,
+    pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return transform_text_features_(
+      impl_ref_(), features,
+      [encoding](const Thread& value) {
+        return value.encode_text(encoding);
+      },
+      "DataFrame::text_encode");
+}
+
+DataFrame DataFrame::regex_groups(
+    std::string_view feature,
+    std::string_view pattern,
+    pluss::msharp::RangeView::Of<std::string_view> names) const {
+  const auto source = features(feature);
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "DataFrame::regex_groups: feature must be text");
+  return expanded_text_result_(
+      source.regex_extract(pattern, names), cases(), title());
+}
+
+DataFrame DataFrame::split_feature(
+    std::string_view feature,
+    std::string_view delimiter,
+    std::int64_t limit,
+    std::string prefix) const {
+  const auto source = features(feature);
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "DataFrame::split_feature: feature must be text");
+  return expanded_text_result_(
+      source.split_text(delimiter, limit, std::move(prefix)),
+      cases(), title());
+}
+
+DataFrame DataFrame::partition_feature(
+    std::string_view feature,
+    std::string_view separator,
+    std::string prefix) const {
+  const auto source = features(feature);
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "DataFrame::partition_feature: feature must be text");
+  return expanded_text_result_(
+      source.partition_text(separator, std::move(prefix)),
+      cases(), title());
+}
+
+DataFrame DataFrame::text_indicators(
+    std::string_view feature,
+    std::string_view delimiter,
+    std::string prefix) const {
+  const auto source = features(feature);
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "DataFrame::text_indicators: feature must be text");
+  return expanded_text_result_(
+      source.text_indicators(delimiter, std::move(prefix)),
+      cases(), title());
 }
 
 DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) const {

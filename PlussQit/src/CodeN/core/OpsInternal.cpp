@@ -18,6 +18,32 @@
 #include <regex>
 #include <thread>
 
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+#include <unicase.h>
+#include <uninorm.h>
+// Some libunistring packages expose fixed-width C types as macros on
+// non-glibc platforms.  Do not allow those compatibility macros to rewrite
+// std::uint*_t throughout this C++ translation unit.
+#ifdef int8_t
+#undef int8_t
+#endif
+#ifdef uint8_t
+#undef uint8_t
+#endif
+#ifdef int16_t
+#undef int16_t
+#endif
+#ifdef uint16_t
+#undef uint16_t
+#endif
+#ifdef int32_t
+#undef int32_t
+#endif
+#ifdef uint32_t
+#undef uint32_t
+#endif
+#endif
+
 #include "CodeN/core/TextArena.h"
 #include "CodeN/core/TokenBatchImpl.h"
 #include "CodeN/native/cpu/TextKernels.h"
@@ -32,6 +58,12 @@ static bool starts_with_sv(::std::string_view s, ::std::string_view prefix) {
 
 static bool ends_with_sv(::std::string_view s, ::std::string_view suffix) {
   return s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix;
+}
+
+[[maybe_unused]] static bool ascii_only_(::std::string_view value) {
+  return ::std::all_of(
+      value.begin(), value.end(),
+      [](unsigned char byte) { return byte < 0x80; });
 }
 
 static ::std::string ascii_lower_copy(::std::string_view s) {
@@ -3525,9 +3557,75 @@ static Note transform_note_with_encoding(const Note& x,
   return NoteFactoryAccess::wrap(::std::move(new_impl));
 }
 
-Chord lower(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::lower_ascii); }
-Chord upper(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::upper_ascii); }
-Chord title(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::title_ascii); }
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+using UnicodeCaseMap_ = uint8_t* (*)(
+    const uint8_t*, size_t, const char*, uninorm_t, uint8_t*, size_t*);
+
+static ::std::string unicode_case_map_(
+    ::std::string_view input,
+    UnicodeCaseMap_ operation,
+    const char* where) {
+  size_t output_size = 0;
+  auto* output = operation(
+      reinterpret_cast<const uint8_t*>(input.data()), input.size(),
+      nullptr, nullptr, nullptr, &output_size);
+  PLUSS_CHECK(output != nullptr,
+              ::std::string(where) + ": Unicode case mapping failed");
+  ::std::string mapped(
+      reinterpret_cast<const char*>(output), output_size);
+  ::std::free(output);
+  return mapped;
+}
+#endif
+
+Chord lower(const Chord& x) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  return transform_chord_text(
+      x, [](auto value) {
+        return unicode_case_map_(
+            value, u8_tolower, "Chord::lower");
+      });
+#else
+  return transform_chord_text(x, [](auto value) {
+    PLUSS_CHECK(
+        ascii_only_(value),
+        "Chord::lower: non-ASCII text requires a Unicode backend");
+    return ::pluss::coden::native::cpu::lower_ascii(value);
+  });
+#endif
+}
+Chord upper(const Chord& x) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  return transform_chord_text(
+      x, [](auto value) {
+        return unicode_case_map_(
+            value, u8_toupper, "Chord::upper");
+      });
+#else
+  return transform_chord_text(x, [](auto value) {
+    PLUSS_CHECK(
+        ascii_only_(value),
+        "Chord::upper: non-ASCII text requires a Unicode backend");
+    return ::pluss::coden::native::cpu::upper_ascii(value);
+  });
+#endif
+}
+Chord title(const Chord& x) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  return transform_chord_text(
+      x, [](auto value) {
+        return unicode_case_map_(
+            value, u8_totitle, "Chord::title");
+      });
+#else
+  return transform_chord_text(x, [](auto value) {
+    PLUSS_CHECK(
+        ascii_only_(value),
+        "Chord::title: non-ASCII text requires a Unicode backend");
+    return ::pluss::coden::native::cpu::title_ascii(value);
+  });
+#endif
+}
 Chord capitalize(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::capitalize_ascii); }
 Chord swapcase(const Chord& x) { return transform_chord_text(x, ::pluss::coden::native::cpu::swapcase_ascii); }
 Chord strip(const Chord& x) { return transform_chord_text(x, [](auto s) { return ::pluss::coden::native::cpu::strip_ascii(s); }); }
@@ -3963,9 +4061,57 @@ bool contains(const Chord& x, ::std::string_view needle) {
   return ::pluss::coden::native::cpu::contains_bytes(x.utf8(), needle);
 }
 
-Note lower(const Note& x) { return transform_note_text(x, "Note::lower", ::pluss::coden::native::cpu::lower_ascii); }
-Note upper(const Note& x) { return transform_note_text(x, "Note::upper", ::pluss::coden::native::cpu::upper_ascii); }
-Note title(const Note& x) { return transform_note_text(x, "Note::title", ::pluss::coden::native::cpu::title_ascii); }
+Note lower(const Note& x) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  return transform_note_text(
+      x, "Note::lower",
+      [](auto value) {
+        return unicode_case_map_(
+            value, u8_tolower, "Note::lower");
+      });
+#else
+  return transform_note_text(x, "Note::lower", [](auto value) {
+    PLUSS_CHECK(
+        ascii_only_(value),
+        "Note::lower: non-ASCII text requires a Unicode backend");
+    return ::pluss::coden::native::cpu::lower_ascii(value);
+  });
+#endif
+}
+Note upper(const Note& x) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  return transform_note_text(
+      x, "Note::upper",
+      [](auto value) {
+        return unicode_case_map_(
+            value, u8_toupper, "Note::upper");
+      });
+#else
+  return transform_note_text(x, "Note::upper", [](auto value) {
+    PLUSS_CHECK(
+        ascii_only_(value),
+        "Note::upper: non-ASCII text requires a Unicode backend");
+    return ::pluss::coden::native::cpu::upper_ascii(value);
+  });
+#endif
+}
+Note title(const Note& x) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  return transform_note_text(
+      x, "Note::title",
+      [](auto value) {
+        return unicode_case_map_(
+            value, u8_totitle, "Note::title");
+      });
+#else
+  return transform_note_text(x, "Note::title", [](auto value) {
+    PLUSS_CHECK(
+        ascii_only_(value),
+        "Note::title: non-ASCII text requires a Unicode backend");
+    return ::pluss::coden::native::cpu::title_ascii(value);
+  });
+#endif
+}
 Note capitalize(const Note& x) { return transform_note_text(x, "Note::capitalize", ::pluss::coden::native::cpu::capitalize_ascii); }
 Note swapcase(const Note& x) { return transform_note_text(x, "Note::swapcase", ::pluss::coden::native::cpu::swapcase_ascii); }
 Note strip(const Note& x) { return transform_note_text(x, "Note::strip", [](auto s) { return ::pluss::coden::native::cpu::strip_ascii(s); }); }
@@ -5372,14 +5518,54 @@ TokenBatch split_whitespace(const Note& x) {
 
 // ---- Patch8: Unicode/regex/split/join hooks ----
 
-Chord normalize(const Chord& x, ::std::int64_t /*form*/) {
-  // ICU-optional hook. Without ICU we conservatively no-op.
+Chord normalize(const Chord& x, ::std::int64_t form) {
+  if (!x.defined()) return Chord::undefined();
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  PLUSS_CHECK(form >= 0 && form <= 3,
+              "Chord::normalize: form must be NFC, NFD, NFKC, or NFKD");
+  const ::std::array<uninorm_t, 4> forms{
+      UNINORM_NFC, UNINORM_NFD, UNINORM_NFKC, UNINORM_NFKD};
+  size_t output_size = 0;
+  auto* output = u8_normalize(
+      forms[static_cast<::std::size_t>(form)],
+      reinterpret_cast<const uint8_t*>(x.utf8().data()),
+      x.utf8().size(), nullptr, &output_size);
+  PLUSS_CHECK(output != nullptr,
+              "Chord::normalize: Unicode normalization failed");
+  ::std::string normalized(
+      reinterpret_cast<const char*>(output), output_size);
+  ::std::free(output);
+  return chord_from_utf8(normalized);
+#else
+  PLUSS_CHECK(
+      ascii_only_(x.utf8()),
+      "Chord::normalize: non-ASCII text requires a Unicode backend");
   return x;
+#endif
 }
 
-Chord casefold(const Chord& x, ::std::string_view /*locale*/) {
-  // ICU-optional hook. ASCII fallback = lower.
+Chord casefold(const Chord& x, ::std::string_view locale) {
+  if (!x.defined()) return Chord::undefined();
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  const auto language = ::std::string(locale);
+  size_t output_size = 0;
+  auto* output = u8_casefold(
+      reinterpret_cast<const uint8_t*>(x.utf8().data()),
+      x.utf8().size(), language.empty() ? nullptr : language.c_str(),
+      nullptr, nullptr, &output_size);
+  PLUSS_CHECK(output != nullptr,
+              "Chord::casefold: Unicode case folding failed");
+  ::std::string folded(
+      reinterpret_cast<const char*>(output), output_size);
+  ::std::free(output);
+  return chord_from_utf8(folded);
+#else
+  (void)locale;
+  PLUSS_CHECK(
+      ascii_only_(x.utf8()),
+      "Chord::casefold: non-ASCII text requires a Unicode backend");
   return lower(x);
+#endif
 }
 
 bool regex_match(const Chord& x, ::std::string_view pattern) {
@@ -5483,18 +5669,71 @@ TokenBatch token_feature(const Chord& x, ::std::string_view op, ::std::int64_t i
 }
 
 Note normalize(const Note& x, ::std::int64_t form) {
-  // no-op normalization for now
-  (void)form;
-  if (x.defined()) {
-    const auto& impl = NoteAccess::impl(x);
-    require_text_note(*impl, "Note::normalize");
+  PLUSS_CHECK(form >= 0 && form <= 3,
+              "Note::normalize: form must be NFC, NFD, NFKC, or NFKD");
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  const ::std::array<uninorm_t, 4> forms{
+      UNINORM_NFC, UNINORM_NFD, UNINORM_NFKC, UNINORM_NFKD};
+  return transform_note_text(
+      x, "Note::normalize",
+      [selected = forms[static_cast<::std::size_t>(form)]](
+          ::std::string_view input) {
+        size_t output_size = 0;
+        auto* output = u8_normalize(
+            selected,
+            reinterpret_cast<const uint8_t*>(input.data()),
+            input.size(), nullptr, &output_size);
+        PLUSS_CHECK(output != nullptr,
+                    "Note::normalize: Unicode normalization failed");
+        ::std::string normalized(
+            reinterpret_cast<const char*>(output), output_size);
+        ::std::free(output);
+        return normalized;
+      });
+#else
+  if (!x.defined()) return Note::undefined();
+  const auto& impl = NoteAccess::impl(x);
+  require_text_note(*impl, "Note::normalize");
+  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+    PLUSS_CHECK(
+        ascii_only_(impl->bytes_at(i)),
+        "Note::normalize: non-ASCII text requires a Unicode backend");
   }
   return x;
+#endif
 }
 
 Note casefold(const Note& x, ::std::string_view locale) {
+#if defined(PLUSSQIT_HAS_LIBUNISTRING)
+  const auto language = ::std::string(locale);
+  return transform_note_text(
+      x, "Note::casefold",
+      [&language](::std::string_view input) {
+        size_t output_size = 0;
+        auto* output = u8_casefold(
+            reinterpret_cast<const uint8_t*>(input.data()),
+            input.size(),
+            language.empty() ? nullptr : language.c_str(),
+            nullptr, nullptr, &output_size);
+        PLUSS_CHECK(output != nullptr,
+                    "Note::casefold: Unicode case folding failed");
+        ::std::string folded(
+            reinterpret_cast<const char*>(output), output_size);
+        ::std::free(output);
+        return folded;
+      });
+#else
   (void)locale;
+  if (!x.defined()) return Note::undefined();
+  const auto& impl = NoteAccess::impl(x);
+  require_text_note(*impl, "Note::casefold");
+  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
+    PLUSS_CHECK(
+        ascii_only_(impl->bytes_at(i)),
+        "Note::casefold: non-ASCII text requires a Unicode backend");
+  }
   return lower(x);
+#endif
 }
 
 ::std::vector<::std::uint8_t> regex_match(const Note& x, ::std::string_view pattern) {

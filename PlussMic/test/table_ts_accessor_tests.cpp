@@ -66,14 +66,19 @@ void test_dataframe_ts_resample_reindex_blocks() {
   });
 
   auto daily = df.ts({"Adj Close", "Volume"}).resample("date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+  auto daily_chain = df.ts({"Adj Close", "Volume"}).resample("date", "D").mean();
   expect(daily.ncases() == 2, "daily resample should produce 2 bins");
   expect(daily.nfeatures() == 2, "daily resample should keep selected features");
   const auto daily_adj = to_f64(daily.features("Adj Close"));
   const auto daily_vol = to_f64(daily.features("Volume"));
+  const auto daily_chain_adj = to_f64(daily_chain.features("Adj Close"));
+  const auto daily_chain_vol = to_f64(daily_chain.features("Volume"));
   expect(daily_adj.size() == 2 && std::abs(daily_adj[0] - 2.0) < 1e-12 && std::abs(daily_adj[1] - 3.0) < 1e-12,
          "daily mean resample should match bin averages");
   expect(daily_vol.size() == 2 && std::abs(daily_vol[0] - 15.0) < 1e-12 && std::abs(daily_vol[1] - 35.0) < 1e-12,
          "daily mean resample should keep per-feature aggregation");
+  expect(daily_chain_adj == daily_adj && daily_chain_vol == daily_vol,
+         "chained resample(...).mean() should match explicit ResampleOp::Mean");
 
   DataFrame counted({
       {"Adj Close", Thread(pluss::make_series(std::vector<double>{
@@ -88,6 +93,65 @@ void test_dataframe_ts_resample_reindex_blocks() {
   const auto counts = daily_count.features("Adj Close").as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
   expect(counts.size() == 2 && counts[0] == 1 && counts[1] == 2,
          "count resample should exclude missing values inside each bin");
+
+  auto six_hour_exact = df.ts("Adj Close").resample("date", "6H").asfreq();
+  const auto six_hour_exact_vals = to_f64(six_hour_exact.features("Adj Close"));
+  expect(six_hour_exact_vals.size() == 7, "asfreq should materialize the resampled axis");
+  expect(std::abs(six_hour_exact_vals[0] - 1.0) < 1e-12
+             && std::isnan(six_hour_exact_vals[1])
+             && std::abs(six_hour_exact_vals[2] - 3.0) < 1e-12
+             && std::isnan(six_hour_exact_vals[3])
+             && std::abs(six_hour_exact_vals[4] - 2.0) < 1e-12
+             && std::isnan(six_hour_exact_vals[5])
+             && std::abs(six_hour_exact_vals[6] - 4.0) < 1e-12,
+         "asfreq should behave like an exact reindex onto the target frequency");
+
+  auto six_hour_fill = df.ts("Adj Close").resample("date", "6H").asfreq(0.0);
+  const auto six_hour_fill_vals = to_f64(six_hour_fill.features("Adj Close"));
+  expect(six_hour_fill_vals.size() == 7
+             && std::abs(six_hour_fill_vals[1] - 0.0) < 1e-12
+             && std::abs(six_hour_fill_vals[3] - 0.0) < 1e-12
+             && std::abs(six_hour_fill_vals[5] - 0.0) < 1e-12,
+         "asfreq(fill_value) should fill only the newly introduced timestamps");
+
+  auto six_hour_ffill = df.ts("Adj Close").resample("date", "6H").ffill();
+  const auto six_hour_ffill_vals = to_f64(six_hour_ffill.features("Adj Close"));
+  expect(six_hour_ffill_vals.size() == 7
+             && std::abs(six_hour_ffill_vals[0] - 1.0) < 1e-12
+             && std::abs(six_hour_ffill_vals[1] - 1.0) < 1e-12
+             && std::abs(six_hour_ffill_vals[2] - 3.0) < 1e-12
+             && std::abs(six_hour_ffill_vals[3] - 3.0) < 1e-12
+             && std::abs(six_hour_ffill_vals[4] - 2.0) < 1e-12
+             && std::abs(six_hour_ffill_vals[5] - 2.0) < 1e-12
+             && std::abs(six_hour_ffill_vals[6] - 4.0) < 1e-12,
+         "ffill should use the last observed source value at or before each resampled timestamp");
+
+  auto six_hour_bfill = df.ts("Adj Close").resample("date", "6H").bfill();
+  const auto six_hour_bfill_vals = to_f64(six_hour_bfill.features("Adj Close"));
+  expect(six_hour_bfill_vals.size() == 7
+             && std::abs(six_hour_bfill_vals[0] - 1.0) < 1e-12
+             && std::abs(six_hour_bfill_vals[1] - 3.0) < 1e-12
+             && std::abs(six_hour_bfill_vals[2] - 3.0) < 1e-12
+             && std::abs(six_hour_bfill_vals[3] - 2.0) < 1e-12
+             && std::abs(six_hour_bfill_vals[4] - 2.0) < 1e-12
+             && std::abs(six_hour_bfill_vals[5] - 4.0) < 1e-12
+             && std::abs(six_hour_bfill_vals[6] - 4.0) < 1e-12,
+         "bfill should use the next observed source value at or after each resampled timestamp");
+
+  auto weekly_max = df.ts({"Adj Close", "Volume"}).resample("date", "W").max();
+  expect(weekly_max.ncases() == 1, "weekly resample should group the sample into one weekly bin");
+  const auto weekly_adj = to_f64(weekly_max.features("Adj Close"));
+  const auto weekly_vol = to_f64(weekly_max.features("Volume"));
+  expect(weekly_adj.size() == 1 && std::abs(weekly_adj[0] - 4.0) < 1e-12,
+         "weekly max resample should honor W frequency aliases");
+  expect(weekly_vol.size() == 1 && std::abs(weekly_vol[0] - 40.0) < 1e-12,
+         "weekly max resample should aggregate each selected feature");
+
+  auto monthly_max = df.ts("Adj Close").resample("date", "M").max();
+  expect(monthly_max.ncases() == 1, "monthly resample should group the sample into one monthly bin");
+  const auto monthly_adj = to_f64(monthly_max.features("Adj Close"));
+  expect(monthly_adj.size() == 1 && std::abs(monthly_adj[0] - 4.0) < 1e-12,
+         "monthly max resample should honor M frequency aliases");
 
   const std::vector<std::string_view> target_iso{
       "2024-01-01T00:00:00Z",

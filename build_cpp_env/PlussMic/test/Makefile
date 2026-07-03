@@ -262,6 +262,48 @@ plussmic_table_ts_accessor_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build
 .PHONY : plussmic_table_ts_accessor_tests/fast
 
+# Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/rule
+
+# Convenience name for target.
+plussmic_table_axis_match_tests: PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/rule
+.PHONY : plussmic_table_axis_match_tests
+
+# fast build rule for target.
+plussmic_table_axis_match_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build
+.PHONY : plussmic_table_axis_match_tests/fast
+
+# Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/rule
+
+# Convenience name for target.
+plussmic_table_statistics_window_tests: PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/rule
+.PHONY : plussmic_table_statistics_window_tests
+
+# fast build rule for target.
+plussmic_table_statistics_window_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build
+.PHONY : plussmic_table_statistics_window_tests/fast
+
+# Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
+
+# Convenience name for target.
+plussmic_table_gap_benchmark: PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule
+.PHONY : plussmic_table_gap_benchmark
+
+# fast build rule for target.
+plussmic_table_gap_benchmark/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build
+.PHONY : plussmic_table_gap_benchmark/fast
+
 bundle_model_tests.o: bundle_model_tests.cpp.o
 .PHONY : bundle_model_tests.o
 
@@ -309,6 +351,30 @@ kindle_catalog_tests.s: kindle_catalog_tests.cpp.s
 kindle_catalog_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/kindle_catalog_tests.cpp.s
 .PHONY : kindle_catalog_tests.cpp.s
+
+table_axis_match_tests.o: table_axis_match_tests.cpp.o
+.PHONY : table_axis_match_tests.o
+
+# target to build an object file
+table_axis_match_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/table_axis_match_tests.cpp.o
+.PHONY : table_axis_match_tests.cpp.o
+
+table_axis_match_tests.i: table_axis_match_tests.cpp.i
+.PHONY : table_axis_match_tests.i
+
+# target to preprocess a source file
+table_axis_match_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/table_axis_match_tests.cpp.i
+.PHONY : table_axis_match_tests.cpp.i
+
+table_axis_match_tests.s: table_axis_match_tests.cpp.s
+.PHONY : table_axis_match_tests.s
+
+# target to generate assembly for a file
+table_axis_match_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/table_axis_match_tests.cpp.s
+.PHONY : table_axis_match_tests.cpp.s
 
 table_csv_parser_tests.o: table_csv_parser_tests.cpp.o
 .PHONY : table_csv_parser_tests.o
@@ -358,6 +424,54 @@ table_dataframe_plot_api_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_dataframe_plot_api_tests.dir/table_dataframe_plot_api_tests.cpp.s
 .PHONY : table_dataframe_plot_api_tests.cpp.s
 
+table_gap_benchmark.o: table_gap_benchmark.cpp.o
+.PHONY : table_gap_benchmark.o
+
+# target to build an object file
+table_gap_benchmark.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/table_gap_benchmark.cpp.o
+.PHONY : table_gap_benchmark.cpp.o
+
+table_gap_benchmark.i: table_gap_benchmark.cpp.i
+.PHONY : table_gap_benchmark.i
+
+# target to preprocess a source file
+table_gap_benchmark.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/table_gap_benchmark.cpp.i
+.PHONY : table_gap_benchmark.cpp.i
+
+table_gap_benchmark.s: table_gap_benchmark.cpp.s
+.PHONY : table_gap_benchmark.s
+
+# target to generate assembly for a file
+table_gap_benchmark.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/table_gap_benchmark.cpp.s
+.PHONY : table_gap_benchmark.cpp.s
+
+table_statistics_window_tests.o: table_statistics_window_tests.cpp.o
+.PHONY : table_statistics_window_tests.o
+
+# target to build an object file
+table_statistics_window_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/table_statistics_window_tests.cpp.o
+.PHONY : table_statistics_window_tests.cpp.o
+
+table_statistics_window_tests.i: table_statistics_window_tests.cpp.i
+.PHONY : table_statistics_window_tests.i
+
+# target to preprocess a source file
+table_statistics_window_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/table_statistics_window_tests.cpp.i
+.PHONY : table_statistics_window_tests.cpp.i
+
+table_statistics_window_tests.s: table_statistics_window_tests.cpp.s
+.PHONY : table_statistics_window_tests.s
+
+# target to generate assembly for a file
+table_statistics_window_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_statistics_window_tests.dir/table_statistics_window_tests.cpp.s
+.PHONY : table_statistics_window_tests.cpp.s
+
 table_ts_accessor_tests.o: table_ts_accessor_tests.cpp.o
 .PHONY : table_ts_accessor_tests.o
 
@@ -399,8 +513,11 @@ help:
 	@echo "... test"
 	@echo "... plussmic_bundle_model_tests"
 	@echo "... plussmic_kindle_catalog_tests"
+	@echo "... plussmic_table_axis_match_tests"
 	@echo "... plussmic_table_csv_tests"
 	@echo "... plussmic_table_dataframe_plot_api_tests"
+	@echo "... plussmic_table_gap_benchmark"
+	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
 	@echo "... bundle_model_tests.o"
 	@echo "... bundle_model_tests.i"
@@ -408,12 +525,21 @@ help:
 	@echo "... kindle_catalog_tests.o"
 	@echo "... kindle_catalog_tests.i"
 	@echo "... kindle_catalog_tests.s"
+	@echo "... table_axis_match_tests.o"
+	@echo "... table_axis_match_tests.i"
+	@echo "... table_axis_match_tests.s"
 	@echo "... table_csv_parser_tests.o"
 	@echo "... table_csv_parser_tests.i"
 	@echo "... table_csv_parser_tests.s"
 	@echo "... table_dataframe_plot_api_tests.o"
 	@echo "... table_dataframe_plot_api_tests.i"
 	@echo "... table_dataframe_plot_api_tests.s"
+	@echo "... table_gap_benchmark.o"
+	@echo "... table_gap_benchmark.i"
+	@echo "... table_gap_benchmark.s"
+	@echo "... table_statistics_window_tests.o"
+	@echo "... table_statistics_window_tests.i"
+	@echo "... table_statistics_window_tests.s"
 	@echo "... table_ts_accessor_tests.o"
 	@echo "... table_ts_accessor_tests.i"
 	@echo "... table_ts_accessor_tests.s"

@@ -518,6 +518,21 @@ target_include_directories(plussqit_coden
 target_compile_features(plussqit_coden PUBLIC cxx_std_20)
 target_compile_definitions(plussqit_coden PRIVATE CODEN_BUILD_MAIN_LIB)
 
+# Unicode normalization is enabled when GNU libunistring is available.  The
+# public Note contract remains stable on every platform; builds without the
+# backend fail explicitly for normalization instead of silently returning
+# unnormalized text.
+find_path(PLUSSQIT_UNISTRING_INCLUDE_DIR NAMES uninorm.h)
+find_library(PLUSSQIT_UNISTRING_LIBRARY NAMES unistring libunistring)
+if(PLUSSQIT_UNISTRING_INCLUDE_DIR AND PLUSSQIT_UNISTRING_LIBRARY)
+  target_include_directories(
+    plussqit_coden PRIVATE ${PLUSSQIT_UNISTRING_INCLUDE_DIR})
+  target_compile_definitions(
+    plussqit_coden PRIVATE PLUSSQIT_HAS_LIBUNISTRING=1)
+  target_link_libraries(
+    plussqit_coden PUBLIC ${PLUSSQIT_UNISTRING_LIBRARY})
+endif()
+
 # Optional: CodeN <-> CodeM interop (guards the tiny surface in Note.h)
 if (PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP AND PLUSSQIT_BUILD_CODEM)
   target_compile_definitions(plussqit_coden PUBLIC CODEN_ENABLE_SERIES_INTEROP)

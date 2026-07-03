@@ -1,7 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
+
+namespace pluss::view {
+class VirtualTableModel;
+}
 
 namespace pluss::view::detail {
 
@@ -33,6 +38,8 @@ bool show_inhouse_html_window(const std::string& title,
                               std::int64_t height,
                               const std::string& snapshot_name,
                               const std::string& svg_payload,
-                              const std::string& svg_snapshot_name);
+                              const std::string& svg_snapshot_name,
+                              std::shared_ptr<const VirtualTableModel>
+                                  virtual_table_model = {});
 
 } // namespace pluss::view::detail

@@ -92,6 +92,12 @@ signatures, overloads, and parameter behavior.</p>
 <li class="toctree-l2"><a class="reference internal" href="dataframe.html#common-everyday-tasks">Common Everyday Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe.html#cast-and-derive-features">Cast And Derive Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe.html#filter-query-and-sort">Filter, Query, And Sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe.html#match-frames-by-cases-and-features">Match Frames By Cases And Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe.html#extend-and-unify-frames">Extend And Unify Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe.html#grouped-reductions">Grouped Reductions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe.html#wide-to-long-reshape">Wide-To-Long Reshape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe.html#low-cardinality-encoding">Low-Cardinality Encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe.html#stream-large-csv-files-by-cases">Stream Large CSV Files By Cases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe.html#grouping-pivoting-and-summaries">Grouping, Pivoting, And Summaries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe.html#missing-data-and-rolling-windows">Missing Data And Rolling Windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe.html#join-and-combine">Join And Combine</a></li>
@@ -144,6 +150,7 @@ signatures, overloads, and parameter behavior.</p>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#l">L</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#m">M</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#n">N</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#o">O</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#p">P</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#q">Q</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#r">R</a></li>
@@ -152,6 +159,108 @@ signatures, overloads, and parameter behavior.</p>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#u">U</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#v">V</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dataframe_api_reference.html#w">W</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Stabilization, Statistics, and Window API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#matched-with"><code class="docutils literal notranslate"><span class="pre">matched_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#extend-cases"><code class="docutils literal notranslate"><span class="pre">extend_cases</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#unify"><code class="docutils literal notranslate"><span class="pre">unify</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#combine"><code class="docutils literal notranslate"><span class="pre">combine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#group-by"><code class="docutils literal notranslate"><span class="pre">group_by</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#lengthen"><code class="docutils literal notranslate"><span class="pre">lengthen</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#catalogue"><code class="docutils literal notranslate"><span class="pre">catalogue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#covariance"><code class="docutils literal notranslate"><span class="pre">covariance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#percentiles"><code class="docutils literal notranslate"><span class="pre">percentiles</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#most-frequent"><code class="docutils literal notranslate"><span class="pre">most_frequent</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#ranks"><code class="docutils literal notranslate"><span class="pre">ranks</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#asymmetry"><code class="docutils literal notranslate"><span class="pre">asymmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#tail-weight"><code class="docutils literal notranslate"><span class="pre">tail_weight</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#variance"><code class="docutils literal notranslate"><span class="pre">variance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#deviation"><code class="docutils literal notranslate"><span class="pre">deviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#mean-error"><code class="docutils literal notranslate"><span class="pre">mean_error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#running-sum"><code class="docutils literal notranslate"><span class="pre">running_sum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#running-product"><code class="docutils literal notranslate"><span class="pre">running_product</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#running-minimum"><code class="docutils literal notranslate"><span class="pre">running_minimum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#running-maximum"><code class="docutils literal notranslate"><span class="pre">running_maximum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#correlate-with"><code class="docutils literal notranslate"><span class="pre">correlate_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#matrix-product"><code class="docutils literal notranslate"><span class="pre">matrix_product</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-sum"><code class="docutils literal notranslate"><span class="pre">moving_sum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-mean"><code class="docutils literal notranslate"><span class="pre">moving_mean</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-minimum"><code class="docutils literal notranslate"><span class="pre">moving_minimum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-maximum"><code class="docutils literal notranslate"><span class="pre">moving_maximum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-variance"><code class="docutils literal notranslate"><span class="pre">moving_variance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-deviation"><code class="docutils literal notranslate"><span class="pre">moving_deviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-mean-error"><code class="docutils literal notranslate"><span class="pre">moving_mean_error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-asymmetry"><code class="docutils literal notranslate"><span class="pre">moving_asymmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#moving-tail-weight"><code class="docutils literal notranslate"><span class="pre">moving_tail_weight</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#weighted-moving"><code class="docutils literal notranslate"><span class="pre">weighted_moving</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#indexed-moving"><code class="docutils literal notranslate"><span class="pre">indexed_moving</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-sum"><code class="docutils literal notranslate"><span class="pre">growing_sum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-mean"><code class="docutils literal notranslate"><span class="pre">growing_mean</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-minimum"><code class="docutils literal notranslate"><span class="pre">growing_minimum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-maximum"><code class="docutils literal notranslate"><span class="pre">growing_maximum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-variance"><code class="docutils literal notranslate"><span class="pre">growing_variance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-deviation"><code class="docutils literal notranslate"><span class="pre">growing_deviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-mean-error"><code class="docutils literal notranslate"><span class="pre">growing_mean_error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-asymmetry"><code class="docutils literal notranslate"><span class="pre">growing_asymmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#growing-tail-weight"><code class="docutils literal notranslate"><span class="pre">growing_tail_weight</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#exponential-mean"><code class="docutils literal notranslate"><span class="pre">exponential_mean</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#exponential-variance"><code class="docutils literal notranslate"><span class="pre">exponential_variance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#exponential-deviation"><code class="docutils literal notranslate"><span class="pre">exponential_deviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#grouped-moving-mean"><code class="docutils literal notranslate"><span class="pre">grouped_moving_mean</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#grouped-moving"><code class="docutils literal notranslate"><span class="pre">grouped_moving</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#time-moving-mean"><code class="docutils literal notranslate"><span class="pre">time_moving_mean</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics_window_api_reference.html#time-moving"><code class="docutils literal notranslate"><span class="pre">time_moving</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-map-elements"><code class="docutils literal notranslate"><span class="pre">Thread::map_elements</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-aggregate-with"><code class="docutils literal notranslate"><span class="pre">Thread::aggregate_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-flow"><code class="docutils literal notranslate"><span class="pre">Thread::flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-map-cases"><code class="docutils literal notranslate"><span class="pre">DataFrame::map_cases</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-apply-cases"><code class="docutils literal notranslate"><span class="pre">DataFrame::apply_cases</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-map-elements"><code class="docutils literal notranslate"><span class="pre">DataFrame::map_elements</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-aggregate-with"><code class="docutils literal notranslate"><span class="pre">DataFrame::aggregate_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-flow"><code class="docutils literal notranslate"><span class="pre">DataFrame::flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#atlas-map-elements"><code class="docutils literal notranslate"><span class="pre">Atlas::map_elements</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#atlas-moving"><code class="docutils literal notranslate"><span class="pre">Atlas::moving</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#atlas-flow"><code class="docutils literal notranslate"><span class="pre">Atlas::flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-upper"><code class="docutils literal notranslate"><span class="pre">Thread::upper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-casefold"><code class="docutils literal notranslate"><span class="pre">Thread::casefold</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-title-case"><code class="docutils literal notranslate"><span class="pre">Thread::title_case</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-text-length"><code class="docutils literal notranslate"><span class="pre">Thread::text_length</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-starts-with"><code class="docutils literal notranslate"><span class="pre">Thread::starts_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-ends-with"><code class="docutils literal notranslate"><span class="pre">Thread::ends_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-regex-match"><code class="docutils literal notranslate"><span class="pre">Thread::regex_match</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-regex-fullmatch"><code class="docutils literal notranslate"><span class="pre">Thread::regex_fullmatch</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-regex-extract"><code class="docutils literal notranslate"><span class="pre">Thread::regex_extract</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-split-text"><code class="docutils literal notranslate"><span class="pre">Thread::split_text</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-partition-text"><code class="docutils literal notranslate"><span class="pre">Thread::partition_text</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-pad-text"><code class="docutils literal notranslate"><span class="pre">Thread::pad_text</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-slice-text"><code class="docutils literal notranslate"><span class="pre">Thread::slice_text</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-normalize-text"><code class="docutils literal notranslate"><span class="pre">Thread::normalize_text</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-encode-text"><code class="docutils literal notranslate"><span class="pre">Thread::encode_text</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#thread-text-indicators"><code class="docutils literal notranslate"><span class="pre">Thread::text_indicators</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-upper"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_upper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-casefold"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_casefold</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-title"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_title</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-lengths"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_lengths</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-starts-with"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_starts_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-ends-with"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_ends_with</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-matches"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_matches</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-pad"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_pad</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-slice"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_slice</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-normalize"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_normalize</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-encode"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_encode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-regex-groups"><code class="docutils literal notranslate"><span class="pre">DataFrame::regex_groups</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-split-feature"><code class="docutils literal notranslate"><span class="pre">DataFrame::split_feature</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-partition-feature"><code class="docutils literal notranslate"><span class="pre">DataFrame::partition_feature</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_thread_api_reference.html#dataframe-text-indicators"><code class="docutils literal notranslate"><span class="pre">DataFrame::text_indicators</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_benchmarks.html">DataFrame Benchmark Results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dataframe_benchmarks.html#reproduce">Reproduce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataframe_benchmarks.html#latest-million-case-run">Latest million-case run</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
@@ -309,6 +418,9 @@ signatures, overloads, and parameter behavior.</p>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Stabilization, Statistics, and Window API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>

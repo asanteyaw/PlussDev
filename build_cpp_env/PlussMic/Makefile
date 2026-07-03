@@ -758,6 +758,30 @@ src/table/io/ThreadIO.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/ThreadIO.cpp.s
 .PHONY : src/table/io/ThreadIO.cpp.s
 
+src/table/ops/DataFrameAxisMatch.o: src/table/ops/DataFrameAxisMatch.cpp.o
+.PHONY : src/table/ops/DataFrameAxisMatch.o
+
+# target to build an object file
+src/table/ops/DataFrameAxisMatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/ops/DataFrameAxisMatch.cpp.o
+.PHONY : src/table/ops/DataFrameAxisMatch.cpp.o
+
+src/table/ops/DataFrameAxisMatch.i: src/table/ops/DataFrameAxisMatch.cpp.i
+.PHONY : src/table/ops/DataFrameAxisMatch.i
+
+# target to preprocess a source file
+src/table/ops/DataFrameAxisMatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/ops/DataFrameAxisMatch.cpp.i
+.PHONY : src/table/ops/DataFrameAxisMatch.cpp.i
+
+src/table/ops/DataFrameAxisMatch.s: src/table/ops/DataFrameAxisMatch.cpp.s
+.PHONY : src/table/ops/DataFrameAxisMatch.s
+
+# target to generate assembly for a file
+src/table/ops/DataFrameAxisMatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/ops/DataFrameAxisMatch.cpp.s
+.PHONY : src/table/ops/DataFrameAxisMatch.cpp.s
+
 src/table/ops/DataFrameReshape.o: src/table/ops/DataFrameReshape.cpp.o
 .PHONY : src/table/ops/DataFrameReshape.o
 
@@ -987,6 +1011,9 @@ help:
 	@echo "... src/table/io/ThreadIO.o"
 	@echo "... src/table/io/ThreadIO.i"
 	@echo "... src/table/io/ThreadIO.s"
+	@echo "... src/table/ops/DataFrameAxisMatch.o"
+	@echo "... src/table/ops/DataFrameAxisMatch.i"
+	@echo "... src/table/ops/DataFrameAxisMatch.s"
 	@echo "... src/table/ops/DataFrameReshape.o"
 	@echo "... src/table/ops/DataFrameReshape.i"
 	@echo "... src/table/ops/DataFrameReshape.s"

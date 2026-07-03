@@ -50,26 +50,31 @@
 <h3><code class="docutils literal notranslate"><span class="pre">execute</span></code><a class="headerlink" href="#execute" title="Link to this heading">¶</a></h3>
 <section id="api-signature">
 <h4>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">execute</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlAccessor</span><span class="o">::</span><span class="n">execute</span><span class="p">(</span><span class="n">statement</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="parameters">
-<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
+<p>Runs a SQL query against the current frame and returns the result as a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+</section>
+<section id="inputs">
+<h4>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">statement</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 SQL query text run against the current frame. The frame is exposed to the statement as <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </section>
-<section id="returns">
-<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
+<section id="output">
+<h4>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 Value produced by this call.</p>
 </section>
-<section id="what-it-does">
-<h4>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h4>
-<p>Runs a SQL query against the current frame and returns the result as a new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<section id="options">
+<h4>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
+<p>Example 1. Use this overload when its parameter combination matches the result shape or control level you need.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
@@ -80,11 +85,14 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; 95&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<section id="expected-output">
+<h5>Expected output<a class="headerlink" href="#expected-output" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales
 1   100.0
 2   120.0
 </pre></div>
 </div>
+</section>
 </section>
 <section id="practical-behavior">
 <h4>Practical Behavior<a class="headerlink" href="#practical-behavior" title="Link to this heading">¶</a></h4>
@@ -102,26 +110,31 @@ Value produced by this call.</p>
 <h3><code class="docutils literal notranslate"><span class="pre">prepare</span></code><a class="headerlink" href="#prepare" title="Link to this heading">¶</a></h3>
 <section id="id1">
 <h4>API Signature<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlPrepared</span><span class="w"> </span><span class="n">prepare</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameSqlAccessor</span><span class="o">::</span><span class="n">prepare</span><span class="p">(</span><span class="n">statement</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameSqlPrepared</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h4>Parameters<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<h4>Notes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<p>Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.</p>
+</section>
+<section id="id3">
+<h4>Inputs<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">statement</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
 Parameterized SQL statement template. Use placeholders such as <code class="docutils literal notranslate"><span class="pre">{min_sales}</span></code> when you plan to bind values later.</p>
 </section>
-<section id="id3">
-<h4>Returns<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<section id="id4">
+<h4>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameSqlPrepared</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id4">
-<h4>What It Does<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
-<p>Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.</p>
-</section>
 <section id="id5">
-<h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<h4>Options<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id6">
+<h4>Examples<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h4>
+<p>Example 1. Use this overload when its parameter combination matches the result shape or control level you need.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
@@ -132,12 +145,15 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sql</span><span class="p">.</span><span class="n">prepare</span><span class="p">(</span><span class="s">&quot;SELECT id, sales FROM self WHERE sales &gt; {min_sales}&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+<section id="id7">
+<h5>Expected output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Prepared statement ready
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h4>Practical Behavior<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h4>
+</section>
+<section id="id8">
+<h4>Practical Behavior<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">prepare(statement)</span></code> captures a parameterized SQL template and returns a reusable prepared helper.</p></li>
 <li><p>Use placeholders such as <code class="docutils literal notranslate"><span class="pre">{min_sales}</span></code> for value parameters you will bind later.</p></li>
@@ -183,6 +199,9 @@ Value produced by this call.</p>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Stabilization, Statistics, and Window API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
