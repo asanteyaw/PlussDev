@@ -69,32 +69,32 @@ Stream Stream::astype(pluss::codem::ScalarType dtype) const {
 
 Stream Stream::sum() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream(to_thread().sum());
+  return Stream::from_thread(to_thread().sum().thread());
 }
 
 Stream Stream::mean() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream(to_thread().mean());
+  return Stream::from_thread(to_thread().mean().thread());
 }
 
 Stream Stream::min() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream(to_thread().min());
+  return Stream::from_thread(to_thread().min().thread());
 }
 
 Stream Stream::max() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream(to_thread().max());
+  return Stream::from_thread(to_thread().max().thread());
 }
 
 Stream Stream::var(bool unbiased) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream(to_thread().var(unbiased));
+  return Stream::from_thread(to_thread().var(unbiased).thread());
 }
 
 Stream Stream::std(bool unbiased) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream(to_thread().std(unbiased));
+  return Stream::from_thread(to_thread().std(unbiased).thread());
 }
 
 const pluss::Series& Stream::as_series() const {

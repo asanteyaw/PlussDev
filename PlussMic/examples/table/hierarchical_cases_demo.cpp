@@ -1,0 +1,101 @@
+#include <iostream>
+#include <vector>
+
+#include "pluss/pluss.h"
+
+int main() {
+  using pluss::table::DataFrame;
+  using pluss::table::Thread;
+
+  auto sales = DataFrame({
+      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
+      {"quarter", Thread(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
+      {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"cost", Thread(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
+  });
+
+  auto indexed = sales.set_cases(DataFrame::SetCasesOptions{
+      .features = {"region", "account", "quarter"},
+      .drop = false,
+      .verify = true,
+      .sort = false,
+  });
+  std::cout << "Structured case levels\n";
+  for (const auto& name : indexed.levels()) {
+    std::cout << "- " << name << "\n";
+  }
+  std::cout << indexed.features({"sales", "cost"}).head(4) << "\n";
+
+  auto west = indexed.case_study(DataFrame::CasePick{
+      .level = "region",
+      .value = "West",
+  });
+  std::cout << "Partial level selection: region=West\n";
+  std::cout << west.features({"sales", "cost"}).head(4) << "\n";
+
+  auto one_cell = indexed.case_study(DataFrame::CasePick{
+      .key = {"East", "201", "Q2"},
+  });
+  std::cout << "Full structured key selection: East / 201 / Q2\n";
+  std::cout << one_cell.features({"sales", "cost"}).head(2) << "\n";
+
+  auto sorted = indexed.sort_cases(DataFrame::SortCasesOptions{
+      .levels = {"region", "account", "quarter"},
+      .ascending = true,
+      .nulls_last = true,
+  });
+  std::cout << "Sorted by structured case levels\n";
+  std::cout << sorted.features({"sales", "cost"}).head(4) << "\n";
+
+  std::vector<DataFrame::GroupSpec> group_specs{
+      {"total_sales", "sales", DataFrame::GroupOp::Sum},
+      {"mean_cost", "cost", DataFrame::GroupOp::Mean},
+      {"n", "", DataFrame::GroupOp::Count},
+  };
+  auto by_region = static_cast<DataFrame>(
+      indexed.group_by(DataFrame::CaseGroup{.level = "region"}, group_specs));
+  std::cout << "Grouped by case level: region\n";
+  std::cout << by_region << "\n";
+
+  auto renamed = indexed.rename_levels({{"account", "acct"}});
+  auto reordered = renamed.reorder_levels({"region", "quarter", "acct"});
+  auto dropped = reordered.drop_levels({"quarter"});
+  std::cout << "Renamed/reordered/dropped levels\n";
+  for (const auto& name : dropped.levels()) {
+    std::cout << "- " << name << "\n";
+  }
+
+  auto reset = indexed.reset_cases(DataFrame::ResetCasesOptions{
+      .drop = false,
+      .names = {"region_case", "account_case", "quarter_case"},
+  });
+  std::cout << "Reset cases back into ordinary features\n";
+  std::cout << reset.features({"region_case", "account_case", "quarter_case", "sales"}).head(4) << "\n";
+
+  auto compact = sales.set_cases({"region", "account", "quarter"}, true);
+  auto wide = compact.unstack("quarter");
+  std::cout << "Unstack quarter into features\n";
+  std::cout << wide << "\n";
+
+  auto long_again = wide.stack("quarter", "sales");
+  std::cout << "Stack quarter features back into structured cases\n";
+  std::cout << long_again << "\n";
+
+  auto featurewise = indexed.features({"sales", "cost"}).transform(
+      [](const Thread& values) {
+        return values + 1.0;
+      },
+      pluss::table::Axis::Feature);
+  std::cout << "Feature-wise transform with Axis::Feature\n";
+  std::cout << featurewise.head(4) << "\n";
+
+  auto threadwise = indexed.features("sales").transform(
+      [](const pluss::table::ThreadValue& value) {
+        return pluss::table::ThreadValue(value.thread() * 2.0);
+      });
+  std::cout << "Thread element-wise transform\n";
+  std::cout << threadwise << "\n";
+
+  return 0;
+}

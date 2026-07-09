@@ -33,8 +33,8 @@ int main() {
 
   // Basic TS transforms.
   auto lr = df.ts("adj_close").log_returns();
-  auto roll = df.ts("adj_close").rolling_std(3, 2);
-  auto exp = df.ts("adj_close").expanding_mean(2);
+  auto roll = df.ts("adj_close").rolling(3, pluss::table::WindowStatistic::Std, {.min_count = 2});
+  auto exp = df.ts("adj_close").expanding(pluss::table::WindowStatistic::Mean, {.min_count = 2});
 
   // Model-ready feature blocks.
   auto lag_block = df.ts({"adj_close", "volume"}).lag_block({1, 2, 3});

@@ -473,6 +473,20 @@ plussmic_time_series_accessor_demo/fast:
 .PHONY : plussmic_time_series_accessor_demo/fast
 
 # Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/rule
+
+# Convenience name for target.
+plussmic_dataframe_tl_batched_demo: PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/rule
+.PHONY : plussmic_dataframe_tl_batched_demo
+
+# fast build rule for target.
+plussmic_dataframe_tl_batched_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build
+.PHONY : plussmic_dataframe_tl_batched_demo/fast
+
+# Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule
 .PHONY : PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/rule
@@ -485,6 +499,34 @@ plussmic_csv_engine_bench: PlussMic/examples/table/CMakeFiles/plussmic_csv_engin
 plussmic_csv_engine_bench/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build
 .PHONY : plussmic_csv_engine_bench/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/rule
+
+# Convenience name for target.
+plussmic_native_gap_api_demo: PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/rule
+.PHONY : plussmic_native_gap_api_demo
+
+# fast build rule for target.
+plussmic_native_gap_api_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build
+.PHONY : plussmic_native_gap_api_demo/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/rule
+
+# Convenience name for target.
+plussmic_hierarchical_cases_demo: PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/rule
+.PHONY : plussmic_hierarchical_cases_demo
+
+# fast build rule for target.
+plussmic_hierarchical_cases_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build
+.PHONY : plussmic_hierarchical_cases_demo/fast
 
 atlas_plot_demo.o: atlas_plot_demo.cpp.o
 .PHONY : atlas_plot_demo.o
@@ -750,6 +792,30 @@ dataframe_thread_values_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/dataframe_thread_values_demo.cpp.s
 .PHONY : dataframe_thread_values_demo.cpp.s
 
+dataframe_tl_batched_demo.o: dataframe_tl_batched_demo.cpp.o
+.PHONY : dataframe_tl_batched_demo.o
+
+# target to build an object file
+dataframe_tl_batched_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/dataframe_tl_batched_demo.cpp.o
+.PHONY : dataframe_tl_batched_demo.cpp.o
+
+dataframe_tl_batched_demo.i: dataframe_tl_batched_demo.cpp.i
+.PHONY : dataframe_tl_batched_demo.i
+
+# target to preprocess a source file
+dataframe_tl_batched_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/dataframe_tl_batched_demo.cpp.i
+.PHONY : dataframe_tl_batched_demo.cpp.i
+
+dataframe_tl_batched_demo.s: dataframe_tl_batched_demo.cpp.s
+.PHONY : dataframe_tl_batched_demo.s
+
+# target to generate assembly for a file
+dataframe_tl_batched_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/dataframe_tl_batched_demo.cpp.s
+.PHONY : dataframe_tl_batched_demo.cpp.s
+
 dataframe_versatile_methods_demo.o: dataframe_versatile_methods_demo.cpp.o
 .PHONY : dataframe_versatile_methods_demo.o
 
@@ -870,6 +936,30 @@ eda_us_accidents.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_eda_us_accidents_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_eda_us_accidents_demo.dir/eda_us_accidents.cpp.s
 .PHONY : eda_us_accidents.cpp.s
 
+hierarchical_cases_demo.o: hierarchical_cases_demo.cpp.o
+.PHONY : hierarchical_cases_demo.o
+
+# target to build an object file
+hierarchical_cases_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/hierarchical_cases_demo.cpp.o
+.PHONY : hierarchical_cases_demo.cpp.o
+
+hierarchical_cases_demo.i: hierarchical_cases_demo.cpp.i
+.PHONY : hierarchical_cases_demo.i
+
+# target to preprocess a source file
+hierarchical_cases_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/hierarchical_cases_demo.cpp.i
+.PHONY : hierarchical_cases_demo.cpp.i
+
+hierarchical_cases_demo.s: hierarchical_cases_demo.cpp.s
+.PHONY : hierarchical_cases_demo.s
+
+# target to generate assembly for a file
+hierarchical_cases_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/hierarchical_cases_demo.cpp.s
+.PHONY : hierarchical_cases_demo.cpp.s
+
 loader_saver_parity_demo.o: loader_saver_parity_demo.cpp.o
 .PHONY : loader_saver_parity_demo.o
 
@@ -917,6 +1007,30 @@ option_smile_skew_surface_demo.s: option_smile_skew_surface_demo.cpp.s
 option_smile_skew_surface_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_option_smile_skew_surface_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_option_smile_skew_surface_demo.dir/option_smile_skew_surface_demo.cpp.s
 .PHONY : option_smile_skew_surface_demo.cpp.s
+
+pluss_native_gap_api_demo.o: pluss_native_gap_api_demo.cpp.o
+.PHONY : pluss_native_gap_api_demo.o
+
+# target to build an object file
+pluss_native_gap_api_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/pluss_native_gap_api_demo.cpp.o
+.PHONY : pluss_native_gap_api_demo.cpp.o
+
+pluss_native_gap_api_demo.i: pluss_native_gap_api_demo.cpp.i
+.PHONY : pluss_native_gap_api_demo.i
+
+# target to preprocess a source file
+pluss_native_gap_api_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/pluss_native_gap_api_demo.cpp.i
+.PHONY : pluss_native_gap_api_demo.cpp.i
+
+pluss_native_gap_api_demo.s: pluss_native_gap_api_demo.cpp.s
+.PHONY : pluss_native_gap_api_demo.s
+
+# target to generate assembly for a file
+pluss_native_gap_api_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/pluss_native_gap_api_demo.cpp.s
+.PHONY : pluss_native_gap_api_demo.cpp.s
 
 sp500_eda_ml_prep_notebook_demo.o: sp500_eda_ml_prep_notebook_demo.cpp.o
 .PHONY : sp500_eda_ml_prep_notebook_demo.o
@@ -1016,12 +1130,15 @@ help:
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
 	@echo "... plussmic_dataframe_thread_values_demo"
+	@echo "... plussmic_dataframe_tl_batched_demo"
 	@echo "... plussmic_dataframe_versatile_methods_demo"
 	@echo "... plussmic_dataframe_view_demo"
 	@echo "... plussmic_df_ex_demo"
 	@echo "... plussmic_display_policy_demo"
 	@echo "... plussmic_eda_us_accidents_demo"
+	@echo "... plussmic_hierarchical_cases_demo"
 	@echo "... plussmic_loader_saver_parity_demo"
+	@echo "... plussmic_native_gap_api_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
 	@echo "... plussmic_time_series_accessor_demo"
@@ -1059,6 +1176,9 @@ help:
 	@echo "... dataframe_thread_values_demo.o"
 	@echo "... dataframe_thread_values_demo.i"
 	@echo "... dataframe_thread_values_demo.s"
+	@echo "... dataframe_tl_batched_demo.o"
+	@echo "... dataframe_tl_batched_demo.i"
+	@echo "... dataframe_tl_batched_demo.s"
 	@echo "... dataframe_versatile_methods_demo.o"
 	@echo "... dataframe_versatile_methods_demo.i"
 	@echo "... dataframe_versatile_methods_demo.s"
@@ -1074,12 +1194,18 @@ help:
 	@echo "... eda_us_accidents.o"
 	@echo "... eda_us_accidents.i"
 	@echo "... eda_us_accidents.s"
+	@echo "... hierarchical_cases_demo.o"
+	@echo "... hierarchical_cases_demo.i"
+	@echo "... hierarchical_cases_demo.s"
 	@echo "... loader_saver_parity_demo.o"
 	@echo "... loader_saver_parity_demo.i"
 	@echo "... loader_saver_parity_demo.s"
 	@echo "... option_smile_skew_surface_demo.o"
 	@echo "... option_smile_skew_surface_demo.i"
 	@echo "... option_smile_skew_surface_demo.s"
+	@echo "... pluss_native_gap_api_demo.o"
+	@echo "... pluss_native_gap_api_demo.i"
+	@echo "... pluss_native_gap_api_demo.s"
 	@echo "... sp500_eda_ml_prep_notebook_demo.o"
 	@echo "... sp500_eda_ml_prep_notebook_demo.i"
 	@echo "... sp500_eda_ml_prep_notebook_demo.s"

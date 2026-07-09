@@ -1079,7 +1079,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
     auto [left_key, right_key] =
         resolve_join_keys(out, right_src, join.source.name, join.source.alias, join.on_left, join.on_right, source_prefixes);
     const auto right_prefixed = with_prefixed_columns(right_src, join.source.alias + ".");
-    out = out.stitch_on(left_key, right_prefixed, join.source.alias + "." + right_key, "_" + join.source.alias);
+    out = out.unify(left_key, right_prefixed, join.source.alias + "." + right_key, "common", "_" + join.source.alias);
 
     source_prefixes[lower_ascii_copy(join.source.name)] = join.source.alias;
     source_prefixes[lower_ascii_copy(join.source.alias)] = join.source.alias;
@@ -1211,11 +1211,11 @@ DataFrameSqlAccessor DataFrame::sql() const {
   return DataFrameSqlAccessor(*this, SqlOptions{});
 }
 
-DataFrameSqlPrepared DataFrame::prepare_sql(std::string_view statement) const {
+DataFrameSqlPrepared DataFrame::prep_sql(std::string_view statement) const {
   return DataFrameSqlAccessor(*this, SqlOptions{}).prepare(statement);
 }
 
-DataFrameSqlPrepared DataFrame::prepare_sql(std::string_view statement, SqlOptions options) const {
+DataFrameSqlPrepared DataFrame::prep_sql(std::string_view statement, SqlOptions options) const {
   return DataFrameSqlAccessor(*this, std::move(options)).prepare(statement);
 }
 

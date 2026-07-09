@@ -29,6 +29,8 @@ class ThreadValue;
 class DataFrame;
 class DataFrameView;
 class ThreadView;
+class ThreadNoteAccessor;
+class ThreadTimelineAccessor;
 class TimeSeriesAccessor;
 
 enum class ThreadKind : std::uint8_t {
@@ -36,6 +38,13 @@ enum class ThreadKind : std::uint8_t {
   Note = 1,
   Timeline = 2,
   TimeIndex = 3,
+};
+
+std::string_view thread_kind_name(ThreadKind kind) noexcept;
+
+enum class Axis : std::uint8_t {
+  Feature = 0,
+  Case = 1,
 };
 
 enum class ThreadBinaryMathOp : std::uint8_t {
@@ -63,6 +72,17 @@ enum class ThreadCastTarget : std::uint8_t {
   Note = 1,
   Timeline = 2,
   TimeIndex = 3,
+};
+
+enum class ParseInvalid : std::uint8_t {
+  Raise = 0,
+  Null = 1,
+};
+
+struct ThreadCastOptions {
+  std::optional<pluss::codem::ScalarType> series_dtype{std::nullopt};
+  std::string format{};
+  ParseInvalid invalid{ParseInvalid::Raise};
 };
 
 enum class ThreadWindowOp : std::uint8_t {
@@ -116,15 +136,30 @@ enum class WindowStatistic : std::uint8_t {
   Mean = 1,
   Minimum = 2,
   Maximum = 3,
-  Variance = 4,
-  Deviation = 5,
+  Var = 4,
+  Std = 5,
+  Sem = 6,
+  Skew = 7,
+  Kurtosis = 8,
 };
 
 enum class TimeWindowStatistic : std::uint8_t {
   Sum = 0,
   Mean = 1,
-  Variance = 2,
-  Deviation = 3,
+  Var = 2,
+  Std = 3,
+};
+
+enum class ScanStatistic : std::uint8_t {
+  Sum = 0,
+  Product = 1,
+  Minimum = 2,
+  Maximum = 3,
+};
+
+enum class ErrorTarget : std::uint8_t {
+  Mean = 0,
+  Median = 1,
 };
 
 enum class UnicodeForm : std::uint8_t {
@@ -145,6 +180,19 @@ enum class ResultShape : std::uint8_t {
   Reduce = 1,
   Preserve = 2,
   Expand = 3,
+};
+
+enum class TimeUnit : std::uint8_t {
+  Nanos = 0,
+  Micros = 1,
+  Millis = 2,
+  Seconds = 3,
+};
+
+struct TimelineLocalizeOptions {
+  std::string tz{"UTC"};
+  int fold{0};
+  std::string nonexistent{"raise"};
 };
 
 using WindowBoundsFn =
@@ -209,9 +257,9 @@ public:
   Thread& fillna_(const pluss::TimeIndex& value);
 
   // 1D row-space transforms.
-  ThreadView head(std::int64_t n = 5, bool render = true) const;
-  ThreadView tail(std::int64_t n = 5, bool render = true) const;
-  ThreadView view(std::int64_t start, std::int64_t stop, bool render = true) const;
+  ThreadView head(std::int64_t n = 5, bool render = false) const;
+  ThreadView tail(std::int64_t n = 5, bool render = false) const;
+  ThreadView view(std::int64_t start, std::int64_t stop, bool render = false) const;
   Thread shift(std::int64_t periods = 1) const;
   Thread slice(std::int64_t start, std::int64_t stop) const;
   Thread take(std::span<const std::int64_t> indices) const;
@@ -221,97 +269,67 @@ public:
   Thread ffill() const;
   Thread bfill() const;
   Thread distinct(bool dropna = true) const;
-  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
-  ThreadView describe(bool render = true) const;
+  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = false) const;
+  ThreadView describe(bool render = false) const;
   Thread bucketize(pluss::msharp::RangeView::Double bins,
                    pluss::msharp::RangeView::Int labels = {},
                    bool right = true,
                    bool include_lowest = true) const;
 
-  // Reductions (Series payload only) return scalar Series (numel == 1).
-  pluss::Series sum() const;
-  pluss::Series count(bool count_true = true) const;
-  pluss::Series any(bool skipna = true) const;
-  pluss::Series all(bool skipna = true) const;
-  pluss::Series mean() const;
-  pluss::Series median() const;
-  pluss::Series min() const;
-  pluss::Series max() const;
-  pluss::Series var(bool unbiased = true) const;
-  pluss::Series std(bool unbiased = true) const;
+  ThreadNoteAccessor note() const;
+  ThreadTimelineAccessor tl() const;
+
+  // Reductions return scalar payloads where the operation is valid.
+  ThreadValue sum() const;
+  ThreadValue count(bool count_true = true) const;
+  ThreadValue any(bool skipna = true) const;
+  ThreadValue all(bool skipna = true) const;
+  ThreadValue mean() const;
+  ThreadValue median() const;
+  ThreadValue min() const;
+  ThreadValue max() const;
+  ThreadValue var(bool unbiased = true) const;
+  ThreadValue var(const StatisticOptions& options) const;
+  ThreadValue std(bool unbiased = true) const;
+  ThreadValue std(const StatisticOptions& options) const;
+  ThreadValue se(ErrorTarget target = ErrorTarget::Mean,
+                 const StatisticOptions& options = {}) const;
   double corr(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pearson) const;
-  Thread covariance(const Thread& other, const StatisticOptions& options = {}) const;
+  ThreadValue covar(const Thread& other, const StatisticOptions& options = {}) const;
   Thread percentiles(pluss::msharp::RangeView::Double points = {0.25, 0.5, 0.75},
                      std::int64_t min_count = 1) const;
-  Thread most_frequent(bool drop_nulls = true) const;
-  Thread ranks(RankTieRule ties = RankTieRule::Average,
-               RankNullRule nulls = RankNullRule::Keep,
-               bool ascending = true,
-               bool percentage = false) const;
-  Thread asymmetry(std::int64_t min_count = 3) const;
-  Thread tail_weight(std::int64_t min_count = 4) const;
-  Thread variance(const StatisticOptions& options = {}) const;
-  Thread deviation(const StatisticOptions& options = {}) const;
-  Thread mean_error(const StatisticOptions& options = {}) const;
-  Thread running_sum(bool skip_nulls = true) const;
-  Thread running_product(bool skip_nulls = true) const;
-  Thread running_minimum(bool skip_nulls = true) const;
-  Thread running_maximum(bool skip_nulls = true) const;
-  Thread correlate_with(const Thread& other,
+  Thread mode(bool drop_nulls = true) const;
+  Thread rank(RankTieRule ties = RankTieRule::Average,
+              RankNullRule nulls = RankNullRule::Keep,
+              bool ascending = true,
+              bool percentage = false) const;
+  ThreadValue skew(std::int64_t min_count = 3) const;
+  ThreadValue kurtosis(std::int64_t min_count = 4) const;
+  Thread scan(ScanStatistic statistic, bool skip_nulls = true) const;
+  ThreadValue corr_with(const Thread& other,
                         ThreadCorrMethod method = ThreadCorrMethod::Pearson,
                         std::int64_t min_count = 1) const;
-  pluss::Series matrix_product(const Thread& other) const;
+  ThreadValue matmul(const Thread& other) const;
+  ThreadValue ndistinct(bool dropna = true) const;
+  Thread freq(std::int64_t top_n = 0, bool dropna = true) const;
+  Thread duplicated(bool keep_first = true, bool keep_last = false) const;
 
-  Thread moving(std::int64_t window,
-                WindowStatistic statistic,
-                const WindowOptions& options = {}) const;
-  Thread moving_mean_error(std::int64_t window,
-                           const WindowOptions& options = {}) const;
-  Thread moving_asymmetry(std::int64_t window,
-                          const WindowOptions& options = {}) const;
-  Thread moving_tail_weight(std::int64_t window,
-                            const WindowOptions& options = {}) const;
-  Thread growing(WindowStatistic statistic,
-                 const StatisticOptions& options = {}) const;
-  Thread growing_mean_error(const StatisticOptions& options = {}) const;
-  Thread growing_asymmetry(std::int64_t min_count = 3) const;
-  Thread growing_tail_weight(std::int64_t min_count = 4) const;
-  Thread exponential_mean(double alpha,
-                          bool adjusted = true,
-                          std::int64_t min_count = 1,
-                          bool ignore_nulls = false) const;
-  Thread exponential_variance(double alpha,
-                              bool adjusted = true,
-                              bool bias_corrected = true,
-                              std::int64_t min_count = 1,
-                              bool ignore_nulls = false) const;
-  Thread exponential_deviation(double alpha,
-                               bool adjusted = true,
-                               bool bias_corrected = true,
-                               std::int64_t min_count = 1,
-                               bool ignore_nulls = false) const;
-  Thread weighted_moving(pluss::msharp::RangeView::Double weights,
-                         WindowStatistic statistic = WindowStatistic::Mean,
-                         std::int64_t min_count = 1) const;
-  Thread indexed_moving(const WindowBoundsFn& bounds,
-                        WindowStatistic statistic = WindowStatistic::Mean,
-                        const WindowOptions& options = {}) const;
-  Thread time_moving(const Thread& axis,
-                     std::int64_t duration_nanos,
-                     TimeWindowStatistic statistic = TimeWindowStatistic::Mean,
-                     const StatisticOptions& options = {},
-                     WindowClosure closure = WindowClosure::Right) const;
-  Thread grouped_moving(const Thread& groups,
-                        std::int64_t window,
-                        WindowStatistic statistic = WindowStatistic::Mean,
-                        const WindowOptions& options = {}) const;
+  Thread weigh(pluss::msharp::RangeView::Double weights,
+               WindowStatistic statistic = WindowStatistic::Mean,
+               std::int64_t min_count = 1) const;
+  Thread bounded(const WindowBoundsFn& bounds,
+                 WindowStatistic statistic = WindowStatistic::Mean,
+                 const WindowOptions& options = {}) const;
 
-  Thread map_elements(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
-  Thread aggregate_with(const std::function<Thread(const Thread&)>& fn,
-                        ResultShape shape = ResultShape::Reduce) const;
+  Thread map(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
+  Thread transform(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
+  Thread transform(const std::function<Thread(const Thread&)>& fn,
+                   ResultShape shape = ResultShape::Reduce) const;
+  Thread fold(const std::function<Thread(const Thread&)>& fn,
+              ResultShape shape = ResultShape::Reduce) const;
   Thread flow(const std::function<Thread(const Thread&)>& fn) const;
 
-  // Text operations (Note payload only).
+  // Note payload operations. Prefer note().method() in public code.
   Thread strip() const;
   Thread strip(std::string_view chars) const;
   Thread lstrip() const;
@@ -321,29 +339,29 @@ public:
   Thread lower() const;
   Thread upper() const;
   Thread casefold() const;
-  Thread title_case() const;
-  Thread text_length() const;
-  Thread starts_with(std::string_view prefix) const;
-  Thread ends_with(std::string_view suffix) const;
-  Thread regex_match(std::string_view pattern) const;
-  Thread regex_fullmatch(std::string_view pattern) const;
-  DataFrame regex_extract(std::string_view pattern,
-                          pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
-  DataFrame split_text(std::string_view delimiter,
-                       std::int64_t limit = -1,
-                       std::string prefix = "part") const;
-  DataFrame partition_text(std::string_view separator,
-                           std::string prefix = "part") const;
-  Thread pad_text(std::int64_t width,
-                  TextAlign align = TextAlign::Left,
-                  char fill = ' ') const;
-  Thread slice_text(std::int64_t start,
-                    std::optional<std::int64_t> stop = std::nullopt,
-                    std::int64_t step = 1) const;
-  Thread normalize_text(UnicodeForm form = UnicodeForm::NFC) const;
-  Thread encode_text(std::string_view encoding = "base64") const;
-  DataFrame text_indicators(std::string_view delimiter = "|",
-                            std::string prefix = "") const;
+  Thread titlecase() const;
+  Thread length() const;
+  Thread starts(std::string_view prefix) const;
+  Thread ends(std::string_view suffix) const;
+  Thread matches(std::string_view pattern) const;
+  Thread fullmatch(std::string_view pattern) const;
+  DataFrame extract(std::string_view pattern,
+                    pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
+  DataFrame split(std::string_view delimiter,
+                  std::int64_t limit = -1,
+                  std::string prefix = "part") const;
+  DataFrame partition(std::string_view separator,
+                      std::string prefix = "part") const;
+  Thread pad(std::int64_t width,
+             TextAlign align = TextAlign::Left,
+             char fill = ' ') const;
+  Thread chars(std::int64_t start,
+               std::optional<std::int64_t> stop = std::nullopt,
+               std::int64_t step = 1) const;
+  Thread normalize(UnicodeForm form = UnicodeForm::NFC) const;
+  Thread encode(std::string_view encoding = "base64") const;
+  DataFrame indicate(std::string_view delimiter = "|",
+                     std::string prefix = "") const;
   Thread replace(std::string_view from, std::string_view to) const;
   Thread put(const Thread& bool_mask, const Thread& value) const;
   Thread put(const Thread& bool_mask, double value) const;
@@ -494,8 +512,9 @@ public:
   Thread btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const;
   int compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last = true) const;
   Thread window(std::int64_t window, ThreadWindowOp op, std::int64_t min_periods = 1) const;
+  Thread cast(ThreadCastTarget target, const ThreadCastOptions& options = {}) const;
   Thread cast(ThreadCastTarget target,
-              std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const;
+              std::optional<pluss::codem::ScalarType> series_dtype) const;
   Thread astype(pluss::codem::ScalarType dtype) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
@@ -521,7 +540,30 @@ public:
   TimeSeriesAccessor ts() const;
 
 private:
+  friend class TimeSeriesAccessor;
+
   explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
+
+  Thread moving(std::int64_t window,
+                WindowStatistic statistic = WindowStatistic::Mean,
+                const WindowOptions& options = {}) const;
+  Thread growing(WindowStatistic statistic,
+                 const StatisticOptions& options = {}) const;
+  Thread decay(double alpha,
+               WindowStatistic statistic = WindowStatistic::Mean,
+               bool adjusted = true,
+               bool bias_corrected = true,
+               std::int64_t min_count = 1,
+               bool ignore_nulls = false) const;
+  Thread timed(const Thread& axis,
+               std::int64_t duration_nanos,
+               TimeWindowStatistic statistic = TimeWindowStatistic::Mean,
+               const StatisticOptions& options = {},
+               WindowClosure closure = WindowClosure::Right) const;
+  Thread grouped(const Thread& groups,
+                 std::int64_t window,
+                 WindowStatistic statistic = WindowStatistic::Mean,
+                 const WindowOptions& options = {}) const;
 
   detail::ThreadImpl& mut_impl_();
   const detail::ThreadImpl& impl_ref_() const;
@@ -543,17 +585,31 @@ class TimeSeriesAccessor {
   Thread diff(std::int64_t periods = 1) const;
   Thread lag(std::int64_t periods = 1) const;
   Thread lead(std::int64_t periods = 1) const;
-  Thread rolling_mean(std::int64_t window, std::int64_t min_periods = 1) const;
-  Thread rolling_std(std::int64_t window, std::int64_t min_periods = 1) const;
-  Thread rolling_sum(std::int64_t window, std::int64_t min_periods = 1) const;
-  Thread rolling_var(std::int64_t window, std::int64_t min_periods = 1) const;
-  Thread rolling_min(std::int64_t window, std::int64_t min_periods = 1) const;
-  Thread rolling_max(std::int64_t window, std::int64_t min_periods = 1) const;
-  Thread ema(double alpha) const;
-  Thread ewm_mean(double alpha) const;
-  Thread ewm_std(double alpha, double epsilon = 1e-12) const;
-  Thread expanding_mean(std::int64_t min_periods = 1) const;
-  Thread expanding_std(std::int64_t min_periods = 1, double epsilon = 1e-12) const;
+  Thread rolling(std::int64_t window,
+                 WindowStatistic statistic = WindowStatistic::Mean,
+                 const WindowOptions& options = {}) const;
+  Thread rolling(const Thread& axis,
+                 std::string_view duration,
+                 WindowStatistic statistic = WindowStatistic::Mean,
+                 const StatisticOptions& options = {},
+                 WindowClosure closure = WindowClosure::Right) const;
+  Thread timed(const Thread& axis,
+               std::int64_t duration_nanos,
+               TimeWindowStatistic statistic = TimeWindowStatistic::Mean,
+               const StatisticOptions& options = {},
+               WindowClosure closure = WindowClosure::Right) const;
+  Thread grouped(const Thread& groups,
+                 std::int64_t window,
+                 WindowStatistic statistic = WindowStatistic::Mean,
+                 const WindowOptions& options = {}) const;
+  Thread expanding(WindowStatistic statistic = WindowStatistic::Mean,
+                   const StatisticOptions& options = {}) const;
+  Thread ewm(double alpha,
+             WindowStatistic statistic = WindowStatistic::Mean,
+             bool adjusted = true,
+             bool bias_corrected = true,
+             std::int64_t min_count = 1,
+             bool ignore_nulls = false) const;
   Thread zscore_rolling(std::int64_t window,
                         std::int64_t min_periods = 1,
                         double epsilon = 1e-12) const;
@@ -596,6 +652,87 @@ class ThreadView final : public Thread {
 
   friend void output_render(std::ostream& os, const ThreadView& thread);
   friend std::ostream& operator<<(std::ostream& os, const ThreadView& thread);
+};
+
+class ThreadNoteAccessor {
+public:
+  explicit ThreadNoteAccessor(Thread base);
+
+  Thread strip() const;
+  Thread strip(std::string_view chars) const;
+  Thread lstrip() const;
+  Thread lstrip(std::string_view chars) const;
+  Thread rstrip() const;
+  Thread rstrip(std::string_view chars) const;
+  Thread lower() const;
+  Thread upper() const;
+  Thread casefold() const;
+  Thread titlecase() const;
+  Thread length() const;
+  Thread starts(std::string_view prefix) const;
+  Thread ends(std::string_view suffix) const;
+  Thread matches(std::string_view pattern, bool full = false) const;
+  Thread fullmatch(std::string_view pattern) const;
+  DataFrame extract(std::string_view pattern,
+                    pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
+  DataFrame split(std::string_view delimiter,
+                  std::int64_t limit = -1,
+                  std::string prefix = "part") const;
+  DataFrame partition(std::string_view separator,
+                      std::string prefix = "part") const;
+  Thread pad(std::int64_t width,
+             TextAlign align = TextAlign::Left,
+             char fill = ' ') const;
+  Thread chars(std::int64_t start,
+               std::optional<std::int64_t> stop = std::nullopt,
+               std::int64_t step = 1) const;
+  Thread normalize(UnicodeForm form = UnicodeForm::NFC) const;
+  Thread encode(std::string_view encoding = "base64") const;
+  DataFrame indicate(std::string_view delimiter = "|",
+                     std::string prefix = "") const;
+
+private:
+  Thread base_{};
+};
+
+class ThreadTimelineAccessor {
+public:
+  explicit ThreadTimelineAccessor(Thread base);
+
+  Thread isnat() const;
+  Thread valid() const;
+  Thread year() const;
+  Thread month() const;
+  Thread day() const;
+  Thread hour() const;
+  Thread minute() const;
+  Thread second() const;
+  Thread weekday() const;
+  Thread yearday() const;
+  Thread quarter() const;
+  Thread week() const;
+  Thread weekend() const;
+  Thread month_start() const;
+  Thread month_end() const;
+  Thread leap() const;
+  Thread weekday_name() const;
+  Thread month_name() const;
+  Thread fmt(std::string_view pattern) const;
+  Thread iso() const;
+  Thread epoch(TimeUnit unit = TimeUnit::Nanos) const;
+  Thread floor(std::string_view unit) const;
+  Thread ceil(std::string_view unit) const;
+  Thread round(std::string_view unit) const;
+  Thread date() const;
+  Thread time() const;
+  Thread shift(std::int64_t periods, std::string_view freq) const;
+  Thread tz(std::string_view name) const;
+  Thread localize(const TimelineLocalizeOptions& options = {}) const;
+  Thread utc() const;
+  Thread index(bool require_sorted = true) const;
+
+private:
+  Thread base_{};
 };
 
 Thread operator+(const Thread& lhs, double rhs);

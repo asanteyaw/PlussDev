@@ -1081,6 +1081,47 @@ DataFrameView Thread::tally(std::int64_t top_n, bool dropna, bool render) const 
   return DataFrameView(std::move(out), render, "tally", "");
 }
 
+Thread Thread::freq(std::int64_t top_n, bool dropna) const {
+  DataFrame frame = tally(top_n, dropna, false);
+  return frame.features("count").with_display_labels(frame.features("value")).with_display_name("freq");
+}
+
+ThreadValue Thread::ndistinct(bool dropna) const {
+  auto value = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
+  reinterpret_cast<std::int64_t*>(value.raw_data())[0] = distinct(dropna).size();
+  return ThreadValue(Thread(value));
+}
+
+Thread Thread::duplicated(bool keep_first, bool keep_last) const {
+  PLUSS_CHECK(!(keep_first && keep_last),
+              "Thread::duplicated: keep_first and keep_last cannot both be true");
+  std::vector<bool> duplicated_mask(static_cast<std::size_t>(size()), false);
+  std::optional<std::vector<bool>> valid;
+  if (has_validity_mask()) {
+    valid = validity_mask()->to_vec<bool>();
+  }
+
+  std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_key;
+  rows_by_key.reserve(static_cast<std::size_t>(size()));
+  for (std::int64_t row = 0; row < size(); ++row) {
+    const bool observed = !valid.has_value() || (*valid)[static_cast<std::size_t>(row)];
+    const auto key = observed ? thread_scalar_string_at(*this, row) : std::string{"<NA>"};
+    rows_by_key[key].push_back(row);
+  }
+
+  for (const auto& [_, rows] : rows_by_key) {
+    if (rows.size() <= 1) {
+      continue;
+    }
+    const std::size_t start = keep_first ? 1 : 0;
+    const std::size_t stop = keep_last ? rows.size() - 1 : rows.size();
+    for (std::size_t i = start; i < stop; ++i) {
+      duplicated_mask[static_cast<std::size_t>(rows[i])] = true;
+    }
+  }
+  return Thread(bool_series_from_bools(duplicated_mask));
+}
+
 ThreadView Thread::describe(bool render) const {
   const auto name = has_display_name() ? display_name() : std::string("value");
 
@@ -1091,8 +1132,8 @@ ThreadView Thread::describe(bool render) const {
   }
 
   if (kind() == ThreadKind::Note) {
-    const auto non_null = count(true).item<std::int64_t>();
-    const auto distinct_count = distinct(/*dropna=*/true).count(true).item<std::int64_t>();
+    const auto non_null = count(true).as_series().item<std::int64_t>();
+    const auto distinct_count = distinct(/*dropna=*/true).count(true).as_series().item<std::int64_t>();
     auto counts = tally(/*top_n=*/0, /*dropna=*/true, /*render=*/false);
 
     std::string top_value = "NA";
@@ -1129,23 +1170,23 @@ ThreadView Thread::describe(bool render) const {
   PLUSS_FAIL("Thread::describe supports numeric Series and Note payloads");
 }
 
-pluss::Series Thread::sum() const {
+ThreadValue Thread::sum() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::sum is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(notnull().as_series());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::sum on an empty (all-null) selection");
-  return s.sum();
+  return ThreadValue(Thread(s.sum().reshape({1})));
 }
 
-pluss::Series Thread::count(bool count_true) const {
+ThreadValue Thread::count(bool count_true) const {
   if (kind() == ThreadKind::Series) {
     auto s = as_series();
     if (has_validity_mask()) {
       s = s.masked_select(notnull().as_series());
     }
-    return s.count(count_true);
+    return ThreadValue(Thread(s.count(count_true).reshape({1})));
   }
 
   PLUSS_CHECK(count_true, "Thread::count(false) is only valid for Bool Series payload");
@@ -1156,10 +1197,10 @@ pluss::Series Thread::count(bool count_true) const {
   }
   auto out = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
   reinterpret_cast<std::int64_t*>(out.raw_data())[0] = total;
-  return out;
+  return ThreadValue(Thread(out));
 }
 
-pluss::Series Thread::any(bool skipna) const {
+ThreadValue Thread::any(bool skipna) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::any is only valid for Series payload");
   auto s = as_series();
   PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool,
@@ -1173,10 +1214,10 @@ pluss::Series Thread::any(bool skipna) const {
   }
 
   const auto true_count = s.count(true).item<std::int64_t>();
-  return bool_series_from_bools({true_count > 0});
+  return ThreadValue(Thread(bool_series_from_bools({true_count > 0})));
 }
 
-pluss::Series Thread::all(bool skipna) const {
+ThreadValue Thread::all(bool skipna) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::all is only valid for Series payload");
   auto s = as_series();
   PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool,
@@ -1190,10 +1231,10 @@ pluss::Series Thread::all(bool skipna) const {
   }
 
   const auto true_count = s.count(true).item<std::int64_t>();
-  return bool_series_from_bools({true_count == s.numel()});
+  return ThreadValue(Thread(bool_series_from_bools({true_count == s.numel()})));
 }
 
-pluss::Series Thread::mean() const {
+ThreadValue Thread::mean() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::mean is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
@@ -1206,10 +1247,10 @@ pluss::Series Thread::mean() const {
             : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::mean on an empty (all-null) selection");
-  return s.mean();
+  return ThreadValue(Thread(s.mean().reshape({1})));
 }
 
-pluss::Series Thread::median() const {
+ThreadValue Thread::median() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::median is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
@@ -1222,30 +1263,60 @@ pluss::Series Thread::median() const {
             : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::median on an empty (all-null) selection");
-  return s.median();
+  return ThreadValue(Thread(s.median().reshape({1})));
 }
 
-pluss::Series Thread::min() const {
-  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::min is only valid for Series payload");
-  auto s = as_series();
-  if (has_validity_mask()) {
-    s = s.masked_select(notnull().as_series());
+ThreadValue Thread::min() const {
+  auto observed = has_validity_mask() ? dropna() : *this;
+  PLUSS_CHECK(observed.size() > 0, "Thread::min on an empty (all-null) selection");
+  switch (observed.kind()) {
+    case ThreadKind::Series:
+      return ThreadValue(Thread(observed.as_series().min().reshape({1})));
+    case ThreadKind::Note: {
+      const auto sorted = observed.sort_values(true, true);
+      return ThreadValue(Thread(make_utf8_note({std::string(sorted.as_note().at(0))})));
+    }
+    case ThreadKind::Timeline: {
+      const auto sorted = observed.sort_values(true, true);
+      const auto ticks = sorted.as_timeline().to_epoch_nanos_vector();
+      return ThreadValue(Thread(rebuild_timeline_like(sorted.as_timeline(), {ticks.front()})));
+    }
+    case ThreadKind::TimeIndex: {
+      const auto sorted = observed.sort_values(true, true);
+      const auto ticks = sorted.as_timeindex().timeline().to_epoch_nanos_vector();
+      auto timeline = rebuild_timeline_like(sorted.as_timeindex().timeline(), {ticks.front()});
+      return ThreadValue(Thread(timeline.to_timeindex(false)));
+    }
   }
-  PLUSS_CHECK(s.numel() > 0, "Thread::min on an empty (all-null) selection");
-  return s.min();
+  PLUSS_FAIL("Thread::min: unsupported payload kind");
 }
 
-pluss::Series Thread::max() const {
-  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::max is only valid for Series payload");
-  auto s = as_series();
-  if (has_validity_mask()) {
-    s = s.masked_select(notnull().as_series());
+ThreadValue Thread::max() const {
+  auto observed = has_validity_mask() ? dropna() : *this;
+  PLUSS_CHECK(observed.size() > 0, "Thread::max on an empty (all-null) selection");
+  switch (observed.kind()) {
+    case ThreadKind::Series:
+      return ThreadValue(Thread(observed.as_series().max().reshape({1})));
+    case ThreadKind::Note: {
+      const auto sorted = observed.sort_values(false, true);
+      return ThreadValue(Thread(make_utf8_note({std::string(sorted.as_note().at(0))})));
+    }
+    case ThreadKind::Timeline: {
+      const auto sorted = observed.sort_values(false, true);
+      const auto ticks = sorted.as_timeline().to_epoch_nanos_vector();
+      return ThreadValue(Thread(rebuild_timeline_like(sorted.as_timeline(), {ticks.front()})));
+    }
+    case ThreadKind::TimeIndex: {
+      const auto sorted = observed.sort_values(false, true);
+      const auto ticks = sorted.as_timeindex().timeline().to_epoch_nanos_vector();
+      auto timeline = rebuild_timeline_like(sorted.as_timeindex().timeline(), {ticks.front()});
+      return ThreadValue(Thread(timeline.to_timeindex(false)));
+    }
   }
-  PLUSS_CHECK(s.numel() > 0, "Thread::max on an empty (all-null) selection");
-  return s.max();
+  PLUSS_FAIL("Thread::max: unsupported payload kind");
 }
 
-pluss::Series Thread::var(bool unbiased) const {
+ThreadValue Thread::var(bool unbiased) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::var is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
@@ -1258,10 +1329,10 @@ pluss::Series Thread::var(bool unbiased) const {
             : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::var on an empty (all-null) selection");
-  return s.var(unbiased);
+  return ThreadValue(Thread(s.var(unbiased).reshape({1})));
 }
 
-pluss::Series Thread::std(bool unbiased) const {
+ThreadValue Thread::std(bool unbiased) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::std is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
@@ -1274,7 +1345,7 @@ pluss::Series Thread::std(bool unbiased) const {
             : pluss::codem::ScalarType::Float32);
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::std on an empty (all-null) selection");
-  return s.std(unbiased);
+  return ThreadValue(Thread(s.std(unbiased).reshape({1})));
 }
 
 double Thread::corr(const Thread& other, ThreadCorrMethod method) const {
@@ -2092,9 +2163,113 @@ Thread Thread::window(std::int64_t window_size, ThreadWindowOp op, std::int64_t 
   return Thread(out, optional_mask_from_valid(out_valid));
 }
 
+namespace {
+
+std::int64_t cast_days_from_civil_(std::int64_t y, unsigned m, unsigned d) noexcept {
+  y -= m <= 2;
+  const auto era = (y >= 0 ? y : y - 399) / 400;
+  const auto yoe = static_cast<unsigned>(y - era * 400);
+  const auto doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+  const auto doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+  return era * 146097 + static_cast<std::int64_t>(doe) - 719468;
+}
+
+std::optional<std::int64_t> cast_timeline_tick_from_pattern_(
+    std::string_view text,
+    std::string_view pattern) {
+  std::tm tm{};
+  tm.tm_mday = 1;
+  std::istringstream input{std::string(text)};
+  const auto fmt = std::string(pattern);
+  input >> std::get_time(&tm, fmt.c_str());
+  if (input.fail()) {
+    return std::nullopt;
+  }
+  input >> std::ws;
+  if (!input.eof()) {
+    return std::nullopt;
+  }
+  const auto year = static_cast<std::int64_t>(tm.tm_year) + 1900;
+  const auto month = static_cast<unsigned>(tm.tm_mon + 1);
+  const auto day = static_cast<unsigned>(tm.tm_mday);
+  if (month < 1 || month > 12 || day < 1 || day > 31 ||
+      tm.tm_hour < 0 || tm.tm_hour > 23 ||
+      tm.tm_min < 0 || tm.tm_min > 59 ||
+      tm.tm_sec < 0 || tm.tm_sec > 60) {
+    return std::nullopt;
+  }
+  const auto seconds =
+      cast_days_from_civil_(year, month, day) * 86'400LL +
+      static_cast<std::int64_t>(tm.tm_hour) * 3'600LL +
+      static_cast<std::int64_t>(tm.tm_min) * 60LL +
+      static_cast<std::int64_t>(tm.tm_sec);
+  if (seconds < std::numeric_limits<std::int64_t>::min() / 1'000'000'000LL ||
+      seconds > std::numeric_limits<std::int64_t>::max() / 1'000'000'000LL) {
+    return std::nullopt;
+  }
+  return seconds * 1'000'000'000LL;
+}
+
+std::optional<std::int64_t> cast_timeline_tick_from_utf8_(std::string_view text) {
+  std::array<std::string_view, 1> views{text};
+  std::array<std::int64_t, 1> shape{1};
+  try {
+    const auto parsed = pluss::codeh::ops_internal::timeline_from_utf8(
+        std::span<const std::string_view>(views.data(), views.size()),
+        std::span<const std::int64_t>(shape.data(), shape.size()));
+    auto ticks = parsed.to_epoch_nanos_vector();
+    if (ticks.empty() || !parsed.isvalid().all().item<bool>()) {
+      return std::nullopt;
+    }
+    return ticks.front();
+  } catch (...) {
+    return std::nullopt;
+  }
+}
+
+Thread cast_note_to_timeline_(
+    const Thread& source,
+    const ThreadCastOptions& options,
+    std::string_view where) {
+  std::vector<std::int64_t> ticks(static_cast<std::size_t>(source.size()), 0);
+  std::vector<bool> valid(static_cast<std::size_t>(source.size()), true);
+  for (std::int64_t i = 0; i < source.size(); ++i) {
+    const auto pos = static_cast<std::size_t>(i);
+    if (!source.is_valid(i)) {
+      valid[pos] = false;
+      continue;
+    }
+    const auto text = source.as_note().at(i);
+    const auto tick = options.format.empty()
+                          ? cast_timeline_tick_from_utf8_(text)
+                          : cast_timeline_tick_from_pattern_(text, options.format);
+    if (tick.has_value()) {
+      ticks[pos] = *tick;
+      continue;
+    }
+    if (options.invalid == ParseInvalid::Null) {
+      valid[pos] = false;
+      continue;
+    }
+    PLUSS_FAIL(std::string(where) + ": could not parse datetime value '" + std::string(text) + "'");
+  }
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(ticks.size())};
+  auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(
+      std::span<const std::int64_t>(ticks.data(), ticks.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+  return Thread(out, bool_series_from_bools(valid));
+}
+
+} // namespace
+
+Thread Thread::cast(ThreadCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype) const {
+  return cast(target, ThreadCastOptions{.series_dtype = series_dtype});
+}
+
 Thread Thread::cast(
     ThreadCastTarget target,
-    std::optional<pluss::codem::ScalarType> series_dtype) const {
+    const ThreadCastOptions& options) const {
+  const auto series_dtype = options.series_dtype;
   switch (target) {
     case ThreadCastTarget::Series: {
       if (kind() == ThreadKind::Series) {
@@ -2244,6 +2419,9 @@ Thread Thread::cast(
       }
 
       PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::cast(Timeline): unsupported source type");
+      if (!options.format.empty() || options.invalid == ParseInvalid::Null) {
+        return cast_note_to_timeline_(*this, options, "Thread::cast(Timeline)");
+      }
       std::vector<std::string> vals;
       vals.reserve(static_cast<std::size_t>(size()));
       for (std::int64_t i = 0; i < size(); ++i) {
@@ -2264,7 +2442,7 @@ Thread Thread::cast(
       if (kind() == ThreadKind::TimeIndex) {
         return *this;
       }
-      auto t = cast(ThreadCastTarget::Timeline).as_timeline();
+      auto t = cast(ThreadCastTarget::Timeline, options).as_timeline();
       return Thread(t.to_timeindex(false), validity_mask());
     }
     default:
@@ -2281,6 +2459,81 @@ TimeSeriesAccessor Thread::ts() const {
 }
 
 TimeSeriesAccessor::TimeSeriesAccessor(Thread base) : base_(std::move(base)) {}
+
+namespace {
+
+std::int64_t ts_duration_nanos_(std::string_view raw, std::string_view where) {
+  auto first = raw.begin();
+  auto last = raw.end();
+  while (first != last && std::isspace(static_cast<unsigned char>(*first))) {
+    ++first;
+  }
+  while (last != first && std::isspace(static_cast<unsigned char>(*(last - 1)))) {
+    --last;
+  }
+  PLUSS_CHECK(first != last, std::string(where) + ": duration cannot be empty");
+
+  std::int64_t value = 0;
+  bool saw_digit = false;
+  while (first != last && std::isdigit(static_cast<unsigned char>(*first))) {
+    saw_digit = true;
+    const auto digit = static_cast<std::int64_t>(*first - '0');
+    PLUSS_CHECK(value <= (std::numeric_limits<std::int64_t>::max() - digit) / 10,
+                std::string(where) + ": duration is too large");
+    value = value * 10 + digit;
+    ++first;
+  }
+  PLUSS_CHECK(saw_digit && value > 0, std::string(where) + ": duration must start with a positive integer");
+  while (first != last && std::isspace(static_cast<unsigned char>(*first))) {
+    ++first;
+  }
+  std::string unit(first, last);
+  for (auto& ch : unit) {
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  }
+  PLUSS_CHECK(!unit.empty(), std::string(where) + ": duration unit is required, e.g. \"7D\", \"12H\", \"30min\"");
+
+  std::int64_t multiplier = 0;
+  if (unit == "ns" || unit == "nano" || unit == "nanos") {
+    multiplier = 1;
+  } else if (unit == "us" || unit == "micro" || unit == "micros") {
+    multiplier = 1'000;
+  } else if (unit == "ms" || unit == "milli" || unit == "millis") {
+    multiplier = 1'000'000;
+  } else if (unit == "s" || unit == "sec" || unit == "secs") {
+    multiplier = 1'000'000'000;
+  } else if (unit == "m" || unit == "min" || unit == "mins") {
+    multiplier = 60LL * 1'000'000'000;
+  } else if (unit == "h" || unit == "hr" || unit == "hrs") {
+    multiplier = 60LL * 60LL * 1'000'000'000;
+  } else if (unit == "d" || unit == "day" || unit == "days") {
+    multiplier = 24LL * 60LL * 60LL * 1'000'000'000;
+  } else if (unit == "w" || unit == "week" || unit == "weeks") {
+    multiplier = 7LL * 24LL * 60LL * 60LL * 1'000'000'000;
+  } else {
+    PLUSS_FAIL(std::string(where) + ": unsupported duration unit '" + unit + "'");
+  }
+  PLUSS_CHECK(value <= std::numeric_limits<std::int64_t>::max() / multiplier,
+              std::string(where) + ": duration is too large");
+  return value * multiplier;
+}
+
+TimeWindowStatistic to_time_window_stat_(WindowStatistic statistic, std::string_view where) {
+  switch (statistic) {
+    case WindowStatistic::Sum:
+      return TimeWindowStatistic::Sum;
+    case WindowStatistic::Mean:
+      return TimeWindowStatistic::Mean;
+    case WindowStatistic::Var:
+      return TimeWindowStatistic::Var;
+    case WindowStatistic::Std:
+      return TimeWindowStatistic::Std;
+    default:
+      PLUSS_FAIL(std::string(where) + ": supported time-window statistics are Sum, Mean, Var, and Std");
+  }
+}
+
+} // namespace
 
 const pluss::Series& TimeSeriesAccessor::series_payload_(const char* op) const {
   PLUSS_CHECK(base_.defined(), std::string("TimeSeriesAccessor::") + op + ": source Thread is undefined");
@@ -2310,48 +2563,65 @@ Thread TimeSeriesAccessor::lead(std::int64_t periods) const {
   return Thread(pluss::subsp::stats::ts::lead(series_payload_("lead"), periods));
 }
 
-Thread TimeSeriesAccessor::rolling_mean(std::int64_t window, std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::rolling_mean(series_payload_("rolling_mean"), window, min_periods));
+Thread TimeSeriesAccessor::rolling(
+    std::int64_t window,
+    WindowStatistic statistic,
+    const WindowOptions& options) const {
+  (void)series_payload_("rolling");
+  return base_.moving(window, statistic, options);
 }
 
-Thread TimeSeriesAccessor::rolling_std(std::int64_t window, std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::rolling_std(series_payload_("rolling_std"), window, min_periods));
+Thread TimeSeriesAccessor::rolling(
+    const Thread& axis,
+    std::string_view duration,
+    WindowStatistic statistic,
+    const StatisticOptions& options,
+    WindowClosure closure) const {
+  (void)series_payload_("rolling");
+  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
+              "TimeSeriesAccessor::rolling: axis must be Timeline or TimeIndex");
+  return base_.timed(axis,
+                     ts_duration_nanos_(duration, "TimeSeriesAccessor::rolling"),
+                     to_time_window_stat_(statistic, "TimeSeriesAccessor::rolling"),
+                     options,
+                     closure);
 }
 
-Thread TimeSeriesAccessor::rolling_sum(std::int64_t window, std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::rolling_sum(series_payload_("rolling_sum"), window, min_periods));
+Thread TimeSeriesAccessor::timed(
+    const Thread& axis,
+    std::int64_t duration_nanos,
+    TimeWindowStatistic statistic,
+    const StatisticOptions& options,
+    WindowClosure closure) const {
+  (void)series_payload_("timed");
+  return base_.timed(axis, duration_nanos, statistic, options, closure);
 }
 
-Thread TimeSeriesAccessor::rolling_var(std::int64_t window, std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::rolling_var(series_payload_("rolling_var"), window, min_periods));
+Thread TimeSeriesAccessor::grouped(
+    const Thread& groups,
+    std::int64_t window,
+    WindowStatistic statistic,
+    const WindowOptions& options) const {
+  (void)series_payload_("grouped");
+  return base_.grouped(groups, window, statistic, options);
 }
 
-Thread TimeSeriesAccessor::rolling_min(std::int64_t window, std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::rolling_min(series_payload_("rolling_min"), window, min_periods));
+Thread TimeSeriesAccessor::expanding(
+    WindowStatistic statistic,
+    const StatisticOptions& options) const {
+  (void)series_payload_("expanding");
+  return base_.growing(statistic, options);
 }
 
-Thread TimeSeriesAccessor::rolling_max(std::int64_t window, std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::rolling_max(series_payload_("rolling_max"), window, min_periods));
-}
-
-Thread TimeSeriesAccessor::ema(double alpha) const {
-  return Thread(pluss::subsp::stats::ts::ema(series_payload_("ema"), alpha));
-}
-
-Thread TimeSeriesAccessor::ewm_mean(double alpha) const {
-  return Thread(pluss::subsp::stats::ts::ewm_mean(series_payload_("ewm_mean"), alpha));
-}
-
-Thread TimeSeriesAccessor::ewm_std(double alpha, double epsilon) const {
-  return Thread(pluss::subsp::stats::ts::ewm_std(series_payload_("ewm_std"), alpha, epsilon));
-}
-
-Thread TimeSeriesAccessor::expanding_mean(std::int64_t min_periods) const {
-  return Thread(pluss::subsp::stats::ts::expanding_mean(series_payload_("expanding_mean"), min_periods));
-}
-
-Thread TimeSeriesAccessor::expanding_std(std::int64_t min_periods, double epsilon) const {
-  return Thread(pluss::subsp::stats::ts::expanding_std(series_payload_("expanding_std"), min_periods, epsilon));
+Thread TimeSeriesAccessor::ewm(
+    double alpha,
+    WindowStatistic statistic,
+    bool adjusted,
+    bool bias_corrected,
+    std::int64_t min_count,
+    bool ignore_nulls) const {
+  (void)series_payload_("ewm");
+  return base_.decay(alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls);
 }
 
 Thread TimeSeriesAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods, double epsilon) const {

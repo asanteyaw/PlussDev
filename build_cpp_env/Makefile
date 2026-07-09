@@ -4834,6 +4834,19 @@ plussmic_time_series_accessor_demo/fast:
 .PHONY : plussmic_time_series_accessor_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_dataframe_tl_batched_demo
+
+# Build rule for target.
+plussmic_dataframe_tl_batched_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_tl_batched_demo
+.PHONY : plussmic_dataframe_tl_batched_demo
+
+# fast build rule for target.
+plussmic_dataframe_tl_batched_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_tl_batched_demo.dir/build
+.PHONY : plussmic_dataframe_tl_batched_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_csv_engine_bench
 
 # Build rule for target.
@@ -4845,6 +4858,32 @@ plussmic_csv_engine_bench: cmake_check_build_system
 plussmic_csv_engine_bench/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_csv_engine_bench.dir/build
 .PHONY : plussmic_csv_engine_bench/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_native_gap_api_demo
+
+# Build rule for target.
+plussmic_native_gap_api_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_native_gap_api_demo
+.PHONY : plussmic_native_gap_api_demo
+
+# fast build rule for target.
+plussmic_native_gap_api_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build
+.PHONY : plussmic_native_gap_api_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_hierarchical_cases_demo
+
+# Build rule for target.
+plussmic_hierarchical_cases_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_hierarchical_cases_demo
+.PHONY : plussmic_hierarchical_cases_demo
+
+# fast build rule for target.
+plussmic_hierarchical_cases_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_hierarchical_cases_demo.dir/build
+.PHONY : plussmic_hierarchical_cases_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_kindle_model_demo
@@ -7676,14 +7715,17 @@ help:
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
 	@echo "... plussmic_dataframe_thread_values_demo"
+	@echo "... plussmic_dataframe_tl_batched_demo"
 	@echo "... plussmic_dataframe_versatile_methods_demo"
 	@echo "... plussmic_dataframe_view_demo"
 	@echo "... plussmic_df_ex_demo"
 	@echo "... plussmic_display_policy_demo"
 	@echo "... plussmic_eda_us_accidents_demo"
+	@echo "... plussmic_hierarchical_cases_demo"
 	@echo "... plussmic_kindle_catalog_tests"
 	@echo "... plussmic_kindle_model_demo"
 	@echo "... plussmic_loader_saver_parity_demo"
+	@echo "... plussmic_native_gap_api_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
 	@echo "... plussmic_table_axis_match_tests"

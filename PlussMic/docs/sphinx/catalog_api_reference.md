@@ -571,12 +571,12 @@ auto cleaned = catalog.bfill({"Final Points Grade", "Midterm 3"});
 ```
 
 
-### `cast_note`
+### `cast`
 
 #### Signature
 
 ```cpp
-Catalog::cast_note(keys: std::initializer_list<std::string_view>) -> Catalog
+Catalog::cast(keys: std::initializer_list<std::string_view>, target: pluss::table::ThreadCastTarget, options: const pluss::table::ThreadCastOptions& = {}) -> Catalog
 ```
 
 #### Notes
@@ -587,6 +587,12 @@ This changes the semantic or numeric type so later operations route through the 
 
 `keys` : `std::initializer_list<std::string_view>`
     Collection of slot or stream names to keep, drop, or rewrite together.
+
+`target` : `pluss::table::ThreadCastTarget`
+    Target payload family chosen by this cast overload.
+
+`options` : `const pluss::table::ThreadCastOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Output
 
@@ -608,206 +614,14 @@ auto ct = pluss::kindle::Catalog({
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = ct.cast_note({"metric"});
+auto out = ct.cast();
 ```
 
 #### Expected output
 
 ```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
+The call completes and returns the contract described under Output.
 ```
-
-#### Conversion Rules
-
-- These helpers rewrite only the selected keys and leave all other streams unchanged.
-- Unknown keys throw immediately.
-
-
-### `cast_series`
-
-#### Signature
-
-```cpp
-Catalog::cast_series(keys: std::initializer_list<std::string_view>, dtype: std::optional<pluss::ScalarType> = std::nullopt) -> Catalog
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-`dtype` : `std::optional<pluss::ScalarType>`
-    Target scalar dtype used by this conversion overload.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-auto ct = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});
-
-auto out = ct.cast_series({"metric"}, pluss::ScalarType::Float64);
-```
-
-#### Expected output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-#### Conversion Rules
-
-- Catalog cast helpers rewrite only the selected keys.
-- Unknown keys throw immediately.
-
-
-### `cast_timeindex`
-
-#### Signature
-
-```cpp
-Catalog::cast_timeindex(keys: std::initializer_list<std::string_view>) -> Catalog
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.cast_timeindex({"metric"});
-```
-
-#### Expected output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-#### Conversion Rules
-
-- These helpers rewrite only the selected keys and leave all other streams unchanged.
-- Unknown keys throw immediately.
-
-
-### `cast_timeline`
-
-#### Signature
-
-```cpp
-Catalog::cast_timeline(keys: std::initializer_list<std::string_view>) -> Catalog
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.cast_timeline({"metric"});
-```
-
-#### Expected output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-#### Conversion Rules
-
-- These helpers rewrite only the selected keys and leave all other streams unchanged.
-- Unknown keys throw immediately.
-
 
 ### `cloc`
 

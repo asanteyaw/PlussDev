@@ -271,6 +271,67 @@ DataFrameView DataFrame::group_by(pluss::msharp::RangeView::Of<std::string_view>
   return DataFrameView(group(keys, specs, dropna_keys, false), render, "group_by", title());
 }
 
+DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
+                                  pluss::msharp::RangeView::Of<GroupSpec> specs,
+                                  bool dropna_keys,
+                                  bool render) const {
+  return group_by(pluss::msharp::RangeView::Of<std::string_view>(keys),
+                  specs,
+                  dropna_keys,
+                  render);
+}
+
+DataFrameView DataFrame::group_by(const CaseGroup& keys,
+                                  pluss::msharp::RangeView::Of<GroupSpec> specs,
+                                  bool dropna_keys,
+                                  bool render) const {
+  PLUSS_CHECK(has_levels(), "DataFrame::group_by(CaseGroup): current DataFrame has no case levels");
+  std::vector<std::string> level_names = keys.levels;
+  if (!keys.level.empty()) {
+    PLUSS_CHECK(level_names.empty(),
+                "DataFrame::group_by(CaseGroup): use either `level` or `levels`, not both");
+    level_names.push_back(keys.level);
+  }
+  PLUSS_CHECK(!level_names.empty(),
+              "DataFrame::group_by(CaseGroup): expected at least one case level");
+
+  auto keyed = *this;
+  std::vector<std::string> temp_names;
+  temp_names.reserve(level_names.size());
+  for (const auto& level_name : level_names) {
+    PLUSS_CHECK(!level_name.empty(),
+                "DataFrame::group_by(CaseGroup): level name cannot be empty");
+    auto temp = "__pluss_case_level_" + level_name;
+    std::int64_t suffix = 1;
+    while (keyed.has_feature(temp)) {
+      temp = fmt::format("__pluss_case_level_{}_{}", level_name, suffix++);
+    }
+    keyed = keyed.set_features(temp, level(level_name));
+    temp_names.push_back(std::move(temp));
+  }
+
+  std::vector<std::string_view> temp_views;
+  temp_views.reserve(temp_names.size());
+  for (const auto& temp : temp_names) {
+    temp_views.push_back(temp);
+  }
+  auto grouped = keyed.group(
+      pluss::msharp::RangeView::Of<std::string_view>(
+          std::span<const std::string_view>(temp_views.data(), temp_views.size())),
+      specs,
+      dropna_keys,
+      false);
+
+  std::vector<std::pair<std::string_view, std::string_view>> renames;
+  renames.reserve(level_names.size());
+  for (std::size_t i = 0; i < level_names.size(); ++i) {
+    renames.emplace_back(temp_names[i], level_names[i]);
+  }
+  grouped = grouped.rename(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(
+      std::span<const std::pair<std::string_view, std::string_view>>(renames.data(), renames.size())));
+  return DataFrameView(std::move(grouped), render, "group_by", title());
+}
+
 DataFrameView DataFrame::pivot(std::string_view case_feature,
                                std::string_view feature_feature,
                                std::string_view value_feature,
@@ -445,7 +506,7 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
   FrameMatchOptions match_options;
   match_options.cases = spec.cases;
   match_options.features = FrameMatchRule::Unite;
-  const auto matched = matched_with(other, match_options);
+  const auto matched = match(other, match_options);
   const auto& left = matched.left.impl_ref_();
 
   std::vector<std::string> out_names;

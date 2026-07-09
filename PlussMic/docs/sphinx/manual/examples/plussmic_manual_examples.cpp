@@ -422,17 +422,17 @@ void example_16_time_series() {
 
   std::cout << "returns:\n" << df.features("close").ts().returns(1).to_string() << '\n';
   std::cout << "rolling mean window 2:\n"
-            << df.features("close").ts().rolling_mean(2, 2).to_string() << '\n';
+            << df.features("close").ts().rolling(2, pluss::table::WindowStatistic::Mean, {.min_count = 2}).to_string() << '\n';
 
-  auto daily = df.ts({"close", "volume"}).resample(
-      "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+  auto values = df.set_cases("date", false).features({"close", "volume"});
+  auto daily = values.ts().resample(
+      "D", pluss::subsp::stats::ts::ResampleOp::Mean);
   std::cout << "daily mean:\n" << daily.to_string() << '\n';
 
-  auto calendar = df.ts("close").calendar("date");
-  std::cout << "calendar:\n"
-            << calendar.features({"date_year", "date_month", "date_weekday"}).to_string() << '\n';
+  auto calendar = df.features({"date"}).tl().year();
+  std::cout << "calendar:\n" << calendar.to_string() << '\n';
 
-  auto lags = df.ts({"close", "volume"}).lag_block({1, 2});
+  auto lags = df.features({"close", "volume"}).ts().lag_block({1, 2});
   std::cout << "lag block:\n" << lags.to_string() << '\n';
 }
 

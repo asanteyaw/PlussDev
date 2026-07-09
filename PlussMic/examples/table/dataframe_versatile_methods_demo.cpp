@@ -152,7 +152,7 @@ int main() {
           {"features", {"Business Case ID", "Agency Name", "Lifecycle Cost"}},
       });
   missing_demo.head(8);
-  missing_demo.isna().head(8);
+  missing_demo.isnull().head(8);
   missing_demo.fillna(0.0, {"Lifecycle Cost"}).head(8);
   missing_demo.ffill().head(8);
   missing_demo.bfill().head(8);

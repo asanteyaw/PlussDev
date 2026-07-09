@@ -23,6 +23,7 @@ namespace {
 using pluss::table::DataFrame;
 using pluss::table::Thread;
 using pluss::table::ThreadBinaryCompareOp;
+using pluss::table::ThreadCastOptions;
 using pluss::table::ThreadCastTarget;
 using pluss::table::ThreadKind;
 using pluss::table::ThreadWindowOp;
@@ -480,8 +481,8 @@ void run_verb_walkthrough(const DataFrame& df) {
   });
   (void)arranged;
 
-  auto miss_isnull = df.isna({"Visibility(mi)", "Precipitation(in)", "Weather_Condition"});
-  auto miss_notnull = df.notna({"Visibility(mi)", "Precipitation(in)"});
+  auto miss_isnull = df.isnull({"Visibility(mi)", "Precipitation(in)", "Weather_Condition"});
+  auto miss_notnull = df.notnull({"Visibility(mi)", "Precipitation(in)"});
   auto miss_fill = df.fillna(0.0, {"Precipitation(in)"});
   auto miss_drop_any = df.dropna();
   auto miss_drop_all = df.dropna_all({"Precipitation(in)", "Visibility(mi)"});
@@ -495,9 +496,12 @@ void run_verb_walkthrough(const DataFrame& df) {
   (void)miss_ffill;
   (void)miss_bfill;
 
-  auto cast_note = df.cast({DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Note, std::nullopt}});
+  auto cast_note = df.cast({DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Note, {}}});
   auto cast_series = cast_note.cast(
-      {DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Series, pluss::codem::ScalarType::Int64}});
+      {DataFrame::CastSpec{"Start_Time",
+                           ThreadCastTarget::Series,
+                           ThreadCastOptions{
+                               .series_dtype = pluss::codem::ScalarType::Int64}}});
   auto typed = cast_series.astype({{"Severity", pluss::codem::ScalarType::Float64}});
   (void)typed;
 
@@ -599,10 +603,14 @@ int main(int argc, char** argv) {
 
   run_verb_walkthrough(df);
 
-  auto start_as_note = df.cast({DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Note, std::nullopt}});
+  auto start_as_note = df.cast({DataFrame::CastSpec{"Start_Time", ThreadCastTarget::Note, {}}});
   auto times_ns = df.cast({
-      {"Start_Time", ThreadCastTarget::Series, pluss::codem::ScalarType::Int64},
-      {"End_Time", ThreadCastTarget::Series, pluss::codem::ScalarType::Int64},
+      DataFrame::CastSpec{"Start_Time",
+                          ThreadCastTarget::Series,
+                          ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}},
+      DataFrame::CastSpec{"End_Time",
+                          ThreadCastTarget::Series,
+                          ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}},
   });
 
   const auto& severity_t = df.features("Severity");

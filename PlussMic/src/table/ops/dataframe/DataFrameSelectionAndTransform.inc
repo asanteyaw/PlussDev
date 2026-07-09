@@ -34,6 +34,24 @@ DataFrame transform_text_features_(
   return DataFrame(std::move(columns), src.cases_).title(src.title_);
 }
 
+template <class Operation>
+DataFrame transform_text_features_(
+    const detail::DataFrameImpl& src,
+    const std::vector<std::string>& features,
+    Operation&& operation,
+    std::string_view where) {
+  std::vector<std::string_view> views;
+  views.reserve(features.size());
+  for (const auto& feature : features) {
+    views.push_back(feature);
+  }
+  return transform_text_features_(
+      src,
+      pluss::msharp::RangeView::Of<std::string_view>(views),
+      std::forward<Operation>(operation),
+      where);
+}
+
 DataFrame expanded_text_result_(const DataFrame& expanded,
                                 const Thread& cases,
                                 std::string title) {
@@ -59,11 +77,12 @@ std::vector<std::size_t> resolve_time_feature_indices_(
   if (features.size() == 0) {
     indices.reserve(src.columns_.size());
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
-      if (is_time_like_thread_(src.columns_[i].kind())) {
-        indices.push_back(i);
-      }
+      PLUSS_CHECK(is_time_like_thread_(src.columns_[i].kind()),
+                  std::string(where) + ": no features supplied; current frame contains non-Timeline feature '" +
+                      src.names_[i] + "'. Select timeline feature(s) first, e.g. df.features({\"date\"}).tl()");
+      indices.push_back(i);
     }
-    PLUSS_CHECK(!indices.empty(), std::string(where) + ": no Timeline/TimeIndex features found");
+    PLUSS_CHECK(!indices.empty(), std::string(where) + ": current frame has no Timeline/TimeIndex features");
     return indices;
   }
 
@@ -359,27 +378,26 @@ std::vector<std::size_t> sample_feature_indices_(std::size_t total, std::size_t 
 } // namespace
 
 DataFrame DataFrame::sample(std::int64_t n) const {
-  return sample_impl_(n, std::nullopt, false, 0);
+  return sample_impl_(n, std::nullopt, false, Axis::Case);
 }
 
-DataFrame DataFrame::sample(std::int64_t n, bool replace, int axis) const {
+DataFrame DataFrame::sample(std::int64_t n, bool replace, Axis axis) const {
   return sample_impl_(n, std::nullopt, replace, axis);
 }
 
-DataFrame DataFrame::sample(std::int64_t n, std::uint64_t random_state, bool replace, int axis) const {
+DataFrame DataFrame::sample(std::int64_t n, std::uint64_t random_state, bool replace, Axis axis) const {
   return sample_impl_(n, random_state, replace, axis);
 }
 
 DataFrame DataFrame::sample_impl_(std::int64_t n,
                                   std::optional<std::uint64_t> random_state,
                                   bool replace,
-                                  int axis) const {
-  PLUSS_CHECK(axis == 0 || axis == 1, "DataFrame::sample: axis must be 0 (rows) or 1 (features)");
+                                  Axis axis) const {
   PLUSS_CHECK(n >= 0, "DataFrame::sample: n must be >= 0");
   const auto& src = impl_ref_();
   std::mt19937_64 rng(random_state.value_or(std::random_device{}()));
 
-  if (axis == 0) {
+  if (axis == Axis::Case) {
     const auto total = ncases();
     PLUSS_CHECK(total >= 0, "DataFrame::sample: invalid case count");
     const auto draw = replace ? n : std::min<std::int64_t>(n, total);
@@ -405,26 +423,24 @@ DataFrame DataFrame::sample_impl_(std::int64_t n,
 DataFrame DataFrame::sample_fraction_(double frac,
                                       std::optional<std::uint64_t> random_state,
                                       bool replace,
-                                      int axis) const {
-  PLUSS_CHECK(axis == 0 || axis == 1, "DataFrame::sample: axis must be 0 (rows) or 1 (features)");
+                                      Axis axis) const {
   PLUSS_CHECK(std::isfinite(frac), "DataFrame::sample: frac must be finite");
   PLUSS_CHECK(frac >= 0.0, "DataFrame::sample: frac must be >= 0");
   PLUSS_CHECK(replace || frac <= 1.0, "DataFrame::sample: frac > 1 requires replace = true");
-  const auto total = axis == 0 ? ncases() : nfeats();
+  const auto total = axis == Axis::Case ? ncases() : nfeats();
   const auto draw = static_cast<std::int64_t>(std::llround(frac * static_cast<double>(total)));
   return sample_impl_(draw, random_state, replace, axis);
 }
 
 DataFrame DataFrame::shuffle(std::optional<std::uint64_t> random_state) const {
-  return reshuffle(0, random_state);
+  return reshuffle(Axis::Case, random_state);
 }
 
-DataFrame DataFrame::reshuffle(int axis, std::optional<std::uint64_t> random_state) const {
-  PLUSS_CHECK(axis == 0 || axis == 1, "DataFrame::reshuffle: axis must be 0 (rows) or 1 (features)");
+DataFrame DataFrame::reshuffle(Axis axis, std::optional<std::uint64_t> random_state) const {
   const auto& src = impl_ref_();
   std::mt19937_64 rng(random_state.value_or(std::random_device{}()));
 
-  if (axis == 0) {
+  if (axis == Axis::Case) {
     std::vector<std::int64_t> idx(static_cast<std::size_t>(src.nrows_));
     std::iota(idx.begin(), idx.end(), 0);
     std::shuffle(idx.begin(), idx.end(), rng);
@@ -472,7 +488,8 @@ DataFrame DataFrame::shift(pluss::msharp::RangeView::Of<std::string_view> featur
     out_cols[idx] = src.columns_[idx].shift(periods);
   }
 
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
 DataFrame DataFrame::slice(std::int64_t start, std::int64_t stop) const {
@@ -505,7 +522,9 @@ DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const {
     out_cols.push_back(c.take(indices));
   }
   auto out_case = src.cases_.take(indices);
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
+  auto out_axis = src.case_axis_.defined() ? take_case_axis_(src.case_axis_, indices) : detail::CaseAxis{};
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), std::move(out_case), src.title_, std::move(out_axis)));
 }
 
 DataFrame DataFrame::where(const pluss::Series& bool_mask) const {
@@ -525,7 +544,9 @@ DataFrame DataFrame::filter(const pluss::Series& bool_mask) const {
     out_cols.push_back(c.filter(bool_mask));
   }
   auto out_case = src.cases_.filter(bool_mask);
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
+  auto out_axis = src.case_axis_.defined() ? filter_case_axis_(src.case_axis_, bool_mask) : detail::CaseAxis{};
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, std::move(out_cols), std::move(out_case), src.title_, std::move(out_axis)));
 }
 
 DataFrame DataFrame::filter(const Thread& bool_mask) const {
@@ -574,19 +595,22 @@ DataFrame DataFrame::assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) cons
   return out;
 }
 
-Thread DataFrame::map_cases(
-    const std::function<ThreadValue(const DataFrame&)>& fn) const {
+Thread DataFrame::transform(
+    const std::function<ThreadValue(const DataFrame&)>& fn,
+    Axis axis) const {
+  PLUSS_CHECK(axis == Axis::Case,
+              "DataFrame::transform(ThreadValue callback): use Axis::Case for row-wise scalar transforms");
   PLUSS_CHECK(static_cast<bool>(fn),
-              "DataFrame::map_cases: callback is empty");
+              "DataFrame::transform: callback is empty");
   std::vector<Thread> mapped;
   mapped.reserve(static_cast<std::size_t>(ncases()));
   for (std::int64_t row = 0; row < ncases(); ++row) {
     auto value = fn(DataFrame(observe(row, false)));
     PLUSS_CHECK(value.defined() && value.thread().size() == 1,
-                "DataFrame::map_cases: callback must return one value");
+                "DataFrame::transform: callback must return one value");
     if (!mapped.empty()) {
       PLUSS_CHECK(value.kind() == mapped.front().kind(),
-                  "DataFrame::map_cases: output kinds must be consistent");
+                  "DataFrame::transform: output kinds must be consistent");
     }
     mapped.push_back(value.thread());
   }
@@ -643,23 +667,26 @@ Thread DataFrame::map_cases(
   return Thread(values.to_timeindex(false), mask);
 }
 
-DataFrame DataFrame::apply_cases(
+DataFrame DataFrame::transform(
     const std::function<DataFrame(const DataFrame&)>& fn,
+    Axis axis,
     ResultShape shape) const {
+  PLUSS_CHECK(axis == Axis::Case,
+              "DataFrame::transform(DataFrame callback): use Axis::Case for row-wise frame transforms");
   PLUSS_CHECK(static_cast<bool>(fn),
-              "DataFrame::apply_cases: callback is empty");
+              "DataFrame::transform: callback is empty");
   DataFrame output;
   std::int64_t callback_cases = -1;
   std::vector<std::string> callback_features;
   for (std::int64_t row = 0; row < ncases(); ++row) {
     auto mapped = fn(DataFrame(observe(row, false)));
     PLUSS_CHECK(mapped.defined(),
-                "DataFrame::apply_cases: callback returned undefined");
+                "DataFrame::transform: callback returned undefined");
     if (shape == ResultShape::Reduce ||
         shape == ResultShape::Preserve) {
       PLUSS_CHECK(
           mapped.ncases() == 1,
-          "DataFrame::apply_cases: selected shape requires one output case");
+          "DataFrame::transform: selected shape requires one output case");
     }
     if (shape == ResultShape::Expand) {
       if (callback_cases < 0) {
@@ -668,15 +695,15 @@ DataFrame DataFrame::apply_cases(
       }
       PLUSS_CHECK(
           mapped.ncases() == callback_cases,
-          "DataFrame::apply_cases: Expand requires a stable case count");
+          "DataFrame::transform: Expand requires a stable case count");
       PLUSS_CHECK(
           mapped.feature_names() == callback_features,
-          "DataFrame::apply_cases: Expand requires a stable feature schema");
+          "DataFrame::transform: Expand requires a stable feature schema");
     }
     if (shape == ResultShape::Preserve) {
       PLUSS_CHECK(
           mapped.feature_names() == feature_names(),
-          "DataFrame::apply_cases: Preserve requires the input feature schema");
+          "DataFrame::transform: Preserve requires the input feature schema");
     }
     output = output.defined()
                  ? output.extend_cases(
@@ -690,15 +717,15 @@ DataFrame DataFrame::apply_cases(
   return output;
 }
 
-DataFrame DataFrame::map_elements(
+DataFrame DataFrame::map(
     const std::function<ThreadValue(const ThreadValue&)>& fn,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   PLUSS_CHECK(static_cast<bool>(fn),
-              "DataFrame::map_elements: callback is empty");
+              "DataFrame::map: callback is empty");
   if (features.empty()) {
     return transform(
         [&fn](const Thread& feature) {
-          return feature.map_elements(fn);
+          return feature.map(fn);
         });
   }
   std::vector<TransformSpec> specs;
@@ -708,27 +735,27 @@ DataFrame DataFrame::map_elements(
         TransformSpec{
             .feature = owned_name(feature),
             .expr = [&fn](const Thread& value) {
-              return value.map_elements(fn);
+              return value.map(fn);
             }});
   }
   return transform(specs);
 }
 
-Thread DataFrame::aggregate_with(
+Thread DataFrame::fold(
     const std::function<Thread(const DataFrame&)>& fn,
     ResultShape shape) const {
   PLUSS_CHECK(static_cast<bool>(fn),
-              "DataFrame::aggregate_with: callback is empty");
+              "DataFrame::fold: callback is empty");
   auto result = fn(*this);
   PLUSS_CHECK(result.defined(),
-              "DataFrame::aggregate_with: callback returned undefined");
+              "DataFrame::fold: callback returned undefined");
   if (shape == ResultShape::Reduce) {
     PLUSS_CHECK(result.size() == 1,
-                "DataFrame::aggregate_with: Reduce requires one value");
+                "DataFrame::fold: Reduce requires one value");
   } else if (shape == ResultShape::Preserve) {
     PLUSS_CHECK(
         result.size() == ncases(),
-        "DataFrame::aggregate_with: Preserve requires the case count");
+        "DataFrame::fold: Preserve requires the case count");
   }
   return result;
 }
@@ -743,167 +770,379 @@ DataFrame DataFrame::flow(
   return result;
 }
 
-DataFrame DataFrame::text_upper(
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [](const Thread& value) { return value.upper(); },
-      "DataFrame::text_upper");
+DataFrameNoteAccessor DataFrame::note(std::string_view feature) const {
+  std::vector<std::string> selected{owned_name(feature)};
+  return DataFrameNoteAccessor(*this, std::move(selected));
 }
 
-DataFrame DataFrame::text_casefold(
+DataFrameNoteAccessor DataFrame::note(
     pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [](const Thread& value) { return value.casefold(); },
-      "DataFrame::text_casefold");
+  std::vector<std::string> selected;
+  const auto& src = impl_ref_();
+  if (features.size() == 0) {
+    selected.reserve(src.names_.size());
+    for (std::size_t i = 0; i < src.names_.size(); ++i) {
+      PLUSS_CHECK(src.columns_[i].kind() == ThreadKind::Note,
+                  "DataFrame::note: no features supplied; current frame contains non-Note feature '" +
+                      src.names_[i] + "'. Select text feature(s) first, e.g. df.features({\"name\"}).note()");
+      selected.push_back(src.names_[i]);
+    }
+    PLUSS_CHECK(!selected.empty(), "DataFrame::note: current frame has no Note features");
+    return DataFrameNoteAccessor(*this, std::move(selected));
+  }
+
+  selected.reserve(features.size());
+  std::unordered_set<std::string> seen;
+  seen.reserve(features.size());
+  for (const auto feature : features) {
+    const auto name = owned_name(feature);
+    PLUSS_CHECK(!name.empty(), "DataFrame::note: feature name cannot be empty");
+    const auto it = src.name_to_idx_.find(name);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::note: unknown feature '" + name + "'");
+    PLUSS_CHECK(src.columns_[it->second].kind() == ThreadKind::Note,
+                "DataFrame::note: feature '" + name + "' is not Note");
+    PLUSS_CHECK(seen.insert(name).second, "DataFrame::note: duplicate feature '" + name + "'");
+    selected.push_back(name);
+  }
+  return DataFrameNoteAccessor(*this, std::move(selected));
 }
 
-DataFrame DataFrame::text_title(
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [](const Thread& value) { return value.title_case(); },
-      "DataFrame::text_title");
+DataFrameNoteAccessor::DataFrameNoteAccessor(DataFrame frame,
+                                             std::vector<std::string> features)
+    : frame_(std::move(frame)),
+      features_(std::move(features)) {}
+
+DataFrame DataFrameNoteAccessor::strip() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().strip(); },
+                                  "DataFrame::note().strip");
 }
 
-DataFrame DataFrame::text_lengths(
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [](const Thread& value) { return value.text_length(); },
-      "DataFrame::text_lengths");
+DataFrame DataFrameNoteAccessor::strip(std::string_view chars) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [chars](const Thread& value) { return value.note().strip(chars); },
+                                  "DataFrame::note().strip");
 }
 
-DataFrame DataFrame::text_starts_with(
-    std::string_view prefix,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [prefix](const Thread& value) {
-        return value.starts_with(prefix);
-      },
-      "DataFrame::text_starts_with");
+DataFrame DataFrameNoteAccessor::lstrip() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().lstrip(); },
+                                  "DataFrame::note().lstrip");
 }
 
-DataFrame DataFrame::text_ends_with(
-    std::string_view suffix,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [suffix](const Thread& value) {
-        return value.ends_with(suffix);
-      },
-      "DataFrame::text_ends_with");
+DataFrame DataFrameNoteAccessor::lstrip(std::string_view chars) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [chars](const Thread& value) { return value.note().lstrip(chars); },
+                                  "DataFrame::note().lstrip");
 }
 
-DataFrame DataFrame::text_matches(
-    std::string_view pattern,
-    bool full,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [pattern, full](const Thread& value) {
-        return full ? value.regex_fullmatch(pattern)
-                    : value.regex_match(pattern);
-      },
-      "DataFrame::text_matches");
+DataFrame DataFrameNoteAccessor::rstrip() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().rstrip(); },
+                                  "DataFrame::note().rstrip");
 }
 
-DataFrame DataFrame::text_pad(
-    std::int64_t width,
-    TextAlign align,
-    char fill,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [=](const Thread& value) {
-        return value.pad_text(width, align, fill);
-      },
-      "DataFrame::text_pad");
+DataFrame DataFrameNoteAccessor::rstrip(std::string_view chars) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [chars](const Thread& value) { return value.note().rstrip(chars); },
+                                  "DataFrame::note().rstrip");
 }
 
-DataFrame DataFrame::text_slice(
-    std::int64_t start,
-    std::optional<std::int64_t> stop,
-    std::int64_t step,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [=](const Thread& value) {
-        return value.slice_text(start, stop, step);
-      },
-      "DataFrame::text_slice");
+DataFrame DataFrameNoteAccessor::lower() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().lower(); },
+                                  "DataFrame::note().lower");
 }
 
-DataFrame DataFrame::text_normalize(
-    UnicodeForm form,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [form](const Thread& value) {
-        return value.normalize_text(form);
-      },
-      "DataFrame::text_normalize");
+DataFrame DataFrameNoteAccessor::upper() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().upper(); },
+                                  "DataFrame::note().upper");
 }
 
-DataFrame DataFrame::text_encode(
-    std::string_view encoding,
-    pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return transform_text_features_(
-      impl_ref_(), features,
-      [encoding](const Thread& value) {
-        return value.encode_text(encoding);
-      },
-      "DataFrame::text_encode");
+DataFrame DataFrameNoteAccessor::casefold() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().casefold(); },
+                                  "DataFrame::note().casefold");
 }
 
-DataFrame DataFrame::regex_groups(
-    std::string_view feature,
+DataFrame DataFrameNoteAccessor::titlecase() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().titlecase(); },
+                                  "DataFrame::note().titlecase");
+}
+
+DataFrame DataFrameNoteAccessor::length() const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [](const Thread& value) { return value.note().length(); },
+                                  "DataFrame::note().length");
+}
+
+DataFrame DataFrameNoteAccessor::starts(std::string_view prefix) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [prefix](const Thread& value) { return value.note().starts(prefix); },
+                                  "DataFrame::note().starts");
+}
+
+DataFrame DataFrameNoteAccessor::ends(std::string_view suffix) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [suffix](const Thread& value) { return value.note().ends(suffix); },
+                                  "DataFrame::note().ends");
+}
+
+DataFrame DataFrameNoteAccessor::matches(std::string_view pattern, bool full) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [pattern, full](const Thread& value) { return value.note().matches(pattern, full); },
+                                  "DataFrame::note().matches");
+}
+
+DataFrame DataFrameNoteAccessor::fullmatch(std::string_view pattern) const {
+  return matches(pattern, true);
+}
+
+DataFrame DataFrameNoteAccessor::extract(
     std::string_view pattern,
     pluss::msharp::RangeView::Of<std::string_view> names) const {
-  const auto source = features(feature);
-  PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "DataFrame::regex_groups: feature must be text");
-  return expanded_text_result_(
-      source.regex_extract(pattern, names), cases(), title());
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().extract requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().extract: feature must be Note");
+  return expanded_text_result_(source.note().extract(pattern, names), frame_.cases(), frame_.title());
 }
 
-DataFrame DataFrame::split_feature(
-    std::string_view feature,
+DataFrame DataFrameNoteAccessor::split(
     std::string_view delimiter,
     std::int64_t limit,
     std::string prefix) const {
-  const auto source = features(feature);
-  PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "DataFrame::split_feature: feature must be text");
-  return expanded_text_result_(
-      source.split_text(delimiter, limit, std::move(prefix)),
-      cases(), title());
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().split requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().split: feature must be Note");
+  return expanded_text_result_(source.note().split(delimiter, limit, std::move(prefix)), frame_.cases(), frame_.title());
 }
 
-DataFrame DataFrame::partition_feature(
-    std::string_view feature,
-    std::string_view separator,
-    std::string prefix) const {
-  const auto source = features(feature);
-  PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "DataFrame::partition_feature: feature must be text");
-  return expanded_text_result_(
-      source.partition_text(separator, std::move(prefix)),
-      cases(), title());
+DataFrame DataFrameNoteAccessor::partition(std::string_view separator,
+                                           std::string prefix) const {
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().partition requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().partition: feature must be Note");
+  return expanded_text_result_(source.note().partition(separator, std::move(prefix)), frame_.cases(), frame_.title());
 }
 
-DataFrame DataFrame::text_indicators(
-    std::string_view feature,
-    std::string_view delimiter,
-    std::string prefix) const {
-  const auto source = features(feature);
-  PLUSS_CHECK(source.kind() == ThreadKind::Note,
-              "DataFrame::text_indicators: feature must be text");
-  return expanded_text_result_(
-      source.text_indicators(delimiter, std::move(prefix)),
-      cases(), title());
+DataFrame DataFrameNoteAccessor::pad(std::int64_t width, TextAlign align, char fill) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [=](const Thread& value) { return value.note().pad(width, align, fill); },
+                                  "DataFrame::note().pad");
+}
+
+DataFrame DataFrameNoteAccessor::chars(
+    std::int64_t start,
+    std::optional<std::int64_t> stop,
+    std::int64_t step) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [=](const Thread& value) { return value.note().chars(start, stop, step); },
+                                  "DataFrame::note().chars");
+}
+
+DataFrame DataFrameNoteAccessor::normalize(UnicodeForm form) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [form](const Thread& value) { return value.note().normalize(form); },
+                                  "DataFrame::note().normalize");
+}
+
+DataFrame DataFrameNoteAccessor::encode(std::string_view encoding) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [encoding](const Thread& value) { return value.note().encode(encoding); },
+                                  "DataFrame::note().encode");
+}
+
+DataFrame DataFrameNoteAccessor::indicate(std::string_view delimiter,
+                                          std::string prefix) const {
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().indicate requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().indicate: feature must be Note");
+  return expanded_text_result_(source.note().indicate(delimiter, std::move(prefix)), frame_.cases(), frame_.title());
+}
+
+DataFrameTimelineAccessor DataFrame::tl(std::string_view feature) const {
+  const auto single = std::array<std::string_view, 1>{feature};
+  return tl(pluss::msharp::RangeView::Of<std::string_view>(
+      std::span<const std::string_view>(single.data(), single.size())));
+}
+
+DataFrameTimelineAccessor DataFrame::tl(std::initializer_list<std::string_view> features) const {
+  return tl(pluss::msharp::RangeView::Of<std::string_view>(features));
+}
+
+DataFrameTimelineAccessor DataFrame::tl(const std::vector<std::string>& features) const {
+  std::vector<std::string_view> views;
+  views.reserve(features.size());
+  for (const auto& name : features) {
+    views.emplace_back(name);
+  }
+  return tl(pluss::msharp::RangeView::Of<std::string_view>(
+      std::span<const std::string_view>(views.data(), views.size())));
+}
+
+DataFrameTimelineAccessor DataFrame::tl(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::tl");
+  std::vector<std::string> selected;
+  selected.reserve(indices.size());
+  for (const auto idx : indices) {
+    selected.push_back(src.names_[idx]);
+  }
+  return DataFrameTimelineAccessor(*this, std::move(selected));
+}
+
+DataFrameTimelineAccessor::DataFrameTimelineAccessor(DataFrame frame,
+                                                     std::vector<std::string> features)
+    : frame_(std::move(frame)),
+      features_(std::move(features)) {
+  PLUSS_CHECK(!features_.empty(), "DataFrame::tl: expected at least one Timeline/TimeIndex feature");
+}
+
+DataFrame DataFrameTimelineAccessor::map_(
+    const std::function<Thread(const Thread&)>& fn,
+    std::string_view op) const {
+  PLUSS_CHECK(static_cast<bool>(fn), std::string(op) + ": callback is empty");
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(static_cast<std::size_t>(frame_.nfeatures()));
+  std::unordered_set<std::string> selected(features_.begin(), features_.end());
+  for (const auto& name : frame_.feature_names()) {
+    const auto source = frame_.features(name);
+    if (selected.contains(name)) {
+      PLUSS_CHECK(is_time_like_thread_(source.kind()),
+                  std::string(op) + ": feature '" + name + "' is not Timeline/TimeIndex");
+      columns.emplace_back(name, fn(source));
+    } else {
+      columns.emplace_back(name, source);
+    }
+  }
+  return DataFrame(std::move(columns), frame_.cases()).title(frame_.title());
+}
+
+DataFrame DataFrameTimelineAccessor::isnat() const {
+  return map_([](const Thread& t) { return t.tl().isnat(); }, "DataFrame::tl().isnat");
+}
+
+DataFrame DataFrameTimelineAccessor::valid() const {
+  return map_([](const Thread& t) { return t.tl().valid(); }, "DataFrame::tl().valid");
+}
+
+DataFrame DataFrameTimelineAccessor::year() const {
+  return map_([](const Thread& t) { return t.tl().year(); }, "DataFrame::tl().year");
+}
+
+DataFrame DataFrameTimelineAccessor::month() const {
+  return map_([](const Thread& t) { return t.tl().month(); }, "DataFrame::tl().month");
+}
+
+DataFrame DataFrameTimelineAccessor::day() const {
+  return map_([](const Thread& t) { return t.tl().day(); }, "DataFrame::tl().day");
+}
+
+DataFrame DataFrameTimelineAccessor::hour() const {
+  return map_([](const Thread& t) { return t.tl().hour(); }, "DataFrame::tl().hour");
+}
+
+DataFrame DataFrameTimelineAccessor::minute() const {
+  return map_([](const Thread& t) { return t.tl().minute(); }, "DataFrame::tl().minute");
+}
+
+DataFrame DataFrameTimelineAccessor::second() const {
+  return map_([](const Thread& t) { return t.tl().second(); }, "DataFrame::tl().second");
+}
+
+DataFrame DataFrameTimelineAccessor::weekday() const {
+  return map_([](const Thread& t) { return t.tl().weekday(); }, "DataFrame::tl().weekday");
+}
+
+DataFrame DataFrameTimelineAccessor::yearday() const {
+  return map_([](const Thread& t) { return t.tl().yearday(); }, "DataFrame::tl().yearday");
+}
+
+DataFrame DataFrameTimelineAccessor::quarter() const {
+  return map_([](const Thread& t) { return t.tl().quarter(); }, "DataFrame::tl().quarter");
+}
+
+DataFrame DataFrameTimelineAccessor::week() const {
+  return map_([](const Thread& t) { return t.tl().week(); }, "DataFrame::tl().week");
+}
+
+DataFrame DataFrameTimelineAccessor::weekend() const {
+  return map_([](const Thread& t) { return t.tl().weekend(); }, "DataFrame::tl().weekend");
+}
+
+DataFrame DataFrameTimelineAccessor::month_start() const {
+  return map_([](const Thread& t) { return t.tl().month_start(); }, "DataFrame::tl().month_start");
+}
+
+DataFrame DataFrameTimelineAccessor::month_end() const {
+  return map_([](const Thread& t) { return t.tl().month_end(); }, "DataFrame::tl().month_end");
+}
+
+DataFrame DataFrameTimelineAccessor::leap() const {
+  return map_([](const Thread& t) { return t.tl().leap(); }, "DataFrame::tl().leap");
+}
+
+DataFrame DataFrameTimelineAccessor::weekday_name() const {
+  return map_([](const Thread& t) { return t.tl().weekday_name(); }, "DataFrame::tl().weekday_name");
+}
+
+DataFrame DataFrameTimelineAccessor::month_name() const {
+  return map_([](const Thread& t) { return t.tl().month_name(); }, "DataFrame::tl().month_name");
+}
+
+DataFrame DataFrameTimelineAccessor::fmt(std::string_view pattern) const {
+  return map_([pattern](const Thread& t) { return t.tl().fmt(pattern); }, "DataFrame::tl().fmt");
+}
+
+DataFrame DataFrameTimelineAccessor::iso() const {
+  return map_([](const Thread& t) { return t.tl().iso(); }, "DataFrame::tl().iso");
+}
+
+DataFrame DataFrameTimelineAccessor::epoch(TimeUnit unit) const {
+  return map_([unit](const Thread& t) { return t.tl().epoch(unit); }, "DataFrame::tl().epoch");
+}
+
+DataFrame DataFrameTimelineAccessor::floor(std::string_view unit) const {
+  return map_([unit](const Thread& t) { return t.tl().floor(unit); }, "DataFrame::tl().floor");
+}
+
+DataFrame DataFrameTimelineAccessor::ceil(std::string_view unit) const {
+  return map_([unit](const Thread& t) { return t.tl().ceil(unit); }, "DataFrame::tl().ceil");
+}
+
+DataFrame DataFrameTimelineAccessor::round(std::string_view unit) const {
+  return map_([unit](const Thread& t) { return t.tl().round(unit); }, "DataFrame::tl().round");
+}
+
+DataFrame DataFrameTimelineAccessor::date() const {
+  return map_([](const Thread& t) { return t.tl().date(); }, "DataFrame::tl().date");
+}
+
+DataFrame DataFrameTimelineAccessor::time() const {
+  return map_([](const Thread& t) { return t.tl().time(); }, "DataFrame::tl().time");
+}
+
+DataFrame DataFrameTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const {
+  return map_([=](const Thread& t) { return t.tl().shift(periods, freq); }, "DataFrame::tl().shift");
+}
+
+DataFrame DataFrameTimelineAccessor::tz(std::string_view name) const {
+  return map_([name](const Thread& t) { return t.tl().tz(name); }, "DataFrame::tl().tz");
+}
+
+DataFrame DataFrameTimelineAccessor::localize(const TimelineLocalizeOptions& options) const {
+  return map_([options](const Thread& t) { return t.tl().localize(options); }, "DataFrame::tl().localize");
+}
+
+DataFrame DataFrameTimelineAccessor::utc() const {
+  return map_([](const Thread& t) { return t.tl().utc(); }, "DataFrame::tl().utc");
+}
+
+DataFrame DataFrameTimelineAccessor::index(bool require_sorted) const {
+  return map_([require_sorted](const Thread& t) { return t.tl().index(require_sorted); },
+              "DataFrame::tl().index");
 }
 
 DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) const {
@@ -919,6 +1158,14 @@ DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) c
   }, src.columns_);
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::transform(
+    const std::function<Thread(const Thread&)>& fn,
+    Axis axis) const {
+  PLUSS_CHECK(axis == Axis::Feature,
+              "DataFrame::transform(Thread callback): use Axis::Feature for feature-wise transforms; use the DataFrame callback overload with Axis::Case for row-wise transforms");
+  return transform(fn);
 }
 
 DataFrame DataFrame::transform(std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const {
@@ -970,7 +1217,7 @@ DataFrame DataFrame::put(std::string_view feature, const Thread& bool_mask, cons
   auto out_cols = src.columns_;
   out_cols[it->second] = out_cols[it->second].put(mask, value);
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      src.names_, std::move(out_cols), src.cases_, src.title_));
+      src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
 DataFrame DataFrame::put(std::string_view feature, const Thread& bool_mask, double value) const {
@@ -1099,13 +1346,13 @@ DataFrame DataFrame::to_utc(pluss::msharp::RangeView::Of<std::string_view> featu
   return tz_convert(features, "UTC");
 }
 
-DataFrame DataFrame::shift_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                                int periods,
-                                std::string_view freq) const {
+DataFrame DataFrame::shift(pluss::msharp::RangeView::Of<std::string_view> features,
+                           int periods,
+                           std::string_view freq) const {
   const auto freq_owned = owned_name(freq);
-  PLUSS_CHECK(!freq_owned.empty(), "DataFrame::shift_time: freq cannot be empty");
+  PLUSS_CHECK(!freq_owned.empty(), "DataFrame::shift: freq cannot be empty");
   const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::shift_time");
+  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::shift");
   auto out_cols = src.columns_;
   for (const auto idx : indices) {
     const auto& col = src.columns_[idx];
@@ -1119,48 +1366,12 @@ DataFrame DataFrame::shift_time(pluss::msharp::RangeView::Of<std::string_view> f
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::floor_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                                std::string_view unit) const {
+DataFrame DataFrame::round(pluss::msharp::RangeView::Of<std::string_view> features,
+                           std::string_view unit) const {
   const auto unit_owned = owned_name(unit);
-  PLUSS_CHECK(!unit_owned.empty(), "DataFrame::floor_time: unit cannot be empty");
+  PLUSS_CHECK(!unit_owned.empty(), "DataFrame::round: unit cannot be empty");
   const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::floor_time");
-  auto out_cols = src.columns_;
-  for (const auto idx : indices) {
-    const auto& col = src.columns_[idx];
-    if (col.kind() == ThreadKind::Timeline) {
-      out_cols[idx] = Thread(col.as_timeline().floor(unit_owned), col.validity_mask());
-    } else {
-      out_cols[idx] = Thread(col.as_timeindex().floor(unit_owned), col.validity_mask());
-    }
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::ceil_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                               std::string_view unit) const {
-  const auto unit_owned = owned_name(unit);
-  PLUSS_CHECK(!unit_owned.empty(), "DataFrame::ceil_time: unit cannot be empty");
-  const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::ceil_time");
-  auto out_cols = src.columns_;
-  for (const auto idx : indices) {
-    const auto& col = src.columns_[idx];
-    if (col.kind() == ThreadKind::Timeline) {
-      out_cols[idx] = Thread(col.as_timeline().ceil(unit_owned), col.validity_mask());
-    } else {
-      out_cols[idx] = Thread(col.as_timeindex().ceil(unit_owned), col.validity_mask());
-    }
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::round_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                                std::string_view unit) const {
-  const auto unit_owned = owned_name(unit);
-  PLUSS_CHECK(!unit_owned.empty(), "DataFrame::round_time: unit cannot be empty");
-  const auto& src = impl_ref_();
-  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::round_time");
+  const auto indices = resolve_time_feature_indices_(src, features, "DataFrame::round");
   auto out_cols = src.columns_;
   for (const auto idx : indices) {
     const auto& col = src.columns_[idx];

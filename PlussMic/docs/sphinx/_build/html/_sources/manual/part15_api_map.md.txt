@@ -11,20 +11,20 @@ reference; it tells you where to look.
 | Save | `save_csv`, `save_txt`, `save_excel`, `save_json`, `save_parquet`, `save_as` |
 | Inspect | `defined`, `ncases`, `nfeatures`, `feature_names`, `info`, `describe`, `to_string` |
 | Select features | `features`, `select`, `select_like`, `select_regex`, `series_features`, `note_features`, `timeline_features` |
-| Manage features | `insert`, `drop`, `reorder`, `rename`, `rename_features`, `set_axis`, `add_prefix`, `add_suffix` |
-| Manage cases | `cases`, `cases_series`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases` |
+| Manage features | `insert`, `drop`, `reorder`, `rename`, `set_axis`, `add_prefix`, `add_suffix` |
+| Manage cases | `cases`, `cases_series`, `set_cases`, `reset_cases`, `align_cases` |
 | Row selection | `head`, `tail`, `view`, `cloc`, `slice`, `take`, `sample` |
 | Filter | `where`, `filter`, `query` |
 | Derive | `assign`, `set_features`, `set` |
-| Transform | `transform`, `cast`, `astype`, `cast_series`, `cast_note`, `cast_timeline`, `cast_timeindex` |
+| Transform | `transform`, `cast`, `astype` |
 | Sort/rank | `sort_values`, `sort_cases`, `top`, `bottom` |
-| Missing data | `isna`, `isnull`, `notna`, `notnull`, `fillna`, `dropna`, `dropna_all`, `ffill`, `bfill` |
+| Missing data | `isnull`, `notnull`, `fillna`, `dropna`, `ffill`, `bfill` |
 | Arithmetic | `add`, `sub`, `mul`, `div`, `truediv`, `floordiv`, `mod`, `pow`, reverse variants |
 | Comparison | `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare` |
-| Reductions | `sum`, `mean`, `median`, `min`, `max`, `std`, `var`, `count`, `corr`, `count_distinct` |
+| Reductions | `sum`, `mean`, `median`, `min`, `max`, `std`, `var`, `count`, `corr`, `ndistinct` |
 | Grouping | `aggregate`, `group_by`, `count_by`, `mean_by`, `pivot`, `pivot_table` |
-| Time | `ts`, `resample`, `rolling`, `window`, `tz_convert`, `tz_localize`, `to_utc`, `floor_time`, `ceil_time`, `round_time`, `shift_time` |
-| Combine | `join`, `update`, `combine`, `stitch_on`, `conform_to`, `reindex_like` |
+| Time | `tl`, `ts`, `resample`, `rolling`, `window`, `tz_convert`, `tz_localize`, `to_utc`, `floor_time`, `ceil_time`, `round`, `shift` |
+| Combine | `join`, `update`, `combine`, `unify`, `conform_to` |
 | Plot | `plot`, `plot3d` |
 | SQL | `sql`, `prepare_sql` |
 | Convert | `kindelize`, `tabelize`, `unsqueeze` |

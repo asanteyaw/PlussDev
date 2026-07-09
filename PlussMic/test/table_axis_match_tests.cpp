@@ -97,7 +97,7 @@ void test_explicit_common_matching() {
   FrameMatchOptions options;
   options.cases = FrameMatchRule::Common;
   options.features = FrameMatchRule::Common;
-  const auto matched = left.matched_with(right, options);
+  const auto matched = left.match(right, options);
 
   expect(matched.left.feature_names() == std::vector<std::string>({"y"}),
          "common feature matching should retain shared features only");
@@ -131,7 +131,7 @@ void test_repeated_cases_pair_in_order() {
   FrameMatchOptions reject;
   reject.repeated_cases = RepeatedCaseRule::Reject;
   expect_throw(
-      [&]() { (void)left.matched_with(right, reject); },
+      [&]() { (void)left.match(right, reject); },
       "reject mode should diagnose repeated cases");
 }
 
@@ -144,7 +144,7 @@ void test_matching_rejects_incompatible_case_types() {
       Thread(pluss::make_series(std::vector<std::int64_t>{0})));
 
   expect_throw(
-      [&]() { (void)text_cases.matched_with(numeric_cases); },
+      [&]() { (void)text_cases.match(numeric_cases); },
       "matching should reject case axes with different payload kinds");
 }
 
@@ -369,6 +369,140 @@ void test_lengthen_reshape() {
       "lengthen should reject heterogeneous value payload kinds");
 }
 
+void test_hierarchical_case_axis_engine() {
+  const auto frame = DataFrame({
+      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{102, 101, 201, 202}))},
+      {"quarter", Thread(pluss::make_note({"Q2", "Q1", "Q1", "Q2"}))},
+      {"sales", Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
+      {"cost", Thread(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
+  });
+
+  const auto indexed = frame.set_cases(
+      DataFrame::SetCasesOptions{
+          .features = {"region", "account"},
+          .drop = false,
+          .verify = true,
+          .sort = false});
+  expect(indexed.has_levels(), "set_cases should attach structured case levels");
+  expect(indexed.levels() == std::vector<std::string>({"region", "account"}),
+         "set_cases should preserve level names");
+  expect(indexed.level("region").as_note().vector()[0] == "West",
+         "level(name) should expose a typed case level");
+
+  const auto selected = indexed.case_study(
+      DataFrame::CasePick{.level = "region", .value = "West"});
+  expect(selected.ncases() == 2 &&
+             selected.level("account").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({102, 101}),
+         "case_study(level,value) should perform partial hierarchical selection");
+
+  const auto full_key = indexed.case_study(
+      DataFrame::CasePick{.key = {"East", "202"}});
+  expect(full_key.ncases() == 1 &&
+             full_key.features("sales").as_series().to_vec<double>() ==
+                 std::vector<double>({40.0}),
+         "case_study(key) should match a full structured key");
+
+  const auto projected = indexed.features({"sales", "cost"});
+  expect(projected.has_levels() && projected.levels() == indexed.levels(),
+         "feature selection should preserve hierarchical case metadata");
+
+  const auto sorted = indexed.sort_cases(
+      DataFrame::SortCasesOptions{.levels = {"region", "account"}});
+  expect(sorted.level("region").as_note().vector() ==
+             std::vector<std::string_view>({"East", "East", "West", "West"}) &&
+             sorted.level("account").as_series().to_vec<std::int64_t>() ==
+                 std::vector<std::int64_t>({201, 202, 101, 102}),
+         "sort_cases(levels) should sort by typed case levels");
+
+  const std::vector<DataFrame::GroupSpec> specs{
+      {"total", "sales", DataFrame::GroupOp::Sum},
+      {"n", "", DataFrame::GroupOp::Count},
+  };
+  const auto grouped = static_cast<DataFrame>(
+      indexed.group_by(DataFrame::CaseGroup{.level = "region"}, specs));
+  expect(grouped.features("region").as_note().vector() ==
+             std::vector<std::string_view>({"West", "East"}) &&
+             grouped.features("total").as_series().to_vec<double>() ==
+                 std::vector<double>({30.0, 70.0}),
+         "group_by(CaseGroup) should group by case levels without requiring key features");
+
+  const auto renamed = indexed.rename_levels({{"account", "acct"}});
+  expect(renamed.levels() == std::vector<std::string>({"region", "acct"}),
+         "rename_levels should rename a structured case level");
+  const auto reordered = renamed.reorder_levels({"acct", "region"});
+  expect(reordered.levels() == std::vector<std::string>({"acct", "region"}),
+         "reorder_levels should reorder structured case levels");
+  const auto dropped = reordered.drop_levels({"region"});
+  expect(dropped.levels() == std::vector<std::string>({"acct"}),
+         "drop_levels should remove selected structured case levels");
+  const auto reset = indexed.reset_cases(
+      DataFrame::ResetCasesOptions{.drop = false, .names = {"region_case", "account_case"}});
+  expect(reset.has_feature("region_case") && reset.has_feature("account_case") &&
+             !reset.has_levels(),
+         "reset_cases should materialize levels as ordinary features and clear hierarchy");
+}
+
+void test_stack_unstack_hierarchical_cases() {
+  const auto frame = DataFrame({
+      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
+      {"quarter", Thread(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
+      {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+  }).set_cases({"region", "account", "quarter"}, true);
+
+  const auto wide = frame.unstack("quarter");
+  expect(wide.has_levels() &&
+             wide.levels() == std::vector<std::string>({"region", "account"}) &&
+             wide.feature_names() == std::vector<std::string>({"Q1", "Q2"}) &&
+             wide.features("Q1").as_series().to_vec<double>() ==
+                 std::vector<double>({10.0, 30.0}) &&
+             wide.features("Q2").as_series().to_vec<double>() ==
+                 std::vector<double>({20.0, 40.0}),
+         "unstack should move one case level into wide features");
+
+  const auto long_again = wide.stack("quarter", "sales");
+  expect(long_again.has_levels() &&
+             long_again.levels() == std::vector<std::string>({"region", "account", "quarter"}) &&
+             long_again.features("sales").as_series().to_vec<double>() ==
+                 std::vector<double>({10.0, 30.0, 20.0, 40.0}),
+         "stack should move features into the case hierarchy and keep typed values");
+
+  const auto duplicate = DataFrame({
+      {"region", Thread(pluss::make_note({"West", "West"}))},
+      {"quarter", Thread(pluss::make_note({"Q1", "Q1"}))},
+      {"sales", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+  }).set_cases({"region", "quarter"}, true);
+  expect_throw([&]() { (void)duplicate.unstack("quarter"); },
+               "unstack should reject duplicate output cells");
+}
+
+void test_transform_axis_surface() {
+  const auto frame = DataFrame({
+      {"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"y", Thread(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+  });
+  const auto by_feature = frame.transform(
+      [](const Thread& value) {
+        return value + 10.0;
+      },
+      pluss::table::Axis::Feature);
+  expect(by_feature.features("x").as_series().to_vec<double>() ==
+             std::vector<double>({11.0, 12.0}) &&
+             by_feature.features("y").as_series().to_vec<double>() ==
+                 std::vector<double>({13.0, 14.0}),
+         "transform(thread_fn, Axis::Feature) should apply column-wise");
+
+  const auto thread_transformed = frame.features("x").transform(
+      [](const pluss::table::ThreadValue& value) {
+        return pluss::table::ThreadValue(value.thread() + 5.0);
+      });
+  expect(thread_transformed.as_series().to_vec<double>() ==
+             std::vector<double>({6.0, 7.0}),
+         "Thread::transform(value_fn) should apply element-wise");
+}
+
 void test_category_catalogue() {
   const auto validity = pluss::make_series(
       std::vector<bool>{true, true, true, true, false});
@@ -448,6 +582,9 @@ int main() {
   test_unify_modes();
   test_vectorized_group_reductions();
   test_lengthen_reshape();
+  test_hierarchical_case_axis_engine();
+  test_stack_unstack_hierarchical_cases();
+  test_transform_axis_surface();
   test_category_catalogue();
   test_streamed_csv_case_batches();
   return 0;

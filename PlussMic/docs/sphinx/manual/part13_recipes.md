@@ -14,7 +14,7 @@ auto raw = DataFrame::load_csv("input.csv", {
 
 auto clean = raw
     .fillna(0.0)
-    .dropna_all({"id"})
+    .dropna({"id"}, true)
     .sort_values({"id"});
 
 clean.describe();
@@ -78,8 +78,8 @@ top.save_csv("outputs/top_revenue.csv");
 ## Missing-value audit
 
 ```cpp
-std::cout << "null rows: " << df.count_null_rows() << '\n';
-df.isna().head(20);
+std::cout << "null rows: " << df.isnull().any(pluss::table::Axis::Case).sum() << '\n';
+df.isnull().head(20);
 df.tally({"category"}, 20, false, true);
 ```
 
@@ -101,7 +101,7 @@ auto engineered = sorted.assign({
       return frame.features("close").ts().returns(1);
     }},
     {"close_20_mean", [](const DataFrame& frame) {
-      return frame.features("close").ts().rolling_mean(20, 10);
+      return frame.features("close").ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 10});
     }},
 });
 ```

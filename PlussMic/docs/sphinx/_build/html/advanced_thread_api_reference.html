@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="DataFrame Benchmark Results" href="dataframe_benchmarks.html" />
-    <link rel="prev" title="Stabilization, Statistics, and Window API Reference" href="statistics_window_api_reference.html" />
+    <link rel="prev" title="Window Statistics API Reference" href="statistics_window_api_reference.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -767,17 +767,17 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 </section>
 </section>
 </section>
-<section id="atlas-moving">
-<h2><code class="docutils literal notranslate"><span class="pre">Atlas::moving</span></code><a class="headerlink" href="#atlas-moving" title="Link to this heading">¶</a></h2>
+<section id="atlastsaccessor-rolling">
+<h2><code class="docutils literal notranslate"><span class="pre">AtlasTsAccessor::rolling</span></code><a class="headerlink" href="#atlastsaccessor-rolling" title="Link to this heading">¶</a></h2>
 <section id="id93">
 <h3>API Signature<a class="headerlink" href="#id93" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Atlas::moving(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -&gt; Atlas
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>AtlasTsAccessor::rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -&gt; Atlas
 </pre></div>
 </div>
 </section>
 <section id="id94">
 <h3>Notes<a class="headerlink" href="#id94" title="Link to this heading">¶</a></h3>
-<p>Delegates the selected moving statistic to every DataFrame at depth.</p>
+<p>Delegates the selected rolling statistic through <code class="docutils literal notranslate"><span class="pre">atlas.ts(...)</span></code> to every DataFrame at depth.</p>
 </section>
 <section id="id95">
 <h3>Inputs<a class="headerlink" href="#id95" title="Link to this heading">¶</a></h3>
@@ -799,7 +799,7 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 <section id="id98">
 <h3>Examples<a class="headerlink" href="#id98" title="Link to this heading">¶</a></h3>
 <p>Example 1.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="id99">
@@ -808,7 +808,7 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p>Example 2.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullable_atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullable_atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -818,7 +818,7 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p>Example 3.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">one_atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">one_atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -828,7 +828,7 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p>Example 4.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">).</span><span class="n">flow</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">).</span><span class="n">flow</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
 </pre></div>
 </div>
 </section>
@@ -838,8 +838,8 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p>Example 5.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -3501,10 +3501,11 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline_batched_api_reference.html">Timeline (<code class="docutils literal notranslate"><span class="pre">tl</span></code>) and Batched DataFrame Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Stabilization, Statistics, and Window API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Window Statistics API Reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Thread, UDF, Text, and Delegation API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#thread-map-elements"><code class="docutils literal notranslate"><span class="pre">Thread::map_elements</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#thread-aggregate-with"><code class="docutils literal notranslate"><span class="pre">Thread::aggregate_with</span></code></a></li>
@@ -3515,7 +3516,7 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 <li class="toctree-l2"><a class="reference internal" href="#dataframe-aggregate-with"><code class="docutils literal notranslate"><span class="pre">DataFrame::aggregate_with</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dataframe-flow"><code class="docutils literal notranslate"><span class="pre">DataFrame::flow</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#atlas-map-elements"><code class="docutils literal notranslate"><span class="pre">Atlas::map_elements</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#atlas-moving"><code class="docutils literal notranslate"><span class="pre">Atlas::moving</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#atlastsaccessor-rolling"><code class="docutils literal notranslate"><span class="pre">AtlasTsAccessor::rolling</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#atlas-flow"><code class="docutils literal notranslate"><span class="pre">Atlas::flow</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#thread-upper"><code class="docutils literal notranslate"><span class="pre">Thread::upper</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#thread-casefold"><code class="docutils literal notranslate"><span class="pre">Thread::casefold</span></code></a></li>
@@ -3587,7 +3588,7 @@ Public value controlling <code class="docutils literal notranslate"><span class=
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="statistics_window_api_reference.html" title="previous chapter">Stabilization, Statistics, and Window API Reference</a></li>
+      <li>Previous: <a href="statistics_window_api_reference.html" title="previous chapter">Window Statistics API Reference</a></li>
       <li>Next: <a href="dataframe_benchmarks.html" title="next chapter">DataFrame Benchmark Results</a></li>
   </ul></li>
 </ul>

@@ -323,7 +323,7 @@ The API uses focused canonical names:
 Complete method index (current public surface, grouped):
 
 - Access: `nrows`, `ncols`, `nfeatures`, `feature_names`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
-- Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_feature_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
+- Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
 - Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
 - Derivation/aggregation/grouping: `assign`, `transform`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `tally`, `describe`, `transpose`
 - Dimensional bridge: `unsqueeze` (DataFrame -> depth-1 Atlas), `squeeze` (Atlas -> DataFrame when depth==1)
@@ -514,7 +514,7 @@ auto reset = cased.reset_cases("city_case");
 auto aligned = reset.align_cases(reset.cases());
 auto renamed = df.rename_features({{"price", "price_usd"}});
 auto relabeled = df.relabel_features({"feat_a", "feat_b", "feat_c"});
-auto relabeled2 = df.set_feature_axis({"feat_a", "feat_b", "feat_c"});
+auto relabeled2 = df.set_axis({"feat_a", "feat_b", "feat_c"});
 auto relabeled3 = df.set_axis({"feat_a", "feat_b", "feat_c"}); // alias
 auto conformed = df.conform_to(other_df);
 auto reindexed_like = df.reindex_like(other_df);

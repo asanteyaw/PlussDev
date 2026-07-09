@@ -60,7 +60,7 @@ int main() {
   std::cout << "INSERT\n";
   std::cout << sales.insert(3, "tip", make_series({0.45, 0.35, 0.55, 0.25})).to_string() << "\n\n";
 
-  std::cout << "ISNA_ALL\n" << sales_missing.isna().to_string() << "\n\n";
+  std::cout << "ISNA_ALL\n" << sales_missing.isnull().to_string() << "\n\n";
   std::cout << "ISNULL_SELECTED\n" << sales_missing.isnull({"region", "units"}).to_string() << "\n\n";
 
   std::cout << "JOIN_DEFAULT\n" << sales.join(metadata).to_string() << "\n\n";

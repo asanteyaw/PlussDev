@@ -45,55 +45,12 @@ auto out = thread.abs();
 [10.0, 20.0, 30.0]
 ```
 
-### `aggregate_with`
-
-#### Signature
-
-```cpp
-Thread::aggregate_with(fn: const std::function<Thread(const Thread&)>&, shape: ResultShape = ResultShape::Reduce) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`fn` : `const std::function<Thread(const Thread&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-`shape` : `ResultShape`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.aggregate_with();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
 ### `all`
 
 #### Signature
 
 ```cpp
-Thread::all(skipna: bool = true) -> pluss::Series
+Thread::all(skipna: bool = true) -> ThreadValue
 ```
 
 #### Notes
@@ -107,7 +64,7 @@ Thread::all(skipna: bool = true) -> pluss::Series
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -133,7 +90,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::any(skipna: bool = true) -> pluss::Series
+Thread::any(skipna: bool = true) -> ThreadValue
 ```
 
 #### Notes
@@ -147,7 +104,7 @@ Thread::any(skipna: bool = true) -> pluss::Series
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -404,46 +361,6 @@ auto out = thread.astype(pluss::ScalarType::Float64);
 - `astype(...)` is the numeric-series dtype conversion path.
 
 
-### `asymmetry`
-
-#### Signature
-
-```cpp
-Thread::asymmetry(min_count: std::int64_t = 3) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.asymmetry();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
 ### `bfill`
 
 #### Signature
@@ -491,6 +408,52 @@ auto out = thread.bfill();
 - Trailing null runs remain null because there is no later value to use.
 - Use this when only one feature should be filled instead of the whole frame.
 
+
+### `bounded`
+
+#### Signature
+
+```cpp
+Thread::bounded(bounds: const WindowBoundsFn&, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> Thread
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`bounds` : `const WindowBoundsFn&`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`statistic` : `WindowStatistic`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`options` : `const WindowOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.bounded();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
 
 ### `btw`
 
@@ -1019,7 +982,62 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::cast(target: ThreadCastTarget, series_dtype: std::optional<pluss::ScalarType> = std::nullopt) -> Thread
+Thread::cast(target: ThreadCastTarget, options: const ThreadCastOptions& = {}) -> Thread
+```
+
+#### Notes
+
+This changes the semantic or numeric type so later operations route through the correct implementation path.
+
+#### Inputs
+
+`target` : `ThreadCastTarget`
+    Target payload family chosen by this cast overload.
+
+`options` : `const ThreadCastOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Thread::cast(target: ThreadCastTarget, series_dtype: std::optional<pluss::ScalarType>) -> Thread`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"1.0", "2.0", "3.0"}));
+
+auto out = thread.cast(pluss::table::ThreadCastTarget::Series, pluss::ScalarType::Float64);
+```
+
+#### Expected output
+
+```text
+[10.0, 20.0, 30.0]
+```
+
+#### Conversion Rules
+
+- These methods convert or reinterpret the current payload into the requested thread type.
+- Use `as_*()` when you want access to the underlying pluss-type surface directly.
+- Use `cast(...)` when you need explicit target selection with broader conversion control.
+- `astype(...)` is the numeric-series dtype conversion path.
+
+
+### `cast`
+
+#### Signature
+
+```cpp
+Thread::cast(target: ThreadCastTarget, series_dtype: std::optional<pluss::ScalarType>) -> Thread
 ```
 
 #### Notes
@@ -1043,6 +1061,10 @@ This changes the semantic or numeric type so later operations route through the 
 
 Option and enum values, when present, are listed with their effects under **Inputs**.
 
+#### See also
+
+- `Thread::cast(target: ThreadCastTarget, options: const ThreadCastOptions& = {}) -> Thread`
+
 #### Examples
 
 ```cpp
@@ -1064,6 +1086,52 @@ auto out = thread.cast(pluss::table::ThreadCastTarget::Series, pluss::ScalarType
 - Use `cast(...)` when you need explicit target selection with broader conversion control.
 - `astype(...)` is the numeric-series dtype conversion path.
 
+
+### `chars`
+
+#### Signature
+
+```cpp
+Thread::chars(start: std::int64_t, stop: std::optional<std::int64_t> = std::nullopt, step: std::int64_t = 1) -> Thread
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`start` : `std::int64_t`
+    Inclusive starting position of the slice.
+
+`stop` : `std::optional<std::int64_t>`
+    Exclusive ending position of the slice.
+
+`step` : `std::int64_t`
+    Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.chars();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
 
 ### `clear_display_labels`
 
@@ -1902,12 +1970,12 @@ auto out = thread.corr(other, pluss::table::ThreadCorrMethod::Pearson);
 - If too few valid paired values remain, the result is `NaN`.
 
 
-### `correlate_with`
+### `corr_with`
 
 #### Signature
 
 ```cpp
-Thread::correlate_with(other: const Thread&, method: ThreadCorrMethod = ThreadCorrMethod::Pearson, min_count: std::int64_t = 1) -> Thread
+Thread::corr_with(other: const Thread&, method: ThreadCorrMethod = ThreadCorrMethod::Pearson, min_count: std::int64_t = 1) -> ThreadValue
 ```
 
 #### Notes
@@ -1927,7 +1995,7 @@ Thread::correlate_with(other: const Thread&, method: ThreadCorrMethod = ThreadCo
 
 #### Output
 
-`Thread`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -1939,7 +2007,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.correlate_with();
+auto out = thread.corr_with();
 ```
 
 #### Expected output
@@ -1953,7 +2021,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::count(count_true: bool = true) -> pluss::Series
+Thread::count(count_true: bool = true) -> ThreadValue
 ```
 
 #### Notes
@@ -1967,7 +2035,7 @@ Returns a size/count summary for the current object without changing it.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -1995,12 +2063,12 @@ auto out = thread.count(true);
 - `count(false)` is only meaningful on boolean series payloads.
 
 
-### `covariance`
+### `covar`
 
 #### Signature
 
 ```cpp
-Thread::covariance(other: const Thread&, options: const StatisticOptions& = {}) -> Thread
+Thread::covar(other: const Thread&, options: const StatisticOptions& = {}) -> ThreadValue
 ```
 
 #### Notes
@@ -2017,7 +2085,7 @@ Thread::covariance(other: const Thread&, options: const StatisticOptions& = {}) 
 
 #### Output
 
-`Thread`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -2029,7 +2097,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.covariance();
+auto out = thread.covar();
 ```
 
 #### Expected output
@@ -2127,7 +2195,7 @@ true
 #### Signature
 
 ```cpp
-Thread::describe(render: bool = true) -> ThreadView
+Thread::describe(render: bool = false) -> ThreadView
 ```
 
 #### Notes
@@ -2175,46 +2243,6 @@ max    30.0
 - Note payloads produce count/unique/top/freq style summaries.
 - Other payload kinds are not supported by `describe()`.
 
-
-### `deviation`
-
-#### Signature
-
-```cpp
-Thread::deviation(options: const StatisticOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.deviation();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
 
 ### `display_labels`
 
@@ -2443,12 +2471,55 @@ Float64
 - Use it when debugging type-dependent behavior or conversion steps.
 
 
-### `encode_text`
+### `duplicated`
 
 #### Signature
 
 ```cpp
-Thread::encode_text(encoding: std::string_view = "base64") -> Thread
+Thread::duplicated(keep_first: bool = true, keep_last: bool = false) -> Thread
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`keep_first` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+`keep_last` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.duplicated();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `encode`
+
+#### Signature
+
+```cpp
+Thread::encode(encoding: std::string_view = "base64") -> Thread
 ```
 
 #### Notes
@@ -2474,7 +2545,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.encode_text();
+auto out = thread.encode();
 ```
 
 #### Expected output
@@ -2483,12 +2554,12 @@ auto out = thread.encode_text();
 The call completes and returns the contract described under Output.
 ```
 
-### `ends_with`
+### `ends`
 
 #### Signature
 
 ```cpp
-Thread::ends_with(suffix: std::string_view) -> Thread
+Thread::ends(suffix: std::string_view) -> Thread
 ```
 
 #### Notes
@@ -2514,7 +2585,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.ends_with();
+auto out = thread.ends();
 ```
 
 #### Expected output
@@ -2562,12 +2633,12 @@ auto out = thread.exp();
 [10.0, 20.0, 30.0]
 ```
 
-### `exponential_deviation`
+### `extract`
 
 #### Signature
 
 ```cpp
-Thread::exponential_deviation(alpha: double, adjusted: bool = true, bias_corrected: bool = true, min_count: std::int64_t = 1, ignore_nulls: bool = false) -> Thread
+Thread::extract(pattern: std::string_view, names: pluss::RangeView<std::string_view> = {}) -> DataFrame
 ```
 
 #### Notes
@@ -2576,24 +2647,15 @@ Thread::exponential_deviation(alpha: double, adjusted: bool = true, bias_correct
 
 #### Inputs
 
-`alpha` : `scalar`
-    Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.
+`pattern` : `std::string_view`
+    Pattern string used for matching or extraction.
 
-`adjusted` : `bool`
-    When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.
-
-`bias_corrected` : `bool`
-    When `true`, apply finite-sample bias correction to exponentially weighted variance.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-`ignore_nulls` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+`names` : `pluss::RangeView<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
 
 #### Output
 
-`Thread`
+`DataFrame`
     Value produced by this call.
 
 #### Options
@@ -2605,108 +2667,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.exponential_deviation();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `exponential_mean`
-
-#### Signature
-
-```cpp
-Thread::exponential_mean(alpha: double, adjusted: bool = true, min_count: std::int64_t = 1, ignore_nulls: bool = false) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`alpha` : `scalar`
-    Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.
-
-`adjusted` : `bool`
-    When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-`ignore_nulls` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.exponential_mean();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `exponential_variance`
-
-#### Signature
-
-```cpp
-Thread::exponential_variance(alpha: double, adjusted: bool = true, bias_corrected: bool = true, min_count: std::int64_t = 1, ignore_nulls: bool = false) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`alpha` : `scalar`
-    Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.
-
-`adjusted` : `bool`
-    When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.
-
-`bias_corrected` : `bool`
-    When `true`, apply finite-sample bias correction to exponentially weighted variance.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-`ignore_nulls` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.exponential_variance();
+auto out = thread.extract();
 ```
 
 #### Expected output
@@ -3305,12 +3266,12 @@ auto out = thread.flow();
 The call completes and returns the contract described under Output.
 ```
 
-### `grouped_moving`
+### `fold`
 
 #### Signature
 
 ```cpp
-Thread::grouped_moving(groups: const Thread&, window: std::int64_t, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> Thread
+Thread::fold(fn: const std::function<Thread(const Thread&)>&, shape: ResultShape = ResultShape::Reduce) -> Thread
 ```
 
 #### Notes
@@ -3319,18 +3280,12 @@ Thread::grouped_moving(groups: const Thread&, window: std::int64_t, statistic: W
 
 #### Inputs
 
-`groups` : `const Thread&`
+`fn` : `const std::function<Thread(const Thread&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+`shape` : `ResultShape`
     Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
 #### Output
 
 `Thread`
@@ -3345,7 +3300,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.grouped_moving();
+auto out = thread.fold();
 ```
 
 #### Expected output
@@ -3354,12 +3309,12 @@ auto out = thread.grouped_moving();
 The call completes and returns the contract described under Output.
 ```
 
-### `growing`
+### `freq`
 
 #### Signature
 
 ```cpp
-Thread::growing(statistic: WindowStatistic, options: const StatisticOptions& = {}) -> Thread
+Thread::freq(top_n: std::int64_t = 0, dropna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -3368,11 +3323,11 @@ Thread::growing(statistic: WindowStatistic, options: const StatisticOptions& = {
 
 #### Inputs
 
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+`top_n` : `std::int64_t`
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+`dropna` : `bool`
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 #### Output
 
@@ -3388,7 +3343,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.growing();
+auto out = thread.freq();
 ```
 
 #### Expected output
@@ -3397,12 +3352,12 @@ auto out = thread.growing();
 The call completes and returns the contract described under Output.
 ```
 
-### `growing_asymmetry`
+### `fullmatch`
 
 #### Signature
 
 ```cpp
-Thread::growing_asymmetry(min_count: std::int64_t = 3) -> Thread
+Thread::fullmatch(pattern: std::string_view) -> Thread
 ```
 
 #### Notes
@@ -3411,8 +3366,8 @@ Thread::growing_asymmetry(min_count: std::int64_t = 3) -> Thread
 
 #### Inputs
 
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+`pattern` : `std::string_view`
+    Pattern string used for matching or extraction.
 
 #### Output
 
@@ -3428,87 +3383,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.growing_asymmetry();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `growing_mean_error`
-
-#### Signature
-
-```cpp
-Thread::growing_mean_error(options: const StatisticOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.growing_mean_error();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `growing_tail_weight`
-
-#### Signature
-
-```cpp
-Thread::growing_tail_weight(min_count: std::int64_t = 4) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.growing_tail_weight();
+auto out = thread.fullmatch();
 ```
 
 #### Expected output
@@ -3639,7 +3514,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::head(n: std::int64_t = 5, render: bool = true) -> ThreadView
+Thread::head(n: std::int64_t = 5, render: bool = false) -> ThreadView
 ```
 
 #### Notes
@@ -3716,12 +3591,12 @@ auto out = thread.hour();
 [1, 2, 3]
 ```
 
-### `indexed_moving`
+### `indicate`
 
 #### Signature
 
 ```cpp
-Thread::indexed_moving(bounds: const WindowBoundsFn&, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> Thread
+Thread::indicate(delimiter: std::string_view = "|", prefix: std::string = "") -> DataFrame
 ```
 
 #### Notes
@@ -3730,18 +3605,15 @@ Thread::indexed_moving(bounds: const WindowBoundsFn&, statistic: WindowStatistic
 
 #### Inputs
 
-`bounds` : `const WindowBoundsFn&`
+`delimiter` : `std::string_view`
     Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+`prefix` : `std::string`
+    Text prefix inserted ahead of the existing label or value.
 
 #### Output
 
-`Thread`
+`DataFrame`
     Value produced by this call.
 
 #### Options
@@ -3753,7 +3625,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.indexed_moving();
+auto out = thread.indicate();
 ```
 
 #### Expected output
@@ -4084,6 +3956,85 @@ auto out = thread.kind();
 Series
 ```
 
+### `kurtosis`
+
+#### Signature
+
+```cpp
+Thread::kurtosis(min_count: std::int64_t = 4) -> ThreadValue
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`min_count` : `std::int64_t`
+    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+
+#### Output
+
+`ThreadValue`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.kurtosis();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `length`
+
+#### Signature
+
+```cpp
+Thread::length() -> Thread
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.length();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `log`
 
 #### Signature
@@ -4249,17 +4200,17 @@ auto out = thread.lstrip("#");
 ["203930", "7788", "4455##"]
 ```
 
-### `map_elements`
+### `map`
 
 #### Signature
 
 ```cpp
-Thread::map_elements(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Thread
+Thread::map(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Thread
 ```
 
 #### Notes
 
-
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
 
 #### Inputs
 
@@ -4280,7 +4231,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.map_elements();
+auto out = thread.map();
 ```
 
 #### Expected output
@@ -4289,12 +4240,52 @@ auto out = thread.map_elements();
 The call completes and returns the contract described under Output.
 ```
 
-### `matrix_product`
+### `matches`
 
 #### Signature
 
 ```cpp
-Thread::matrix_product(other: const Thread&) -> pluss::Series
+Thread::matches(pattern: std::string_view) -> Thread
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`pattern` : `std::string_view`
+    Pattern string used for matching or extraction.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.matches();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `matmul`
+
+#### Signature
+
+```cpp
+Thread::matmul(other: const Thread&) -> ThreadValue
 ```
 
 #### Notes
@@ -4308,7 +4299,7 @@ Thread::matrix_product(other: const Thread&) -> pluss::Series
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -4320,7 +4311,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.matrix_product();
+auto out = thread.matmul();
 ```
 
 #### Expected output
@@ -4334,7 +4325,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::max() -> pluss::Series
+Thread::max() -> ThreadValue
 ```
 
 #### Notes
@@ -4347,7 +4338,7 @@ Returns the maximum value of a numeric thread.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -4373,7 +4364,7 @@ auto out = thread.max();
 #### Signature
 
 ```cpp
-Thread::mean() -> pluss::Series
+Thread::mean() -> ThreadValue
 ```
 
 #### Notes
@@ -4386,7 +4377,7 @@ Returns the mean value of a numeric thread.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -4407,52 +4398,12 @@ auto out = thread.mean();
 20.0
 ```
 
-### `mean_error`
-
-#### Signature
-
-```cpp
-Thread::mean_error(options: const StatisticOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.mean_error();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
 ### `median`
 
 #### Signature
 
 ```cpp
-Thread::median() -> pluss::Series
+Thread::median() -> ThreadValue
 ```
 
 #### Notes
@@ -4465,7 +4416,7 @@ Thread::median() -> pluss::Series
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -4491,7 +4442,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::min() -> pluss::Series
+Thread::min() -> ThreadValue
 ```
 
 #### Notes
@@ -4504,7 +4455,7 @@ Returns the minimum value of a numeric thread.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -4523,6 +4474,46 @@ auto out = thread.min();
 
 ```text
 20.0
+```
+
+### `mode`
+
+#### Signature
+
+```cpp
+Thread::mode(drop_nulls: bool = true) -> Thread
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`drop_nulls` : `bool`
+    When `true`, missing values do not participate while the most-frequent value is selected.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.mode();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
 ```
 
 ### `month`
@@ -4564,12 +4555,12 @@ auto out = thread.month();
 [1, 2, 3]
 ```
 
-### `most_frequent`
+### `ndistinct`
 
 #### Signature
 
 ```cpp
-Thread::most_frequent(drop_nulls: bool = true) -> Thread
+Thread::ndistinct(dropna: bool = true) -> ThreadValue
 ```
 
 #### Notes
@@ -4578,12 +4569,12 @@ Thread::most_frequent(drop_nulls: bool = true) -> Thread
 
 #### Inputs
 
-`drop_nulls` : `bool`
-    When `true`, missing values do not participate while the most-frequent value is selected.
+`dropna` : `bool`
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
 
 #### Output
 
-`Thread`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -4595,7 +4586,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.most_frequent();
+auto out = thread.ndistinct();
 ```
 
 #### Expected output
@@ -4604,187 +4595,12 @@ auto out = thread.most_frequent();
 The call completes and returns the contract described under Output.
 ```
 
-### `moving`
+### `normalize`
 
 #### Signature
 
 ```cpp
-Thread::moving(window: std::int64_t, statistic: WindowStatistic, options: const WindowOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.moving();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `moving_asymmetry`
-
-#### Signature
-
-```cpp
-Thread::moving_asymmetry(window: std::int64_t, options: const WindowOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.moving_asymmetry();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `moving_mean_error`
-
-#### Signature
-
-```cpp
-Thread::moving_mean_error(window: std::int64_t, options: const WindowOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.moving_mean_error();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `moving_tail_weight`
-
-#### Signature
-
-```cpp
-Thread::moving_tail_weight(window: std::int64_t, options: const WindowOptions& = {}) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.moving_tail_weight();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `normalize_text`
-
-#### Signature
-
-```cpp
-Thread::normalize_text(form: UnicodeForm = UnicodeForm::NFC) -> Thread
+Thread::normalize(form: UnicodeForm = UnicodeForm::NFC) -> Thread
 ```
 
 #### Notes
@@ -4810,13 +4626,52 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.normalize_text();
+auto out = thread.normalize();
 ```
 
 #### Expected output
 
 ```text
 The call completes and returns the contract described under Output.
+```
+
+### `note`
+
+#### Signature
+
+```cpp
+Thread::note() -> ThreadNoteAccessor
+```
+
+#### Notes
+
+Returns the current payload as a note/text object.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`ThreadNoteAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.note();
+```
+
+#### Expected output
+
+```text
+["Accra", "Tema", "Kumasi"]
 ```
 
 ### `notnull`
@@ -4955,12 +4810,12 @@ auto out = thread.numeric_binary(10.0, pluss::table::ThreadBinaryMathOp::Add, fa
 [20.0, 30.0, 40.0]
 ```
 
-### `pad_text`
+### `pad`
 
 #### Signature
 
 ```cpp
-Thread::pad_text(width: std::int64_t, align: TextAlign = TextAlign::Left, fill: char = ' ') -> Thread
+Thread::pad(width: std::int64_t, align: TextAlign = TextAlign::Left, fill: char = ' ') -> Thread
 ```
 
 #### Notes
@@ -4992,7 +4847,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.pad_text();
+auto out = thread.pad();
 ```
 
 #### Expected output
@@ -5001,12 +4856,12 @@ auto out = thread.pad_text();
 The call completes and returns the contract described under Output.
 ```
 
-### `partition_text`
+### `partition`
 
 #### Signature
 
 ```cpp
-Thread::partition_text(separator: std::string_view, prefix: std::string = "part") -> DataFrame
+Thread::partition(separator: std::string_view, prefix: std::string = "part") -> DataFrame
 ```
 
 #### Notes
@@ -5035,7 +4890,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.partition_text();
+auto out = thread.partition();
 ```
 
 #### Expected output
@@ -5637,12 +5492,12 @@ auto out = thread.put();
 The call completes and returns the contract described under Output.
 ```
 
-### `ranks`
+### `rank`
 
 #### Signature
 
 ```cpp
-Thread::ranks(ties: RankTieRule = RankTieRule::Average, nulls: RankNullRule = RankNullRule::Keep, ascending: bool = true, percentage: bool = false) -> Thread
+Thread::rank(ties: RankTieRule = RankTieRule::Average, nulls: RankNullRule = RankNullRule::Keep, ascending: bool = true, percentage: bool = false) -> Thread
 ```
 
 #### Notes
@@ -5677,130 +5532,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.ranks();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `regex_extract`
-
-#### Signature
-
-```cpp
-Thread::regex_extract(pattern: std::string_view, names: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`pattern` : `std::string_view`
-    Pattern string used for matching or extraction.
-
-`names` : `pluss::RangeView<std::string_view>`
-    Collection of feature, slot, or stream names supplied in positional order.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.regex_extract();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `regex_fullmatch`
-
-#### Signature
-
-```cpp
-Thread::regex_fullmatch(pattern: std::string_view) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`pattern` : `std::string_view`
-    Pattern string used for matching or extraction.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.regex_fullmatch();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `regex_match`
-
-#### Signature
-
-```cpp
-Thread::regex_match(pattern: std::string_view) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`pattern` : `std::string_view`
-    Pattern string used for matching or extraction.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.regex_match();
+auto out = thread.rank();
 ```
 
 #### Expected output
@@ -6872,12 +6604,12 @@ auto out = thread.rstrip("#");
 ["#203930", "##7788", "4455"]
 ```
 
-### `running_maximum`
+### `scan`
 
 #### Signature
 
 ```cpp
-Thread::running_maximum(skip_nulls: bool = true) -> Thread
+Thread::scan(statistic: ScanStatistic, skip_nulls: bool = true) -> Thread
 ```
 
 #### Notes
@@ -6885,6 +6617,9 @@ Thread::running_maximum(skip_nulls: bool = true) -> Thread
 
 
 #### Inputs
+
+`statistic` : `ScanStatistic`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 `skip_nulls` : `bool`
     When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
@@ -6903,7 +6638,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.running_maximum();
+auto out = thread.scan();
 ```
 
 #### Expected output
@@ -6912,12 +6647,12 @@ auto out = thread.running_maximum();
 The call completes and returns the contract described under Output.
 ```
 
-### `running_minimum`
+### `se`
 
 #### Signature
 
 ```cpp
-Thread::running_minimum(skip_nulls: bool = true) -> Thread
+Thread::se(target: ErrorTarget = ErrorTarget::Mean, options: const StatisticOptions& = {}) -> ThreadValue
 ```
 
 #### Notes
@@ -6926,12 +6661,15 @@ Thread::running_minimum(skip_nulls: bool = true) -> Thread
 
 #### Inputs
 
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
+`target` : `ErrorTarget`
+    Target payload family chosen by this cast overload.
+
+`options` : `const StatisticOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Output
 
-`Thread`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -6943,87 +6681,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.running_minimum();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `running_product`
-
-#### Signature
-
-```cpp
-Thread::running_product(skip_nulls: bool = true) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.running_product();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `running_sum`
-
-#### Signature
-
-```cpp
-Thread::running_sum(skip_nulls: bool = true) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.running_sum();
+auto out = thread.se();
 ```
 
 #### Expected output
@@ -7950,7 +7608,7 @@ Thread::shift(periods: std::int64_t = 1) -> Thread
 
 #### Notes
 
-
+This is part of the time-aware surface and expects timeline or time-index semantics.
 
 #### Inputs
 
@@ -8110,6 +7768,46 @@ auto out = thread.size();
 3
 ```
 
+### `skew`
+
+#### Signature
+
+```cpp
+Thread::skew(min_count: std::int64_t = 3) -> ThreadValue
+```
+
+#### Notes
+
+
+
+#### Inputs
+
+`min_count` : `std::int64_t`
+    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+
+#### Output
+
+`ThreadValue`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.skew();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `slice`
 
 #### Signature
@@ -8151,52 +7849,6 @@ auto out = thread.slice(0, 2);
 
 ```text
 [10.0, 20.0, 30.0]
-```
-
-### `slice_text`
-
-#### Signature
-
-```cpp
-Thread::slice_text(start: std::int64_t, stop: std::optional<std::int64_t> = std::nullopt, step: std::int64_t = 1) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::optional<std::int64_t>`
-    Exclusive ending position of the slice.
-
-`step` : `std::int64_t`
-    Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.slice_text();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
 ```
 
 ### `sort_values`
@@ -8242,12 +7894,12 @@ auto out = thread.sort_values();
 The call completes and returns the contract described under Output.
 ```
 
-### `split_text`
+### `split`
 
 #### Signature
 
 ```cpp
-Thread::split_text(delimiter: std::string_view, limit: std::int64_t = -1, prefix: std::string = "part") -> DataFrame
+Thread::split(delimiter: std::string_view, limit: std::int64_t = -1, prefix: std::string = "part") -> DataFrame
 ```
 
 #### Notes
@@ -8279,7 +7931,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.split_text();
+auto out = thread.split();
 ```
 
 #### Expected output
@@ -8288,12 +7940,12 @@ auto out = thread.split_text();
 The call completes and returns the contract described under Output.
 ```
 
-### `starts_with`
+### `starts`
 
 #### Signature
 
 ```cpp
-Thread::starts_with(prefix: std::string_view) -> Thread
+Thread::starts(prefix: std::string_view) -> Thread
 ```
 
 #### Notes
@@ -8319,7 +7971,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.starts_with();
+auto out = thread.starts();
 ```
 
 #### Expected output
@@ -8333,7 +7985,51 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::std(unbiased: bool = true) -> pluss::Series
+Thread::std(options: const StatisticOptions&) -> ThreadValue
+```
+
+#### Notes
+
+Returns the standard deviation of a numeric thread.
+
+#### Inputs
+
+`options` : `const StatisticOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`ThreadValue`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Thread::std(unbiased: bool = true) -> ThreadValue`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.std(true);
+```
+
+#### Expected output
+
+```text
+20.0
+```
+
+### `std`
+
+#### Signature
+
+```cpp
+Thread::std(unbiased: bool = true) -> ThreadValue
 ```
 
 #### Notes
@@ -8347,12 +8043,16 @@ Returns the standard deviation of a numeric thread.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
 
 Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Thread::std(options: const StatisticOptions&) -> ThreadValue`
 
 #### Examples
 
@@ -8460,7 +8160,7 @@ auto out = thread.strip("# ");
 #### Signature
 
 ```cpp
-Thread::sum() -> pluss::Series
+Thread::sum() -> ThreadValue
 ```
 
 #### Notes
@@ -8473,7 +8173,7 @@ Returns the sum of a numeric thread.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
@@ -8499,7 +8199,7 @@ auto out = thread.sum();
 #### Signature
 
 ```cpp
-Thread::tail(n: std::int64_t = 5, render: bool = true) -> ThreadView
+Thread::tail(n: std::int64_t = 5, render: bool = false) -> ThreadView
 ```
 
 #### Notes
@@ -8535,46 +8235,6 @@ auto out = thread.tail(2);
 
 ```text
 [10.0, 20.0, 30.0]
-```
-
-### `tail_weight`
-
-#### Signature
-
-```cpp
-Thread::tail_weight(min_count: std::int64_t = 4) -> Thread
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.tail_weight();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
 ```
 
 ### `take`
@@ -8623,7 +8283,7 @@ auto out = thread.take(picks);
 #### Signature
 
 ```cpp
-Thread::tally(top_n: std::int64_t = 0, dropna: bool = true, render: bool = true) -> DataFrameView
+Thread::tally(top_n: std::int64_t = 0, dropna: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -8664,55 +8324,12 @@ auto out = thread.tally();
 The call completes and returns the contract described under Output.
 ```
 
-### `text_indicators`
+### `titlecase`
 
 #### Signature
 
 ```cpp
-Thread::text_indicators(delimiter: std::string_view = "|", prefix: std::string = "") -> DataFrame
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`delimiter` : `std::string_view`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`prefix` : `std::string`
-    Text prefix inserted ahead of the existing label or value.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.text_indicators();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `text_length`
-
-#### Signature
-
-```cpp
-Thread::text_length() -> Thread
+Thread::titlecase() -> Thread
 ```
 
 #### Notes
@@ -8737,7 +8354,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.text_length();
+auto out = thread.titlecase();
 ```
 
 #### Expected output
@@ -8746,69 +8363,17 @@ auto out = thread.text_length();
 The call completes and returns the contract described under Output.
 ```
 
-### `time_moving`
+### `tl`
 
 #### Signature
 
 ```cpp
-Thread::time_moving(axis: const Thread&, duration_nanos: std::int64_t, statistic: TimeWindowStatistic = TimeWindowStatistic::Mean, options: const StatisticOptions& = {}, closure: WindowClosure = WindowClosure::Right) -> Thread
+Thread::tl() -> ThreadTimelineAccessor
 ```
 
 #### Notes
 
-
-
-#### Inputs
-
-`axis` : `const Thread&`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`duration_nanos` : `std::int64_t`
-    Positive time-window width expressed in nanoseconds. The interval is open on the left and closed on the current observation.
-
-`statistic` : `TimeWindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-`closure` : `WindowClosure`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = thread.time_moving();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `title_case`
-
-#### Signature
-
-```cpp
-Thread::title_case() -> Thread
-```
-
-#### Notes
-
-
+This is part of the time-aware surface and expects timeline or time-index semantics.
 
 #### Inputs
 
@@ -8816,7 +8381,7 @@ Thread::title_case() -> Thread
 
 #### Output
 
-`Thread`
+`ThreadTimelineAccessor`
     Value produced by this call.
 
 #### Options
@@ -8828,7 +8393,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.title_case();
+auto out = thread.tl();
 ```
 
 #### Expected output
@@ -8916,6 +8481,97 @@ auto out = thread.to_string();
 [10.0, 20.0, 30.0]
 ```
 
+### `transform`
+
+#### Signature
+
+```cpp
+Thread::transform(fn: const std::function<Thread(const Thread&)>&, shape: ResultShape = ResultShape::Reduce) -> Thread
+```
+
+#### Notes
+
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
+
+#### Inputs
+
+`fn` : `const std::function<Thread(const Thread&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+`shape` : `ResultShape`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Thread::transform(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Thread`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.transform();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `transform`
+
+#### Signature
+
+```cpp
+Thread::transform(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Thread
+```
+
+#### Notes
+
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
+
+#### Inputs
+
+`fn` : `const std::function<ThreadValue(const ThreadValue&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Thread::transform(fn: const std::function<Thread(const Thread&)>&, shape: ResultShape = ResultShape::Reduce) -> Thread`
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.transform();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `ts`
 
 #### Signature
@@ -8926,7 +8582,7 @@ Thread::ts() -> TimeSeriesAccessor
 
 #### Notes
 
-
+This is part of the time-aware surface and expects timeline or time-index semantics.
 
 #### Inputs
 
@@ -9116,7 +8772,7 @@ auto out = thread.value();
 #### Signature
 
 ```cpp
-Thread::var(unbiased: bool = true) -> pluss::Series
+Thread::var(options: const StatisticOptions&) -> ThreadValue
 ```
 
 #### Notes
@@ -9125,17 +8781,21 @@ Returns the variance of a numeric thread.
 
 #### Inputs
 
-`unbiased` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+`options` : `const StatisticOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Output
 
-`pluss::Series`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
 
 Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Thread::var(unbiased: bool = true) -> ThreadValue`
 
 #### Examples
 
@@ -9151,44 +8811,48 @@ auto out = thread.var(true);
 20.0
 ```
 
-### `variance`
+### `var`
 
 #### Signature
 
 ```cpp
-Thread::variance(options: const StatisticOptions& = {}) -> Thread
+Thread::var(unbiased: bool = true) -> ThreadValue
 ```
 
 #### Notes
 
-
+Returns the variance of a numeric thread.
 
 #### Inputs
 
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+`unbiased` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Output
 
-`Thread`
+`ThreadValue`
     Value produced by this call.
 
 #### Options
 
 Option and enum values, when present, are listed with their effects under **Inputs**.
 
+#### See also
+
+- `Thread::var(options: const StatisticOptions&) -> ThreadValue`
+
 #### Examples
 
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.variance();
+auto out = thread.var(true);
 ```
 
 #### Expected output
 
 ```text
-The call completes and returns the contract described under Output.
+20.0
 ```
 
 ### `view`
@@ -9196,7 +8860,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-Thread::view(start: std::int64_t, stop: std::int64_t, render: bool = true) -> ThreadView
+Thread::view(start: std::int64_t, stop: std::int64_t, render: bool = false) -> ThreadView
 ```
 
 #### Notes
@@ -9237,12 +8901,12 @@ auto out = thread.view();
 The call completes and returns the contract described under Output.
 ```
 
-### `weighted_moving`
+### `weigh`
 
 #### Signature
 
 ```cpp
-Thread::weighted_moving(weights: pluss::RangeView<double>, statistic: WindowStatistic = WindowStatistic::Mean, min_count: std::int64_t = 1) -> Thread
+Thread::weigh(weights: pluss::RangeView<double>, statistic: WindowStatistic = WindowStatistic::Mean, min_count: std::int64_t = 1) -> Thread
 ```
 
 #### Notes
@@ -9274,7 +8938,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.weighted_moving();
+auto out = thread.weigh();
 ```
 
 #### Expected output

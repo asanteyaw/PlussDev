@@ -99,11 +99,41 @@ template <std::size_t NCodes, std::size_t NLabels>
                 .rename("cnt", "total_count")
                 .rename("hr", "hour")
                 .rename("yr", "year")
-                .cast_timeline({"date"})
-                .cast_series(
-                    {"rec_id", "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday",
-                     "weather_condition", "temp", "atemp", "humidity", "windspeed", "casual", "registered", "total_count"},
-                    pluss::codem::ScalarType::Float64);
+                .cast({
+                    DataFrame::CastSpec{"date", pluss::table::ThreadCastTarget::Timeline, {}},
+                    DataFrame::CastSpec{"rec_id", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"season", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"year", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"month", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"hour", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"is_holiday", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"weekday", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"is_workingday", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"weather_condition", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"temp", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"atemp", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"humidity", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"windspeed", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"casual", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"registered", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                    DataFrame::CastSpec{"total_count", pluss::table::ThreadCastTarget::Series,
+                                        {.series_dtype = pluss::codem::ScalarType::Float64}},
+                });
 
   static constexpr std::array<double, 4> kSeasonCodes{1.0, 2.0, 3.0, 4.0};
   static constexpr std::array<double, 4> kWeatherCodes{1.0, 2.0, 3.0, 4.0};

@@ -4,7 +4,7 @@
 
 ## API Reference Style
 
-This page documents the public prepared-statement helper returned by `DataFrame::prepare_sql()` or `DataFrameSqlAccessor::prepare()`.
+This page documents the public prepared-statement helper returned by `DataFrame::prep_sql()` or `DataFrameSqlAccessor::prepare()`.
 
 ## E
 
@@ -51,7 +51,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > 95");
+auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > 95");
 
 auto out = stmt.execute();
 ```
@@ -71,7 +71,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 
 auto out = stmt.execute({{"min_sales", 95.0}});
 ```
@@ -91,7 +91,7 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 
 auto out = stmt.execute({{"min_sales", 95.0}}, {{"table_name", "self"}});
 ```

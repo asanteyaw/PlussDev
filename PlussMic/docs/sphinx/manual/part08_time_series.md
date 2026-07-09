@@ -17,18 +17,33 @@ Use the DataFrame accessor when you want to transform one or more named
 features and keep a table-shaped result:
 
 ```cpp
-auto returns = df.ts({"close", "volume"}).returns(1);
+auto returns = df.features({"close", "volume"}).ts().returns(1);
 ```
 
 Use DataFrame resampling and reindexing when the operation needs a time axis:
 
 ```cpp
-auto daily = df.ts({"close", "volume"}).resample(
-    "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+auto values = df.set_cases("date", false).features({"close", "volume"});
+auto daily = values.ts().resample("D").mean();
 ```
 
-The accessors do not guess that a feature named `"date"` is time-like. The
-feature must actually be a `Timeline` or `TimeIndex` for time-axis methods.
+The accessors do not guess that a feature named `"date"` is time-like. For
+cases-based resampling, the frame cases must actually be a `Timeline` or
+`TimeIndex`; use `.tl()` for datetime columns and `.ts()` for numeric value
+streams.
+
+If a date column starts as text, parse it through explicit `cast(...)` first:
+
+```cpp
+auto parsed = df.cast({
+    pluss::table::DataFrame::CastSpec{
+        "date_text",
+        pluss::table::ThreadCastTarget::Timeline,
+        pluss::table::ThreadCastOptions{
+            .format = "%Y-%m-%d",
+            .invalid = pluss::table::ParseInvalid::Null}},
+});
+```
 
 ## The time data model
 
@@ -72,11 +87,14 @@ auto df = DataFrame::load_csv("prices.csv", options);
 If a column loaded as text or as a numeric `YYYYMMDD` series, cast it:
 
 ```cpp
-auto with_time = df.cast_timeline({"date"});
+auto with_time = df.cast({
+    pluss::table::DataFrame::CastSpec{
+        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+});
 ```
 
 The current source supports conversion of integer `YYYYMMDD` values through
-`cast_timeline`, which is useful for market-data files that store dates as
+`cast(..., ThreadCastTarget::Timeline)`, which is useful for market-data files that store dates as
 `19900102` instead of ISO strings.
 
 ## Sorting is your responsibility
@@ -89,7 +107,7 @@ For ordered calculations, sort first:
 
 ```cpp
 auto sorted = df.sort_values({DataFrame::ArrangeSpec{"date", true, true}});
-auto returns = sorted.ts("close").returns(1);
+auto returns = sorted.features({"close"}).ts().returns(1);
 ```
 
 This matters in production. A return computed on unsorted prices is not a
@@ -117,17 +135,9 @@ operation throws when you call the accessor method.
 | `diff(periods)` | `Thread` | Difference from the value `periods` rows earlier. |
 | `lag(periods)` | `Thread` | Shift values backward by `periods`; early rows become undefined numeric positions. |
 | `lead(periods)` | `Thread` | Shift values forward by `periods`; trailing rows become undefined numeric positions. |
-| `rolling_mean(window, min_periods)` | `Thread` | Rolling mean. |
-| `rolling_std(window, min_periods)` | `Thread` | Rolling standard deviation. |
-| `rolling_sum(window, min_periods)` | `Thread` | Rolling sum. |
-| `rolling_var(window, min_periods)` | `Thread` | Rolling variance. |
-| `rolling_min(window, min_periods)` | `Thread` | Rolling minimum. |
-| `rolling_max(window, min_periods)` | `Thread` | Rolling maximum. |
-| `ema(alpha)` | `Thread` | Exponential moving average. |
-| `ewm_mean(alpha)` | `Thread` | Exponentially weighted mean. |
-| `ewm_std(alpha, epsilon)` | `Thread` | Exponentially weighted standard deviation. |
-| `expanding_mean(min_periods)` | `Thread` | Expanding mean. |
-| `expanding_std(min_periods, epsilon)` | `Thread` | Expanding standard deviation. |
+| `rolling(window, statistic, options)` | `Thread` | Observation-count rolling/window statistic. |
+| `expanding(statistic, options)` | `Thread` | Expanding statistic. |
+| `ewm(alpha, statistic, ...)` | `Thread` | Exponentially weighted statistic. |
 | `zscore_rolling(window, min_periods, epsilon)` | `Thread` | Rolling z-score. |
 | `fill_gaps(mode, constant)` | `Thread` | Fill numeric gaps according to a gap-fill mode. |
 | `resample(axis, freq, op, step)` | `TimeSeriesResample` | Resample one value stream against a time axis. |
@@ -182,12 +192,12 @@ explicitly converted them to a validity-mask representation.
 Rolling methods use observation windows:
 
 ```cpp
-auto rolling_mean = close.ts().rolling_mean(20, 10);
-auto rolling_std = close.ts().rolling_std(20, 10);
-auto rolling_sum = close.ts().rolling_sum(20, 10);
-auto rolling_var = close.ts().rolling_var(20, 10);
-auto rolling_min = close.ts().rolling_min(20, 10);
-auto rolling_max = close.ts().rolling_max(20, 10);
+auto rolling_mean = close.ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 10});
+auto rolling_std = close.ts().rolling(20, pluss::table::WindowStatistic::Std, {.min_count = 10});
+auto rolling_sum = close.ts().rolling(20, pluss::table::WindowStatistic::Sum, {.min_count = 10});
+auto rolling_var = close.ts().rolling(20, pluss::table::WindowStatistic::Var, {.min_count = 10});
+auto rolling_min = close.ts().rolling(20, pluss::table::WindowStatistic::Minimum, {.min_count = 10});
+auto rolling_max = close.ts().rolling(20, pluss::table::WindowStatistic::Maximum, {.min_count = 10});
 ```
 
 `window` is the number of rows in the rolling window. `min_periods` is the
@@ -196,13 +206,13 @@ minimum number of observations required before a value is emitted.
 Use `min_periods = window` when you want strict full-window results:
 
 ```cpp
-auto strict = close.ts().rolling_mean(20, 20);
+auto strict = close.ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 20});
 ```
 
 Use a smaller `min_periods` when early estimates are acceptable:
 
 ```cpp
-auto warmup = close.ts().rolling_mean(20, 5);
+auto warmup = close.ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 5});
 ```
 
 Rolling windows are observation-based, not calendar-based. If you need calendar
@@ -213,16 +223,15 @@ windows, resample first or construct the exact frame you want before rolling.
 Expanding metrics grow from the start of the series:
 
 ```cpp
-auto expanding_mean = close.ts().expanding_mean(5);
-auto expanding_std = close.ts().expanding_std(5);
+auto expanding_mean = close.ts().expanding(pluss::table::WindowStatistic::Mean, {.min_count = 5});
+auto expanding_std = close.ts().expanding(pluss::table::WindowStatistic::Std, {.min_count = 5});
 ```
 
 Exponentially weighted metrics give more weight to recent values:
 
 ```cpp
-auto ema = close.ts().ema(0.1);
-auto ewm_mean = close.ts().ewm_mean(0.1);
-auto ewm_std = close.ts().ewm_std(0.1);
+auto ewm_mean = close.ts().ewm(0.1, pluss::table::WindowStatistic::Mean);
+auto ewm_std = close.ts().ewm(0.1, pluss::table::WindowStatistic::Std);
 ```
 
 `alpha` controls responsiveness. Values closer to `1.0` react faster. Values
@@ -269,8 +278,8 @@ Choose the fill mode based on the domain:
 numeric features:
 
 ```cpp
-auto one = df.ts("close");
-auto many = df.ts({"close", "volume"});
+auto one = df.features({"close"}).ts();
+auto many = df.features({"close", "volume"}).ts();
 ```
 
 The selected feature names must exist and must be unique. Most accessor methods
@@ -287,41 +296,39 @@ target axis.
 | `diff(periods)` | `DataFrame` | Differences for selected features. |
 | `lag(periods)` | `DataFrame` | Lag selected features. |
 | `lead(periods)` | `DataFrame` | Lead selected features. |
-| `rolling_mean(window, min_periods)` | `DataFrame` | Rolling means. |
-| `rolling_std(window, min_periods)` | `DataFrame` | Rolling standard deviations. |
-| `rolling_sum(window, min_periods)` | `DataFrame` | Rolling sums. |
-| `rolling_var(window, min_periods)` | `DataFrame` | Rolling variances. |
-| `rolling_min(window, min_periods)` | `DataFrame` | Rolling minimums. |
-| `rolling_max(window, min_periods)` | `DataFrame` | Rolling maximums. |
-| `ema(alpha)` | `DataFrame` | Exponential moving averages. |
-| `ewm_mean(alpha)` | `DataFrame` | Exponentially weighted means. |
-| `ewm_std(alpha, epsilon)` | `DataFrame` | Exponentially weighted standard deviations. |
-| `expanding_mean(min_periods)` | `DataFrame` | Expanding means. |
-| `expanding_std(min_periods, epsilon)` | `DataFrame` | Expanding standard deviations. |
+| `rolling(window, statistic, options)` | `DataFrame` | Observation-count rolling/window statistics for selected features. |
+| `rolling(duration, statistic, options, closure)` | `DataFrame` | Time-window statistics over timeline cases, e.g. `"7D"`. |
+| `expanding(statistic, options)` | `DataFrame` | Expanding statistics for selected features. |
+| `ewm(alpha, statistic, ...)` | `DataFrame` | Exponentially weighted statistics for selected features. |
 | `zscore_rolling(window, min_periods, epsilon)` | `DataFrame` | Rolling z-scores. |
 | `fill_gaps(mode, constant)` | `DataFrame` | Fill numeric gaps in selected features. |
-| `resample(time_feature, freq, step)` | `DataFrameTsResampler` | Build a time-series resampler object, then choose `.mean()`, `.max()`, `.asfreq()`, `.ffill()`, and related actions. |
-| `resample(time_feature, freq, op, step)` | `DataFrame` | Aggregate selected features into time bins immediately. |
-| `asfreq(time_feature, freq, step, fill_mode, constant, op)` | `DataFrame` | Resample, then fill gaps. |
-| `insert_gaps(time_feature, freq, step)` | `DataFrame` | Align to regular bins and insert gaps where exact observations are missing. |
-| `align_to(time_feature, target_axis, mode)` | `DataFrame` | Align selected features to a target time axis. |
-| `reindex_time(time_feature, target_axis, mode, fill, constant)` | `DataFrame` | Align to a target axis and optionally fill gaps. |
-| `calendar(time_feature)` | `DataFrame` | Extract calendar features from a time axis. |
+| `sort(ascending, nulls_last)` | `DataFrame` | Sort selected numeric features by timeline cases. |
+| `resample(freq, step)` | `DataFrameTsResampler` | Build a cases-based resampler object, then choose `.mean()`, `.max()`, `.asfreq()`, `.ffill()`, and related actions. |
+| `resample(freq, op, step)` | `DataFrame` | Aggregate selected features into cases-based time bins immediately. |
+| `asfreq(freq, step, fill_mode, constant, op)` | `DataFrame` | Resample against timeline cases, then fill gaps. |
+| `insert_gaps(freq, step)` | `DataFrame` | Align to regular timeline cases and insert gaps where exact observations are missing. |
+| `align_to(target_axis, mode)` | `DataFrame` | Align selected features to a target time axis using timeline cases. |
+| `reindex_time(target_axis, mode, fill, constant)` | `DataFrame` | Align to a target axis and optionally fill gaps. |
+| `.tl()` calendar methods | `DataFrame` | Extract calendar features from datetime columns. |
 | `lag_block(lags)` | `DataFrame` | Create multiple lagged features. |
 | `rolling_block(windows, options)` | `DataFrame` | Create multiple rolling features. |
 
 ## Resampling
 
-Resampling now has two surfaces on `df.ts(...)`.
+Resampling is selection-first. Put the timeline column on the case axis, then
+select numeric value features and call `.ts()`.
 
 Use the resampler object when you want time-series semantics closer to a
 grouped pipeline:
 
 ```cpp
-auto daily = df.ts({"close", "volume"}).resample("date", "D").mean();
-auto weekly_max = df.ts("close").resample("date", "W").max();
-auto hourly = df.ts("close").resample("date", "H").asfreq();
-auto hourly_filled = df.ts("close").resample("date", "H").ffill();
+auto values = df.set_cases("date", false).features({"close", "volume"});
+auto ordered = values.ts().sort();
+auto seven_day = values.ts().rolling("7D", pluss::table::WindowStatistic::Mean);
+auto daily = values.ts().resample("D").mean();
+auto weekly_max = values.features({"close"}).ts().resample("W").max();
+auto hourly = values.features({"close"}).ts().resample("H").asfreq();
+auto hourly_filled = values.features({"close"}).ts().resample("H").ffill();
 ```
 
 Arguments:
@@ -350,8 +357,8 @@ When you already know the aggregation at the call site, the immediate overload
 still exists:
 
 ```cpp
-auto daily = df.ts({"close", "volume"}).resample(
-    "date",
+auto values = df.set_cases("date", false).features({"close", "volume"});
+auto daily = values.ts().resample(
     "D",
     pluss::subsp::stats::ts::ResampleOp::Mean,
     1);
@@ -371,8 +378,7 @@ you want the main time-series resampler surface.
 `asfreq` resamples and then fills gaps:
 
 ```cpp
-auto hourly = df.ts("close").asfreq(
-    "date",
+auto hourly = df.features({"close"}).ts().asfreq(
     "H",
     1,
     pluss::subsp::stats::ts::GapFillMode::Forward,
@@ -387,7 +393,7 @@ Use it when your downstream code expects a regular time grid.
 `insert_gaps` builds regular bins and aligns exact observations onto them:
 
 ```cpp
-auto with_gaps = df.ts("close").insert_gaps("date", "H", 1);
+auto with_gaps = df.set_cases("date", false).features({"close"}).ts().insert_gaps("H", 1);
 ```
 
 Rows with no exact source observation are emitted as undefined numeric
@@ -399,8 +405,7 @@ instead of connecting across missing intervals.
 Use `align_to` when you already have the target timeline:
 
 ```cpp
-auto aligned = df.ts({"close", "volume"}).align_to(
-    "date",
+auto aligned = df.set_cases("date", false).features({"close", "volume"}).ts().align_to(
     target_axis,
     pluss::table::TsAlignMode::Exact);
 ```
@@ -417,8 +422,7 @@ auto aligned = df.ts({"close", "volume"}).align_to(
 Use `reindex_time` when you also want to fill missing aligned values:
 
 ```cpp
-auto reindexed = df.ts("close").reindex_time(
-    "date",
+auto reindexed = df.set_cases("date", false).features({"close"}).ts().reindex_time(
     target_axis,
     pluss::table::TsAlignMode::Exact,
     pluss::table::TsReindexFill::Forward);
@@ -437,8 +441,7 @@ auto reindexed = df.ts("close").reindex_time(
 If you use `Constant`, pass the constant value:
 
 ```cpp
-auto filled = df.ts("close").reindex_time(
-    "date",
+auto filled = df.set_cases("date", false).features({"close"}).ts().reindex_time(
     target_axis,
     pluss::table::TsAlignMode::Exact,
     pluss::table::TsReindexFill::Constant,
@@ -450,7 +453,7 @@ auto filled = df.ts("close").reindex_time(
 `calendar(time_feature)` extracts useful calendar columns from a time axis:
 
 ```cpp
-auto cal = df.ts("close").calendar("date");
+auto cal = df.features({"date"}).tl().year();
 ```
 
 It returns:
@@ -475,7 +478,7 @@ auto enriched = df.combine(cal, {DataFrame::CombineOp::Columns, "_cal", true});
 `lag_block` creates several lagged features at once:
 
 ```cpp
-auto lags = df.ts({"close", "volume"}).lag_block({1, 2, 5});
+auto lags = df.features({"close", "volume"}).ts().lag_block({1, 2, 5});
 ```
 
 For features `close` and `volume`, that emits:
@@ -502,7 +505,7 @@ options.include_min = true;
 options.include_max = true;
 options.min_periods = 5;
 
-auto block = df.ts({"close", "volume"}).rolling_block({5, 20}, options);
+auto block = df.features({"close", "volume"}).ts().rolling_block({5, 20}, options);
 ```
 
 `TsRollingBlockOptions` contains:
@@ -549,19 +552,19 @@ DataFrame df({
 std::cout << "returns:\n"
           << df.features("close").ts().returns(1).to_string() << '\n';
 std::cout << "rolling mean window 2:\n"
-          << df.features("close").ts().rolling_mean(2, 2).to_string()
+          << df.features("close").ts().rolling(2, pluss::table::WindowStatistic::Mean, {.min_count = 2}).to_string()
           << '\n';
 
-auto daily = df.ts({"close", "volume"}).resample(
-    "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
+auto values = df.set_cases("date", false).features({"close", "volume"});
+auto daily = values.ts().resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
 std::cout << "daily mean:\n" << daily.to_string() << '\n';
 
-auto calendar = df.ts("close").calendar("date");
+auto calendar = df.features({"date"}).tl().year();
 std::cout << "calendar:\n"
           << calendar.features({"date_year", "date_month",
                                 "date_weekday"}).to_string() << '\n';
 
-auto lags = df.ts({"close", "volume"}).lag_block({1, 2});
+auto lags = df.features({"close", "volume"}).ts().lag_block({1, 2});
 std::cout << "lag block:\n" << lags.to_string() << '\n';
 ```
 
@@ -625,12 +628,12 @@ The output demonstrates several important details:
 | Need | Use |
 | --- | --- |
 | One transformed value stream | `df.features("x").ts()` |
-| Several transformed value streams | `df.ts({"x", "y"})` |
+| Several transformed value streams | `df.features({"x", "y"}).ts()` |
 | Resample one value stream and handle labels manually | `Thread::ts().resample(axis, ...)` |
-| Resample several value streams into a new frame | `DataFrame::ts(features).resample(...)` |
-| Add calendar model features | `DataFrame::ts(feature).calendar(time_feature)` |
-| Build lagged model features | `DataFrame::ts(features).lag_block(...)` |
-| Build rolling model features | `DataFrame::ts(features).rolling_block(...)` |
+| Resample several value streams into a new frame | `df.set_cases("date").features({...}).ts().resample(...)` |
+| Add calendar model features | `df.features({"date"}).tl().year()` |
+| Build lagged model features | `df.features({...}).ts().lag_block(...)` |
+| Build rolling model features | `df.features({...}).ts().rolling_block(...)` |
 | Align data to an existing schedule | `align_to` or `reindex_time` |
 | Make missing intervals visible | `insert_gaps` |
 
@@ -663,7 +666,7 @@ auto out = df.features("close").ts().returns(1);
 This returns a `DataFrame`:
 
 ```cpp
-auto out = df.ts("close").returns(1);
+auto out = df.features({"close"}).ts().returns(1);
 ```
 
 Choose based on the return shape you need.
@@ -673,7 +676,7 @@ Choose based on the return shape you need.
 This is a one-row return:
 
 ```cpp
-auto out = df.ts("close").returns(1);
+auto out = df.features({"close"}).ts().returns(1);
 ```
 
 It is not necessarily a one-day return. If the frame has hourly rows, it is a
@@ -685,14 +688,17 @@ return. Resample first when the calendar interval matters.
 This fails when `"date"` is not a `Timeline` or `TimeIndex`:
 
 ```cpp
-auto daily = df.ts("close").resample("date", "D").mean();
+auto daily = df.set_cases("date", false).features({"close"}).ts().resample("D").mean();
 ```
 
 Fix the schema first:
 
 ```cpp
-auto fixed = df.cast_timeline({"date"});
-auto daily = fixed.ts("close").resample("date", "D").mean();
+auto fixed = df.cast({
+    pluss::table::DataFrame::CastSpec{
+        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+});
+auto daily = fixed.set_cases("date", false).features({"close"}).ts().resample("D").mean();
 ```
 
 ### Rolling unsorted data
@@ -700,12 +706,12 @@ auto daily = fixed.ts("close").resample("date", "D").mean();
 This compiles but can be wrong:
 
 ```cpp
-auto rolling = df.ts("close").rolling_mean(20, 20);
+auto rolling = df.features({"close"}).ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 20});
 ```
 
 If `df` is not sorted by time, the rolling window follows row order. Sort first:
 
 ```cpp
 auto sorted = df.sort_values({DataFrame::ArrangeSpec{"date", true, true}});
-auto rolling = sorted.ts("close").rolling_mean(20, 20);
+auto rolling = sorted.features({"close"}).ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 20});
 ```

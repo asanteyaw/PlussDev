@@ -14,14 +14,6 @@ DataFrame DataFrame::sub(const DataFrame& other) const {
   return dataframe_math_frame(*this, other, BinaryMathOp::Sub);
 }
 
-DataFrame DataFrame::subtract(double other) const {
-  return sub(other);
-}
-
-DataFrame DataFrame::subtract(const DataFrame& other) const {
-  return sub(other);
-}
-
 DataFrame DataFrame::mul(double other) const {
   return dataframe_math_scalar(*this, other, BinaryMathOp::Mul, false);
 }
@@ -30,28 +22,12 @@ DataFrame DataFrame::mul(const DataFrame& other) const {
   return dataframe_math_frame(*this, other, BinaryMathOp::Mul);
 }
 
-DataFrame DataFrame::multiply(double other) const {
-  return mul(other);
-}
-
-DataFrame DataFrame::multiply(const DataFrame& other) const {
-  return mul(other);
-}
-
 DataFrame DataFrame::div(double other) const {
   return dataframe_math_scalar(*this, other, BinaryMathOp::Div, false);
 }
 
 DataFrame DataFrame::div(const DataFrame& other) const {
   return dataframe_math_frame(*this, other, BinaryMathOp::Div);
-}
-
-DataFrame DataFrame::divide(double other) const {
-  return div(other);
-}
-
-DataFrame DataFrame::divide(const DataFrame& other) const {
-  return div(other);
 }
 
 DataFrame DataFrame::truediv(double other) const {
@@ -134,36 +110,20 @@ DataFrame DataFrame::ne(const DataFrame& other) const {
   return dataframe_cmp_frame(*this, other, BinaryCmpOp::Ne);
 }
 
-DataFrame DataFrame::lt(double other) const {
-  return dataframe_cmp_scalar(*this, other, BinaryCmpOp::Lt);
+DataFrame DataFrame::lt(double other, bool strict) const {
+  return dataframe_cmp_scalar(*this, other, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le);
 }
 
-DataFrame DataFrame::lt(const DataFrame& other) const {
-  return dataframe_cmp_frame(*this, other, BinaryCmpOp::Lt);
+DataFrame DataFrame::lt(const DataFrame& other, bool strict) const {
+  return dataframe_cmp_frame(*this, other, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le);
 }
 
-DataFrame DataFrame::le(double other) const {
-  return dataframe_cmp_scalar(*this, other, BinaryCmpOp::Le);
+DataFrame DataFrame::gt(double other, bool strict) const {
+  return dataframe_cmp_scalar(*this, other, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge);
 }
 
-DataFrame DataFrame::le(const DataFrame& other) const {
-  return dataframe_cmp_frame(*this, other, BinaryCmpOp::Le);
-}
-
-DataFrame DataFrame::gt(double other) const {
-  return dataframe_cmp_scalar(*this, other, BinaryCmpOp::Gt);
-}
-
-DataFrame DataFrame::gt(const DataFrame& other) const {
-  return dataframe_cmp_frame(*this, other, BinaryCmpOp::Gt);
-}
-
-DataFrame DataFrame::ge(double other) const {
-  return dataframe_cmp_scalar(*this, other, BinaryCmpOp::Ge);
-}
-
-DataFrame DataFrame::ge(const DataFrame& other) const {
-  return dataframe_cmp_frame(*this, other, BinaryCmpOp::Ge);
+DataFrame DataFrame::gt(const DataFrame& other, bool strict) const {
+  return dataframe_cmp_frame(*this, other, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge);
 }
 
 DataFrame DataFrame::compare(double other) const {
@@ -500,138 +460,16 @@ DataFrame DataFrame::replace(
   return fillna(to, features);
 }
 
-DataFrameView DataFrame::sum(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Sum});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::sum: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "sum", title());
-}
-
-DataFrameView DataFrame::mean(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Mean});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::mean: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "mean", title());
-}
-
-DataFrameView DataFrame::median(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Median});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::median: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "median", title());
-}
-
-DataFrameView DataFrame::min(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Min});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::min: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "min", title());
-}
-
-DataFrameView DataFrame::max(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Max});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::max: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "max", title());
-}
-
-DataFrameView DataFrame::std(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Std});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::std: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "std", title());
-}
-
-DataFrameView DataFrame::var(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Var});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::var: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "var", title());
-}
-
-DataFrameView DataFrame::count(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (const auto& name : src.names_) {
-    specs.push_back(SummarySpec{name, name, SummaryOp::Count});
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::count: no features");
-  return DataFrameView(summarize_specs(specs, false), render, "count", title());
-}
-
-DataFrameView DataFrame::prod(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
-      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Prod});
-    }
-  }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::prod: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render, "prod", title());
-}
-
 namespace {
 
-std::int64_t normalize_reduce_axis_(std::int64_t axis, std::string_view where) {
-  auto out = axis;
-  if (out < 0) {
-    out += 2;
+std::int64_t normalize_reduce_axis_(Axis axis, std::string_view where) {
+  switch (axis) {
+    case Axis::Feature:
+      return 0;
+    case Axis::Case:
+      return 1;
   }
-  PLUSS_CHECK(out == 0 || out == 1, std::string(where) + ": axis must be 0 (features) or 1 (cases)");
-  return out;
+  PLUSS_FAIL(std::string(where) + ": axis must be Axis::Feature or Axis::Case");
 }
 
 struct ReduceMatrix_ {
@@ -894,48 +732,48 @@ Thread reduce_bool_(
 
 } // namespace
 
-Thread DataFrame::sum(std::int64_t axis, bool skipna) const {
+Thread DataFrame::sum(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::sum");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Sum, "DataFrame::sum");
 }
 
-Thread DataFrame::mean(std::int64_t axis, bool skipna) const {
+Thread DataFrame::mean(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::mean");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Mean, "DataFrame::mean");
 }
 
-Thread DataFrame::median(std::int64_t axis, bool skipna) const {
+Thread DataFrame::median(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::median");
   return reduce_numeric_(
       impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Median, "DataFrame::median");
 }
 
-Thread DataFrame::min(std::int64_t axis, bool skipna) const {
+Thread DataFrame::min(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::min");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Min, "DataFrame::min");
 }
 
-Thread DataFrame::max(std::int64_t axis, bool skipna) const {
+Thread DataFrame::max(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::max");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Max, "DataFrame::max");
 }
 
-Thread DataFrame::std(std::int64_t axis, bool skipna) const {
+Thread DataFrame::std(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::std");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Std, "DataFrame::std");
 }
 
-Thread DataFrame::var(std::int64_t axis, bool skipna) const {
+Thread DataFrame::var(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::var");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Var, "DataFrame::var");
 }
 
-Thread DataFrame::prod(std::int64_t axis, bool skipna) const {
+Thread DataFrame::prod(Axis axis, bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::prod");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipna, NumericAxisOp_::Prod, "DataFrame::prod");
 }
 
-Thread DataFrame::count(std::int64_t axis) const {
+Thread DataFrame::count(Axis axis) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::count");
   const auto& src = impl_ref_();
   PLUSS_CHECK(!src.columns_.empty(), "DataFrame::count: no features");
@@ -948,10 +786,10 @@ Thread DataFrame::count(std::int64_t axis) const {
 }
 
 Thread DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipna) const {
-  return any(0, features, skipna);
+  return any(Axis::Feature, features, skipna);
 }
 
-Thread DataFrame::any(std::int64_t axis,
+Thread DataFrame::any(Axis axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
                       bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::any");
@@ -960,10 +798,10 @@ Thread DataFrame::any(std::int64_t axis,
 }
 
 Thread DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipna) const {
-  return all(0, features, skipna);
+  return all(Axis::Feature, features, skipna);
 }
 
-Thread DataFrame::all(std::int64_t axis,
+Thread DataFrame::all(Axis axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
                       bool skipna) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::all");
@@ -971,13 +809,13 @@ Thread DataFrame::all(std::int64_t axis,
       impl_ref_(), normalized_axis, features, true, skipna, "DataFrame::all");
 }
 
-Thread DataFrame::idxmin(std::int64_t axis, bool skipna) const {
-  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::idxmin");
+Thread DataFrame::csmin(Axis axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::csmin");
   const auto& src = impl_ref_();
-  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::idxmin");
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::csmin");
   const auto reduced_size =
       normalized_axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
-  PLUSS_CHECK(reduced_size > 0, "DataFrame::idxmin: cannot reduce an empty axis");
+  PLUSS_CHECK(reduced_size > 0, "DataFrame::csmin: cannot reduce an empty axis");
   const auto indices = matrix.values
                            .where(matrix.valid.logical_not(),
                                   std::numeric_limits<double>::infinity())
@@ -991,13 +829,13 @@ Thread DataFrame::idxmin(std::int64_t axis, bool skipna) const {
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
-Thread DataFrame::idxmax(std::int64_t axis, bool skipna) const {
-  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::idxmax");
+Thread DataFrame::csmax(Axis axis, bool skipna) const {
+  const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::csmax");
   const auto& src = impl_ref_();
-  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::idxmax");
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::csmax");
   const auto reduced_size =
       normalized_axis == 0 ? matrix.ncases : static_cast<std::int64_t>(matrix.names.size());
-  PLUSS_CHECK(reduced_size > 0, "DataFrame::idxmax: cannot reduce an empty axis");
+  PLUSS_CHECK(reduced_size > 0, "DataFrame::csmax: cannot reduce an empty axis");
   const auto indices = matrix.values
                            .where(matrix.valid.logical_not(),
                                   -std::numeric_limits<double>::infinity())
@@ -1011,9 +849,8 @@ Thread DataFrame::idxmax(std::int64_t axis, bool skipna) const {
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
-DataFrameView DataFrame::count_distinct(pluss::msharp::RangeView::Of<std::string_view> features,
-                                        bool dropna,
-                                        bool render) const {
+Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> features,
+                            bool dropna) const {
   const auto& src = impl_ref_();
 
   std::vector<std::string> names;
@@ -1025,29 +862,121 @@ DataFrameView DataFrame::count_distinct(pluss::msharp::RangeView::Of<std::string
     names.reserve(features.size());
     for (const auto feature : features) {
       const auto key = owned_name(feature);
-      PLUSS_CHECK(!key.empty(), "DataFrame::count_distinct: feature name cannot be empty");
+      PLUSS_CHECK(!key.empty(), "DataFrame::ndistinct: feature name cannot be empty");
       if (!seen.insert(key).second) {
         continue;
       }
       const auto it = src.name_to_idx_.find(key);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::count_distinct: unknown feature '" + key + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + key + "'");
       names.push_back(key);
     }
   }
 
-  PLUSS_CHECK(!names.empty(), "DataFrame::count_distinct: no features");
+  PLUSS_CHECK(!names.empty(), "DataFrame::ndistinct: no features");
 
-  std::vector<std::pair<std::string, Thread>> out_cols;
-  out_cols.reserve(names.size());
+  std::vector<std::int64_t> values;
+  values.reserve(names.size());
   for (const auto& name : names) {
     const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::count_distinct: unknown feature '" + name + "'");
-    const auto distinct_count = src.columns_[it->second].distinct(dropna).size();
-    out_cols.emplace_back(name, make_i64_thread({distinct_count}));
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + name + "'");
+    values.push_back(src.columns_[it->second].ndistinct(dropna).as_series().item<std::int64_t>());
   }
 
-  auto out = DataFrame(std::move(out_cols), make_note_thread({"summary"}));
-  return DataFrameView(std::move(out), render, "count_distinct", title());
+  return make_i64_thread(values)
+      .with_display_labels(make_note_thread(names))
+      .with_display_name("ndistinct");
+}
+
+Thread DataFrame::freq(pluss::msharp::RangeView::Of<std::string_view> features,
+                       std::int64_t top_n,
+                       bool dropna) const {
+  const auto scoped = features.empty() ? *this : this->features(features);
+  if (scoped.nfeatures() == 1) {
+    return scoped.features(scoped.feature_names().front()).freq(top_n, dropna);
+  }
+
+  std::unordered_map<std::string, std::int64_t> counts;
+  std::vector<std::string> order;
+  for (std::int64_t row = 0; row < scoped.ncases(); ++row) {
+    bool observed = true;
+    std::string key;
+    for (const auto& name : scoped.feature_names()) {
+      const auto column = scoped.features(name);
+      if (!column.is_valid(row)) {
+        observed = false;
+        if (dropna) break;
+      }
+      if (!key.empty()) key += "|";
+      key += observed ? thread_scalar_string_at(column, row) : "NA";
+    }
+    if (!observed && dropna) continue;
+    if (!counts.contains(key)) order.push_back(key);
+    counts[key] += 1;
+  }
+  std::sort(order.begin(), order.end(), [&](const auto& lhs, const auto& rhs) {
+    if (counts[lhs] != counts[rhs]) return counts[lhs] > counts[rhs];
+    return lhs < rhs;
+  });
+  if (top_n > 0 && static_cast<std::size_t>(top_n) < order.size()) {
+    order.resize(static_cast<std::size_t>(top_n));
+  }
+  std::vector<std::string> keys;
+  std::vector<std::int64_t> values;
+  keys.reserve(order.size());
+  values.reserve(order.size());
+  for (const auto& key : order) {
+    keys.push_back(key);
+    values.push_back(counts[key]);
+  }
+  return make_i64_thread(values)
+      .with_display_labels(Thread(pluss::make_note(keys)))
+      .with_display_name("freq");
+}
+
+Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> features,
+                             bool keep_first,
+                             bool keep_last) const {
+  PLUSS_CHECK(!(keep_first && keep_last),
+              "DataFrame::duplicated: keep_first and keep_last cannot both be true");
+  const auto scoped = features.empty() ? *this : this->features(features);
+  if (scoped.nfeatures() == 1) {
+    const auto name = scoped.feature_names().front();
+    return scoped.features(name)
+        .duplicated(keep_first, keep_last)
+        .with_display_labels(scoped.cases())
+        .with_display_name("duplicated");
+  }
+
+  std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_key;
+  rows_by_key.reserve(static_cast<std::size_t>(scoped.ncases()));
+  for (std::int64_t row = 0; row < scoped.ncases(); ++row) {
+    std::string key;
+    for (const auto& name : scoped.feature_names()) {
+      const auto column = scoped.features(name);
+      if (!key.empty()) key += "|";
+      key += column.is_valid(row) ? thread_scalar_string_at(column, row) : "NA";
+    }
+    rows_by_key[key].push_back(row);
+  }
+  std::vector<bool> mask(static_cast<std::size_t>(scoped.ncases()), false);
+  for (const auto& [_, rows] : rows_by_key) {
+    if (rows.size() <= 1) continue;
+    const std::size_t start = keep_first ? 1 : 0;
+    const std::size_t stop = keep_last ? rows.size() - 1 : rows.size();
+    for (std::size_t i = start; i < stop; ++i) {
+      mask[static_cast<std::size_t>(rows[i])] = true;
+    }
+  }
+  return Thread(bool_series_from_keep(mask))
+      .with_display_labels(scoped.cases())
+      .with_display_name("duplicated");
+}
+
+DataFrame DataFrame::drop_duplicates(pluss::msharp::RangeView::Of<std::string_view> features,
+                                     bool keep_first,
+                                     bool keep_last) const {
+  const auto duplicated_mask = duplicated(features, keep_first, keep_last).as_series();
+  return filter(duplicated_mask.logical_not());
 }
 
 DataFrameView DataFrame::corr(CorrMethod method, bool render) const {
@@ -1249,20 +1178,12 @@ DataFrame DataFrame::missing(
   return missing(spec);
 }
 
-DataFrame DataFrame::isna(pluss::msharp::RangeView::Of<std::string_view> features) const {
+DataFrame DataFrame::isnull(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return missing(MissingOp::IsNull, features);
 }
 
-DataFrame DataFrame::isnull(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return isna(features);
-}
-
-DataFrame DataFrame::notna(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return missing(MissingOp::NotNull, features);
-}
-
 DataFrame DataFrame::notnull(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return notna(features);
+  return missing(MissingOp::NotNull, features);
 }
 
 DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
@@ -1282,7 +1203,7 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
     if (!seen.insert(spec.feature).second) {
       continue;
     }
-    out_cols[it->second] = src.columns_[it->second].cast(spec.target, spec.series_dtype);
+    out_cols[it->second] = src.columns_[it->second].cast(spec.target, spec.options);
   }
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
@@ -1567,33 +1488,9 @@ DataFrame& DataFrame::fillna_(const pluss::TimeIndex& value) {
   return *this;
 }
 
-std::int64_t DataFrame::count_null_rows() const {
-  const auto& src = impl_ref_();
-  if (src.nrows_ == 0) {
-    return 0;
-  }
-
-  std::optional<pluss::Series> has_null = std::nullopt;
-  for (const auto& c : src.columns_) {
-    if (!c.has_validity_mask()) {
-      continue;
-    }
-    const auto null_mask = c.validity_mask()->logical_not();
-    has_null = has_null.has_value() ? has_null->logical_or(null_mask) : null_mask;
-  }
-
-  if (!has_null.has_value()) {
-    return 0;
-  }
-  return has_null->to(pluss::codem::ScalarType::Int64).sum().item<std::int64_t>();
-}
-
-DataFrame DataFrame::dropna() const {
-  return missing(MissingOp::DropAny);
-}
-
-DataFrame DataFrame::dropna_all(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return missing(MissingOp::DropAll, features);
+DataFrame DataFrame::dropna(pluss::msharp::RangeView::Of<std::string_view> features,
+                            bool all) const {
+  return missing(all ? MissingOp::DropAll : MissingOp::DropAny, features);
 }
 
 DataFrame DataFrame::ffill() const {

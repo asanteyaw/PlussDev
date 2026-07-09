@@ -405,7 +405,7 @@ auto log_returns = price.ts().log_returns(1);
 auto diff = price.ts().diff(1);
 auto lagged = price.ts().lag(1);
 auto leading = price.ts().lead(1);
-auto rolling = price.ts().rolling_mean(20, 10);
+auto rolling = price.ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 10});
 auto z = price.ts().zscore_rolling(20, 10);
 ```
 

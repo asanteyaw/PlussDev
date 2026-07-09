@@ -1,5 +1,6 @@
 #include "table/DataFrame.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -9,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -202,6 +204,25 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
   return {};
 }
 
+Thread null_singleton_like(const Thread& reference) {
+  PLUSS_CHECK(reference.size() > 0, "DataFrame::unstack: cannot infer null payload from an empty feature");
+  auto out = reference.take(pluss::msharp::RangeView::Int(std::initializer_list<std::int64_t>{0}));
+  pluss::codem::Platform platform = pluss::codem::Platform::CPU;
+  if (reference.kind() == ThreadKind::Series) {
+    platform = reference.as_series().platform();
+  } else if (reference.kind() == ThreadKind::Timeline) {
+    platform = reference.as_timeline().epoch_nanos().platform();
+  } else if (reference.kind() == ThreadKind::TimeIndex) {
+    platform = reference.as_timeindex().timeline().epoch_nanos().platform();
+  }
+  return out.with_validity_mask(pluss::Series::zeros(
+      {1}, pluss::codem::ScalarType::Bool, platform));
+}
+
+std::string axis_value_key(const Thread& values, std::int64_t row) {
+  return values.is_valid(row) ? case_label_from_axis(values, row) : std::string("NA");
+}
+
 } // namespace
 
 DataFrameView DataFrame::transpose(bool render) const {
@@ -335,6 +356,194 @@ DataFrame DataFrame::lengthen(
             pluss::codem::Platform::CPU))
       : cases().take(tiled_rows);
   return DataFrame(std::move(output), output_cases).title(title());
+}
+
+DataFrame DataFrame::stack(std::string feature_name,
+                           std::string value_name) const {
+  PLUSS_CHECK(defined(), "DataFrame::stack: frame is undefined");
+  PLUSS_CHECK(!feature_name.empty(), "DataFrame::stack: feature_name cannot be empty");
+  PLUSS_CHECK(!value_name.empty(), "DataFrame::stack: value_name cannot be empty");
+  PLUSS_CHECK(feature_name != value_name,
+              "DataFrame::stack: feature_name and value_name must differ");
+  PLUSS_CHECK(nfeats() > 0, "DataFrame::stack: expected at least one feature");
+
+  std::vector<std::string> case_level_names;
+  std::vector<Thread> case_level_values;
+  if (has_levels()) {
+    case_level_names = levels();
+    case_level_values.reserve(case_level_names.size());
+    for (const auto& name : case_level_names) {
+      case_level_values.push_back(level(name));
+    }
+  } else {
+    case_level_names.push_back("case");
+    case_level_values.push_back(cases());
+  }
+
+  std::unordered_set<std::string> output_names;
+  output_names.reserve(case_level_names.size() + 2);
+  for (const auto& name : case_level_names) {
+    PLUSS_CHECK(output_names.insert(name).second,
+                "DataFrame::stack: duplicate case level name '" + name + "'");
+  }
+  PLUSS_CHECK(output_names.insert(feature_name).second,
+              "DataFrame::stack: feature_name collides with a case level");
+  PLUSS_CHECK(output_names.insert(value_name).second,
+              "DataFrame::stack: value_name collides with a case level or feature-name output");
+
+  const auto block_count = nfeats();
+  std::vector<std::int64_t> tiled_rows(
+      static_cast<std::size_t>(ncases() * block_count));
+  for (std::int64_t block = 0; block < block_count; ++block) {
+    std::iota(
+        tiled_rows.begin() + block * ncases(),
+        tiled_rows.begin() + (block + 1) * ncases(),
+        std::int64_t{0});
+  }
+
+  std::vector<std::pair<std::string, Thread>> output;
+  output.reserve(case_level_names.size() + 2);
+  for (std::size_t i = 0; i < case_level_names.size(); ++i) {
+    output.emplace_back(case_level_names[i], case_level_values[i].take(tiled_rows));
+  }
+
+  std::vector<std::string> feature_values;
+  feature_values.reserve(tiled_rows.size());
+  for (const auto& name : feature_names()) {
+    feature_values.insert(
+        feature_values.end(),
+        static_cast<std::size_t>(ncases()),
+        name);
+  }
+  output.emplace_back(feature_name, Thread(pluss::make_note(feature_values)));
+
+  std::vector<Thread> value_blocks = features();
+  output.emplace_back(value_name, concatenate_reshape_threads(value_blocks));
+
+  auto out = DataFrame(std::move(output));
+  std::vector<std::string> case_features = case_level_names;
+  case_features.push_back(feature_name);
+  SetCasesOptions options;
+  options.features = std::move(case_features);
+  options.drop = true;
+  options.verify = false;
+  options.sort = false;
+  return out.set_cases(options).title(title());
+}
+
+DataFrame DataFrame::unstack(const UnstackOptions& options) const {
+  PLUSS_CHECK(defined(), "DataFrame::unstack: frame is undefined");
+  PLUSS_CHECK(has_levels(), "DataFrame::unstack: current DataFrame has no case levels");
+  PLUSS_CHECK(!options.level.empty(), "DataFrame::unstack: level cannot be empty");
+  PLUSS_CHECK(ncases() > 0, "DataFrame::unstack: cannot unstack an empty frame");
+
+  const auto all_levels = levels();
+  PLUSS_CHECK(std::find(all_levels.begin(), all_levels.end(), options.level) != all_levels.end(),
+              "DataFrame::unstack: unknown case level '" + options.level + "'");
+
+  std::vector<std::string> remaining_levels;
+  remaining_levels.reserve(all_levels.size());
+  for (const auto& name : all_levels) {
+    if (name != options.level) {
+      remaining_levels.push_back(name);
+    }
+  }
+
+  const auto pivot_values = level(options.level);
+  std::vector<Thread> remaining_values;
+  remaining_values.reserve(remaining_levels.size());
+  for (const auto& name : remaining_levels) {
+    remaining_values.push_back(level(name));
+  }
+
+  std::vector<std::string> row_keys;
+  std::vector<std::int64_t> first_rows;
+  std::unordered_map<std::string, std::size_t> row_index;
+  std::vector<std::string> column_keys;
+  std::unordered_map<std::string, std::size_t> column_index;
+  std::unordered_map<std::string, std::int64_t> cell_row;
+  row_index.reserve(static_cast<std::size_t>(ncases()));
+  column_index.reserve(static_cast<std::size_t>(ncases()));
+  cell_row.reserve(static_cast<std::size_t>(ncases()));
+
+  for (std::int64_t row = 0; row < ncases(); ++row) {
+    std::string row_key;
+    if (remaining_values.empty()) {
+      row_key = "__all__";
+    } else {
+      for (const auto& values : remaining_values) {
+        row_key += axis_value_key(values, row);
+        row_key.append("\x1E", 1);
+      }
+    }
+    const auto [row_it, row_inserted] = row_index.emplace(row_key, row_keys.size());
+    if (row_inserted) {
+      row_keys.push_back(row_key);
+      first_rows.push_back(row);
+    }
+
+    const auto col_key = axis_value_key(pivot_values, row);
+    const auto [col_it, col_inserted] = column_index.emplace(col_key, column_keys.size());
+    if (col_inserted) {
+      column_keys.push_back(col_key);
+    }
+
+    const auto cell_key = fmt::format("{}\x1F{}", row_it->second, col_it->second);
+    PLUSS_CHECK(cell_row.emplace(cell_key, row).second,
+                "DataFrame::unstack: duplicate cells found; aggregate before unstacking");
+  }
+
+  if (options.sort) {
+    std::sort(column_keys.begin(), column_keys.end());
+  }
+
+  std::vector<std::pair<std::string, Thread>> output;
+  output.reserve(remaining_levels.size() + feature_names().size() * column_keys.size());
+  for (std::size_t i = 0; i < remaining_levels.size(); ++i) {
+    output.emplace_back(remaining_levels[i], remaining_values[i].take(first_rows));
+  }
+
+  const bool multi_value = nfeats() > 1;
+  std::unordered_set<std::string> out_names;
+  for (const auto& level_name : remaining_levels) {
+    out_names.insert(level_name);
+  }
+
+  for (const auto& value_feature : feature_names()) {
+    const auto source = features(value_feature);
+    for (std::size_t col = 0; col < column_keys.size(); ++col) {
+      std::vector<Thread> blocks;
+      blocks.reserve(row_keys.size());
+      for (std::size_t row = 0; row < row_keys.size(); ++row) {
+        const auto key = fmt::format("{}\x1F{}", row, col);
+        const auto found = cell_row.find(key);
+        blocks.push_back(found == cell_row.end()
+                             ? null_singleton_like(source)
+                             : source.take(pluss::msharp::RangeView::Int(
+                                   std::initializer_list<std::int64_t>{found->second})));
+      }
+      auto out_name = multi_value
+          ? value_feature + options.separator + column_keys[col]
+          : column_keys[col];
+      if (out_name.empty()) {
+        out_name = multi_value ? value_feature : options.level;
+      }
+      PLUSS_CHECK(out_names.insert(out_name).second,
+                  "DataFrame::unstack: duplicate output feature '" + out_name + "'");
+      output.emplace_back(std::move(out_name), concatenate_reshape_threads(blocks));
+    }
+  }
+
+  auto out = DataFrame(std::move(output));
+  if (!remaining_levels.empty()) {
+    SetCasesOptions set_options;
+    set_options.features = remaining_levels;
+    set_options.drop = options.drop;
+    set_options.verify = false;
+    set_options.sort = false;
+    out = out.set_cases(set_options);
+  }
+  return out.title(title());
 }
 
 } // namespace pluss::table

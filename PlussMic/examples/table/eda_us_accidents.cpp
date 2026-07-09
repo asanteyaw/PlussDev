@@ -38,7 +38,12 @@ int main(int argc, char** argv) {
   df.describe();
 
   auto work = df
-      .cast_timeline({"Start_Time", "End_Time"})
+      .cast({
+          pluss::table::DataFrame::CastSpec{
+              "Start_Time", pluss::table::ThreadCastTarget::Timeline, {}},
+          pluss::table::DataFrame::CastSpec{
+              "End_Time", pluss::table::ThreadCastTarget::Timeline, {}},
+      })
       .astype({
           "Severity",
           "Distance(mi)",

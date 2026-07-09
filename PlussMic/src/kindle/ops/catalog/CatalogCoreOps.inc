@@ -476,13 +476,14 @@ Catalog Catalog::notnull(std::initializer_list<std::string_view> keys) const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::cast_series(std::initializer_list<std::string_view> keys,
-                             std::optional<pluss::codem::ScalarType> dtype) const {
+Catalog Catalog::cast(std::initializer_list<std::string_view> keys,
+                      pluss::table::ThreadCastTarget target,
+                      const pluss::table::ThreadCastOptions& options) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);
   if (!key_set.empty()) {
     for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::cast_series: unknown key '" + k + "'");
+      PLUSS_CHECK(has(k), "Catalog::cast: unknown key '" + k + "'");
     }
   }
 
@@ -492,74 +493,15 @@ Catalog Catalog::cast_series(std::initializer_list<std::string_view> keys,
     const auto& key = impl_ref_().keys_[i];
     const auto& stream = impl_ref_().streams_[i];
     const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.cast(pluss::table::ThreadCastTarget::Series, dtype) : stream);
-  }
-  return Catalog(std::move(out));
-}
-
-Catalog Catalog::cast_note(std::initializer_list<std::string_view> keys) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  const auto key_set = normalize_name_set(keys);
-  if (!key_set.empty()) {
-    for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::cast_note: unknown key '" + k + "'");
-    }
-  }
-
-  std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(static_cast<std::size_t>(nstreams()));
-  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    const auto& key = impl_ref_().keys_[i];
-    const auto& stream = impl_ref_().streams_[i];
-    const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.cast(pluss::table::ThreadCastTarget::Note) : stream);
-  }
-  return Catalog(std::move(out));
-}
-
-Catalog Catalog::cast_timeline(std::initializer_list<std::string_view> keys) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  const auto key_set = normalize_name_set(keys);
-  if (!key_set.empty()) {
-    for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::cast_timeline: unknown key '" + k + "'");
-    }
-  }
-
-  std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(static_cast<std::size_t>(nstreams()));
-  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    const auto& key = impl_ref_().keys_[i];
-    const auto& stream = impl_ref_().streams_[i];
-    const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.cast(pluss::table::ThreadCastTarget::Timeline) : stream);
-  }
-  return Catalog(std::move(out));
-}
-
-Catalog Catalog::cast_timeindex(std::initializer_list<std::string_view> keys) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  const auto key_set = normalize_name_set(keys);
-  if (!key_set.empty()) {
-    for (const auto& k : key_set) {
-      PLUSS_CHECK(has(k), "Catalog::cast_timeindex: unknown key '" + k + "'");
-    }
-  }
-
-  std::vector<std::pair<std::string, Stream>> out;
-  out.reserve(static_cast<std::size_t>(nstreams()));
-  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    const auto& key = impl_ref_().keys_[i];
-    const auto& stream = impl_ref_().streams_[i];
-    const bool selected = key_set.empty() || (key_set.find(key) != key_set.end());
-    out.emplace_back(key, selected ? stream.cast(pluss::table::ThreadCastTarget::TimeIndex) : stream);
+    out.emplace_back(key, selected ? stream.cast(target, options.series_dtype) : stream);
   }
   return Catalog(std::move(out));
 }
 
 Catalog Catalog::astype(std::initializer_list<std::string_view> keys,
                         pluss::codem::ScalarType dtype) const {
-  return cast_series(keys, dtype);
+  return cast(keys, pluss::table::ThreadCastTarget::Series,
+              pluss::table::ThreadCastOptions{.series_dtype = dtype});
 }
 
 Stream Catalog::sum(std::string_view field) const {
@@ -601,7 +543,7 @@ Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_vi
   const auto right = other.tabelize();
   PLUSS_CHECK(left.has_feature(key), "Catalog::merge: left key not found '" + key + "'");
   PLUSS_CHECK(right.has_feature(key), "Catalog::merge: right key not found '" + key + "'");
-  return kindelize(left.stitch_on(key, right, key));
+  return kindelize(left.unify(key, right, key));
 }
 
 Catalog Catalog::apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const {

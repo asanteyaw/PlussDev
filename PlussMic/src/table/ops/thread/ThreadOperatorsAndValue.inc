@@ -1,5 +1,4 @@
-namespace {
-const char* thread_kind_name(ThreadKind k) {
+std::string_view thread_kind_name(ThreadKind k) noexcept {
   switch (k) {
     case ThreadKind::Series:
       return "Series";
@@ -14,6 +13,7 @@ const char* thread_kind_name(ThreadKind k) {
   }
 }
 
+namespace {
 void ensure_numeric_thread_for_math(const Thread& t, std::string_view where) {
   PLUSS_CHECK(t.defined(), std::string(where) + ": Thread is undefined");
   PLUSS_CHECK(t.kind() == ThreadKind::Series,
@@ -139,7 +139,7 @@ Thread binary_math_scalar(const Thread& lhs, double rhs, ThreadBinaryMathOp op, 
 
   PLUSS_FAIL(std::string(where)
              + ": unsupported payload for operator '" + math_op_name(op)
-             + "' (" + thread_kind_name(lhs.kind()) + " with scalar)");
+             + "' (" + std::string(thread_kind_name(lhs.kind())) + " with scalar)");
 }
 
 Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp op, std::string_view where) {
@@ -161,7 +161,8 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
 
   PLUSS_FAIL(std::string(where)
              + ": unsupported payload combination for operator '" + math_op_name(op)
-             + "' (" + thread_kind_name(lhs.kind()) + " vs " + thread_kind_name(rhs.kind()) + ")");
+             + "' (" + std::string(thread_kind_name(lhs.kind())) + " vs " +
+             std::string(thread_kind_name(rhs.kind())) + ")");
 }
 
 Thread compare_scalar(const Thread& lhs, double rhs, ThreadBinaryCompareOp op, std::string_view where) {
@@ -197,7 +198,8 @@ Thread compare_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryCompareOp 
 
   PLUSS_FAIL(std::string(where)
              + ": unsupported payload combination for operator '" + cmp_op_name(op)
-             + "' (" + thread_kind_name(lk) + " vs " + thread_kind_name(rk) + ")");
+             + "' (" + std::string(thread_kind_name(lk)) + " vs " +
+             std::string(thread_kind_name(rk)) + ")");
 }
 } // namespace
 

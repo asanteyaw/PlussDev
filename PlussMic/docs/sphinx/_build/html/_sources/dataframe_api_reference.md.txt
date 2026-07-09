@@ -199,7 +199,7 @@ id_2024  sales_2024  city_2024
 #### API Signature
 
 ```cpp
-DataFrame::aggregate(specs: pluss::RangeView<SummarySpec>, render: bool = true) -> DataFrameView
+DataFrame::aggregate(specs: pluss::RangeView<SummarySpec>, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -262,55 +262,6 @@ sales_mean    115.0
 - Each `SummarySpec` chooses an output name, a source feature, and a summary operation.
 - Use this when you want one-row summary output such as totals, means, mins, maxes, or counts.
 
-
-### `aggregate_with`
-
-#### API Signature
-
-```cpp
-DataFrame::aggregate_with(fn: const std::function<Thread(const DataFrame&)>&, shape: ResultShape = ResultShape::Reduce) -> Thread
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`fn` : `const std::function<Thread(const DataFrame&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-`shape` : `ResultShape`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.aggregate_with();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
 
 ### `align_cases`
 
@@ -382,7 +333,7 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-DataFrame::all(axis: std::int64_t, features: pluss::RangeView<std::string_view> = {}, skipna: bool = true) -> Thread
+DataFrame::all(axis: Axis, features: pluss::RangeView<std::string_view> = {}, skipna: bool = true) -> Thread
 
 DataFrame::all(features: pluss::RangeView<std::string_view> = {}, skipna: bool = true) -> Thread
 ```
@@ -393,7 +344,7 @@ Use this method through the public contract shown above.
 
 #### Inputs
 
-`axis` : `std::int64_t`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `features` : `pluss::RangeView<std::string_view>`
@@ -413,7 +364,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Evaluate `all` across rows using a selected boolean feature set.
+Example 1. Evaluate `all` down the selected boolean columns.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -421,7 +372,7 @@ auto df = pluss::table::DataFrame({
     {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
 });
 
-auto out = df.all(1, {"passed_math", "passed_lab"}, true);
+auto out = df.all({"passed_math", "passed_lab"}, true);
 ```
 
 ##### Expected output
@@ -459,7 +410,7 @@ The call completes and returns the contract described under Output.
 #### API Signatures
 
 ```cpp
-DataFrame::any(axis: std::int64_t, features: pluss::RangeView<std::string_view> = {}, skipna: bool = true) -> Thread
+DataFrame::any(axis: Axis, features: pluss::RangeView<std::string_view> = {}, skipna: bool = true) -> Thread
 
 DataFrame::any(features: pluss::RangeView<std::string_view> = {}, skipna: bool = true) -> Thread
 ```
@@ -470,7 +421,7 @@ Use this method through the public contract shown above.
 
 #### Inputs
 
-`axis` : `std::int64_t`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `features` : `pluss::RangeView<std::string_view>`
@@ -490,7 +441,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Evaluate `any` across rows using a selected boolean feature set.
+Example 1. Evaluate `any` down the selected boolean columns.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -498,7 +449,7 @@ auto df = pluss::table::DataFrame({
     {"passed_lab", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
 });
 
-auto out = df.any(1, {"passed_math", "passed_lab"}, true);
+auto out = df.any({"passed_math", "passed_lab"}, true);
 ```
 
 ##### Expected output
@@ -530,58 +481,6 @@ The call completes and returns the contract described under Output.
 - These methods expect boolean features; they are not general numeric reducers.
 - Nullable boolean input requires `skipna=true`.
 
-
-### `apply_cases`
-
-#### API Signature
-
-```cpp
-DataFrame::apply_cases(fn: const std::function<DataFrame(const DataFrame&)>&, shape: ResultShape = ResultShape::Infer) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`fn` : `const std::function<DataFrame(const DataFrame&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-`shape` : `ResultShape`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.apply_cases();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
 
 ### `assign`
 
@@ -741,55 +640,6 @@ id  sales  city
 - `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
 
 
-### `asymmetry`
-
-#### API Signature
-
-```cpp
-DataFrame::asymmetry(axis: std::int64_t = 0, min_count: std::int64_t = 3) -> Thread
-```
-
-#### Notes
-
-Computes bias-corrected sample skewness across cases or features.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.asymmetry();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
 ## B
 
 ### `bfill`
@@ -928,6 +778,61 @@ auto out = df.sort_values({pluss::table::DataFrame::ArrangeSpec{"sales", true, t
 ```
 
 
+### `bounded`
+
+#### API Signature
+
+```cpp
+DataFrame::bounded(bounds: const WindowBoundsFn&, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> DataFrame
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`bounds` : `const WindowBoundsFn&`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`statistic` : `WindowStatistic`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`options` : `const WindowOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Pass an explicit options object to control the operation.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.bounded();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
 ### `bucketize`
 
 #### API Signatures
@@ -1057,11 +962,15 @@ id  sales  city
 #### Signatures
 
 ```cpp
+DataFrame::case_study(pick: const CasePick&) -> DataFrame
 DataFrame::case_study(rows: const CaseSelector&) -> DataFrame
 DataFrame::case_study(rows: const CaseSelector&, features: const FeatureSelector&) -> DataFrame
 ```
 
 #### Parameters
+
+`pick` : `const CasePick&`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 `rows` : `const CaseSelector&`
     Selector describing which rows `case_study(...)` should return.
@@ -1478,229 +1387,6 @@ id  sales  city
 - `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
 
 
-### `cast_note`
-
-#### API Signature
-
-```cpp
-DataFrame::cast_note(features: pluss::RangeView<std::string_view>) -> DataFrame
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.cast_note({"sales"});
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-#### Conversion Rules
-
-- These methods rewrite only the selected features; unselected features are passed through unchanged.
-- Duplicate feature names in the request are ignored after the first occurrence.
-- Unknown or empty feature names throw immediately.
-- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
-
-
-### `cast_series`
-
-#### API Signature
-
-```cpp
-DataFrame::cast_series(features: pluss::RangeView<std::string_view>, dtype: std::optional<pluss::ScalarType> = std::nullopt) -> DataFrame
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-`dtype` : `std::optional<pluss::ScalarType>`
-    Target scalar dtype used by this conversion overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});
-
-auto out = df.cast_series({"sales"}, pluss::ScalarType::Float64);
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-#### Conversion Rules
-
-- These methods rewrite only the selected features; unselected features are passed through unchanged.
-- Duplicate feature names in the request are ignored after the first occurrence.
-- Unknown or empty feature names throw immediately.
-- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
-
-
-### `cast_timeindex`
-
-#### API Signature
-
-```cpp
-DataFrame::cast_timeindex(features: pluss::RangeView<std::string_view>) -> DataFrame
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.cast_timeindex({"sales"});
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-#### Conversion Rules
-
-- These methods rewrite only the selected features; unselected features are passed through unchanged.
-- Duplicate feature names in the request are ignored after the first occurrence.
-- Unknown or empty feature names throw immediately.
-- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
-
-
-### `cast_timeline`
-
-#### API Signature
-
-```cpp
-DataFrame::cast_timeline(features: pluss::RangeView<std::string_view>) -> DataFrame
-```
-
-#### Notes
-
-This changes the semantic or numeric type so later operations route through the correct implementation path.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_note({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});
-
-auto out = df.cast_timeline({"ts"});
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-#### Conversion Rules
-
-- These methods rewrite only the selected features; unselected features are passed through unchanged.
-- Duplicate feature names in the request are ignored after the first occurrence.
-- Unknown or empty feature names throw immediately.
-- `astype(...)` is the direct numeric-series dtype conversion path, while `cast(...)` is the broader target-selection route.
-
-
 ### `catalogue`
 
 #### API Signature
@@ -1759,68 +1445,6 @@ The call completes and returns the contract described under Output.
 - Missing source values keep an invalid mask and use the conventional payload code `-1`.
 - Levels preserve first-seen order by default; `sort_levels=true` assigns codes from sorted levels.
 - `encoding.decode()` reconstructs the typed Thread and its validity mask.
-
-
-### `ceil_time`
-
-#### API Signature
-
-```cpp
-DataFrame::ceil_time(features: pluss::RangeView<std::string_view>, unit: std::string_view) -> DataFrame
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-`unit` : `std::string_view`
-    Temporal ceiling unit such as `"hour"`, `"day"`, or `"month"`.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
-});
-
-auto out = df.ceil_time({"ts"}, "hour");
-```
-
-##### Expected output
-
-```text
-ts
-2024-01-01T10:00:00Z
-2024-01-01T10:00:00Z
-2024-01-01T11:00:00Z
-```
-
-#### Practical Behavior
-
-- `ceil_time(...)` rounds selected temporal features upward to the requested unit.
-- Only timeline/timeindex features are valid targets.
-- Use this when you want time-bucket labels that always round toward the next boundary.
 
 
 ### `combine`
@@ -2235,17 +1859,19 @@ sales    0.3273  1.0000
 - Supported methods route through thread-level correlation kernels such as Pearson, Spearman, and Kendall Tau.
 
 
-### `correlate_with`
+### `corr_with`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
-DataFrame::correlate_with(other: const DataFrame&, method: CorrMethod = CorrMethod::Pearson, min_count: std::int64_t = 1) -> Thread
+DataFrame::corr_with(other: const DataFrame&, method: CorrMethod = CorrMethod::Pearson, min_count: std::int64_t = 1) -> Thread
+
+DataFrame::corr_with(others: pluss::RangeView<DataFrame>, method: CorrMethod = CorrMethod::Pearson, min_count: std::int64_t = 1) -> DataFrame
 ```
 
 #### Notes
 
-Computes one aligned correlation value for every numeric feature shared with another frame.
+Use this method through the public contract shown above.
 
 #### Inputs
 
@@ -2261,9 +1887,15 @@ Computes one aligned correlation value for every numeric feature shared with ano
 `min_count` : `std::int64_t`
     Minimum non-null observations required before a grouped or rolling summary is considered valid.
 
+`others` : `pluss::RangeView<DataFrame>`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
 #### Output
 
 `Thread`
+    Value produced by this call.
+
+`DataFrame`
     Value produced by this call.
 
 #### Options
@@ -2281,7 +1913,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.correlate_with();
+auto out = df.corr_with();
 ```
 
 ##### Expected output
@@ -2289,17 +1921,33 @@ auto out = df.correlate_with();
 ```text
 The call completes and returns the contract described under Output.
 ```
+Example 2. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr_with();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
 
 ### `count`
 
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::count(axis: int) -> Thread
-
-DataFrame::count(axis: std::int64_t) -> Thread
-
-DataFrame::count(render: bool = true) -> DataFrameView
+DataFrame::count(axis: Axis = Axis::Feature) -> Thread
 ```
 
 #### Notes
@@ -2308,18 +1956,12 @@ Returns a size/count summary for the current object without changing it.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -2328,45 +1970,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `count` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.count(1);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       3
-sales    3
-city     3
-```
-Example 2. Compute `count` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.count(static_cast<std::int64_t>(1));
-```
-
-##### Expected output
-
-```text
-feature  value
-id       3
-sales    3
-city     3
-```
-Example 3. Compute `count` for each numeric column in the frame.
+Example 1. Compute `count` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2398,7 +2002,7 @@ city     3
 #### API Signature
 
 ```cpp
-DataFrame::count_by(feature: std::string_view, top_n: std::int64_t = 0, dropna: bool = true, render: bool = true) -> DataFrameView
+DataFrame::count_by(feature: std::string_view, top_n: std::int64_t = 0, dropna: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -2456,12 +2060,12 @@ Tema    2
 - Ties are broken by key name in ascending order.
 
 
-### `count_distinct`
+### `covar`
 
 #### API Signature
 
 ```cpp
-DataFrame::count_distinct(features: pluss::RangeView<std::string_view> = {}, dropna: bool = true, render: bool = true) -> DataFrameView
+DataFrame::covar(options: const StatisticOptions& = {}, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -2470,119 +2074,8 @@ Use this method through the public contract shown above.
 
 #### Inputs
 
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-`dropna` : `bool`
-    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
-
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
-
-#### Output
-
-`DataFrameView`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Choose whether the returned object should auto-render in display contexts.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.count_distinct({"id", "sales", "city"}, true, false);
-```
-
-##### Expected output
-
-```text
-case     id  sales  city
-summary  3   3      2
-```
-
-#### Practical Behavior
-
-- `count_distinct(...)` returns one summary row containing distinct-value counts for the selected features.
-- With no feature list, every feature is included.
-- `dropna` controls whether null should participate as its own distinct value.
-
-
-### `count_null_rows`
-
-#### API Signature
-
-```cpp
-DataFrame::count_null_rows() -> std::int64_t
-```
-
-#### Notes
-
-Counts how many rows contain at least one null value.
-
-#### Inputs
-
-`None`
-
-#### Output
-
-`std::int64_t`
-    Integer count, size, or positional result.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.count_null_rows();
-```
-
-##### Expected output
-
-```text
-3
-```
-
-#### Practical Behavior
-
-- `count_null_rows()` counts how many rows contain at least one null value anywhere in the frame.
-- Use this as a quick completeness check before grouping, joining, or export.
-
-
-### `covariance`
-
-#### API Signature
-
-```cpp
-DataFrame::covariance(options: const StatisticOptions& = {}, render: bool = false) -> DataFrameView
-```
-
-#### Notes
-
-Computes the pairwise covariance matrix for numeric features using pairwise-complete observations.
-
-#### Inputs
-
 `options` : `const StatisticOptions&`
-    `StatisticOptions` controls `ddof` (denominator correction) and `min_count` (minimum pairwise-complete cases).
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 `render` : `bool`
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
@@ -2607,7 +2100,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.covariance();
+auto out = df.covar();
 ```
 
 ##### Expected output
@@ -2617,6 +2110,104 @@ id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
+```
+
+### `csmax`
+
+#### API Signature
+
+```cpp
+DataFrame::csmax(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`skipna` : `bool`
+    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.csmax();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `csmin`
+
+#### API Signature
+
+```cpp
+DataFrame::csmin(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`skipna` : `bool`
+    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.csmin();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
 ```
 
 ## D
@@ -2671,7 +2262,7 @@ true
 #### API Signature
 
 ```cpp
-DataFrame::describe(render: bool = true) -> DataFrameView
+DataFrame::describe(render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -2719,55 +2310,6 @@ sales    3      103.3  90.0  120.0
 - Non-numeric and non-series features are skipped rather than coerced.
 - Null values are removed before the statistics are computed.
 
-
-### `deviation`
-
-#### API Signature
-
-```cpp
-DataFrame::deviation(axis: std::int64_t = 0, options: const StatisticOptions& = {}) -> Thread
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.deviation();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
 
 ### `div`
 
@@ -2843,80 +2385,6 @@ id  sales  city
 0.3   9.0  Kumasi
 ```
 
-### `divide`
-
-#### API Signatures
-
-```cpp
-DataFrame::divide(other: const DataFrame&) -> DataFrame
-
-DataFrame::divide(other: double) -> DataFrame
-```
-
-#### Notes
-
-This applies arithmetic across the compatible numeric payloads in the current object.
-
-#### Inputs
-
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Divide each compatible numeric cell against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.divide(right);
-```
-
-##### Expected output
-
-```text
-id    sales
-0.5   0.909091
-1.0   1.090909
-0.75  0.9
-```
-Example 2. Divide each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.divide(10);
-```
-
-##### Expected output
-
-```text
-id  sales  city
-0.1  10.0  Accra
-0.2  12.0  Tema
-0.3   9.0  Kumasi
-```
-
 ### `drop`
 
 #### API Signature
@@ -2972,21 +2440,28 @@ id  sales
 - The remaining features keep their existing row alignment and case axis.
 
 
-### `dropna`
+### `drop_duplicates`
 
 #### API Signature
 
 ```cpp
-DataFrame::dropna() -> DataFrame
+DataFrame::drop_duplicates(features: pluss::RangeView<std::string_view> = {}, keep_first: bool = true, keep_last: bool = false) -> DataFrame
 ```
 
 #### Notes
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Use this method through the public contract shown above.
 
 #### Inputs
 
-`None`
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+`keep_first` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+`keep_last` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Output
 
@@ -2999,7 +2474,130 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Call the simplest overload.
+Example 1. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.drop_duplicates();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `drop_levels`
+
+#### API Signatures
+
+```cpp
+DataFrame::drop_levels(names: pluss::RangeView<std::string_view>) -> DataFrame
+
+DataFrame::drop_levels(names: std::initializer_list<std::string_view>) -> DataFrame
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`names` : `pluss::RangeView<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.drop_levels();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.drop_levels();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `dropna`
+
+#### API Signature
+
+```cpp
+DataFrame::dropna(features: pluss::RangeView<std::string_view> = {}, all: bool = false) -> DataFrame
+```
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Inputs
+
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+`all` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))
@@ -3027,26 +2625,32 @@ id  sales  city
 - Use `dropna_all(features)` when the rule should apply only to selected features and only when all of them are null.
 
 
-### `dropna_all`
+### `duplicated`
 
 #### API Signature
 
 ```cpp
-DataFrame::dropna_all(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
+DataFrame::duplicated(features: pluss::RangeView<std::string_view> = {}, keep_first: bool = true, keep_last: bool = false) -> Thread
 ```
 
 #### Notes
 
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+Use this method through the public contract shown above.
 
 #### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
+`keep_first` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+`keep_last` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
 #### Output
 
-`DataFrame`
+`Thread`
     Value produced by this call.
 
 #### Options
@@ -3064,22 +2668,14 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.dropna_all({"sales"});
+auto out = df.duplicated();
 ```
 
 ##### Expected output
 
 ```text
-id  sales
-2   null
-3   90.0
+The call completes and returns the contract described under Output.
 ```
-
-#### Practical Behavior
-
-- `dropna_all(features)` removes rows only when all selected features are null in that row.
-- Rows with at least one observed value among the selected features are kept.
-
 
 ## E
 
@@ -3204,186 +2800,6 @@ auto out = left.equals(right);
 
 ```text
 true
-```
-
-### `exponential_deviation`
-
-#### API Signature
-
-```cpp
-DataFrame::exponential_deviation(alpha: double, adjusted: bool = true, bias_corrected: bool = true, min_count: std::int64_t = 1, ignore_nulls: bool = false) -> DataFrame
-```
-
-#### Notes
-
-Computes exponentially weighted standard deviation over each numeric feature.
-
-#### Inputs
-
-`alpha` : `scalar`
-    Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.
-
-`adjusted` : `bool`
-    When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.
-
-`bias_corrected` : `bool`
-    When `true`, apply finite-sample bias correction to exponentially weighted variance.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-`ignore_nulls` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.exponential_deviation();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `exponential_mean`
-
-#### API Signature
-
-```cpp
-DataFrame::exponential_mean(alpha: double, adjusted: bool = true, min_count: std::int64_t = 1, ignore_nulls: bool = false) -> DataFrame
-```
-
-#### Notes
-
-Computes an exponentially weighted mean over each numeric feature.
-
-#### Inputs
-
-`alpha` : `scalar`
-    Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.
-
-`adjusted` : `bool`
-    When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-`ignore_nulls` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.exponential_mean();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `exponential_variance`
-
-#### API Signature
-
-```cpp
-DataFrame::exponential_variance(alpha: double, adjusted: bool = true, bias_corrected: bool = true, min_count: std::int64_t = 1, ignore_nulls: bool = false) -> DataFrame
-```
-
-#### Notes
-
-Computes exponentially weighted variance over each numeric feature.
-
-#### Inputs
-
-`alpha` : `scalar`
-    Exponential smoothing factor in `(0, 1]`; larger values give more weight to recent observations.
-
-`adjusted` : `bool`
-    When `true`, normalize by the finite geometric weight sum; when `false`, use the recursive form.
-
-`bias_corrected` : `bool`
-    When `true`, apply finite-sample bias correction to exponentially weighted variance.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-`ignore_nulls` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.exponential_variance();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
 ```
 
 ### `extend_cases`
@@ -4291,61 +3707,6 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-### `floor_time`
-
-#### API Signature
-
-```cpp
-DataFrame::floor_time(features: pluss::RangeView<std::string_view>, unit: std::string_view) -> DataFrame
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-`unit` : `std::string_view`
-    Temporal floor unit such as `"hour"`, `"day"`, or `"month"`.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
-});
-
-auto out = df.floor_time({"ts"}, "hour");
-```
-
-##### Expected output
-
-```text
-ts
-2024-01-01T09:00:00Z
-2024-01-01T09:00:00Z
-2024-01-01T10:00:00Z
-```
-
 ### `floordiv`
 
 #### API Signatures
@@ -4469,30 +3830,29 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-## G
+### `fold`
 
-### `ge`
-
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::ge(other: const DataFrame&) -> DataFrame
-
-DataFrame::ge(other: double) -> DataFrame
+DataFrame::fold(fn: const std::function<Thread(const DataFrame&)>&, shape: ResultShape = ResultShape::Reduce) -> Thread
 ```
 
 #### Notes
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+Use this method through the public contract shown above.
 
 #### Inputs
 
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+`fn` : `const std::function<Thread(const DataFrame&)>&`
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+`shape` : `ResultShape`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 #### Output
 
-`DataFrame`
+`Thread`
     Value produced by this call.
 
 #### Options
@@ -4501,30 +3861,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compare each compatible cell using the `>=` relation against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.ge(right);
-```
-
-##### Expected output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 2. Compare each compatible cell using the `>=` relation against one broadcast scalar value.
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -4533,17 +3870,68 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.ge(10);
+auto out = df.fold();
 ```
 
 ##### Expected output
 
 ```text
-id  sales
-1   true
-2   true
-3   false
+The call completes and returns the contract described under Output.
 ```
+
+### `freq`
+
+#### API Signature
+
+```cpp
+DataFrame::freq(features: pluss::RangeView<std::string_view> = {}, top_n: std::int64_t = 0, dropna: bool = true) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+`top_n` : `std::int64_t`
+    Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
+
+`dropna` : `bool`
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.freq();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+## G
 
 ### `get`
 
@@ -4593,10 +3981,14 @@ Thread([100.0, 120.0, 90.0])
 
 ### `group_by`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
-DataFrame::group_by(keys: pluss::RangeView<std::string_view>, specs: pluss::RangeView<GroupSpec>, dropna_keys: bool = true, render: bool = true) -> DataFrameView
+DataFrame::group_by(keys: const CaseGroup&, specs: pluss::RangeView<GroupSpec>, dropna_keys: bool = true, render: bool = false) -> DataFrameView
+
+DataFrame::group_by(keys: pluss::RangeView<std::string_view>, specs: pluss::RangeView<GroupSpec>, dropna_keys: bool = true, render: bool = false) -> DataFrameView
+
+DataFrame::group_by(keys: std::initializer_list<std::string_view>, specs: pluss::RangeView<GroupSpec>, dropna_keys: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -4605,7 +3997,7 @@ Groups rows by one or more key features and computes the requested aggregations 
 
 #### Inputs
 
-`keys` : `pluss::RangeView<std::string_view>`
+`keys` : `const CaseGroup&`
     Feature names whose distinct value combinations define the output groups.
 
 `specs` : `pluss::RangeView<GroupSpec>`
@@ -4657,6 +4049,44 @@ city    sales_sum
 Accra   220.0
 Tema    240.0
 ```
+Example 2. Choose whether the returned object should auto-render in display contexts.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto out = df.group_by({"city"}, {{"sales_sum", "sales", pluss::table::DataFrame::GroupOp::Sum}}, true, false);
+```
+
+##### Expected output
+
+```text
+city    sales_sum
+Accra   220.0
+Tema    240.0
+```
+Example 3. Choose whether the returned object should auto-render in display contexts.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto out = df.group_by({"city"}, {{"sales_sum", "sales", pluss::table::DataFrame::GroupOp::Sum}}, true, false);
+```
+
+##### Expected output
+
+```text
+city    sales_sum
+Accra   220.0
+Tema    240.0
+```
 
 #### Execution Model
 
@@ -4666,568 +4096,14 @@ Tema    240.0
 - Output key features retain their original Thread kind and dtype.
 
 
-### `grouped_moving`
-
-#### API Signature
-
-```cpp
-DataFrame::grouped_moving(group_feature: std::string_view, window: std::int64_t, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes a selected moving statistic independently within each group while preserving original case order.
-
-#### Inputs
-
-`group_feature` : `std::string_view`
-    Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.grouped_moving();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `grouped_moving_mean`
-
-#### API Signature
-
-```cpp
-DataFrame::grouped_moving_mean(group_feature: std::string_view, window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes moving means independently within each group while preserving original case order.
-
-#### Inputs
-
-`group_feature` : `std::string_view`
-    Feature whose distinct values define the groups for grouped summaries such as `mean_by(...)`.
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.grouped_moving_mean();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_asymmetry`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_asymmetry(min_count: std::int64_t = 3) -> DataFrame
-```
-
-#### Notes
-
-Computes skewness over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_asymmetry();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_deviation`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_deviation(options: const StatisticOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes standard deviation over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`options` : `const StatisticOptions&`
-    `StatisticOptions` controls `ddof` and the minimum valid case count.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_deviation();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_maximum`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_maximum(min_count: std::int64_t = 1) -> DataFrame
-```
-
-#### Notes
-
-Computes maxima over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_maximum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_mean`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_mean(min_count: std::int64_t = 1) -> DataFrame
-```
-
-#### Notes
-
-Computes means over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_mean();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_mean_error`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_mean_error(options: const StatisticOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes standard error over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_mean_error();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_minimum`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_minimum(min_count: std::int64_t = 1) -> DataFrame
-```
-
-#### Notes
-
-Computes minima over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_minimum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_sum`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_sum(min_count: std::int64_t = 1) -> DataFrame
-```
-
-#### Notes
-
-Computes sums over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_sum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_tail_weight`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_tail_weight(min_count: std::int64_t = 4) -> DataFrame
-```
-
-#### Notes
-
-Computes excess kurtosis over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_tail_weight();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `growing_variance`
-
-#### API Signature
-
-```cpp
-DataFrame::growing_variance(options: const StatisticOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes variance over windows that grow from the first case through the current case.
-
-#### Inputs
-
-`options` : `const StatisticOptions&`
-    `StatisticOptions` controls `ddof` and the minimum valid case count.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.growing_variance();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
 ### `gt`
 
 #### API Signatures
 
 ```cpp
-DataFrame::gt(other: const DataFrame&) -> DataFrame
+DataFrame::gt(other: const DataFrame&, strict: bool = true) -> DataFrame
 
-DataFrame::gt(other: double) -> DataFrame
+DataFrame::gt(other: double, strict: bool = true) -> DataFrame
 ```
 
 #### Notes
@@ -5238,6 +4114,9 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 `other` : `const DataFrame&`
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+`strict` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Output
 
@@ -5342,12 +4221,57 @@ auto out = df.has_feature("sales");
 true
 ```
 
+### `has_levels`
+
+#### API Signature
+
+```cpp
+DataFrame::has_levels() -> bool
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`bool`
+    Boolean status or membership result.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.has_levels();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `head`
 
 #### API Signature
 
 ```cpp
-DataFrame::head(n: std::int64_t = 5, render: bool = true) -> DataFrameView
+DataFrame::head(n: std::int64_t = 5, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -5440,159 +4364,6 @@ The call completes and returns the contract described under Output.
 ```
 
 ## I
-
-### `idxmax`
-
-#### API Signature
-
-```cpp
-DataFrame::idxmax(axis: std::int64_t = 0, skipna: bool = true) -> Thread
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`skipna` : `bool`
-    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.idxmax();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `idxmin`
-
-#### API Signature
-
-```cpp
-DataFrame::idxmin(axis: std::int64_t = 0, skipna: bool = true) -> Thread
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`skipna` : `bool`
-    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.idxmin();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `indexed_moving`
-
-#### API Signature
-
-```cpp
-DataFrame::indexed_moving(bounds: const WindowBoundsFn&, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`bounds` : `const WindowBoundsFn&`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.indexed_moving();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
 
 ### `info`
 
@@ -5773,55 +4544,6 @@ id  sales  city    profit
 3    90.0  Kumasi  30.0
 ```
 
-### `isna`
-
-#### API Signature
-
-```cpp
-DataFrame::isna(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.isna({"sales"});
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
 ### `isnull`
 
 #### API Signature
@@ -5996,30 +4718,29 @@ auto out = df.kindelize(policy);
 The call completes and returns the contract described under Output.
 ```
 
-## L
+### `kurtosis`
 
-### `le`
-
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::le(other: const DataFrame&) -> DataFrame
-
-DataFrame::le(other: double) -> DataFrame
+DataFrame::kurtosis(axis: Axis = Axis::Feature, min_count: std::int64_t = 4) -> Thread
 ```
 
 #### Notes
 
-This produces a comparison-style result you can inspect directly or reuse as a mask.
+Use this method through the public contract shown above.
 
 #### Inputs
 
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`min_count` : `std::int64_t`
+    Minimum non-null observations required before a grouped or rolling summary is considered valid.
 
 #### Output
 
-`DataFrame`
+`Thread`
     Value produced by this call.
 
 #### Options
@@ -6028,30 +4749,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compare each compatible cell using the `<=` relation against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.le(right);
-```
-
-##### Expected output
-
-```text
-id  sales
-1   true
-2   true
-3   false
-```
-Example 2. Compare each compatible cell using the `<=` relation against one broadcast scalar value.
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -6060,17 +4758,16 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.le(10);
+auto out = df.kurtosis();
 ```
 
 ##### Expected output
 
 ```text
-id  sales
-1   true
-2   true
-3   false
+The call completes and returns the contract described under Output.
 ```
+
+## L
 
 ### `lengthen`
 
@@ -6140,6 +4837,119 @@ r2  b        4.0
 - Payload concatenation and identifier tiling use Series/Thread bulk operations rather than cell-wise conversion.
 - Missing-value masks are concatenated with the payload and preserved.
 
+
+### `level`
+
+#### API Signatures
+
+```cpp
+DataFrame::level(name: std::string_view) -> Thread
+
+DataFrame::level(position: std::int64_t) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`name` : `std::string_view`
+    Name used to identify the target object, field, feature, or slot for this overload.
+
+`position` : `std::int64_t`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.level();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.level();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `levels`
+
+#### API Signature
+
+```cpp
+DataFrame::levels() -> std::vector<std::string>
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`None`
+
+#### Output
+
+`std::vector<std::string>`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Pass several names together from a standard string container.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.levels();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
 
 ### `load`
 
@@ -7073,9 +5883,9 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-DataFrame::lt(other: const DataFrame&) -> DataFrame
+DataFrame::lt(other: const DataFrame&, strict: bool = true) -> DataFrame
 
-DataFrame::lt(other: double) -> DataFrame
+DataFrame::lt(other: double, strict: bool = true) -> DataFrame
 ```
 
 #### Notes
@@ -7086,6 +5896,9 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 `other` : `const DataFrame&`
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+`strict` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
 #### Output
 
@@ -7151,63 +5964,17 @@ id  sales
 
 ## M
 
-### `map_cases`
+### `map`
 
 #### API Signature
 
 ```cpp
-DataFrame::map_cases(fn: const std::function<ThreadValue(const DataFrame&)>&) -> Thread
+DataFrame::map(fn: const std::function<ThreadValue(const ThreadValue&)>&, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
 ```
 
 #### Notes
 
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`fn` : `const std::function<ThreadValue(const DataFrame&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.map_cases();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `map_elements`
-
-#### API Signature
-
-```cpp
-DataFrame::map_elements(fn: const std::function<ThreadValue(const ThreadValue&)>&, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
 
 #### Inputs
 
@@ -7237,7 +6004,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.map_elements();
+auto out = df.map();
 ```
 
 ##### Expected output
@@ -7249,12 +6016,12 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-### `matched_with`
+### `match`
 
 #### API Signature
 
 ```cpp
-DataFrame::matched_with(other: const DataFrame&, options: const FrameMatchOptions& = {}) -> FrameMatch
+DataFrame::match(other: const DataFrame&, options: const FrameMatchOptions& = {}) -> FrameMatch
 ```
 
 #### Notes
@@ -7291,7 +6058,7 @@ auto right = pluss::table::DataFrame(
     {{"y", pluss::make_series({100.0, 200.0})},
      {"z", pluss::make_series({7.0, 8.0})}},
     pluss::table::Thread(pluss::make_note({"B", "A"})));
-auto matched = left.matched_with(right);
+auto matched = left.match(right);
 ```
 
 ##### Expected output
@@ -7306,13 +6073,62 @@ matched.left.feature_names():
 
 #### Matching Rules
 
-- `matched_with(other)` matches both case labels and feature names in one call.
+- `match(other)` matches both case labels and feature names in one call.
 - The default `Unite` rule preserves the left order and appends labels found only on the right.
 - `Common`, `KeepLeft`, and `KeepRight` select the intersection or one side explicitly.
 - Repeated cases pair by occurrence order by default; choose `RepeatedCaseRule::Reject` when repeated labels should be an error.
 - Frame-to-frame arithmetic and comparisons use the same default matching behavior automatically.
 - Only case-key matching is materialized on the host; feature gathers and arithmetic remain on the source Series platform.
 
+
+### `matmul`
+
+#### API Signature
+
+```cpp
+DataFrame::matmul(other: const DataFrame&) -> DataFrame
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`other` : `const DataFrame&`
+    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.matmul();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
 
 ### `matrix`
 
@@ -7375,65 +6191,12 @@ timeindex blocks: 0
 - Use `as_series()`, `as_note()`, `as_timeline()`, or `as_timeindex()` only when the frame contributes exactly one block of that family.
 
 
-### `matrix_product`
+### `max`
 
 #### API Signature
 
 ```cpp
-DataFrame::matrix_product(other: const DataFrame&) -> DataFrame
-```
-
-#### Notes
-
-Multiplies the numeric matrix represented by this frame with the numeric matrix represented by another frame.
-
-#### Inputs
-
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.matrix_product();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `max`
-
-#### API Signatures
-
-```cpp
-DataFrame::max(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::max(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::max(render: bool = true) -> DataFrameView
+DataFrame::max(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -7442,21 +6205,15 @@ Computes per-feature maxima for the selected numeric features.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
-
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -7465,43 +6222,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `max` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.max(1, true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       3
-sales    120.0
-```
-Example 2. Compute `max` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.max(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       3
-sales    120.0
-```
-Example 3. Compute `max` for each numeric column in the frame.
+Example 1. Compute `max` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7530,14 +6251,10 @@ sales    120.0
 
 ### `mean`
 
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::mean(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::mean(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::mean(render: bool = true) -> DataFrameView
+DataFrame::mean(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -7546,21 +6263,15 @@ Computes per-feature means for the selected numeric features.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
-
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -7569,43 +6280,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `mean` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.mean(1, true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       2.0
-sales    103.333333333
-```
-Example 2. Compute `mean` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.mean(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       2.0
-sales    103.333333333
-```
-Example 3. Compute `mean` for each numeric column in the frame.
+Example 1. Compute `mean` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7637,7 +6312,7 @@ sales    103.333333333
 #### API Signature
 
 ```cpp
-DataFrame::mean_by(group_feature: std::string_view, value_feature: std::string_view, top_n: std::int64_t = 0, min_count: std::int64_t = 1, dropna_group: bool = true, render: bool = true) -> DataFrameView
+DataFrame::mean_by(group_feature: std::string_view, value_feature: std::string_view, top_n: std::int64_t = 0, min_count: std::int64_t = 1, dropna_group: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -7695,65 +6370,12 @@ Accra   110.0
 Tema    120.0
 ```
 
-### `mean_error`
+### `median`
 
 #### API Signature
 
 ```cpp
-DataFrame::mean_error(axis: std::int64_t = 0, options: const StatisticOptions& = {}) -> Thread
-```
-
-#### Notes
-
-Computes the standard error of the mean with configurable degrees of freedom and minimum observations.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`options` : `const StatisticOptions&`
-    `StatisticOptions` controls `ddof` and the minimum valid case count.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.mean_error();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `median`
-
-#### API Signatures
-
-```cpp
-DataFrame::median(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::median(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::median(render: bool = true) -> DataFrameView
+DataFrame::median(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -7762,21 +6384,15 @@ Use this method through the public contract shown above.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
-
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -7785,43 +6401,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `median` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.median(1, true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       2.0
-sales    100.0
-```
-Example 2. Compute `median` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.median(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       2.0
-sales    100.0
-```
-Example 3. Compute `median` for each numeric column in the frame.
+Example 1. Compute `median` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -7850,14 +6430,10 @@ sales    100.0
 
 ### `min`
 
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::min(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::min(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::min(render: bool = true) -> DataFrameView
+DataFrame::min(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -7866,21 +6442,15 @@ Computes per-feature minima for the selected numeric features.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
-
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -7889,43 +6459,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `min` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.min(1, true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       1
-sales    90.0
-```
-Example 2. Compute `min` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.min(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       1
-sales    90.0
-```
-Example 3. Compute `min` for each numeric column in the frame.
+Example 1. Compute `min` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -8026,17 +6560,17 @@ id  sales  city
 3   0.0    Kumasi
 ```
 
-### `most_frequent`
+### `mode`
 
 #### API Signature
 
 ```cpp
-DataFrame::most_frequent(drop_nulls: bool = true) -> DataFrame
+DataFrame::mode(drop_nulls: bool = true) -> DataFrame
 ```
 
 #### Notes
 
-Returns the most frequently occurring value in every supported feature.
+Use this method through the public contract shown above.
 
 #### Inputs
 
@@ -8063,475 +6597,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.most_frequent();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_asymmetry`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_asymmetry(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width bias-corrected skewness.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_asymmetry();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_deviation`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_deviation(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing standard deviation with configurable degrees of freedom.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    `WindowOptions` controls `min_count`, `ddof`, and centered result placement.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_deviation();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_maximum`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_maximum(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing maxima over every numeric feature.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    `WindowOptions` controls `min_count`, `ddof`, and centered result placement.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_maximum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_mean`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_mean(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing means over every numeric feature.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    `WindowOptions` controls `min_count`, `ddof`, and centered result placement.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_mean();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_mean_error`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_mean_error(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing standard error with configurable degrees of freedom.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_mean_error();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_minimum`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_minimum(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing minima over every numeric feature.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    `WindowOptions` controls `min_count`, `ddof`, and centered result placement.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_minimum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_sum`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_sum(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing sums over every numeric feature.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    `WindowOptions` controls `min_count`, `ddof`, and centered result placement.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_sum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_tail_weight`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_tail_weight(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width bias-corrected Fisher excess kurtosis.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_tail_weight();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `moving_variance`
-
-#### API Signature
-
-```cpp
-DataFrame::moving_variance(window: std::int64_t, options: const WindowOptions& = {}) -> DataFrame
-```
-
-#### Notes
-
-Computes fixed-width trailing variance with configurable degrees of freedom.
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`options` : `const WindowOptions&`
-    `WindowOptions` controls `min_count`, `ddof`, and centered result placement.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.moving_variance();
+auto out = df.mode();
 ```
 
 ##### Expected output
@@ -8617,80 +6683,6 @@ id  sales  city
 30   900.0  Kumasi
 ```
 
-### `multiply`
-
-#### API Signatures
-
-```cpp
-DataFrame::multiply(other: const DataFrame&) -> DataFrame
-
-DataFrame::multiply(other: double) -> DataFrame
-```
-
-#### Notes
-
-This applies arithmetic across the compatible numeric payloads in the current object.
-
-#### Inputs
-
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Multiply each compatible numeric cell against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.multiply(right);
-```
-
-##### Expected output
-
-```text
-id  sales
-2   11000.0
-4   13200.0
-12   9000.0
-```
-Example 2. Multiply each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.multiply(10);
-```
-
-##### Expected output
-
-```text
-id  sales  city
-10  1000.0  Accra
-20  1200.0  Tema
-30   900.0  Kumasi
-```
-
 ## N
 
 ### `ncases`
@@ -8736,6 +6728,55 @@ auto out = df.ncases();
 
 ```text
 3
+```
+
+### `ndistinct`
+
+#### API Signature
+
+```cpp
+DataFrame::ndistinct(features: pluss::RangeView<std::string_view> = {}, dropna: bool = true) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+`dropna` : `bool`
+    When `true`, null grouping keys or null values are excluded where the method supports that policy. When `false`, null participates instead of being removed.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.ndistinct();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
 ```
 
 ### `ne`
@@ -8902,6 +6943,80 @@ auto out = df.nfeatures();
 3
 ```
 
+### `note`
+
+#### API Signatures
+
+```cpp
+DataFrame::note(feature: std::string_view) -> DataFrameNoteAccessor
+
+DataFrame::note(features: pluss::RangeView<std::string_view> = {}) -> DataFrameNoteAccessor
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`feature` : `std::string_view`
+    Name of the source feature used by the operation.
+
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Output
+
+`DataFrameNoteAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Work with one named feature.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.note();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 2. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.note();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
 ### `note_features`
 
 #### API Signature
@@ -8949,62 +7064,6 @@ Accra
 Tema
 Kumasi
 ```
-
-### `notna`
-
-#### API Signature
-
-```cpp
-DataFrame::notna(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
-auto df = pluss::table::DataFrame({
-    {"sales", sales},
-});
-
-auto out = df.notna({"sales"});
-```
-
-##### Expected output
-
-```text
-sales
-true
-false
-true
-```
-
-#### Practical Behavior
-
-- `notna(...)` returns a boolean-style frame marking which cells are observed rather than missing.
-- Use it to build masks before `filter(...)`, replacement policies, or diagnostic summaries.
-- `notna(...)` and `notnull(...)` are equivalent.
-
 
 ### `notnull`
 
@@ -9069,9 +7128,9 @@ true
 #### API Signatures
 
 ```cpp
-DataFrame::observe(row: std::int64_t, render: bool = true) -> DataFrameView
+DataFrame::observe(row: std::int64_t, render: bool = false) -> DataFrameView
 
-DataFrame::observe(start: std::int64_t, stop: std::int64_t, render: bool = true) -> DataFrameView
+DataFrame::observe(start: std::int64_t, stop: std::int64_t, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -9152,61 +7211,6 @@ id  sales  city
 
 ## P
 
-### `partition_feature`
-
-#### API Signature
-
-```cpp
-DataFrame::partition_feature(feature: std::string_view, separator: std::string_view, prefix: std::string = "part") -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`feature` : `std::string_view`
-    Name of the source feature used by the operation.
-
-`separator` : `std::string_view`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`prefix` : `std::string`
-    Text prefix inserted ahead of the existing label or value.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with one named feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.partition_feature();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
 ### `percentiles`
 
 #### API Signature
@@ -9264,7 +7268,7 @@ id  sales  city
 #### API Signature
 
 ```cpp
-DataFrame::pivot(case_feature: std::string_view, feature_feature: std::string_view, value_feature: std::string_view, dropna_keys: bool = true, render: bool = true) -> DataFrameView
+DataFrame::pivot(case_feature: std::string_view, feature_feature: std::string_view, value_feature: std::string_view, dropna_keys: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -9324,7 +7328,7 @@ Tema    90.0  150.0
 #### API Signature
 
 ```cpp
-DataFrame::pivot_table(case_feature: std::string_view, feature_feature: std::string_view, value_feature: std::string_view, op: GroupOp = GroupOp::Mean, dropna_keys: bool = true, render: bool = true) -> DataFrameView
+DataFrame::pivot_table(case_feature: std::string_view, feature_feature: std::string_view, value_feature: std::string_view, op: GroupOp = GroupOp::Mean, dropna_keys: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -9676,14 +7680,14 @@ a    b
 9.0  25.0
 ```
 
-### `prepare_sql`
+### `prep_sql`
 
 #### API Signatures
 
 ```cpp
-DataFrame::prepare_sql(statement: std::string_view) -> DataFrameSqlPrepared
+DataFrame::prep_sql(statement: std::string_view) -> DataFrameSqlPrepared
 
-DataFrame::prepare_sql(statement: std::string_view, options: SqlOptions) -> DataFrameSqlPrepared
+DataFrame::prep_sql(statement: std::string_view, options: SqlOptions) -> DataFrameSqlPrepared
 ```
 
 #### Notes
@@ -9718,7 +7722,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
+auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 ```
 
 ##### Expected output
@@ -9736,7 +7740,7 @@ auto df = pluss::table::DataFrame({
 });
 
 pluss::table::DataFrame::SqlOptions options;
-auto stmt = df.prepare_sql("SELECT id, sales FROM self WHERE sales > {min_sales}", options);
+auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}", options);
 ```
 
 ##### Expected output
@@ -9747,14 +7751,10 @@ SQL accessor / prepared statement created
 
 ### `prod`
 
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::prod(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::prod(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::prod(render: bool = true) -> DataFrameView
+DataFrame::prod(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -9763,21 +7763,15 @@ Computes per-feature or per-row products across numeric data.
 
 #### Inputs
 
-`axis` : `int`
-    Reduction axis. `0` computes one product per numeric feature, while `1` computes one product per row across numeric features.
+`axis` : `Axis`
+    Reduction axis. `Axis::Feature` computes one product per numeric feature, while `Axis::Case` computes one product per row across numeric features.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the summary view can auto-render in temporary terminal contexts. Pass `false` when you want the summary object without implicit display.
-
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -9801,40 +7795,6 @@ auto out = df.prod(1, true);
 
 ```text
 [2.0, 8.0, 15.0]
-```
-Example 2. Compute products across rows instead of returning one product per numeric feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.prod(1, true);
-```
-
-##### Expected output
-
-```text
-[2.0, 8.0, 15.0]
-```
-Example 3. Compute one product per numeric feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.prod(false);
-```
-
-##### Expected output
-
-```text
-feature  value
-a        6.0
-b        40.0
 ```
 
 #### Axis Rules
@@ -10495,17 +8455,17 @@ a    b
 13.0  15.0
 ```
 
-### `ranks`
+### `rank`
 
 #### API Signature
 
 ```cpp
-DataFrame::ranks(ties: RankTieRule = RankTieRule::Average, nulls: RankNullRule = RankNullRule::Keep, ascending: bool = true, percentage: bool = false) -> DataFrame
+DataFrame::rank(ties: RankTieRule = RankTieRule::Average, nulls: RankNullRule = RankNullRule::Keep, ascending: bool = true, percentage: bool = false) -> DataFrame
 ```
 
 #### Notes
 
-Assigns numeric ranks while controlling tie, null, direction, and percentage behavior.
+Use this method through the public contract shown above.
 
 #### Inputs
 
@@ -10541,7 +8501,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.ranks();
+auto out = df.rank();
 ```
 
 ##### Expected output
@@ -10601,233 +8561,30 @@ a         b
 3.333333  2.0
 ```
 
-### `regex_groups`
+### `rename`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
-DataFrame::regex_groups(feature: std::string_view, pattern: std::string_view, names: pluss::RangeView<std::string_view> = {}) -> DataFrame
+DataFrame::rename(feature_names: pluss::RangeView<std::string_view>) -> DataFrame
+
+DataFrame::rename(feature_names: std::initializer_list<const char*>) -> DataFrame
+
+DataFrame::rename(old_name: std::string_view, new_name: std::string) -> DataFrame
+
+DataFrame::rename(renames: pluss::RangeView<std::pair<std::string_view, std::string_view>>) -> DataFrame
+
+DataFrame::rename(renames: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> DataFrame
 ```
 
 #### Notes
 
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`feature` : `std::string_view`
-    Name of the source feature used by the operation.
-
-`pattern` : `std::string_view`
-    Pattern string used for matching or extraction.
-
-`names` : `pluss::RangeView<std::string_view>`
-    Collection of feature, slot, or stream names supplied in positional order.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with one named feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.regex_groups();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `reindex_cases`
-
-#### API Signature
-
-```cpp
-DataFrame::reindex_cases(new_cases: const Thread&) -> DataFrame
-```
-
-#### Notes
-
-Builds a new case axis from the supplied labels and aligns rows onto that case order.
-
-#### Inputs
-
-`new_cases` : `const Thread&`
-    Replacement case labels in the exact order you want the rows to follow.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));
-auto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));
-auto out = df.reindex_cases(cases);
-```
-
-##### Expected output
-
-```text
-df.cases():
-["cs0", "cs1", "cs2"]
-
-out.cases():
-["cs1", "cs0", "cs2"]
-
-out.head():
-id  sales  city
-2   120.0  Tema
-1   100.0  Accra
-3    90.0  Kumasi
-```
-
-### `reindex_like`
-
-#### API Signature
-
-```cpp
-DataFrame::reindex_like(other: const DataFrame&) -> DataFrame
-```
-
-#### Notes
-
-Realigns this frame so its cases match another frame.
-
-#### Inputs
-
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
-});
-
-auto out = left.reindex_like(right);
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `relabel_features`
-
-#### API Signature
-
-```cpp
-DataFrame::relabel_features(feature_names: pluss::RangeView<std::string_view>) -> DataFrame
-```
-
-#### Notes
-
-Replaces the full feature label set with the supplied names in positional order.
+Renames one feature, several features, or the full feature axis without changing row values.
 
 #### Inputs
 
 `feature_names` : `pluss::RangeView<std::string_view>`
     Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.relabel_features({"revenue", "location", "id_new"});
-```
-
-##### Expected output
-
-```text
-revenue  location  id_new
-100.0    Accra     1
-120.0    Tema      2
-90.0     Kumasi    3
-```
-
-### `rename`
-
-#### API Signature
-
-```cpp
-DataFrame::rename(old_name: std::string_view, new_name: std::string) -> DataFrame
-```
-
-#### Notes
-
-Renames one feature without changing its values.
-
-#### Inputs
 
 `old_name` : `std::string_view`
     Existing feature name to rename.
@@ -10835,6 +8592,9 @@ Renames one feature without changing its values.
 `new_name` : `std::string`
     Replacement feature name.
 
+`renames` : `pluss::RangeView<std::pair<std::string_view, std::string_view>>`
+    Collection of `(old_name, new_name)` pairs applied in one rename pass.
+
 #### Output
 
 `DataFrame`
@@ -10847,6 +8607,86 @@ Option and enum values, when present, are listed with their effects under **Inpu
 #### Examples
 
 Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.rename("sales", "revenue");
+```
+
+##### Expected output
+
+```text
+id  revenue  city
+1   100.0    Accra
+2   120.0    Tema
+3    90.0    Kumasi
+```
+Example 2. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.rename("sales", "revenue");
+```
+
+##### Expected output
+
+```text
+id  revenue  city
+1   100.0    Accra
+2   120.0    Tema
+3    90.0    Kumasi
+```
+Example 3. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.rename("sales", "revenue");
+```
+
+##### Expected output
+
+```text
+id  revenue  city
+1   100.0    Accra
+2   120.0    Tema
+3    90.0    Kumasi
+```
+Example 4. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.rename("sales", "revenue");
+```
+
+##### Expected output
+
+```text
+id  revenue  city
+1   100.0    Accra
+2   120.0    Tema
+3    90.0    Kumasi
+```
+Example 5. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -10919,22 +8759,24 @@ id  revenue  city
 3    90.0    Kumasi
 ```
 
-### `rename_features`
+### `rename_levels`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
-DataFrame::rename_features(renames: pluss::RangeView<std::pair<std::string_view, std::string_view>>) -> DataFrame
+DataFrame::rename_levels(renames: pluss::RangeView<LevelRename>) -> DataFrame
+
+DataFrame::rename_levels(renames: std::initializer_list<LevelRename>) -> DataFrame
 ```
 
 #### Notes
 
-Renames several features in one call.
+Use this method through the public contract shown above.
 
 #### Inputs
 
-`renames` : `pluss::RangeView<std::pair<std::string_view, std::string_view>>`
-    Collection of `(old_name, new_name)` pairs applied in one rename pass.
+`renames` : `pluss::RangeView<LevelRename>`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 #### Output
 
@@ -10956,16 +8798,36 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.rename_features({{"sales", "revenue"}, {"city", "location"}});
+auto out = df.rename_levels();
 ```
 
 ##### Expected output
 
 ```text
-id  revenue  location
-1   100.0    Accra
-2   120.0    Tema
-3    90.0    Kumasi
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 2. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.rename_levels();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
 ```
 
 ### `reorder`
@@ -11127,6 +8989,77 @@ col_25  col_10  col_1  col_2  col_3  col_4  col_20  col_5  col_6  col_7  col_8  
 - Use the multi-spec overload when you want to apply several moves in one call from left to right.
 - This avoids listing a 3000-feature schema just to reposition two columns.
 
+
+### `reorder_levels`
+
+#### API Signatures
+
+```cpp
+DataFrame::reorder_levels(names: pluss::RangeView<std::string_view>) -> DataFrame
+
+DataFrame::reorder_levels(names: std::initializer_list<std::string_view>) -> DataFrame
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`names` : `pluss::RangeView<std::string_view>`
+    Collection of feature, slot, or stream names supplied in positional order.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.reorder_levels();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 2. Pass several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.reorder_levels();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
 
 ### `repeated_cases`
 
@@ -11682,7 +9615,7 @@ midterm_1  midterm_2  city
 #### API Signature
 
 ```cpp
-DataFrame::resample(time_feature: std::string_view, value_features: pluss::RangeView<std::string_view>, freq: std::string_view, op: std::string_view = "mean", step: std::int64_t = 1, render: bool = true) -> DataFrameView
+DataFrame::resample(time_feature: std::string_view, value_features: pluss::RangeView<std::string_view>, freq: std::string_view, op: std::string_view = "mean", step: std::int64_t = 1, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -11763,10 +9696,12 @@ ts                   load
 
 ### `reset_cases`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
 DataFrame::reset_cases(case_feature: std::string = "case") -> DataFrame
+
+DataFrame::reset_cases(options: const ResetCasesOptions&) -> DataFrame
 ```
 
 #### Notes
@@ -11777,6 +9712,9 @@ Materializes the current case axis as a normal feature, then restores the defaul
 
 `case_feature` : `std::string`
     Name to use for the restored case-axis feature when the current cases are materialized back into ordinary columns.
+
+`options` : `const ResetCasesOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Output
 
@@ -11817,13 +9755,41 @@ id  sales  case
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+Example 2. Pass an explicit options object to control the operation.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto with_cases = df.set_cases("city", true);
+auto out = with_cases.reset_cases("case");
+```
+
+##### Expected output
+
+```text
+with_cases.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.cases():
+[0, 1, 2]
+
+out.head():
+id  sales  case
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
 
 ### `reshuffle`
 
 #### API Signature
 
 ```cpp
-DataFrame::reshuffle(axis: int = 0, random_state: std::optional<std::uint64_t> = std::nullopt) -> DataFrame
+DataFrame::reshuffle(axis: Axis = Axis::Case, random_state: std::optional<std::uint64_t> = std::nullopt) -> DataFrame
 ```
 
 #### Notes
@@ -11832,7 +9798,7 @@ Use this method through the public contract shown above.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Shuffle axis. Use `0` to permute rows and `1` to permute feature order.
 
 `random_state` : `std::optional<std::uint64_t>`
@@ -12088,12 +10054,12 @@ sales_roll
 - Each `WindowSpec` controls the output name, source feature, operation, window width, and minimum observation rule.
 
 
-### `round_time`
+### `round`
 
 #### API Signature
 
 ```cpp
-DataFrame::round_time(features: pluss::RangeView<std::string_view>, unit: std::string_view) -> DataFrame
+DataFrame::round(features: pluss::RangeView<std::string_view>, unit: std::string_view) -> DataFrame
 ```
 
 #### Notes
@@ -12123,24 +10089,21 @@ Example 1. Work with a selected feature subset.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.round_time({"ts"}, "hour");
+auto out = df.round();
 ```
 
 ##### Expected output
 
 ```text
-ts
-2024-01-01T09:00:00Z
-2024-01-01T10:00:00Z
-2024-01-01T10:00:00Z
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
 ```
 
 ### `rpow`
@@ -12287,202 +10250,6 @@ a         b
 3.333333  2.0
 ```
 
-### `running_maximum`
-
-#### API Signature
-
-```cpp
-DataFrame::running_maximum(skip_nulls: bool = true) -> DataFrame
-```
-
-#### Notes
-
-Computes the maximum observed so far down each numeric feature.
-
-#### Inputs
-
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.running_maximum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `running_minimum`
-
-#### API Signature
-
-```cpp
-DataFrame::running_minimum(skip_nulls: bool = true) -> DataFrame
-```
-
-#### Notes
-
-Computes the minimum observed so far down each numeric feature.
-
-#### Inputs
-
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.running_minimum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `running_product`
-
-#### API Signature
-
-```cpp
-DataFrame::running_product(skip_nulls: bool = true) -> DataFrame
-```
-
-#### Notes
-
-Computes a cumulative product down each numeric feature.
-
-#### Inputs
-
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.running_product();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `running_sum`
-
-#### API Signature
-
-```cpp
-DataFrame::running_sum(skip_nulls: bool = true) -> DataFrame
-```
-
-#### Notes
-
-Computes a cumulative sum down each numeric feature.
-
-#### Inputs
-
-`skip_nulls` : `bool`
-    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.running_sum();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
 ## S
 
 ### `sample`
@@ -12492,15 +10259,15 @@ id  sales  city
 ```cpp
 DataFrame::sample(frac: Float) -> template <class Float> requires std::floating_point<Float> DataFrame
 
-DataFrame::sample(frac: Float, random_state: std::uint64_t, replace: bool = false, axis: int = 0) -> template <class Float> requires std::floating_point<Float> DataFrame
+DataFrame::sample(frac: Float, random_state: std::uint64_t, replace: bool = false, axis: Axis = Axis::Case) -> template <class Float> requires std::floating_point<Float> DataFrame
 
-DataFrame::sample(frac: Float, replace: bool, axis: int) -> template <class Float> requires std::floating_point<Float> DataFrame
+DataFrame::sample(frac: Float, replace: bool, axis: Axis) -> template <class Float> requires std::floating_point<Float> DataFrame
 
 DataFrame::sample(n: std::int64_t) -> DataFrame
 
-DataFrame::sample(n: std::int64_t, random_state: std::uint64_t, replace: bool = false, axis: int = 0) -> DataFrame
+DataFrame::sample(n: std::int64_t, random_state: std::uint64_t, replace: bool = false, axis: Axis = Axis::Case) -> DataFrame
 
-DataFrame::sample(n: std::int64_t, replace: bool, axis: int) -> DataFrame
+DataFrame::sample(n: std::int64_t, replace: bool, axis: Axis) -> DataFrame
 ```
 
 #### Notes
@@ -12518,7 +10285,7 @@ Returns a random sample of rows.
 `replace` : `bool`
     When `true`, the same row may be drawn more than once. Feature sampling currently requires `replace=false`.
 
-`axis` : `int`
+`axis` : `Axis`
     Sampling axis. Use `0` for rows and `1` for features.
 
 `n` : `std::int64_t`
@@ -12638,7 +10405,7 @@ sales  city
 120.0  Tema
 90.0   Kumasi
 ```
-Example 6. Sample rows or features while controlling replacement and axis directly.
+Example 6. Sample rows with the default settings.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -12647,23 +10414,15 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto rows = df.sample(2, false, 0);
-auto cols = df.sample(2, false, 1);
+auto out = df.sample(2);
 ```
 
 ##### Expected output
 
 ```text
-rows.head():
 id  sales  city
 1   100.0  Accra
 3    90.0  Kumasi
-
-cols.head():
-sales  city
-100.0  Accra
-120.0  Tema
-90.0   Kumasi
 ```
 
 #### Practical Behavior
@@ -13335,6 +11094,110 @@ df.save_txt("path/to/output.txt", {"indent", 2});
 saved: out.*
 ```
 
+### `scan`
+
+#### API Signature
+
+```cpp
+DataFrame::scan(statistic: ScanStatistic, skip_nulls: bool = true) -> DataFrame
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`statistic` : `ScanStatistic`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`skip_nulls` : `bool`
+    When `true`, a null output remains null only at that case and later cumulative values resume; when `false`, every output after the first null is null.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.scan();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `se`
+
+#### API Signature
+
+```cpp
+DataFrame::se(axis: Axis = Axis::Feature, target: ErrorTarget = ErrorTarget::Mean, options: const StatisticOptions& = {}) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`target` : `ErrorTarget`
+    Target payload family chosen by this cast overload.
+
+`options` : `const StatisticOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Pass an explicit options object to control the operation.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.se();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `select`
 
 #### API Signature
@@ -13709,10 +11572,16 @@ revenue  location  id_new
 
 ### `set_cases`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
-DataFrame::set_cases(feature_name: std::string_view, drop_feature: bool = true) -> DataFrame
+DataFrame::set_cases(feature_name: std::string_view, drop_feature: bool = false) -> DataFrame
+
+DataFrame::set_cases(feature_names: pluss::RangeView<std::string_view>, drop_features: bool = false, separator: std::string_view = "\x1F") -> DataFrame
+
+DataFrame::set_cases(feature_names: std::initializer_list<std::string_view>, drop_features: bool = false, separator: std::string_view = "\x1F") -> DataFrame
+
+DataFrame::set_cases(options: const SetCasesOptions&) -> DataFrame
 ```
 
 #### Notes
@@ -13726,6 +11595,18 @@ Promotes one feature to become the case axis. With the default `drop_feature=tru
 
 `drop_feature` : `bool`
     When `true`, the feature promoted to cases is removed from the ordinary feature columns.
+
+`feature_names` : `pluss::RangeView<std::string_view>`
+    Feature name(s) supplied explicitly for subset, ordering, or axis-replacement operations, depending on the method.
+
+`drop_features` : `bool`
+    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
+
+`separator` : `std::string_view`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`options` : `const SetCasesOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Output
 
@@ -13768,36 +11649,7 @@ id  sales
 2   120.0
 3    90.0
 ```
-
-### `set_feature_axis`
-
-#### API Signature
-
-```cpp
-DataFrame::set_feature_axis(feature_names: pluss::RangeView<std::string_view>) -> DataFrame
-```
-
-#### Notes
-
-Replaces the full feature label set with the supplied names in positional order.
-
-#### Inputs
-
-`feature_names` : `pluss::RangeView<std::string_view>`
-    Full replacement feature-label list in final left-to-right order. The count must match the current number of features.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+Example 2. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -13806,16 +11658,86 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.set_feature_axis({"revenue", "location", "id_new"});
+auto out = df.set_cases("city");
 ```
 
 ##### Expected output
 
 ```text
-revenue  location  id_new
-100.0    Accra     1
-120.0    Tema      2
-90.0     Kumasi    3
+df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+
+out.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.head():
+id  sales
+1   100.0
+2   120.0
+3    90.0
+```
+Example 3. Pass several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.set_cases("city");
+```
+
+##### Expected output
+
+```text
+df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+
+out.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.head():
+id  sales
+1   100.0
+2   120.0
+3    90.0
+```
+Example 4. Pass an explicit options object to control the operation.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.set_cases("city");
+```
+
+##### Expected output
+
+```text
+df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+
+out.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.head():
+id  sales
+1   100.0
+2   120.0
+3    90.0
 ```
 
 ### `set_features`
@@ -13993,6 +11915,8 @@ id  sales  city    profit
 #### API Signatures
 
 ```cpp
+DataFrame::shift(features: pluss::RangeView<std::string_view>, periods: int, freq: std::string_view) -> DataFrame
+
 DataFrame::shift(features: pluss::RangeView<std::string_view>, periods: std::int64_t = 1) -> DataFrame
 
 DataFrame::shift(periods: std::int64_t = 1) -> DataFrame
@@ -14000,15 +11924,18 @@ DataFrame::shift(periods: std::int64_t = 1) -> DataFrame
 
 #### Notes
 
-Use this method through the public contract shown above.
+This is part of the time-aware surface and expects timeline or time-index semantics.
 
 #### Inputs
 
 `features` : `pluss::RangeView<std::string_view>`
     Feature name(s) that select the target DataFrame columns for the operation.
 
-`periods` : `std::int64_t`
+`periods` : `int`
     Number of rows to shift selected feature values. Positive values move values downward and introduce missing entries at the top; negative values move upward.
+
+`freq` : `std::string_view`
+    Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.
 
 #### Output
 
@@ -14041,7 +11968,27 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 ```
-Example 2. Shift every compatible column by a fixed number of rows.
+Example 2. Shift only selected columns by a fixed number of rows.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.shift({"sales"}, 2);
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 3. Shift every compatible column by a fixed number of rows.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -14060,64 +12007,6 @@ id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
-```
-
-### `shift_time`
-
-#### API Signature
-
-```cpp
-DataFrame::shift_time(features: pluss::RangeView<std::string_view>, periods: int, freq: std::string_view) -> DataFrame
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-`periods` : `int`
-    Number of row or time steps to shift forward or backward. Positive values usually move data down or later; negative values move it up or earlier.
-
-`freq` : `std::string_view`
-    Bin or calendar frequency such as `"1h"`, `"D"`, `"W"`, or `"M"`.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
-        "2024-01-01T09:10:00Z",
-        "2024-01-01T09:40:00Z",
-        "2024-01-01T10:05:00Z",
-    }))},
-    {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
-});
-
-auto out = df.shift_time({"ts"}, 1, "hour");
-```
-
-##### Expected output
-
-```text
-ts
-2024-01-01T10:10:00Z
-2024-01-01T10:40:00Z
-2024-01-01T11:05:00Z
 ```
 
 ### `show`
@@ -14250,6 +12139,55 @@ id  sales  city
 - It is equivalent to `reshuffle(axis=0, ...)`, but reads more directly in train/test split and stochastic preview workflows.
 
 
+### `skew`
+
+#### API Signature
+
+```cpp
+DataFrame::skew(axis: Axis = Axis::Feature, min_count: std::int64_t = 3) -> Thread
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`min_count` : `std::int64_t`
+    Minimum non-null observations required before a grouped or rolling summary is considered valid.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.skew();
+```
+
+##### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `slice`
 
 #### API Signature
@@ -14304,10 +12242,12 @@ id  sales  city
 
 ### `sort_cases`
 
-#### API Signature
+#### API Signatures
 
 ```cpp
 DataFrame::sort_cases(ascending: bool = true, nulls_last: bool = true) -> DataFrame
+
+DataFrame::sort_cases(options: const SortCasesOptions&) -> DataFrame
 ```
 
 #### Notes
@@ -14322,6 +12262,9 @@ Sorts rows by the current case axis rather than by a data feature.
 `nulls_last` : `bool`
     When `true`, null case labels are placed after observed labels. When `false`, they are placed first.
 
+`options` : `const SortCasesOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
 #### Output
 
 `DataFrame`
@@ -14334,6 +12277,34 @@ Option and enum values, when present, are listed with their effects under **Inpu
 #### Examples
 
 Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto with_cases = df.with_cases(pluss::table::Thread(pluss::make_note({"cs2", "cs0", "cs1"})));
+auto out = with_cases.sort_cases(true, true);
+```
+
+##### Expected output
+
+```text
+with_cases.cases():
+["cs2", "cs0", "cs1"]
+
+out.cases():
+["cs0", "cs1", "cs2"]
+
+out.head():
+id  sales  city
+2   120.0  Tema
+3    90.0  Kumasi
+1   100.0  Accra
+```
+Example 2. Pass an explicit options object to control the operation.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -14442,64 +12413,6 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-### `split_feature`
-
-#### API Signature
-
-```cpp
-DataFrame::split_feature(feature: std::string_view, delimiter: std::string_view, limit: std::int64_t = -1, prefix: std::string = "part") -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`feature` : `std::string_view`
-    Name of the source feature used by the operation.
-
-`delimiter` : `std::string_view`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`limit` : `std::int64_t`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`prefix` : `std::string`
-    Text prefix inserted ahead of the existing label or value.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with one named feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.split_feature();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
 ### `sql`
 
 #### API Signatures
@@ -14578,39 +12491,29 @@ id  sales
 - Use `prepare_sql(...)` when the same query will be executed repeatedly with changing bindings.
 
 
-### `std`
+### `stack`
 
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::std(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::std(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::std(render: bool = true) -> DataFrameView
+DataFrame::stack(feature_name: std::string = "feature", value_name: std::string = "value") -> DataFrame
 ```
 
 #### Notes
 
-Computes per-feature standard deviations for the selected numeric features.
+Use this method through the public contract shown above.
 
 #### Inputs
 
-`axis` : `int`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+`feature_name` : `std::string`
+    Name of the target feature to read, rewrite, sort by, or promote to cases.
 
-`skipna` : `bool`
-    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
-
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
+`value_name` : `std::string`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
 #### Output
 
-`Thread`
-    Value produced by this call.
-
-`DataFrameView`
+`DataFrame`
     Value produced by this call.
 
 #### Options
@@ -14619,15 +12522,73 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `std` across rows instead of returning one summary value per numeric column.
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.std(1, true);
+auto out = df.stack();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `std`
+
+#### API Signatures
+
+```cpp
+DataFrame::std(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
+
+DataFrame::std(axis: Axis, options: const StatisticOptions&) -> Thread
+```
+
+#### Notes
+
+Computes per-feature standard deviations for the selected numeric features.
+
+#### Inputs
+
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`skipna` : `bool`
+    When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
+
+`options` : `const StatisticOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`Thread`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Compute `std` for each numeric column in the frame.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.std(false);
 ```
 
 ##### Expected output
@@ -14637,25 +12598,7 @@ feature  value
 id       1.0
 sales    15.275252317
 ```
-Example 2. Compute `std` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.std(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       1.0
-sales    15.275252317
-```
-Example 3. Compute `std` for each numeric column in the frame.
+Example 2. Compute `std` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -14681,123 +12624,6 @@ sales    15.275252317
 - Non-numeric features are skipped rather than coerced.
 - The output stays in DataFrame form, which makes these reducers easy to reuse in downstream frame pipelines.
 
-
-### `stitch_on`
-
-#### API Signatures
-
-```cpp
-DataFrame::stitch_on(left_feature: std::string_view, right: const DataFrame&, right_feature: std::string_view = "", right_suffix: std::string = "_right") -> DataFrame
-
-DataFrame::stitch_on(left_features: pluss::RangeView<std::string_view>, right: const DataFrame&, right_features: pluss::RangeView<std::string_view> = {}, right_suffix: std::string = "_right") -> DataFrame
-
-DataFrame::stitch_on(left_features: std::initializer_list<std::string_view>, right: const DataFrame&, right_features: std::initializer_list<std::string_view> = {}, right_suffix: std::string = "_right") -> DataFrame
-```
-
-#### Notes
-
-Matches rows from two frames using key features and appends the matched features from the right-hand frame.
-
-#### Inputs
-
-`left_feature` : `std::string_view`
-    Key feature on the left frame used to match rows against the right frame.
-
-`right` : `const DataFrame&`
-    When `true`, intervals are right-closed. When `false`, they are left-closed and right-open.
-
-`right_feature` : `std::string_view`
-    Matching key feature on the right frame. Leave empty to reuse the left feature name.
-
-`right_suffix` : `std::string`
-    Suffix added to right-hand feature names only when a non-key right feature would otherwise collide with an existing left feature name.
-
-`left_features` : `pluss::RangeView<std::string_view>`
-    Key features on the left frame used to build a composite match key against the right frame.
-
-`right_features` : `pluss::RangeView<std::string_view>`
-    Matching key features on the right frame. Leave empty to reuse the left feature names in the same order.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Attach right-hand features by matching on one key feature.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
-});
-
-auto out = left.stitch_on("id", right, "id", "_right");
-```
-
-##### Expected output
-
-```text
-id  sales  cost
-1   100.0  60.0
-2   120.0  80.0
-3    90.0  55.0
-```
-Example 2. Attach right-hand features by matching on one key feature.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
-});
-
-auto out = left.stitch_on("id", right, "id", "_right");
-```
-
-##### Expected output
-
-```text
-id  sales  cost
-1   100.0  60.0
-2   120.0  80.0
-3    90.0  55.0
-```
-Example 3. Attach right-hand features by matching on several key features listed inline.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
-});
-
-auto out = left.stitch_on({"id"}, right, {"id"}, "_right");
-```
-
-##### Expected output
-
-```text
-id  sales  cost
-1   100.0  60.0
-2   120.0  80.0
-3    90.0  55.0
-```
 
 ### `sub`
 
@@ -14873,90 +12699,12 @@ id  sales  city
 -7  80.0   Kumasi
 ```
 
-### `subtract`
-
-#### API Signatures
-
-```cpp
-DataFrame::subtract(other: const DataFrame&) -> DataFrame
-
-DataFrame::subtract(other: double) -> DataFrame
-```
-
-#### Notes
-
-This applies arithmetic across the compatible numeric payloads in the current object.
-
-#### Inputs
-
-`other` : `const DataFrame&`
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Subtract each compatible numeric cell against another aligned frame.
-
-```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
-});
-
-auto out = left.subtract(right);
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-Example 2. Subtract each compatible numeric cell against one broadcast scalar value.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.subtract(10);
-```
-
-##### Expected output
-
-```text
-id  sales  city
--9  90.0   Accra
--8  110.0  Tema
--7  80.0   Kumasi
-```
-
 ### `sum`
 
-#### API Signatures
+#### API Signature
 
 ```cpp
-DataFrame::sum(axis: int, skipna: bool = true) -> Thread
-
-DataFrame::sum(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::sum(render: bool = true) -> DataFrameView
+DataFrame::sum(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 ```
 
 #### Notes
@@ -14965,21 +12713,15 @@ Computes per-feature sums for the selected numeric features.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
-
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -14988,43 +12730,7 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `sum` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.sum(1, true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       6
-sales    310.0
-```
-Example 2. Compute `sum` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.sum(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       6
-sales    310.0
-```
-Example 3. Compute `sum` for each numeric column in the frame.
+Example 1. Compute `sum` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -15132,7 +12838,7 @@ sales
 #### API Signature
 
 ```cpp
-DataFrame::tail(n: std::int64_t = 5, render: bool = true) -> DataFrameView
+DataFrame::tail(n: std::int64_t = 5, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -15184,55 +12890,6 @@ id  sales  city
 - If `n` is larger than the frame height, the whole frame is returned.
 - The returned object is a `DataFrameView`, so it behaves like a lightweight preview slice rather than a deep copy.
 
-
-### `tail_weight`
-
-#### API Signature
-
-```cpp
-DataFrame::tail_weight(axis: std::int64_t = 0, min_count: std::int64_t = 4) -> Thread
-```
-
-#### Notes
-
-Computes bias-corrected Fisher excess kurtosis across cases or features.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.tail_weight();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
 
 ### `take`
 
@@ -15288,11 +12945,11 @@ id  sales  city
 #### API Signatures
 
 ```cpp
-DataFrame::tally(feature: std::string_view, top_n: std::int64_t = 0, dropna: bool = true, render: bool = true) -> DataFrameView
+DataFrame::tally(feature: std::string_view, top_n: std::int64_t = 0, dropna: bool = true, render: bool = false) -> DataFrameView
 
-DataFrame::tally(features: pluss::RangeView<std::string_view>, top_n: std::int64_t = 0, dropna: bool = true, render: bool = true) -> DataFrameView
+DataFrame::tally(features: pluss::RangeView<std::string_view>, top_n: std::int64_t = 0, dropna: bool = true, render: bool = false) -> DataFrameView
 
-DataFrame::tally(top_n: std::int64_t = 0, dropna: bool = true, render: bool = true) -> DataFrameView
+DataFrame::tally(top_n: std::int64_t = 0, dropna: bool = true, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -15383,752 +13040,6 @@ auto out = df.tally(3, true, false);
 city    count
 Accra   2
 Tema    2
-```
-
-### `text_casefold`
-
-#### API Signature
-
-```cpp
-DataFrame::text_casefold(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_casefold();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_encode`
-
-#### API Signature
-
-```cpp
-DataFrame::text_encode(encoding: std::string_view = "base64", features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`encoding` : `std::string_view`
-    Text encoding used when reading or writing text-based files.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_encode();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_ends_with`
-
-#### API Signature
-
-```cpp
-DataFrame::text_ends_with(suffix: std::string_view, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`suffix` : `std::string_view`
-    Text suffix appended after the existing label or value.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_ends_with();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_indicators`
-
-#### API Signature
-
-```cpp
-DataFrame::text_indicators(feature: std::string_view, delimiter: std::string_view = "|", prefix: std::string = "") -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`feature` : `std::string_view`
-    Name of the source feature used by the operation.
-
-`delimiter` : `std::string_view`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`prefix` : `std::string`
-    Text prefix inserted ahead of the existing label or value.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with one named feature.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_indicators();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_lengths`
-
-#### API Signature
-
-```cpp
-DataFrame::text_lengths(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_lengths();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_matches`
-
-#### API Signature
-
-```cpp
-DataFrame::text_matches(pattern: std::string_view, full: bool = false, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`pattern` : `std::string_view`
-    Pattern string used for matching or extraction.
-
-`full` : `bool`
-    Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_matches();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_normalize`
-
-#### API Signature
-
-```cpp
-DataFrame::text_normalize(form: UnicodeForm = UnicodeForm::NFC, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`form` : `UnicodeForm`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_normalize();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_pad`
-
-#### API Signature
-
-```cpp
-DataFrame::text_pad(width: std::int64_t, align: TextAlign = TextAlign::Left, fill: char = ' ', features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`width` : `std::int64_t`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`align` : `TextAlign`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`fill` : `char`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_pad();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_slice`
-
-#### API Signature
-
-```cpp
-DataFrame::text_slice(start: std::int64_t, stop: std::optional<std::int64_t> = std::nullopt, step: std::int64_t = 1, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::optional<std::int64_t>`
-    Exclusive ending position of the slice.
-
-`step` : `std::int64_t`
-    Positive frequency multiplier. For example, `6` with hourly frequency means six-hour bins.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_slice();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_starts_with`
-
-#### API Signature
-
-```cpp
-DataFrame::text_starts_with(prefix: std::string_view, features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`prefix` : `std::string_view`
-    Text prefix inserted ahead of the existing label or value.
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_starts_with();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_title`
-
-#### API Signature
-
-```cpp
-DataFrame::text_title(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_title();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `text_upper`
-
-#### API Signature
-
-```cpp
-DataFrame::text_upper(features: pluss::RangeView<std::string_view> = {}) -> DataFrame
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Work with a selected feature subset.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.text_upper();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `time_moving`
-
-#### API Signature
-
-```cpp
-DataFrame::time_moving(time_feature: std::string_view, duration_nanos: std::int64_t, statistic: TimeWindowStatistic = TimeWindowStatistic::Mean, options: const StatisticOptions& = {}, closure: WindowClosure = WindowClosure::Right) -> DataFrame
-```
-
-#### Notes
-
-Computes a selected statistic over a nanosecond-duration window on a monotonic temporal feature.
-
-#### Inputs
-
-`time_feature` : `std::string_view`
-    Name of the Timeline or TimeIndex feature that defines the resampling, alignment, or calendar axis.
-
-`duration_nanos` : `std::int64_t`
-    Positive time-window width expressed in nanoseconds. The interval is open on the left and closed on the current observation.
-
-`statistic` : `TimeWindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-`closure` : `WindowClosure`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.time_moving();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
-```
-
-### `time_moving_mean`
-
-#### API Signature
-
-```cpp
-DataFrame::time_moving_mean(time_feature: std::string_view, duration_nanos: std::int64_t, min_count: std::int64_t = 1) -> DataFrame
-```
-
-#### Notes
-
-Computes moving means over a nanosecond-duration window on a monotonic temporal feature.
-
-#### Inputs
-
-`time_feature` : `std::string_view`
-    Name of the Timeline or TimeIndex feature that defines the resampling, alignment, or calendar axis.
-
-`duration_nanos` : `std::int64_t`
-    Positive time-window width expressed in nanoseconds. The interval is open on the left and closed on the current observation.
-
-`min_count` : `std::int64_t`
-    Minimum non-null observations required before a grouped or rolling summary is considered valid.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.time_moving_mean();
-```
-
-##### Expected output
-
-```text
-id  sales  city
-1   100.0  Accra
-2   120.0  Tema
-3    90.0  Kumasi
 ```
 
 ### `timeline_features`
@@ -16328,6 +13239,124 @@ id  sales  city
 - `title_("...")` mutates the current frame title in place.
 
 
+### `tl`
+
+#### API Signatures
+
+```cpp
+DataFrame::tl(feature: std::string_view) -> DataFrameTimelineAccessor
+
+DataFrame::tl(features: const std::vector<std::string>&) -> DataFrameTimelineAccessor
+
+DataFrame::tl(features: pluss::RangeView<std::string_view> = {}) -> DataFrameTimelineAccessor
+
+DataFrame::tl(features: std::initializer_list<std::string_view>) -> DataFrameTimelineAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`feature` : `std::string_view`
+    Name of the source feature used by the operation.
+
+`features` : `const std::vector<std::string>&`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Output
+
+`DataFrameTimelineAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Work with one named feature.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.tl();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 2. Pass several names together from a standard string container.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.tl();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 3. Work with a selected feature subset.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.tl();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 4. Pass several feature names inline.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.tl();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
 ### `to_string`
 
 #### API Signature
@@ -16497,7 +13526,13 @@ DataFrame::transform(feature: std::string_view, fn: const std::function<Thread(c
 
 DataFrame::transform(feature: std::string_view, fn: const std::function<Thread(const Thread&)>&) -> DataFrame
 
+DataFrame::transform(fn: const std::function<DataFrame(const DataFrame&)>&, axis: Axis, shape: ResultShape = ResultShape::Infer) -> DataFrame
+
 DataFrame::transform(fn: const std::function<Thread(const Thread&)>&) -> DataFrame
+
+DataFrame::transform(fn: const std::function<Thread(const Thread&)>&, axis: Axis) -> DataFrame
+
+DataFrame::transform(fn: const std::function<ThreadValue(const DataFrame&)>&, axis: Axis) -> Thread
 
 DataFrame::transform(specs: pluss::RangeView<TransformSpec>) -> DataFrame
 ```
@@ -16514,12 +13549,21 @@ Rewrites one feature, several features, or all features by applying a user funct
 `fn` : `const std::function<Thread(const DataFrame&)>&`
     Thread-to-thread or frame-to-thread transform function, depending on the overload. The returned thread must match the frame case count.
 
+`axis` : `Axis`
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
+`shape` : `ResultShape`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
 `specs` : `pluss::RangeView<TransformSpec>`
     Collection of structured operation specs. Each element describes one requested summary, derive, transform, group, or placement rule depending on the method.
 
 #### Output
 
 `DataFrame`
+    Value produced by this call.
+
+`Thread`
     Value produced by this call.
 
 #### Options
@@ -16568,7 +13612,7 @@ id  sales  city
 2   110.0  Tema
 3    90.0  Kumasi
 ```
-Example 3. Rewrite every feature with the same thread-level transform.
+Example 3. Rewrite one named feature with a thread-level transform.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -16588,7 +13632,67 @@ id  sales  city
 2   110.0  Tema
 3    90.0  Kumasi
 ```
-Example 4. Rewrite one or more selected features with structured transform specs.
+Example 4. Rewrite every feature with the same thread-level transform.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.transform([](const pluss::table::Thread& thread) { return thread.kind() == pluss::table::ThreadKind::Series ? thread.clip(0.0, 110.0) : thread; });
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   110.0  Tema
+3    90.0  Kumasi
+```
+Example 5. Rewrite every feature with the same thread-level transform.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.transform([](const pluss::table::Thread& thread) { return thread.kind() == pluss::table::ThreadKind::Series ? thread.clip(0.0, 110.0) : thread; });
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   110.0  Tema
+3    90.0  Kumasi
+```
+Example 6. Rewrite one named feature with a thread-level transform.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.transform([](const pluss::table::Thread& thread) { return thread.kind() == pluss::table::ThreadKind::Series ? thread.clip(0.0, 110.0) : thread; });
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   110.0  Tema
+3    90.0  Kumasi
+```
+Example 7. Rewrite one or more selected features with structured transform specs.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -16752,7 +13856,7 @@ id  sales  city
 ```cpp
 DataFrame::ts(feature: std::string_view) -> DataFrameTsAccessor
 
-DataFrame::ts(features: pluss::RangeView<std::string_view>) -> DataFrameTsAccessor
+DataFrame::ts(features: pluss::RangeView<std::string_view> = {}) -> DataFrameTsAccessor
 
 DataFrame::ts(features: std::initializer_list<std::string_view>) -> DataFrameTsAccessor
 ```
@@ -16792,7 +13896,7 @@ auto df = pluss::table::DataFrame({
     {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.ts("load");
+auto out = df.features({"load"}).ts();
 ```
 
 ##### Expected output
@@ -16812,7 +13916,7 @@ auto df = pluss::table::DataFrame({
     {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.ts({"load"});
+auto out = df.features({"load"}).ts();
 ```
 
 ##### Expected output
@@ -16832,7 +13936,7 @@ auto df = pluss::table::DataFrame({
     {"load", pluss::table::Thread(pluss::make_series({10.0, 20.0, 15.0}))},
 });
 
-auto out = df.ts({"load"});
+auto out = df.features({"load"}).ts();
 ```
 
 ##### Expected output
@@ -17313,6 +14417,80 @@ id  sales  city
 - This is useful when downstream APIs expect atlas depth even though you currently have only one frame.
 
 
+### `unstack`
+
+#### API Signatures
+
+```cpp
+DataFrame::unstack(level: std::string_view) -> DataFrame
+
+DataFrame::unstack(options: const UnstackOptions&) -> DataFrame
+```
+
+#### Notes
+
+Use this method through the public contract shown above.
+
+#### Inputs
+
+`level` : `std::string_view`
+    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
+
+`options` : `const UnstackOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Output
+
+`DataFrame`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### Examples
+
+Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.unstack();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+Example 2. Pass an explicit options object to control the operation.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.unstack();
+```
+
+##### Expected output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
 ### `update`
 
 #### API Signature
@@ -17375,11 +14553,9 @@ id  sales  cost
 #### API Signatures
 
 ```cpp
-DataFrame::var(axis: int, skipna: bool = true) -> Thread
+DataFrame::var(axis: Axis = Axis::Feature, skipna: bool = true) -> Thread
 
-DataFrame::var(axis: std::int64_t, skipna: bool = true) -> Thread
-
-DataFrame::var(render: bool = true) -> DataFrameView
+DataFrame::var(axis: Axis, options: const StatisticOptions&) -> Thread
 ```
 
 #### Notes
@@ -17388,21 +14564,18 @@ Computes per-feature variances for the selected numeric features.
 
 #### Inputs
 
-`axis` : `int`
+`axis` : `Axis`
     Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 `skipna` : `bool`
     When `true`, missing values are skipped during the reduction. When `false`, missing state can affect the result.
 
-`render` : `bool`
-    When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
+`options` : `const StatisticOptions&`
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 #### Output
 
 `Thread`
-    Value produced by this call.
-
-`DataFrameView`
     Value produced by this call.
 
 #### Options
@@ -17411,15 +14584,16 @@ Option and enum values, when present, are listed with their effects under **Inpu
 
 #### Examples
 
-Example 1. Compute `var` across rows instead of returning one summary value per numeric column.
+Example 1. Compute `var` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.var(1, true);
+auto out = df.var(false);
 ```
 
 ##### Expected output
@@ -17429,25 +14603,7 @@ feature  value
 id       1.0
 sales    233.333333333
 ```
-Example 2. Compute `var` across rows instead of returning one summary value per numeric column.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},
-});
-
-auto out = df.var(static_cast<std::int64_t>(1), true);
-```
-
-##### Expected output
-
-```text
-feature  value
-id       1.0
-sales    233.333333333
-```
-Example 3. Compute `var` for each numeric column in the frame.
+Example 2. Compute `var` for each numeric column in the frame.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -17474,61 +14630,12 @@ sales    233.333333333
 - The output stays in DataFrame form, which makes these reducers easy to reuse in downstream frame pipelines.
 
 
-### `variance`
-
-#### API Signature
-
-```cpp
-DataFrame::variance(axis: std::int64_t = 0, options: const StatisticOptions& = {}) -> Thread
-```
-
-#### Notes
-
-Use this method through the public contract shown above.
-
-#### Inputs
-
-`axis` : `std::int64_t`
-    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
-
-`options` : `const StatisticOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-Example 1. Pass an explicit options object to control the operation.
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.variance();
-```
-
-##### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
 ### `view`
 
 #### API Signature
 
 ```cpp
-DataFrame::view(start: std::int64_t, stop: std::int64_t, render: bool = true) -> DataFrameView
+DataFrame::view(start: std::int64_t, stop: std::int64_t, render: bool = false) -> DataFrameView
 ```
 
 #### Notes
@@ -17586,12 +14693,12 @@ id  sales  city
 
 ## W
 
-### `weighted_moving`
+### `weigh`
 
 #### API Signature
 
 ```cpp
-DataFrame::weighted_moving(weights: pluss::RangeView<double>, statistic: WindowStatistic = WindowStatistic::Mean, min_count: std::int64_t = 1) -> DataFrame
+DataFrame::weigh(weights: pluss::RangeView<double>, statistic: WindowStatistic = WindowStatistic::Mean, min_count: std::int64_t = 1) -> DataFrame
 ```
 
 #### Notes
@@ -17629,7 +14736,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.weighted_moving();
+auto out = df.weigh();
 ```
 
 ##### Expected output

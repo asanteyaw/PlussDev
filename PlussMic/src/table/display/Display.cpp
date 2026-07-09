@@ -1577,9 +1577,12 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
       "<div class=\"summary-card\"><div class=\"label\">Case Range</div><div class=\"value\">{} <span class=\"muted\">to</span> {}</div></div>",
       escape_html_(first_case),
       escape_html_(last_case));
+  const auto null_case_rows = frame.nfeatures() == 0
+                                  ? std::int64_t{0}
+                                  : frame.isnull().any(Axis::Case).sum().as_series().item<std::int64_t>();
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Null Case Rows</div><div class=\"value\">{}</div></div>",
-      frame.count_null_rows());
+      null_case_rows);
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Dtypes</div><div class=\"value\">{}</div></div>",
                       escape_html_(dtype_summary_line(dtype_counts)));
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Memory</div><div class=\"value\">{}</div></div>",
@@ -1781,12 +1784,15 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   summary.headers = {"Field", "Value"};
   summary.right_align = {false, false};
   summary.min_widths = {5, 8};
+  const auto null_case_rows = frame.nfeatures() == 0
+                                  ? std::int64_t{0}
+                                  : frame.isnull().any(Axis::Case).sum().as_series().item<std::int64_t>();
   summary.rows = {
       {"Class", "pluss::table::DataFrame"},
       {"Cases", fmt::format("{}", frame.ncases())},
       {"Features", fmt::format("{}", frame.nfeats())},
       {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
-      {"Null Case Rows", fmt::format("{}", frame.count_null_rows())},
+      {"Null Case Rows", fmt::format("{}", null_case_rows)},
       {"Dtypes", dtype_summary_line(dtype_counts)},
       {"Memory", human_bytes(memory_bytes)},
   };

@@ -190,11 +190,9 @@ public:
   Catalog bfill(std::initializer_list<std::string_view> keys = {}) const;
   Catalog isnull(std::initializer_list<std::string_view> keys = {}) const;
   Catalog notnull(std::initializer_list<std::string_view> keys = {}) const;
-  Catalog cast_series(std::initializer_list<std::string_view> keys,
-                      std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const;
-  Catalog cast_note(std::initializer_list<std::string_view> keys) const;
-  Catalog cast_timeline(std::initializer_list<std::string_view> keys) const;
-  Catalog cast_timeindex(std::initializer_list<std::string_view> keys) const;
+  Catalog cast(std::initializer_list<std::string_view> keys,
+               pluss::table::ThreadCastTarget target,
+               const pluss::table::ThreadCastOptions& options = {}) const;
   Catalog astype(std::initializer_list<std::string_view> keys,
                  pluss::codem::ScalarType dtype) const;
   Stream sum(std::string_view field) const;

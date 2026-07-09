@@ -83,14 +83,16 @@ Rule of thumb:
 ```cpp
 auto renamed_one = df.rename("sales", "revenue");
 
-auto renamed_many = df.rename_features({
+auto renamed_many = df.rename({
     {"sales", "revenue"},
     {"city", "location"},
 });
+
+auto renamed_all = df.rename({"id", "city", "revenue"});
 ```
 
-Use `rename(...)` for one feature. Use `rename_features(...)` when you have a
-mapping of old names to new names.
+Use `rename(...)` for one feature, a mapping of old names to new names, or a
+full replacement of the feature axis.
 
 ### Replace or create a column
 
@@ -155,7 +157,10 @@ see `dataframe_display.md`.
 
 ```cpp
 auto work = csv_df
-    .cast_timeline({"Business Case ID"})
+    .cast({
+        pluss::table::DataFrame::CastSpec{
+            "Business Case ID", pluss::table::ThreadCastTarget::Timeline, {}},
+    })
     .astype({{"Lifecycle Cost", pluss::codem::ScalarType::Float64}})
     .assign({
         pluss::table::DataFrame::DeriveSpec{
@@ -190,7 +195,7 @@ result.
 auto total = left.add(right);
 ```
 
-Use `matched_with(...)` when you need the matched operands themselves or want a
+Use `match(...)` when you need the matched operands themselves or want a
 different rule:
 
 ```cpp
@@ -198,7 +203,7 @@ pluss::table::FrameMatchOptions rules;
 rules.cases = pluss::table::FrameMatchRule::Common;
 rules.features = pluss::table::FrameMatchRule::KeepLeft;
 
-auto matched = left.matched_with(right, rules);
+auto matched = left.match(right, rules);
 auto total = matched.left.add(matched.right);
 ```
 
@@ -375,12 +380,12 @@ auto right = pluss::table::DataFrame({
     {"manager", pluss::table::Thread(pluss::make_note({"Ama", "Kojo"}))},
 });
 
-auto joined = left.stitch_on({"city"}, right, {"city"}, "_r");
+auto joined = left.unify({"city"}, right, {"city"}, "common", "_r");
 auto updated = left.update(right, true);
 ```
 
-`stitch_on(...)` is the inner-match join helper. For general key-based merge/join
-workflows, prefer `unify(...)`.
+`unify(...)` is the key-based merge/join helper. Use `update(...)` when the
+right frame should patch matching cells/features.
 
 ### Same-key merge
 

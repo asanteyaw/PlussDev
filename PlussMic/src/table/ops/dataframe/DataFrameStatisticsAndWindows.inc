@@ -81,7 +81,7 @@ Thread reduce_numeric_threads_(const detail::DataFrameImpl& src,
         !is_numeric_series_type(source.as_series())) {
       continue;
     }
-    auto reduced = operation(source);
+    auto reduced = operation(source).thread();
     PLUSS_CHECK(reduced.kind() == ThreadKind::Series && reduced.size() == 1,
                 std::string(where) +
                     ": Thread reduction must return one numeric value");
@@ -417,11 +417,11 @@ DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
 
 } // namespace
 
-DataFrameView DataFrame::covariance(const StatisticOptions& options, bool render) const {
-  PLUSS_CHECK(options.ddof >= 0, "DataFrame::covariance: ddof must be >= 0");
-  PLUSS_CHECK(options.min_count >= 0, "DataFrame::covariance: min_count must be >= 0");
+DataFrameView DataFrame::covar(const StatisticOptions& options, bool render) const {
+  PLUSS_CHECK(options.ddof >= 0, "DataFrame::covar: ddof must be >= 0");
+  PLUSS_CHECK(options.min_count >= 0, "DataFrame::covar: min_count must be >= 0");
   const auto& src = impl_ref_();
-  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::covariance");
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::covar");
   const auto dtype = matrix.values.scalar_type();
   const auto valid_numeric = matrix.valid.to(dtype);
   const auto feature_counts = valid_numeric.sum(0);
@@ -451,7 +451,7 @@ DataFrameView DataFrame::covariance(const StatisticOptions& options, bool render
                column_from_matrix_(valid, static_cast<std::int64_t>(i))));
   }
   auto result = DataFrame(std::move(columns), make_note_thread(matrix.names));
-  return DataFrameView(std::move(result), render, "covariance", title());
+  return DataFrameView(std::move(result), render, "covar", title());
 }
 
 DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
@@ -481,7 +481,7 @@ DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
   return DataFrame(std::move(columns), make_note_thread(labels));
 }
 
-DataFrame DataFrame::most_frequent(bool drop_nulls) const {
+DataFrame DataFrame::mode(bool drop_nulls) const {
   const auto& src = impl_ref_();
   std::vector<std::pair<std::string, Thread>> modes;
   std::int64_t output_size = 0;
@@ -492,12 +492,12 @@ DataFrame DataFrame::most_frequent(bool drop_nulls) const {
         source.kind() == ThreadKind::Note ||
         source.kind() == ThreadKind::Timeline ||
         source.kind() == ThreadKind::TimeIndex) {
-      auto values = source.most_frequent(drop_nulls);
+      auto values = source.mode(drop_nulls);
       output_size = std::max(output_size, values.size());
       modes.emplace_back(src.names_[i], std::move(values));
     }
   }
-  PLUSS_CHECK(!modes.empty(), "DataFrame::most_frequent: no supported features");
+  PLUSS_CHECK(!modes.empty(), "DataFrame::mode: no supported features");
 
   std::vector<std::pair<std::string, Thread>> columns;
   columns.reserve(modes.size());
@@ -512,28 +512,28 @@ DataFrame DataFrame::most_frequent(bool drop_nulls) const {
   return DataFrame(std::move(columns), make_note_thread(case_labels));
 }
 
-DataFrame DataFrame::ranks(RankTieRule ties,
-                           RankNullRule nulls,
-                           bool ascending,
-                           bool percentage) const {
+DataFrame DataFrame::rank(RankTieRule ties,
+                          RankNullRule nulls,
+                          bool ascending,
+                          bool percentage) const {
   return delegate_numeric_threads_(
       impl_ref_(), [&](const Thread& source) {
-        return source.ranks(ties, nulls, ascending, percentage);
+        return source.rank(ties, nulls, ascending, percentage);
       });
 }
 
-Thread DataFrame::asymmetry(std::int64_t axis, std::int64_t min_count) const {
-  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::asymmetry");
+Thread DataFrame::skew(Axis axis, std::int64_t min_count) const {
+  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::skew");
   const auto& src = impl_ref_();
   if (normalized == 0) {
     return reduce_numeric_threads_(
         src,
         [min_count](const Thread& source) {
-          return source.asymmetry(min_count);
+          return source.skew(min_count);
         },
-        "DataFrame::asymmetry");
+        "DataFrame::skew");
   }
-  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::asymmetry");
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::skew");
   auto counts = matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
   auto values = matrix.values.where(matrix.valid.logical_not(), 0.0);
   auto means = values.sum(normalized) / counts;
@@ -550,18 +550,18 @@ Thread DataFrame::asymmetry(std::int64_t axis, std::int64_t min_count) const {
   return labelled_statistic_(std::move(skew), std::move(valid), src, matrix, normalized);
 }
 
-Thread DataFrame::tail_weight(std::int64_t axis, std::int64_t min_count) const {
-  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::tail_weight");
+Thread DataFrame::kurtosis(Axis axis, std::int64_t min_count) const {
+  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::kurtosis");
   const auto& src = impl_ref_();
   if (normalized == 0) {
     return reduce_numeric_threads_(
         src,
         [min_count](const Thread& source) {
-          return source.tail_weight(min_count);
+          return source.kurtosis(min_count);
         },
-        "DataFrame::tail_weight");
+        "DataFrame::kurtosis");
   }
-  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::tail_weight");
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::kurtosis");
   auto counts = matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
   auto values = matrix.values.where(matrix.valid.logical_not(), 0.0);
   auto means = values.sum(normalized) / counts;
@@ -580,24 +580,24 @@ Thread DataFrame::tail_weight(std::int64_t axis, std::int64_t min_count) const {
   return labelled_statistic_(std::move(kurt), std::move(valid), src, matrix, normalized);
 }
 
-Thread DataFrame::variance(
-    std::int64_t axis,
+Thread DataFrame::var(
+    Axis axis,
     const StatisticOptions& options) const {
   const auto normalized =
-      normalize_reduce_axis_(axis, "DataFrame::variance");
+      normalize_reduce_axis_(axis, "DataFrame::var");
   PLUSS_CHECK(options.ddof >= 0 && options.min_count >= 0,
-              "DataFrame::variance: ddof and min_count must be >= 0");
+              "DataFrame::var: ddof and min_count must be >= 0");
   const auto& src = impl_ref_();
   if (normalized == 0) {
     return reduce_numeric_threads_(
         src,
         [&options](const Thread& source) {
-          return source.variance(options);
+          return source.var(options);
         },
-        "DataFrame::variance");
+        "DataFrame::var");
   }
   const auto matrix =
-      numeric_reduce_matrix_(src, "DataFrame::variance");
+      numeric_reduce_matrix_(src, "DataFrame::var");
   const auto counts =
       matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
   const auto values =
@@ -616,30 +616,33 @@ Thread DataFrame::variance(
       result.clamp_min(0.0), valid, src, matrix, normalized);
 }
 
-Thread DataFrame::deviation(
-    std::int64_t axis,
+Thread DataFrame::std(
+    Axis axis,
     const StatisticOptions& options) const {
-  const auto result = variance(axis, options);
+  const auto result = var(axis, options);
   return Thread(
              result.as_series().clamp_min(0.0).sqrt(),
              result.validity_mask())
       .with_display_labels(result.display_labels());
 }
 
-Thread DataFrame::mean_error(std::int64_t axis,
-                             const StatisticOptions& options) const {
-  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::mean_error");
-  PLUSS_CHECK(options.ddof >= 0, "DataFrame::mean_error: ddof must be >= 0");
+Thread DataFrame::se(Axis axis,
+                     ErrorTarget target,
+                     const StatisticOptions& options) const {
+  PLUSS_CHECK(target == ErrorTarget::Mean,
+              "DataFrame::se: only ErrorTarget::Mean is currently supported");
+  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::se");
+  PLUSS_CHECK(options.ddof >= 0, "DataFrame::se: ddof must be >= 0");
   const auto& src = impl_ref_();
   if (normalized == 0) {
     return reduce_numeric_threads_(
         src,
         [&options](const Thread& source) {
-          return source.mean_error(options);
+          return source.se(ErrorTarget::Mean, options);
         },
-        "DataFrame::mean_error");
+        "DataFrame::se");
   }
-  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::mean_error");
+  const auto matrix = numeric_reduce_matrix_(src, "DataFrame::se");
   auto counts = matrix.valid.to(matrix.values.scalar_type()).sum(normalized);
   auto values = matrix.values.where(matrix.valid.logical_not(), 0.0);
   auto means = values.sum(normalized) / counts;
@@ -656,39 +659,18 @@ Thread DataFrame::mean_error(std::int64_t axis,
   return labelled_statistic_(std::move(error), std::move(valid), src, matrix, normalized);
 }
 
-DataFrame DataFrame::running_sum(bool skip_nulls) const {
+DataFrame DataFrame::scan(ScanStatistic statistic, bool skip_nulls) const {
   return delegate_numeric_threads_(
-      impl_ref_(), [skip_nulls](const Thread& source) {
-        return source.running_sum(skip_nulls);
+      impl_ref_(), [statistic, skip_nulls](const Thread& source) {
+        return source.scan(statistic, skip_nulls);
       });
 }
 
-DataFrame DataFrame::running_product(bool skip_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [skip_nulls](const Thread& source) {
-        return source.running_product(skip_nulls);
-      });
-}
-
-DataFrame DataFrame::running_minimum(bool skip_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [skip_nulls](const Thread& source) {
-        return source.running_minimum(skip_nulls);
-      });
-}
-
-DataFrame DataFrame::running_maximum(bool skip_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [skip_nulls](const Thread& source) {
-        return source.running_maximum(skip_nulls);
-      });
-}
-
-Thread DataFrame::correlate_with(const DataFrame& other,
-                                 CorrMethod method,
-                                 std::int64_t min_count) const {
-  PLUSS_CHECK(min_count >= 1, "DataFrame::correlate_with: min_count must be >= 1");
-  const auto matched = matched_with(
+Thread DataFrame::corr_with(const DataFrame& other,
+                            CorrMethod method,
+                            std::int64_t min_count) const {
+  PLUSS_CHECK(min_count >= 1, "DataFrame::corr_with: min_count must be >= 1");
+  const auto matched = match(
       other,
       FrameMatchOptions{
           .cases = FrameMatchRule::Common,
@@ -713,11 +695,11 @@ Thread DataFrame::correlate_with(const DataFrame& other,
     }
     names.push_back(name);
     const auto correlated =
-        left.correlate_with(right, thread_method, min_count);
-    valid.push_back(correlated.notnull().as_series());
+        left.corr_with(right, thread_method, min_count);
+    valid.push_back(correlated.thread().notnull().as_series());
     values.push_back(correlated.as_series());
   }
-  PLUSS_CHECK(!names.empty(), "DataFrame::correlate_with: no common numeric features");
+  PLUSS_CHECK(!names.empty(), "DataFrame::corr_with: no common numeric features");
   auto output = pluss::pile(values, 0).reshape(
       {static_cast<std::int64_t>(values.size())});
   auto output_valid = pluss::pile(valid, 0).reshape(
@@ -725,16 +707,28 @@ Thread DataFrame::correlate_with(const DataFrame& other,
   return Thread(output, output_valid).with_display_labels(make_note_thread(names));
 }
 
-DataFrame DataFrame::matrix_product(const DataFrame& other) const {
+DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others,
+                               CorrMethod method,
+                               std::int64_t min_count) const {
+  PLUSS_CHECK(others.size() > 0, "DataFrame::corr_with: expected at least one comparison frame");
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(others.size());
+  for (std::size_t i = 0; i < others.size(); ++i) {
+    columns.emplace_back(fmt::format("frame_{}", i), corr_with(others[i], method, min_count));
+  }
+  return DataFrame(std::move(columns));
+}
+
+DataFrame DataFrame::matmul(const DataFrame& other) const {
   const auto& left = impl_ref_();
   const auto& right = other.impl_ref_();
-  const auto left_matrix = numeric_reduce_matrix_(left, "DataFrame::matrix_product(left)");
-  const auto right_matrix = numeric_reduce_matrix_(right, "DataFrame::matrix_product(right)");
+  const auto left_matrix = numeric_reduce_matrix_(left, "DataFrame::matmul(left)");
+  const auto right_matrix = numeric_reduce_matrix_(right, "DataFrame::matmul(right)");
   PLUSS_CHECK(left_matrix.values.sizes()[1] == right_matrix.values.sizes()[0],
-              "DataFrame::matrix_product: left feature count must equal right case count");
+              "DataFrame::matmul: left feature count must equal right case count");
   PLUSS_CHECK(left_matrix.valid.all().item<bool>() &&
                   right_matrix.valid.all().item<bool>(),
-              "DataFrame::matrix_product: null values are not supported");
+              "DataFrame::matmul: null values are not supported");
   auto result = left_matrix.values.matmul(right_matrix.values);
   auto valid = pluss::Series::ones(
       result.sizes(), pluss::codem::ScalarType::Bool, result.platform());
@@ -742,281 +736,25 @@ DataFrame DataFrame::matrix_product(const DataFrame& other) const {
       result, valid, right_matrix.names, left.cases_);
 }
 
-DataFrame DataFrame::moving_sum(std::int64_t window,
-                                const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving(window, WindowStatistic::Sum, options);
-      });
-}
-
-DataFrame DataFrame::moving_mean(std::int64_t window,
-                                 const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving(window, WindowStatistic::Mean, options);
-      });
-}
-
-DataFrame DataFrame::moving_minimum(std::int64_t window,
-                                    const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving(window, WindowStatistic::Minimum, options);
-      });
-}
-
-DataFrame DataFrame::moving_maximum(std::int64_t window,
-                                    const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving(window, WindowStatistic::Maximum, options);
-      });
-}
-
-DataFrame DataFrame::moving_variance(std::int64_t window,
-                                     const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving(window, WindowStatistic::Variance, options);
-      });
-}
-
-DataFrame DataFrame::moving_deviation(std::int64_t window,
-                                      const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving(window, WindowStatistic::Deviation, options);
-      });
-}
-
-DataFrame DataFrame::moving_mean_error(std::int64_t window,
-                                       const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving_mean_error(window, options);
-      });
-}
-
-DataFrame DataFrame::moving_asymmetry(std::int64_t window,
-                                      const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving_asymmetry(window, options);
-      });
-}
-
-DataFrame DataFrame::moving_tail_weight(std::int64_t window,
-                                        const WindowOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [window, &options](const Thread& source) {
-        return source.moving_tail_weight(window, options);
-      });
-}
-
-DataFrame DataFrame::weighted_moving(
+DataFrame DataFrame::weigh(
     pluss::msharp::RangeView::Double weights,
     WindowStatistic statistic,
     std::int64_t min_count) const {
   return delegate_numeric_threads_(
       impl_ref_(), [=](const Thread& source) {
-        return source.weighted_moving(
+        return source.weigh(
             weights, statistic, min_count);
       });
 }
 
-DataFrame DataFrame::indexed_moving(
+DataFrame DataFrame::bounded(
     const WindowBoundsFn& bounds,
     WindowStatistic statistic,
     const WindowOptions& options) const {
   PLUSS_CHECK(static_cast<bool>(bounds),
-              "DataFrame::indexed_moving: bounds callback is empty");
+              "DataFrame::bounded: bounds callback is empty");
   return delegate_numeric_threads_(
       impl_ref_(), [&](const Thread& source) {
-        return source.indexed_moving(bounds, statistic, options);
+        return source.bounded(bounds, statistic, options);
       });
-}
-
-DataFrame DataFrame::growing_sum(std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [min_count](const Thread& source) {
-        return source.growing(
-            WindowStatistic::Sum,
-            StatisticOptions{.ddof = 1, .min_count = min_count});
-      });
-}
-
-DataFrame DataFrame::growing_mean(std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [min_count](const Thread& source) {
-        return source.growing(
-            WindowStatistic::Mean,
-            StatisticOptions{.ddof = 1, .min_count = min_count});
-      });
-}
-
-DataFrame DataFrame::growing_minimum(std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [min_count](const Thread& source) {
-        return source.growing(
-            WindowStatistic::Minimum,
-            StatisticOptions{.ddof = 1, .min_count = min_count});
-      });
-}
-
-DataFrame DataFrame::growing_maximum(std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [min_count](const Thread& source) {
-        return source.growing(
-            WindowStatistic::Maximum,
-            StatisticOptions{.ddof = 1, .min_count = min_count});
-      });
-}
-
-DataFrame DataFrame::growing_variance(const StatisticOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [&options](const Thread& source) {
-        return source.growing(WindowStatistic::Variance, options);
-      });
-}
-
-DataFrame DataFrame::growing_deviation(const StatisticOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [&options](const Thread& source) {
-        return source.growing(WindowStatistic::Deviation, options);
-      });
-}
-
-DataFrame DataFrame::growing_mean_error(const StatisticOptions& options) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [&options](const Thread& source) {
-        return source.growing_mean_error(options);
-      });
-}
-
-DataFrame DataFrame::growing_asymmetry(std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [min_count](const Thread& source) {
-        return source.growing_asymmetry(min_count);
-      });
-}
-
-DataFrame DataFrame::growing_tail_weight(std::int64_t min_count) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [min_count](const Thread& source) {
-        return source.growing_tail_weight(min_count);
-      });
-}
-
-DataFrame DataFrame::exponential_mean(double alpha,
-                                      bool adjusted,
-                                      std::int64_t min_count,
-                                      bool ignore_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [=](const Thread& source) {
-        return source.exponential_mean(
-            alpha, adjusted, min_count, ignore_nulls);
-      });
-}
-
-DataFrame DataFrame::exponential_variance(double alpha,
-                                          bool adjusted,
-                                          bool bias_corrected,
-                                          std::int64_t min_count,
-                                          bool ignore_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [=](const Thread& source) {
-        return source.exponential_variance(
-            alpha, adjusted, bias_corrected, min_count, ignore_nulls);
-      });
-}
-
-DataFrame DataFrame::exponential_deviation(double alpha,
-                                           bool adjusted,
-                                           bool bias_corrected,
-                                           std::int64_t min_count,
-                                           bool ignore_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [=](const Thread& source) {
-        return source.exponential_deviation(
-            alpha, adjusted, bias_corrected, min_count, ignore_nulls);
-  });
-}
-
-DataFrame DataFrame::grouped_moving(std::string_view group_feature,
-                                    std::int64_t window,
-                                    WindowStatistic statistic,
-                                    const WindowOptions& options) const {
-  const auto& src = impl_ref_();
-  const auto group_name = owned_name(group_feature);
-  const auto group_it = src.name_to_idx_.find(group_name);
-  PLUSS_CHECK(group_it != src.name_to_idx_.end(),
-              "DataFrame::grouped_moving: unknown group feature '" +
-                  group_name + "'");
-  const auto& groups = src.columns_[group_it->second];
-  std::vector<std::pair<std::string, Thread>> delegated;
-  delegated.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& source = src.columns_[i];
-    delegated.emplace_back(
-        src.names_[i],
-        i != group_it->second &&
-                source.kind() == ThreadKind::Series &&
-                is_numeric_series_type(source.as_series())
-            ? source.grouped_moving(
-                  groups, window, statistic, options)
-            : source);
-  }
-  return DataFrame(std::move(delegated), src.cases_);
-}
-
-DataFrame DataFrame::grouped_moving_mean(std::string_view group_feature,
-                                         std::int64_t window,
-                                         const WindowOptions& options) const {
-  return grouped_moving(
-      group_feature, window, WindowStatistic::Mean, options);
-}
-
-DataFrame DataFrame::time_moving(std::string_view time_feature,
-                                 std::int64_t duration_nanos,
-                                 TimeWindowStatistic statistic,
-                                 const StatisticOptions& options,
-                                 WindowClosure closure) const {
-  PLUSS_CHECK(duration_nanos > 0,
-              "DataFrame::time_moving: duration_nanos must be > 0");
-  PLUSS_CHECK(options.min_count > 0,
-              "DataFrame::time_moving: min_count must be > 0");
-  PLUSS_CHECK(options.ddof >= 0,
-              "DataFrame::time_moving: ddof must be >= 0");
-  const auto& src = impl_ref_();
-  const auto time_name = owned_name(time_feature);
-  const auto time_it = src.name_to_idx_.find(time_name);
-  PLUSS_CHECK(time_it != src.name_to_idx_.end(),
-              "DataFrame::time_moving: unknown time feature '" +
-                  time_name + "'");
-  const auto& axis = src.columns_[time_it->second];
-  std::vector<std::pair<std::string, Thread>> delegated;
-  delegated.reserve(src.names_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    const auto& source = src.columns_[i];
-    delegated.emplace_back(
-        src.names_[i],
-        i != time_it->second &&
-                source.kind() == ThreadKind::Series &&
-                is_numeric_series_type(source.as_series())
-            ? source.time_moving(
-                  axis, duration_nanos, statistic, options, closure)
-            : source);
-  }
-  return DataFrame(std::move(delegated), src.cases_);
-}
-
-DataFrame DataFrame::time_moving_mean(std::string_view time_feature,
-                                      std::int64_t duration_nanos,
-                                      std::int64_t min_count) const {
-  return time_moving(
-      time_feature,
-      duration_nanos,
-      TimeWindowStatistic::Mean,
-      StatisticOptions{.ddof = 1, .min_count = min_count});
 }

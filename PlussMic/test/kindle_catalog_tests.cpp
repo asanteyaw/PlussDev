@@ -289,13 +289,15 @@ void test_catalog_sort_group_missing() {
   expect(!ti_filled.stream("ti_col").has_validity_mask(),
          "Catalog::fillna(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
 
-  const auto id_as_note = base.cast_note({"id"});
-  const auto ts_as_series = base.cast_series({"timestamp"}, pluss::codem::ScalarType::Int64);
-  const auto ts_as_ti = base.cast_timeindex({"timestamp"});
+  const auto id_as_note = base.cast({"id"}, pluss::table::ThreadCastTarget::Note);
+  const auto ts_as_series = base.cast(
+      {"timestamp"}, pluss::table::ThreadCastTarget::Series,
+      pluss::table::ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64});
+  const auto ts_as_ti = base.cast({"timestamp"}, pluss::table::ThreadCastTarget::TimeIndex);
   const auto id_as_f64 = base.astype({"id"}, pluss::codem::ScalarType::Float64);
-  expect(id_as_note.stream("id").kind() == StreamKind::Note, "cast_note(id) kind mismatch");
-  expect(ts_as_series.stream("timestamp").kind() == StreamKind::Series, "cast_series(timestamp) kind mismatch");
-  expect(ts_as_ti.stream("timestamp").kind() == StreamKind::TimeIndex, "cast_timeindex(timestamp) kind mismatch");
+  expect(id_as_note.stream("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
+  expect(ts_as_series.stream("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
+  expect(ts_as_ti.stream("timestamp").kind() == StreamKind::TimeIndex, "cast(TimeIndex) timestamp kind mismatch");
   expect(id_as_f64.stream("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "astype(id,float64) scalar type mismatch");
 }

@@ -63,8 +63,14 @@ Then cast:
 
 ```cpp
 auto typed = df.astype({{"amount", pluss::codem::ScalarType::Float64}});
-auto text = typed.cast_note({"category"});
-auto dates = typed.cast_timeline({"date"});
+auto text = typed.cast({
+    pluss::table::DataFrame::CastSpec{
+        "category", pluss::table::ThreadCastTarget::Note, {}},
+});
+auto dates = typed.cast({
+    pluss::table::DataFrame::CastSpec{
+        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+});
 ```
 
 ## Verified output does not match what you expected

@@ -50,16 +50,29 @@ either a <code class="docutils literal notranslate"><span class="pre">Thread</sp
 </div>
 <p>Use the DataFrame accessor when you want to transform one or more named
 features and keep a table-shaped result:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Use DataFrame resampling and reindexing when the operation needs a time axis:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">resample</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">ResampleOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>The accessors do not guess that a feature named <code class="docutils literal notranslate"><span class="pre">&quot;date&quot;</span></code> is time-like. The
-feature must actually be a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> for time-axis methods.</p>
+<p>The accessors do not guess that a feature named <code class="docutils literal notranslate"><span class="pre">&quot;date&quot;</span></code> is time-like. For
+cases-based resampling, the frame cases must actually be a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>; use <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> for datetime columns and <code class="docutils literal notranslate"><span class="pre">.ts()</span></code> for numeric value
+streams.</p>
+<p>If a date column starts as text, parse it through explicit <code class="docutils literal notranslate"><span class="pre">cast(...)</span></code> first:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;date_text&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="p">{</span>
+<span class="w">            </span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%Y-%m-%d&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">}},</span>
+<span class="p">});</span>
+</pre></div>
+</div>
 <section id="the-time-data-model">
 <h2>The time data model<a class="headerlink" href="#the-time-data-model" title="Link to this heading">¶</a></h2>
 <p>PlussMic represents time in three common ways:</p>
@@ -106,11 +119,14 @@ semantics even though both can be represented internally as arrays.</p>
 </pre></div>
 </div>
 <p>If a column loaded as text or as a numeric <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> series, cast it:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast_timeline</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="p">});</span>
 </pre></div>
 </div>
 <p>The current source supports conversion of integer <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> values through
-<code class="docutils literal notranslate"><span class="pre">cast_timeline</span></code>, which is useful for market-data files that store dates as
+<code class="docutils literal notranslate"><span class="pre">cast(...,</span> <span class="pre">ThreadCastTarget::Timeline)</span></code>, which is useful for market-data files that store dates as
 <code class="docutils literal notranslate"><span class="pre">19900102</span></code> instead of ISO strings.</p>
 </section>
 <section id="sorting-is-your-responsibility">
@@ -120,7 +136,7 @@ aligns by a time axis. PlussMic will not sort a frame for you before computing a
 return, lag, rolling mean, or line plot.</p>
 <p>For ordered calculations, sort first:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>This matters in production. A return computed on unsorted prices is not a
@@ -166,49 +182,17 @@ operation throws when you call the accessor method.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
 <td><p>Shift values forward by <code class="docutils literal notranslate"><span class="pre">periods</span></code>; trailing rows become undefined numeric positions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling(window,</span> <span class="pre">statistic,</span> <span class="pre">options)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Rolling mean.</p></td>
+<td><p>Observation-count rolling/window statistic.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_std(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expanding(statistic,</span> <span class="pre">options)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Rolling standard deviation.</p></td>
+<td><p>Expanding statistic.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_sum(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ewm(alpha,</span> <span class="pre">statistic,</span> <span class="pre">...)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Rolling sum.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_var(window,</span> <span class="pre">min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Rolling variance.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_min(window,</span> <span class="pre">min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Rolling minimum.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_max(window,</span> <span class="pre">min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Rolling maximum.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ema(alpha)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Exponential moving average.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ewm_mean(alpha)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Exponentially weighted mean.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ewm_std(alpha,</span> <span class="pre">epsilon)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Exponentially weighted standard deviation.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expanding_mean(min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Expanding mean.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">expanding_std(min_periods,</span> <span class="pre">epsilon)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
-<td><p>Expanding standard deviation.</p></td>
+<td><p>Exponentially weighted statistic.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zscore_rolling(window,</span> <span class="pre">min_periods,</span> <span class="pre">epsilon)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
@@ -267,22 +251,22 @@ explicitly converted them to a validity-mask representation.</p>
 <section id="rolling-windows">
 <h2>Rolling windows<a class="headerlink" href="#rolling-windows" title="Link to this heading">¶</a></h2>
 <p>Rolling methods use observation windows:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rolling_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_mean</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_std</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_sum</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_var</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_min</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_max</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rolling_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Std</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Sum</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Var</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Minimum</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Maximum</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">});</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">window</span></code> is the number of rows in the rolling window. <code class="docutils literal notranslate"><span class="pre">min_periods</span></code> is the
 minimum number of observations required before a value is emitted.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">min_periods</span> <span class="pre">=</span> <span class="pre">window</span></code> when you want strict full-window results:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_mean</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>Use a smaller <code class="docutils literal notranslate"><span class="pre">min_periods</span></code> when early estimates are acceptable:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">warmup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_mean</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">warmup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>Rolling windows are observation-based, not calendar-based. If you need calendar
@@ -291,14 +275,13 @@ windows, resample first or construct the exact frame you want before rolling.</p
 <section id="expanding-and-exponentially-weighted-metrics">
 <h2>Expanding and exponentially weighted metrics<a class="headerlink" href="#expanding-and-exponentially-weighted-metrics" title="Link to this heading">¶</a></h2>
 <p>Expanding metrics grow from the start of the series:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">expanding_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">expanding_mean</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">expanding_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">expanding_std</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">expanding_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">expanding</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">expanding_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">expanding</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Std</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>Exponentially weighted metrics give more weight to recent values:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ema</span><span class="p">(</span><span class="mf">0.1</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">ewm_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ewm_mean</span><span class="p">(</span><span class="mf">0.1</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">ewm_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ewm_std</span><span class="p">(</span><span class="mf">0.1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ewm_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ewm</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ewm_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ewm</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Std</span><span class="p">);</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> controls responsiveness. Values closer to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> react faster. Values
@@ -340,8 +323,8 @@ should apply.</p></li>
 <h2>DataFrame time-series accessor<a class="headerlink" href="#dataframe-time-series-accessor" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::ts(...)</span></code> creates a <code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor</span></code> for one or more selected
 numeric features:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The selected feature names must exist and must be unique. Most accessor methods
@@ -378,85 +361,61 @@ target axis.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
 <td><p>Lead selected features.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling(window,</span> <span class="pre">statistic,</span> <span class="pre">options)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Rolling means.</p></td>
+<td><p>Observation-count rolling/window statistics for selected features.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_std(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling(duration,</span> <span class="pre">statistic,</span> <span class="pre">options,</span> <span class="pre">closure)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Rolling standard deviations.</p></td>
+<td><p>Time-window statistics over timeline cases, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;7D&quot;</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_sum(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">expanding(statistic,</span> <span class="pre">options)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Rolling sums.</p></td>
+<td><p>Expanding statistics for selected features.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_var(window,</span> <span class="pre">min_periods)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ewm(alpha,</span> <span class="pre">statistic,</span> <span class="pre">...)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Rolling variances.</p></td>
+<td><p>Exponentially weighted statistics for selected features.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_min(window,</span> <span class="pre">min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Rolling minimums.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_max(window,</span> <span class="pre">min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Rolling maximums.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ema(alpha)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Exponential moving averages.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ewm_mean(alpha)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Exponentially weighted means.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ewm_std(alpha,</span> <span class="pre">epsilon)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Exponentially weighted standard deviations.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expanding_mean(min_periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Expanding means.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">expanding_std(min_periods,</span> <span class="pre">epsilon)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Expanding standard deviations.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zscore_rolling(window,</span> <span class="pre">min_periods,</span> <span class="pre">epsilon)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zscore_rolling(window,</span> <span class="pre">min_periods,</span> <span class="pre">epsilon)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
 <td><p>Rolling z-scores.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fill_gaps(mode,</span> <span class="pre">constant)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fill_gaps(mode,</span> <span class="pre">constant)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
 <td><p>Fill numeric gaps in selected features.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resample(time_feature,</span> <span class="pre">freq,</span> <span class="pre">step)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sort(ascending,</span> <span class="pre">nulls_last)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Sort selected numeric features by timeline cases.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resample(freq,</span> <span class="pre">step)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrameTsResampler</span></code></p></td>
-<td><p>Build a time-series resampler object, then choose <code class="docutils literal notranslate"><span class="pre">.mean()</span></code>, <code class="docutils literal notranslate"><span class="pre">.max()</span></code>, <code class="docutils literal notranslate"><span class="pre">.asfreq()</span></code>, <code class="docutils literal notranslate"><span class="pre">.ffill()</span></code>, and related actions.</p></td>
+<td><p>Build a cases-based resampler object, then choose <code class="docutils literal notranslate"><span class="pre">.mean()</span></code>, <code class="docutils literal notranslate"><span class="pre">.max()</span></code>, <code class="docutils literal notranslate"><span class="pre">.asfreq()</span></code>, <code class="docutils literal notranslate"><span class="pre">.ffill()</span></code>, and related actions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resample(time_feature,</span> <span class="pre">freq,</span> <span class="pre">op,</span> <span class="pre">step)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resample(freq,</span> <span class="pre">op,</span> <span class="pre">step)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Aggregate selected features into time bins immediately.</p></td>
+<td><p>Aggregate selected features into cases-based time bins immediately.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">asfreq(time_feature,</span> <span class="pre">freq,</span> <span class="pre">step,</span> <span class="pre">fill_mode,</span> <span class="pre">constant,</span> <span class="pre">op)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">asfreq(freq,</span> <span class="pre">step,</span> <span class="pre">fill_mode,</span> <span class="pre">constant,</span> <span class="pre">op)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Resample, then fill gaps.</p></td>
+<td><p>Resample against timeline cases, then fill gaps.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">insert_gaps(time_feature,</span> <span class="pre">freq,</span> <span class="pre">step)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">insert_gaps(freq,</span> <span class="pre">step)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Align to regular bins and insert gaps where exact observations are missing.</p></td>
+<td><p>Align to regular timeline cases and insert gaps where exact observations are missing.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">align_to(time_feature,</span> <span class="pre">target_axis,</span> <span class="pre">mode)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">align_to(target_axis,</span> <span class="pre">mode)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Align selected features to a target time axis.</p></td>
+<td><p>Align selected features to a target time axis using timeline cases.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reindex_time(time_feature,</span> <span class="pre">target_axis,</span> <span class="pre">mode,</span> <span class="pre">fill,</span> <span class="pre">constant)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reindex_time(target_axis,</span> <span class="pre">mode,</span> <span class="pre">fill,</span> <span class="pre">constant)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
 <td><p>Align to a target axis and optionally fill gaps.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calendar(time_feature)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> calendar methods</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Extract calendar features from a time axis.</p></td>
+<td><p>Extract calendar features from datetime columns.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag_block(lags)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
@@ -472,13 +431,17 @@ target axis.</p>
 </section>
 <section id="resampling">
 <h2>Resampling<a class="headerlink" href="#resampling" title="Link to this heading">¶</a></h2>
-<p>Resampling now has two surfaces on <code class="docutils literal notranslate"><span class="pre">df.ts(...)</span></code>.</p>
+<p>Resampling is selection-first. Put the timeline column on the case axis, then
+select numeric value features and call <code class="docutils literal notranslate"><span class="pre">.ts()</span></code>.</p>
 <p>Use the resampler object when you want time-series semantics closer to a
 grouped pipeline:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">weekly_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;W&quot;</span><span class="p">).</span><span class="n">max</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">hourly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;H&quot;</span><span class="p">).</span><span class="n">asfreq</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">hourly_filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;H&quot;</span><span class="p">).</span><span class="n">ffill</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">seven_day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="s">&quot;7D&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weekly_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;W&quot;</span><span class="p">).</span><span class="n">max</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">hourly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">).</span><span class="n">asfreq</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">hourly_filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">).</span><span class="n">ffill</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Arguments:</p>
@@ -516,8 +479,8 @@ grouped pipeline:</p>
 </ul>
 <p>When you already know the aggregation at the call site, the immediate overload
 still exists:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">resample</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;D&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">ResampleOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span>
 <span class="w">    </span><span class="mi">1</span><span class="p">);</span>
@@ -533,8 +496,7 @@ you want the main time-series resampler surface.</p>
 <section id="as-frequency-conversion">
 <h2>As-frequency conversion<a class="headerlink" href="#as-frequency-conversion" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">asfreq</span></code> resamples and then fills gaps:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">hourly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">asfreq</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">hourly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">asfreq</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;H&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">GapFillMode</span><span class="o">::</span><span class="n">Forward</span><span class="p">,</span>
@@ -547,7 +509,7 @@ you want the main time-series resampler surface.</p>
 <section id="inserting-gaps">
 <h2>Inserting gaps<a class="headerlink" href="#inserting-gaps" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">insert_gaps</span></code> builds regular bins and aligns exact observations onto them:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">insert_gaps</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;H&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">insert_gaps</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Rows with no exact source observation are emitted as undefined numeric
@@ -557,8 +519,7 @@ instead of connecting across missing intervals.</p>
 <section id="aligning-and-reindexing-to-a-target-axis">
 <h2>Aligning and reindexing to a target axis<a class="headerlink" href="#aligning-and-reindexing-to-a-target-axis" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">align_to</span></code> when you already have the target timeline:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">align_to</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">align_to</span><span class="p">(</span>
 <span class="w">    </span><span class="n">target_axis</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TsAlignMode</span><span class="o">::</span><span class="n">Exact</span><span class="p">);</span>
 </pre></div>
@@ -586,8 +547,7 @@ instead of connecting across missing intervals.</p>
 </tbody>
 </table>
 <p>Use <code class="docutils literal notranslate"><span class="pre">reindex_time</span></code> when you also want to fill missing aligned values:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">reindexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">reindex_time</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">reindexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">reindex_time</span><span class="p">(</span>
 <span class="w">    </span><span class="n">target_axis</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TsAlignMode</span><span class="o">::</span><span class="n">Exact</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TsReindexFill</span><span class="o">::</span><span class="n">Forward</span><span class="p">);</span>
@@ -619,8 +579,7 @@ instead of connecting across missing intervals.</p>
 </tbody>
 </table>
 <p>If you use <code class="docutils literal notranslate"><span class="pre">Constant</span></code>, pass the constant value:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">reindex_time</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">reindex_time</span><span class="p">(</span>
 <span class="w">    </span><span class="n">target_axis</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TsAlignMode</span><span class="o">::</span><span class="n">Exact</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">TsReindexFill</span><span class="o">::</span><span class="n">Constant</span><span class="p">,</span>
@@ -631,7 +590,7 @@ instead of connecting across missing intervals.</p>
 <section id="calendar-features">
 <h2>Calendar features<a class="headerlink" href="#calendar-features" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">calendar(time_feature)</span></code> extracts useful calendar columns from a time axis:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">calendar</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>It returns:</p>
@@ -652,7 +611,7 @@ the output columns are <code class="docutils literal notranslate"><span class="p
 <section id="lag-blocks">
 <h2>Lag blocks<a class="headerlink" href="#lag-blocks" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">lag_block</span></code> creates several lagged features at once:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">lag_block</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">lag_block</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>For features <code class="docutils literal notranslate"><span class="pre">close</span></code> and <code class="docutils literal notranslate"><span class="pre">volume</span></code>, that emits:</p>
@@ -677,7 +636,7 @@ engineering.</p>
 <span class="n">options</span><span class="p">.</span><span class="n">include_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">min_periods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">rolling_block</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">},</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_block</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">},</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">TsRollingBlockOptions</span></code> contains:</p>
@@ -747,19 +706,19 @@ engineering.</p>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;returns:</span><span class="se">\n</span><span class="s">&quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rolling mean window 2:</span><span class="se">\n</span><span class="s">&quot;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling_mean</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">).</span><span class="n">to_string</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">}).</span><span class="n">to_string</span><span class="p">()</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">resample</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">ResampleOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">ResampleOp</span><span class="o">::</span><span class="n">Mean</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;daily mean:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">daily</span><span class="p">.</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">calendar</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">calendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;calendar:</span><span class="se">\n</span><span class="s">&quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">calendar</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;date_year&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;date_month&quot;</span><span class="p">,</span>
 <span class="w">                                </span><span class="s">&quot;date_weekday&quot;</span><span class="p">}).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">lag_block</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;volume&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">lag_block</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;lag block:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lags</span><span class="p">.</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -830,22 +789,22 @@ lag block:
 <td><p><code class="docutils literal notranslate"><span class="pre">df.features(&quot;x&quot;).ts()</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Several transformed value streams</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">df.ts({&quot;x&quot;,</span> <span class="pre">&quot;y&quot;})</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">df.features({&quot;x&quot;,</span> <span class="pre">&quot;y&quot;}).ts()</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Resample one value stream and handle labels manually</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Thread::ts().resample(axis,</span> <span class="pre">...)</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Resample several value streams into a new frame</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame::ts(features).resample(...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">df.set_cases(&quot;date&quot;).features({...}).ts().resample(...)</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Add calendar model features</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame::ts(feature).calendar(time_feature)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">df.features({&quot;date&quot;}).tl().year()</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Build lagged model features</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame::ts(features).lag_block(...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">df.features({...}).ts().lag_block(...)</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Build rolling model features</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame::ts(features).rolling_block(...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">df.features({...}).ts().rolling_block(...)</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Align data to an existing schedule</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">align_to</span></code> or <code class="docutils literal notranslate"><span class="pre">reindex_time</span></code></p></td>
@@ -882,7 +841,7 @@ replaced it as cases.</p></li>
 </pre></div>
 </div>
 <p>This returns a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Choose based on the return shape you need.</p>
@@ -890,7 +849,7 @@ replaced it as cases.</p></li>
 <section id="treating-row-periods-as-calendar-periods">
 <h3>Treating row periods as calendar periods<a class="headerlink" href="#treating-row-periods-as-calendar-periods" title="Link to this heading">¶</a></h3>
 <p>This is a one-row return:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>It is not necessarily a one-day return. If the frame has hourly rows, it is a
@@ -900,24 +859,27 @@ return. Resample first when the calendar interval matters.</p>
 <section id="resampling-a-non-time-feature">
 <h3>Resampling a non-time feature<a class="headerlink" href="#resampling-a-non-time-feature" title="Link to this heading">¶</a></h3>
 <p>This fails when <code class="docutils literal notranslate"><span class="pre">&quot;date&quot;</span></code> is not a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Fix the schema first:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">fixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast_timeline</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fixed</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">fixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fixed</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="rolling-unsorted-data">
 <h3>Rolling unsorted data<a class="headerlink" href="#rolling-unsorted-data" title="Link to this heading">¶</a></h3>
 <p>This compiles but can be wrong:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">rolling_mean</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>If <code class="docutils literal notranslate"><span class="pre">df</span></code> is not sorted by time, the rolling window follows row order. Sort first:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sort_values</span><span class="p">({</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">ArrangeSpec</span><span class="p">{</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">ts</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">rolling_mean</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rolling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">});</span>
 </pre></div>
 </div>
 </section>
@@ -961,9 +923,13 @@ return. Resample first when the calendar interval matters.</p>
 <li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeline_batched_api_reference.html">Timeline (<code class="docutils literal notranslate"><span class="pre">tl</span></code>) and Batched DataFrame Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics_window_api_reference.html">Window Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html">ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>

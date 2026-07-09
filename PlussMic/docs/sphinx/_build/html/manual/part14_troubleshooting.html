@@ -90,8 +90,14 @@
 </div>
 <p>Then cast:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">typed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">astype</span><span class="p">({{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">typed</span><span class="p">.</span><span class="n">cast_note</span><span class="p">({</span><span class="s">&quot;category&quot;</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">typed</span><span class="p">.</span><span class="n">cast_timeline</span><span class="p">({</span><span class="s">&quot;date&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">typed</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;category&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Note</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">typed</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="p">});</span>
 </pre></div>
 </div>
 </section>
@@ -246,9 +252,13 @@ available. Use terminal output as the reliable path in headless environments:</p
 <li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeline_batched_api_reference.html">Timeline (<code class="docutils literal notranslate"><span class="pre">tl</span></code>) and Batched DataFrame Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics_window_api_reference.html">Window Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html">ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>

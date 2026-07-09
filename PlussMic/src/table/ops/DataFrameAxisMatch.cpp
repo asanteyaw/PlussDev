@@ -46,7 +46,7 @@ pluss::codem::Platform thread_platform(const Thread& thread) {
     case ThreadKind::Note:
       return pluss::codem::Platform::CPU;
   }
-  PLUSS_FAIL("DataFrame::matched_with: unsupported Thread kind");
+  PLUSS_FAIL("DataFrame::match: unsupported Thread kind");
 }
 
 pluss::Series bool_series_on(const std::vector<bool>& values,
@@ -155,7 +155,7 @@ std::vector<std::string> case_keys(const Thread& cases) {
           break;
         default:
           PLUSS_FAIL(
-              "DataFrame::matched_with: unsupported numeric case dtype");
+              "DataFrame::match: unsupported numeric case dtype");
       }
       break;
     }
@@ -192,12 +192,12 @@ std::vector<std::string> case_keys(const Thread& cases) {
 void ensure_case_types_match(const Thread& left, const Thread& right) {
   PLUSS_CHECK(
       left.kind() == right.kind(),
-      "DataFrame::matched_with: case payload kinds differ; cast the case axes "
+      "DataFrame::match: case payload kinds differ; cast the case axes "
       "to a common kind first");
   if (left.kind() == ThreadKind::Series) {
     PLUSS_CHECK(
         left.as_series().scalar_type() == right.as_series().scalar_type(),
-        "DataFrame::matched_with: numeric case dtypes differ; cast the case "
+        "DataFrame::match: numeric case dtypes differ; cast the case "
         "axes to a common dtype first");
   }
 }
@@ -221,7 +221,7 @@ void reject_repeated_cases(
       [](const auto& entry) { return entry.second.size() > 1; });
   PLUSS_CHECK(
       repeated == positions.end(),
-      "DataFrame::matched_with: repeated cases on the " + std::string(side) +
+      "DataFrame::match: repeated cases on the " + std::string(side) +
           " frame require RepeatedCaseRule::PairInOrder");
 }
 
@@ -265,7 +265,7 @@ Thread append_cases(const Thread& left, const Thread& right) {
     case ThreadKind::Series: {
       PLUSS_CHECK(
           left.as_series().platform() == right.as_series().platform(),
-          "DataFrame::matched_with: numeric case axes must use the same platform");
+          "DataFrame::match: numeric case axes must use the same platform");
       std::vector<pluss::Series> tail{right.as_series()};
       auto values = left.as_series().unite(tail, 0);
       return Thread(
@@ -304,7 +304,7 @@ Thread append_cases(const Thread& left, const Thread& right) {
               values.timeline().epoch_nanos().platform()));
     }
   }
-  PLUSS_FAIL("DataFrame::matched_with: unsupported case payload kind");
+  PLUSS_FAIL("DataFrame::match: unsupported case payload kind");
 }
 
 Thread append_feature_values(const Thread& left, const Thread& right) {
@@ -517,7 +517,7 @@ FeaturePlan plan_features(
 }
 
 Thread null_thread_like(const Thread& reference, const std::int64_t size) {
-  PLUSS_CHECK(size >= 0, "DataFrame::matched_with: invalid null feature size");
+  PLUSS_CHECK(size >= 0, "DataFrame::match: invalid null feature size");
   Thread values;
   if (reference.size() > 0) {
     RowMap zeros(static_cast<std::size_t>(size), 0);
@@ -627,7 +627,7 @@ DataFrame remap_frame(
     const auto peer_position = peer_positions[i];
     PLUSS_CHECK(
         peer_position >= 0,
-        "DataFrame::matched_with: internal feature mapping failure");
+        "DataFrame::match: internal feature mapping failure");
     output.emplace_back(
         features.names[i],
         null_thread_like(
@@ -639,11 +639,11 @@ DataFrame remap_frame(
 
 } // namespace
 
-FrameMatch DataFrame::matched_with(
+FrameMatch DataFrame::match(
     const DataFrame& other,
     const FrameMatchOptions& options) const {
-  PLUSS_CHECK(defined(), "DataFrame::matched_with: left frame is undefined");
-  PLUSS_CHECK(other.defined(), "DataFrame::matched_with: right frame is undefined");
+  PLUSS_CHECK(defined(), "DataFrame::match: left frame is undefined");
+  PLUSS_CHECK(other.defined(), "DataFrame::match: right frame is undefined");
 
   if (options.repeated_cases == RepeatedCaseRule::PairInOrder &&
       cases().shares_payload_with(other.cases()) &&

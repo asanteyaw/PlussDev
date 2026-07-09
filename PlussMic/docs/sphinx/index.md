@@ -33,7 +33,9 @@ manual
 quickstart
 demo_catalog
 dataframe
+hierarchical_cases
 time_series_accessor_guide
+timeline_batched_api_reference
 dataframe_display
 dataframe_api_reference
 statistics_window_api_reference

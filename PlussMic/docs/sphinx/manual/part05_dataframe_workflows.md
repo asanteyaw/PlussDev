@@ -77,25 +77,24 @@ Schema management:
 
 ```cpp
 auto renamed = df.rename("old", "new");
-auto renamed_many = df.rename_features({{"age", "age_years"}, {"job", "role"}});
-auto relabeled = df.relabel_features({"a", "b", "c"});
+auto renamed_many = df.rename({{"age", "age_years"}, {"job", "role"}});
+auto relabeled = df.rename({"a", "b", "c"});
 auto prefixed = df.add_prefix("raw_");
 auto suffixed = df.add_suffix("_clean");
 auto reordered = df.reorder({"id", "date", "value"});
 auto dropped = df.drop({"temporary_feature"});
 ```
 
-`rename` changes one feature name and fails if the old name is missing or the
-new name already exists. `rename_features` applies several renames one after
-another. `relabel_features` replaces the entire feature axis, so the number of
-new names must match the current feature count. `reorder` also requires the
-full feature set; it is not a selector. Use `features({...})` or `drop({...})`
+`rename` changes one feature name, applies several renames, or replaces the
+entire feature axis depending on the overload. Full-axis renaming requires the
+number of new names to match the current feature count. `reorder` also requires
+the full feature set; it is not a selector. Use `features({...})` or `drop({...})`
 when you want to keep only part of the frame.
 
 Practical rule:
 
 - use `rename("old", "new")` for one feature
-- use `rename_features({{"old1", "new1"}, {"old2", "new2"}})` for many features
+- use `rename({{"old1", "new1"}, {"old2", "new2"}})` for many features
 
 ## Select cases
 
@@ -358,20 +357,20 @@ auto adjusted = df.transform({
 ## Missing data
 
 ```cpp
-auto nulls = df.isna();
-auto present = df.notna();
+auto nulls = df.isnull();
+auto present = df.notnull();
 auto filled_numeric = df.fillna(0.0, {"balance", "duration"});
 auto filled_text = df.fillna("unknown", {"job"});
 auto forward = df.ffill();
 auto backward = df.bfill();
 auto complete = df.dropna();
-auto complete_selected = df.dropna_all({"balance", "duration"});
+auto complete_selected = df.dropna({"balance", "duration"}, true);
 ```
 
 Count null rows:
 
 ```cpp
-std::int64_t null_rows = df.count_null_rows();
+auto null_rows = df.isnull().any(pluss::table::Axis::Case).sum();
 ```
 
 ### Verified example: missing data audit
@@ -572,11 +571,11 @@ auto joined = left.join(right, "_right");
 auto updated = left.update(right, true);
 auto combined = left.combine(right);
 
-auto stitched = left.stitch_on("id", right, "id", "_right");
+auto stitched = left.unify("id", right, "id", "common", "_right");
 ```
 
 Use `join` when two frames already have compatible row counts and you want to
-append features. Use `stitch_on` when rows must be matched by key values. Use
+append features. Use `unify` when rows must be matched by key values. Use
 `update` when the right frame should patch values into the left frame. Use
 `combine` when you need the configurable primitive behind `join` and `update`.
 
@@ -587,11 +586,11 @@ The names are precise:
   the collision suffix.
 - `update` is schema-preserving patching. It only updates overlapping features
   and ignores right-hand features that do not exist on the left.
-- `stitch_on` is key-based matching. It creates rows for matching key values
+- `unify` is key-based matching. It creates rows for matching key values
   and appends right-hand payload features.
 - `combine` is the configurable primitive underneath `join` and `update`.
 
-### Verified example: join, update, and stitch_on
+### Verified example: join, update, and unify
 
 ```cpp
 DataFrame left({
@@ -610,7 +609,7 @@ DataFrame patch({
 
 std::cout << left.join(patch, "_patch").to_string() << '\n';
 std::cout << left.update(patch, true).to_string() << '\n';
-std::cout << left.stitch_on("sku", right, "sku", "_right").to_string() << '\n';
+std::cout << left.unify("sku", right, "sku", "common", "_right").to_string() << '\n';
 ```
 
 Output:

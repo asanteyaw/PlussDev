@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "statistics_window_api_reference.md"
 
 METHODS = {
-    "matched_with": ("other: const DataFrame&, options: FrameMatchOptions = {}", "FrameMatch", "two frames with identical case and feature axes"),
+    "match": ("other: const DataFrame&, options: FrameMatchOptions = {}", "FrameMatch", "two frames with identical case and feature axes"),
     "extend_cases": ("other: const DataFrame&, features: FrameMatchRule = Unite, fresh_cases: bool = false, reject_repeated_cases: bool = false", "DataFrame", "case-wise extension with matched features"),
     "unify": ("left_on: RangeView<string_view>, right: const DataFrame&, right_on: RangeView<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\"", "DataFrame", "key-matched rows from two frames"),
     "combine": ("other: const DataFrame&, spec: const CombineSpec&", "DataFrame", "feature-wise composition or aligned update"),
@@ -39,7 +39,7 @@ METHODS = {
     "moving_asymmetry": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving bias-corrected skewness"),
     "moving_tail_weight": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving bias-corrected excess kurtosis"),
     "weighted_moving": ("weights: RangeView<double>, statistic: WindowStatistic = Mean, min_count: int64 = 1", "DataFrame", "weighted moving statistics"),
-    "indexed_moving": ("bounds: WindowBoundsFn, statistic: WindowStatistic = Mean, options: WindowOptions = {}", "DataFrame", "moving statistics over caller-defined bounds"),
+    "bounded": ("bounds: WindowBoundsFn, statistic: WindowStatistic = Mean, options: WindowOptions = {}", "DataFrame", "moving statistics over caller-defined bounds"),
     "growing_sum": ("min_count: int64 = 1", "DataFrame", "expanding sums"),
     "growing_mean": ("min_count: int64 = 1", "DataFrame", "expanding means"),
     "growing_minimum": ("min_count: int64 = 1", "DataFrame", "expanding minima"),
@@ -71,7 +71,7 @@ SIGNATURE_OVERRIDES = {
 }
 
 PRIMARY = {
-    "matched_with": ("auto out = left.matched_with(right);", "out.left and out.right have identical stable-union axes"),
+    "match": ("auto out = left.match(right);", "out.left and out.right have identical stable-union axes"),
     "extend_cases": ("auto out = north.extend_cases(south);", "south cases follow north cases; one-sided features are null-filled"),
     "unify": ("auto out = left.unify(\"id\", right);", "only matching id rows are returned"),
     "combine": ("auto out = left.combine(right);", "right features are appended after aligned left features"),
@@ -103,7 +103,7 @@ PRIMARY = {
     "moving_asymmetry": ("auto out = df.moving_asymmetry(3, {.min_count=3});", "x = [NA, NA, 0.0, 0.0]"),
     "moving_tail_weight": ("auto out = df.moving_tail_weight(4, {.min_count=4});", "x = [NA, NA, NA, -1.2]"),
     "weighted_moving": ("auto out = df.weighted_moving({1.0, 2.0});", "x = [1.0, 1.666667, 2.666667, 3.666667]"),
-    "indexed_moving": ("auto out = df.indexed_moving(expanding_bounds);", "x = [1.0, 1.5, 2.0, 2.5]"),
+    "bounded": ("auto out = df.bounded(expanding_bounds);", "x = [1.0, 1.5, 2.0, 2.5]"),
     "growing_sum": ("auto out = df.growing_sum();", "x = [1.0, 3.0, 6.0, 10.0]"),
     "growing_mean": ("auto out = df.growing_mean();", "x = [1.0, 1.5, 2.0, 2.5]"),
     "growing_minimum": ("auto out = reversed.growing_minimum();", "x = [4.0, 3.0, 2.0, 1.0]"),
@@ -119,7 +119,7 @@ PRIMARY = {
     "grouped_moving_mean": ("auto out = grouped.grouped_moving_mean(\"group\", 2);", "value = [1.0, 10.0, 2.0, 15.0]"),
     "grouped_moving": ("auto out = grouped.grouped_moving(\"group\", 2, WindowStatistic::Sum);", "value = [1.0, 10.0, 4.0, 30.0]"),
     "time_moving_mean": ("auto out = timed.time_moving_mean(\"time\", 3);", "value = [1.0, 1.5, 2.5, 3.5]"),
-    "time_moving": ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Variance, {.ddof=1, .min_count=2});", "value = [NA, 0.5, 0.5, 0.5]"),
+    "time_moving": ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Var, {.ddof=1, .min_count=2});", "value = [NA, 0.5, 0.5, 0.5]"),
 }
 
 INPUT_DESCRIPTIONS = {
@@ -200,7 +200,7 @@ def input_lines(args: str) -> list[str]:
 
 def option_lines(name: str, args: str) -> list[str]:
     lines = []
-    if name == "matched_with":
+    if name == "match":
         lines.extend([
             "- Axis rules: `Unite`, `Common`, `KeepLeft`, and `KeepRight`.",
             "- Repeated cases: `PairInOrder` or `Reject`.",
@@ -299,13 +299,13 @@ def examples(name: str) -> list[tuple[str, str]]:
             (f"auto out = wide.{name}();", "every numeric feature is processed independently"),
             (f"auto out = df.head(1, false).{name}();", "one observed result is returned per numeric feature"),
         ]
-    if name == "matched_with":
+    if name == "match":
         return [
             first,
-            ("auto out = left.matched_with(right, {.cases=FrameMatchRule::Common, .features=FrameMatchRule::Common});", "both axes contain only labels shared by left and right"),
-            ("auto out = left.matched_with(right, {.cases=FrameMatchRule::KeepLeft, .features=FrameMatchRule::KeepLeft});", "both outputs use the left axes; unmatched right cells are NA"),
-            ("auto out = left.matched_with(right, {.cases=FrameMatchRule::KeepRight, .features=FrameMatchRule::KeepRight});", "both outputs use the right axes; unmatched left cells are NA"),
-            ("auto out = left.matched_with(right, {.repeated_cases=RepeatedCaseRule::Reject});", "the call fails if either case axis contains repeated labels"),
+            ("auto out = left.match(right, {.cases=FrameMatchRule::Common, .features=FrameMatchRule::Common});", "both axes contain only labels shared by left and right"),
+            ("auto out = left.match(right, {.cases=FrameMatchRule::KeepLeft, .features=FrameMatchRule::KeepLeft});", "both outputs use the left axes; unmatched right cells are NA"),
+            ("auto out = left.match(right, {.cases=FrameMatchRule::KeepRight, .features=FrameMatchRule::KeepRight});", "both outputs use the right axes; unmatched left cells are NA"),
+            ("auto out = left.match(right, {.repeated_cases=RepeatedCaseRule::Reject});", "the call fails if either case axis contains repeated labels"),
         ]
     if name == "extend_cases":
         return [
@@ -361,31 +361,31 @@ def examples(name: str) -> list[tuple[str, str]]:
             ("auto out = grouped.grouped_moving(\"group\", 2, WindowStatistic::Mean);", "value = [1.0, 10.0, 2.0, 15.0]"),
             ("auto out = grouped.grouped_moving(\"group\", 2, WindowStatistic::Minimum);", "value = [1.0, 10.0, 1.0, 10.0]"),
             ("auto out = grouped.grouped_moving(\"group\", 2, WindowStatistic::Maximum);", "value = [1.0, 10.0, 3.0, 20.0]"),
-            ("auto out = grouped.grouped_moving(\"group\", 2, WindowStatistic::Variance, {.min_count=2, .ddof=1});", "value = [NA, NA, 2.0, 50.0]"),
+            ("auto out = grouped.grouped_moving(\"group\", 2, WindowStatistic::Var, {.min_count=2, .ddof=1});", "value = [NA, NA, 2.0, 50.0]"),
         ]
     if name == "time_moving":
         return [
             first,
             ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Sum);", "value = [1.0, 3.0, 5.0, 7.0]"),
             ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Mean);", "value = [1.0, 1.5, 2.5, 3.5]"),
-            ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Deviation, {.ddof=1, .min_count=2});", "value = [NA, 0.707107, 0.707107, 0.707107]"),
+            ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Std, {.ddof=1, .min_count=2});", "value = [NA, 0.707107, 0.707107, 0.707107]"),
             ("auto out = timed.time_moving(\"time\", 3, TimeWindowStatistic::Sum, {}, WindowClosure::Both);", "the case exactly on the left boundary participates"),
         ]
     if name == "weighted_moving":
         return [
             first,
             ("auto out = df.weighted_moving({1.0, 1.0}, WindowStatistic::Sum);", "x = [1.0, 3.0, 5.0, 7.0]"),
-            ("auto out = df.weighted_moving({1.0, 2.0}, WindowStatistic::Variance);", "returns weighted population variance per trailing window"),
-            ("auto out = df.weighted_moving({1.0, 2.0}, WindowStatistic::Deviation);", "each output is the square root of weighted variance"),
+            ("auto out = df.weighted_moving({1.0, 2.0}, WindowStatistic::Var);", "returns weighted population variance per trailing window"),
+            ("auto out = df.weighted_moving({1.0, 2.0}, WindowStatistic::Std);", "each output is the square root of weighted variance"),
             ("auto out = nullable.weighted_moving({1.0, 2.0}, WindowStatistic::Mean, 2);", "a result is NA until two observed values carry weight"),
         ]
-    if name == "indexed_moving":
+    if name == "bounded":
         return [
             first,
-            ("auto out = df.indexed_moving(expanding_bounds, WindowStatistic::Sum);", "x = [1.0, 3.0, 6.0, 10.0]"),
-            ("auto out = df.indexed_moving(pair_bounds, WindowStatistic::Minimum);", "each result is the minimum inside its caller-defined interval"),
-            ("auto out = df.indexed_moving(pair_bounds, WindowStatistic::Maximum);", "each result is the maximum inside its caller-defined interval"),
-            ("auto out = nullable.indexed_moving(expanding_bounds, WindowStatistic::Mean, {.min_count=3});", "results are NA until three observed values are inside the custom bound"),
+            ("auto out = df.bounded(expanding_bounds, WindowStatistic::Sum);", "x = [1.0, 3.0, 6.0, 10.0]"),
+            ("auto out = df.bounded(pair_bounds, WindowStatistic::Minimum);", "each result is the minimum inside its caller-defined interval"),
+            ("auto out = df.bounded(pair_bounds, WindowStatistic::Maximum);", "each result is the maximum inside its caller-defined interval"),
+            ("auto out = nullable.bounded(expanding_bounds, WindowStatistic::Mean, {.min_count=3});", "results are NA until three observed values are inside the custom bound"),
         ]
     if name == "grouped_moving_mean":
         return [

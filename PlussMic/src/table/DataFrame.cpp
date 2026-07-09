@@ -150,12 +150,24 @@ pluss::TimeIndex DataFrame::MatrixValues::as_timeindex() const {
 
 namespace detail {
 
+struct CaseAxisLevel {
+  std::string name{};
+  Thread values{};
+};
+
+struct CaseAxis {
+  std::vector<CaseAxisLevel> levels{};
+
+  bool defined() const noexcept { return !levels.empty(); }
+};
+
 class DataFrameImpl final : public pluss::msharp::RefCounted {
 public:
   DataFrameImpl(std::vector<std::string> names,
                 std::vector<Thread> columns,
                 std::optional<Thread> cases = std::nullopt,
-                std::string title = {});
+                std::string title = {},
+                CaseAxis case_axis = {});
   void validate_and_reindex_();
 
   std::vector<std::string> names_;
@@ -163,6 +175,7 @@ public:
   std::unordered_map<std::string, std::size_t> name_to_idx_;
   std::int64_t nrows_{0};
   Thread cases_{};
+  CaseAxis case_axis_{};
   std::string title_{};
   mutable bool suppress_next_stream_{false};
 };
@@ -598,9 +611,9 @@ double numeric_reduce_value(const Thread& t, DataFrame::SummaryOp op) {
     case DataFrame::SummaryOp::Median:
       return scalar_series_to_double(clean.median(), "DataFrame::summarize(median)");
     case DataFrame::SummaryOp::Min:
-      return scalar_series_to_double(clean.min(), "DataFrame::summarize(min)");
+      return scalar_series_to_double(clean.min().as_series(), "DataFrame::summarize(min)");
     case DataFrame::SummaryOp::Max:
-      return scalar_series_to_double(clean.max(), "DataFrame::summarize(max)");
+      return scalar_series_to_double(clean.max().as_series(), "DataFrame::summarize(max)");
     case DataFrame::SummaryOp::Std:
       return scalar_series_to_double(clean.std(true), "DataFrame::summarize(std)");
     case DataFrame::SummaryOp::Var:
@@ -1219,54 +1232,373 @@ Thread apply_cmp_thread_pair(const Thread& lhs, const Thread& rhs, BinaryCmpOp o
   return lhs.compare(rhs, mapped);
 }
 
+pluss::Series dataframe_column_from_matrix_(const pluss::Series& matrix, std::int64_t column) {
+  auto index = pluss::Series::arange(
+      column,
+      column + 1,
+      1,
+      pluss::codem::ScalarType::Int64,
+      matrix.platform());
+  return matrix.index_select(1, index).reshape({matrix.sizes()[0]});
+}
+
+pluss::Series dataframe_scalar_like_matrix_(const pluss::Series& reference, double value) {
+  return pluss::Series::full(
+      reference.sizes(),
+      value,
+      reference.scalar_type(),
+      reference.platform());
+}
+
+pluss::Series dataframe_apply_math_matrix_pair_(const pluss::Series& lhs,
+                                                const pluss::Series& rhs,
+                                                BinaryMathOp op) {
+  auto floor_divide = [](const pluss::Series& a, const pluss::Series& b) {
+    return a.to(pluss::codem::ScalarType::Float64)
+        .true_divide(b.to(pluss::codem::ScalarType::Float64))
+        .floor();
+  };
+
+  switch (op) {
+    case BinaryMathOp::Add:
+      return lhs.add(rhs);
+    case BinaryMathOp::Sub:
+      return lhs.sub(rhs);
+    case BinaryMathOp::Mul:
+      return lhs.mul(rhs);
+    case BinaryMathOp::Div:
+      return lhs.div(rhs);
+    case BinaryMathOp::TrueDiv:
+      return lhs.true_divide(rhs);
+    case BinaryMathOp::FloorDiv:
+      return floor_divide(lhs, rhs);
+    case BinaryMathOp::Mod:
+      return lhs.remainder(rhs);
+    case BinaryMathOp::Pow:
+      break;
+  }
+
+  PLUSS_FAIL("DataFrame: batched pow is not supported by the Series backend");
+}
+
+pluss::Series dataframe_apply_math_matrix_scalar_(const pluss::Series& matrix,
+                                                  double other,
+                                                  BinaryMathOp op,
+                                                  bool reverse) {
+  if (!reverse) {
+    switch (op) {
+      case BinaryMathOp::Add:
+        return matrix.add(other);
+      case BinaryMathOp::Sub:
+        return matrix.sub(other);
+      case BinaryMathOp::Mul:
+        return matrix.mul(other);
+      case BinaryMathOp::Div:
+        return matrix.div(other);
+      case BinaryMathOp::TrueDiv:
+        return matrix.true_divide(other);
+      case BinaryMathOp::FloorDiv:
+        return dataframe_apply_math_matrix_pair_(
+            matrix, dataframe_scalar_like_matrix_(matrix, other), BinaryMathOp::FloorDiv);
+      case BinaryMathOp::Mod:
+        return matrix.remainder(other);
+      case BinaryMathOp::Pow:
+        break;
+    }
+    PLUSS_FAIL("DataFrame: batched pow is not supported by the Series backend");
+  }
+
+  return dataframe_apply_math_matrix_pair_(
+      dataframe_scalar_like_matrix_(matrix, other), matrix, op);
+}
+
+pluss::Series dataframe_apply_cmp_matrix_scalar_(const pluss::Series& matrix,
+                                                 double other,
+                                                 BinaryCmpOp op) {
+  switch (op) {
+    case BinaryCmpOp::Eq:
+      return matrix.eq(other);
+    case BinaryCmpOp::Ne:
+      return matrix.ne(other);
+    case BinaryCmpOp::Lt:
+      return matrix.lt(other);
+    case BinaryCmpOp::Le:
+      return matrix.le(other);
+    case BinaryCmpOp::Gt:
+      return matrix.gt(other);
+    case BinaryCmpOp::Ge:
+      return matrix.ge(other);
+  }
+  PLUSS_FAIL("DataFrame: unsupported batched comparison op");
+}
+
+pluss::Series dataframe_apply_cmp_matrix_pair_(const pluss::Series& lhs,
+                                               const pluss::Series& rhs,
+                                               BinaryCmpOp op) {
+  switch (op) {
+    case BinaryCmpOp::Eq:
+      return lhs.eq(rhs);
+    case BinaryCmpOp::Ne:
+      return lhs.ne(rhs);
+    case BinaryCmpOp::Lt:
+      return lhs.lt(rhs);
+    case BinaryCmpOp::Le:
+      return lhs.le(rhs);
+    case BinaryCmpOp::Gt:
+      return lhs.gt(rhs);
+    case BinaryCmpOp::Ge:
+      return lhs.ge(rhs);
+  }
+  PLUSS_FAIL("DataFrame: unsupported batched comparison op");
+}
+
+struct NumericBatchKey_ {
+  pluss::codem::ScalarType dtype;
+  pluss::codem::Platform platform;
+
+  bool operator<(const NumericBatchKey_& other) const noexcept {
+    return std::tie(dtype, platform) < std::tie(other.dtype, other.platform);
+  }
+};
+
+std::optional<NumericBatchKey_> numeric_batch_key_(const Thread& value) {
+  if (value.kind() != ThreadKind::Series || !is_numeric_series_type(value.as_series())) {
+    return std::nullopt;
+  }
+  return NumericBatchKey_{value.as_series().scalar_type(), value.as_series().platform()};
+}
+
+struct NumericPairBatchKey_ {
+  pluss::codem::ScalarType lhs_dtype;
+  pluss::codem::ScalarType rhs_dtype;
+  pluss::codem::Platform platform;
+
+  bool operator<(const NumericPairBatchKey_& other) const noexcept {
+    return std::tie(lhs_dtype, rhs_dtype, platform)
+           < std::tie(other.lhs_dtype, other.rhs_dtype, other.platform);
+  }
+};
+
+std::optional<NumericPairBatchKey_> numeric_pair_batch_key_(const Thread& lhs,
+                                                            const Thread& rhs) {
+  const auto lhs_key = numeric_batch_key_(lhs);
+  const auto rhs_key = numeric_batch_key_(rhs);
+  if (!lhs_key.has_value() || !rhs_key.has_value()) {
+    return std::nullopt;
+  }
+  if (lhs_key->platform != rhs_key->platform) {
+    return std::nullopt;
+  }
+  return NumericPairBatchKey_{
+      lhs_key->dtype,
+      rhs_key->dtype,
+      lhs_key->platform,
+  };
+}
+
+pluss::Series thread_valid_on_platform_(const Thread& value,
+                                        pluss::codem::Platform platform) {
+  auto valid = value.notnull().as_series();
+  if (valid.platform() != platform) {
+    valid = valid.to(platform);
+  }
+  return valid;
+}
+
 DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMathOp op, bool reverse) {
   const auto cols = frame.features();
   const auto& names = frame.feature_names();
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(cols.size());
+  std::vector<Thread> out(cols.size());
+
+  std::map<NumericBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < cols.size(); ++i) {
-    out.emplace_back(names[i], apply_math_thread_scalar(cols[i], other, op, reverse));
+    const auto key = numeric_batch_key_(cols[i]);
+    if (key.has_value() && op != BinaryMathOp::Pow) {
+      batches[*key].push_back(i);
+    } else {
+      out[i] = apply_math_thread_scalar(cols[i], other, op, reverse);
+    }
   }
-  return DataFrame(std::move(out), frame.cases());
+
+  for (const auto& [key, indices] : batches) {
+    std::vector<pluss::Series> values;
+    std::vector<pluss::Series> valids;
+    values.reserve(indices.size());
+    valids.reserve(indices.size());
+    for (const auto i : indices) {
+      values.push_back(cols[i].as_series());
+      auto valid = cols[i].notnull().as_series();
+      if (valid.platform() != key.platform) {
+        valid = valid.to(key.platform);
+      }
+      valids.push_back(std::move(valid));
+    }
+    const auto value_matrix = pack_series_columns(values, "DataFrame::numeric_batch", true);
+    const auto valid_matrix = pack_series_columns(valids, "DataFrame::numeric_batch", true);
+    const auto result_matrix =
+        dataframe_apply_math_matrix_scalar_(value_matrix, other, op, reverse);
+    for (std::size_t pos = 0; pos < indices.size(); ++pos) {
+      out[indices[pos]] = Thread(
+          dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
+          dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(cols.size());
+  for (std::size_t i = 0; i < cols.size(); ++i) {
+    columns.emplace_back(names[i], std::move(out[i]));
+  }
+  return DataFrame(std::move(columns), frame.cases());
 }
 
 DataFrame dataframe_math_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryMathOp op) {
-  const auto matched = lhs.matched_with(rhs);
+  const auto matched = lhs.match(rhs);
   const auto lhs_cols = matched.left.features();
   const auto rhs_cols = matched.right.features();
   const auto& names = matched.left.feature_names();
 
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(lhs_cols.size());
+  std::vector<Thread> out(lhs_cols.size());
+  std::map<NumericPairBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
-    out.emplace_back(names[i], apply_math_thread_pair(lhs_cols[i], rhs_cols[i], op));
+    const auto key = numeric_pair_batch_key_(lhs_cols[i], rhs_cols[i]);
+    if (key.has_value() && op != BinaryMathOp::Pow) {
+      batches[*key].push_back(i);
+    } else {
+      out[i] = apply_math_thread_pair(lhs_cols[i], rhs_cols[i], op);
+    }
   }
-  return DataFrame(std::move(out), matched.left.cases()).title(lhs.title());
+
+  for (const auto& [key, indices] : batches) {
+    std::vector<pluss::Series> lhs_values;
+    std::vector<pluss::Series> rhs_values;
+    std::vector<pluss::Series> valids;
+    lhs_values.reserve(indices.size());
+    rhs_values.reserve(indices.size());
+    valids.reserve(indices.size());
+    for (const auto i : indices) {
+      lhs_values.push_back(lhs_cols[i].as_series());
+      rhs_values.push_back(rhs_cols[i].as_series());
+      valids.push_back(
+          thread_valid_on_platform_(lhs_cols[i], key.platform)
+              .logical_and(thread_valid_on_platform_(rhs_cols[i], key.platform)));
+    }
+
+    const auto lhs_matrix = pack_series_columns(lhs_values, "DataFrame::numeric_pair_batch", true);
+    const auto rhs_matrix = pack_series_columns(rhs_values, "DataFrame::numeric_pair_batch", true);
+    const auto valid_matrix = pack_series_columns(valids, "DataFrame::numeric_pair_batch", true);
+    const auto result_matrix = dataframe_apply_math_matrix_pair_(lhs_matrix, rhs_matrix, op);
+    for (std::size_t pos = 0; pos < indices.size(); ++pos) {
+      out[indices[pos]] = Thread(
+          dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
+          dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(lhs_cols.size());
+  for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
+    columns.emplace_back(names[i], std::move(out[i]));
+  }
+  return DataFrame(std::move(columns), matched.left.cases()).title(lhs.title());
 }
 
 DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp op) {
   const auto cols = frame.features();
   const auto& names = frame.feature_names();
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(cols.size());
+  std::vector<Thread> out(cols.size());
+
+  std::map<NumericBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < cols.size(); ++i) {
-    out.emplace_back(names[i], apply_cmp_thread_scalar(cols[i], other, op));
+    const auto key = numeric_batch_key_(cols[i]);
+    if (key.has_value()) {
+      batches[*key].push_back(i);
+    } else {
+      out[i] = apply_cmp_thread_scalar(cols[i], other, op);
+    }
   }
-  return DataFrame(std::move(out), frame.cases());
+
+  for (const auto& [key, indices] : batches) {
+    std::vector<pluss::Series> values;
+    std::vector<pluss::Series> valids;
+    values.reserve(indices.size());
+    valids.reserve(indices.size());
+    for (const auto i : indices) {
+      values.push_back(cols[i].as_series());
+      auto valid = cols[i].notnull().as_series();
+      if (valid.platform() != key.platform) {
+        valid = valid.to(key.platform);
+      }
+      valids.push_back(std::move(valid));
+    }
+    const auto value_matrix = pack_series_columns(values, "DataFrame::numeric_batch", true);
+    const auto valid_matrix = pack_series_columns(valids, "DataFrame::numeric_batch", true);
+    const auto result_matrix =
+        dataframe_apply_cmp_matrix_scalar_(value_matrix, other, op);
+    for (std::size_t pos = 0; pos < indices.size(); ++pos) {
+      out[indices[pos]] = Thread(
+          dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
+          dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(cols.size());
+  for (std::size_t i = 0; i < cols.size(); ++i) {
+    columns.emplace_back(names[i], std::move(out[i]));
+  }
+  return DataFrame(std::move(columns), frame.cases());
 }
 
 DataFrame dataframe_cmp_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryCmpOp op) {
-  const auto matched = lhs.matched_with(rhs);
+  const auto matched = lhs.match(rhs);
   const auto lhs_cols = matched.left.features();
   const auto rhs_cols = matched.right.features();
   const auto& names = matched.left.feature_names();
 
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(lhs_cols.size());
+  std::vector<Thread> out(lhs_cols.size());
+  std::map<NumericPairBatchKey_, std::vector<std::size_t>> batches;
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
-    out.emplace_back(names[i], apply_cmp_thread_pair(lhs_cols[i], rhs_cols[i], op));
+    const auto key = numeric_pair_batch_key_(lhs_cols[i], rhs_cols[i]);
+    if (key.has_value()) {
+      batches[*key].push_back(i);
+    } else {
+      out[i] = apply_cmp_thread_pair(lhs_cols[i], rhs_cols[i], op);
+    }
   }
-  return DataFrame(std::move(out), matched.left.cases()).title(lhs.title());
+
+  for (const auto& [key, indices] : batches) {
+    std::vector<pluss::Series> lhs_values;
+    std::vector<pluss::Series> rhs_values;
+    std::vector<pluss::Series> valids;
+    lhs_values.reserve(indices.size());
+    rhs_values.reserve(indices.size());
+    valids.reserve(indices.size());
+    for (const auto i : indices) {
+      lhs_values.push_back(lhs_cols[i].as_series());
+      rhs_values.push_back(rhs_cols[i].as_series());
+      valids.push_back(
+          thread_valid_on_platform_(lhs_cols[i], key.platform)
+              .logical_and(thread_valid_on_platform_(rhs_cols[i], key.platform)));
+    }
+
+    const auto lhs_matrix = pack_series_columns(lhs_values, "DataFrame::numeric_pair_batch", true);
+    const auto rhs_matrix = pack_series_columns(rhs_values, "DataFrame::numeric_pair_batch", true);
+    const auto valid_matrix = pack_series_columns(valids, "DataFrame::numeric_pair_batch", true);
+    const auto result_matrix = dataframe_apply_cmp_matrix_pair_(lhs_matrix, rhs_matrix, op);
+    for (std::size_t pos = 0; pos < indices.size(); ++pos) {
+      out[indices[pos]] = Thread(
+          dataframe_column_from_matrix_(result_matrix, static_cast<std::int64_t>(pos)),
+          dataframe_column_from_matrix_(valid_matrix, static_cast<std::int64_t>(pos)));
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(lhs_cols.size());
+  for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
+    columns.emplace_back(names[i], std::move(out[i]));
+  }
+  return DataFrame(std::move(columns), matched.left.cases()).title(lhs.title());
 }
 
 DataFrame arrange_impl_frame(
@@ -1592,8 +1924,12 @@ std::int64_t normalize_view_stop(std::int64_t stop, std::int64_t nrows) {
 detail::DataFrameImpl::DataFrameImpl(std::vector<std::string> names,
                                      std::vector<Thread> columns,
                                      std::optional<Thread> cases,
-                                     std::string title)
-    : names_(std::move(names)), columns_(std::move(columns)), title_(std::move(title)) {
+                                     std::string title,
+                                     CaseAxis case_axis)
+    : names_(std::move(names)),
+      columns_(std::move(columns)),
+      case_axis_(std::move(case_axis)),
+      title_(std::move(title)) {
   if (cases.has_value()) {
     cases_ = *cases;
   }
@@ -1639,12 +1975,25 @@ void detail::DataFrameImpl::validate_and_reindex_() {
                           cases_.size(),
                           nrows_,
                           columns_.size()));
+  if (case_axis_.defined()) {
+    std::unordered_set<std::string> level_names;
+    level_names.reserve(case_axis_.levels.size());
+    for (const auto& level : case_axis_.levels) {
+      PLUSS_CHECK(!level.name.empty(), "DataFrame: case level names must be non-empty");
+      PLUSS_CHECK(level.values.defined(), "DataFrame: case level values are undefined");
+      PLUSS_CHECK(level.values.size() == nrows_,
+                  "DataFrame: case level length mismatch for '" + level.name + "'");
+      PLUSS_CHECK(level_names.insert(level.name).second,
+                  "DataFrame: duplicate case level name '" + level.name + "'");
+    }
+  }
 }
 
 namespace {
 
 pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::DataFrameImpl& src) {
-  return pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, src.cases_, src.title_);
+  return pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      src.names_, src.columns_, src.cases_, src.title_, src.case_axis_);
 }
 
 } // namespace

@@ -921,16 +921,17 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-<section id="map-elements">
-<h3><code class="docutils literal notranslate"><span class="pre">map_elements</span></code><a class="headerlink" href="#map-elements" title="Link to this heading">¶</a></h3>
+<section id="map">
+<h3><code class="docutils literal notranslate"><span class="pre">map</span></code><a class="headerlink" href="#map" title="Link to this heading">¶</a></h3>
 <section id="id122">
 <h4>Signature<a class="headerlink" href="#id122" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">map_elements</span><span class="p">(</span><span class="n">fn</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">map</span><span class="p">(</span><span class="n">fn</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
 </div>
 </section>
 <section id="id123">
 <h4>Notes<a class="headerlink" href="#id123" title="Link to this heading">¶</a></h4>
+<p>Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with <code class="docutils literal notranslate"><span class="pre">_</span></code> perform the change in place.</p>
 </section>
 <section id="id124">
 <h4>Inputs<a class="headerlink" href="#id124" title="Link to this heading">¶</a></h4>
@@ -956,7 +957,7 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">map_elements</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">map</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -1022,11 +1023,11 @@ sales
 </div>
 </section>
 </section>
-<section id="moving">
-<h3><code class="docutils literal notranslate"><span class="pre">moving</span></code><a class="headerlink" href="#moving" title="Link to this heading">¶</a></h3>
+<section id="ncases">
+<h3><code class="docutils literal notranslate"><span class="pre">ncases</span></code><a class="headerlink" href="#ncases" title="Link to this heading">¶</a></h3>
 <section id="id136">
 <h4>Signature<a class="headerlink" href="#id136" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">moving</span><span class="p">(</span><span class="n">window</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="n">statistic</span><span class="o">:</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">WindowOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
 </pre></div>
 </div>
 </section>
@@ -1035,17 +1036,12 @@ sales
 </section>
 <section id="id138">
 <h4>Inputs<a class="headerlink" href="#id138" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">window</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-Positive fixed case count in each moving window.</p>
-<p><code class="docutils literal notranslate"><span class="pre">statistic</span></code> : <code class="docutils literal notranslate"><span class="pre">WindowStatistic</span></code>
-Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
-<p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">WindowOptions&amp;</span></code>
-Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id139">
 <h4>Output<a class="headerlink" href="#id139" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
-Value produced by this call.</p>
+<p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+Integer count, size, or positional result.</p>
 </section>
 <section id="id140">
 <h4>Options<a class="headerlink" href="#id140" title="Link to this heading">¶</a></h4>
@@ -1061,7 +1057,7 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">moving</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ncases</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -1072,11 +1068,11 @@ Value produced by this call.</p>
 </div>
 </section>
 </section>
-<section id="ncases">
-<h3><code class="docutils literal notranslate"><span class="pre">ncases</span></code><a class="headerlink" href="#ncases" title="Link to this heading">¶</a></h3>
+<section id="nfeats">
+<h3><code class="docutils literal notranslate"><span class="pre">nfeats</span></code><a class="headerlink" href="#nfeats" title="Link to this heading">¶</a></h3>
 <section id="id143">
 <h4>Signature<a class="headerlink" href="#id143" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">nfeats</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
 </pre></div>
 </div>
 </section>
@@ -1106,7 +1102,7 @@ Integer count, size, or positional result.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ncases</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">nfeats</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
@@ -1117,16 +1113,17 @@ Integer count, size, or positional result.</p>
 </div>
 </section>
 </section>
-<section id="nfeats">
-<h3><code class="docutils literal notranslate"><span class="pre">nfeats</span></code><a class="headerlink" href="#nfeats" title="Link to this heading">¶</a></h3>
+<section id="plot">
+<h3><code class="docutils literal notranslate"><span class="pre">plot</span></code><a class="headerlink" href="#plot" title="Link to this heading">¶</a></h3>
 <section id="id150">
 <h4>Signature<a class="headerlink" href="#id150" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">nfeats</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">plot</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="id151">
 <h4>Notes<a class="headerlink" href="#id151" title="Link to this heading">¶</a></h4>
+<p>This opens the plotting accessor for the current data object.</p>
 </section>
 <section id="id152">
 <h4>Inputs<a class="headerlink" href="#id152" title="Link to this heading">¶</a></h4>
@@ -1134,67 +1131,21 @@ Integer count, size, or positional result.</p>
 </section>
 <section id="id153">
 <h4>Output<a class="headerlink" href="#id153" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-Integer count, size, or positional result.</p>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>
+Value produced by this call.</p>
 </section>
 <section id="id154">
 <h4>Options<a class="headerlink" href="#id154" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
 <section id="id155">
-<h4>Examples<a class="headerlink" href="#id155" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">nfeats</span><span class="p">();</span>
-</pre></div>
-</div>
-</section>
-<section id="id156">
-<h4>Expected output<a class="headerlink" href="#id156" title="Link to this heading">¶</a></h4>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
-</pre></div>
-</div>
-</section>
-</section>
-<section id="plot">
-<h3><code class="docutils literal notranslate"><span class="pre">plot</span></code><a class="headerlink" href="#plot" title="Link to this heading">¶</a></h3>
-<section id="id157">
-<h4>Signature<a class="headerlink" href="#id157" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">plot</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span>
-</pre></div>
-</div>
-</section>
-<section id="id158">
-<h4>Notes<a class="headerlink" href="#id158" title="Link to this heading">¶</a></h4>
-<p>This opens the plotting accessor for the current data object.</p>
-</section>
-<section id="id159">
-<h4>Inputs<a class="headerlink" href="#id159" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</section>
-<section id="id160">
-<h4>Output<a class="headerlink" href="#id160" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>
-Value produced by this call.</p>
-</section>
-<section id="id161">
-<h4>Options<a class="headerlink" href="#id161" title="Link to this heading">¶</a></h4>
-<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
-</section>
-<section id="id162">
-<h4>See also<a class="headerlink" href="#id162" title="Link to this heading">¶</a></h4>
+<h4>See also<a class="headerlink" href="#id155" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::plot(options:</span> <span class="pre">const</span> <span class="pre">AtlasPlotOptions&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasPlotAccessor</span></code></p></li>
 </ul>
 </section>
-<section id="id163">
-<h4>Examples<a class="headerlink" href="#id163" title="Link to this heading">¶</a></h4>
+<section id="id156">
+<h4>Examples<a class="headerlink" href="#id156" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1207,47 +1158,47 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 </section>
-<section id="id164">
-<h4>Expected output<a class="headerlink" href="#id164" title="Link to this heading">¶</a></h4>
+<section id="id157">
+<h4>Expected output<a class="headerlink" href="#id157" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(line)
 </pre></div>
 </div>
 </section>
 </section>
-<section id="id165">
-<h3><code class="docutils literal notranslate"><span class="pre">plot</span></code><a class="headerlink" href="#id165" title="Link to this heading">¶</a></h3>
-<section id="id166">
-<h4>Signature<a class="headerlink" href="#id166" title="Link to this heading">¶</a></h4>
+<section id="id158">
+<h3><code class="docutils literal notranslate"><span class="pre">plot</span></code><a class="headerlink" href="#id158" title="Link to this heading">¶</a></h3>
+<section id="id159">
+<h4>Signature<a class="headerlink" href="#id159" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">plot</span><span class="p">(</span><span class="n">options</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AtlasPlotOptions</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasPlotAccessor</span>
 </pre></div>
 </div>
 </section>
-<section id="id167">
-<h4>Notes<a class="headerlink" href="#id167" title="Link to this heading">¶</a></h4>
+<section id="id160">
+<h4>Notes<a class="headerlink" href="#id160" title="Link to this heading">¶</a></h4>
 <p>This opens the plotting accessor for the current data object.</p>
 </section>
-<section id="id168">
-<h4>Inputs<a class="headerlink" href="#id168" title="Link to this heading">¶</a></h4>
+<section id="id161">
+<h4>Inputs<a class="headerlink" href="#id161" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">AtlasPlotOptions&amp;</span></code>
 Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
-<section id="id169">
-<h4>Output<a class="headerlink" href="#id169" title="Link to this heading">¶</a></h4>
+<section id="id162">
+<h4>Output<a class="headerlink" href="#id162" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">AtlasPlotAccessor</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id170">
-<h4>Options<a class="headerlink" href="#id170" title="Link to this heading">¶</a></h4>
+<section id="id163">
+<h4>Options<a class="headerlink" href="#id163" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id171">
-<h4>See also<a class="headerlink" href="#id171" title="Link to this heading">¶</a></h4>
+<section id="id164">
+<h4>See also<a class="headerlink" href="#id164" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::plot()</span> <span class="pre">-&gt;</span> <span class="pre">AtlasPlotAccessor</span></code></p></li>
 </ul>
 </section>
-<section id="id172">
-<h4>Examples<a class="headerlink" href="#id172" title="Link to this heading">¶</a></h4>
+<section id="id165">
+<h4>Examples<a class="headerlink" href="#id165" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1260,8 +1211,8 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 </section>
-<section id="id173">
-<h4>Expected output<a class="headerlink" href="#id173" title="Link to this heading">¶</a></h4>
+<section id="id166">
+<h4>Expected output<a class="headerlink" href="#id166" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(line)
 </pre></div>
 </div>
@@ -1269,32 +1220,32 @@ Value produced by this call.</p>
 </section>
 <section id="relabel-depth">
 <h3><code class="docutils literal notranslate"><span class="pre">relabel_depth</span></code><a class="headerlink" href="#relabel-depth" title="Link to this heading">¶</a></h3>
-<section id="id174">
-<h4>Signature<a class="headerlink" href="#id174" title="Link to this heading">¶</a></h4>
+<section id="id167">
+<h4>Signature<a class="headerlink" href="#id167" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">relabel_depth</span><span class="p">(</span><span class="n">labels</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
 </div>
 </section>
-<section id="id175">
-<h4>Notes<a class="headerlink" href="#id175" title="Link to this heading">¶</a></h4>
+<section id="id168">
+<h4>Notes<a class="headerlink" href="#id168" title="Link to this heading">¶</a></h4>
 <p>Replaces the depth-label axis with the supplied labels while keeping frame contents unchanged.</p>
 </section>
-<section id="id176">
-<h4>Inputs<a class="headerlink" href="#id176" title="Link to this heading">¶</a></h4>
+<section id="id169">
+<h4>Inputs<a class="headerlink" href="#id169" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">labels</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>
 Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>.</p>
 </section>
-<section id="id177">
-<h4>Output<a class="headerlink" href="#id177" title="Link to this heading">¶</a></h4>
+<section id="id170">
+<h4>Output<a class="headerlink" href="#id170" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id178">
-<h4>Options<a class="headerlink" href="#id178" title="Link to this heading">¶</a></h4>
+<section id="id171">
+<h4>Options<a class="headerlink" href="#id171" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id179">
-<h4>Examples<a class="headerlink" href="#id179" title="Link to this heading">¶</a></h4>
+<section id="id172">
+<h4>Examples<a class="headerlink" href="#id172" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1308,8 +1259,8 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 </section>
-<section id="id180">
-<h4>Expected output<a class="headerlink" href="#id180" title="Link to this heading">¶</a></h4>
+<section id="id173">
+<h4>Expected output<a class="headerlink" href="#id173" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
 sales
 10.0
@@ -1325,38 +1276,38 @@ sales
 </section>
 <section id="show">
 <h3><code class="docutils literal notranslate"><span class="pre">show</span></code><a class="headerlink" href="#show" title="Link to this heading">¶</a></h3>
-<section id="id181">
-<h4>Signature<a class="headerlink" href="#id181" title="Link to this heading">¶</a></h4>
+<section id="id174">
+<h4>Signature<a class="headerlink" href="#id174" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="n">options</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
 </pre></div>
 </div>
 </section>
-<section id="id182">
-<h4>Notes<a class="headerlink" href="#id182" title="Link to this heading">¶</a></h4>
+<section id="id175">
+<h4>Notes<a class="headerlink" href="#id175" title="Link to this heading">¶</a></h4>
 <p>This renders a human-readable view for inspection instead of creating a new analytic object.</p>
 </section>
-<section id="id183">
-<h4>Inputs<a class="headerlink" href="#id183" title="Link to this heading">¶</a></h4>
+<section id="id176">
+<h4>Inputs<a class="headerlink" href="#id176" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span></code>
 Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
-<section id="id184">
-<h4>Output<a class="headerlink" href="#id184" title="Link to this heading">¶</a></h4>
+<section id="id177">
+<h4>Output<a class="headerlink" href="#id177" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">void</span></code>
 Performs the side effect and returns no value.</p>
 </section>
-<section id="id185">
-<h4>Options<a class="headerlink" href="#id185" title="Link to this heading">¶</a></h4>
+<section id="id178">
+<h4>Options<a class="headerlink" href="#id178" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id186">
-<h4>See also<a class="headerlink" href="#id186" title="Link to this heading">¶</a></h4>
+<section id="id179">
+<h4>See also<a class="headerlink" href="#id179" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::show(os:</span> <span class="pre">std::ostream&amp;,</span> <span class="pre">options:</span> <span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
 </ul>
 </section>
-<section id="id187">
-<h4>Examples<a class="headerlink" href="#id187" title="Link to this heading">¶</a></h4>
+<section id="id180">
+<h4>Examples<a class="headerlink" href="#id180" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1369,8 +1320,8 @@ Performs the side effect and returns no value.</p>
 </pre></div>
 </div>
 </section>
-<section id="id188">
-<h4>Expected output<a class="headerlink" href="#id188" title="Link to this heading">¶</a></h4>
+<section id="id181">
+<h4>Expected output<a class="headerlink" href="#id181" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
 sales
 10.0
@@ -1384,39 +1335,96 @@ sales
 </div>
 </section>
 </section>
-<section id="id189">
-<h3><code class="docutils literal notranslate"><span class="pre">show</span></code><a class="headerlink" href="#id189" title="Link to this heading">¶</a></h3>
-<section id="id190">
-<h4>Signature<a class="headerlink" href="#id190" title="Link to this heading">¶</a></h4>
+<section id="id182">
+<h3><code class="docutils literal notranslate"><span class="pre">show</span></code><a class="headerlink" href="#id182" title="Link to this heading">¶</a></h3>
+<section id="id183">
+<h4>Signature<a class="headerlink" href="#id183" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">show</span><span class="p">(</span><span class="n">os</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
 </pre></div>
 </div>
 </section>
-<section id="id191">
-<h4>Notes<a class="headerlink" href="#id191" title="Link to this heading">¶</a></h4>
+<section id="id184">
+<h4>Notes<a class="headerlink" href="#id184" title="Link to this heading">¶</a></h4>
 <p>This renders a human-readable view for inspection instead of creating a new analytic object.</p>
 </section>
-<section id="id192">
-<h4>Inputs<a class="headerlink" href="#id192" title="Link to this heading">¶</a></h4>
+<section id="id185">
+<h4>Inputs<a class="headerlink" href="#id185" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">os</span></code> : <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
 Destination output stream used instead of the default display or print target.</p>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span></code>
 Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
-<section id="id193">
-<h4>Output<a class="headerlink" href="#id193" title="Link to this heading">¶</a></h4>
+<section id="id186">
+<h4>Output<a class="headerlink" href="#id186" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">void</span></code>
 Performs the side effect and returns no value.</p>
 </section>
-<section id="id194">
-<h4>Options<a class="headerlink" href="#id194" title="Link to this heading">¶</a></h4>
+<section id="id187">
+<h4>Options<a class="headerlink" href="#id187" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id195">
-<h4>See also<a class="headerlink" href="#id195" title="Link to this heading">¶</a></h4>
+<section id="id188">
+<h4>See also<a class="headerlink" href="#id188" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::show(options:</span> <span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">void</span></code></p></li>
 </ul>
+</section>
+<section id="id189">
+<h4>Examples<a class="headerlink" href="#id189" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
+
+<span class="n">atlas</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id190">
+<h4>Expected output<a class="headerlink" href="#id190" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="slice-frames">
+<h3><code class="docutils literal notranslate"><span class="pre">slice_frames</span></code><a class="headerlink" href="#slice-frames" title="Link to this heading">¶</a></h3>
+<section id="id191">
+<h4>Signature<a class="headerlink" href="#id191" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">slice_frames</span><span class="p">(</span><span class="n">start</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+</pre></div>
+</div>
+</section>
+<section id="id192">
+<h4>Notes<a class="headerlink" href="#id192" title="Link to this heading">¶</a></h4>
+<p>Returns a contiguous depth slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> from the atlas.</p>
+</section>
+<section id="id193">
+<h4>Inputs<a class="headerlink" href="#id193" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">start</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+Inclusive starting position of the slice.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stop</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+Exclusive ending position of the slice.</p>
+</section>
+<section id="id194">
+<h4>Output<a class="headerlink" href="#id194" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id195">
+<h4>Options<a class="headerlink" href="#id195" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
 <section id="id196">
 <h4>Examples<a class="headerlink" href="#id196" title="Link to this heading">¶</a></h4>
@@ -1428,7 +1436,7 @@ Performs the side effect and returns no value.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="n">atlas</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">slice_frames</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -1447,24 +1455,24 @@ sales
 </div>
 </section>
 </section>
-<section id="slice-frames">
-<h3><code class="docutils literal notranslate"><span class="pre">slice_frames</span></code><a class="headerlink" href="#slice-frames" title="Link to this heading">¶</a></h3>
+<section id="sort-depth">
+<h3><code class="docutils literal notranslate"><span class="pre">sort_depth</span></code><a class="headerlink" href="#sort-depth" title="Link to this heading">¶</a></h3>
 <section id="id198">
 <h4>Signature<a class="headerlink" href="#id198" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">slice_frames</span><span class="p">(</span><span class="n">start</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">sort_depth</span><span class="p">(</span><span class="n">ascending</span><span class="o">:</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">nulls_last</span><span class="o">:</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
 </div>
 </section>
 <section id="id199">
 <h4>Notes<a class="headerlink" href="#id199" title="Link to this heading">¶</a></h4>
-<p>Returns a contiguous depth slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> from the atlas.</p>
+<p>Sorts frames by their current depth labels.</p>
 </section>
 <section id="id200">
 <h4>Inputs<a class="headerlink" href="#id200" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">start</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-Inclusive starting position of the slice.</p>
-<p><code class="docutils literal notranslate"><span class="pre">stop</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-Exclusive ending position of the slice.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ascending</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
+Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="id201">
 <h4>Output<a class="headerlink" href="#id201" title="Link to this heading">¶</a></h4>
@@ -1485,7 +1493,8 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">slice_frames</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;test&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;train&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">sort_depth</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -1504,28 +1513,25 @@ sales
 </div>
 </section>
 </section>
-<section id="sort-depth">
-<h3><code class="docutils literal notranslate"><span class="pre">sort_depth</span></code><a class="headerlink" href="#sort-depth" title="Link to this heading">¶</a></h3>
+<section id="squeeze">
+<h3><code class="docutils literal notranslate"><span class="pre">squeeze</span></code><a class="headerlink" href="#squeeze" title="Link to this heading">¶</a></h3>
 <section id="id205">
 <h4>Signature<a class="headerlink" href="#id205" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">sort_depth</span><span class="p">(</span><span class="n">ascending</span><span class="o">:</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">nulls_last</span><span class="o">:</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">squeeze</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id206">
 <h4>Notes<a class="headerlink" href="#id206" title="Link to this heading">¶</a></h4>
-<p>Sorts frames by their current depth labels.</p>
+<p>Collapses a depth-1 atlas back into a single <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 </section>
 <section id="id207">
 <h4>Inputs<a class="headerlink" href="#id207" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">ascending</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> : <code class="docutils literal notranslate"><span class="pre">bool</span></code>
-Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of <code class="docutils literal notranslate"><span class="pre">true</span></code> versus <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id208">
 <h4>Output<a class="headerlink" href="#id208" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 Value produced by this call.</p>
 </section>
 <section id="id209">
@@ -1542,67 +1548,12 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;test&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;train&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">sort_depth</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">squeeze</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
 <section id="id211">
 <h4>Expected output<a class="headerlink" href="#id211" title="Link to this heading">¶</a></h4>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
-</pre></div>
-</div>
-</section>
-</section>
-<section id="squeeze">
-<h3><code class="docutils literal notranslate"><span class="pre">squeeze</span></code><a class="headerlink" href="#squeeze" title="Link to this heading">¶</a></h3>
-<section id="id212">
-<h4>Signature<a class="headerlink" href="#id212" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">squeeze</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-</pre></div>
-</div>
-</section>
-<section id="id213">
-<h4>Notes<a class="headerlink" href="#id213" title="Link to this heading">¶</a></h4>
-<p>Collapses a depth-1 atlas back into a single <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
-</section>
-<section id="id214">
-<h4>Inputs<a class="headerlink" href="#id214" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</section>
-<section id="id215">
-<h4>Output<a class="headerlink" href="#id215" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
-</section>
-<section id="id216">
-<h4>Options<a class="headerlink" href="#id216" title="Link to this heading">¶</a></h4>
-<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
-</section>
-<section id="id217">
-<h4>Examples<a class="headerlink" href="#id217" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">squeeze</span><span class="p">();</span>
-</pre></div>
-</div>
-</section>
-<section id="id218">
-<h4>Expected output<a class="headerlink" href="#id218" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sales
 10.0
 20.0
@@ -1612,38 +1563,38 @@ Value produced by this call.</p>
 </section>
 <section id="tabelize">
 <h3><code class="docutils literal notranslate"><span class="pre">tabelize</span></code><a class="headerlink" href="#tabelize" title="Link to this heading">¶</a></h3>
-<section id="id219">
-<h4>Signature<a class="headerlink" href="#id219" title="Link to this heading">¶</a></h4>
+<section id="id212">
+<h4>Signature<a class="headerlink" href="#id212" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tabelize</span><span class="p">(</span><span class="n">archive</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Archive</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
 </div>
 </section>
-<section id="id220">
-<h4>Notes<a class="headerlink" href="#id220" title="Link to this heading">¶</a></h4>
+<section id="id213">
+<h4>Notes<a class="headerlink" href="#id213" title="Link to this heading">¶</a></h4>
 <p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
 </section>
-<section id="id221">
-<h4>Inputs<a class="headerlink" href="#id221" title="Link to this heading">¶</a></h4>
+<section id="id214">
+<h4>Inputs<a class="headerlink" href="#id214" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">archive</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::kindle::Archive&amp;</span></code>
 Archive payload supplied to this overload.</p>
 </section>
-<section id="id222">
-<h4>Output<a class="headerlink" href="#id222" title="Link to this heading">¶</a></h4>
+<section id="id215">
+<h4>Output<a class="headerlink" href="#id215" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id223">
-<h4>Options<a class="headerlink" href="#id223" title="Link to this heading">¶</a></h4>
+<section id="id216">
+<h4>Options<a class="headerlink" href="#id216" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id224">
-<h4>See also<a class="headerlink" href="#id224" title="Link to this heading">¶</a></h4>
+<section id="id217">
+<h4>See also<a class="headerlink" href="#id217" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tabelize(archive:</span> <span class="pre">const</span> <span class="pre">pluss::kindle::Archive&amp;,</span> <span class="pre">policy:</span> <span class="pre">const</span> <span class="pre">pluss::kindle::TabelizePolicy&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">Atlas</span></code></p></li>
 </ul>
 </section>
-<section id="id225">
-<h4>Examples<a class="headerlink" href="#id225" title="Link to this heading">¶</a></h4>
+<section id="id218">
+<h4>Examples<a class="headerlink" href="#id218" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">c0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))});</span>
@@ -1652,8 +1603,8 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 </section>
-<section id="id226">
-<h4>Expected output<a class="headerlink" href="#id226" title="Link to this heading">¶</a></h4>
+<section id="id219">
+<h4>Expected output<a class="headerlink" href="#id219" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
 sales
 10.0
@@ -1667,47 +1618,102 @@ sales
 </div>
 </section>
 </section>
-<section id="id227">
-<h3><code class="docutils literal notranslate"><span class="pre">tabelize</span></code><a class="headerlink" href="#id227" title="Link to this heading">¶</a></h3>
-<section id="id228">
-<h4>Signature<a class="headerlink" href="#id228" title="Link to this heading">¶</a></h4>
+<section id="id220">
+<h3><code class="docutils literal notranslate"><span class="pre">tabelize</span></code><a class="headerlink" href="#id220" title="Link to this heading">¶</a></h3>
+<section id="id221">
+<h4>Signature<a class="headerlink" href="#id221" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tabelize</span><span class="p">(</span><span class="n">archive</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Archive</span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="n">policy</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">TabelizePolicy</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
 </div>
 </section>
-<section id="id229">
-<h4>Notes<a class="headerlink" href="#id229" title="Link to this heading">¶</a></h4>
+<section id="id222">
+<h4>Notes<a class="headerlink" href="#id222" title="Link to this heading">¶</a></h4>
 <p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
 </section>
-<section id="id230">
-<h4>Inputs<a class="headerlink" href="#id230" title="Link to this heading">¶</a></h4>
+<section id="id223">
+<h4>Inputs<a class="headerlink" href="#id223" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">archive</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::kindle::Archive&amp;</span></code>
 Archive payload supplied to this overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">policy</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::kindle::TabelizePolicy&amp;</span></code>
 Policy object that changes the structural behavior of this overload.</p>
 </section>
-<section id="id231">
-<h4>Output<a class="headerlink" href="#id231" title="Link to this heading">¶</a></h4>
+<section id="id224">
+<h4>Output<a class="headerlink" href="#id224" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
 Value produced by this call.</p>
 </section>
-<section id="id232">
-<h4>Options<a class="headerlink" href="#id232" title="Link to this heading">¶</a></h4>
+<section id="id225">
+<h4>Options<a class="headerlink" href="#id225" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id233">
-<h4>See also<a class="headerlink" href="#id233" title="Link to this heading">¶</a></h4>
+<section id="id226">
+<h4>See also<a class="headerlink" href="#id226" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tabelize(archive:</span> <span class="pre">const</span> <span class="pre">pluss::kindle::Archive&amp;)</span> <span class="pre">-&gt;</span> <span class="pre">Atlas</span></code></p></li>
 </ul>
 </section>
-<section id="id234">
-<h4>Examples<a class="headerlink" href="#id234" title="Link to this heading">¶</a></h4>
+<section id="id227">
+<h4>Examples<a class="headerlink" href="#id227" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">c0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Archive</span><span class="p">({</span><span class="n">c0</span><span class="p">,</span><span class="w"> </span><span class="n">c1</span><span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="o">::</span><span class="n">tabelize</span><span class="p">(</span><span class="n">archive</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id228">
+<h4>Expected output<a class="headerlink" href="#id228" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tail">
+<h3><code class="docutils literal notranslate"><span class="pre">tail</span></code><a class="headerlink" href="#tail" title="Link to this heading">¶</a></h3>
+<section id="id229">
+<h4>Signature<a class="headerlink" href="#id229" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tail</span><span class="p">(</span><span class="n">n</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+</pre></div>
+</div>
+</section>
+<section id="id230">
+<h4>Notes<a class="headerlink" href="#id230" title="Link to this heading">¶</a></h4>
+<p>Returns the last <code class="docutils literal notranslate"><span class="pre">n</span></code> frames from the atlas depth axis.</p>
+</section>
+<section id="id231">
+<h4>Inputs<a class="headerlink" href="#id231" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+Number of rows, entries, or depth items to keep in the preview.</p>
+</section>
+<section id="id232">
+<h4>Output<a class="headerlink" href="#id232" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id233">
+<h4>Options<a class="headerlink" href="#id233" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id234">
+<h4>Examples<a class="headerlink" href="#id234" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -1726,26 +1732,26 @@ sales
 </div>
 </section>
 </section>
-<section id="tail">
-<h3><code class="docutils literal notranslate"><span class="pre">tail</span></code><a class="headerlink" href="#tail" title="Link to this heading">¶</a></h3>
+<section id="tl">
+<h3><code class="docutils literal notranslate"><span class="pre">tl</span></code><a class="headerlink" href="#tl" title="Link to this heading">¶</a></h3>
 <section id="id236">
 <h4>Signature<a class="headerlink" href="#id236" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tail</span><span class="p">(</span><span class="n">n</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tl</span><span class="p">(</span><span class="n">feature</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasTimelineAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="id237">
 <h4>Notes<a class="headerlink" href="#id237" title="Link to this heading">¶</a></h4>
-<p>Returns the last <code class="docutils literal notranslate"><span class="pre">n</span></code> frames from the atlas depth axis.</p>
+<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
 </section>
 <section id="id238">
 <h4>Inputs<a class="headerlink" href="#id238" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-Number of rows, entries, or depth items to keep in the preview.</p>
+<p><code class="docutils literal notranslate"><span class="pre">feature</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
+Name of the source feature used by the operation.</p>
 </section>
 <section id="id239">
 <h4>Output<a class="headerlink" href="#id239" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasTimelineAccessor</span></code>
 Value produced by this call.</p>
 </section>
 <section id="id240">
@@ -1753,7 +1759,14 @@ Value produced by this call.</p>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
 <section id="id241">
-<h4>Examples<a class="headerlink" href="#id241" title="Link to this heading">¶</a></h4>
+<h4>See also<a class="headerlink" href="#id241" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl(features:</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl(features:</span> <span class="pre">pluss::RangeView&lt;std::string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p></li>
+</ul>
+</section>
+<section id="id242">
+<h4>Examples<a class="headerlink" href="#id242" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1762,53 +1775,153 @@ Value produced by this call.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
 </pre></div>
 </div>
 </section>
-<section id="id242">
-<h4>Expected output<a class="headerlink" href="#id242" title="Link to this heading">¶</a></h4>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
-sales
-10.0
-20.0
+<section id="id243">
+<h4>Expected output<a class="headerlink" href="#id243" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id244">
+<h3><code class="docutils literal notranslate"><span class="pre">tl</span></code><a class="headerlink" href="#id244" title="Link to this heading">¶</a></h3>
+<section id="id245">
+<h4>Signature<a class="headerlink" href="#id245" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tl</span><span class="p">(</span><span class="n">features</span><span class="o">:</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasTimelineAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="id246">
+<h4>Notes<a class="headerlink" href="#id246" title="Link to this heading">¶</a></h4>
+<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+</section>
+<section id="id247">
+<h4>Inputs<a class="headerlink" href="#id247" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">features</span></code> : <code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>
+Feature name(s) that select the target DataFrame columns for the operation.</p>
+</section>
+<section id="id248">
+<h4>Output<a class="headerlink" href="#id248" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasTimelineAccessor</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id249">
+<h4>Options<a class="headerlink" href="#id249" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id250">
+<h4>See also<a class="headerlink" href="#id250" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl(feature:</span> <span class="pre">std::string_view)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl(features:</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p></li>
+</ul>
+</section>
+<section id="id251">
+<h4>Examples<a class="headerlink" href="#id251" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-frame1:
-sales
-30.0
-40.0
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id252">
+<h4>Expected output<a class="headerlink" href="#id252" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id253">
+<h3><code class="docutils literal notranslate"><span class="pre">tl</span></code><a class="headerlink" href="#id253" title="Link to this heading">¶</a></h3>
+<section id="id254">
+<h4>Signature<a class="headerlink" href="#id254" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">tl</span><span class="p">(</span><span class="n">features</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasTimelineAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="id255">
+<h4>Notes<a class="headerlink" href="#id255" title="Link to this heading">¶</a></h4>
+<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+</section>
+<section id="id256">
+<h4>Inputs<a class="headerlink" href="#id256" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">features</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
+Feature name(s) that select the target DataFrame columns for the operation.</p>
+</section>
+<section id="id257">
+<h4>Output<a class="headerlink" href="#id257" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasTimelineAccessor</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id258">
+<h4>Options<a class="headerlink" href="#id258" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id259">
+<h4>See also<a class="headerlink" href="#id259" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl(feature:</span> <span class="pre">std::string_view)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl(features:</span> <span class="pre">pluss::RangeView&lt;std::string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p></li>
+</ul>
+</section>
+<section id="id260">
+<h4>Examples<a class="headerlink" href="#id260" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">tl</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id261">
+<h4>Expected output<a class="headerlink" href="#id261" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
 </pre></div>
 </div>
 </section>
 </section>
 <section id="to-string">
 <h3><code class="docutils literal notranslate"><span class="pre">to_string</span></code><a class="headerlink" href="#to-string" title="Link to this heading">¶</a></h3>
-<section id="id243">
-<h4>Signature<a class="headerlink" href="#id243" title="Link to this heading">¶</a></h4>
+<section id="id262">
+<h4>Signature<a class="headerlink" href="#id262" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">options</span><span class="o">:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
 </pre></div>
 </div>
 </section>
-<section id="id244">
-<h4>Notes<a class="headerlink" href="#id244" title="Link to this heading">¶</a></h4>
+<section id="id263">
+<h4>Notes<a class="headerlink" href="#id263" title="Link to this heading">¶</a></h4>
 <p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
 </section>
-<section id="id245">
-<h4>Inputs<a class="headerlink" href="#id245" title="Link to this heading">¶</a></h4>
+<section id="id264">
+<h4>Inputs<a class="headerlink" href="#id264" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">options</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span></code>
 Typed loader, renderer, SQL, plotting, or policy options for this overload.</p>
 </section>
-<section id="id246">
-<h4>Output<a class="headerlink" href="#id246" title="Link to this heading">¶</a></h4>
+<section id="id265">
+<h4>Output<a class="headerlink" href="#id265" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
 Rendered string result.</p>
 </section>
-<section id="id247">
-<h4>Options<a class="headerlink" href="#id247" title="Link to this heading">¶</a></h4>
+<section id="id266">
+<h4>Options<a class="headerlink" href="#id266" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id248">
-<h4>Examples<a class="headerlink" href="#id248" title="Link to this heading">¶</a></h4>
+<section id="id267">
+<h4>Examples<a class="headerlink" href="#id267" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1821,8 +1934,8 @@ Rendered string result.</p>
 </pre></div>
 </div>
 </section>
-<section id="id249">
-<h4>Expected output<a class="headerlink" href="#id249" title="Link to this heading">¶</a></h4>
+<section id="id268">
+<h4>Expected output<a class="headerlink" href="#id268" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame0:
 sales
 10.0
@@ -1836,33 +1949,195 @@ sales
 </div>
 </section>
 </section>
+<section id="ts">
+<h3><code class="docutils literal notranslate"><span class="pre">ts</span></code><a class="headerlink" href="#ts" title="Link to this heading">¶</a></h3>
+<section id="id269">
+<h4>Signature<a class="headerlink" href="#id269" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">ts</span><span class="p">(</span><span class="n">feature</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasTsAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="id270">
+<h4>Notes<a class="headerlink" href="#id270" title="Link to this heading">¶</a></h4>
+<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+</section>
+<section id="id271">
+<h4>Inputs<a class="headerlink" href="#id271" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">feature</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
+Name of the source feature used by the operation.</p>
+</section>
+<section id="id272">
+<h4>Output<a class="headerlink" href="#id272" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasTsAccessor</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id273">
+<h4>Options<a class="headerlink" href="#id273" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id274">
+<h4>See also<a class="headerlink" href="#id274" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::ts(features:</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTsAccessor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::ts(features:</span> <span class="pre">pluss::RangeView&lt;std::string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTsAccessor</span></code></p></li>
+</ul>
+</section>
+<section id="id275">
+<h4>Examples<a class="headerlink" href="#id275" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id276">
+<h4>Expected output<a class="headerlink" href="#id276" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id277">
+<h3><code class="docutils literal notranslate"><span class="pre">ts</span></code><a class="headerlink" href="#id277" title="Link to this heading">¶</a></h3>
+<section id="id278">
+<h4>Signature<a class="headerlink" href="#id278" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">ts</span><span class="p">(</span><span class="n">features</span><span class="o">:</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasTsAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="id279">
+<h4>Notes<a class="headerlink" href="#id279" title="Link to this heading">¶</a></h4>
+<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+</section>
+<section id="id280">
+<h4>Inputs<a class="headerlink" href="#id280" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">features</span></code> : <code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>
+Feature name(s) that select the target DataFrame columns for the operation.</p>
+</section>
+<section id="id281">
+<h4>Output<a class="headerlink" href="#id281" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasTsAccessor</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id282">
+<h4>Options<a class="headerlink" href="#id282" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id283">
+<h4>See also<a class="headerlink" href="#id283" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::ts(feature:</span> <span class="pre">std::string_view)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTsAccessor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::ts(features:</span> <span class="pre">std::initializer_list&lt;std::string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTsAccessor</span></code></p></li>
+</ul>
+</section>
+<section id="id284">
+<h4>Examples<a class="headerlink" href="#id284" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id285">
+<h4>Expected output<a class="headerlink" href="#id285" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id286">
+<h3><code class="docutils literal notranslate"><span class="pre">ts</span></code><a class="headerlink" href="#id286" title="Link to this heading">¶</a></h3>
+<section id="id287">
+<h4>Signature<a class="headerlink" href="#id287" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">ts</span><span class="p">(</span><span class="n">features</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AtlasTsAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="id288">
+<h4>Notes<a class="headerlink" href="#id288" title="Link to this heading">¶</a></h4>
+<p>This is part of the time-aware surface and expects timeline or time-index semantics.</p>
+</section>
+<section id="id289">
+<h4>Inputs<a class="headerlink" href="#id289" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">features</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
+Feature name(s) that select the target DataFrame columns for the operation.</p>
+</section>
+<section id="id290">
+<h4>Output<a class="headerlink" href="#id290" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">AtlasTsAccessor</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id291">
+<h4>Options<a class="headerlink" href="#id291" title="Link to this heading">¶</a></h4>
+<p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
+</section>
+<section id="id292">
+<h4>See also<a class="headerlink" href="#id292" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::ts(feature:</span> <span class="pre">std::string_view)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTsAccessor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Atlas::ts(features:</span> <span class="pre">pluss::RangeView&lt;std::string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTsAccessor</span></code></p></li>
+</ul>
+</section>
+<section id="id293">
+<h4>Examples<a class="headerlink" href="#id293" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">ts</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id294">
+<h4>Expected output<a class="headerlink" href="#id294" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+</section>
+</section>
 <section id="unique">
 <h3><code class="docutils literal notranslate"><span class="pre">unique</span></code><a class="headerlink" href="#unique" title="Link to this heading">¶</a></h3>
-<section id="id250">
-<h4>Signature<a class="headerlink" href="#id250" title="Link to this heading">¶</a></h4>
+<section id="id295">
+<h4>Signature<a class="headerlink" href="#id295" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">unique</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
 </pre></div>
 </div>
 </section>
-<section id="id251">
-<h4>Notes<a class="headerlink" href="#id251" title="Link to this heading">¶</a></h4>
+<section id="id296">
+<h4>Notes<a class="headerlink" href="#id296" title="Link to this heading">¶</a></h4>
 <p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
 </section>
-<section id="id252">
-<h4>Inputs<a class="headerlink" href="#id252" title="Link to this heading">¶</a></h4>
+<section id="id297">
+<h4>Inputs<a class="headerlink" href="#id297" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id253">
-<h4>Output<a class="headerlink" href="#id253" title="Link to this heading">¶</a></h4>
+<section id="id298">
+<h4>Output<a class="headerlink" href="#id298" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
 Boolean status or membership result.</p>
 </section>
-<section id="id254">
-<h4>Options<a class="headerlink" href="#id254" title="Link to this heading">¶</a></h4>
+<section id="id299">
+<h4>Options<a class="headerlink" href="#id299" title="Link to this heading">¶</a></h4>
 <p>Option and enum values, when present, are listed with their effects under <strong>Inputs</strong>.</p>
 </section>
-<section id="id255">
-<h4>Examples<a class="headerlink" href="#id255" title="Link to this heading">¶</a></h4>
+<section id="id300">
+<h4>Examples<a class="headerlink" href="#id300" title="Link to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -1875,8 +2150,8 @@ Boolean status or membership result.</p>
 </pre></div>
 </div>
 </section>
-<section id="id256">
-<h4>Expected output<a class="headerlink" href="#id256" title="Link to this heading">¶</a></h4>
+<section id="id301">
+<h4>Expected output<a class="headerlink" href="#id301" title="Link to this heading">¶</a></h4>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
@@ -1916,11 +2191,13 @@ Boolean status or membership result.</p>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hierarchical_cases.html">Hierarchical Cases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline_batched_api_reference.html">Timeline (<code class="docutils literal notranslate"><span class="pre">tl</span></code>) and Batched DataFrame Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Stabilization, Statistics, and Window API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Window Statistics API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>

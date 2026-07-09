@@ -856,17 +856,17 @@ sales
 20.0
 ```
 
-### `map_elements`
+### `map`
 
 #### Signature
 
 ```cpp
-Atlas::map_elements(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Atlas
+Atlas::map(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Atlas
 ```
 
 #### Notes
 
-
+Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
 
 #### Inputs
 
@@ -893,7 +893,7 @@ auto f1 = pluss::table::DataFrame({
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto out = atlas.map_elements();
+auto out = atlas.map();
 ```
 
 #### Expected output
@@ -954,58 +954,6 @@ frame1:
 sales
 30.0
 40.0
-```
-
-### `moving`
-
-#### Signature
-
-```cpp
-Atlas::moving(window: std::int64_t, statistic: WindowStatistic = WindowStatistic::Mean, options: const WindowOptions& = {}) -> Atlas
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`window` : `std::int64_t`
-    Positive fixed case count in each moving window.
-
-`statistic` : `WindowStatistic`
-    Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
-
-`options` : `const WindowOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Atlas`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.moving();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
 ```
 
 ### `ncases`
@@ -1698,6 +1646,159 @@ sales
 40.0
 ```
 
+### `tl`
+
+#### Signature
+
+```cpp
+Atlas::tl(feature: std::string_view) -> AtlasTimelineAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`feature` : `std::string_view`
+    Name of the source feature used by the operation.
+
+#### Output
+
+`AtlasTimelineAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Atlas::tl(features: std::initializer_list<std::string_view>) -> AtlasTimelineAccessor`
+- `Atlas::tl(features: pluss::RangeView<std::string_view> = {}) -> AtlasTimelineAccessor`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.tl();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `tl`
+
+#### Signature
+
+```cpp
+Atlas::tl(features: pluss::RangeView<std::string_view> = {}) -> AtlasTimelineAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Output
+
+`AtlasTimelineAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Atlas::tl(feature: std::string_view) -> AtlasTimelineAccessor`
+- `Atlas::tl(features: std::initializer_list<std::string_view>) -> AtlasTimelineAccessor`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.tl();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `tl`
+
+#### Signature
+
+```cpp
+Atlas::tl(features: std::initializer_list<std::string_view>) -> AtlasTimelineAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`features` : `std::initializer_list<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Output
+
+`AtlasTimelineAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Atlas::tl(feature: std::string_view) -> AtlasTimelineAccessor`
+- `Atlas::tl(features: pluss::RangeView<std::string_view> = {}) -> AtlasTimelineAccessor`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.tl();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
 ### `to_string`
 
 #### Signature
@@ -1750,6 +1851,159 @@ frame1:
 sales
 30.0
 40.0
+```
+
+### `ts`
+
+#### Signature
+
+```cpp
+Atlas::ts(feature: std::string_view) -> AtlasTsAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`feature` : `std::string_view`
+    Name of the source feature used by the operation.
+
+#### Output
+
+`AtlasTsAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Atlas::ts(features: std::initializer_list<std::string_view>) -> AtlasTsAccessor`
+- `Atlas::ts(features: pluss::RangeView<std::string_view> = {}) -> AtlasTsAccessor`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.ts();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `ts`
+
+#### Signature
+
+```cpp
+Atlas::ts(features: pluss::RangeView<std::string_view> = {}) -> AtlasTsAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`features` : `pluss::RangeView<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Output
+
+`AtlasTsAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Atlas::ts(feature: std::string_view) -> AtlasTsAccessor`
+- `Atlas::ts(features: std::initializer_list<std::string_view>) -> AtlasTsAccessor`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.ts();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
+```
+
+### `ts`
+
+#### Signature
+
+```cpp
+Atlas::ts(features: std::initializer_list<std::string_view>) -> AtlasTsAccessor
+```
+
+#### Notes
+
+This is part of the time-aware surface and expects timeline or time-index semantics.
+
+#### Inputs
+
+`features` : `std::initializer_list<std::string_view>`
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+#### Output
+
+`AtlasTsAccessor`
+    Value produced by this call.
+
+#### Options
+
+Option and enum values, when present, are listed with their effects under **Inputs**.
+
+#### See also
+
+- `Atlas::ts(feature: std::string_view) -> AtlasTsAccessor`
+- `Atlas::ts(features: pluss::RangeView<std::string_view> = {}) -> AtlasTsAccessor`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.ts();
+```
+
+#### Expected output
+
+```text
+The call completes and returns the contract described under Output.
 ```
 
 ### `unique`

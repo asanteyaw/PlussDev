@@ -57,6 +57,8 @@ class DataFrame;
 class DataFrameView;
 class DataFramePlotAccessor;
 class DataFramePlot3DAccessor;
+class DataFrameNoteAccessor;
+class DataFrameTimelineAccessor;
 class AtlasPlotAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
@@ -250,6 +252,52 @@ public:
     bool nulls_last{true};
   };
 
+  struct SetCasesOptions {
+    std::vector<std::string> features{};
+    bool drop{false};
+    bool verify{false};
+    bool sort{false};
+    std::string separator{"\x1F"};
+  };
+
+  struct ResetCasesOptions {
+    bool drop{false};
+    std::vector<std::string> names{};
+    std::string prefix{"case"};
+  };
+
+  struct CasePick {
+    std::string level{};
+    std::string value{};
+    std::vector<std::string> levels{};
+    std::vector<std::string> values{};
+    std::vector<std::string> key{};
+    bool drop{false};
+  };
+
+  struct SortCasesOptions {
+    std::vector<std::string> levels{};
+    bool ascending{true};
+    bool nulls_last{true};
+  };
+
+  struct LevelRename {
+    std::string from;
+    std::string to;
+  };
+
+  struct CaseGroup {
+    std::string level{};
+    std::vector<std::string> levels{};
+  };
+
+  struct UnstackOptions {
+    std::string level{};
+    bool drop{true};
+    bool sort{true};
+    std::string separator{"_"};
+  };
+
   enum class ReorderPlacement : std::uint8_t {
     Front = 0,
     Back = 1,
@@ -362,7 +410,7 @@ public:
   struct CastSpec {
     std::string feature;
     ThreadCastTarget target{ThreadCastTarget::Series};
-    std::optional<pluss::codem::ScalarType> series_dtype{std::nullopt};
+    ThreadCastOptions options{};
   };
 
   struct WindowSpec {
@@ -551,7 +599,12 @@ public:
   std::vector<Thread> features() const;
   const Thread& cases() const;
   pluss::Series cases_series() const;
+  bool has_levels() const;
+  std::vector<std::string> levels() const;
+  Thread level(std::string_view name) const;
+  Thread level(std::int64_t position) const;
   DataFrame case_study(const CaseSelector& rows) const;
+  DataFrame case_study(const CasePick& pick) const;
   DataFrame case_study(const CaseSelector& rows, const FeatureSelector& features) const;
   std::optional<Thread> get(std::string_view feature_name) const;
 
@@ -597,11 +650,6 @@ public:
   DataFrame series_features() const;
   DataFrame note_features() const;
   DataFrame timeline_features() const;
-  DataFrame cast_series(pluss::msharp::RangeView::Of<std::string_view> features,
-                        std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const;
-  DataFrame cast_note(pluss::msharp::RangeView::Of<std::string_view> features) const;
-  DataFrame cast_timeline(pluss::msharp::RangeView::Of<std::string_view> features) const;
-  DataFrame cast_timeindex(pluss::msharp::RangeView::Of<std::string_view> features) const;
   DataFrame astype(pluss::msharp::RangeView::Of<std::string_view> features,
                    pluss::codem::ScalarType dtype) const;
   DataFrame insert(std::int64_t feature_index, std::string name, const Thread& feature) const;
@@ -640,16 +688,37 @@ public:
                         bool nulls_last = true) const;
   DataFrame sort_values(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const;
   DataFrame sort_cases(bool ascending = true, bool nulls_last = true) const;
+  DataFrame sort_cases(const SortCasesOptions& options) const;
   DataFrame top(std::string_view feature, std::int64_t n) const;
   DataFrame bottom(std::string_view feature, std::int64_t n) const;
   pluss::Series repeated_cases(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame unique_cases(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrameView observe(std::int64_t row, bool render = true) const;
-  DataFrameView observe(std::int64_t start, std::int64_t stop, bool render = true) const;
-  DataFrame set_cases(std::string_view feature_name, bool drop_feature = true) const;
+  DataFrameView observe(std::int64_t row, bool render = false) const;
+  DataFrameView observe(std::int64_t start, std::int64_t stop, bool render = false) const;
+  DataFrame set_cases(std::string_view feature_name, bool drop_feature = false) const;
+  DataFrame set_cases(std::initializer_list<std::string_view> feature_names,
+                      bool drop_features = false,
+                      std::string_view separator = "\x1F") const;
+  DataFrame set_cases(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                      bool drop_features = false,
+                      std::string_view separator = "\x1F") const;
+  DataFrame set_cases(const SetCasesOptions& options) const;
   DataFrame reset_cases(std::string case_feature = "case") const;
-  FrameMatch matched_with(const DataFrame& other,
-                          const FrameMatchOptions& options = {}) const;
+  DataFrame reset_cases(const ResetCasesOptions& options) const;
+  DataFrame rename_levels(pluss::msharp::RangeView::Of<LevelRename> renames) const;
+  DataFrame rename_levels(std::initializer_list<LevelRename> renames) const {
+    return rename_levels(pluss::msharp::RangeView::Of<LevelRename>(renames));
+  }
+  DataFrame reorder_levels(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame reorder_levels(std::initializer_list<std::string_view> names) const {
+    return reorder_levels(pluss::msharp::RangeView::Of<std::string_view>(names));
+  }
+  DataFrame drop_levels(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame drop_levels(std::initializer_list<std::string_view> names) const {
+    return drop_levels(pluss::msharp::RangeView::Of<std::string_view>(names));
+  }
+  FrameMatch match(const DataFrame& other,
+                   const FrameMatchOptions& options = {}) const;
   DataFrame align_cases(const Thread& new_cases) const;
   DataFrame join(const DataFrame& other, std::string collision_suffix = "_right") const;
   DataFrame update(const DataFrame& other, bool overwrite = true) const;
@@ -678,11 +747,17 @@ public:
   DataFramePlot3DAccessor plot3d(const DataFramePlotOptions& options) const;
   DataFrameSqlAccessor sql(SqlOptions options) const;
   DataFrameSqlAccessor sql() const;
-  DataFrameSqlPrepared prepare_sql(std::string_view statement) const;
-  DataFrameSqlPrepared prepare_sql(std::string_view statement, SqlOptions options) const;
+  DataFrameSqlPrepared prep_sql(std::string_view statement) const;
+  DataFrameSqlPrepared prep_sql(std::string_view statement, SqlOptions options) const;
   DataFrameTsAccessor ts(std::string_view feature) const;
   DataFrameTsAccessor ts(std::initializer_list<std::string_view> features) const;
-  DataFrameTsAccessor ts(pluss::msharp::RangeView::Of<std::string_view> features) const;
+  DataFrameTsAccessor ts(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrameTimelineAccessor tl(std::string_view feature) const;
+  DataFrameTimelineAccessor tl(std::initializer_list<std::string_view> features) const;
+  DataFrameTimelineAccessor tl(const std::vector<std::string>& features) const;
+  DataFrameTimelineAccessor tl(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrameNoteAccessor note(std::string_view feature) const;
+  DataFrameNoteAccessor note(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   LetSlot set(std::string_view name);
   LetSlots set(pluss::msharp::RangeView::Of<std::string_view> names);
   LetSlots set(std::initializer_list<std::string_view> names) {
@@ -697,50 +772,39 @@ public:
                            pluss::msharp::RangeView::Of<Thread> values);
 
   DataFrame rename(std::string_view old_name, std::string new_name) const;
-  DataFrame& rename_(std::string_view old_name, std::string new_name);
-  DataFrame rename_features(
+  DataFrame rename(
       pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> renames) const;
-  DataFrame relabel_features(pluss::msharp::RangeView::Of<std::string_view> feature_names) const;
+  DataFrame rename(std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const {
+    return rename(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(renames));
+  }
+  DataFrame rename(pluss::msharp::RangeView::Of<std::string_view> feature_names) const;
+  DataFrame rename(std::initializer_list<const char*> feature_names) const;
+  DataFrame& rename_(std::string_view old_name, std::string new_name);
   DataFrame set_axis(pluss::msharp::RangeView::Of<std::string_view> feature_names) const;
-  DataFrame set_feature_axis(pluss::msharp::RangeView::Of<std::string_view> feature_names) const;
   DataFrame conform_to(const DataFrame& other) const;
-  DataFrame reindex_like(const DataFrame& other) const;
-  DataFrame reindex_cases(const Thread& new_cases) const;
-  DataFrame stitch_on(std::string_view left_feature,
-                      const DataFrame& right,
-                      std::string_view right_feature = "",
-                      std::string right_suffix = "_right") const;
-  DataFrame stitch_on(pluss::msharp::RangeView::Of<std::string_view> left_features,
-                      const DataFrame& right,
-                      pluss::msharp::RangeView::Of<std::string_view> right_features = {},
-                      std::string right_suffix = "_right") const;
-  DataFrame stitch_on(std::initializer_list<std::string_view> left_features,
-                      const DataFrame& right,
-                      std::initializer_list<std::string_view> right_features = {},
-                      std::string right_suffix = "_right") const;
 
-  DataFrameView head(std::int64_t n = 5, bool render = true) const;
-  DataFrameView tail(std::int64_t n = 5, bool render = true) const;
+  DataFrameView head(std::int64_t n = 5, bool render = false) const;
+  DataFrameView tail(std::int64_t n = 5, bool render = false) const;
   DataFrame sample(std::int64_t n) const;
-  DataFrame sample(std::int64_t n, bool replace, int axis) const;
-  DataFrame sample(std::int64_t n, std::uint64_t random_state, bool replace = false, int axis = 0) const;
+  DataFrame sample(std::int64_t n, bool replace, Axis axis) const;
+  DataFrame sample(std::int64_t n, std::uint64_t random_state, bool replace = false, Axis axis = Axis::Case) const;
   template <class Float>
     requires std::floating_point<Float>
   DataFrame sample(Float frac) const {
-    return sample_fraction_(static_cast<double>(frac), std::nullopt, false, 0);
+    return sample_fraction_(static_cast<double>(frac), std::nullopt, false, Axis::Case);
   }
   template <class Float>
     requires std::floating_point<Float>
-  DataFrame sample(Float frac, bool replace, int axis) const {
+  DataFrame sample(Float frac, bool replace, Axis axis) const {
     return sample_fraction_(static_cast<double>(frac), std::nullopt, replace, axis);
   }
   template <class Float>
     requires std::floating_point<Float>
-  DataFrame sample(Float frac, std::uint64_t random_state, bool replace = false, int axis = 0) const {
+  DataFrame sample(Float frac, std::uint64_t random_state, bool replace = false, Axis axis = Axis::Case) const {
     return sample_fraction_(static_cast<double>(frac), random_state, replace, axis);
   }
   DataFrame shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const;
-  DataFrame reshuffle(int axis = 0, std::optional<std::uint64_t> random_state = std::nullopt) const;
+  DataFrame reshuffle(Axis axis = Axis::Case, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame shift(std::int64_t periods = 1) const;
   DataFrame shift(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t periods = 1) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
@@ -752,68 +816,22 @@ public:
   DataFrame query(std::string_view expression) const;
   DataFrame assign(pluss::msharp::RangeView::Of<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(pluss::msharp::RangeView::Of<DeriveSpec> specs) const;
-  Thread map_cases(
-      const std::function<ThreadValue(const DataFrame&)>& fn) const;
-  DataFrame apply_cases(
-      const std::function<DataFrame(const DataFrame&)>& fn,
-      ResultShape shape = ResultShape::Infer) const;
-  DataFrame map_elements(
+  DataFrame map(
       const std::function<ThreadValue(const ThreadValue&)>& fn,
       pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  Thread aggregate_with(
+  Thread fold(
       const std::function<Thread(const DataFrame&)>& fn,
       ResultShape shape = ResultShape::Reduce) const;
   DataFrame flow(
       const std::function<DataFrame(const DataFrame&)>& fn) const;
-  DataFrame text_upper(
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_casefold(
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_title(
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_lengths(
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_starts_with(
-      std::string_view prefix,
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_ends_with(
-      std::string_view suffix,
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_matches(
-      std::string_view pattern,
-      bool full = false,
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_pad(
-      std::int64_t width,
-      TextAlign align = TextAlign::Left,
-      char fill = ' ',
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_slice(
-      std::int64_t start,
-      std::optional<std::int64_t> stop = std::nullopt,
-      std::int64_t step = 1,
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_normalize(
-      UnicodeForm form = UnicodeForm::NFC,
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame text_encode(
-      std::string_view encoding = "base64",
-      pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame regex_groups(
-      std::string_view feature,
-      std::string_view pattern,
-      pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
-  DataFrame split_feature(std::string_view feature,
-                          std::string_view delimiter,
-                          std::int64_t limit = -1,
-                          std::string prefix = "part") const;
-  DataFrame partition_feature(std::string_view feature,
-                              std::string_view separator,
-                              std::string prefix = "part") const;
-  DataFrame text_indicators(std::string_view feature,
-                            std::string_view delimiter = "|",
-                            std::string prefix = "") const;
   DataFrame transform(const std::function<Thread(const Thread&)>& fn) const;
+  DataFrame transform(const std::function<Thread(const Thread&)>& fn,
+                      Axis axis) const;
+  Thread transform(const std::function<ThreadValue(const DataFrame&)>& fn,
+                   Axis axis) const;
+  DataFrame transform(const std::function<DataFrame(const DataFrame&)>& fn,
+                      Axis axis,
+                      ResultShape shape = ResultShape::Infer) const;
   DataFrame transform(std::string_view feature, const std::function<Thread(const DataFrame&)>& fn) const;
   DataFrame transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
   DataFrame transform(pluss::msharp::RangeView::Of<TransformSpec> specs) const;
@@ -845,39 +863,51 @@ public:
                         int fold = 0,
                         std::string_view nonexistent = "raise") const;
   DataFrame to_utc(pluss::msharp::RangeView::Of<std::string_view> features) const;
-  DataFrame shift_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                       int periods,
-                       std::string_view freq) const;
-  DataFrame floor_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                       std::string_view unit) const;
-  DataFrame ceil_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                      std::string_view unit) const;
-  DataFrame round_time(pluss::msharp::RangeView::Of<std::string_view> features,
-                       std::string_view unit) const;
+  DataFrame shift(pluss::msharp::RangeView::Of<std::string_view> features,
+                  int periods,
+                  std::string_view freq) const;
+  DataFrame round(pluss::msharp::RangeView::Of<std::string_view> features,
+                  std::string_view unit) const;
   DataFrameView resample(std::string_view time_feature,
                          pluss::msharp::RangeView::Of<std::string_view> value_features,
                          std::string_view freq,
                          std::string_view op = "mean",
                          std::int64_t step = 1,
-                         bool render = true) const;
-  DataFrameView aggregate(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = true) const;
+                         bool render = false) const;
+  DataFrameView aggregate(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = false) const;
   DataFrameView group_by(pluss::msharp::RangeView::Of<std::string_view> keys,
                          pluss::msharp::RangeView::Of<GroupSpec> specs,
                          bool dropna_keys = true,
-                         bool render = true) const;
+                         bool render = false) const;
+  DataFrameView group_by(std::initializer_list<std::string_view> keys,
+                         pluss::msharp::RangeView::Of<GroupSpec> specs,
+                         bool dropna_keys = true,
+                         bool render = false) const;
+  DataFrameView group_by(const CaseGroup& keys,
+                         pluss::msharp::RangeView::Of<GroupSpec> specs,
+                         bool dropna_keys = true,
+                         bool render = false) const;
   DataFrameView pivot(std::string_view case_feature,
                       std::string_view feature_feature,
                       std::string_view value_feature,
                       bool dropna_keys = true,
-                      bool render = true) const;
+                      bool render = false) const;
   DataFrameView pivot_table(std::string_view case_feature,
                             std::string_view feature_feature,
                             std::string_view value_feature,
                             GroupOp op = GroupOp::Mean,
                             bool dropna_keys = true,
-                            bool render = true) const;
+                            bool render = false) const;
   DataFrame combine(const DataFrame& other) const;
   DataFrame combine(const DataFrame& other, const CombineSpec& spec) const;
+  DataFrame stack(std::string feature_name = "feature",
+                  std::string value_name = "value") const;
+  DataFrame unstack(const UnstackOptions& options) const;
+  DataFrame unstack(std::string_view level) const {
+    UnstackOptions options;
+    options.level = std::string(level);
+    return unstack(options);
+  }
   DataFrame extend_cases(const DataFrame& other,
                          FrameMatchRule features = FrameMatchRule::Unite,
                          bool fresh_cases = false,
@@ -887,27 +917,21 @@ public:
   DataFrameView count_by(std::string_view feature,
                          std::int64_t top_n = 0,
                          bool dropna = true,
-                         bool render = true) const;
+                         bool render = false) const;
   DataFrameView mean_by(std::string_view group_feature,
                         std::string_view value_feature,
                         std::int64_t top_n = 0,
                         std::int64_t min_count = 1,
                         bool dropna_group = true,
-                        bool render = true) const;
+                        bool render = false) const;
   DataFrame add(double other) const;
   DataFrame add(const DataFrame& other) const;
   DataFrame sub(double other) const;
   DataFrame sub(const DataFrame& other) const;
-  DataFrame subtract(double other) const;
-  DataFrame subtract(const DataFrame& other) const;
   DataFrame mul(double other) const;
   DataFrame mul(const DataFrame& other) const;
-  DataFrame multiply(double other) const;
-  DataFrame multiply(const DataFrame& other) const;
   DataFrame div(double other) const;
   DataFrame div(const DataFrame& other) const;
-  DataFrame divide(double other) const;
-  DataFrame divide(const DataFrame& other) const;
   DataFrame truediv(double other) const;
   DataFrame truediv(const DataFrame& other) const;
   DataFrame floordiv(double other) const;
@@ -928,160 +952,76 @@ public:
   DataFrame eq(const DataFrame& other) const;
   DataFrame ne(double other) const;
   DataFrame ne(const DataFrame& other) const;
-  DataFrame lt(double other) const;
-  DataFrame lt(const DataFrame& other) const;
-  DataFrame le(double other) const;
-  DataFrame le(const DataFrame& other) const;
-  DataFrame gt(double other) const;
-  DataFrame gt(const DataFrame& other) const;
-  DataFrame ge(double other) const;
-  DataFrame ge(const DataFrame& other) const;
+  DataFrame lt(double other, bool strict = true) const;
+  DataFrame lt(const DataFrame& other, bool strict = true) const;
+  DataFrame gt(double other, bool strict = true) const;
+  DataFrame gt(const DataFrame& other, bool strict = true) const;
   DataFrame compare(double other) const;
   DataFrame compare(const DataFrame& other) const;
-  DataFrameView sum(bool render = true) const;
-  Thread sum(std::int64_t axis, bool skipna = true) const;
-  Thread sum(int axis, bool skipna = true) const {
-    return sum(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView mean(bool render = true) const;
-  Thread mean(std::int64_t axis, bool skipna = true) const;
-  Thread mean(int axis, bool skipna = true) const {
-    return mean(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView median(bool render = true) const;
-  Thread median(std::int64_t axis, bool skipna = true) const;
-  Thread median(int axis, bool skipna = true) const {
-    return median(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView min(bool render = true) const;
-  Thread min(std::int64_t axis, bool skipna = true) const;
-  Thread min(int axis, bool skipna = true) const {
-    return min(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView max(bool render = true) const;
-  Thread max(std::int64_t axis, bool skipna = true) const;
-  Thread max(int axis, bool skipna = true) const {
-    return max(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView std(bool render = true) const;
-  Thread std(std::int64_t axis, bool skipna = true) const;
-  Thread std(int axis, bool skipna = true) const {
-    return std(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView var(bool render = true) const;
-  Thread var(std::int64_t axis, bool skipna = true) const;
-  Thread var(int axis, bool skipna = true) const {
-    return var(static_cast<std::int64_t>(axis), skipna);
-  }
-  DataFrameView count(bool render = true) const;
-  Thread count(std::int64_t axis) const;
-  Thread count(int axis) const {
-    return count(static_cast<std::int64_t>(axis));
-  }
-  DataFrameView prod(bool render = true) const;
-  Thread prod(std::int64_t axis, bool skipna = true) const;
-  Thread prod(int axis, bool skipna = true) const {
-    return prod(static_cast<std::int64_t>(axis), skipna);
-  }
+  Thread sum(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread mean(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread median(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread min(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread max(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread std(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread var(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread count(Axis axis = Axis::Feature) const;
+  Thread prod(Axis axis = Axis::Feature, bool skipna = true) const;
   Thread any(pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const;
-  Thread any(std::int64_t axis,
+  Thread any(Axis axis,
              pluss::msharp::RangeView::Of<std::string_view> features = {},
              bool skipna = true) const;
   Thread all(pluss::msharp::RangeView::Of<std::string_view> features = {}, bool skipna = true) const;
-  Thread all(std::int64_t axis,
+  Thread all(Axis axis,
              pluss::msharp::RangeView::Of<std::string_view> features = {},
              bool skipna = true) const;
-  Thread idxmin(std::int64_t axis = 0, bool skipna = true) const;
-  Thread idxmax(std::int64_t axis = 0, bool skipna = true) const;
-  DataFrameView count_distinct(pluss::msharp::RangeView::Of<std::string_view> features = {},
-                               bool dropna = true,
-                               bool render = true) const;
+  Thread csmin(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread csmax(Axis axis = Axis::Feature, bool skipna = true) const;
+  Thread ndistinct(pluss::msharp::RangeView::Of<std::string_view> features = {},
+                   bool dropna = true) const;
+  Thread freq(pluss::msharp::RangeView::Of<std::string_view> features = {},
+              std::int64_t top_n = 0,
+              bool dropna = true) const;
+  Thread duplicated(pluss::msharp::RangeView::Of<std::string_view> features = {},
+                    bool keep_first = true,
+                    bool keep_last = false) const;
+  DataFrame drop_duplicates(pluss::msharp::RangeView::Of<std::string_view> features = {},
+                            bool keep_first = true,
+                            bool keep_last = false) const;
   DataFrameView corr(CorrMethod method, bool render = false) const;
   DataFrameView corr(bool render = false) const;
   DataFrameView corr(pluss::msharp::RangeView::Of<std::string_view> features, CorrMethod method, bool render = false) const;
   DataFrameView corr(pluss::msharp::RangeView::Of<std::string_view> features, bool render = false) const;
-  DataFrameView covariance(const StatisticOptions& options = {}, bool render = false) const;
+  DataFrameView covar(const StatisticOptions& options = {}, bool render = false) const;
   DataFrame percentiles(pluss::msharp::RangeView::Double points = {0.25, 0.5, 0.75},
                         std::int64_t min_count = 1) const;
-  DataFrame most_frequent(bool drop_nulls = true) const;
-  DataFrame ranks(RankTieRule ties = RankTieRule::Average,
-                  RankNullRule nulls = RankNullRule::Keep,
-                  bool ascending = true,
-                  bool percentage = false) const;
-  Thread asymmetry(std::int64_t axis = 0, std::int64_t min_count = 3) const;
-  Thread tail_weight(std::int64_t axis = 0, std::int64_t min_count = 4) const;
-  Thread variance(std::int64_t axis = 0,
-                  const StatisticOptions& options = {}) const;
-  Thread deviation(std::int64_t axis = 0,
-                   const StatisticOptions& options = {}) const;
-  Thread mean_error(std::int64_t axis = 0,
-                    const StatisticOptions& options = {}) const;
-  DataFrame running_sum(bool skip_nulls = true) const;
-  DataFrame running_product(bool skip_nulls = true) const;
-  DataFrame running_minimum(bool skip_nulls = true) const;
-  DataFrame running_maximum(bool skip_nulls = true) const;
-  Thread correlate_with(const DataFrame& other,
-                        CorrMethod method = CorrMethod::Pearson,
-                        std::int64_t min_count = 1) const;
-  DataFrame matrix_product(const DataFrame& other) const;
-  DataFrame moving_sum(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_mean(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_minimum(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_maximum(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_variance(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_deviation(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_mean_error(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_asymmetry(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame moving_tail_weight(std::int64_t window, const WindowOptions& options = {}) const;
-  DataFrame weighted_moving(
-      pluss::msharp::RangeView::Double weights,
-      WindowStatistic statistic = WindowStatistic::Mean,
-      std::int64_t min_count = 1) const;
-  DataFrame indexed_moving(
-      const WindowBoundsFn& bounds,
-      WindowStatistic statistic = WindowStatistic::Mean,
-      const WindowOptions& options = {}) const;
-  DataFrame growing_sum(std::int64_t min_count = 1) const;
-  DataFrame growing_mean(std::int64_t min_count = 1) const;
-  DataFrame growing_minimum(std::int64_t min_count = 1) const;
-  DataFrame growing_maximum(std::int64_t min_count = 1) const;
-  DataFrame growing_variance(const StatisticOptions& options = {}) const;
-  DataFrame growing_deviation(const StatisticOptions& options = {}) const;
-  DataFrame growing_mean_error(const StatisticOptions& options = {}) const;
-  DataFrame growing_asymmetry(std::int64_t min_count = 3) const;
-  DataFrame growing_tail_weight(std::int64_t min_count = 4) const;
-  DataFrame exponential_mean(double alpha,
-                             bool adjusted = true,
-                             std::int64_t min_count = 1,
-                             bool ignore_nulls = false) const;
-  DataFrame exponential_variance(double alpha,
-                                 bool adjusted = true,
-                                 bool bias_corrected = true,
-                                 std::int64_t min_count = 1,
-                                 bool ignore_nulls = false) const;
-  DataFrame exponential_deviation(double alpha,
-                                  bool adjusted = true,
-                                  bool bias_corrected = true,
-                                  std::int64_t min_count = 1,
-                                  bool ignore_nulls = false) const;
-  DataFrame grouped_moving_mean(std::string_view group_feature,
-                                std::int64_t window,
-                                const WindowOptions& options = {}) const;
-  DataFrame grouped_moving(std::string_view group_feature,
-                           std::int64_t window,
-                           WindowStatistic statistic = WindowStatistic::Mean,
-                           const WindowOptions& options = {}) const;
-  DataFrame time_moving_mean(std::string_view time_feature,
-                             std::int64_t duration_nanos,
-                             std::int64_t min_count = 1) const;
-  DataFrame time_moving(std::string_view time_feature,
-                        std::int64_t duration_nanos,
-                        TimeWindowStatistic statistic = TimeWindowStatistic::Mean,
-                        const StatisticOptions& options = {},
-                        WindowClosure closure = WindowClosure::Right) const;
-  DataFrame isna(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame mode(bool drop_nulls = true) const;
+  DataFrame rank(RankTieRule ties = RankTieRule::Average,
+                 RankNullRule nulls = RankNullRule::Keep,
+                 bool ascending = true,
+                 bool percentage = false) const;
+  Thread skew(Axis axis = Axis::Feature, std::int64_t min_count = 3) const;
+  Thread kurtosis(Axis axis = Axis::Feature, std::int64_t min_count = 4) const;
+  Thread var(Axis axis, const StatisticOptions& options) const;
+  Thread std(Axis axis, const StatisticOptions& options) const;
+  Thread se(Axis axis = Axis::Feature,
+            ErrorTarget target = ErrorTarget::Mean,
+            const StatisticOptions& options = {}) const;
+  DataFrame scan(ScanStatistic statistic, bool skip_nulls = true) const;
+  Thread corr_with(const DataFrame& other,
+                   CorrMethod method = CorrMethod::Pearson,
+                   std::int64_t min_count = 1) const;
+  DataFrame corr_with(pluss::msharp::RangeView::Of<DataFrame> others,
+                      CorrMethod method = CorrMethod::Pearson,
+                      std::int64_t min_count = 1) const;
+  DataFrame matmul(const DataFrame& other) const;
+  DataFrame weigh(pluss::msharp::RangeView::Double weights,
+                  WindowStatistic statistic = WindowStatistic::Mean,
+                  std::int64_t min_count = 1) const;
+  DataFrame bounded(const WindowBoundsFn& bounds,
+                    WindowStatistic statistic = WindowStatistic::Mean,
+                    const WindowOptions& options = {}) const;
   DataFrame isnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
-  DataFrame notna(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame notnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame cast(pluss::msharp::RangeView::Of<CastSpec> specs) const;
   DataFrame cast(
@@ -1199,12 +1139,11 @@ public:
   DataFrame& put_(std::string_view feature, const pluss::Series& bool_mask, pluss::null_t value) {
     return put_(feature, Thread(bool_mask), value);
   }
-  DataFrame dropna() const;
-  DataFrame dropna_all(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame dropna(pluss::msharp::RangeView::Of<std::string_view> features = {},
+                   bool all = false) const;
   DataFrame ffill() const;
   DataFrame bfill() const;
-  std::int64_t count_null_rows() const;
-  DataFrameView describe(bool render = true) const;
+  DataFrameView describe(bool render = false) const;
   DataFrameView transpose(bool render = false) const;
   DataFrame lengthen(
       pluss::msharp::RangeView::Of<std::string_view> id_features = {},
@@ -1215,16 +1154,16 @@ public:
   CategoryEncoding catalogue(std::string_view feature,
                              bool ordered = false,
                              bool sort_levels = false) const;
-  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
+  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = false) const;
   DataFrameView tally(pluss::msharp::RangeView::Of<std::string_view> features,
                       std::int64_t top_n = 0,
                       bool dropna = true,
-                      bool render = true) const;
+                      bool render = false) const;
   DataFrameView tally(std::string_view feature,
                       std::int64_t top_n = 0,
                       bool dropna = true,
-                      bool render = true) const;
-  DataFrameView view(std::int64_t start, std::int64_t stop, bool render = true) const;
+                      bool render = false) const;
+  DataFrameView view(std::int64_t start, std::int64_t stop, bool render = false) const;
   DataFrame copy() const;
   bool equals(const DataFrame& other) const;
 
@@ -1296,21 +1235,21 @@ private:
   DataFrame sample_impl_(std::int64_t n,
                          std::optional<std::uint64_t> random_state,
                          bool replace,
-                         int axis) const;
+                         Axis axis) const;
   DataFrame sample_fraction_(double frac,
                              std::optional<std::uint64_t> random_state,
                              bool replace,
-                             int axis) const;
-  DataFrame summarize_specs(const std::vector<SummarySpec>& specs, bool render = true) const;
+                             Axis axis) const;
+  DataFrame summarize_specs(const std::vector<SummarySpec>& specs, bool render = false) const;
   DataFrameView tally_impl(const std::vector<std::string>& feature_names,
                            std::int64_t top_n,
                            bool dropna,
                            bool render) const;
-  DataFrame summarize(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = true) const;
+  DataFrame summarize(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = false) const;
   DataFrame group(pluss::msharp::RangeView::Of<std::string_view> keys,
                   pluss::msharp::RangeView::Of<GroupSpec> specs,
                   bool dropna_keys = true,
-                  bool render = true) const;
+                  bool render = false) const;
   DataFrame missing(const MissingSpec& spec) const;
   DataFrame missing(MissingOp op,
                     pluss::msharp::RangeView::Of<std::string_view> features = {},
@@ -1319,6 +1258,8 @@ private:
   pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl_{nullptr};
   friend void output_render(std::ostream& os, const DataFrame& frame);
   friend std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
+  friend class DataFrameNoteAccessor;
+  friend class DataFrameTimelineAccessor;
 };
 
 struct FrameMatch {
@@ -1360,6 +1301,91 @@ private:
 std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
 void output_render(std::ostream& os, const DataFrameView& frame);
 
+class DataFrameNoteAccessor {
+ public:
+  DataFrameNoteAccessor(DataFrame frame, std::vector<std::string> features);
+
+  DataFrame strip() const;
+  DataFrame strip(std::string_view chars) const;
+  DataFrame lstrip() const;
+  DataFrame lstrip(std::string_view chars) const;
+  DataFrame rstrip() const;
+  DataFrame rstrip(std::string_view chars) const;
+  DataFrame lower() const;
+  DataFrame upper() const;
+  DataFrame casefold() const;
+  DataFrame titlecase() const;
+  DataFrame length() const;
+  DataFrame starts(std::string_view prefix) const;
+  DataFrame ends(std::string_view suffix) const;
+  DataFrame matches(std::string_view pattern, bool full = false) const;
+  DataFrame fullmatch(std::string_view pattern) const;
+  DataFrame extract(std::string_view pattern,
+                    pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
+  DataFrame split(std::string_view delimiter,
+                  std::int64_t limit = -1,
+                  std::string prefix = "part") const;
+  DataFrame partition(std::string_view separator,
+                      std::string prefix = "part") const;
+  DataFrame pad(std::int64_t width,
+                TextAlign align = TextAlign::Left,
+                char fill = ' ') const;
+  DataFrame chars(std::int64_t start,
+                  std::optional<std::int64_t> stop = std::nullopt,
+                  std::int64_t step = 1) const;
+  DataFrame normalize(UnicodeForm form = UnicodeForm::NFC) const;
+  DataFrame encode(std::string_view encoding = "base64") const;
+  DataFrame indicate(std::string_view delimiter = "|",
+                     std::string prefix = "") const;
+
+ private:
+  DataFrame frame_{};
+  std::vector<std::string> features_{};
+};
+
+class DataFrameTimelineAccessor {
+ public:
+  DataFrameTimelineAccessor(DataFrame frame, std::vector<std::string> features);
+
+  DataFrame isnat() const;
+  DataFrame valid() const;
+  DataFrame year() const;
+  DataFrame month() const;
+  DataFrame day() const;
+  DataFrame hour() const;
+  DataFrame minute() const;
+  DataFrame second() const;
+  DataFrame weekday() const;
+  DataFrame yearday() const;
+  DataFrame quarter() const;
+  DataFrame week() const;
+  DataFrame weekend() const;
+  DataFrame month_start() const;
+  DataFrame month_end() const;
+  DataFrame leap() const;
+  DataFrame weekday_name() const;
+  DataFrame month_name() const;
+  DataFrame fmt(std::string_view pattern) const;
+  DataFrame iso() const;
+  DataFrame epoch(TimeUnit unit = TimeUnit::Nanos) const;
+  DataFrame floor(std::string_view unit) const;
+  DataFrame ceil(std::string_view unit) const;
+  DataFrame round(std::string_view unit) const;
+  DataFrame date() const;
+  DataFrame time() const;
+  DataFrame shift(std::int64_t periods, std::string_view freq) const;
+  DataFrame tz(std::string_view name) const;
+  DataFrame localize(const TimelineLocalizeOptions& options = {}) const;
+  DataFrame utc() const;
+  DataFrame index(bool require_sorted = true) const;
+
+ private:
+  DataFrame map_(const std::function<Thread(const Thread&)>& fn, std::string_view op) const;
+
+  DataFrame frame_{};
+  std::vector<std::string> features_{};
+};
+
 enum class TsAlignMode : std::uint8_t {
   Exact = 0,
   Backward = 1,
@@ -1394,26 +1420,36 @@ class DataFrameTsAccessor {
   DataFrame diff(std::int64_t periods = 1) const;
   DataFrame lag(std::int64_t periods = 1) const;
   DataFrame lead(std::int64_t periods = 1) const;
-  DataFrame rolling_mean(std::int64_t window, std::int64_t min_periods = 1) const;
-  DataFrame rolling_std(std::int64_t window, std::int64_t min_periods = 1) const;
-  DataFrame rolling_sum(std::int64_t window, std::int64_t min_periods = 1) const;
-  DataFrame rolling_var(std::int64_t window, std::int64_t min_periods = 1) const;
-  DataFrame rolling_min(std::int64_t window, std::int64_t min_periods = 1) const;
-  DataFrame rolling_max(std::int64_t window, std::int64_t min_periods = 1) const;
-  DataFrame ema(double alpha) const;
-  DataFrame ewm_mean(double alpha) const;
-  DataFrame ewm_std(double alpha, double epsilon = 1e-12) const;
-  DataFrame expanding_mean(std::int64_t min_periods = 1) const;
-  DataFrame expanding_std(std::int64_t min_periods = 1, double epsilon = 1e-12) const;
+  DataFrame rolling(std::int64_t window,
+                    WindowStatistic statistic = WindowStatistic::Mean,
+                    const WindowOptions& options = {}) const;
+  DataFrame rolling(std::string_view duration,
+                    WindowStatistic statistic = WindowStatistic::Mean,
+                    const StatisticOptions& options = {},
+                    WindowClosure closure = WindowClosure::Right) const;
+  DataFrame expanding(WindowStatistic statistic = WindowStatistic::Mean,
+                      const StatisticOptions& options = {}) const;
+  DataFrame ewm(double alpha,
+                WindowStatistic statistic = WindowStatistic::Mean,
+                bool adjusted = true,
+                bool bias_corrected = true,
+                std::int64_t min_count = 1,
+                bool ignore_nulls = false) const;
   DataFrame zscore_rolling(std::int64_t window, std::int64_t min_periods = 1, double epsilon = 1e-12) const;
   DataFrame fill_gaps(pluss::subsp::stats::ts::GapFillMode mode = pluss::subsp::stats::ts::GapFillMode::Forward,
                       std::optional<double> constant = std::nullopt) const;
+  DataFrame sort(bool ascending = true, bool nulls_last = true) const;
 
   DataFrameTsResampler resample(std::string_view time_feature,
                                 std::string_view freq,
                                 std::int64_t step = 1) const;
+  DataFrameTsResampler resample(std::string_view freq,
+                                std::int64_t step = 1) const;
   DataFrame resample(std::string_view time_feature,
                      std::string_view freq,
+                     pluss::subsp::stats::ts::ResampleOp op,
+                     std::int64_t step = 1) const;
+  DataFrame resample(std::string_view freq,
                      pluss::subsp::stats::ts::ResampleOp op,
                      std::int64_t step = 1) const;
   DataFrame asfreq(std::string_view time_feature,
@@ -1422,14 +1458,27 @@ class DataFrameTsAccessor {
                    pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward,
                    std::optional<double> constant = std::nullopt,
                    pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
+  DataFrame asfreq(std::string_view freq,
+                   std::int64_t step = 1,
+                   pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward,
+                   std::optional<double> constant = std::nullopt,
+                   pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
   DataFrame insert_gaps(std::string_view time_feature,
                         std::string_view freq,
+                        std::int64_t step = 1) const;
+  DataFrame insert_gaps(std::string_view freq,
                         std::int64_t step = 1) const;
   DataFrame align_to(std::string_view time_feature,
                      const Thread& target_axis,
                      TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame align_to(const Thread& target_axis,
+                     TsAlignMode mode = TsAlignMode::Exact) const;
   DataFrame reindex_time(std::string_view time_feature,
                          const Thread& target_axis,
+                         TsAlignMode mode = TsAlignMode::Exact,
+                         TsReindexFill fill = TsReindexFill::None,
+                         std::optional<double> constant = std::nullopt) const;
+  DataFrame reindex_time(const Thread& target_axis,
                          TsAlignMode mode = TsAlignMode::Exact,
                          TsReindexFill fill = TsReindexFill::None,
                          std::optional<double> constant = std::nullopt) const;

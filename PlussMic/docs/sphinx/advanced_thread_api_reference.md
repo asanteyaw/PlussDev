@@ -808,17 +808,17 @@ auto second = atlas.map_elements(double_value);
 repeated calls are deterministic and produce identical values and validity
 ```
 
-## `Atlas::moving`
+## `AtlasTsAccessor::rolling`
 
 ### API Signature
 
 ```text
-Atlas::moving(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -> Atlas
+AtlasTsAccessor::rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -> Atlas
 ```
 
 ### Notes
 
-Delegates the selected moving statistic to every DataFrame at depth.
+Delegates the selected rolling statistic through `atlas.ts(...)` to every DataFrame at depth.
 
 ### Inputs
 
@@ -844,7 +844,7 @@ Delegates the selected moving statistic to every DataFrame at depth.
 Example 1.
 
 ```cpp
-auto out = atlas.moving(2, WindowStatistic::Sum);
+auto out = atlas.ts({"x"}).rolling(2, WindowStatistic::Sum);
 ```
 
 #### Expected output
@@ -856,7 +856,7 @@ each frame x = [1.0, 3.0, 5.0]
 Example 2.
 
 ```cpp
-auto out = nullable_atlas.moving(2, WindowStatistic::Sum);
+auto out = nullable_atlas.ts({"x"}).rolling(2, WindowStatistic::Sum);
 ```
 
 #### Expected output
@@ -868,7 +868,7 @@ null input positions remain null; observed positions follow the same contract
 Example 3.
 
 ```cpp
-auto out = one_atlas.moving(2, WindowStatistic::Sum);
+auto out = one_atlas.ts({"x"}).rolling(2, WindowStatistic::Sum);
 ```
 
 #### Expected output
@@ -880,7 +880,7 @@ one input value or case produces one contract-compatible result
 Example 4.
 
 ```cpp
-auto out = atlas.moving(2, WindowStatistic::Sum).flow([](const auto& value) { return value; });
+auto out = atlas.ts({"x"}).rolling(2, WindowStatistic::Sum).flow([](const auto& value) { return value; });
 ```
 
 #### Expected output
@@ -892,8 +892,8 @@ identity flow preserves the preceding result
 Example 5.
 
 ```cpp
-auto first = atlas.moving(2, WindowStatistic::Sum);
-auto second = atlas.moving(2, WindowStatistic::Sum);
+auto first = atlas.ts({"x"}).rolling(2, WindowStatistic::Sum);
+auto second = atlas.ts({"x"}).rolling(2, WindowStatistic::Sum);
 ```
 
 #### Expected output

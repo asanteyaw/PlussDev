@@ -119,14 +119,16 @@ table workflow.</p>
 <h3>Rename one column vs many columns<a class="headerlink" href="#rename-one-column-vs-many-columns" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">renamed_one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rename</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">);</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">renamed_many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rename_features</span><span class="p">({</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">renamed_many</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rename</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;location&quot;</span><span class="p">},</span>
 <span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">renamed_all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">rename</span><span class="p">({</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;revenue&quot;</span><span class="p">});</span>
 </pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">rename(...)</span></code> for one feature. Use <code class="docutils literal notranslate"><span class="pre">rename_features(...)</span></code> when you have a
-mapping of old names to new names.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">rename(...)</span></code> for one feature, a mapping of old names to new names, or a
+full replacement of the feature axis.</p>
 </section>
 <section id="replace-or-create-a-column">
 <h3>Replace or create a column<a class="headerlink" href="#replace-or-create-a-column" title="Link to this heading">¶</a></h3>
@@ -181,7 +183,10 @@ see <code class="docutils literal notranslate"><span class="pre">dataframe_displ
 <section id="cast-and-derive-features">
 <h2>Cast And Derive Features<a class="headerlink" href="#cast-and-derive-features" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">csv_df</span>
-<span class="w">    </span><span class="p">.</span><span class="n">cast_timeline</span><span class="p">({</span><span class="s">&quot;Business Case ID&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
+<span class="w">            </span><span class="s">&quot;Business Case ID&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="w">    </span><span class="p">})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">astype</span><span class="p">({{</span><span class="s">&quot;Lifecycle Cost&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">}})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">assign</span><span class="p">({</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">DeriveSpec</span><span class="p">{</span>
@@ -215,13 +220,13 @@ result.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">matched_with(...)</span></code> when you need the matched operands themselves or want a
+<p>Use <code class="docutils literal notranslate"><span class="pre">match(...)</span></code> when you need the matched operands themselves or want a
 different rule:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchOptions</span><span class="w"> </span><span class="n">rules</span><span class="p">;</span>
 <span class="n">rules</span><span class="p">.</span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">;</span>
 <span class="n">rules</span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">KeepLeft</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">matched_with</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">rules</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">matched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">rules</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matched</span><span class="p">.</span><span class="n">left</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">matched</span><span class="p">.</span><span class="n">right</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -380,12 +385,12 @@ cannot represent several streamed batches.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;manager&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ama&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kojo&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">stitch_on</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;_r&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">unify</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;common&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_r&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">stitch_on(...)</span></code> is the inner-match join helper. For general key-based merge/join
-workflows, prefer <code class="docutils literal notranslate"><span class="pre">unify(...)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">unify(...)</span></code> is the key-based merge/join helper. Use <code class="docutils literal notranslate"><span class="pre">update(...)</span></code> when the
+right frame should patch matching cells/features.</p>
 <section id="same-key-merge">
 <h3>Same-key merge<a class="headerlink" href="#same-key-merge" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df_ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gradebook</span><span class="p">.</span><span class="n">unify</span><span class="p">(</span>
@@ -517,9 +522,13 @@ workflows, prefer <code class="docutils literal notranslate"><span class="pre">u
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="time_series_accessor_guide.html">Time-Series Accessor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline_batched_api_reference.html">Timeline (<code class="docutils literal notranslate"><span class="pre">tl</span></code>) and Batched DataFrame Operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics_window_api_reference.html">Window Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_thread_api_reference.html">Advanced Thread, UDF, Text, and Delegation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_benchmarks.html">DataFrame Benchmark Results</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>

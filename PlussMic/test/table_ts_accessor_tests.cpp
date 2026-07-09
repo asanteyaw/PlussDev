@@ -17,14 +17,28 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
 using pluss::table::Thread;
+using pluss::table::ThreadCastOptions;
+using pluss::table::ThreadCastTarget;
 using pluss::table::ThreadKind;
 using pluss::table::TsAlignMode;
 using pluss::table::TsReindexFill;
+using pluss::table::WindowStatistic;
 
 void expect(bool ok, const std::string& message) {
   if (!ok) {
     throw std::runtime_error(message);
   }
+}
+
+template <typename Fn>
+void expect_throw(Fn&& fn, const std::string& message) {
+  bool threw = false;
+  try {
+    fn();
+  } catch (...) {
+    threw = true;
+  }
+  expect(threw, message);
 }
 
 std::vector<double> to_f64(const Thread& t) {
@@ -186,9 +200,13 @@ void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
       {"Date", Thread(pluss::make_series(std::vector<std::int64_t>{19900102, 19900103, 20000229}))},
   });
 
-  const auto out = df.cast_timeline({"Date"});
+  const auto out = df.cast({{
+      "Date",
+      ThreadCastTarget::Timeline,
+      ThreadCastOptions{},
+  }});
   const auto date_thread = out.features("Date");
-  expect(date_thread.kind() == ThreadKind::Timeline, "cast_timeline should materialize Timeline for YYYYMMDD integers");
+  expect(date_thread.kind() == ThreadKind::Timeline, "cast(Timeline) should materialize Timeline for YYYYMMDD integers");
 
   const auto tl = date_thread.as_timeline();
   const auto years = Thread(tl.year()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
@@ -201,6 +219,94 @@ void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
   expect(years[2] == 2000 && months[2] == 2 && days[2] == 29, "leap-day YYYYMMDD conversion mismatch");
 }
 
+void test_selection_first_note_tl_and_ts_time_rolling() {
+  DataFrame raw({
+      {"date_text", Thread(pluss::make_note({"2024-01-01", "bad", "2024-01-05"}))},
+      {"price", Thread(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
+      {"volume", Thread(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
+  });
+
+  auto parsed = raw.cast({{
+      "date_text",
+      ThreadCastTarget::Timeline,
+      ThreadCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null},
+  }}).features({"date_text"});
+  expect(parsed.features("date_text").kind() == ThreadKind::Timeline,
+         "cast(Timeline) should parse selected text feature into Timeline");
+  expect(parsed.features("date_text").is_valid(0), "valid parsed date should stay valid");
+  expect(!parsed.features("date_text").is_valid(1), "invalid parsed date should become null when requested");
+
+  const std::vector<std::string_view> iso{
+      "2024-01-01T00:00:00Z",
+      "2024-01-02T00:00:00Z",
+      "2024-01-05T00:00:00Z",
+  };
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(iso.size())};
+  const auto timeline = pluss::codeh::ops_internal::timeline_from_utf8(
+      std::span<const std::string_view>(iso.data(), iso.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  DataFrame df({
+      {"date", Thread(timeline)},
+      {"price", Thread(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
+      {"volume", Thread(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
+  });
+  auto values = df.set_cases("date", false).features({"price", "volume"});
+
+  auto rolling = values.ts().rolling("2D", WindowStatistic::Sum);
+  const auto price = to_f64(rolling.features("price"));
+  const auto volume = to_f64(rolling.features("volume"));
+  expect(price.size() == 3 && std::abs(price[0] - 10.0) < 1e-12 &&
+             std::abs(price[1] - 22.0) < 1e-12 &&
+             std::abs(price[2] - 20.0) < 1e-12,
+         "selection-first ts().rolling(\"2D\", Sum) should use timeline cases");
+  expect(volume.size() == 3 && std::abs(volume[0] - 100.0) < 1e-12 &&
+             std::abs(volume[1] - 300.0) < 1e-12 &&
+             std::abs(volume[2] - 300.0) < 1e-12,
+         "selection-first ts().rolling should process every selected numeric feature");
+
+  auto sorted = values.ts().sort(false);
+  const auto sorted_price = to_f64(sorted.features("price"));
+  expect(sorted_price.size() == 3 && std::abs(sorted_price[0] - 20.0) < 1e-12 &&
+             std::abs(sorted_price[2] - 10.0) < 1e-12,
+         "selection-first ts().sort(false) should sort selected values by timeline cases");
+}
+
+void test_payload_surfaces_reject_wrong_payloads() {
+  const std::vector<std::string_view> iso{
+      "2024-01-01T00:00:00Z",
+      "2024-01-02T00:00:00Z",
+  };
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(iso.size())};
+  const auto timeline = pluss::codeh::ops_internal::timeline_from_utf8(
+      std::span<const std::string_view>(iso.data(), iso.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
+
+  DataFrame df({
+      {"date", Thread(timeline)},
+      {"name", Thread(pluss::make_note({"Ada", "Grace"}))},
+      {"price", Thread(pluss::make_series(std::vector<double>{10.0, 12.0}))},
+  });
+
+  expect_throw([&] { (void)df.features("price").note().upper(); },
+               "Thread.note() should reject Series payloads");
+  expect_throw([&] { (void)df.features("name").tl().year(); },
+               "Thread.tl() should reject Note payloads");
+  expect_throw([&] { (void)df.note("price").upper(); },
+               "DataFrame.note(feature) should reject non-Note features");
+  expect_throw([&] { (void)df.tl("name").year(); },
+               "DataFrame.tl(feature) should reject non-Timeline features");
+  expect_throw([&] { (void)df.note().upper(); },
+               "DataFrame.note() should require an intentional all-Note selection");
+  expect_throw([&] { (void)df.tl().year(); },
+               "DataFrame.tl() should require an intentional all-Timeline selection");
+
+  expect(df.features("name").note().upper().kind() == ThreadKind::Note,
+         "Thread.note() should still work for Note payloads");
+  expect(df.features("date").tl().year().kind() == ThreadKind::Series,
+         "Thread.tl() should still work for Timeline payloads");
+}
+
 } // namespace
 
 int main() {
@@ -208,6 +314,8 @@ int main() {
     test_dataframe_ts_one_feature_and_set();
     test_dataframe_ts_resample_reindex_blocks();
     test_dataframe_cast_timeline_from_yyyymmdd_ints();
+    test_selection_first_note_tl_and_ts_time_rolling();
+    test_payload_surfaces_reject_wrong_payloads();
     std::cout << "table_ts_accessor_tests passed\n";
     return 0;
   } catch (const std::exception& e) {

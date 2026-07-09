@@ -167,8 +167,8 @@ Thread indexed_numeric_window_(
     result = sums;
   } else if (statistic == WindowStatistic::Mean) {
     result = sums / counts;
-  } else if (statistic == WindowStatistic::Variance ||
-             statistic == WindowStatistic::Deviation) {
+  } else if (statistic == WindowStatistic::Var ||
+             statistic == WindowStatistic::Std) {
     const auto origin = prepared.sum() / valid.to(dtype).sum();
     const auto shifted =
         (values - origin).where(valid.logical_not(), 0.0);
@@ -188,7 +188,7 @@ Thread indexed_numeric_window_(
     output_valid = output_valid.logical_and(
         counts.gt(static_cast<double>(options.ddof)));
     variance = variance.clamp_min(0.0);
-    result = statistic == WindowStatistic::Deviation
+    result = statistic == WindowStatistic::Std
                  ? variance.sqrt()
                  : variance;
   } else {
@@ -404,18 +404,18 @@ std::regex compile_regex_(std::string_view pattern,
 
 } // namespace
 
-Thread Thread::covariance(
+ThreadValue Thread::covar(
     const Thread& other,
     const StatisticOptions& options) const {
-  require_numeric_thread_(*this, "Thread::covariance");
-  require_numeric_thread_(other, "Thread::covariance");
+  require_numeric_thread_(*this, "Thread::covar");
+  require_numeric_thread_(other, "Thread::covar");
   PLUSS_CHECK(size() == other.size(),
-              "Thread::covariance: operands must have equal length");
+              "Thread::covar: operands must have equal length");
   PLUSS_CHECK(options.ddof >= 0 && options.min_count >= 0,
-              "Thread::covariance: ddof and min_count must be >= 0");
+              "Thread::covar: ddof and min_count must be >= 0");
   const auto platform = as_series().platform();
   PLUSS_CHECK(other.as_series().platform() == platform,
-              "Thread::covariance: operands must share a platform");
+              "Thread::covar: operands must share a platform");
   const auto dtype = thread_compute_type_(as_series());
   const auto left_valid = thread_valid_(*this);
   const auto right_valid = thread_valid_(other);
@@ -436,9 +436,9 @@ Thread Thread::covariance(
       (centered_left * centered_right).sum() /
       (count - static_cast<double>(options.ddof));
   const auto minimum = std::max(options.min_count, options.ddof + 1);
-  return Thread(
+  return ThreadValue(Thread(
       value.reshape({1}),
-      count.ge(static_cast<double>(minimum)).reshape({1}));
+      count.ge(static_cast<double>(minimum)).reshape({1})));
 }
 
 Thread Thread::percentiles(
@@ -482,17 +482,17 @@ Thread Thread::percentiles(
   return Thread(packed, valid);
 }
 
-Thread Thread::most_frequent(bool drop_nulls) const {
+Thread Thread::mode(bool drop_nulls) const {
   PLUSS_CHECK(
       kind() == ThreadKind::Series || kind() == ThreadKind::Note ||
           kind() == ThreadKind::Timeline ||
           kind() == ThreadKind::TimeIndex,
-      "Thread::most_frequent: unsupported payload");
+      "Thread::mode: unsupported payload");
   const auto validity = notnull().as_series().to_vec<bool>();
   std::int64_t null_count = 0;
   std::vector<bool> output_valid;
   if (kind() == ThreadKind::Series) {
-    require_numeric_thread_(*this, "Thread::most_frequent");
+    require_numeric_thread_(*this, "Thread::mode");
     const auto values =
         as_series().to(pluss::codem::Platform::CPU)
             .to(pluss::codem::ScalarType::Float64).to_vec<double>();
@@ -505,7 +505,7 @@ Thread Thread::most_frequent(bool drop_nulls) const {
       (void)value;
       best = std::max(best, count);
     }
-    PLUSS_CHECK(best > 0, "Thread::most_frequent: no values");
+    PLUSS_CHECK(best > 0, "Thread::mode: no values");
     std::vector<double> modes;
     for (const auto& [value, count] : counts) {
       if (count == best) {
@@ -560,7 +560,7 @@ Thread Thread::most_frequent(bool drop_nulls) const {
       (void)tick;
       best = std::max(best, occurrence.first);
     }
-    PLUSS_CHECK(best > 0, "Thread::most_frequent: no values");
+    PLUSS_CHECK(best > 0, "Thread::mode: no values");
     std::vector<std::int64_t> positions;
     for (const auto& [tick, occurrence] : counts) {
       (void)tick;
@@ -584,7 +584,7 @@ Thread Thread::most_frequent(bool drop_nulls) const {
     (void)value;
     best = std::max(best, count);
   }
-  PLUSS_CHECK(best > 0, "Thread::most_frequent: no values");
+  PLUSS_CHECK(best > 0, "Thread::mode: no values");
   std::vector<std::string> modes;
   for (const auto& [value, count] : counts) {
     if (count == best) {
@@ -600,12 +600,12 @@ Thread Thread::most_frequent(bool drop_nulls) const {
                 bool_series_from_bools(output_valid));
 }
 
-Thread Thread::ranks(
+Thread Thread::rank(
     RankTieRule ties,
     RankNullRule nulls,
     bool ascending,
     bool percentage) const {
-  require_numeric_thread_(*this, "Thread::ranks");
+  require_numeric_thread_(*this, "Thread::rank");
   const auto n = size();
   auto values = as_series().to(pluss::codem::Platform::CPU)
                     .to(pluss::codem::ScalarType::Float64).to_vec<double>();
@@ -686,8 +686,8 @@ Thread Thread::ranks(
   return Thread(output, output_valid);
 }
 
-Thread Thread::asymmetry(std::int64_t min_count) const {
-  require_numeric_thread_(*this, "Thread::asymmetry");
+ThreadValue Thread::skew(std::int64_t min_count) const {
+  require_numeric_thread_(*this, "Thread::skew");
   const auto dtype = thread_compute_type_(as_series());
   const auto valid = thread_valid_(*this);
   const auto count = valid.to(dtype).sum();
@@ -702,14 +702,14 @@ Thread Thread::asymmetry(std::int64_t min_count) const {
       (m3 / (m2 * m2.sqrt())) *
       ((count * (count - 1.0)).sqrt() / (count - 2.0));
   result = result.where(m2.eq(0.0), 0.0);
-  return Thread(
+  return ThreadValue(Thread(
       result.reshape({1}),
       count.ge(static_cast<double>(
-          std::max<std::int64_t>(3, min_count))).reshape({1}));
+          std::max<std::int64_t>(3, min_count))).reshape({1})));
 }
 
-Thread Thread::tail_weight(std::int64_t min_count) const {
-  require_numeric_thread_(*this, "Thread::tail_weight");
+ThreadValue Thread::kurtosis(std::int64_t min_count) const {
+  require_numeric_thread_(*this, "Thread::kurtosis");
   const auto dtype = thread_compute_type_(as_series());
   const auto valid = thread_valid_(*this);
   const auto count = valid.to(dtype).sum();
@@ -726,16 +726,16 @@ Thread Thread::tail_weight(std::int64_t min_count) const {
       ((count - 1.0) / ((count - 2.0) * (count - 3.0))) *
       ((count + 1.0) * raw + 6.0);
   result = result.where(m2.eq(0.0), 0.0);
-  return Thread(
+  return ThreadValue(Thread(
       result.reshape({1}),
       count.ge(static_cast<double>(
-          std::max<std::int64_t>(4, min_count))).reshape({1}));
+          std::max<std::int64_t>(4, min_count))).reshape({1})));
 }
 
-Thread Thread::variance(const StatisticOptions& options) const {
-  require_numeric_thread_(*this, "Thread::variance");
+ThreadValue Thread::var(const StatisticOptions& options) const {
+  require_numeric_thread_(*this, "Thread::var");
   PLUSS_CHECK(options.ddof >= 0 && options.min_count >= 0,
-              "Thread::variance: ddof and min_count must be >= 0");
+              "Thread::var: ddof and min_count must be >= 0");
   const auto dtype = thread_compute_type_(as_series());
   const auto valid = thread_valid_(*this);
   const auto count = valid.to(dtype).sum();
@@ -747,23 +747,25 @@ Thread Thread::variance(const StatisticOptions& options) const {
   const auto result =
       (centered * centered).sum() /
       (count - static_cast<double>(options.ddof));
-  return Thread(
+  return ThreadValue(Thread(
       result.clamp_min(0.0).reshape({1}),
       count.ge(static_cast<double>(
-          std::max(options.min_count, options.ddof + 1))).reshape({1}));
+          std::max(options.min_count, options.ddof + 1))).reshape({1})));
 }
 
-Thread Thread::deviation(const StatisticOptions& options) const {
-  const auto result = variance(options);
-  return Thread(
+ThreadValue Thread::std(const StatisticOptions& options) const {
+  const auto result = var(options);
+  return ThreadValue(Thread(
       result.as_series().clamp_min(0.0).sqrt(),
-      result.validity_mask());
+      result.thread().validity_mask()));
 }
 
-Thread Thread::mean_error(const StatisticOptions& options) const {
-  require_numeric_thread_(*this, "Thread::mean_error");
+ThreadValue Thread::se(ErrorTarget target, const StatisticOptions& options) const {
+  PLUSS_CHECK(target == ErrorTarget::Mean,
+              "Thread::se: only ErrorTarget::Mean is implemented in this pass");
+  require_numeric_thread_(*this, "Thread::se");
   PLUSS_CHECK(options.ddof >= 0 && options.min_count >= 0,
-              "Thread::mean_error: ddof and min_count must be >= 0");
+              "Thread::se: ddof and min_count must be >= 0");
   const auto dtype = thread_compute_type_(as_series());
   const auto valid = thread_valid_(*this);
   const auto count = valid.to(dtype).sum();
@@ -776,43 +778,38 @@ Thread Thread::mean_error(const StatisticOptions& options) const {
       (centered * centered).sum() /
       (count - static_cast<double>(options.ddof));
   const auto result = variance.sqrt() / count.sqrt();
-  return Thread(
+  return ThreadValue(Thread(
       result.reshape({1}),
       count.ge(static_cast<double>(
-          std::max(options.min_count, options.ddof + 1))).reshape({1}));
+          std::max(options.min_count, options.ddof + 1))).reshape({1})));
 }
 
-Thread Thread::running_sum(bool skip_nulls) const {
-  return running_thread_(*this, skip_nulls, 0, "Thread::running_sum");
+Thread Thread::scan(ScanStatistic statistic, bool skip_nulls) const {
+  switch (statistic) {
+    case ScanStatistic::Sum:
+      return running_thread_(*this, skip_nulls, 0, "Thread::scan");
+    case ScanStatistic::Product:
+      return running_thread_(*this, skip_nulls, 1, "Thread::scan");
+    case ScanStatistic::Minimum:
+      return running_thread_(*this, skip_nulls, 2, "Thread::scan");
+    case ScanStatistic::Maximum:
+      return running_thread_(*this, skip_nulls, 3, "Thread::scan");
+  }
+  PLUSS_FAIL("Thread::scan: unsupported statistic");
 }
 
-Thread Thread::running_product(bool skip_nulls) const {
-  return running_thread_(
-      *this, skip_nulls, 1, "Thread::running_product");
-}
-
-Thread Thread::running_minimum(bool skip_nulls) const {
-  return running_thread_(
-      *this, skip_nulls, 2, "Thread::running_minimum");
-}
-
-Thread Thread::running_maximum(bool skip_nulls) const {
-  return running_thread_(
-      *this, skip_nulls, 3, "Thread::running_maximum");
-}
-
-Thread Thread::correlate_with(
+ThreadValue Thread::corr_with(
     const Thread& other,
     ThreadCorrMethod method,
     std::int64_t min_count) const {
-  require_numeric_thread_(*this, "Thread::correlate_with");
-  require_numeric_thread_(other, "Thread::correlate_with");
+  require_numeric_thread_(*this, "Thread::corr_with");
+  require_numeric_thread_(other, "Thread::corr_with");
   PLUSS_CHECK(size() == other.size(),
-              "Thread::correlate_with: operands must have equal length");
+              "Thread::corr_with: operands must have equal length");
   PLUSS_CHECK(min_count >= 1,
-              "Thread::correlate_with: min_count must be >= 1");
+              "Thread::corr_with: min_count must be >= 1");
   PLUSS_CHECK(as_series().platform() == other.as_series().platform(),
-              "Thread::correlate_with: operands must share a platform");
+              "Thread::corr_with: operands must share a platform");
   const auto valid =
       notnull().as_series().logical_and(other.notnull().as_series());
   if (method == ThreadCorrMethod::Pearson) {
@@ -838,10 +835,10 @@ Thread Thread::correlate_with(
         count.ge(static_cast<double>(min_count))
             .logical_and(left_square.gt(0.0))
             .logical_and(right_square.gt(0.0));
-    return Thread(
+    return ThreadValue(Thread(
         (numerator / (left_square * right_square).sqrt())
             .clamp(-1.0, 1.0).reshape({1}),
-        output_valid.reshape({1}));
+        output_valid.reshape({1})));
   }
   const auto count =
       valid.to(pluss::codem::ScalarType::Int64).sum().item<std::int64_t>();
@@ -852,57 +849,45 @@ Thread Thread::correlate_with(
         {1}, corr(other, method), thread_compute_type_(as_series()),
         as_series().platform());
   }
-  return scalar_thread_(value, count >= min_count);
+  return ThreadValue(scalar_thread_(value, count >= min_count));
 }
 
-pluss::Series Thread::matrix_product(const Thread& other) const {
-  require_numeric_thread_(*this, "Thread::matrix_product");
-  require_numeric_thread_(other, "Thread::matrix_product");
+ThreadValue Thread::matmul(const Thread& other) const {
+  require_numeric_thread_(*this, "Thread::matmul");
+  require_numeric_thread_(other, "Thread::matmul");
   PLUSS_CHECK(!has_validity_mask() && !other.has_validity_mask(),
-              "Thread::matrix_product: null values are not supported");
-  return as_series().matmul(other.as_series());
+              "Thread::matmul: null values are not supported");
+  return ThreadValue(Thread(as_series().matmul(other.as_series()).reshape({1})));
 }
 
-Thread Thread::indexed_moving(
+Thread Thread::bounded(
     const WindowBoundsFn& bounds,
     WindowStatistic statistic,
     const WindowOptions& options) const {
   PLUSS_CHECK(static_cast<bool>(bounds),
-              "Thread::indexed_moving: bounds callback is empty");
+              "Thread::bounded: bounds callback is empty");
   auto [starts, ends] = bounds(size(), options);
   return indexed_numeric_window_(
       *this, starts, ends, statistic, options,
-      "Thread::indexed_moving");
+      "Thread::bounded");
 }
 
 Thread Thread::moving(
     std::int64_t window,
     WindowStatistic statistic,
     const WindowOptions& options) const {
+  if (statistic == WindowStatistic::Sem) {
+    return moving_moment_thread_(*this, window, options, 0, "Thread::moving");
+  }
+  if (statistic == WindowStatistic::Skew) {
+    return moving_moment_thread_(*this, window, options, 1, "Thread::moving");
+  }
+  if (statistic == WindowStatistic::Kurtosis) {
+    return moving_moment_thread_(*this, window, options, 2, "Thread::moving");
+  }
   auto [starts, ends] = fixed_bounds_(size(), window, options);
   return indexed_numeric_window_(
       *this, starts, ends, statistic, options, "Thread::moving");
-}
-
-Thread Thread::moving_mean_error(
-    std::int64_t window,
-    const WindowOptions& options) const {
-  return moving_moment_thread_(
-      *this, window, options, 0, "Thread::moving_mean_error");
-}
-
-Thread Thread::moving_asymmetry(
-    std::int64_t window,
-    const WindowOptions& options) const {
-  return moving_moment_thread_(
-      *this, window, options, 1, "Thread::moving_asymmetry");
-}
-
-Thread Thread::moving_tail_weight(
-    std::int64_t window,
-    const WindowOptions& options) const {
-  return moving_moment_thread_(
-      *this, window, options, 2, "Thread::moving_tail_weight");
 }
 
 Thread Thread::growing(
@@ -917,46 +902,26 @@ Thread Thread::growing(
       std::max<std::int64_t>(1, size()), statistic, window_options);
 }
 
-Thread Thread::growing_mean_error(
-    const StatisticOptions& options) const {
-  return moving_mean_error(
-      std::max<std::int64_t>(options.ddof + 1, size()),
-      WindowOptions{
-          .min_count = options.min_count,
-          .ddof = options.ddof});
-}
-
-Thread Thread::growing_asymmetry(std::int64_t min_count) const {
-  return moving_asymmetry(
-      std::max<std::int64_t>(3, size()),
-      WindowOptions{.min_count = min_count});
-}
-
-Thread Thread::growing_tail_weight(std::int64_t min_count) const {
-  return moving_tail_weight(
-      std::max<std::int64_t>(4, size()),
-      WindowOptions{.min_count = min_count});
-}
-
-Thread Thread::exponential_mean(
+Thread exponential_mean_thread_(
+    const Thread& source,
     double alpha,
     bool adjusted,
     std::int64_t min_count,
-    bool ignore_nulls) const {
-  require_numeric_thread_(*this, "Thread::exponential_mean");
+    bool ignore_nulls) {
+  require_numeric_thread_(source, "Thread::decay");
   PLUSS_CHECK(alpha > 0.0 && alpha <= 1.0,
-              "Thread::exponential_mean: alpha must be in (0, 1]");
+              "Thread::decay: alpha must be in (0, 1]");
   PLUSS_CHECK(min_count > 0,
-              "Thread::exponential_mean: min_count must be > 0");
-  const auto dtype = thread_compute_type_(as_series());
-  const auto platform = as_series().platform();
-  const auto values = as_series().to(dtype);
-  const auto valid = thread_valid_(*this);
+              "Thread::decay: min_count must be > 0");
+  const auto dtype = thread_compute_type_(source.as_series());
+  const auto platform = source.as_series().platform();
+  const auto values = source.as_series().to(dtype);
+  const auto valid = thread_valid_(source);
   const auto count = valid.to(dtype).cumsum(0);
   if (!adjusted) {
     PLUSS_CHECK(
-        !has_validity_mask(),
-        "Thread::exponential_mean(adjusted=false): nullable input requires "
+        !source.has_validity_mask(),
+        "Thread::decay(adjusted=false): nullable input requires "
         "adjusted=true");
     auto result = Thread(pluss::subsp::stats::ts::ema(values, alpha));
     return result.with_validity_mask(
@@ -968,7 +933,7 @@ Thread Thread::exponential_mean(
   }
   const auto beta = 1.0 - alpha;
   auto positions = pluss::Series::arange(
-      0, size(), 1, pluss::codem::ScalarType::Int64, platform).to(dtype);
+      0, source.size(), 1, pluss::codem::ScalarType::Int64, platform).to(dtype);
   if (ignore_nulls) {
     positions = count - 1.0;
   }
@@ -983,19 +948,20 @@ Thread Thread::exponential_mean(
       count.ge(static_cast<double>(min_count)));
 }
 
-Thread Thread::exponential_variance(
+Thread exponential_variance_thread_(
+    const Thread& source,
     double alpha,
     bool adjusted,
     bool bias_corrected,
     std::int64_t min_count,
-    bool ignore_nulls) const {
-  require_numeric_thread_(*this, "Thread::exponential_variance");
+    bool ignore_nulls) {
+  require_numeric_thread_(source, "Thread::decay");
   PLUSS_CHECK(alpha > 0.0 && alpha <= 1.0,
-              "Thread::exponential_variance: alpha must be in (0, 1]");
-  const auto dtype = thread_compute_type_(as_series());
-  const auto platform = as_series().platform();
-  const auto values = as_series().to(dtype);
-  const auto valid = thread_valid_(*this);
+              "Thread::decay: alpha must be in (0, 1]");
+  const auto dtype = thread_compute_type_(source.as_series());
+  const auto platform = source.as_series().platform();
+  const auto values = source.as_series().to(dtype);
+  const auto valid = thread_valid_(source);
   const auto count = valid.to(dtype).cumsum(0);
   const auto origin =
       values.where(valid.logical_not(), 0.0).sum() /
@@ -1003,15 +969,15 @@ Thread Thread::exponential_variance(
   const auto centered =
       (values - origin).where(valid.logical_not(), 0.0);
   const auto centered_thread =
-      Thread(centered, validity_mask());
-  const auto mean = centered_thread.exponential_mean(
+      Thread(centered, source.validity_mask());
+  const auto mean = exponential_mean_thread_(centered_thread,
       alpha, adjusted, 1, ignore_nulls).as_series();
   pluss::Series second;
   auto correction =
-      pluss::Series::ones({size()}, dtype, platform);
+      pluss::Series::ones({source.size()}, dtype, platform);
   if (adjusted && alpha < 1.0) {
     auto positions = pluss::Series::arange(
-        0, size(), 1, pluss::codem::ScalarType::Int64, platform).to(dtype);
+        0, source.size(), 1, pluss::codem::ScalarType::Int64, platform).to(dtype);
     if (ignore_nulls) {
       positions = count - 1.0;
     }
@@ -1031,19 +997,19 @@ Thread Thread::exponential_variance(
     }
   } else {
     PLUSS_CHECK(
-        !has_validity_mask(),
-        "Thread::exponential_variance(adjusted=false): nullable input "
+        !source.has_validity_mask(),
+        "Thread::decay(adjusted=false): nullable input "
         "requires adjusted=true");
     second = pluss::subsp::stats::ts::ema(
         centered * centered, alpha);
     if (bias_corrected) {
       if (alpha == 1.0) {
         correction = pluss::Series::full(
-            {size()}, std::numeric_limits<double>::infinity(),
+            {source.size()}, std::numeric_limits<double>::infinity(),
             dtype, platform);
       } else {
         const auto positions = pluss::Series::arange(
-            0, size(), 1, pluss::codem::ScalarType::Int64,
+            0, source.size(), 1, pluss::codem::ScalarType::Int64,
             platform).to(dtype);
         const auto beta2 =
             (positions * (2.0 * std::log(1.0 - alpha))).exp();
@@ -1063,32 +1029,44 @@ Thread Thread::exponential_variance(
   auto output_valid = count.ge(static_cast<double>(required));
   if (bias_corrected && alpha == 1.0) {
     output_valid = pluss::Series::zeros(
-        {size()}, pluss::codem::ScalarType::Bool, platform);
+        {source.size()}, pluss::codem::ScalarType::Bool, platform);
   }
   return Thread(result, output_valid);
 }
 
-Thread Thread::exponential_deviation(
+Thread Thread::decay(
     double alpha,
+    WindowStatistic statistic,
     bool adjusted,
     bool bias_corrected,
     std::int64_t min_count,
     bool ignore_nulls) const {
-  const auto variance = exponential_variance(
-      alpha, adjusted, bias_corrected, min_count, ignore_nulls);
-  return Thread(variance.as_series().sqrt(), variance.validity_mask());
+  switch (statistic) {
+    case WindowStatistic::Mean:
+      return exponential_mean_thread_(*this, alpha, adjusted, min_count, ignore_nulls);
+    case WindowStatistic::Var:
+      return exponential_variance_thread_(
+          *this, alpha, adjusted, bias_corrected, min_count, ignore_nulls);
+    case WindowStatistic::Std: {
+      const auto variance = exponential_variance_thread_(
+          *this, alpha, adjusted, bias_corrected, min_count, ignore_nulls);
+      return Thread(variance.as_series().sqrt(), variance.validity_mask());
+    }
+    default:
+      PLUSS_FAIL("Thread::decay: only Mean, Var, and Std are supported");
+  }
 }
 
-Thread Thread::weighted_moving(
+Thread Thread::weigh(
     pluss::msharp::RangeView::Double weights,
     WindowStatistic statistic,
     std::int64_t min_count) const {
-  require_numeric_thread_(*this, "Thread::weighted_moving");
+  require_numeric_thread_(*this, "Thread::weigh");
   PLUSS_CHECK(!weights.empty(),
-              "Thread::weighted_moving: weights cannot be empty");
+              "Thread::weigh: weights cannot be empty");
   PLUSS_CHECK(min_count > 0 &&
                   min_count <= static_cast<std::int64_t>(weights.size()),
-              "Thread::weighted_moving: invalid min_count");
+              "Thread::weigh: invalid min_count");
   if (statistic == WindowStatistic::Minimum ||
       statistic == WindowStatistic::Maximum) {
     return moving(
@@ -1137,7 +1115,7 @@ Thread Thread::weighted_moving(
     auto variance =
         (centered * centered * active_weights).sum(1) / weight_sum;
     variance = variance.clamp_min(0.0);
-    result = statistic == WindowStatistic::Deviation
+    result = statistic == WindowStatistic::Std
                  ? variance.sqrt()
                  : variance;
   }
@@ -1145,19 +1123,19 @@ Thread Thread::weighted_moving(
       result, count.ge(static_cast<double>(min_count)));
 }
 
-Thread Thread::time_moving(
+Thread Thread::timed(
     const Thread& axis,
     std::int64_t duration_nanos,
     TimeWindowStatistic statistic,
     const StatisticOptions& options,
     WindowClosure closure) const {
   PLUSS_CHECK(axis.size() == size(),
-              "Thread::time_moving: axis length mismatch");
+              "Thread::timed: axis length mismatch");
   PLUSS_CHECK(duration_nanos > 0,
-              "Thread::time_moving: duration_nanos must be > 0");
+              "Thread::timed: duration_nanos must be > 0");
   PLUSS_CHECK(
       axis.notnull().as_series().all().item<bool>(),
-      "Thread::time_moving: axis cannot contain null values");
+      "Thread::timed: axis cannot contain null values");
   std::vector<std::int64_t> ticks;
   if (axis.kind() == ThreadKind::Timeline) {
     ticks = axis.as_timeline().to_epoch_nanos_vector();
@@ -1170,11 +1148,11 @@ Thread Thread::time_moving(
         pluss::codem::Platform::CPU).to_vec<std::int64_t>();
   } else {
     PLUSS_FAIL(
-        "Thread::time_moving: axis must be Timeline, TimeIndex, or Int64 "
+        "Thread::timed: axis must be Timeline, TimeIndex, or Int64 "
         "nanoseconds");
   }
   PLUSS_CHECK(std::is_sorted(ticks.begin(), ticks.end()),
-              "Thread::time_moving: axis must be monotonic");
+              "Thread::timed: axis must be monotonic");
   std::vector<std::int64_t> starts(ticks.size());
   std::vector<std::int64_t> ends(ticks.size());
   std::int64_t start = 0;
@@ -1205,11 +1183,11 @@ Thread Thread::time_moving(
     case TimeWindowStatistic::Mean:
       mapped = WindowStatistic::Mean;
       break;
-    case TimeWindowStatistic::Variance:
-      mapped = WindowStatistic::Variance;
+    case TimeWindowStatistic::Var:
+      mapped = WindowStatistic::Var;
       break;
-    case TimeWindowStatistic::Deviation:
-      mapped = WindowStatistic::Deviation;
+    case TimeWindowStatistic::Std:
+      mapped = WindowStatistic::Std;
       break;
   }
   return indexed_numeric_window_(
@@ -1219,17 +1197,17 @@ Thread Thread::time_moving(
           .ddof = options.ddof,
           .centered = false,
           .closure = closure},
-      "Thread::time_moving");
+      "Thread::timed");
 }
 
-Thread Thread::grouped_moving(
+Thread Thread::grouped(
     const Thread& groups,
     std::int64_t window,
     WindowStatistic statistic,
     const WindowOptions& options) const {
-  require_numeric_thread_(*this, "Thread::grouped_moving");
+  require_numeric_thread_(*this, "Thread::grouped");
   PLUSS_CHECK(groups.size() == size(),
-              "Thread::grouped_moving: group length mismatch");
+              "Thread::grouped: group length mismatch");
   Thread cpu_groups = groups;
   if (groups.kind() == ThreadKind::Series &&
       groups.as_series().platform() != pluss::codem::Platform::CPU) {
@@ -1272,28 +1250,39 @@ Thread Thread::flow(
   return result;
 }
 
-Thread Thread::aggregate_with(
+Thread Thread::fold(
     const std::function<Thread(const Thread&)>& fn,
     ResultShape shape) const {
   PLUSS_CHECK(static_cast<bool>(fn),
-              "Thread::aggregate_with: callback is empty");
+              "Thread::fold: callback is empty");
   auto result = fn(*this);
   PLUSS_CHECK(result.defined(),
-              "Thread::aggregate_with: callback returned undefined");
+              "Thread::fold: callback returned undefined");
   if (shape == ResultShape::Reduce) {
     PLUSS_CHECK(result.size() == 1,
-                "Thread::aggregate_with: Reduce requires one value");
+                "Thread::fold: Reduce requires one value");
   } else if (shape == ResultShape::Preserve) {
     PLUSS_CHECK(result.size() == size(),
-                "Thread::aggregate_with: Preserve requires input length");
+                "Thread::fold: Preserve requires input length");
   }
   return result;
 }
 
-Thread Thread::map_elements(
+Thread Thread::transform(
+    const std::function<ThreadValue(const ThreadValue&)>& fn) const {
+  return map(fn);
+}
+
+Thread Thread::transform(
+    const std::function<Thread(const Thread&)>& fn,
+    ResultShape shape) const {
+  return fold(fn, shape);
+}
+
+Thread Thread::map(
     const std::function<ThreadValue(const ThreadValue&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn),
-              "Thread::map_elements: callback is empty");
+              "Thread::map: callback is empty");
   std::vector<std::optional<Thread>> mapped_values(
       static_cast<std::size_t>(size()));
   std::optional<Thread> prototype;
@@ -1304,10 +1293,10 @@ Thread Thread::map_elements(
     const std::array<std::int64_t, 1> index{row};
     auto mapped = fn(ThreadValue(take(index)));
     PLUSS_CHECK(mapped.defined() && mapped.thread().size() == 1,
-                "Thread::map_elements: callback must return one value");
+                "Thread::map: callback must return one value");
     if (prototype.has_value()) {
       PLUSS_CHECK(mapped.kind() == prototype->kind(),
-                  "Thread::map_elements: output kinds must be consistent");
+                  "Thread::map: output kinds must be consistent");
     }
     prototype = mapped.thread();
     mapped_values[static_cast<std::size_t>(row)] = mapped.thread();
@@ -1410,15 +1399,15 @@ Thread Thread::casefold() const {
   return Thread(as_note().casefold(), validity_mask());
 }
 
-Thread Thread::title_case() const {
+Thread Thread::titlecase() const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::title_case: expected Note payload");
+              "Thread::titlecase: expected Note payload");
   return Thread(as_note().title(), validity_mask());
 }
 
-Thread Thread::text_length() const {
+Thread Thread::length() const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::text_length: expected Note payload");
+              "Thread::length: expected Note payload");
   const auto lengths = as_note().lengths_chars();
   auto output = pluss::Series::empty(
       {static_cast<std::int64_t>(lengths.size())},
@@ -1428,45 +1417,45 @@ Thread Thread::text_length() const {
   return Thread(output, validity_mask());
 }
 
-Thread Thread::starts_with(std::string_view prefix) const {
+Thread Thread::starts(std::string_view prefix) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::starts_with: expected Note payload");
+              "Thread::starts: expected Note payload");
   return note_bool_result_(*this, as_note().starts_with(prefix));
 }
 
-Thread Thread::ends_with(std::string_view suffix) const {
+Thread Thread::ends(std::string_view suffix) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::ends_with: expected Note payload");
+              "Thread::ends: expected Note payload");
   return note_bool_result_(*this, as_note().ends_with(suffix));
 }
 
-Thread Thread::regex_match(std::string_view pattern) const {
+Thread Thread::matches(std::string_view pattern) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::regex_match: expected Note payload");
-  (void)compile_regex_(pattern, "Thread::regex_match");
+              "Thread::matches: expected Note payload");
+  (void)compile_regex_(pattern, "Thread::matches");
   const auto anchored = "^(?:" + std::string(pattern) + ")";
   return note_bool_result_(*this, as_note().regex_search(anchored));
 }
 
-Thread Thread::regex_fullmatch(std::string_view pattern) const {
+Thread Thread::fullmatch(std::string_view pattern) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::regex_fullmatch: expected Note payload");
-  (void)compile_regex_(pattern, "Thread::regex_fullmatch");
+              "Thread::fullmatch: expected Note payload");
+  (void)compile_regex_(pattern, "Thread::fullmatch");
   return note_bool_result_(*this, as_note().regex_match(pattern));
 }
 
-DataFrame Thread::regex_extract(
+DataFrame Thread::extract(
     std::string_view pattern,
     pluss::msharp::RangeView::Of<std::string_view> names) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::regex_extract: expected Note payload");
+              "Thread::extract: expected Note payload");
   auto expression =
-      compile_regex_(pattern, "Thread::regex_extract");
+      compile_regex_(pattern, "Thread::extract");
   const auto group_count = expression.mark_count();
   PLUSS_CHECK(group_count > 0,
-              "Thread::regex_extract: pattern needs a capture group");
+              "Thread::extract: pattern needs a capture group");
   PLUSS_CHECK(names.empty() || names.size() == group_count,
-              "Thread::regex_extract: names must match capture groups");
+              "Thread::extract: names must match capture groups");
   std::vector<std::vector<std::string>> columns(group_count);
   std::vector<std::vector<bool>> valid(group_count);
   for (auto& column : columns) {
@@ -1503,12 +1492,12 @@ DataFrame Thread::regex_extract(
   return DataFrame(std::move(output));
 }
 
-DataFrame Thread::split_text(
+DataFrame Thread::split(
     std::string_view delimiter,
     std::int64_t limit,
     std::string prefix) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::split_text: expected Note payload");
+              "Thread::split: expected Note payload");
   const auto batch =
       limit < 0 ? as_note().split(delimiter)
                 : as_note().split(delimiter, limit);
@@ -1540,13 +1529,13 @@ DataFrame Thread::split_text(
   return DataFrame(std::move(output));
 }
 
-DataFrame Thread::partition_text(
+DataFrame Thread::partition(
     std::string_view separator,
     std::string prefix) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::partition_text: expected Note payload");
+              "Thread::partition: expected Note payload");
   PLUSS_CHECK(!separator.empty(),
-              "Thread::partition_text: separator cannot be empty");
+              "Thread::partition: separator cannot be empty");
   std::array<std::vector<std::string>, 3> values;
   for (auto& column : values) {
     column.reserve(static_cast<std::size_t>(size()));
@@ -1573,13 +1562,13 @@ DataFrame Thread::partition_text(
   return DataFrame(std::move(output));
 }
 
-Thread Thread::pad_text(
+Thread Thread::pad(
     std::int64_t width,
     TextAlign align,
     char fill) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::pad_text: expected Note payload");
-  PLUSS_CHECK(width >= 0, "Thread::pad_text: width must be >= 0");
+              "Thread::pad: expected Note payload");
+  PLUSS_CHECK(width >= 0, "Thread::pad: width must be >= 0");
   const auto lengths = as_note().lengths_chars();
   std::vector<std::string> values;
   values.reserve(static_cast<std::size_t>(size()));
@@ -1600,13 +1589,13 @@ Thread Thread::pad_text(
   return Thread(rebuild_note_like(as_note(), values), validity_mask());
 }
 
-Thread Thread::slice_text(
+Thread Thread::chars(
     std::int64_t start,
     std::optional<std::int64_t> stop,
     std::int64_t step) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::slice_text: expected Note payload");
-  PLUSS_CHECK(step != 0, "Thread::slice_text: step cannot be zero");
+              "Thread::chars: expected Note payload");
+  PLUSS_CHECK(step != 0, "Thread::chars: step cannot be zero");
   const auto chars = as_note().split_chars();
   const auto& offsets = chars.offsets();
   const auto tokens = chars.tokens().vector();
@@ -1640,17 +1629,17 @@ Thread Thread::slice_text(
   return Thread(rebuild_note_like(as_note(), output), validity_mask());
 }
 
-Thread Thread::normalize_text(UnicodeForm form) const {
+Thread Thread::normalize(UnicodeForm form) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::normalize_text: expected Note payload");
+              "Thread::normalize: expected Note payload");
   return Thread(
       as_note().normalize(static_cast<std::int64_t>(form)),
       validity_mask());
 }
 
-Thread Thread::encode_text(std::string_view encoding) const {
+Thread Thread::encode(std::string_view encoding) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::encode_text: expected Note payload");
+              "Thread::encode: expected Note payload");
   if (encoding == "base64") {
     return Thread(as_note().base64_encode(), validity_mask());
   }
@@ -1661,15 +1650,15 @@ Thread Thread::encode_text(std::string_view encoding) const {
     return Thread(as_note().url_encode(), validity_mask());
   }
   PLUSS_FAIL(
-      "Thread::encode_text: encoding must be base64, hex, or url");
+      "Thread::encode: encoding must be base64, hex, or url");
 }
 
-DataFrame Thread::text_indicators(std::string_view delimiter,
+DataFrame Thread::indicate(std::string_view delimiter,
                                   std::string prefix) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
-              "Thread::text_indicators: expected Note payload");
+              "Thread::indicate: expected Note payload");
   PLUSS_CHECK(!delimiter.empty(),
-              "Thread::text_indicators: delimiter cannot be empty");
+              "Thread::indicate: delimiter cannot be empty");
   const auto batch = as_note().split(delimiter);
   const auto& offsets = batch.offsets();
   const auto tokens = batch.tokens().vector();
@@ -1703,4 +1692,286 @@ DataFrame Thread::text_indicators(std::string_view delimiter,
         Thread(bool_series_from_bools(indicators)));
   }
   return DataFrame(std::move(output));
+}
+
+ThreadNoteAccessor Thread::note() const {
+  return ThreadNoteAccessor(*this);
+}
+
+ThreadNoteAccessor::ThreadNoteAccessor(Thread base)
+    : base_(std::move(base)) {}
+
+Thread ThreadNoteAccessor::strip() const { return base_.strip(); }
+Thread ThreadNoteAccessor::strip(std::string_view chars) const { return base_.strip(chars); }
+Thread ThreadNoteAccessor::lstrip() const { return base_.lstrip(); }
+Thread ThreadNoteAccessor::lstrip(std::string_view chars) const { return base_.lstrip(chars); }
+Thread ThreadNoteAccessor::rstrip() const { return base_.rstrip(); }
+Thread ThreadNoteAccessor::rstrip(std::string_view chars) const { return base_.rstrip(chars); }
+Thread ThreadNoteAccessor::lower() const { return base_.lower(); }
+Thread ThreadNoteAccessor::upper() const { return base_.upper(); }
+Thread ThreadNoteAccessor::casefold() const { return base_.casefold(); }
+Thread ThreadNoteAccessor::titlecase() const { return base_.titlecase(); }
+Thread ThreadNoteAccessor::length() const { return base_.length(); }
+Thread ThreadNoteAccessor::starts(std::string_view prefix) const { return base_.starts(prefix); }
+Thread ThreadNoteAccessor::ends(std::string_view suffix) const { return base_.ends(suffix); }
+Thread ThreadNoteAccessor::matches(std::string_view pattern, bool full) const {
+  return full ? base_.fullmatch(pattern) : base_.matches(pattern);
+}
+Thread ThreadNoteAccessor::fullmatch(std::string_view pattern) const { return base_.fullmatch(pattern); }
+DataFrame ThreadNoteAccessor::extract(
+    std::string_view pattern,
+    pluss::msharp::RangeView::Of<std::string_view> names) const {
+  return base_.extract(pattern, names);
+}
+DataFrame ThreadNoteAccessor::split(
+    std::string_view delimiter,
+    std::int64_t limit,
+    std::string prefix) const {
+  return base_.split(delimiter, limit, std::move(prefix));
+}
+DataFrame ThreadNoteAccessor::partition(
+    std::string_view separator,
+    std::string prefix) const {
+  return base_.partition(separator, std::move(prefix));
+}
+Thread ThreadNoteAccessor::pad(std::int64_t width, TextAlign align, char fill) const {
+  return base_.pad(width, align, fill);
+}
+Thread ThreadNoteAccessor::chars(
+    std::int64_t start,
+    std::optional<std::int64_t> stop,
+    std::int64_t step) const {
+  return base_.chars(start, stop, step);
+}
+Thread ThreadNoteAccessor::normalize(UnicodeForm form) const {
+  return base_.normalize(form);
+}
+Thread ThreadNoteAccessor::encode(std::string_view encoding) const {
+  return base_.encode(encoding);
+}
+DataFrame ThreadNoteAccessor::indicate(std::string_view delimiter, std::string prefix) const {
+  return base_.indicate(delimiter, std::move(prefix));
+}
+
+namespace {
+
+const pluss::Timeline& tl_payload_(const Thread& base, std::string_view where) {
+  if (base.kind() == ThreadKind::Timeline) {
+    return base.as_timeline();
+  }
+  if (base.kind() == ThreadKind::TimeIndex) {
+    return base.as_timeindex().timeline();
+  }
+  PLUSS_FAIL(std::string(where) + ": expected Timeline or TimeIndex payload");
+}
+
+pluss::Series tl_validity_(const Thread& base, std::string_view where) {
+  auto valid = tl_payload_(base, where).isvalid();
+  if (base.has_validity_mask()) {
+    valid = valid.logical_and(*base.validity_mask());
+  }
+  return valid;
+}
+
+Thread tl_series_(const Thread& base, const pluss::Series& values, std::string_view where) {
+  auto out = Thread(values.reshape({base.size()}), tl_validity_(base, where));
+  if (base.has_display_labels()) {
+    out = out.with_display_labels(base.display_labels());
+  }
+  if (base.has_display_name()) {
+    out = out.with_display_name(base.display_name());
+  }
+  return out;
+}
+
+Thread tl_note_(const Thread& base, const pluss::Note& values, std::string_view where) {
+  auto out = Thread(values, tl_validity_(base, where));
+  if (base.has_display_labels()) {
+    out = out.with_display_labels(base.display_labels());
+  }
+  if (base.has_display_name()) {
+    out = out.with_display_name(base.display_name());
+  }
+  return out;
+}
+
+Thread tl_temporal_(const Thread& base, const pluss::Timeline& values) {
+  auto out = base.kind() == ThreadKind::TimeIndex
+                 ? Thread(values.to_timeindex(false), base.validity_mask())
+                 : Thread(values, base.validity_mask());
+  if (base.has_display_labels()) {
+    out = out.with_display_labels(base.display_labels());
+  }
+  if (base.has_display_name()) {
+    out = out.with_display_name(base.display_name());
+  }
+  return out;
+}
+
+} // namespace
+
+ThreadTimelineAccessor Thread::tl() const {
+  return ThreadTimelineAccessor(*this);
+}
+
+ThreadTimelineAccessor::ThreadTimelineAccessor(Thread base)
+    : base_(std::move(base)) {
+  PLUSS_CHECK(base_.defined(), "Thread::tl: Thread is undefined");
+  PLUSS_CHECK(base_.kind() == ThreadKind::Timeline || base_.kind() == ThreadKind::TimeIndex,
+              "Thread::tl: expected Timeline or TimeIndex payload");
+}
+
+Thread ThreadTimelineAccessor::isnat() const {
+  return Thread(tl_payload_(base_, "Thread::tl().isnat").isnat(), base_.validity_mask());
+}
+
+Thread ThreadTimelineAccessor::valid() const {
+  return Thread(tl_validity_(base_, "Thread::tl().valid"));
+}
+
+Thread ThreadTimelineAccessor::year() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().year").year(), "Thread::tl().year");
+}
+
+Thread ThreadTimelineAccessor::month() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().month").month(), "Thread::tl().month");
+}
+
+Thread ThreadTimelineAccessor::day() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().day").day(), "Thread::tl().day");
+}
+
+Thread ThreadTimelineAccessor::hour() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().hour").hour(), "Thread::tl().hour");
+}
+
+Thread ThreadTimelineAccessor::minute() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().minute").minute(), "Thread::tl().minute");
+}
+
+Thread ThreadTimelineAccessor::second() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().second").second(), "Thread::tl().second");
+}
+
+Thread ThreadTimelineAccessor::weekday() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().weekday").weekday(), "Thread::tl().weekday");
+}
+
+Thread ThreadTimelineAccessor::yearday() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().yearday").dayofyear(), "Thread::tl().yearday");
+}
+
+Thread ThreadTimelineAccessor::quarter() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().quarter").quarter(), "Thread::tl().quarter");
+}
+
+Thread ThreadTimelineAccessor::week() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().week").week(), "Thread::tl().week");
+}
+
+Thread ThreadTimelineAccessor::weekend() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().weekend").is_weekend(), "Thread::tl().weekend");
+}
+
+Thread ThreadTimelineAccessor::month_start() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().month_start").is_month_start(), "Thread::tl().month_start");
+}
+
+Thread ThreadTimelineAccessor::month_end() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().month_end").is_month_end(), "Thread::tl().month_end");
+}
+
+Thread ThreadTimelineAccessor::leap() const {
+  return tl_series_(base_, tl_payload_(base_, "Thread::tl().leap").is_leap_year(), "Thread::tl().leap");
+}
+
+Thread ThreadTimelineAccessor::weekday_name() const {
+  return tl_note_(base_, tl_payload_(base_, "Thread::tl().weekday_name").strftime("%A"), "Thread::tl().weekday_name");
+}
+
+Thread ThreadTimelineAccessor::month_name() const {
+  return tl_note_(base_, tl_payload_(base_, "Thread::tl().month_name").strftime("%B"), "Thread::tl().month_name");
+}
+
+Thread ThreadTimelineAccessor::fmt(std::string_view pattern) const {
+  PLUSS_CHECK(!pattern.empty(), "Thread::tl().fmt: pattern cannot be empty");
+  return tl_note_(base_, tl_payload_(base_, "Thread::tl().fmt").strftime(pattern), "Thread::tl().fmt");
+}
+
+Thread ThreadTimelineAccessor::iso() const {
+  return tl_note_(base_, tl_payload_(base_, "Thread::tl().iso").to_note_iso(), "Thread::tl().iso");
+}
+
+Thread ThreadTimelineAccessor::epoch(TimeUnit unit) const {
+  const auto& t = tl_payload_(base_, "Thread::tl().epoch");
+  switch (unit) {
+    case TimeUnit::Nanos:
+      return tl_series_(base_, t.epoch_nanos(), "Thread::tl().epoch");
+    case TimeUnit::Micros:
+      return tl_series_(base_, t.epoch_micros(), "Thread::tl().epoch");
+    case TimeUnit::Millis:
+      return tl_series_(base_, t.epoch_millis(), "Thread::tl().epoch");
+    case TimeUnit::Seconds:
+      return tl_series_(base_, t.epoch_seconds(), "Thread::tl().epoch");
+  }
+  PLUSS_FAIL("Thread::tl().epoch: unknown TimeUnit");
+}
+
+Thread ThreadTimelineAccessor::floor(std::string_view unit) const {
+  PLUSS_CHECK(!unit.empty(), "Thread::tl().floor: unit cannot be empty");
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().floor").floor(unit));
+}
+
+Thread ThreadTimelineAccessor::ceil(std::string_view unit) const {
+  PLUSS_CHECK(!unit.empty(), "Thread::tl().ceil: unit cannot be empty");
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().ceil").ceil(unit));
+}
+
+Thread ThreadTimelineAccessor::round(std::string_view unit) const {
+  PLUSS_CHECK(!unit.empty(), "Thread::tl().round: unit cannot be empty");
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().round").round(unit));
+}
+
+Thread ThreadTimelineAccessor::date() const {
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().date").date());
+}
+
+Thread ThreadTimelineAccessor::time() const {
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().time").time());
+}
+
+Thread ThreadTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const {
+  PLUSS_CHECK(!freq.empty(), "Thread::tl().shift: freq cannot be empty");
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().shift").shift(static_cast<int>(periods), freq));
+}
+
+Thread ThreadTimelineAccessor::tz(std::string_view name) const {
+  PLUSS_CHECK(!name.empty(), "Thread::tl().tz: timezone cannot be empty");
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().tz").tz_convert(name));
+}
+
+Thread ThreadTimelineAccessor::localize(const TimelineLocalizeOptions& options) const {
+  PLUSS_CHECK(!options.tz.empty(), "Thread::tl().localize: timezone cannot be empty");
+  return tl_temporal_(
+      base_,
+      tl_payload_(base_, "Thread::tl().localize")
+          .tz_localize(options.tz, options.fold, options.nonexistent));
+}
+
+Thread ThreadTimelineAccessor::utc() const {
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().utc").to_utc());
+}
+
+Thread ThreadTimelineAccessor::index(bool require_sorted) const {
+  if (base_.kind() == ThreadKind::TimeIndex) {
+    return base_;
+  }
+  auto out = Thread(base_.as_timeline().to_timeindex(require_sorted), base_.validity_mask());
+  if (base_.has_display_labels()) {
+    out = out.with_display_labels(base_.display_labels());
+  }
+  if (base_.has_display_name()) {
+    out = out.with_display_name(base_.display_name());
+  }
+  return out;
 }
