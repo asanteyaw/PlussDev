@@ -24,11 +24,14 @@ alignment.
 
 - `feature`: one Timeline or TimeIndex feature name.
 - `features`: zero or more Timeline/TimeIndex feature names. Empty selection
-  means all timeline-like features.
+  is valid only after an intentional selection where every feature in the
+  current frame is Timeline/TimeIndex, for example
+  `df.features({"event_time"}).tl()`.
 - `unit`: calendar/time unit accepted by `Timeline` rounding methods, such as
   `"D"`, `"H"`, `"min"`, or compatible CodeH units.
 - `periods`: signed number of frequency steps to shift.
-- `freq`: shift frequency such as `"D"` or `"H"`.
+- `freq`: shift/period frequency such as `"D"`, `"H"`, `"month"`, or
+  `"year"`.
 - `TimelineLocalizeOptions`: option struct with `.tz`, `.fold`, and
   `.nonexistent` fields.
 
@@ -90,6 +93,7 @@ auto year_frame = df.tl("event_time").year()
     .rename({{"event_time", "event_year"}});
 
 auto rounded = df.tl("event_time").floor("D");
+auto monthly = df.tl("event_time").period("month");
 ```
 
 Expected output:
@@ -98,6 +102,8 @@ Expected output:
   the extracted year, renamed to `event_year`.
 - `rounded` keeps `event_time` as a Timeline/TimeIndex feature rounded down to
   day precision.
+- `monthly` keeps `event_time` as a Timeline/TimeIndex feature bucketed to the
+  start of its calendar month.
 
 ### Example 4: Option-struct localization
 
@@ -140,4 +146,3 @@ Expected output:
   path where dtype/platform compatibility allows it.
 - `combined` uses the DataFrame-vs-DataFrame batched pair path for compatible
   numeric feature groups, falling back per Thread for mixed payloads.
-

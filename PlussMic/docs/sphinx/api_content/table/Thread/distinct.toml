@@ -1,0 +1,43 @@
+summary = """
+Return distinct values in stable first-seen order.
+
+Use this when you want the unique observed values themselves, not just the count.
+
+Unlike a sorting operation, `distinct(...)` preserves the encounter order of the first surviving representatives.
+"""
+
+returns = """
+`Thread`
+    Thread containing one representative of each distinct value, ordered by first appearance.
+"""
+
+notes = [
+  """
+`distinct(...)` is value-returning, not count-returning. Use `ndistinct(...)` when you only need the number of distinct values.
+"""
+]
+
+[[parameters]]
+name = "dropnull"
+body = """
+Whether missing entries should be removed before distinctness is computed.
+
+- `true`: ignore null entries,
+- `false`: keep at most one null entry in the output.
+
+This flag matters when missingness itself is meaningful and you want a single null representative preserved among the distinct values.
+"""
+
+[[examples]]
+title = "Collect distinct note values in first-seen order."
+code = """
+using namespace pluss::table;
+
+auto out = Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"})).distinct(true);
+"""
+output = """
+0  Accra
+1  Tema
+2  Kumasi
+dtype: Note
+"""

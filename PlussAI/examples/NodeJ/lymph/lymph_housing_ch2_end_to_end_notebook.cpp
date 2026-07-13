@@ -37,7 +37,7 @@ int main() {
 
   DataFrame housing = DataFrame::load_csv(data_path.string());
   out.writef("rows={} features={}", housing.ncases(), housing.nfeats()).endln();
-  out.writeln("feature names", housing.feature_names());
+  out.writeln("feature names", housing.features());
   housing.head(5);
   //========== End Cell 1 ========
 
@@ -94,7 +94,7 @@ int main() {
   const DataFrame test_num = test_x_raw.series_features();
   const DataFrame train_cat = train_x_raw.note_features();
   const DataFrame test_cat = test_x_raw.note_features();
-  const auto categorical_names = train_cat.feature_names();
+  const auto categorical_names = train_cat.features();
   out.writef("numeric feature count={} categorical feature count={}", train_num.nfeats(), train_cat.nfeats()).endln();
   if (train_num.nfeats() == 0) {
     throw std::runtime_error("chapter2 demo: no numeric features resolved.");

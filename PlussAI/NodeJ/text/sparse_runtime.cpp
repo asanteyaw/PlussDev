@@ -150,6 +150,30 @@ namespace {
   return metric_prefers_max(metric);
 }
 
+[[nodiscard]] double signed_log1p(double value) {
+  return std::copysign(std::log1p(std::abs(value)), value);
+}
+
+[[nodiscard]] std::vector<std::string> sparse_encoded_features() {
+  return {
+      "linear.objective",
+      "linear.regularization",
+      "linear.regularization_strength_slog",
+      "linear.elastic_l1_ratio",
+      "linear.robust_transition_slog",
+      "linear.fit_intercept"};
+}
+
+[[nodiscard]] std::vector<double> encode_sparse_options(const LinearFamilyOptions& options) {
+  return {
+      static_cast<double>(options.objective),
+      static_cast<double>(options.regularization),
+      signed_log1p(options.regularization_strength),
+      options.elastic_l1_ratio,
+      signed_log1p(options.robust_transition),
+      options.fit_intercept ? 1.0 : 0.0};
+}
+
 [[nodiscard]] SplitOptions resolved_sparse_split_defaults(TaskKind task, SplitOptions split) {
   if (!split.reliability_defaults) return split;
   if (task != TaskKind::Classification) return split;
@@ -1098,6 +1122,105 @@ StatusOr<SparseCrossReport> cross_assess_sparse_multiclass(const SparseTripletMa
   return assess_sparse_multiclass_folds(x, y, split, train_options, assess_options, linear_options);
 }
 
+void populate_sparse_tune_ledger(SparseTuneReport& report) {
+  const std::size_t trial_count = report.trials.size();
+  report.ledger = SparseTuneLedger{};
+  if (trial_count == 0) return;
+
+  std::size_t metric_count = 0;
+  std::size_t max_folds = 0;
+  for (const SparseTuneTrial& trial : report.trials) {
+    if (!trial.status.ok()) continue;
+    if (metric_count == 0 && !trial.assess.metrics.empty()) {
+      metric_count = trial.assess.metrics.size();
+      report.ledger.metrics = trial.assess.metrics;
+    }
+    max_folds = std::max<std::size_t>(max_folds, trial.assess.folds.size());
+  }
+
+  report.ledger.encoded_param_feature_names = sparse_encoded_features();
+  const std::size_t encoded_width = report.ledger.encoded_param_feature_names.size();
+  std::vector<double> objective(trial_count, std::numeric_limits<double>::quiet_NaN());
+  std::vector<std::int64_t> objective_rank(trial_count, 0);
+  std::vector<std::int64_t> status_code(trial_count, 0);
+  std::vector<double> is_success(trial_count, 0.0);
+  std::vector<double> mean_test(metric_count == 0 ? 0 : trial_count * metric_count, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> std_test(metric_count == 0 ? 0 : trial_count * metric_count, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> split_test(metric_count == 0 || max_folds == 0 ? 0 : trial_count * max_folds * metric_count,
+                                 std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> fit_time(max_folds == 0 ? 0 : trial_count * max_folds, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> score_time(max_folds == 0 ? 0 : trial_count * max_folds, std::numeric_limits<double>::quiet_NaN());
+  std::vector<double> encoded(trial_count * encoded_width, 0.0);
+
+  for (std::size_t i = 0; i < trial_count; ++i) {
+    const SparseTuneTrial& trial = report.trials[i];
+    objective[i] = trial.objective;
+    if (i < report.objective_rank.size()) objective_rank[i] = report.objective_rank[i];
+    status_code[i] = static_cast<std::int64_t>(trial.status.code);
+    is_success[i] = trial.status.ok() ? 1.0 : 0.0;
+
+    const std::vector<double> emb = encode_sparse_options(trial.options);
+    for (std::size_t j = 0; j < emb.size(); ++j) encoded[i * encoded_width + j] = emb[j];
+
+    if (!trial.status.ok() || metric_count == 0) continue;
+    const std::vector<double> mean_vec = trial.assess.mean_metrics.to(pluss::pCPU, ScalarType::Float64)
+                                             .reshape({static_cast<std::int64_t>(metric_count)})
+                                             .to_vec<double>();
+    const std::vector<double> std_vec = trial.assess.std_metrics.to(pluss::pCPU, ScalarType::Float64)
+                                            .reshape({static_cast<std::int64_t>(metric_count)})
+                                            .to_vec<double>();
+    for (std::size_t m = 0; m < metric_count; ++m) {
+      mean_test[i * metric_count + m] = mean_vec[m];
+      std_test[i * metric_count + m] = std_vec[m];
+    }
+    for (std::size_t f = 0; f < trial.assess.folds.size(); ++f) {
+      const std::vector<double> fold_vec = trial.assess.folds[f].metrics.to(pluss::pCPU, ScalarType::Float64)
+                                               .reshape({static_cast<std::int64_t>(metric_count)})
+                                               .to_vec<double>();
+      for (std::size_t m = 0; m < metric_count; ++m) {
+        split_test[i * (max_folds * metric_count) + f * metric_count + m] = fold_vec[m];
+      }
+      fit_time[i * max_folds + f] = trial.assess.folds[f].fit_time_seconds;
+      score_time[i * max_folds + f] = trial.assess.folds[f].score_time_seconds;
+    }
+  }
+
+  report.ledger.objective = pluss::make_series(std::move(objective), {static_cast<std::int64_t>(trial_count)}, f64_cpu());
+  report.ledger.objective_rank = pluss::make_series(std::move(objective_rank), {static_cast<std::int64_t>(trial_count)}, i64_cpu());
+  report.ledger.status_code = pluss::make_series(std::move(status_code), {static_cast<std::int64_t>(trial_count)}, i64_cpu());
+  report.ledger.is_success = pluss::make_series(std::move(is_success), {static_cast<std::int64_t>(trial_count)}, f64_cpu());
+  report.ledger.encoded_params =
+      pluss::make_series(std::move(encoded),
+                         {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(encoded_width)},
+                         f64_cpu());
+  if (metric_count > 0) {
+    report.ledger.mean_test_metrics =
+        pluss::make_series(std::move(mean_test),
+                           {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(metric_count)},
+                           f64_cpu());
+    report.ledger.std_test_metrics =
+        pluss::make_series(std::move(std_test),
+                           {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(metric_count)},
+                           f64_cpu());
+  }
+  if (metric_count > 0 && max_folds > 0) {
+    report.ledger.split_test_metrics =
+        pluss::make_series(std::move(split_test),
+                           {static_cast<std::int64_t>(trial_count),
+                            static_cast<std::int64_t>(max_folds),
+                            static_cast<std::int64_t>(metric_count)},
+                           f64_cpu());
+    report.ledger.fit_time_seconds =
+        pluss::make_series(std::move(fit_time),
+                           {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(max_folds)},
+                           f64_cpu());
+    report.ledger.score_time_seconds =
+        pluss::make_series(std::move(score_time),
+                           {static_cast<std::int64_t>(trial_count), static_cast<std::int64_t>(max_folds)},
+                           f64_cpu());
+  }
+}
+
 template <class CrossAssessFn>
 StatusOr<SparseTuneReport> sweep_sparse_impl(pluss::msharp::RangeView::Of<LinearFamilyOptions> candidates,
                                              const SparseTripletMatrix& x,
@@ -1176,6 +1299,7 @@ StatusOr<SparseTuneReport> sweep_sparse_impl(pluss::msharp::RangeView::Of<Linear
   }
   if (valid.empty()) {
     std::fill(report.objective_rank.begin(), report.objective_rank.end(), 1);
+    populate_sparse_tune_ledger(report);
     return StatusOr<SparseTuneReport>(std::move(report));
   }
 
@@ -1204,6 +1328,7 @@ StatusOr<SparseTuneReport> sweep_sparse_impl(pluss::msharp::RangeView::Of<Linear
     }
   }
 
+  populate_sparse_tune_ledger(report);
   return StatusOr<SparseTuneReport>(std::move(report));
 }
 

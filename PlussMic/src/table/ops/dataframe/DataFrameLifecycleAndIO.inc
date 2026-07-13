@@ -8,27 +8,38 @@ Thread ColumnRef::head(std::int64_t n) const { return column_.head(n, false); }
 ThreadValue ColumnRef::value() const { return column_.value(); }
 Thread ColumnRef::values() const { return column_; }
 
-DataFrame::LetSlot::LetSlot(DataFrame& owner, std::string name) : owner_(&owner), name_(std::move(name)) {
+DataFrame::LetSlot::LetSlot(DataFrame& owner, std::string name, AlignOptions options)
+    : owner_(&owner), name_(std::move(name)), options_(options) {
   PLUSS_CHECK(owner_ != nullptr, "DataFrame::LetSlot: owner must be defined");
   PLUSS_CHECK(!name_.empty(), "DataFrame::set: feature name cannot be empty");
 }
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const Thread& value) {
-  PLUSS_CHECK(value.defined(), "DataFrame::set(name)=Thread requires defined rhs thread");
-  if (owner_->nfeats() > 0) {
-    PLUSS_CHECK(value.size() == owner_->ncases(),
-                "DataFrame::set(name)=Thread requires rhs length to match DataFrame cases");
-  }
-  owner_->set_features_(name_, value);
+  set_prepared_feature_(
+      owner_->mut_impl_(),
+      name_,
+      prepare_feature_assignment_(owner_->impl_ref_(), value, "DataFrame::set(name)=Thread", options_));
   return *this;
 }
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const ThreadValue& value) {
-  return (*this = value.thread());
+  const auto& src = owner_->impl_ref_();
+  set_prepared_feature_(
+      owner_->mut_impl_(),
+      name_,
+      (src.columns_.empty() && src.nrows_ == 0)
+          ? clear_assignment_metadata_(value.thread())
+          : broadcast_assignment_thread_(
+                value.thread(), src.nrows_,
+                "DataFrame::set(name)=ThreadValue"));
+  return *this;
 }
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Series& value) {
   try {
+    if (value.dim() == 0) {
+      return (*this = ThreadValue(Thread(value.reshape({1}))));
+    }
     return (*this = Thread(value));
   } catch (const std::exception& e) {
     PLUSS_FAIL("DataFrame::set(name)=Series failed: " + std::string(e.what()));
@@ -37,6 +48,10 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Series& value) {
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Note& value) {
   try {
+    if (value.dim() == 0) {
+      return (*this = ThreadValue(Thread(pluss::make_note(
+          std::vector<std::string>{std::string(value.flat_at(0))}))));
+    }
     return (*this = Thread(value));
   } catch (const std::exception& e) {
     PLUSS_FAIL("DataFrame::set(name)=Note failed: " + std::string(e.what()));
@@ -61,13 +76,13 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::TimeIndex& value)
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
   PLUSS_CHECK(frame.nfeats() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
-  const auto cols = frame.features();
-  PLUSS_CHECK(cols.size() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
-  return (*this = cols.front());
+  const auto& names = frame.features();
+  PLUSS_CHECK(names.size() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
+  return (*this = detail::with_display_labels(frame.features(names.front()), frame.caselbl()));
 }
 
-DataFrame::LetSlots::LetSlots(DataFrame& owner, std::vector<std::string> names)
-    : owner_(&owner), names_(std::move(names)) {
+DataFrame::LetSlots::LetSlots(DataFrame& owner, std::vector<std::string> names, AlignOptions options)
+    : owner_(&owner), names_(std::move(names)), options_(options) {
   PLUSS_CHECK(owner_ != nullptr, "DataFrame::LetSlots: owner must be defined");
   PLUSS_CHECK(!names_.empty(), "DataFrame::set(names): at least one feature name is required");
   std::unordered_set<std::string> seen;
@@ -82,19 +97,25 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
   PLUSS_CHECK(values.size() == names_.size(),
               "DataFrame::set(names): rhs feature count must match lhs feature count");
 
+  const auto& src = owner_->impl_ref_();
   std::optional<std::int64_t> expected_rows;
-  if (owner_->nfeats() > 0) {
-    expected_rows = owner_->ncases();
+  if (!src.columns_.empty() || src.nrows_ > 0) {
+    expected_rows = src.nrows_;
   }
+  std::vector<Thread> prepared_values;
+  prepared_values.reserve(values.size());
 
   for (const auto& value : values) {
     PLUSS_CHECK(value.defined(), "DataFrame::set(names): rhs thread must be defined");
+    auto prepared = prepare_feature_assignment_(
+        src, value, "DataFrame::set(names)", options_);
     if (!expected_rows.has_value()) {
-      expected_rows = value.size();
+      expected_rows = prepared.size();
     } else {
-      PLUSS_CHECK(value.size() == *expected_rows,
+      PLUSS_CHECK(prepared.size() == *expected_rows,
                   "DataFrame::set(names): rhs thread lengths must match target DataFrame cases");
     }
+    prepared_values.push_back(std::move(prepared));
   }
 
   // Batch-apply updates with at most one reindex/validation pass.
@@ -106,10 +127,10 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
     const auto it = w.name_to_idx_.find(key);
     if (it == w.name_to_idx_.end()) {
       w.names_.push_back(key);
-      w.columns_.push_back(values[i]);
+      w.columns_.push_back(prepared_values[i]);
       touched_schema = true;
     } else {
-      w.columns_[it->second] = values[i];
+      w.columns_[it->second] = prepared_values[i];
     }
   }
   if (touched_schema) {
@@ -118,7 +139,12 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
 }
 
 DataFrame::LetSlots& DataFrame::LetSlots::operator=(const DataFrame& frame) {
-  const auto cols = frame.features();
+  std::vector<Thread> cols;
+  const auto& names = frame.features();
+  cols.reserve(names.size());
+  for (const auto& name : names) {
+    cols.push_back(detail::with_display_labels(frame.features(name), frame.caselbl()));
+  }
   assign_from_threads(std::span<const Thread>(cols.data(), cols.size()));
   return *this;
 }

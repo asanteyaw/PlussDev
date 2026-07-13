@@ -17,7 +17,7 @@ Common stream operations:
 ```cpp
 stream.size();
 stream.kind();
-stream.dtype_name();
+stream.dtype();
 
 stream.isnull();
 stream.notnull();
@@ -55,7 +55,7 @@ auto stripped = annotated.drop_meta("source");
 Cases:
 
 ```cpp
-auto with_cases = stream.with_cases(df.cases());
+auto with_cases = stream.with_cases(df.caselbl());
 auto no_cases = with_cases.clear_cases();
 ```
 

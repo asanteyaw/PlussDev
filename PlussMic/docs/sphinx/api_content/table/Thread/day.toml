@@ -1,0 +1,42 @@
+summary = """
+Extract the day-of-month component from each temporal value.
+
+This is the calendar-field projection for timeline and time-index threads.
+
+Use it when your temporal thread already carries full timestamps but the downstream computation needs just the calendar day.
+"""
+
+returns = """
+`Thread`
+    Numeric thread containing the day component for each participating temporal entry.
+"""
+
+notes = [
+  """
+`day()` expects temporal payloads such as `Timeline` or `TimeIndex`.
+""",
+  """
+The validity mask is preserved while the calendar field is projected out.
+""",
+  """
+The result is a numeric thread, so you can immediately use it in comparison, grouping, bucketing, or arithmetic pipelines.
+"""
+]
+
+[[examples]]
+title = "Project day-of-month values from a timeline thread."
+code = """
+using namespace pluss::table;
+
+auto out = Thread(pluss::make_timeline({
+    "2024-01-01T09:10:00Z",
+    "2024-02-01T11:00:00Z",
+    "2024-03-05T15:30:00Z",
+})).day();
+"""
+output = """
+0  1
+1  1
+2  5
+dtype: Series
+"""

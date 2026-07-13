@@ -102,6 +102,32 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "f_score_rank should return requested top_k entries\n";
       return false;
     }
+    auto rank_report_or = pluss::ai::nodej::rank_features(
+        batch,
+        pluss::ai::nodej::FeatureRankOptions{
+            .mode = pluss::ai::nodej::FeatureScoreMode::ClassF,
+            .absolute_score = true,
+        });
+    if (!rank_report_or.ok()
+        || rank_report_or.value().scores.numel() != 3
+        || rank_report_or.value().ranked_feature_indices.numel() != 3) {
+      if (err) *err << "rank_features should return all scores and a full rank order\n";
+      return false;
+    }
+    auto pick_or = pluss::ai::nodej::pick_features(
+        batch,
+        pluss::ai::nodej::FeaturePickOptions{
+            .mode = pluss::ai::nodej::FeatureScoreMode::ClassF,
+            .top_k = 2,
+            .fraction = 0.0,
+            .absolute_score = true,
+        });
+    if (!pick_or.ok()
+        || pick_or.value().selected_feature_indices.numel() != 2
+        || pick_or.value().reduced.feature_count() != 2) {
+      if (err) *err << "pick_features should return reduced data and selected feature ids\n";
+      return false;
+    }
 
     const Series y_reg = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}, f64());
     const LabeledBatch reg_batch{
@@ -115,6 +141,20 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     }
     if (freg_or.value().numel() != 2) {
       if (err) *err << "f_regression_rank should return requested top_k\n";
+      return false;
+    }
+    auto pick_fraction_or = pluss::ai::nodej::pick_features(
+        reg_batch,
+        pluss::ai::nodej::FeaturePickOptions{
+            .mode = pluss::ai::nodej::FeatureScoreMode::RegressionF,
+            .top_k = 10,
+            .fraction = 0.5,
+            .absolute_score = true,
+        });
+    if (!pick_fraction_or.ok()
+        || pick_fraction_or.value().selected_feature_indices.numel() != 2
+        || pick_fraction_or.value().scores.numel() != 3) {
+      if (err) *err << "pick_features fraction mode should select a rounded feature fraction\n";
       return false;
     }
   }
@@ -249,6 +289,12 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
                                                            SparseObjectivePolicy::Maximize);
     if (!sweep_or.ok() || sweep_or.value().trials.size() != opts.size() || sweep_or.value().best_index < 0) {
       if (err) *err << "sweep_sparse_binary should evaluate options and choose best\n";
+      return false;
+    }
+    if (!sweep_or.value().ledger.objective.defined()
+        || sweep_or.value().ledger.encoded_params.sizes() != std::vector<std::int64_t>{2, 6}
+        || sweep_or.value().ledger.split_test_metrics.sizes().size() != 3) {
+      if (err) *err << "sweep_sparse_binary should expose ledger-grade tuning artifacts\n";
       return false;
     }
     auto tune_native_or = pluss::ai::nodej::tune_sparse_binary(

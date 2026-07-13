@@ -32,6 +32,8 @@ int main() {
 Function-style checks are also available:
 
 - `pluss::validate::check(condition, message = "validation check failed") -> void`
+- `pluss::validate::warn(condition, message = "validation warning") -> void`
+- `pluss::validate::warn({{condition, message}, ...}) -> void`
 - `pluss::validate::warn(message) -> void`
 - `pluss::validate::fail(message = "validation failed") -> noreturn`
 - `pluss::validate::inspect(condition, message = "validation inspect failed") -> void`
@@ -43,8 +45,15 @@ These delegate to the same centralized Pluss error/warn path used by `PLUSS_CHEC
 #include <pluss/pluss.h>
 
 void run_step(const pluss::Series& y_pred, const pluss::Series& y_true) {
+  constexpr double tolerance = 1e-6;
   pluss::validate::check(y_pred.defined(), "y_pred must be defined");
   pluss::validate::check_eq(y_pred.numel(), y_true.numel(), "y_pred.numel()", "y_true.numel()");
+  pluss::validate::warn(tolerance > 0.0, "tolerance should be positive; continuing with fallback");
+  pluss::validate::warn({
+      {y_pred.defined(), "y_pred is undefined; continuing with fallback"},
+      {y_true.defined(), "y_true is undefined; continuing with fallback"},
+      {tolerance > 0.0, "tolerance should be positive; continuing with fallback"},
+  });
   pluss::validate::warn("running validation with default tolerance");
 }
 ```

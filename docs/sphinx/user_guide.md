@@ -120,7 +120,7 @@ Common operations:
 std::int64_t rows = df.ncases();
 std::int64_t cols = df.nfeatures();
 
-auto names = df.feature_names();
+auto names = df.features();
 auto price = df.features("price");
 auto subset = df.features({"price", "volume"});
 auto first_rows = df.head(10);

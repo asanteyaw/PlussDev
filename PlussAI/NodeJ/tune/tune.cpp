@@ -379,7 +379,7 @@ void assign_objective_ranks(TuneReport& report) {
   return x;
 }
 
-[[nodiscard]] std::vector<std::string> encoded_feature_names() {
+[[nodiscard]] std::vector<std::string> encoded_features() {
   return {
       "task", "family",
       "linear.objective", "linear.regularization", "linear.regularization_strength_slog", "linear.fit_intercept",
@@ -410,7 +410,7 @@ void populate_tune_ledger(TuneReport& report) {
     }
     max_folds = std::max<std::size_t>(max_folds, trial.assess.folds.size());
   }
-  report.ledger.encoded_param_feature_names = encoded_feature_names();
+  report.ledger.encoded_param_feature_names = encoded_features();
 
   std::vector<double> objective(trial_count, std::numeric_limits<double>::quiet_NaN());
   std::vector<std::int64_t> objective_rank(trial_count, 0);

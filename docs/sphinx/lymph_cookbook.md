@@ -854,7 +854,7 @@ Use this when different feature subsets need different transform chains.
 #### Examples
 
 ```cpp
-const std::vector<std::string> feature_order = x_train.feature_names();
+const std::vector<std::string> feature_order = x_train.features();
 const auto ft = lym::make_feature_transformer(
     feature_order,
     {

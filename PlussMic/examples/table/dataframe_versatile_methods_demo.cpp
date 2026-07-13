@@ -156,7 +156,7 @@ int main() {
   missing_demo.fillna(0.0, {"Lifecycle Cost"}).head(8);
   missing_demo.ffill().head(8);
   missing_demo.bfill().head(8);
-  missing_demo.dropna().head(8);
+  missing_demo.dropnull().head(8);
 
   std::cout << "\ntranspose\n";
   df.features({"age", "job", "balance"}).transpose(true);

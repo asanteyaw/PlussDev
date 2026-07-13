@@ -68,8 +68,8 @@ pluss::Series reshape_validity(
   std::vector<pluss::Series> masks;
   masks.reserve(blocks.size());
   for (const auto& block : blocks) {
-    auto mask = block.has_validity_mask()
-        ? *block.validity_mask()
+    auto mask = detail::has_validity_mask(block)
+        ? *detail::validity_mask(block)
         : pluss::Series::ones(
               {block.size()},
               pluss::codem::ScalarType::Bool,
@@ -90,7 +90,7 @@ Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
   const bool any_missing = std::any_of(
       blocks.begin(),
       blocks.end(),
-      [](const Thread& block) { return block.has_validity_mask(); });
+      [](const Thread& block) { return detail::has_validity_mask(block); });
   for (const auto& block : blocks) {
     PLUSS_CHECK(
         block.kind() == kind,
@@ -145,7 +145,7 @@ Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
     }
   }
   return any_missing
-      ? output.with_validity_mask(reshape_validity(blocks, platform))
+      ? detail::with_validity_mask(output, reshape_validity(blocks, platform))
       : output;
 }
 
@@ -215,7 +215,7 @@ Thread null_singleton_like(const Thread& reference) {
   } else if (reference.kind() == ThreadKind::TimeIndex) {
     platform = reference.as_timeindex().timeline().epoch_nanos().platform();
   }
-  return out.with_validity_mask(pluss::Series::zeros(
+  return detail::with_validity_mask(out, pluss::Series::zeros(
       {1}, pluss::codem::ScalarType::Bool, platform));
 }
 
@@ -229,7 +229,11 @@ DataFrameView DataFrame::transpose(bool render) const {
   const auto rows = ncases();
   const auto cols = nfeats();
 
-  const auto src_columns = features();
+  std::vector<Thread> src_columns;
+  src_columns.reserve(features().size());
+  for (const auto& name : features()) {
+    src_columns.push_back(this->features(name));
+  }
   std::vector<pluss::Note> src_notes;
   src_notes.reserve(src_columns.size());
   for (const auto& col : src_columns) {
@@ -260,7 +264,7 @@ DataFrameView DataFrame::transpose(bool render) const {
     out_cols.emplace_back(std::move(feature_name), Thread(note_from_strings(values)));
   }
 
-  Thread out_cases(note_from_strings(feature_names()));
+  Thread out_cases(note_from_strings(features()));
   auto out = DataFrame(std::move(out_cols), std::move(out_cases));
   return DataFrameView(std::move(out), render, "transpose", title());
 }
@@ -281,7 +285,7 @@ DataFrame DataFrame::lengthen(
   std::vector<std::string> ids;
   ids.reserve(id_features.size());
   std::unordered_set<std::string> selected;
-  selected.reserve(feature_names().size() + 2);
+  selected.reserve(features().size() + 2);
   for (const auto id : id_features) {
     const std::string name(id);
     PLUSS_CHECK(has_feature(name), "DataFrame::lengthen: unknown id feature '" + name + "'");
@@ -293,7 +297,7 @@ DataFrame DataFrame::lengthen(
   std::vector<std::string> values;
   values.reserve(value_features.size());
   if (value_features.empty()) {
-    for (const auto& name : feature_names()) {
+    for (const auto& name : features()) {
       if (!selected.contains(name)) {
         values.push_back(name);
       }
@@ -409,7 +413,7 @@ DataFrame DataFrame::stack(std::string feature_name,
 
   std::vector<std::string> feature_values;
   feature_values.reserve(tiled_rows.size());
-  for (const auto& name : feature_names()) {
+  for (const auto& name : features()) {
     feature_values.insert(
         feature_values.end(),
         static_cast<std::size_t>(ncases()),
@@ -417,7 +421,11 @@ DataFrame DataFrame::stack(std::string feature_name,
   }
   output.emplace_back(feature_name, Thread(pluss::make_note(feature_values)));
 
-  std::vector<Thread> value_blocks = features();
+  std::vector<Thread> value_blocks;
+  value_blocks.reserve(features().size());
+  for (const auto& name : features()) {
+    value_blocks.push_back(this->features(name));
+  }
   output.emplace_back(value_name, concatenate_reshape_threads(value_blocks));
 
   auto out = DataFrame(std::move(output));
@@ -498,7 +506,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
   }
 
   std::vector<std::pair<std::string, Thread>> output;
-  output.reserve(remaining_levels.size() + feature_names().size() * column_keys.size());
+  output.reserve(remaining_levels.size() + features().size() * column_keys.size());
   for (std::size_t i = 0; i < remaining_levels.size(); ++i) {
     output.emplace_back(remaining_levels[i], remaining_values[i].take(first_rows));
   }
@@ -509,7 +517,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
     out_names.insert(level_name);
   }
 
-  for (const auto& value_feature : feature_names()) {
+  for (const auto& value_feature : features()) {
     const auto source = features(value_feature);
     for (std::size_t col = 0; col < column_keys.size(); ++col) {
       std::vector<Thread> blocks;

@@ -9,6 +9,21 @@ add_executable(plussmic_dataframe_initial_demo
 add_executable(plussmic_dataframe_ab_reference_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_ab_reference_demo.cpp
 )
+add_executable(plussmic_thread_a_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/thread_a_reference_demo.cpp
+)
+add_executable(plussmic_dataframe_b_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_b_reference_demo.cpp
+)
+add_executable(plussmic_thread_b_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/thread_b_reference_demo.cpp
+)
+add_executable(plussmic_dataframe_cd_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_cd_reference_demo.cpp
+)
+add_executable(plussmic_thread_cd_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/thread_cd_reference_demo.cpp
+)
 add_executable(plussmic_dataframe_view_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_view_demo.cpp
 )
@@ -32,6 +47,9 @@ add_executable(plussmic_dataframe_efg_reference_demo
 )
 add_executable(plussmic_dataframe_hijk_reference_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_hijk_reference_demo.cpp
+)
+add_executable(plussmic_dataframe_rich_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_rich_reference_demo.cpp
 )
 add_executable(plussmic_us_accidents_eda_verbs_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/us_accidents_eda_verbs_demo.cpp
@@ -78,6 +96,11 @@ add_executable(plussmic_hierarchical_cases_demo
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_ab_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_thread_a_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_dataframe_b_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_thread_b_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_dataframe_cd_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_thread_cd_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_describe_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_display_policy_demo PRIVATE PlussMic)
@@ -86,6 +109,7 @@ target_link_libraries(plussmic_dataframe_versatile_methods_demo PRIVATE PlussMic
 target_link_libraries(plussmic_dataframe_e_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_efg_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_hijk_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_dataframe_rich_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_us_accidents_eda_verbs_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_eda_us_accidents_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_plot_demo PRIVATE PlussMic)
@@ -105,6 +129,21 @@ target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_ab_reference_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_thread_a_reference_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_dataframe_b_reference_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_thread_b_reference_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_dataframe_cd_reference_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_thread_cd_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_view_demo PRIVATE
@@ -129,6 +168,9 @@ target_compile_definitions(plussmic_dataframe_efg_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_hijk_reference_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_dataframe_rich_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_us_accidents_eda_verbs_demo PRIVATE

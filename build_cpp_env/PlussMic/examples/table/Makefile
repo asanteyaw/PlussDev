@@ -221,6 +221,76 @@ plussmic_dataframe_ab_reference_demo/fast:
 .PHONY : plussmic_dataframe_ab_reference_demo/fast
 
 # Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule
+
+# Convenience name for target.
+plussmic_thread_a_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule
+.PHONY : plussmic_thread_a_reference_demo
+
+# fast build rule for target.
+plussmic_thread_a_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build
+.PHONY : plussmic_thread_a_reference_demo/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/rule
+
+# Convenience name for target.
+plussmic_dataframe_b_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/rule
+.PHONY : plussmic_dataframe_b_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_b_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build
+.PHONY : plussmic_dataframe_b_reference_demo/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule
+
+# Convenience name for target.
+plussmic_thread_b_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule
+.PHONY : plussmic_thread_b_reference_demo
+
+# fast build rule for target.
+plussmic_thread_b_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build
+.PHONY : plussmic_thread_b_reference_demo/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/rule
+
+# Convenience name for target.
+plussmic_dataframe_cd_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/rule
+.PHONY : plussmic_dataframe_cd_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_cd_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build
+.PHONY : plussmic_dataframe_cd_reference_demo/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule
+
+# Convenience name for target.
+plussmic_thread_cd_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule
+.PHONY : plussmic_thread_cd_reference_demo
+
+# fast build rule for target.
+plussmic_thread_cd_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build
+.PHONY : plussmic_thread_cd_reference_demo/fast
+
+# Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_view_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_view_demo.dir/rule
 .PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_view_demo.dir/rule
@@ -331,6 +401,20 @@ plussmic_dataframe_hijk_reference_demo: PlussMic/examples/table/CMakeFiles/pluss
 plussmic_dataframe_hijk_reference_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_hijk_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_hijk_reference_demo.dir/build
 .PHONY : plussmic_dataframe_hijk_reference_demo/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/rule
+
+# Convenience name for target.
+plussmic_dataframe_rich_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/rule
+.PHONY : plussmic_dataframe_rich_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_rich_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build
+.PHONY : plussmic_dataframe_rich_reference_demo/fast
 
 # Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_us_accidents_eda_verbs_demo.dir/rule:
@@ -624,6 +708,54 @@ dataframe_ab_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_ab_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_ab_reference_demo.dir/dataframe_ab_reference_demo.cpp.s
 .PHONY : dataframe_ab_reference_demo.cpp.s
 
+dataframe_b_reference_demo.o: dataframe_b_reference_demo.cpp.o
+.PHONY : dataframe_b_reference_demo.o
+
+# target to build an object file
+dataframe_b_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/dataframe_b_reference_demo.cpp.o
+.PHONY : dataframe_b_reference_demo.cpp.o
+
+dataframe_b_reference_demo.i: dataframe_b_reference_demo.cpp.i
+.PHONY : dataframe_b_reference_demo.i
+
+# target to preprocess a source file
+dataframe_b_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/dataframe_b_reference_demo.cpp.i
+.PHONY : dataframe_b_reference_demo.cpp.i
+
+dataframe_b_reference_demo.s: dataframe_b_reference_demo.cpp.s
+.PHONY : dataframe_b_reference_demo.s
+
+# target to generate assembly for a file
+dataframe_b_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/dataframe_b_reference_demo.cpp.s
+.PHONY : dataframe_b_reference_demo.cpp.s
+
+dataframe_cd_reference_demo.o: dataframe_cd_reference_demo.cpp.o
+.PHONY : dataframe_cd_reference_demo.o
+
+# target to build an object file
+dataframe_cd_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/dataframe_cd_reference_demo.cpp.o
+.PHONY : dataframe_cd_reference_demo.cpp.o
+
+dataframe_cd_reference_demo.i: dataframe_cd_reference_demo.cpp.i
+.PHONY : dataframe_cd_reference_demo.i
+
+# target to preprocess a source file
+dataframe_cd_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/dataframe_cd_reference_demo.cpp.i
+.PHONY : dataframe_cd_reference_demo.cpp.i
+
+dataframe_cd_reference_demo.s: dataframe_cd_reference_demo.cpp.s
+.PHONY : dataframe_cd_reference_demo.s
+
+# target to generate assembly for a file
+dataframe_cd_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/dataframe_cd_reference_demo.cpp.s
+.PHONY : dataframe_cd_reference_demo.cpp.s
+
 dataframe_describe_demo.o: dataframe_describe_demo.cpp.o
 .PHONY : dataframe_describe_demo.o
 
@@ -767,6 +899,30 @@ dataframe_plot_demo.s: dataframe_plot_demo.cpp.s
 dataframe_plot_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_plot_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_plot_demo.dir/dataframe_plot_demo.cpp.s
 .PHONY : dataframe_plot_demo.cpp.s
+
+dataframe_rich_reference_demo.o: dataframe_rich_reference_demo.cpp.o
+.PHONY : dataframe_rich_reference_demo.o
+
+# target to build an object file
+dataframe_rich_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/dataframe_rich_reference_demo.cpp.o
+.PHONY : dataframe_rich_reference_demo.cpp.o
+
+dataframe_rich_reference_demo.i: dataframe_rich_reference_demo.cpp.i
+.PHONY : dataframe_rich_reference_demo.i
+
+# target to preprocess a source file
+dataframe_rich_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/dataframe_rich_reference_demo.cpp.i
+.PHONY : dataframe_rich_reference_demo.cpp.i
+
+dataframe_rich_reference_demo.s: dataframe_rich_reference_demo.cpp.s
+.PHONY : dataframe_rich_reference_demo.s
+
+# target to generate assembly for a file
+dataframe_rich_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/dataframe_rich_reference_demo.cpp.s
+.PHONY : dataframe_rich_reference_demo.cpp.s
 
 dataframe_thread_values_demo.o: dataframe_thread_values_demo.cpp.o
 .PHONY : dataframe_thread_values_demo.o
@@ -1056,6 +1212,78 @@ sp500_eda_ml_prep_notebook_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_sp500_eda_ml_prep_notebook_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_sp500_eda_ml_prep_notebook_demo.dir/sp500_eda_ml_prep_notebook_demo.cpp.s
 .PHONY : sp500_eda_ml_prep_notebook_demo.cpp.s
 
+thread_a_reference_demo.o: thread_a_reference_demo.cpp.o
+.PHONY : thread_a_reference_demo.o
+
+# target to build an object file
+thread_a_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/thread_a_reference_demo.cpp.o
+.PHONY : thread_a_reference_demo.cpp.o
+
+thread_a_reference_demo.i: thread_a_reference_demo.cpp.i
+.PHONY : thread_a_reference_demo.i
+
+# target to preprocess a source file
+thread_a_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/thread_a_reference_demo.cpp.i
+.PHONY : thread_a_reference_demo.cpp.i
+
+thread_a_reference_demo.s: thread_a_reference_demo.cpp.s
+.PHONY : thread_a_reference_demo.s
+
+# target to generate assembly for a file
+thread_a_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/thread_a_reference_demo.cpp.s
+.PHONY : thread_a_reference_demo.cpp.s
+
+thread_b_reference_demo.o: thread_b_reference_demo.cpp.o
+.PHONY : thread_b_reference_demo.o
+
+# target to build an object file
+thread_b_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/thread_b_reference_demo.cpp.o
+.PHONY : thread_b_reference_demo.cpp.o
+
+thread_b_reference_demo.i: thread_b_reference_demo.cpp.i
+.PHONY : thread_b_reference_demo.i
+
+# target to preprocess a source file
+thread_b_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/thread_b_reference_demo.cpp.i
+.PHONY : thread_b_reference_demo.cpp.i
+
+thread_b_reference_demo.s: thread_b_reference_demo.cpp.s
+.PHONY : thread_b_reference_demo.s
+
+# target to generate assembly for a file
+thread_b_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/thread_b_reference_demo.cpp.s
+.PHONY : thread_b_reference_demo.cpp.s
+
+thread_cd_reference_demo.o: thread_cd_reference_demo.cpp.o
+.PHONY : thread_cd_reference_demo.o
+
+# target to build an object file
+thread_cd_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/thread_cd_reference_demo.cpp.o
+.PHONY : thread_cd_reference_demo.cpp.o
+
+thread_cd_reference_demo.i: thread_cd_reference_demo.cpp.i
+.PHONY : thread_cd_reference_demo.i
+
+# target to preprocess a source file
+thread_cd_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/thread_cd_reference_demo.cpp.i
+.PHONY : thread_cd_reference_demo.cpp.i
+
+thread_cd_reference_demo.s: thread_cd_reference_demo.cpp.s
+.PHONY : thread_cd_reference_demo.s
+
+# target to generate assembly for a file
+thread_cd_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/thread_cd_reference_demo.cpp.s
+.PHONY : thread_cd_reference_demo.cpp.s
+
 time_series_accessor_demo.o: time_series_accessor_demo.cpp.o
 .PHONY : time_series_accessor_demo.o
 
@@ -1123,12 +1351,15 @@ help:
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
 	@echo "... plussmic_csv_engine_bench"
 	@echo "... plussmic_dataframe_ab_reference_demo"
+	@echo "... plussmic_dataframe_b_reference_demo"
+	@echo "... plussmic_dataframe_cd_reference_demo"
 	@echo "... plussmic_dataframe_describe_demo"
 	@echo "... plussmic_dataframe_e_reference_demo"
 	@echo "... plussmic_dataframe_efg_reference_demo"
 	@echo "... plussmic_dataframe_hijk_reference_demo"
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
+	@echo "... plussmic_dataframe_rich_reference_demo"
 	@echo "... plussmic_dataframe_thread_values_demo"
 	@echo "... plussmic_dataframe_tl_batched_demo"
 	@echo "... plussmic_dataframe_versatile_methods_demo"
@@ -1141,6 +1372,9 @@ help:
 	@echo "... plussmic_native_gap_api_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
+	@echo "... plussmic_thread_a_reference_demo"
+	@echo "... plussmic_thread_b_reference_demo"
+	@echo "... plussmic_thread_cd_reference_demo"
 	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"
 	@echo "... atlas_plot_demo.o"
@@ -1155,6 +1389,12 @@ help:
 	@echo "... dataframe_ab_reference_demo.o"
 	@echo "... dataframe_ab_reference_demo.i"
 	@echo "... dataframe_ab_reference_demo.s"
+	@echo "... dataframe_b_reference_demo.o"
+	@echo "... dataframe_b_reference_demo.i"
+	@echo "... dataframe_b_reference_demo.s"
+	@echo "... dataframe_cd_reference_demo.o"
+	@echo "... dataframe_cd_reference_demo.i"
+	@echo "... dataframe_cd_reference_demo.s"
 	@echo "... dataframe_describe_demo.o"
 	@echo "... dataframe_describe_demo.i"
 	@echo "... dataframe_describe_demo.s"
@@ -1173,6 +1413,9 @@ help:
 	@echo "... dataframe_plot_demo.o"
 	@echo "... dataframe_plot_demo.i"
 	@echo "... dataframe_plot_demo.s"
+	@echo "... dataframe_rich_reference_demo.o"
+	@echo "... dataframe_rich_reference_demo.i"
+	@echo "... dataframe_rich_reference_demo.s"
 	@echo "... dataframe_thread_values_demo.o"
 	@echo "... dataframe_thread_values_demo.i"
 	@echo "... dataframe_thread_values_demo.s"
@@ -1209,6 +1452,15 @@ help:
 	@echo "... sp500_eda_ml_prep_notebook_demo.o"
 	@echo "... sp500_eda_ml_prep_notebook_demo.i"
 	@echo "... sp500_eda_ml_prep_notebook_demo.s"
+	@echo "... thread_a_reference_demo.o"
+	@echo "... thread_a_reference_demo.i"
+	@echo "... thread_a_reference_demo.s"
+	@echo "... thread_b_reference_demo.o"
+	@echo "... thread_b_reference_demo.i"
+	@echo "... thread_b_reference_demo.s"
+	@echo "... thread_cd_reference_demo.o"
+	@echo "... thread_cd_reference_demo.i"
+	@echo "... thread_cd_reference_demo.s"
 	@echo "... time_series_accessor_demo.o"
 	@echo "... time_series_accessor_demo.i"
 	@echo "... time_series_accessor_demo.s"

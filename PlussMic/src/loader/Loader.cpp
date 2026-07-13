@@ -1683,10 +1683,10 @@ std::vector<std::string> raw_strings_from_arrow_array(const std::shared_ptr<arro
 
 std::vector<bool> thread_validity(const pluss::table::Thread& thread) {
   const auto n = static_cast<std::size_t>(thread.size());
-  if (!thread.has_validity_mask()) {
+  if (!pluss::table::detail::has_validity_mask(thread)) {
     return std::vector<bool>(n, true);
   }
-  auto valid = thread.validity_mask()->to_vec<bool>();
+  auto valid = pluss::table::detail::validity_mask(thread)->to_vec<bool>();
   PLUSS_CHECK(valid.size() == n, "loader::save_parquet: thread validity mask size mismatch");
   return valid;
 }
@@ -1911,11 +1911,15 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
     }
   }
 
-  auto names = frame.feature_names();
-  auto columns = frame.features();
+  auto names = frame.features();
+  std::vector<pluss::table::Thread> columns;
+  columns.reserve(names.size());
+  for (const auto& name : names) {
+    columns.push_back(frame.features(name));
+  }
   if (add_cases) {
     names.insert(names.begin(), case_label);
-    columns.insert(columns.begin(), frame.cases());
+    columns.insert(columns.begin(), frame.caselbl());
   }
   PLUSS_CHECK(names.size() == columns.size(), "loader::save_parquet: column metadata size mismatch");
 
@@ -2774,7 +2778,7 @@ std::string save_case_label_from_config(const Config& config) {
 std::vector<std::string> json_column_names_with_cases(const pluss::table::DataFrame& frame,
                                                       bool add_cases,
                                                       std::string_view case_label) {
-  auto names = frame.feature_names();
+  auto names = frame.features();
   if (add_cases) {
     names.insert(names.begin(), std::string(case_label));
   }
@@ -2783,9 +2787,14 @@ std::vector<std::string> json_column_names_with_cases(const pluss::table::DataFr
 
 std::vector<pluss::table::Thread> json_columns_with_cases(const pluss::table::DataFrame& frame,
                                                           bool add_cases) {
-  auto columns = frame.features();
+  std::vector<pluss::table::Thread> columns;
+  const auto& names = frame.features();
+  columns.reserve(names.size() + (add_cases ? 1 : 0));
+  for (const auto& name : names) {
+    columns.push_back(frame.features(name));
+  }
   if (add_cases) {
-    columns.insert(columns.begin(), frame.cases());
+    columns.insert(columns.begin(), frame.caselbl());
   }
   return columns;
 }
@@ -2845,8 +2854,8 @@ void save_json(const pluss::table::DataFrame& frame,
   std::vector<std::optional<std::vector<bool>>> valid_masks(columns.size());
   std::vector<std::optional<pluss::Note>> note_cache(columns.size());
   for (std::size_t j = 0; j < columns.size(); ++j) {
-    if (columns[j].has_validity_mask()) {
-      valid_masks[j] = columns[j].validity_mask()->to_vec<bool>();
+    if (pluss::table::detail::has_validity_mask(columns[j])) {
+      valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->to_vec<bool>();
     }
     if (columns[j].kind() != pluss::table::ThreadKind::Series) {
       note_cache[j] = columns[j].cast(pluss::table::ThreadCastTarget::Note).as_note();

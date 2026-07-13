@@ -46,7 +46,7 @@ std::int64_t payload_size(const Payload& payload) {
       payload);
 }
 
-std::string payload_dtype_name(const Payload& payload) {
+std::string payload_dtype(const Payload& payload) {
   return std::visit(
       [](const auto& v) {
         using T = std::decay_t<decltype(v)>;
@@ -110,7 +110,7 @@ public:
         cases_(std::move(cases)),
         size_(payload_size(payload_)),
         kind_(to_kind(payload_)),
-        dtype_name_(payload_dtype_name(payload_)) {
+        dtype_(payload_dtype(payload_)) {
     validate_mask_size(validity_mask_, size_);
     validate_cases_size(cases_, size_);
     sync_fields();
@@ -121,7 +121,7 @@ public:
     fields_.emplace("payload", payload_);
     fields_.emplace("size", size_);
     fields_.emplace("kind", static_cast<std::uint8_t>(kind_));
-    fields_.emplace("dtype", dtype_name_);
+    fields_.emplace("dtype", dtype_);
     if (validity_mask_.has_value()) fields_.insert_or_assign("validity_mask", *validity_mask_);
     if (cases_.has_value()) fields_.insert_or_assign("cases", *cases_);
   }
@@ -131,7 +131,7 @@ public:
   std::optional<pluss::table::Thread> cases_{std::nullopt};
   std::int64_t size_{0};
   StreamKind kind_{StreamKind::Series};
-  std::string dtype_name_{};
+  std::string dtype_{};
   std::unordered_map<std::string, FieldValue> fields_{};
   std::unordered_map<std::string, std::string> meta_{};
 };

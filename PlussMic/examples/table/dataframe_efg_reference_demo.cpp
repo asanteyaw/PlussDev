@@ -45,7 +45,7 @@ int main() {
   std::cout << "SALES\n" << sales.to_string() << "\n\n";
   std::cout << "SALES_MISSING\n" << sales_missing.to_string() << "\n\n";
   std::cout << "FEATURE_NAMES\n";
-  for (const auto& name : sales.feature_names()) {
+  for (const auto& name : sales.features()) {
     std::cout << name << "\n";
   }
   std::cout << "\nFEATURE_REF\n";

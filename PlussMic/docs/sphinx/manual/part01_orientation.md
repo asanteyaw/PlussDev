@@ -101,13 +101,13 @@ Common shape calls:
 ```cpp
 std::int64_t rows = df.ncases();
 std::int64_t cols = df.nfeatures();
-const auto& names = df.feature_names();
+const auto& names = df.features();
 ```
 
 Use this language when reading APIs:
 
 - `features(...)` selects or returns columns.
-- `cases(...)`, `case_study(...)`, `observe(...)`, `slice(...)`, and `take(...)` operate in row space.
+- `case_study(...)`, `observe(...)`, `slice(...)`, and `take(...)` operate in row space.
 - `set_cases(...)`, `reset_cases(...)`, and `align_cases(...)` manage the case axis.
 
 ## Functional style

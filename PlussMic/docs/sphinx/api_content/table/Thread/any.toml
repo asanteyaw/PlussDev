@@ -1,0 +1,46 @@
+summary = """
+Return whether at least one value in a boolean thread is true.
+
+`Thread::any(...)` is the scalar existence test for one boolean thread. Use it when one truthy element is enough to satisfy the condition.
+"""
+
+returns = """
+`ThreadValue`
+    One scalar truth result.
+"""
+
+see_also = [
+  "<a href=\"#all\"><code>Thread::all</code></a>: require every element to be true instead of only one.",
+  "<a href=\"dataframe_api_reference.html#any\"><code>DataFrame::any</code></a>: apply the same idea across a frame."
+]
+
+notes = [
+  """
+This method expects a boolean `Series` payload. It is not a general numeric reduction.
+""",
+  """
+Nullable boolean input requires `skipna=true`.
+"""
+]
+
+[[parameters]]
+name = "skipna"
+body = """
+Missing-value policy for the reduction.
+
+- `true`: ignore missing boolean positions while reducing.
+- `false`: missing boolean payloads are not supported for this reduction path.
+"""
+
+[[examples]]
+title = "Reduce one boolean thread to a single truth result."
+code = """
+using namespace pluss::table;
+
+auto flags = Thread(pluss::make_series(std::vector<bool>{true, false, true}));
+
+auto out = flags.any();
+"""
+output = """
+true
+"""

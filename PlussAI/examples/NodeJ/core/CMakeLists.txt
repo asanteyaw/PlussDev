@@ -8,6 +8,7 @@ set(NODEJ_CORE_DEMOS
   nodej_dataframe_bridge_demo
   nodej_flow_demo
   nodej_flow_bundle_demo
+  nodej_sklearn_gap_demo
   nodej_multiclass_demo
   nodej_online_demo
   nodej_unsupervised_demo

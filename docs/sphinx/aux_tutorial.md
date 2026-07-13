@@ -956,8 +956,14 @@ Pathing now emits stronger diagnostics:
 You can also use the function-style facade:
 
 ```cpp
+constexpr double split_ratio = 0.8;
 pluss::validate::check(!data_path.string().empty(), "data path resolved empty");
-pluss::validate::warn("falling back to default split ratio");
+pluss::validate::warn(split_ratio > 0.0 && split_ratio < 1.0,
+                      "falling back to default split ratio");
+pluss::validate::warn({
+    {!data_path.string().empty(), "data path resolved empty"},
+    {split_ratio > 0.0 && split_ratio < 1.0, "falling back to default split ratio"},
+});
 ```
 
 ---
@@ -1381,7 +1387,7 @@ auto df = pluss::loader::load_csv("data/bank-full.csv", {
 
 pluss::OutputEngine out;
 out.writeln("shape", df.ncases(), df.nfeatures());
-out.writeln("features", df.feature_names());
+out.writeln("features", df.features());
 ```
 
 Expected output:

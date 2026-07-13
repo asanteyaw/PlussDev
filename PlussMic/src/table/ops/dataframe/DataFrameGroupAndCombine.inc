@@ -211,7 +211,11 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
         {group_count},
         compute_dtype,
         platform).scatter_add(0, ids, values);
-    const auto any_value = counts.gt(0.0);
+    const auto zero_counts = pluss::Series::zeros(
+        {group_count},
+        compute_dtype,
+        platform);
+    const auto any_value = counts.gt(zero_counts);
 
     pluss::Series result;
     pluss::Series result_validity = any_value;
@@ -245,7 +249,11 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
         result = (
             (squared_sums - (sums * sums / counts)) /
             (counts - 1.0)).clamp_min(0.0);
-        result_validity = counts.gt(1.0);
+        const auto one_counts = pluss::Series::ones(
+            {group_count},
+            compute_dtype,
+            platform);
+        result_validity = counts.gt(one_counts);
         if (spec.op == GroupOp::Std) {
           result = result.sqrt();
         }
@@ -306,7 +314,14 @@ DataFrameView DataFrame::group_by(const CaseGroup& keys,
     while (keyed.has_feature(temp)) {
       temp = fmt::format("__pluss_case_level_{}_{}", level_name, suffix++);
     }
-    keyed = keyed.set_features(temp, level(level_name));
+    auto level_values = level(level_name);
+    if (detail::has_display_labels(level_values)) {
+      level_values = detail::clear_display_labels(level_values);
+    }
+    if (level_values.has_display_name()) {
+      level_values = level_values.clear_display_name();
+    }
+    set_prepared_feature_(keyed.mut_impl_(), temp, clear_assignment_metadata_(level_values));
     temp_names.push_back(std::move(temp));
   }
 
@@ -344,8 +359,10 @@ DataFrameView DataFrame::pivot(std::string_view case_feature,
       false);
   const auto counts = dup.features("__pivot_cell_count__").as_series();
   const bool has_duplicate = counts.gt(1).any().item<bool>();
-  PLUSS_CHECK(!has_duplicate,
-              "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
+  if (has_duplicate) {
+    throw ::pluss::Error(
+        "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
+  }
   auto out = pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, false);
   return DataFrameView(static_cast<DataFrame>(out), render, "pivot", title());
 }
@@ -417,7 +434,6 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
     }
     return it->second;
   };
-
   for (std::int64_t r = 0; r < ncases(); ++r) {
     const bool case_valid = case_col.is_valid(r);
     const bool feat_valid = feat_col.is_valid(r);
@@ -493,7 +509,6 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
     }
     out_cols.emplace_back(feat_labels[c], make_f64_thread(vals, valid));
   }
-
   auto out = DataFrame(std::move(out_cols), make_note_thread(case_labels));
   return DataFrameView(std::move(out), render, "pivot_table", title());
 }
@@ -511,9 +526,9 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
 
   std::vector<std::string> out_names;
   std::vector<Thread> out_cols;
-  out_names.reserve(feature_names().size() + other.feature_names().size());
-  out_cols.reserve(feature_names().size() + other.feature_names().size());
-  for (const auto& name : feature_names()) {
+  out_names.reserve(features().size() + other.features().size());
+  out_cols.reserve(features().size() + other.features().size());
+  for (const auto& name : features()) {
     out_names.push_back(name);
     out_cols.push_back(matched.left.features(name));
   }
@@ -538,7 +553,7 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
     }
   };
 
-  for (const auto& right_name : other.feature_names()) {
+  for (const auto& right_name : other.features()) {
     const auto right_col = matched.right.features(right_name);
 
     const auto it = out_index.find(right_name);

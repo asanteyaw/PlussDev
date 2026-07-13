@@ -1,0 +1,46 @@
+summary = """
+Return whether every value in a boolean thread is true.
+
+`Thread::all(...)` is the scalar truth reduction for one thread. It is the right tool when one falsey element should invalidate the whole column-level condition.
+"""
+
+returns = """
+`ThreadValue`
+    One scalar truth result.
+"""
+
+see_also = [
+  "<a href=\"#any\"><code>Thread::any</code></a>: require only one truthy element instead of all of them.",
+  "<a href=\"dataframe_api_reference.html#all\"><code>DataFrame::all</code></a>: apply the same idea across several features or rows."
+]
+
+notes = [
+  """
+This method expects a boolean `Series` payload. It is not a general numeric reduction.
+""",
+  """
+Nullable boolean input requires `skipna=true`.
+"""
+]
+
+[[parameters]]
+name = "skipna"
+body = """
+Missing-value policy for the reduction.
+
+- `true`: ignore missing boolean positions while reducing.
+- `false`: missing boolean payloads are not supported for this reduction path.
+"""
+
+[[examples]]
+title = "Reduce one boolean thread to a single truth result."
+code = """
+using namespace pluss::table;
+
+auto flags = Thread(pluss::make_series(std::vector<bool>{true, false, true}));
+
+auto out = flags.all();
+"""
+output = """
+false
+"""

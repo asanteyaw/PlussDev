@@ -20,7 +20,7 @@ if (!df.defined() || df.ncases() == 0) {
   throw std::runtime_error("empty input");
 }
 
-for (const auto& name : df.feature_names()) {
+for (const auto& name : df.features()) {
   std::cout << name << '\n';
 }
 ```
@@ -363,8 +363,8 @@ auto filled_numeric = df.fillna(0.0, {"balance", "duration"});
 auto filled_text = df.fillna("unknown", {"job"});
 auto forward = df.ffill();
 auto backward = df.bfill();
-auto complete = df.dropna();
-auto complete_selected = df.dropna({"balance", "duration"}, true);
+auto complete = df.dropnull();
+auto complete_selected = df.dropnull({"balance", "duration"}, true);
 ```
 
 Count null rows:

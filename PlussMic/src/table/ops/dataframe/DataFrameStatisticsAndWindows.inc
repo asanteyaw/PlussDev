@@ -95,7 +95,7 @@ Thread reduce_numeric_threads_(const detail::DataFrameImpl& src,
                  {static_cast<std::int64_t>(values.size())}),
              pluss::pile(validity, 0).reshape(
                  {static_cast<std::int64_t>(validity.size())}))
-      .with_display_labels(make_note_thread(names));
+      .caselbl(make_note_thread(names));
 }
 
 Thread pad_modes_(const Thread& source, std::int64_t size) {
@@ -136,7 +136,7 @@ Thread pad_modes_(const Thread& source, std::int64_t size) {
     if (output_valid.platform() != platform) {
       output_valid = output_valid.to(platform);
     }
-    return output.with_validity_mask(output_valid);
+    return detail::with_validity_mask(output, output_valid);
   }
   std::vector<std::string> padded;
   padded.reserve(static_cast<std::size_t>(size));
@@ -417,6 +417,24 @@ DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
 
 } // namespace
 
+DataFrame DataFrame::abs() const {
+  return delegate_numeric_threads_(impl_ref_(), [](const Thread& source) {
+    return source.abs();
+  });
+}
+
+DataFrame DataFrame::clip(double min_value, double max_value) const {
+  return delegate_numeric_threads_(impl_ref_(), [min_value, max_value](const Thread& source) {
+    return source.clip(min_value, max_value);
+  });
+}
+
+DataFrame DataFrame::round(std::int64_t decimals) const {
+  return delegate_numeric_threads_(impl_ref_(), [decimals](const Thread& source) {
+    return source.round(decimals);
+  });
+}
+
 DataFrameView DataFrame::covar(const StatisticOptions& options, bool render) const {
   PLUSS_CHECK(options.ddof >= 0, "DataFrame::covar: ddof must be >= 0");
   PLUSS_CHECK(options.min_count >= 0, "DataFrame::covar: min_count must be >= 0");
@@ -623,7 +641,7 @@ Thread DataFrame::std(
   return Thread(
              result.as_series().clamp_min(0.0).sqrt(),
              result.validity_mask())
-      .with_display_labels(result.display_labels());
+      .caselbl(detail::display_labels(result));
 }
 
 Thread DataFrame::se(Axis axis,
@@ -666,6 +684,22 @@ DataFrame DataFrame::scan(ScanStatistic statistic, bool skip_nulls) const {
       });
 }
 
+DataFrame DataFrame::cumsum(bool skip_nulls) const {
+  return scan(ScanStatistic::Sum, skip_nulls);
+}
+
+DataFrame DataFrame::cumprod(bool skip_nulls) const {
+  return scan(ScanStatistic::Product, skip_nulls);
+}
+
+DataFrame DataFrame::cummin(bool skip_nulls) const {
+  return scan(ScanStatistic::Minimum, skip_nulls);
+}
+
+DataFrame DataFrame::cummax(bool skip_nulls) const {
+  return scan(ScanStatistic::Maximum, skip_nulls);
+}
+
 Thread DataFrame::corr_with(const DataFrame& other,
                             CorrMethod method,
                             std::int64_t min_count) const {
@@ -685,7 +719,7 @@ Thread DataFrame::corr_with(const DataFrame& other,
   } else if (method == CorrMethod::KendallTau) {
     thread_method = ThreadCorrMethod::KendallTau;
   }
-  for (const auto& name : matched.left.feature_names()) {
+  for (const auto& name : matched.left.features()) {
     const auto left = matched.left.features(name);
     const auto right = matched.right.features(name);
     if (left.kind() != ThreadKind::Series || right.kind() != ThreadKind::Series ||
@@ -704,7 +738,7 @@ Thread DataFrame::corr_with(const DataFrame& other,
       {static_cast<std::int64_t>(values.size())});
   auto output_valid = pluss::pile(valid, 0).reshape(
       {static_cast<std::int64_t>(valid.size())});
-  return Thread(output, output_valid).with_display_labels(make_note_thread(names));
+  return Thread(output, output_valid).caselbl(make_note_thread(names));
 }
 
 DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others,

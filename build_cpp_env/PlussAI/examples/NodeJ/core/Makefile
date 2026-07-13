@@ -319,6 +319,20 @@ plussai_nodej_flow_bundle_demo/fast:
 .PHONY : plussai_nodej_flow_bundle_demo/fast
 
 # Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_sklearn_gap_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/rule
+.PHONY : plussai_nodej_sklearn_gap_demo
+
+# fast build rule for target.
+plussai_nodej_sklearn_gap_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build
+.PHONY : plussai_nodej_sklearn_gap_demo/fast
+
+# Convenience name for target.
 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
 .PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
@@ -600,6 +614,30 @@ nodej_prep_split_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_prep_split_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_prep_split_demo.dir/nodej_prep_split_demo.cpp.s
 .PHONY : nodej_prep_split_demo.cpp.s
 
+nodej_sklearn_gap_demo.o: nodej_sklearn_gap_demo.cpp.o
+.PHONY : nodej_sklearn_gap_demo.o
+
+# target to build an object file
+nodej_sklearn_gap_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/nodej_sklearn_gap_demo.cpp.o
+.PHONY : nodej_sklearn_gap_demo.cpp.o
+
+nodej_sklearn_gap_demo.i: nodej_sklearn_gap_demo.cpp.i
+.PHONY : nodej_sklearn_gap_demo.i
+
+# target to preprocess a source file
+nodej_sklearn_gap_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/nodej_sklearn_gap_demo.cpp.i
+.PHONY : nodej_sklearn_gap_demo.cpp.i
+
+nodej_sklearn_gap_demo.s: nodej_sklearn_gap_demo.cpp.s
+.PHONY : nodej_sklearn_gap_demo.s
+
+# target to generate assembly for a file
+nodej_sklearn_gap_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/nodej_sklearn_gap_demo.cpp.s
+.PHONY : nodej_sklearn_gap_demo.cpp.s
+
 nodej_unsupervised_demo.o: nodej_unsupervised_demo.cpp.o
 .PHONY : nodej_unsupervised_demo.o
 
@@ -673,6 +711,7 @@ help:
 	@echo "... plussai_nodej_multiclass_demo"
 	@echo "... plussai_nodej_online_demo"
 	@echo "... plussai_nodej_prep_split_demo"
+	@echo "... plussai_nodej_sklearn_gap_demo"
 	@echo "... plussai_nodej_unsupervised_demo"
 	@echo "... plussai_nodej_workflow_tuning_demo"
 	@echo "... bike_sharing_end_to_end.o"
@@ -705,6 +744,9 @@ help:
 	@echo "... nodej_prep_split_demo.o"
 	@echo "... nodej_prep_split_demo.i"
 	@echo "... nodej_prep_split_demo.s"
+	@echo "... nodej_sklearn_gap_demo.o"
+	@echo "... nodej_sklearn_gap_demo.i"
+	@echo "... nodej_sklearn_gap_demo.s"
 	@echo "... nodej_unsupervised_demo.o"
 	@echo "... nodej_unsupervised_demo.i"
 	@echo "... nodej_unsupervised_demo.s"

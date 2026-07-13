@@ -90,6 +90,16 @@ int main() {
   std::cout << "Feature-wise transform with Axis::Feature\n";
   std::cout << featurewise.head(4) << "\n";
 
+  auto row_score = indexed.features({"sales", "cost"}).transform(
+      [](const DataFrame& row) {
+        auto sales_value = row.features("sales").as_series();
+        auto cost_value = row.features("cost").as_series();
+        return pluss::table::ThreadValue(Thread(sales_value - cost_value));
+      },
+      pluss::table::Axis::Case);
+  std::cout << "Row-wise transform with Axis::Case\n";
+  std::cout << row_score << "\n";
+
   auto threadwise = indexed.features("sales").transform(
       [](const pluss::table::ThreadValue& value) {
         return pluss::table::ThreadValue(value.thread() * 2.0);

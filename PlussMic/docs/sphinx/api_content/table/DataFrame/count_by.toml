@@ -1,0 +1,94 @@
+summary = """
+Group rows by one feature and return the count for each distinct key.
+
+This is the compact frequency-table surface for one grouping feature.
+"""
+
+returns = """
+`DataFrameView`
+    Frequency table with the grouping key and its count.
+"""
+
+notes = [
+  """
+Results are sorted by count descending. Ties are then stabilized by key order.
+""",
+  """
+Use `top_n` when you only want the most frequent groups.
+"""
+]
+
+[[parameters]]
+name = "feature"
+body = """
+Feature whose distinct values define the groups.
+"""
+
+[[parameters]]
+name = "top_n"
+body = """
+Optional cap on the number of groups returned.
+
+- `0`: keep every group.
+- positive integer: keep only the top `N` groups after sorting.
+"""
+
+[[parameters]]
+name = "dropna"
+body = """
+Missing-key policy.
+
+- `true`: drop missing grouping keys.
+- `false`: allow missing keys to participate as their own group.
+"""
+
+[[parameters]]
+name = "render"
+body = """
+Display toggle for the returned view.
+"""
+
+[[examples]]
+title = "Return counts for every distinct grouping key."
+code = """
+using namespace pluss::table;
+
+auto cities = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Accra", "Tema"})},
+    {"score", pluss::make_series({10.0, 20.0, 11.0, 30.0, 12.0, 21.0})},
+});
+
+auto out = cities.count_by("city", 0, true, false);
+"""
+output = """
+====================
+     | city    count
+--------------------
+0    | Accra   3    
+1    | Tema    2    
+2    | Kumasi  1    
+--------------------
+[3 cs x 2 feat]
+"""
+
+[[examples]]
+title = "Keep only the top two most frequent groups."
+code = """
+using namespace pluss::table;
+
+auto cities = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Accra", "Tema"})},
+    {"score", pluss::make_series({10.0, 20.0, 11.0, 30.0, 12.0, 21.0})},
+});
+
+auto out = cities.count_by("city", 2, true, false);
+"""
+output = """
+===================
+     | city   count
+-------------------
+0    | Accra  3    
+1    | Tema   2    
+-------------------
+[2 cs x 2 feat]
+"""

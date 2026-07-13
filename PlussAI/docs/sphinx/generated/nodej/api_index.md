@@ -1,7 +1,7 @@
 # NodeJ Full API Reference: Method Index
 
 Total method pages: **169**
-Total data-type pages: **31**
+Total data-type pages: **34**
 
 ## Data Types
 
@@ -14,6 +14,8 @@ api/type-crossassessreport
 api/type-dependencecurve
 api/type-dependencesurface
 api/type-featurebatch
+api/type-featurepickresult
+api/type-featurerankreport
 api/type-flowbundle
 api/type-flowbundlemetadata
 api/type-flowgraphinfo
@@ -29,6 +31,7 @@ api/type-sparsecrossreport
 api/type-sparsecsrmatrix
 api/type-sparsefoldreport
 api/type-sparsetripletmatrix
+api/type-sparsetuneledger
 api/type-sparsetunereport
 api/type-sparsetunetrial
 api/type-splitplan

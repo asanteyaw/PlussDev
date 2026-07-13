@@ -263,6 +263,15 @@ std::ostream& operator<<(std::ostream& os, const DataFrame& frame) {
   return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const DataFrame::DTypes& dtypes) {
+  os << "features  dtype\n";
+  os << "--------  --------";
+  for (const auto& [name, dtype] : dtypes.entries()) {
+    os << '\n' << name << "  " << dtype;
+  }
+  return os;
+}
+
 void output_render(std::ostream& os, const DataFrame& frame) {
   if (frame.consume_stream_suppression_()) {
     return;

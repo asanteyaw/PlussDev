@@ -111,8 +111,8 @@ std::string kind_name(StreamKind kind) {
 }
 
 std::string thread_value_at(const pluss::table::Thread& thread, std::int64_t row, std::int64_t max_width) {
-  if (thread.has_validity_mask()) {
-    const auto valid = thread.validity_mask()->to_vec<bool>();
+  if (pluss::table::detail::has_validity_mask(thread)) {
+    const auto valid = pluss::table::detail::validity_mask(thread)->to_vec<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return "NA";
     }
@@ -185,14 +185,14 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
   oss << fit_line(
       fmt::format("kindle::Stream  kind={}  dtype={}  cs={}",
                   kind_name(stream.kind()),
-                  stream.dtype_name(),
+                  stream.dtype(),
                   stream.size()),
       width)
       << "\n";
   oss << fit_line(
       fmt::format("cases={}  mask={}  meta={}",
                   stream.has_cases() ? "yes" : "no",
-                  stream.has_validity_mask() ? "yes" : "no",
+                  detail::has_validity_mask(stream) ? "yes" : "no",
                   stream.meta().size()),
       width)
       << "\n";
@@ -300,7 +300,7 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
     std::string line = right_pad(clip_text(key, key_w), key_w) + " | "
                      + right_pad(kind_name(stream.kind()), kind_w);
     if (show_dtype) {
-      line += " | " + right_pad(clip_text(stream.dtype_name(), dtype_w), dtype_w);
+      line += " | " + right_pad(clip_text(stream.dtype(), dtype_w), dtype_w);
     }
     if (show_cs) {
       line += " | " + right_pad(std::to_string(stream.size()), cs_w);

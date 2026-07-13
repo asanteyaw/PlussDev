@@ -1,45 +1,44 @@
 # DataFrameSqlPrepared API Reference
 
-# Practical DataFrameSqlPrepared API Reference
-
-## API Reference Style
-
 This page documents the public prepared-statement helper returned by `DataFrame::prep_sql()` or `DataFrameSqlAccessor::prepare()`.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
 
 ## E
 
 ### `execute`
 
-#### API Signatures
+#### Signatures
 
 ```cpp
 DataFrameSqlPrepared::execute() -> DataFrame
 
-DataFrameSqlPrepared::execute(params: std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam>) -> DataFrame
+DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params) -> DataFrame
 
-DataFrameSqlPrepared::execute(params: std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam>, identifier_params: std::unordered_map<std::string, std::string>) -> DataFrame
+DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params) -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
 
-#### Inputs
+#### Parameters
 
-`params` : `std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam>`
+**params**
     Named scalar bindings supplied to placeholders such as `{min_sales}` inside the prepared statement template.
 
-`identifier_params` : `std::unordered_map<std::string, std::string>`
+**identifier_params**
     Named identifier bindings used for placeholder substitution when a statement needs a dynamic SQL identifier such as a table alias.
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
 
 #### Examples
 
@@ -56,7 +55,7 @@ auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > 95");
 auto out = stmt.execute();
 ```
 
-##### Expected output
+##### Output
 
 ```text
 id  sales
@@ -76,7 +75,7 @@ auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 auto out = stmt.execute({{"min_sales", 95.0}});
 ```
 
-##### Expected output
+##### Output
 
 ```text
 id  sales
@@ -96,7 +95,7 @@ auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 auto out = stmt.execute({{"min_sales", 95.0}}, {{"table_name", "self"}});
 ```
 
-##### Expected output
+##### Output
 
 ```text
 id  sales

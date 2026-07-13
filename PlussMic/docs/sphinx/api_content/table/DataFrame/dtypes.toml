@@ -1,0 +1,44 @@
+summary = """
+Return the public dtype summary for every feature in the frame.
+
+This is the schema-inspection method you use before casting, selecting numeric features, or debugging mixed-type input.
+
+It answers “what kind of payload does each feature currently hold?” at the table layer.
+"""
+
+returns = """
+`DTypes`
+    Feature-to-dtype summary object describing the current payload family for each feature.
+"""
+
+see_also = [
+  "<a href=\"#cast\"><code>DataFrame::cast</code></a>, <a href=\"#astype\"><code>DataFrame::astype</code></a>: change the dtypes after inspecting them."
+]
+
+notes = [
+  """
+`dtypes()` reports the public table-level dtype categories such as `Series` and `Note`. It is intentionally higher-level than the scalar dtype returned by `Thread::dtype()`.
+""",
+  """
+Use `dtypes()` before `cast(...)`, `astype(...)`, numeric reduction, or feature-selection logic when your frame was loaded from messy or mixed-source input.
+"""
+]
+
+[[examples]]
+title = "Inspect the current feature families before downstream casting."
+code = """
+using namespace pluss::table;
+
+auto raw = DataFrame({
+    {"student_id", pluss::make_series({101.0, 102.0, 103.0})},
+    {"passed", pluss::make_series({1.0, 0.0, 1.0})},
+    {"raw_name", pluss::make_note({"Ada", "Bola", "Chen"})},
+});
+
+auto out = raw.dtypes();
+"""
+output = """
+student_id: Series
+passed: Series
+raw_name: Note
+"""

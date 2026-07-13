@@ -87,6 +87,76 @@
     document.body.insertBefore(topbar, document.body.firstChild);
   }
 
+  function currentApiPage() {
+    const path = window.location.pathname || "";
+    if (path.endsWith("/dataframe_api_reference.html") || path.endsWith("dataframe_api_reference.html")) {
+      return { key: "DataFrame", slug: "dataframe", landing: true };
+    }
+    if (path.endsWith("/thread_api_reference.html") || path.endsWith("thread_api_reference.html")) {
+      return { key: "Thread", slug: "thread", landing: true };
+    }
+    const methodMatch = path.match(/\/api\/(dataframe|thread)\/([A-Za-z_][A-Za-z0-9_]*)\.html$/);
+    if (!methodMatch) {
+      return null;
+    }
+    return {
+      key: methodMatch[1] === "dataframe" ? "DataFrame" : "Thread",
+      slug: methodMatch[1],
+      landing: false,
+      method: methodMatch[2],
+    };
+  }
+
+  function buildApiMethodSidebar() {
+    const page = currentApiPage();
+    const navData = window.PLUSS_API_NAV || {};
+    if (!page || !navData[page.key]) {
+      return null;
+    }
+
+    const documentRoot = document.querySelector("div.document");
+    if (!documentRoot) {
+      return null;
+    }
+
+    document.body.classList.add("has-method-sidebar");
+
+    const sidebar = document.createElement("aside");
+    sidebar.id = "pluss-method-sidebar";
+
+    const title = document.createElement("div");
+    title.className = "sidebar-title";
+    title.textContent = `${navData[page.key].title} Methods`;
+    sidebar.appendChild(title);
+
+    const nav = document.createElement("nav");
+    nav.className = "method-nav";
+    sidebar.appendChild(nav);
+
+    let currentLetter = "";
+    navData[page.key].methods.forEach((name) => {
+      const letter = (name[0] || "#").toUpperCase();
+      if (letter !== currentLetter) {
+        currentLetter = letter;
+        const groupHeader = document.createElement("div");
+        groupHeader.className = "method-group";
+        groupHeader.textContent = currentLetter;
+        nav.appendChild(groupHeader);
+      }
+
+      const link = document.createElement("a");
+      link.textContent = name;
+      link.href = page.landing ? `api/${page.slug}/${name}.html` : `${name}.html`;
+      if (!page.landing && page.method === name) {
+        link.classList.add("active");
+      }
+      nav.appendChild(link);
+    });
+
+    documentRoot.appendChild(sidebar);
+    return { apiSidebar: true };
+  }
+
   function buildMethodSidebar() {
     const pageRoots = Array.from(document.querySelectorAll("div.body > section"));
     const pageRootGroups = pageRoots
@@ -165,7 +235,8 @@
 
     const title = document.createElement("div");
     title.className = "sidebar-title";
-    title.textContent = "Method Navigation";
+    const pageTitle = cleanHeadingText(text(document.querySelector("div.body h1"))) || "Method Navigation";
+    title.textContent = `${pageTitle} Methods`;
     sidebar.appendChild(title);
 
     const nav = document.createElement("nav");
@@ -200,11 +271,10 @@
 
     let activeIndex = 0;
     const listeners = [];
-    const applyVisibility = (idx) => {
-      methodItems.forEach((item, i) => {
-        item.root.classList.toggle("pluss-api-root-hidden", item.root !== methodItems[idx].root);
-        item.section.classList.toggle("pluss-method-hidden", i !== idx);
-      });
+    const sectionTop = (item) => {
+      const wrapperRect = bodywrapper.getBoundingClientRect();
+      const sectionRect = item.section.getBoundingClientRect();
+      return bodywrapper.scrollTop + (sectionRect.top - wrapperRect.top);
     };
     const setActive = (idx, opts = {}) => {
       const { updateHash = true, scrollIntoView = true } = opts;
@@ -213,7 +283,6 @@
       }
       activeIndex = idx;
       const active = methodItems[idx];
-      applyVisibility(idx);
 
       links.forEach((a, i) => {
         a.classList.toggle("active", i === idx);
@@ -224,7 +293,7 @@
       }
       if (scrollIntoView) {
         bodywrapper.scrollTo({
-          top: 0,
+          top: Math.max(0, sectionTop(active) - 8),
           behavior: "auto",
         });
       }
@@ -254,6 +323,19 @@
       const idx = methodItems.findIndex((m) => m.id === hash);
       if (idx >= 0 && idx !== activeIndex) {
         setActive(idx, { updateHash: false, scrollIntoView: true });
+      }
+    });
+
+    bodywrapper.addEventListener("scroll", () => {
+      let candidate = 0;
+      const currentTop = bodywrapper.scrollTop + 12;
+      methodItems.forEach((item, idx) => {
+        if (sectionTop(item) <= currentTop) {
+          candidate = idx;
+        }
+      });
+      if (candidate !== activeIndex) {
+        setActive(candidate, { updateHash: true, scrollIntoView: false });
       }
     });
 
@@ -528,8 +610,8 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
-    const methodNav = buildMethodSidebar();
-    const sectionNav = methodNav ? null : buildSectionSidebar();
+    const apiMethodSidebar = buildApiMethodSidebar();
+    const methodNav = apiMethodSidebar ? null : buildMethodSidebar();
     decorateApiBlocks();
 
     // Safety fallback: never leave the left rail empty.
@@ -544,6 +626,8 @@
       }
     }
 
-    buildPrevNext(methodNav || sectionNav);
+    if (!apiMethodSidebar) {
+      buildPrevNext(methodNav || null);
+    }
   });
 })();

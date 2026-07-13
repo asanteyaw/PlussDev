@@ -188,12 +188,12 @@ Thread temporal_thread_to_display_note(const Thread& t) {
                               || !series_all_zero_i64(timeline.minute())
                               || !series_all_zero_i64(timeline.hour());
   if (!has_clock_time) {
-    return Thread(timeline.to_note_date(), t.validity_mask());
+    return Thread(timeline.to_note_date(), detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return Thread(timeline.to_note_datetime(), t.validity_mask());
+    return Thread(timeline.to_note_datetime(), detail::validity_mask(t));
   }
-  return Thread(timeline.to_note_datetime_nano(), t.validity_mask());
+  return Thread(timeline.to_note_datetime_nano(), detail::validity_mask(t));
 }
 
 Thread display_thread(const Thread& t) {
@@ -223,10 +223,10 @@ std::string thread_value_at(const Thread& t, std::int64_t row) {
 }
 
 std::int64_t non_null_count(const Thread& t) {
-  if (!t.has_validity_mask()) {
+  if (!detail::has_validity_mask(t)) {
     return t.size();
   }
-  const auto valid = t.validity_mask()->to_vec<bool>();
+  const auto valid = detail::validity_mask(t)->to_vec<bool>();
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
@@ -243,7 +243,7 @@ std::uint64_t estimate_bytes(const Thread& t) {
       bytes += static_cast<std::uint64_t>(n.at(i).size());
     }
   }
-  if (t.has_validity_mask()) {
+  if (detail::has_validity_mask(t)) {
     bytes += static_cast<std::uint64_t>(t.size());
   }
   return bytes;
@@ -547,6 +547,16 @@ std::string render_ascii_table(
   return out;
 }
 
+std::vector<Thread> dataframe_columns_(const DataFrame& frame) {
+  std::vector<Thread> columns;
+  const auto& names = frame.features();
+  columns.reserve(names.size());
+  for (const auto& name : names) {
+    columns.push_back(frame.features(name));
+  }
+  return columns;
+}
+
 TableMatrix build_dataframe_matrix(
     const DataFrame& frame,
     const EffectiveDisplayOptions& options,
@@ -554,9 +564,9 @@ TableMatrix build_dataframe_matrix(
   const auto row_plan = build_row_plan(frame.ncases(), options);
   const auto col_plan = build_col_plan(frame.nfeats(), options, compact_columns);
 
-  const auto names = frame.feature_names();
-  const auto cols = frame.features();
-  const auto display_cases = display_thread(frame.cases());
+  const auto names = frame.features();
+  const auto cols = dataframe_columns_(frame);
+  const auto display_cases = display_thread(frame.caselbl());
   std::vector<Thread> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
@@ -689,7 +699,7 @@ std::string dtype_summary_line(const std::unordered_map<std::string, std::int64_
   return line;
 }
 
-std::string logical_dtype_name(const Thread& t) {
+std::string logical_dtype(const Thread& t) {
   switch (t.kind()) {
     case ThreadKind::Series:
       return "Series";
@@ -707,12 +717,12 @@ std::string logical_dtype_name(const Thread& t) {
 std::string render_thread_series_like_(const Thread& thread,
                                        const EffectiveDisplayOptions& options,
                                        std::int64_t terminal_width) {
-  const auto dtype_footer = logical_dtype_name(thread);
+  const auto dtype_footer = logical_dtype(thread);
 
   const auto values = display_thread(thread);
   std::optional<Thread> labels = std::nullopt;
-  if (thread.has_display_labels()) {
-    labels = display_thread(thread.display_labels());
+  if (detail::has_display_labels(thread)) {
+    labels = display_thread(detail::display_labels(thread));
   }
 
   const auto row_plan = build_row_plan(values.size(), options);
@@ -1281,14 +1291,14 @@ std::string render_html_pre_(std::string_view title,
 std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
                                     std::string_view table_id) {
-  const auto cols = frame.features();
-  const auto display_cases = display_thread(frame.cases());
+  const auto cols = dataframe_columns_(frame);
+  const auto display_cases = display_thread(frame.caselbl());
   std::vector<Thread> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
     display_cols.push_back(display_thread(col));
   }
-  const auto names = frame.feature_names();
+  const auto names = frame.features();
 
   std::string body;
   body += "<div class=\"summary-grid\">";
@@ -1299,7 +1309,7 @@ std::string render_html_table_body_(const DataFrame& frame,
                   frame.nfeats());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype_name(frame.cases())));
+      escape_html_(logical_dtype(frame.caselbl())));
   body += "</div>";
 
   body += "<div class=\"table-wrap\"><div class=\"table-scroll\">";
@@ -1307,7 +1317,7 @@ std::string render_html_table_body_(const DataFrame& frame,
 
   std::size_t column_index = 0;
   if (options.show_case_index) {
-    const auto case_numeric = is_numeric_thread(frame.cases());
+    const auto case_numeric = is_numeric_thread(frame.caselbl());
     body += fmt::format(
         "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">case</th>",
         case_numeric ? " num" : "",
@@ -1329,7 +1339,7 @@ std::string render_html_table_body_(const DataFrame& frame,
     body += fmt::format("<tr data-row-index=\"{}\">", row);
     if (options.show_case_index) {
       const auto case_value = thread_value_at(display_cases, row);
-      const auto case_numeric = is_numeric_thread(frame.cases());
+      const auto case_numeric = is_numeric_thread(frame.caselbl());
       body += fmt::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
                           case_value == "NA" ? " missing" : "",
@@ -1356,9 +1366,9 @@ class DataFrameVirtualTableModel final
     : public pluss::view::VirtualTableModel {
  public:
   explicit DataFrameVirtualTableModel(const DataFrame& frame)
-      : cases_(display_thread(frame.cases())),
-        columns_(frame.features()),
-        names_(frame.feature_names()),
+      : cases_(display_thread(frame.caselbl())),
+        columns_(dataframe_columns_(frame)),
+        names_(frame.features()),
         rows_(frame.ncases()) {
     numeric_.reserve(columns_.size());
     search_columns_.reserve(columns_.size());
@@ -1369,7 +1379,7 @@ class DataFrameVirtualTableModel final
       numeric_.push_back(is_numeric_thread(column));
       bool searchable = true;
       if (column.kind() == ThreadKind::Series &&
-          !column.has_validity_mask()) {
+          !detail::has_validity_mask(column)) {
         const void* payload = column.as_series().raw_data();
         searchable = shared_numeric_payloads.insert(payload).second;
       }
@@ -1475,7 +1485,7 @@ std::string render_virtual_html_table_(const DataFrame& frame,
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div "
       "class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype_name(frame.cases())));
+      escape_html_(logical_dtype(frame.caselbl())));
   body += "</div>";
   body +=
       "<div class=\"table-wrap\"><div class=\"table-scroll\"><table "
@@ -1506,7 +1516,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
                       atlas.nfeats());
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth Labels</div><div class=\"value\">{}</div></div>",
-                      atlas.axis0_labels().has_value() ? escape_html_(logical_dtype_name(*atlas.axis0_labels()))
+                      atlas.axis0_labels().has_value() ? escape_html_(logical_dtype(*atlas.axis0_labels()))
                                                        : "None");
   body += "</div>";
 
@@ -1549,14 +1559,14 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 }
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
-  const auto cols = frame.features();
-  const auto display_cases = display_thread(frame.cases());
-  const auto names = frame.feature_names();
+  const auto cols = dataframe_columns_(frame);
+  const auto display_cases = display_thread(frame.caselbl());
+  const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.cases());
+  std::uint64_t memory_bytes = estimate_bytes(frame.caselbl());
   for (std::size_t i = 0; i < names.size(); ++i) {
-    const auto dtype = logical_dtype_name(cols[i]);
+    const auto dtype = logical_dtype(cols[i]);
     dtype_counts[dtype] += 1;
     memory_bytes += estimate_bytes(cols[i]);
   }
@@ -1600,7 +1610,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto nn = non_null_count(cols[i]);
-    const auto dtype = logical_dtype_name(cols[i]);
+    const auto dtype = logical_dtype(cols[i]);
     body += fmt::format(
         "<tr><td class=\"num\" data-sort-value=\"{0}\">{0}</td><td class=\"sticky-left\" data-sort-value=\"{1}\">{2}</td><td class=\"num\" data-sort-value=\"{3}\">{3}</td><td data-sort-value=\"{4}\">{5}</td></tr>",
         i,
@@ -1751,7 +1761,7 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
 
 std::string render_html(const Thread& thread, const DisplayOptions& options) {
   const auto title = document_title_(thread.has_display_name() ? thread.display_name() : "Thread", options);
-  const auto subtitle = fmt::format("{} cases, dtype {}", thread.size(), thread.dtype_name());
+  const auto subtitle = fmt::format("{} cases, dtype {}", thread.size(), thread.dtype());
   return render_html_pre_(title, subtitle, render(thread, options), options);
 }
 
@@ -1764,15 +1774,15 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto effective = resolve_effective_options(options, term, true);
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
-  const auto cols = frame.features();
-  const auto display_cases = display_thread(frame.cases());
-  const auto names = frame.feature_names();
+  const auto cols = dataframe_columns_(frame);
+  const auto display_cases = display_thread(frame.caselbl());
+  const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.cases());
+  std::uint64_t memory_bytes = estimate_bytes(frame.caselbl());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
-    const auto dtype = logical_dtype_name(cols[i]);
+    const auto dtype = logical_dtype(cols[i]);
     dtype_counts[dtype] += 1;
     memory_bytes += estimate_bytes(cols[i]);
   }
@@ -1810,7 +1820,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
         fmt::format("{}", i),
         names[i],
         fmt::format("{}", nn),
-        logical_dtype_name(cols[i]),
+        logical_dtype(cols[i]),
     });
   };
 

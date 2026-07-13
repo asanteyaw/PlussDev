@@ -153,10 +153,10 @@ pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, 
     case ThreadKind::Series:
       break;
     case ThreadKind::Timeline:
-      numeric_thread = Thread(t.as_timeline().epoch_nanos(), t.validity_mask());
+      numeric_thread = Thread(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     case ThreadKind::TimeIndex:
-      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), t.validity_mask());
+      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     case ThreadKind::Note:
       numeric_thread = t.cast(ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
@@ -166,12 +166,12 @@ pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, 
   }
 
   auto values = numeric_thread.as_series().to(pluss::codem::ScalarType::Float64);
-  if (numeric_thread.has_validity_mask()) {
+  if (detail::has_validity_mask(numeric_thread)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
-    values = values.where(numeric_thread.validity_mask()->logical_not(), nan_fill);
+    values = values.where(detail::validity_mask(numeric_thread)->logical_not(), nan_fill);
   }
   return values.reshape({values.numel()});
 }
@@ -345,7 +345,7 @@ DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels,
 std::vector<std::string> default_triplet_features(const std::vector<DataFrame>& frames) {
   PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
   const auto numeric = frames.front().series_features();
-  auto names = numeric.feature_names();
+  auto names = numeric.features();
   PLUSS_CHECK(
       static_cast<std::int64_t>(names.size()) >= 3,
       "Atlas::plot().triplot: requires at least three numeric series features");
@@ -358,7 +358,7 @@ std::vector<std::string> resolve_triplet_features(pluss::msharp::RangeView::Of<s
     return default_triplet_features(frames);
   }
   PLUSS_CHECK(!frames.empty(), "Atlas::plot().triplot: atlas has no frames");
-  const auto numeric_names = frames.front().series_features().feature_names();
+  const auto numeric_names = frames.front().series_features().features();
   std::unordered_set<std::string> available_set;
   available_set.reserve(numeric_names.size());
   for (const auto& name : numeric_names) {
@@ -389,7 +389,7 @@ std::vector<std::string> resolve_depth_features(pluss::msharp::RangeView::Of<std
                                                 std::string_view where) {
   PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
   const auto numeric = frames.front().series_features();
-  const auto numeric_names = numeric.feature_names();
+  const auto numeric_names = numeric.features();
   std::unordered_set<std::string> available_set;
   available_set.reserve(numeric_names.size());
   for (const auto& name : numeric_names) {
@@ -497,7 +497,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
   }
 
   AtlasGrid3D out;
-  const auto& case_thread = frames[static_cast<std::size_t>(positions.front())].cases();
+  const auto& case_thread = frames[static_cast<std::size_t>(positions.front())].caselbl();
   if (thread_prefers_labels(case_thread)) {
     out.x_axis = positional_axis(ncases);
     out.x_labels = thread_to_labels(case_thread);
@@ -557,7 +557,7 @@ struct ResolvedFrameAxis {
 ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
                                      std::optional<std::string_view> x_feature,
                                      std::string_view where) {
-  const auto& axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.cases();
+  const auto& axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.caselbl();
   const auto axis_label = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
   ResolvedFrameAxis axis;
   axis.label = axis_label;

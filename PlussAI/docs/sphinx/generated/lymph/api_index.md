@@ -1,6 +1,6 @@
 # Lymph Full API Reference: Method Index
 
-Total method pages: **132**
+Total method pages: **135**
 Total data-type pages: **26**
 
 ## Data Types
@@ -59,7 +59,9 @@ api/method-copy-feature-route
 api/method-copy-range-values
 api/method-dependence-curve
 api/method-dependence-surface
+api/method-encoded-param-table
 api/method-has-best-trial
+api/method-has-ledger
 api/method-linearregressormodel-dump-state
 api/method-linearregressormodel-feature-count
 api/method-linearregressormodel-infer
@@ -122,6 +124,7 @@ api/method-standardscaler-summary
 api/method-take-features
 api/method-temporal-features
 api/method-to-csr
+api/method-tune-ledger
 api/method-variance-prune
 api/method-workflow-coeff
 api/method-workflow-dependence-curve

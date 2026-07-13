@@ -1,0 +1,51 @@
+summary = """
+Count entries in the current thread.
+
+For ordinary numeric, text, or temporal payloads, `count(true)` is the non-missing count. For boolean series, `count(true)` and `count(false)` let you count each truth state explicitly.
+"""
+
+returns = """
+`ThreadValue`
+    Scalar-like count result.
+"""
+
+notes = [
+  """
+`count(false)` is mainly useful for boolean series payloads.
+"""
+]
+
+[[parameters]]
+name = "count_true"
+body = """
+Boolean target to count on boolean series payloads.
+
+- `true`: count `true` values.
+- `false`: count `false` values.
+"""
+
+[[examples]]
+title = "Count how many `true` values appear in a boolean series."
+code = """
+using namespace pluss::table;
+
+auto flags = Thread(pluss::make_series(std::vector<bool>{true, false, true, true}));
+
+auto out = flags.count(true);
+"""
+output = """
+3
+"""
+
+[[examples]]
+title = "Count how many `false` values appear in a boolean series."
+code = """
+using namespace pluss::table;
+
+auto flags = Thread(pluss::make_series(std::vector<bool>{true, false, true, true}));
+
+auto out = flags.count(false);
+"""
+output = """
+1
+"""

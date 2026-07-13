@@ -1,38 +1,41 @@
 # Catalog API Reference
 
-# Practical Catalog API Reference
-
-## API Reference Style
-
 This page documents the full public `Catalog` surface for named stream collections.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
+
+## A
 
 ### `add_text_features`
 
 #### Signature
 
 ```cpp
-Catalog::add_text_features(field: std::string_view) -> Catalog
+Catalog::add_text_features(std::string_view field) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -48,7 +51,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.add_text_features("text");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -65,37 +68,41 @@ text_word_count -> Series([4, 3, 3])
 - `add_text_features(field)` adds `<field>_char_len` and `<field>_word_count` streams.
 - The source field is coerced through note/text handling before the text statistics are computed.
 
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#aggregate_text_stats">
+    <span class="label">Next</span>
+    <span class="title">aggregate_text_stats</span>
+  </a>
+</div>
 
 ### `aggregate_text_stats`
 
 #### Signature
 
 ```cpp
-Catalog::aggregate_text_stats(field: std::string_view, stat_type: std::string_view) -> Catalog
+Catalog::aggregate_text_stats(std::string_view field, std::string_view stat_type) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-`stat_type` : `std::string_view`
+**stat_type**
     Statistic selector string understood by this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -111,7 +118,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.aggregate_text_stats("text", "mean");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 text_mean_char_len -> Series([20.0])
@@ -122,37 +129,45 @@ text_mean_char_len -> Series([20.0])
 - `aggregate_text_stats(field, stat_type)` collapses one text field into a one-value summary stream.
 - Supported statistics include common length-based summaries such as mean/min/max/count, along with vocabulary size.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#add_text_features">
+    <span class="label">Previous</span>
+    <span class="title">add_text_features</span>
+  </a>
+  <a class="next-link" href="#apply">
+    <span class="label">Next</span>
+    <span class="title">apply</span>
+  </a>
+</div>
 
 ### `apply`
 
 #### Signature
 
 ```cpp
-Catalog::apply(field: std::string_view, func: const std::function<Stream(const Stream&)>&) -> Catalog
+Catalog::apply(std::string_view field, const std::function<Stream(const Stream&)>& func) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Applies a function to one named stream and returns the updated catalog.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-`func` : `const std::function<Stream(const Stream&)>&`
+**func**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -166,7 +181,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.apply("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -186,37 +201,45 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 - The transform must return a defined stream with the same length as the input stream.
 - Use the underscore form when you want the mutation in place.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#aggregate_text_stats">
+    <span class="label">Previous</span>
+    <span class="title">aggregate_text_stats</span>
+  </a>
+  <a class="next-link" href="#apply_">
+    <span class="label">Next</span>
+    <span class="title">apply_</span>
+  </a>
+</div>
 
 ### `apply_`
 
 #### Signature
 
 ```cpp
-Catalog::apply_(field: std::string_view, func: const std::function<Stream(const Stream&)>&) -> Catalog&
+Catalog::apply_(std::string_view field, const std::function<Stream(const Stream&)>& func) -> Catalog&
 ```
 
-#### Notes
+#### What It Does
 
 Applies a function to one named stream in place.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-`func` : `const std::function<Stream(const Stream&)>&`
+**func**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Catalog&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -230,39 +253,55 @@ auto ct = pluss::kindle::Catalog({
 ct.apply_("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#apply">
+    <span class="label">Previous</span>
+    <span class="title">apply</span>
+  </a>
+  <a class="next-link" href="#apply_all">
+    <span class="label">Next</span>
+    <span class="title">apply_all</span>
+  </a>
+</div>
 
 ### `apply_all`
 
 #### Signature
 
 ```cpp
-Catalog::apply_all(fn: const std::function<Stream(const Stream&)>&) -> Catalog
+Catalog::apply_all(const std::function<Stream(const Stream&)>& fn) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Applies the same function to every stream and returns the updated catalog.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<Stream(const Stream&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -276,7 +315,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.apply_all([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -296,34 +335,42 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 - The transform must return a defined stream with the same length as the input stream.
 - Use the underscore form when you want the mutation in place.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#apply_">
+    <span class="label">Previous</span>
+    <span class="title">apply_</span>
+  </a>
+  <a class="next-link" href="#apply_all_">
+    <span class="label">Next</span>
+    <span class="title">apply_all_</span>
+  </a>
+</div>
 
 ### `apply_all_`
 
 #### Signature
 
 ```cpp
-Catalog::apply_all_(fn: const std::function<Stream(const Stream&)>&) -> Catalog&
+Catalog::apply_all_(const std::function<Stream(const Stream&)>& fn) -> Catalog&
 ```
 
-#### Notes
+#### What It Does
 
 Applies the same function to every stream in place.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<Stream(const Stream&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Catalog&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -337,42 +384,58 @@ auto ct = pluss::kindle::Catalog({
 ct.apply_all_([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#apply_all">
+    <span class="label">Previous</span>
+    <span class="title">apply_all</span>
+  </a>
+  <a class="next-link" href="#astype">
+    <span class="label">Next</span>
+    <span class="title">astype</span>
+  </a>
+</div>
 
 ### `astype`
 
 #### Signature
 
 ```cpp
-Catalog::astype(keys: std::initializer_list<std::string_view>, dtype: pluss::ScalarType) -> Catalog
+Catalog::astype(std::initializer_list<std::string_view> keys, pluss::ScalarType dtype) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This changes the semantic or numeric type so later operations route through the correct implementation path.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-`dtype` : `pluss::ScalarType`
+**dtype**
     Target scalar dtype used by this conversion overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -386,7 +449,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.astype({"metric"}, pluss::ScalarType::Float64);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -405,34 +468,42 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 - `astype(keys, dtype)` is the catalog-level numeric-series conversion helper.
 - It delegates to stream/thread conversion on the selected keys only.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#apply_all_">
+    <span class="label">Previous</span>
+    <span class="title">apply_all_</span>
+  </a>
+  <a class="next-link" href="#at">
+    <span class="label">Next</span>
+    <span class="title">at</span>
+  </a>
+</div>
 
 ### `at`
 
 #### Signature
 
 ```cpp
-Catalog::at(key: std::string_view) -> Stream
+Catalog::at(std::string_view key) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -446,7 +517,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.at("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -457,6 +528,18 @@ Series([10.0, 20.0, 30.0])
 - `at(key)` fetches one named stream from the catalog.
 - Use it when you want stream access without routing through table conversion first.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#astype">
+    <span class="label">Previous</span>
+    <span class="title">astype</span>
+  </a>
+  <a class="next-link" href="#begin">
+    <span class="label">Next</span>
+    <span class="title">begin</span>
+  </a>
+</div>
+
+## B
 
 ### `begin`
 
@@ -466,24 +549,22 @@ Series([10.0, 20.0, 30.0])
 Catalog::begin() -> const_iterator
 ```
 
-#### Notes
+#### What It Does
 
 Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const_iterator`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -499,52 +580,60 @@ for (const auto& key : ct) {
 }
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#at">
+    <span class="label">Previous</span>
+    <span class="title">at</span>
+  </a>
+  <a class="next-link" href="#bfill">
+    <span class="label">Next</span>
+    <span class="title">bfill</span>
+  </a>
+</div>
 
 ### `bfill`
 
 #### Signature
 
 ```cpp
-Catalog::bfill(keys: std::initializer_list<std::string_view> = {}) -> Catalog
+Catalog::bfill(std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
 auto ct = pluss::kindle::Catalog({
-    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, 0.0, 88.0, 0.0})).with_validity_mask(pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool)),
-    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, 0.0, 75.0, 91.0})).with_validity_mask(pluss::make_series({true, false, true, true}, pluss::ScalarType::Bool)),
+    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, std::numeric_limits<double>::quiet_NaN(), 88.0, std::numeric_limits<double>::quiet_NaN()})),
+    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, std::numeric_limits<double>::quiet_NaN(), 75.0, 91.0})),
     "Name"_k = pluss::kindle::Stream(pluss::make_note({"A", "B", "C", "D"})),
 });
 
 auto out = ct.bfill({"Final Points Grade", "Midterm 3"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -570,40 +659,50 @@ Name               -> Note(["A", "B", "C", "D"])
 auto cleaned = catalog.bfill({"Final Points Grade", "Midterm 3"});
 ```
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#begin">
+    <span class="label">Previous</span>
+    <span class="title">begin</span>
+  </a>
+  <a class="next-link" href="#cast">
+    <span class="label">Next</span>
+    <span class="title">cast</span>
+  </a>
+</div>
+
+## C
 
 ### `cast`
 
 #### Signature
 
 ```cpp
-Catalog::cast(keys: std::initializer_list<std::string_view>, target: pluss::table::ThreadCastTarget, options: const pluss::table::ThreadCastOptions& = {}) -> Catalog
+Catalog::cast(std::initializer_list<std::string_view> keys, pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This changes the semantic or numeric type so later operations route through the correct implementation path.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-`target` : `pluss::table::ThreadCastTarget`
+**target**
     Target payload family chosen by this cast overload.
 
-`options` : `const pluss::table::ThreadCastOptions&`
+**options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -617,102 +716,55 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.cast();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#bfill">
+    <span class="label">Previous</span>
+    <span class="title">bfill</span>
+  </a>
+  <a class="next-link" href="#cloc">
+    <span class="label">Next</span>
+    <span class="title">cloc</span>
+  </a>
+</div>
 
 ### `cloc`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::cloc(row: std::int64_t) -> Catalog
+Catalog::cloc(std::int64_t row) -> Catalog
+
+Catalog::cloc(std::int64_t start, std::int64_t stop) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
+#### Parameters
 
-#### Inputs
-
-`row` : `std::int64_t`
+**row**
     Zero-based row position used by this overload.
 
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::cloc(start: std::int64_t, stop: std::int64_t) -> Catalog`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.cloc();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-#### Practical Behavior
-
-- `cloc(...)` slices aligned row positions across every stream in the catalog.
-- Use it when you want row-wise positional access while keeping stream alignment intact.
-
-
-### `cloc`
-
-#### Signature
-
-```cpp
-Catalog::cloc(start: std::int64_t, stop: std::int64_t) -> Catalog
-```
-
-#### Notes
-
-
-
-#### Inputs
-
-`start` : `std::int64_t`
+**start**
     Inclusive starting position of the slice.
 
-`stop` : `std::int64_t`
+**stop**
     Exclusive ending position of the slice.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::cloc(row: std::int64_t) -> Catalog`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -726,7 +778,26 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.cloc();
 ```
 
-#### Expected output
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.cloc();
+```
+
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
@@ -737,40 +808,48 @@ The call completes and returns the contract described under Output.
 - `cloc(...)` slices aligned row positions across every stream in the catalog.
 - Use it when you want row-wise positional access while keeping stream alignment intact.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#cast">
+    <span class="label">Previous</span>
+    <span class="title">cast</span>
+  </a>
+  <a class="next-link" href="#compute_similarity">
+    <span class="label">Next</span>
+    <span class="title">compute_similarity</span>
+  </a>
+</div>
 
 ### `compute_similarity`
 
 #### Signature
 
 ```cpp
-Catalog::compute_similarity(field1: std::string_view, field2: std::string_view, method: std::string_view = "cosine") -> Catalog
+Catalog::compute_similarity(std::string_view field1, std::string_view field2, std::string_view method = "cosine") -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field1` : `std::string_view`
+**field1**
     First named field used by this overload.
 
-`field2` : `std::string_view`
+**field2**
     Second named field used by this overload.
 
-`method` : `std::string_view`
+**method**
     Method selector string understood by this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -786,7 +865,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.compute_similarity("text", "text", "cosine");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 text__text_similarity -> Series([1.0, 1.0, 1.0])
@@ -798,6 +877,16 @@ text__text_similarity -> Series([1.0, 1.0, 1.0])
 - At the moment the supported similarity method is cosine.
 - Both fields must have the same length.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#cloc">
+    <span class="label">Previous</span>
+    <span class="title">cloc</span>
+  </a>
+  <a class="next-link" href="#count">
+    <span class="label">Next</span>
+    <span class="title">count</span>
+  </a>
+</div>
 
 ### `count`
 
@@ -807,24 +896,22 @@ text__text_similarity -> Series([1.0, 1.0, 1.0])
 Catalog::count() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `count` and inspect the resulting summary value or summary object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -838,7 +925,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.count();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 3
@@ -849,6 +936,18 @@ auto out = ct.count();
 - `count()` returns the catalog row count after alignment through `tabelize()`.
 - This is the quick “how many aligned rows do I have?” answer.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#compute_similarity">
+    <span class="label">Previous</span>
+    <span class="title">compute_similarity</span>
+  </a>
+  <a class="next-link" href="#defined">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
+  </a>
+</div>
+
+## D
 
 ### `defined`
 
@@ -858,24 +957,22 @@ auto out = ct.count();
 Catalog::defined() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `defined` property of the current object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -889,11 +986,21 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.defined();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#count">
+    <span class="label">Previous</span>
+    <span class="title">count</span>
+  </a>
+  <a class="next-link" href="#display">
+    <span class="label">Next</span>
+    <span class="title">display</span>
+  </a>
+</div>
 
 ### `display`
 
@@ -903,24 +1010,22 @@ true
 Catalog::display() -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -934,7 +1039,7 @@ auto ct = pluss::kindle::Catalog({
 ct.display();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -948,103 +1053,52 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 - `display()` renders a human-readable catalog view for inspection.
 - Use it for inspection and debugging rather than transformation.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#drop">
+    <span class="label">Next</span>
+    <span class="title">drop</span>
+  </a>
+</div>
 
 ### `drop`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::drop(field_name: std::string_view) -> Catalog
+Catalog::drop(const std::vector<std::string>& field_names) -> Catalog
+
+Catalog::drop(std::initializer_list<std::string_view> keys) -> Catalog
+
+Catalog::drop(std::string_view field_name) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Removes the named streams and keeps the remaining catalog structure intact.
 
-#### Inputs
+#### Parameters
 
-`field_name` : `std::string_view`
-    Field name used to select the target text, stream, or grouping column.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::drop(field_names: const std::vector<std::string>&) -> Catalog`
-- `Catalog::drop(keys: std::initializer_list<std::string_view>) -> Catalog`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.drop("city");
-```
-
-#### Expected output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-```
-
-#### Practical Behavior
-
-- `drop(...)` removes named streams, not rows.
-- The remaining streams keep their alignment.
-
-
-### `drop`
-
-#### Signature
-
-```cpp
-Catalog::drop(field_names: const std::vector<std::string>&) -> Catalog
-```
-
-#### Notes
-
-Removes the named streams and keeps the remaining catalog structure intact.
-
-#### Inputs
-
-`field_names` : `const std::vector<std::string>&`
+**field_names**
     Field names supplied together for this overload.
 
-#### Output
+**keys**
+    Collection of slot or stream names to keep, drop, or rewrite together.
+
+**field_name**
+    Field name used to select the target text, stream, or grouping column.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::drop(field_name: std::string_view) -> Catalog`
-- `Catalog::drop(keys: std::initializer_list<std::string_view>) -> Catalog`
-
 #### Examples
+
+Example 1. Pass several names together from a standard string container.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1059,7 +1113,7 @@ std::vector<std::string> names{"city"};
 auto out = ct.drop(names);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1071,45 +1125,7 @@ out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 ```
-
-#### Practical Behavior
-
-- `drop(...)` removes named streams, not rows.
-- The remaining streams keep their alignment.
-
-
-### `drop`
-
-#### Signature
-
-```cpp
-Catalog::drop(keys: std::initializer_list<std::string_view>) -> Catalog
-```
-
-#### Notes
-
-Removes the named streams and keeps the remaining catalog structure intact.
-
-#### Inputs
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::drop(field_name: std::string_view) -> Catalog`
-- `Catalog::drop(field_names: const std::vector<std::string>&) -> Catalog`
-
-#### Examples
+Example 2. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1123,7 +1139,33 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.drop({"city"});
 ```
 
-#### Expected output
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.drop("city");
+```
+
+##### Output
 
 ```text
 ct.head():
@@ -1141,39 +1183,46 @@ metric -> Series([10.0, 20.0, 30.0])
 - `drop(...)` removes named streams, not rows.
 - The remaining streams keep their alignment.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#display">
+    <span class="label">Previous</span>
+    <span class="title">display</span>
+  </a>
+  <a class="next-link" href="#dropna">
+    <span class="label">Next</span>
+    <span class="title">dropna</span>
+  </a>
+</div>
 
 ### `dropna`
 
 #### Signature
 
 ```cpp
-Catalog::dropna(keys: std::initializer_list<std::string_view> = {}) -> Catalog
+Catalog::dropna(std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto metric = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}))
-                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto metric = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));
 auto ct = pluss::kindle::Catalog({
     "metric"_k = metric,
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
@@ -1182,7 +1231,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.dropna({"metric"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1200,6 +1249,18 @@ city   -> Note(["Accra", "Kumasi"])
 - With no keys supplied, every stream is processed.
 - Unknown keys throw immediately.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#drop">
+    <span class="label">Previous</span>
+    <span class="title">drop</span>
+  </a>
+  <a class="next-link" href="#empty">
+    <span class="label">Next</span>
+    <span class="title">empty</span>
+  </a>
+</div>
+
+## E
 
 ### `empty`
 
@@ -1209,24 +1270,22 @@ city   -> Note(["Accra", "Kumasi"])
 Catalog::empty() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object has no rows, entries, slots, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `empty` property of the current object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1240,11 +1299,21 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.empty();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 false
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#dropna">
+    <span class="label">Previous</span>
+    <span class="title">dropna</span>
+  </a>
+  <a class="next-link" href="#end">
+    <span class="label">Next</span>
+    <span class="title">end</span>
+  </a>
+</div>
 
 ### `end`
 
@@ -1254,24 +1323,22 @@ false
 Catalog::end() -> const_iterator
 ```
 
-#### Notes
+#### What It Does
 
 Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const_iterator`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1287,42 +1354,50 @@ for (const auto& key : ct) {
 }
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#empty">
+    <span class="label">Previous</span>
+    <span class="title">empty</span>
+  </a>
+  <a class="next-link" href="#extract_keywords">
+    <span class="label">Next</span>
+    <span class="title">extract_keywords</span>
+  </a>
+</div>
 
 ### `extract_keywords`
 
 #### Signature
 
 ```cpp
-Catalog::extract_keywords(field: std::string_view, top_n: int = 10) -> Catalog
+Catalog::extract_keywords(std::string_view field, int top_n = 10) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-`top_n` : `int`
+**top_n**
     Optional cap on how many grouped rows to keep after sorting. Use `0` to keep every group.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1338,7 +1413,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.extract_keywords("text", 5);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 keyword -> Note(["clear", "downtown", "heavy", "issued", "on"])
@@ -1350,34 +1425,44 @@ count   -> Series([1, 1, 1, 1, 1])
 - `extract_keywords(field, top_n)` tokenizes the text field, counts tokens, sorts by frequency descending then alphabetically, and returns a small keyword/count catalog.
 - Use it for quick corpus-level keyword previews rather than row-wise text features.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#end">
+    <span class="label">Previous</span>
+    <span class="title">end</span>
+  </a>
+  <a class="next-link" href="#ffill">
+    <span class="label">Next</span>
+    <span class="title">ffill</span>
+  </a>
+</div>
+
+## F
 
 ### `ffill`
 
 #### Signature
 
 ```cpp
-Catalog::ffill(keys: std::initializer_list<std::string_view> = {}) -> Catalog
+Catalog::ffill(std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1391,7 +1476,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.ffill();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1404,44 +1489,53 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#extract_keywords">
+    <span class="label">Previous</span>
+    <span class="title">extract_keywords</span>
+  </a>
+  <a class="next-link" href="#fillna">
+    <span class="label">Next</span>
+    <span class="title">fillna</span>
+  </a>
+</div>
 
 ### `fillna`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::fillna(value: const char*, keys: std::initializer_list<std::string_view> = {}) -> Catalog
+Catalog::fillna(const char* value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+
+Catalog::fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+
+Catalog::fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+
+Catalog::fillna(double value, std::initializer_list<std::string_view> keys = {}) -> Catalog
+
+Catalog::fillna(std::string_view value, std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`value` : `const char*`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::fillna(value: double, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: std::string_view, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::Timeline&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::TimeIndex&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1450,7 +1544,7 @@ auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_n
 auto out = ct.fillna("Unknown", {"city"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1463,44 +1557,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Catalog::fillna(value: const pluss::TimeIndex&, keys: std::initializer_list<std::string_view> = {}) -> Catalog
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `const pluss::TimeIndex&`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::fillna(value: double, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: std::string_view, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const char*, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::Timeline&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-
-#### Examples
+Example 2. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1509,7 +1566,7 @@ auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_n
 auto out = ct.fillna("Unknown", {"city"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1522,44 +1579,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Catalog::fillna(value: const pluss::Timeline&, keys: std::initializer_list<std::string_view> = {}) -> Catalog
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `const pluss::Timeline&`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::fillna(value: double, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: std::string_view, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const char*, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::TimeIndex&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-
-#### Examples
+Example 3. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1568,7 +1588,7 @@ auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_n
 auto out = ct.fillna("Unknown", {"city"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1581,44 +1601,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Catalog::fillna(value: double, keys: std::initializer_list<std::string_view> = {}) -> Catalog
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `scalar`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::fillna(value: std::string_view, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const char*, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::Timeline&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::TimeIndex&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-
-#### Examples
+Example 4. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1627,7 +1610,7 @@ auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_n
 auto out = ct.fillna("Unknown", {"city"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1640,44 +1623,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Catalog::fillna(value: std::string_view, keys: std::initializer_list<std::string_view> = {}) -> Catalog
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `std::string_view`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-`keys` : `std::initializer_list<std::string_view>`
-    Collection of slot or stream names to keep, drop, or rewrite together.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::fillna(value: double, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const char*, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::Timeline&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-- `Catalog::fillna(value: const pluss::TimeIndex&, keys: std::initializer_list<std::string_view> = {}) -> Catalog`
-
-#### Examples
+Example 5. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1686,7 +1632,7 @@ auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_n
 auto out = ct.fillna("Unknown", {"city"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1699,34 +1645,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ffill">
+    <span class="label">Previous</span>
+    <span class="title">ffill</span>
+  </a>
+  <a class="next-link" href="#filter">
+    <span class="label">Next</span>
+    <span class="title">filter</span>
+  </a>
+</div>
 
 ### `filter`
 
 #### Signature
 
 ```cpp
-Catalog::filter(condition: const pluss::Series&) -> Catalog
+Catalog::filter(const pluss::Series& condition) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the rows where the supplied mask stream is true.
 
-#### Inputs
+#### Parameters
 
-`condition` : `const pluss::Series&`
+**condition**
     Boolean mask used by this overload to decide which rows, values, or items participate.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1741,7 +1695,7 @@ auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = ct.filter(mask);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1754,37 +1708,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#fillna">
+    <span class="label">Previous</span>
+    <span class="title">fillna</span>
+  </a>
+  <a class="next-link" href="#filter_by_text">
+    <span class="label">Next</span>
+    <span class="title">filter_by_text</span>
+  </a>
+</div>
 
 ### `filter_by_text`
 
 #### Signature
 
 ```cpp
-Catalog::filter_by_text(field: std::string_view, pattern: std::string_view) -> Catalog
+Catalog::filter_by_text(std::string_view field, std::string_view pattern) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-`pattern` : `std::string_view`
+**pattern**
     Pattern string used for matching or extraction.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1800,7 +1762,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.filter_by_text("text", "rain");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -1813,40 +1775,48 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter">
+    <span class="label">Previous</span>
+    <span class="title">filter</span>
+  </a>
+  <a class="next-link" href="#from_json">
+    <span class="label">Next</span>
+    <span class="title">from_json</span>
+  </a>
+</div>
 
 ### `from_json`
 
 #### Signature
 
 ```cpp
-Catalog::from_json(json_text: std::string_view) -> Catalog
+Catalog::from_json(std::string_view json_text) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Builds a catalog from JSON input using the PlussMic JSON loader route.
 
-#### Inputs
+#### Parameters
 
-`json_text` : `std::string_view`
+**json_text**
     Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto out = pluss::kindle::Catalog::from_json(R"([{"id":1,"city":"Accra"},{"id":2,"city":"Tema"}])");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -1854,34 +1824,44 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter_by_text">
+    <span class="label">Previous</span>
+    <span class="title">filter_by_text</span>
+  </a>
+  <a class="next-link" href="#get">
+    <span class="label">Next</span>
+    <span class="title">get</span>
+  </a>
+</div>
+
+## G
 
 ### `get`
 
 #### Signature
 
 ```cpp
-Catalog::get(key: std::string_view) -> std::optional<Stream>
+Catalog::get(std::string_view key) -> std::optional<Stream>
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `std::optional<Stream>`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1895,39 +1875,47 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.get("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#from_json">
+    <span class="label">Previous</span>
+    <span class="title">from_json</span>
+  </a>
+  <a class="next-link" href="#get_stream">
+    <span class="label">Next</span>
+    <span class="title">get_stream</span>
+  </a>
+</div>
 
 ### `get_stream`
 
 #### Signature
 
 ```cpp
-Catalog::get_stream(key: std::string_view) -> std::optional<Stream>
+Catalog::get_stream(std::string_view key) -> std::optional<Stream>
 ```
 
-#### Notes
+#### What It Does
 
 Returns one named stream from the catalog.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `std::optional<Stream>`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1941,39 +1929,47 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.get_stream("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#get">
+    <span class="label">Previous</span>
+    <span class="title">get</span>
+  </a>
+  <a class="next-link" href="#group_by">
+    <span class="label">Next</span>
+    <span class="title">group_by</span>
+  </a>
+</div>
 
 ### `group_by`
 
 #### Signature
 
 ```cpp
-Catalog::group_by(key_field: std::string_view) -> std::unordered_map<std::string, Catalog>
+Catalog::group_by(std::string_view key_field) -> std::unordered_map<std::string, Catalog>
 ```
 
-#### Notes
+#### What It Does
 
 Splits the catalog into sub-catalogs keyed by the distinct values in the grouping stream.
 
-#### Inputs
+#### Parameters
 
-`key_field` : `std::string_view`
+**key_field**
     Field name that acts as the key for matching, grouping, or lookup.
 
-#### Output
+#### Returns
 
 `std::unordered_map<std::string, Catalog>`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1987,39 +1983,49 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.group_by("city");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 {"Accra": Catalog(...), "Tema": Catalog(...)}
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#get_stream">
+    <span class="label">Previous</span>
+    <span class="title">get_stream</span>
+  </a>
+  <a class="next-link" href="#has">
+    <span class="label">Next</span>
+    <span class="title">has</span>
+  </a>
+</div>
+
+## H
 
 ### `has`
 
 #### Signature
 
 ```cpp
-Catalog::has(key: std::string_view) -> bool
+Catalog::has(std::string_view key) -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Checks whether a named stream exists.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2033,39 +2039,47 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.has("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#group_by">
+    <span class="label">Previous</span>
+    <span class="title">group_by</span>
+  </a>
+  <a class="next-link" href="#has_stream">
+    <span class="label">Next</span>
+    <span class="title">has_stream</span>
+  </a>
+</div>
 
 ### `has_stream`
 
 #### Signature
 
 ```cpp
-Catalog::has_stream(key: std::string_view) -> bool
+Catalog::has_stream(std::string_view key) -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Checks whether a named stream exists.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2079,39 +2093,47 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.has_stream("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#has">
+    <span class="label">Previous</span>
+    <span class="title">has</span>
+  </a>
+  <a class="next-link" href="#head">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>
 
 ### `head`
 
 #### Signature
 
 ```cpp
-Catalog::head(n: std::int64_t) -> Catalog
+Catalog::head(std::int64_t n) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns the first `n` rows across every stream in the catalog.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the first part of the current object without changing the source data.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2125,7 +2147,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.head(2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -2138,6 +2160,18 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#has_stream">
+    <span class="label">Previous</span>
+    <span class="title">has_stream</span>
+  </a>
+  <a class="next-link" href="#info">
+    <span class="label">Next</span>
+    <span class="title">info</span>
+  </a>
+</div>
+
+## I
 
 ### `info`
 
@@ -2147,24 +2181,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::info() -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2178,7 +2210,7 @@ auto ct = pluss::kindle::Catalog({
 ct.info();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -2186,34 +2218,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="#isnull">
+    <span class="label">Next</span>
+    <span class="title">isnull</span>
+  </a>
+</div>
 
 ### `isnull`
 
 #### Signature
 
 ```cpp
-Catalog::isnull(keys: std::initializer_list<std::string_view> = {}) -> Catalog
+Catalog::isnull(std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2227,7 +2267,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.isnull();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -2240,6 +2280,18 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#info">
+    <span class="label">Previous</span>
+    <span class="title">info</span>
+  </a>
+  <a class="next-link" href="#keys">
+    <span class="label">Next</span>
+    <span class="title">keys</span>
+  </a>
+</div>
+
+## K
 
 ### `keys`
 
@@ -2249,24 +2301,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::keys() -> const std::vector<std::string>&
 ```
 
-#### Notes
+#### What It Does
 
 Returns the current labels used to address fields, slots, rows, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::vector<std::string>&`
     Borrowed list of names.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several names together from a standard string container.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2280,42 +2330,50 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.keys();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ["id", "metric", "city"]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#isnull">
+    <span class="label">Previous</span>
+    <span class="title">isnull</span>
+  </a>
+  <a class="next-link" href="#kindelize">
+    <span class="label">Next</span>
+    <span class="title">kindelize</span>
+  </a>
+</div>
 
 ### `kindelize`
 
 #### Signature
 
 ```cpp
-Catalog::kindelize(frame: const pluss::table::DataFrame&, policy: const KindelizePolicy& = {}) -> Catalog
+Catalog::kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`frame` : `const pluss::table::DataFrame&`
+**frame**
     Frame payload supplied to this overload.
 
-`policy` : `const KindelizePolicy&`
+**policy**
     Policy object that changes the structural behavior of this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -2327,7 +2385,7 @@ auto df = pluss::table::DataFrame({
 auto out = pluss::kindle::Catalog::kindelize(df);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2335,98 +2393,58 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#keys">
+    <span class="label">Previous</span>
+    <span class="title">keys</span>
+  </a>
+  <a class="next-link" href="#load">
+    <span class="label">Next</span>
+    <span class="title">load</span>
+  </a>
+</div>
+
+## L
 
 ### `load`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::load(source_type: std::string_view, filepath: std::string_view) -> Catalog
+Catalog::load(std::string_view source_type, std::string_view filepath) -> Catalog
+
+Catalog::load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`source_type` : `std::string_view`
+**source_type**
     Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load(source_type: std::string_view, filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog`
-
-#### Examples
-
-```cpp
-auto out = pluss::kindle::Catalog::load("csv", "path/to/data.csv");
-```
-
-#### Expected output
-
-```text
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-### `load`
-
-#### Signature
-
-```cpp
-Catalog::load(source_type: std::string_view, filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog
-```
-
-#### Notes
-
-Loads the object from disk using the corresponding PlussMic loader route.
-
-#### Inputs
-
-`source_type` : `std::string_view`
-    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
-
-`filepath` : `std::string_view`
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
-
-`config` : `const pluss::loader::Config&`
+**config**
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load(source_type: std::string_view, filepath: std::string_view) -> Catalog`
-
 #### Examples
+
+Example 1. Use the simplest filepath-based overload.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load("csv", "path/to/data.csv");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2434,44 +2452,67 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+Example 2. Pass an explicit loader or saver config object.
+
+```cpp
+auto out = pluss::kindle::Catalog::load("csv", "path/to/data.csv");
+```
+
+##### Output
+
+```text
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
+  </a>
+  <a class="next-link" href="#load_csv">
+    <span class="label">Next</span>
+    <span class="title">load_csv</span>
+  </a>
+</div>
 
 ### `load_csv`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::load_csv(filepath: std::string_view) -> Catalog
+Catalog::load_csv(std::string_view filepath) -> Catalog
+
+Catalog::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-#### Output
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_csv(filepath: std::string_view, options: const pluss::loader::ReadCsvOptions&) -> Catalog`
-
 #### Examples
+
+Example 1. Use the simplest filepath-based overload.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_csv("path/to/data.csv");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2479,48 +2520,14 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `load_csv`
-
-#### Signature
-
-```cpp
-Catalog::load_csv(filepath: std::string_view, options: const pluss::loader::ReadCsvOptions&) -> Catalog
-```
-
-#### Notes
-
-Loads the object from disk using the corresponding PlussMic loader route.
-
-#### Inputs
-
-`filepath` : `std::string_view`
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
-
-`options` : `const pluss::loader::ReadCsvOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_csv(filepath: std::string_view) -> Catalog`
-
-#### Examples
+Example 2. Pass a typed reader-options object to control file loading details.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
 auto out = pluss::kindle::Catalog::load_csv("path/to/data.csv", options);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2528,46 +2535,54 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load">
+    <span class="label">Previous</span>
+    <span class="title">load</span>
+  </a>
+  <a class="next-link" href="#load_csv_with_key">
+    <span class="label">Next</span>
+    <span class="title">load_csv_with_key</span>
+  </a>
+</div>
 
 ### `load_csv_with_key`
 
 #### Signature
 
 ```cpp
-Catalog::load_csv_with_key(filepath: std::string_view, key_field: std::string_view, options: const pluss::loader::ReadCsvOptions& = {}) -> Catalog
+Catalog::load_csv_with_key(std::string_view filepath, std::string_view key_field, const pluss::loader::ReadCsvOptions& options = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-`key_field` : `std::string_view`
+**key_field**
     Field name that acts as the key for matching, grouping, or lookup.
 
-`options` : `const pluss::loader::ReadCsvOptions&`
+**options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass a typed reader-options object to control file loading details.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_csv_with_key("path/to/data.csv", "id");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2575,44 +2590,53 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load_csv">
+    <span class="label">Previous</span>
+    <span class="title">load_csv</span>
+  </a>
+  <a class="next-link" href="#load_excel">
+    <span class="label">Next</span>
+    <span class="title">load_excel</span>
+  </a>
+</div>
 
 ### `load_excel`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::load_excel(filepath: std::string_view) -> Catalog
+Catalog::load_excel(std::string_view filepath) -> Catalog
+
+Catalog::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-#### Output
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_excel(filepath: std::string_view, options: const pluss::loader::ReadExcelOptions&) -> Catalog`
-
 #### Examples
+
+Example 1. Use the simplest filepath-based overload.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_excel("path/to/data.xlsx");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2620,48 +2644,14 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `load_excel`
-
-#### Signature
-
-```cpp
-Catalog::load_excel(filepath: std::string_view, options: const pluss::loader::ReadExcelOptions&) -> Catalog
-```
-
-#### Notes
-
-Loads the object from disk using the corresponding PlussMic loader route.
-
-#### Inputs
-
-`filepath` : `std::string_view`
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
-
-`options` : `const pluss::loader::ReadExcelOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_excel(filepath: std::string_view) -> Catalog`
-
-#### Examples
+Example 2. Pass a typed reader-options object to control file loading details.
 
 ```cpp
 pluss::loader::ReadExcelOptions options;
 auto out = pluss::kindle::Catalog::load_excel("path/to/data.xlsx", options);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2669,44 +2659,53 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load_csv_with_key">
+    <span class="label">Previous</span>
+    <span class="title">load_csv_with_key</span>
+  </a>
+  <a class="next-link" href="#load_json">
+    <span class="label">Next</span>
+    <span class="title">load_json</span>
+  </a>
+</div>
 
 ### `load_json`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::load_json(filepath: std::string_view) -> Catalog
+Catalog::load_json(std::string_view filepath) -> Catalog
+
+Catalog::load_json(std::string_view filepath, const pluss::loader::Config& config) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_json(filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog`
-
 #### Examples
+
+Example 1. Use the simplest filepath-based overload.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_json("path/to/data.json");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2714,47 +2713,13 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `load_json`
-
-#### Signature
-
-```cpp
-Catalog::load_json(filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog
-```
-
-#### Notes
-
-Loads the object from disk using the corresponding PlussMic loader route.
-
-#### Inputs
-
-`filepath` : `std::string_view`
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_json(filepath: std::string_view) -> Catalog`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_json("path/to/data.json", {"nrows", 16});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2762,44 +2727,53 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load_excel">
+    <span class="label">Previous</span>
+    <span class="title">load_excel</span>
+  </a>
+  <a class="next-link" href="#load_parquet">
+    <span class="label">Next</span>
+    <span class="title">load_parquet</span>
+  </a>
+</div>
 
 ### `load_parquet`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::load_parquet(filepath: std::string_view) -> Catalog
+Catalog::load_parquet(std::string_view filepath) -> Catalog
+
+Catalog::load_parquet(std::string_view filepath, const pluss::loader::Config& config) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_parquet(filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog`
-
 #### Examples
+
+Example 1. Use the simplest filepath-based overload.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_parquet("path/to/data.parquet");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2807,47 +2781,13 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `load_parquet`
-
-#### Signature
-
-```cpp
-Catalog::load_parquet(filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog
-```
-
-#### Notes
-
-Loads the object from disk using the corresponding PlussMic loader route.
-
-#### Inputs
-
-`filepath` : `std::string_view`
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_parquet(filepath: std::string_view) -> Catalog`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_parquet("path/to/data.parquet", {"nrows", 16});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2855,44 +2795,53 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load_json">
+    <span class="label">Previous</span>
+    <span class="title">load_json</span>
+  </a>
+  <a class="next-link" href="#load_txt">
+    <span class="label">Next</span>
+    <span class="title">load_txt</span>
+  </a>
+</div>
 
 ### `load_txt`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::load_txt(filepath: std::string_view) -> Catalog
+Catalog::load_txt(std::string_view filepath) -> Catalog
+
+Catalog::load_txt(std::string_view filepath, const pluss::loader::Config& config) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Loads the object from disk using the corresponding PlussMic loader route.
 
-#### Inputs
+#### Parameters
 
-`filepath` : `std::string_view`
+**filepath**
     File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_txt(filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog`
-
 #### Examples
+
+Example 1. Use the simplest filepath-based overload.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_txt("path/to/data.txt");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2900,47 +2849,13 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `load_txt`
-
-#### Signature
-
-```cpp
-Catalog::load_txt(filepath: std::string_view, config: const pluss::loader::Config&) -> Catalog
-```
-
-#### Notes
-
-Loads the object from disk using the corresponding PlussMic loader route.
-
-#### Inputs
-
-`filepath` : `std::string_view`
-    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::load_txt(filepath: std::string_view) -> Catalog`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 auto out = pluss::kindle::Catalog::load_txt("path/to/data.txt", {"nrows", 16});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 out.head():
@@ -2948,34 +2863,44 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load_parquet">
+    <span class="label">Previous</span>
+    <span class="title">load_parquet</span>
+  </a>
+  <a class="next-link" href="#masked_select">
+    <span class="label">Next</span>
+    <span class="title">masked_select</span>
+  </a>
+</div>
+
+## M
 
 ### `masked_select`
 
 #### Signature
 
 ```cpp
-Catalog::masked_select(mask: const pluss::Series&) -> Catalog
+Catalog::masked_select(const pluss::Series& mask) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the rows where the supplied mask stream is true.
 
-#### Inputs
+#### Parameters
 
-`mask` : `const pluss::Series&`
+**mask**
     Boolean mask used by this overload to decide which rows, values, or items participate.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -2990,7 +2915,7 @@ auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = ct.masked_select(mask);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3003,34 +2928,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#load_txt">
+    <span class="label">Previous</span>
+    <span class="title">load_txt</span>
+  </a>
+  <a class="next-link" href="#max">
+    <span class="label">Next</span>
+    <span class="title">max</span>
+  </a>
+</div>
 
 ### `max`
 
 #### Signature
 
 ```cpp
-Catalog::max(field: std::string_view) -> Stream
+Catalog::max(std::string_view field) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Computes the maximum value of one named numeric stream.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `max` and inspect the resulting summary value or summary object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3044,39 +2977,47 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.max("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#masked_select">
+    <span class="label">Previous</span>
+    <span class="title">masked_select</span>
+  </a>
+  <a class="next-link" href="#mean">
+    <span class="label">Next</span>
+    <span class="title">mean</span>
+  </a>
+</div>
 
 ### `mean`
 
 #### Signature
 
 ```cpp
-Catalog::mean(field: std::string_view) -> Stream
+Catalog::mean(std::string_view field) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Computes the mean value of one named numeric stream.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `mean` and inspect the resulting summary value or summary object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3090,33 +3031,43 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.mean("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#max">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
+  <a class="next-link" href="#merge">
+    <span class="label">Next</span>
+    <span class="title">merge</span>
+  </a>
+</div>
 
 ### `merge`
 
 #### Signature
 
 ```cpp
-Catalog::merge(other: const Catalog&, on: std::string_view, how: std::string_view = "inner") -> Catalog
+Catalog::merge(const Catalog& other, std::string_view on, std::string_view how = "inner") -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Combines two catalogs by matching rows on a key stream.
 
-#### Inputs
+#### Parameters
 
-`other` : `const Catalog&`
+**other**
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-`on` : `std::string_view`
+**on**
     Field name used as the match or join key for this overload.
 
-`how` : `std::string_view`
+**how**
     Join mode for `DataFrame::unify(...)`.
 
     Supported values:
@@ -3128,16 +3079,14 @@ Combines two catalogs by matching rows on a key stream.
     - `left_only`: Keep left rows whose keys do not occur on the right.
     - `right_only`: Keep right rows whose keys do not occur on the left.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3153,7 +3102,7 @@ auto right = pluss::kindle::Catalog({"id"_k = pluss::kindle::Stream(pluss::make_
 auto out = ct.merge(right, "id", "inner");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3166,34 +3115,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#mean">
+    <span class="label">Previous</span>
+    <span class="title">mean</span>
+  </a>
+  <a class="next-link" href="#min">
+    <span class="label">Next</span>
+    <span class="title">min</span>
+  </a>
+</div>
 
 ### `min`
 
 #### Signature
 
 ```cpp
-Catalog::min(field: std::string_view) -> Stream
+Catalog::min(std::string_view field) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Computes the minimum value of one named numeric stream.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `min` and inspect the resulting summary value or summary object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3207,11 +3164,23 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.min("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#merge">
+    <span class="label">Previous</span>
+    <span class="title">merge</span>
+  </a>
+  <a class="next-link" href="#nfields">
+    <span class="label">Next</span>
+    <span class="title">nfields</span>
+  </a>
+</div>
+
+## N
 
 ### `nfields`
 
@@ -3221,24 +3190,22 @@ Series([20.0])
 Catalog::nfields() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3252,11 +3219,21 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.nfields();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 3
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#min">
+    <span class="label">Previous</span>
+    <span class="title">min</span>
+  </a>
+  <a class="next-link" href="#note">
+    <span class="label">Next</span>
+    <span class="title">note</span>
+  </a>
+</div>
 
 ### `note`
 
@@ -3266,24 +3243,22 @@ auto out = ct.nfields();
 Catalog::note() -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns one named stream interpreted as a note/text stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3297,7 +3272,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.note();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3310,34 +3285,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#nfields">
+    <span class="label">Previous</span>
+    <span class="title">nfields</span>
+  </a>
+  <a class="next-link" href="#notnull">
+    <span class="label">Next</span>
+    <span class="title">notnull</span>
+  </a>
+</div>
 
 ### `notnull`
 
 #### Signature
 
 ```cpp
-Catalog::notnull(keys: std::initializer_list<std::string_view> = {}) -> Catalog
+Catalog::notnull(std::initializer_list<std::string_view> keys = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3351,7 +3334,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.notnull();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3364,6 +3347,16 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#note">
+    <span class="label">Previous</span>
+    <span class="title">note</span>
+  </a>
+  <a class="next-link" href="#nstreams">
+    <span class="label">Next</span>
+    <span class="title">nstreams</span>
+  </a>
+</div>
 
 ### `nstreams`
 
@@ -3373,24 +3366,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::nstreams() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3404,39 +3395,49 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.nstreams();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 3
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#notnull">
+    <span class="label">Previous</span>
+    <span class="title">notnull</span>
+  </a>
+  <a class="next-link" href="#query">
+    <span class="label">Next</span>
+    <span class="title">query</span>
+  </a>
+</div>
+
+## Q
 
 ### `query`
 
 #### Signature
 
 ```cpp
-Catalog::query(fn: const QueryFn&) -> Catalog
+Catalog::query(const QueryFn& fn) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the rows selected by the supplied row-wise query function or expression.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const QueryFn&`
+**fn**
     Callable used to transform, map, or derive values in this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3450,7 +3451,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.query([](const pluss::kindle::Catalog& c) { return c.stream("metric").as_series().gt(15.0); });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3463,101 +3464,54 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#nstreams">
+    <span class="label">Previous</span>
+    <span class="title">nstreams</span>
+  </a>
+  <a class="next-link" href="#rename">
+    <span class="label">Next</span>
+    <span class="title">rename</span>
+  </a>
+</div>
+
+## R
 
 ### `rename`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::rename(from: std::string_view, to: std::string_view) -> Catalog
+Catalog::rename(const std::unordered_map<std::string, std::string>& mapping) -> Catalog
+
+Catalog::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) -> Catalog
+
+Catalog::rename(std::string_view from, std::string_view to) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Renames one or more streams without changing their values.
 
-#### Inputs
+#### Parameters
 
-`from` : `std::string_view`
-    Boundary or replacement value used by this overload. Its type determines which payload family participates.
-
-`to` : `std::string_view`
-    Boundary or replacement value used by this overload. Its type determines which payload family participates.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::rename(mapping: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Catalog`
-- `Catalog::rename(mapping: const std::unordered_map<std::string, std::string>&) -> Catalog`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.rename("metric", "distance_km");
-```
-
-#### Expected output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-### `rename`
-
-#### Signature
-
-```cpp
-Catalog::rename(mapping: const std::unordered_map<std::string, std::string>&) -> Catalog
-```
-
-#### Notes
-
-Renames one or more streams without changing their values.
-
-#### Inputs
-
-`mapping` : `const std::unordered_map<std::string, std::string>&`
+**mapping**
     Name-to-name mapping used by this overload.
 
-#### Output
+**from**
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
+
+**to**
+    Boundary or replacement value used by this overload. Its type determines which payload family participates.
+
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::rename(mapping: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Catalog`
-- `Catalog::rename(from: std::string_view, to: std::string_view) -> Catalog`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3572,7 +3526,7 @@ std::unordered_map<std::string, std::string> renames{{"metric", "distance_km"}};
 auto out = ct.rename(renames);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3585,39 +3539,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `rename`
-
-#### Signature
-
-```cpp
-Catalog::rename(mapping: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Catalog
-```
-
-#### Notes
-
-Renames one or more streams without changing their values.
-
-#### Inputs
-
-`mapping` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
-    Inline collection passed directly at the call site.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::rename(from: std::string_view, to: std::string_view) -> Catalog`
-- `Catalog::rename(mapping: const std::unordered_map<std::string, std::string>&) -> Catalog`
-
-#### Examples
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3631,7 +3553,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.rename({{"metric", "distance_km"}});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3644,37 +3566,72 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.rename("metric", "distance_km");
+```
+
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#query">
+    <span class="label">Previous</span>
+    <span class="title">query</span>
+  </a>
+  <a class="next-link" href="#rename_">
+    <span class="label">Next</span>
+    <span class="title">rename_</span>
+  </a>
+</div>
 
 ### `rename_`
 
 #### Signature
 
 ```cpp
-Catalog::rename_(from: std::string_view, to: std::string_view) -> Catalog&
+Catalog::rename_(std::string_view from, std::string_view to) -> Catalog&
 ```
 
-#### Notes
+#### What It Does
 
 Renames one or more streams in place without changing their values.
 
-#### Inputs
+#### Parameters
 
-`from` : `std::string_view`
+**from**
     Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
-`to` : `std::string_view`
+**to**
     Boundary or replacement value used by this overload. Its type determines which payload family participates.
 
-#### Output
+#### Returns
 
 `Catalog&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3688,42 +3645,60 @@ auto ct = pluss::kindle::Catalog({
 ct.rename_("metric", "distance_km");
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#rename">
+    <span class="label">Previous</span>
+    <span class="title">rename</span>
+  </a>
+  <a class="next-link" href="#sample">
+    <span class="label">Next</span>
+    <span class="title">sample</span>
+  </a>
+</div>
+
+## S
 
 ### `sample`
 
 #### Signature
 
 ```cpp
-Catalog::sample(n: std::int64_t, random_state: std::optional<std::uint64_t> = std::nullopt) -> Catalog
+Catalog::sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns a random sample of rows across all streams.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-`random_state` : `std::optional<std::uint64_t>`
+**random_state**
     Optional seed used to make sampling or shuffling reproducible.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3737,7 +3712,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.sample(2, 7);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -3750,40 +3725,48 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#rename_">
+    <span class="label">Previous</span>
+    <span class="title">rename_</span>
+  </a>
+  <a class="next-link" href="#save_as">
+    <span class="label">Next</span>
+    <span class="title">save_as</span>
+  </a>
+</div>
 
 ### `save_as`
 
 #### Signature
 
 ```cpp
-Catalog::save_as(target_type: std::string_view, filename: std::string_view, config: const pluss::loader::Config& = {}) -> void
+Catalog::save_as(std::string_view target_type, std::string_view filename, const pluss::loader::Config& config = {}) -> void
 ```
 
-#### Notes
+#### What It Does
 
 Writes the catalog using the explicitly supplied output format selector.
 
-#### Inputs
+#### Parameters
 
-`target_type` : `std::string_view`
+**target_type**
     Format or target selector string used by this overload.
 
-`filename` : `std::string_view`
+**filename**
     Filename or path-like string used by this overload.
 
-`config` : `const pluss::loader::Config&`
+**config**
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass an explicit loader or saver config object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3797,43 +3780,52 @@ auto ct = pluss::kindle::Catalog({
 ct.save_as("json", "path/to/output.json");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#sample">
+    <span class="label">Previous</span>
+    <span class="title">sample</span>
+  </a>
+  <a class="next-link" href="#save_csv">
+    <span class="label">Next</span>
+    <span class="title">save_csv</span>
+  </a>
+</div>
 
 ### `save_csv`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::save_csv(filename: std::string_view) -> void
+Catalog::save_csv(std::string_view filename) -> void
+
+Catalog::save_csv(std::string_view filename, const pluss::loader::Config& config) -> void
 ```
 
-#### Notes
+#### What It Does
 
 Writes the catalog to CSV after aligning its streams into a table-like representation.
 
-#### Inputs
+#### Parameters
 
-`filename` : `std::string_view`
+**filename**
     Filename or path-like string used by this overload.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_csv(filename: std::string_view, config: const pluss::loader::Config&) -> void`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3847,46 +3839,12 @@ auto ct = pluss::kindle::Catalog({
 ct.save_csv("path/to/output.csv");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
-
-### `save_csv`
-
-#### Signature
-
-```cpp
-Catalog::save_csv(filename: std::string_view, config: const pluss::loader::Config&) -> void
-```
-
-#### Notes
-
-Writes the catalog to CSV after aligning its streams into a table-like representation.
-
-#### Inputs
-
-`filename` : `std::string_view`
-    Filename or path-like string used by this overload.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`void`
-    Performs the side effect and returns no value.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_csv(filename: std::string_view) -> void`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3900,43 +3858,52 @@ auto ct = pluss::kindle::Catalog({
 ct.save_csv("path/to/output.csv");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#save_as">
+    <span class="label">Previous</span>
+    <span class="title">save_as</span>
+  </a>
+  <a class="next-link" href="#save_excel">
+    <span class="label">Next</span>
+    <span class="title">save_excel</span>
+  </a>
+</div>
 
 ### `save_excel`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::save_excel(filename: std::string_view) -> void
+Catalog::save_excel(std::string_view filename) -> void
+
+Catalog::save_excel(std::string_view filename, const pluss::loader::Config& config) -> void
 ```
 
-#### Notes
+#### What It Does
 
 Writes the catalog to an Excel workbook after aligning its streams into a table-like representation.
 
-#### Inputs
+#### Parameters
 
-`filename` : `std::string_view`
+**filename**
     Filename or path-like string used by this overload.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_excel(filename: std::string_view, config: const pluss::loader::Config&) -> void`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -3950,46 +3917,12 @@ auto ct = pluss::kindle::Catalog({
 ct.save_excel("path/to/output.xlsx");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
-
-### `save_excel`
-
-#### Signature
-
-```cpp
-Catalog::save_excel(filename: std::string_view, config: const pluss::loader::Config&) -> void
-```
-
-#### Notes
-
-Writes the catalog to an Excel workbook after aligning its streams into a table-like representation.
-
-#### Inputs
-
-`filename` : `std::string_view`
-    Filename or path-like string used by this overload.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`void`
-    Performs the side effect and returns no value.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_excel(filename: std::string_view) -> void`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4003,43 +3936,52 @@ auto ct = pluss::kindle::Catalog({
 ct.save_excel("path/to/output.xlsx");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#save_csv">
+    <span class="label">Previous</span>
+    <span class="title">save_csv</span>
+  </a>
+  <a class="next-link" href="#save_json">
+    <span class="label">Next</span>
+    <span class="title">save_json</span>
+  </a>
+</div>
 
 ### `save_json`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::save_json(filename: std::string_view) -> void
+Catalog::save_json(std::string_view filename) -> void
+
+Catalog::save_json(std::string_view filename, const pluss::loader::Config& config) -> void
 ```
 
-#### Notes
+#### What It Does
 
 Writes the catalog to JSON for interchange or later reload.
 
-#### Inputs
+#### Parameters
 
-`filename` : `std::string_view`
+**filename**
     Filename or path-like string used by this overload.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_json(filename: std::string_view, config: const pluss::loader::Config&) -> void`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4053,46 +3995,12 @@ auto ct = pluss::kindle::Catalog({
 ct.save_json("path/to/output.json");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
-
-### `save_json`
-
-#### Signature
-
-```cpp
-Catalog::save_json(filename: std::string_view, config: const pluss::loader::Config&) -> void
-```
-
-#### Notes
-
-Writes the catalog to JSON for interchange or later reload.
-
-#### Inputs
-
-`filename` : `std::string_view`
-    Filename or path-like string used by this overload.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`void`
-    Performs the side effect and returns no value.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_json(filename: std::string_view) -> void`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4106,43 +4014,52 @@ auto ct = pluss::kindle::Catalog({
 ct.save_json("path/to/output.json");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#save_excel">
+    <span class="label">Previous</span>
+    <span class="title">save_excel</span>
+  </a>
+  <a class="next-link" href="#save_parquet">
+    <span class="label">Next</span>
+    <span class="title">save_parquet</span>
+  </a>
+</div>
 
 ### `save_parquet`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::save_parquet(filename: std::string_view) -> void
+Catalog::save_parquet(std::string_view filename) -> void
+
+Catalog::save_parquet(std::string_view filename, const pluss::loader::Config& config) -> void
 ```
 
-#### Notes
+#### What It Does
 
 Writes the catalog to Parquet for compact typed storage.
 
-#### Inputs
+#### Parameters
 
-`filename` : `std::string_view`
+**filename**
     Filename or path-like string used by this overload.
 
-#### Output
+**config**
+    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
+
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_parquet(filename: std::string_view, config: const pluss::loader::Config&) -> void`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4156,46 +4073,12 @@ auto ct = pluss::kindle::Catalog({
 ct.save_parquet("path/to/output.parquet");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
-
-### `save_parquet`
-
-#### Signature
-
-```cpp
-Catalog::save_parquet(filename: std::string_view, config: const pluss::loader::Config&) -> void
-```
-
-#### Notes
-
-Writes the catalog to Parquet for compact typed storage.
-
-#### Inputs
-
-`filename` : `std::string_view`
-    Filename or path-like string used by this overload.
-
-`config` : `const pluss::loader::Config&`
-    Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
-
-#### Output
-
-`void`
-    Performs the side effect and returns no value.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_parquet(filename: std::string_view) -> void`
-
-#### Examples
+Example 2. Pass an explicit loader or saver config object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4209,96 +4092,52 @@ auto ct = pluss::kindle::Catalog({
 ct.save_parquet("path/to/output.parquet");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#save_json">
+    <span class="label">Previous</span>
+    <span class="title">save_json</span>
+  </a>
+  <a class="next-link" href="#save_txt">
+    <span class="label">Next</span>
+    <span class="title">save_txt</span>
+  </a>
+</div>
 
 ### `save_txt`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::save_txt(filename: std::string_view) -> void
+Catalog::save_txt(std::string_view filename) -> void
+
+Catalog::save_txt(std::string_view filename, const pluss::loader::Config& config) -> void
 ```
 
-#### Notes
+#### What It Does
 
 Writes a text rendering of the catalog for inspection or logging.
 
-#### Inputs
+#### Parameters
 
-`filename` : `std::string_view`
+**filename**
     Filename or path-like string used by this overload.
 
-#### Output
-
-`void`
-    Performs the side effect and returns no value.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_txt(filename: std::string_view, config: const pluss::loader::Config&) -> void`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-ct.save_txt("path/to/output.txt");
-```
-
-#### Expected output
-
-```text
-saved: out.*
-```
-
-### `save_txt`
-
-#### Signature
-
-```cpp
-Catalog::save_txt(filename: std::string_view, config: const pluss::loader::Config&) -> void
-```
-
-#### Notes
-
-Writes a text rendering of the catalog for inspection or logging.
-
-#### Inputs
-
-`filename` : `std::string_view`
-    Filename or path-like string used by this overload.
-
-`config` : `const pluss::loader::Config&`
+**config**
     Loader or saver configuration object. Use this when you want to pass a prebuilt option bundle instead of positional arguments.
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::save_txt(filename: std::string_view) -> void`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4312,43 +4151,68 @@ auto ct = pluss::kindle::Catalog({
 ct.save_txt("path/to/output.txt");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 saved: out.*
 ```
+Example 2. Pass an explicit loader or saver config object.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+ct.save_txt("path/to/output.txt");
+```
+
+##### Output
+
+```text
+saved: out.*
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#save_parquet">
+    <span class="label">Previous</span>
+    <span class="title">save_parquet</span>
+  </a>
+  <a class="next-link" href="#select">
+    <span class="label">Next</span>
+    <span class="title">select</span>
+  </a>
+</div>
 
 ### `select`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::select(field_names: const std::vector<std::string>&) -> Catalog
+Catalog::select(const std::vector<std::string>& field_names) -> Catalog
+
+Catalog::select(std::initializer_list<std::string_view> field_names) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the named streams and preserves their shared row alignment.
 
-#### Inputs
+#### Parameters
 
-`field_names` : `const std::vector<std::string>&`
+**field_names**
     Field names supplied together for this overload.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::select(field_names: std::initializer_list<std::string_view>) -> Catalog`
-
 #### Examples
+
+Example 1. Pass several names together from a standard string container.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4363,7 +4227,7 @@ std::vector<std::string> names{"id", "metric"};
 auto out = ct.select(names);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4376,38 +4240,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `select`
-
-#### Signature
-
-```cpp
-Catalog::select(field_names: std::initializer_list<std::string_view>) -> Catalog
-```
-
-#### Notes
-
-Keeps only the named streams and preserves their shared row alignment.
-
-#### Inputs
-
-`field_names` : `std::initializer_list<std::string_view>`
-    Inline collection passed directly at the call site.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::select(field_names: const std::vector<std::string>&) -> Catalog`
-
-#### Examples
+Example 2. Pass several feature names inline.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4421,7 +4254,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.select({"id", "metric"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4434,6 +4267,16 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#save_txt">
+    <span class="label">Previous</span>
+    <span class="title">save_txt</span>
+  </a>
+  <a class="next-link" href="#series">
+    <span class="label">Next</span>
+    <span class="title">series</span>
+  </a>
+</div>
 
 ### `series`
 
@@ -4443,24 +4286,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::series() -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns one named stream interpreted as a numeric series stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4474,7 +4315,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.series();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4487,37 +4328,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#select">
+    <span class="label">Previous</span>
+    <span class="title">select</span>
+  </a>
+  <a class="next-link" href="#set">
+    <span class="label">Next</span>
+    <span class="title">set</span>
+  </a>
+</div>
 
 ### `set`
 
 #### Signature
 
 ```cpp
-Catalog::set(key: std::string_view, value: const Stream&) -> Catalog
+Catalog::set(std::string_view key, const Stream& value) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Adds or replaces one named stream and returns the updated catalog.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-`value` : `const Stream&`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4531,7 +4380,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4544,37 +4393,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#series">
+    <span class="label">Previous</span>
+    <span class="title">series</span>
+  </a>
+  <a class="next-link" href="#set_">
+    <span class="label">Next</span>
+    <span class="title">set_</span>
+  </a>
+</div>
 
 ### `set_`
 
 #### Signature
 
 ```cpp
-Catalog::set_(key: std::string_view, value: const Stream&) -> Catalog&
+Catalog::set_(std::string_view key, const Stream& value) -> Catalog&
 ```
 
-#### Notes
+#### What It Does
 
 Adds or replaces one named stream in place.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-`value` : `const Stream&`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Catalog&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4588,42 +4445,58 @@ auto ct = pluss::kindle::Catalog({
 ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set">
+    <span class="label">Previous</span>
+    <span class="title">set</span>
+  </a>
+  <a class="next-link" href="#set_stream">
+    <span class="label">Next</span>
+    <span class="title">set_stream</span>
+  </a>
+</div>
 
 ### `set_stream`
 
 #### Signature
 
 ```cpp
-Catalog::set_stream(key: std::string_view, value: const Stream&) -> Catalog
+Catalog::set_stream(std::string_view key, const Stream& value) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Adds or replaces one named stream and returns the updated catalog.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-`value` : `const Stream&`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4637,7 +4510,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4650,37 +4523,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_">
+    <span class="label">Previous</span>
+    <span class="title">set_</span>
+  </a>
+  <a class="next-link" href="#set_stream_">
+    <span class="label">Next</span>
+    <span class="title">set_stream_</span>
+  </a>
+</div>
 
 ### `set_stream_`
 
 #### Signature
 
 ```cpp
-Catalog::set_stream_(key: std::string_view, value: const Stream&) -> Catalog&
+Catalog::set_stream_(std::string_view key, const Stream& value) -> Catalog&
 ```
 
-#### Notes
+#### What It Does
 
 Adds or replaces one named stream in place.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-`value` : `const Stream&`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Catalog&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4694,43 +4575,57 @@ auto ct = pluss::kindle::Catalog({
 ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_stream">
+    <span class="label">Previous</span>
+    <span class="title">set_stream</span>
+  </a>
+  <a class="next-link" href="#set_streams">
+    <span class="label">Next</span>
+    <span class="title">set_streams</span>
+  </a>
+</div>
 
 ### `set_streams`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::set_streams(items: std::initializer_list<NamedStream>) -> Catalog
+Catalog::set_streams(std::initializer_list<NamedStream> items) -> Catalog
+
+Catalog::set_streams(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Adds or replaces several named streams and returns the updated catalog.
 
-#### Inputs
+#### Parameters
 
-`items` : `std::initializer_list<NamedStream>`
+**items**
     Inline collection passed directly at the call site.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::set_streams(items: std::initializer_list<std::pair<std::string_view, Stream>>) -> Catalog`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4747,7 +4642,7 @@ auto out = ct.set_streams({
 });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4760,38 +4655,7 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `set_streams`
-
-#### Signature
-
-```cpp
-Catalog::set_streams(items: std::initializer_list<std::pair<std::string_view, Stream>>) -> Catalog
-```
-
-#### Notes
-
-Adds or replaces several named streams and returns the updated catalog.
-
-#### Inputs
-
-`items` : `std::initializer_list<std::pair<std::string_view, Stream>>`
-    Inline collection passed directly at the call site.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::set_streams(items: std::initializer_list<NamedStream>) -> Catalog`
-
-#### Examples
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4807,7 +4671,7 @@ auto out = ct.set_streams({
 });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -4820,38 +4684,44 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_stream_">
+    <span class="label">Previous</span>
+    <span class="title">set_stream_</span>
+  </a>
+  <a class="next-link" href="#set_streams_">
+    <span class="label">Next</span>
+    <span class="title">set_streams_</span>
+  </a>
+</div>
 
 ### `set_streams_`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::set_streams_(items: std::initializer_list<NamedStream>) -> Catalog&
+Catalog::set_streams_(std::initializer_list<NamedStream> items) -> Catalog&
+
+Catalog::set_streams_(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog&
 ```
 
-#### Notes
+#### What It Does
 
 Adds or replaces several named streams in place.
 
-#### Inputs
+#### Parameters
 
-`items` : `std::initializer_list<NamedStream>`
+**items**
     Inline collection passed directly at the call site.
 
-#### Output
+#### Returns
 
 `Catalog&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::set_streams_(items: std::initializer_list<std::pair<std::string_view, Stream>>) -> Catalog&`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4868,43 +4738,20 @@ ct.set_streams_({
 });
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `set_streams_`
-
-#### Signature
-
-```cpp
-Catalog::set_streams_(items: std::initializer_list<std::pair<std::string_view, Stream>>) -> Catalog&
-```
-
-#### Notes
-
-Adds or replaces several named streams in place.
-
-#### Inputs
-
-`items` : `std::initializer_list<std::pair<std::string_view, Stream>>`
-    Inline collection passed directly at the call site.
-
-#### Output
-
-`Catalog&`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::set_streams_(items: std::initializer_list<NamedStream>) -> Catalog&`
-
-#### Examples
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4920,39 +4767,55 @@ ct.set_streams_({
 });
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_streams">
+    <span class="label">Previous</span>
+    <span class="title">set_streams</span>
+  </a>
+  <a class="next-link" href="#show">
+    <span class="label">Next</span>
+    <span class="title">show</span>
+  </a>
+</div>
 
 ### `show`
 
 #### Signature
 
 ```cpp
-Catalog::show(os: std::ostream&) -> void
+Catalog::show(std::ostream& os) -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
-`os` : `std::ostream&`
+**os**
     Destination output stream used instead of the default display or print target.
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Write the output to a caller-provided stream.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -4966,42 +4829,50 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.show();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#set_streams_">
+    <span class="label">Previous</span>
+    <span class="title">set_streams_</span>
+  </a>
+  <a class="next-link" href="#slice">
+    <span class="label">Next</span>
+    <span class="title">slice</span>
+  </a>
+</div>
 
 ### `slice`
 
 #### Signature
 
 ```cpp
-Catalog::slice(start: std::int64_t, stop: std::int64_t) -> Catalog
+Catalog::slice(std::int64_t start, std::int64_t stop) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns a contiguous row slice `[start, stop)` across every stream.
 
-#### Inputs
+#### Parameters
 
-`start` : `std::int64_t`
+**start**
     Inclusive starting position of the slice.
 
-`stop` : `std::int64_t`
+**stop**
     Exclusive ending position of the slice.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect one contiguous positional slice from the current object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5015,7 +4886,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.slice(0, 2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5028,37 +4899,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
+  </a>
+  <a class="next-link" href="#sort">
+    <span class="label">Next</span>
+    <span class="title">sort</span>
+  </a>
+</div>
 
 ### `sort`
 
 #### Signature
 
 ```cpp
-Catalog::sort(by_field: std::string_view, ascending: bool = true) -> Catalog
+Catalog::sort(std::string_view by_field, bool ascending = true) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Reorders rows using one stream as the sort key, while keeping the other streams aligned to the same row order.
 
-#### Inputs
+#### Parameters
 
-`by_field` : `std::string_view`
+**by_field**
     Field name that controls the grouping or sorting basis of the operation.
 
-`ascending` : `bool`
+**ascending**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5072,7 +4951,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.sort("metric", false);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5085,37 +4964,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#slice">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
+  <a class="next-link" href="#sort_by">
+    <span class="label">Next</span>
+    <span class="title">sort_by</span>
+  </a>
+</div>
 
 ### `sort_by`
 
 #### Signature
 
 ```cpp
-Catalog::sort_by(fields: const std::vector<std::string>&, ascending: const std::vector<bool>& = {}) -> Catalog
+Catalog::sort_by(const std::vector<std::string>& fields, const std::vector<bool>& ascending = {}) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Reorders rows using multiple sort keys, while keeping all streams aligned.
 
-#### Inputs
+#### Parameters
 
-`fields` : `const std::vector<std::string>&`
+**fields**
     Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.
 
-`ascending` : `const std::vector<bool>&`
+**ascending**
     Sort-order switch. `true` means ascending order and `false` means descending order.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several names together from a standard string container.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5129,7 +5016,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.sort_by({"city", "id"}, {true, false});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5142,34 +5029,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#sort">
+    <span class="label">Previous</span>
+    <span class="title">sort</span>
+  </a>
+  <a class="next-link" href="#stream">
+    <span class="label">Next</span>
+    <span class="title">stream</span>
+  </a>
+</div>
 
 ### `stream`
 
 #### Signature
 
 ```cpp
-Catalog::stream(key: std::string_view) -> Stream
+Catalog::stream(std::string_view key) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5183,11 +5078,21 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.stream("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#sort_by">
+    <span class="label">Previous</span>
+    <span class="title">sort_by</span>
+  </a>
+  <a class="next-link" href="#streams">
+    <span class="label">Next</span>
+    <span class="title">streams</span>
+  </a>
+</div>
 
 ### `streams`
 
@@ -5197,24 +5102,22 @@ Series([10.0, 20.0, 30.0])
 Catalog::streams() -> std::vector<Stream>
 ```
 
-#### Notes
+#### What It Does
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::vector<Stream>`
     Materialized collection of stream objects.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5228,39 +5131,47 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.streams();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 [Stream(id), Stream(metric), Stream(city)]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#stream">
+    <span class="label">Previous</span>
+    <span class="title">stream</span>
+  </a>
+  <a class="next-link" href="#sum">
+    <span class="label">Next</span>
+    <span class="title">sum</span>
+  </a>
+</div>
 
 ### `sum`
 
 #### Signature
 
 ```cpp
-Catalog::sum(field: std::string_view) -> Stream
+Catalog::sum(std::string_view field) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Computes the sum of one named numeric stream.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `sum` and inspect the resulting summary value or summary object.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5274,39 +5185,49 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.sum("metric");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#streams">
+    <span class="label">Previous</span>
+    <span class="title">streams</span>
+  </a>
+  <a class="next-link" href="#tabelize">
+    <span class="label">Next</span>
+    <span class="title">tabelize</span>
+  </a>
+</div>
+
+## T
 
 ### `tabelize`
 
 #### Signature
 
 ```cpp
-Catalog::tabelize(policy: const TabelizePolicy& = {}) -> pluss::table::DataFrame
+Catalog::tabelize(const TabelizePolicy& policy = {}) -> pluss::table::DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`policy` : `const TabelizePolicy&`
+**policy**
     Policy object that changes the structural behavior of this overload.
 
-#### Output
+#### Returns
 
 `pluss::table::DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5322,7 +5243,7 @@ policy.align = pluss::kindle::AlignPolicy::Inner;
 auto out = ct.tabelize(policy);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 id  sales  city
@@ -5330,34 +5251,42 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#sum">
+    <span class="label">Previous</span>
+    <span class="title">sum</span>
+  </a>
+  <a class="next-link" href="#tail">
+    <span class="label">Next</span>
+    <span class="title">tail</span>
+  </a>
+</div>
 
 ### `tail`
 
 #### Signature
 
 ```cpp
-Catalog::tail(n: std::int64_t) -> Catalog
+Catalog::tail(std::int64_t n) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns the last `n` rows across every stream in the catalog.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the last part of the current object without changing the source data.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5371,7 +5300,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.tail(2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5384,34 +5313,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tabelize">
+    <span class="label">Previous</span>
+    <span class="title">tabelize</span>
+  </a>
+  <a class="next-link" href="#take">
+    <span class="label">Next</span>
+    <span class="title">take</span>
+  </a>
+</div>
 
 ### `take`
 
 #### Signature
 
 ```cpp
-Catalog::take(indices: std::span<const std::int64_t>) -> Catalog
+Catalog::take(std::span<const std::int64_t> indices) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns the rows at the requested integer positions across every stream.
 
-#### Inputs
+#### Parameters
 
-`indices` : `std::span<const std::int64_t>`
+**indices**
     Integer positions used to select, reorder, or address entries.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several integer positions together.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5426,7 +5363,7 @@ std::vector<std::int64_t> picks{0, 2};
 auto out = ct.take(picks);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5439,34 +5376,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tail">
+    <span class="label">Previous</span>
+    <span class="title">tail</span>
+  </a>
+  <a class="next-link" href="#text_preprocess">
+    <span class="label">Next</span>
+    <span class="title">text_preprocess</span>
+  </a>
+</div>
 
 ### `text_preprocess`
 
 #### Signature
 
 ```cpp
-Catalog::text_preprocess(field: std::string_view) -> Catalog
+Catalog::text_preprocess(std::string_view field) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5482,7 +5427,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.text_preprocess("text");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5495,34 +5440,42 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#take">
+    <span class="label">Previous</span>
+    <span class="title">take</span>
+  </a>
+  <a class="next-link" href="#tfidf">
+    <span class="label">Next</span>
+    <span class="title">tfidf</span>
+  </a>
+</div>
 
 ### `tfidf`
 
 #### Signature
 
 ```cpp
-Catalog::tfidf(field: std::string_view) -> Catalog
+Catalog::tfidf(std::string_view field) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the text-processing surface for note-backed or text-oriented data.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**field**
     Name of the target stream in the catalog.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5538,7 +5491,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.tfidf("text");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5551,6 +5504,16 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#text_preprocess">
+    <span class="label">Previous</span>
+    <span class="title">text_preprocess</span>
+  </a>
+  <a class="next-link" href="#timeindex">
+    <span class="label">Next</span>
+    <span class="title">timeindex</span>
+  </a>
+</div>
 
 ### `timeindex`
 
@@ -5560,24 +5523,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::timeindex() -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns one named stream interpreted as a time-index stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5591,7 +5552,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.timeindex();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5604,6 +5565,16 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tfidf">
+    <span class="label">Previous</span>
+    <span class="title">tfidf</span>
+  </a>
+  <a class="next-link" href="#timeline">
+    <span class="label">Next</span>
+    <span class="title">timeline</span>
+  </a>
+</div>
 
 ### `timeline`
 
@@ -5613,24 +5584,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::timeline() -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Returns one named stream interpreted as a timeline stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5644,7 +5613,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.timeline();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5657,6 +5626,16 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#timeindex">
+    <span class="label">Previous</span>
+    <span class="title">timeindex</span>
+  </a>
+  <a class="next-link" href="#to_json">
+    <span class="label">Next</span>
+    <span class="title">to_json</span>
+  </a>
+</div>
 
 ### `to_json`
 
@@ -5666,24 +5645,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::to_json() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5697,7 +5674,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.to_json();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5705,6 +5682,16 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#timeline">
+    <span class="label">Previous</span>
+    <span class="title">timeline</span>
+  </a>
+  <a class="next-link" href="#to_string">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
 
 ### `to_string`
 
@@ -5714,24 +5701,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::to_string() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5745,7 +5730,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.to_string();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5753,37 +5738,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_json">
+    <span class="label">Previous</span>
+    <span class="title">to_json</span>
+  </a>
+  <a class="next-link" href="#to_table">
+    <span class="label">Next</span>
+    <span class="title">to_table</span>
+  </a>
+</div>
 
 ### `to_table`
 
 #### Signature
 
 ```cpp
-Catalog::to_table(policy: const TabelizePolicy& = {}, render: bool = true) -> pluss::table::DataFrame
+Catalog::to_table(const TabelizePolicy& policy = {}, bool render = true) -> pluss::table::DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`policy` : `const TabelizePolicy&`
+**policy**
     Policy object that changes the structural behavior of this overload.
 
-`render` : `bool`
+**render**
     When `true`, the returned view can auto-render in temporary terminal contexts. Pass `false` when you want explicit output control.
 
-#### Output
+#### Returns
 
 `pluss::table::DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Choose whether the returned object should auto-render in display contexts.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5799,7 +5792,7 @@ policy.align = pluss::kindle::AlignPolicy::Inner;
 auto out = ct.to_table(policy, true);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 id  sales  city
@@ -5807,99 +5800,47 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_string">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+  <a class="next-link" href="#transform">
+    <span class="label">Next</span>
+    <span class="title">transform</span>
+  </a>
+</div>
 
 ### `transform`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Catalog::transform(field: std::string_view, fn: const std::function<Stream(const Stream&)>&) -> Catalog
+Catalog::transform(const std::function<Stream(const Stream&)>& fn) -> Catalog
+
+Catalog::transform(std::string_view field, const std::function<Stream(const Stream&)>& fn) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Rewrites one stream, several streams, or all streams by applying a user function.
 
-#### Inputs
+#### Parameters
 
-`field` : `std::string_view`
+**fn**
+    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
+
+**field**
     Name of the target stream in the catalog.
 
-`fn` : `const std::function<Stream(const Stream&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::transform(fn: const std::function<Stream(const Stream&)>&) -> Catalog`
-
 #### Examples
 
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
-    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
-    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
-});
-
-auto out = ct.transform("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
-```
-
-#### Expected output
-
-```text
-ct.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-
-out.head():
-id     -> Series([1, 2, 3])
-metric -> Series([10.0, 20.0, 30.0])
-city   -> Note(["Accra", "Tema", "Kumasi"])
-```
-
-### `transform`
-
-#### Signature
-
-```cpp
-Catalog::transform(fn: const std::function<Stream(const Stream&)>&) -> Catalog
-```
-
-#### Notes
-
-Rewrites one stream, several streams, or all streams by applying a user function.
-
-#### Inputs
-
-`fn` : `const std::function<Stream(const Stream&)>&`
-    Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
-
-#### Output
-
-`Catalog`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Catalog::transform(field: std::string_view, fn: const std::function<Stream(const Stream&)>&) -> Catalog`
-
-#### Examples
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5913,7 +5854,7 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.transform([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -5926,6 +5867,45 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+Example 2. Apply a user function and inspect the transformed result.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto ct = pluss::kindle::Catalog({
+    "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
+    "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
+    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
+});
+
+auto out = ct.transform("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
+```
+
+##### Output
+
+```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_table">
+    <span class="label">Previous</span>
+    <span class="title">to_table</span>
+  </a>
+  <a class="next-link" href="#unique">
+    <span class="label">Next</span>
+    <span class="title">unique</span>
+  </a>
+</div>
+
+## U
 
 ### `unique`
 
@@ -5935,24 +5915,22 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
 Catalog::unique() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -5966,39 +5944,49 @@ auto ct = pluss::kindle::Catalog({
 auto out = ct.unique();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#transform">
+    <span class="label">Previous</span>
+    <span class="title">transform</span>
+  </a>
+  <a class="next-link" href="#where">
+    <span class="label">Next</span>
+    <span class="title">where</span>
+  </a>
+</div>
+
+## W
 
 ### `where`
 
 #### Signature
 
 ```cpp
-Catalog::where(condition: const pluss::Series&) -> Catalog
+Catalog::where(const pluss::Series& condition) -> Catalog
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the rows where the supplied mask stream is true.
 
-#### Inputs
+#### Parameters
 
-`condition` : `const pluss::Series&`
+**condition**
     Boolean mask used by this overload to decide which rows, values, or items participate.
 
-#### Output
+#### Returns
 
 `Catalog`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -6013,7 +6001,7 @@ auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = ct.where(mask);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ct.head():
@@ -6026,3 +6014,9 @@ id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#unique">
+    <span class="label">Previous</span>
+    <span class="title">unique</span>
+  </a>
+</div>

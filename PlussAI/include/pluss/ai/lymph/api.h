@@ -1002,7 +1002,7 @@ struct CrossValidationReport {
 [[nodiscard]] inline std::vector<std::string> cross_validate_default_feature_names_(
     const pluss::table::DataFrame& frame,
     const char* where) {
-  const auto names = frame.series_features().feature_names();
+  const auto names = frame.series_features().features();
   if (names.empty()) {
     ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
   }
@@ -1186,6 +1186,7 @@ using FoldReport = ::pluss::ai::nodej::SparseFoldReport;
 using CrossReport = ::pluss::ai::nodej::SparseCrossReport;
 using ObjectivePolicy = ::pluss::ai::nodej::SparseObjectivePolicy;
 using TuneTrial = ::pluss::ai::nodej::SparseTuneTrial;
+using TuneLedger = ::pluss::ai::nodej::SparseTuneLedger;
 using TuneReport = ::pluss::ai::nodej::SparseTuneReport;
 
 [[nodiscard]] inline Triplet make_triplet(std::int64_t rows,
@@ -1684,6 +1685,7 @@ private:
 }
 
 [[nodiscard]] inline Series objective_series(const TuneReport& report) {
+  if (report.ledger.objective.defined()) return report.ledger.objective;
   std::vector<double> values{};
   values.reserve(report.trials.size());
   for (const auto& trial : report.trials) values.push_back(trial.objective);
@@ -1693,12 +1695,28 @@ private:
 }
 
 [[nodiscard]] inline Series objective_rank_series(const TuneReport& report) {
-  std::vector<double> values{};
+  if (report.ledger.objective_rank.defined()) return report.ledger.objective_rank;
+  std::vector<std::int64_t> values{};
   values.reserve(report.objective_rank.size());
-  for (const auto rank : report.objective_rank) values.push_back(static_cast<double>(rank));
+  for (const auto rank : report.objective_rank) values.push_back(rank);
   return pluss::make_series(std::move(values),
                             {static_cast<std::int64_t>(report.objective_rank.size())},
-                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
+                            Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+}
+
+[[nodiscard]] inline bool has_ledger(const TuneReport& report) {
+  return report.ledger.objective.defined();
+}
+
+[[nodiscard]] inline const TuneLedger& tune_ledger(const TuneReport& report) {
+  if (!has_ledger(report)) {
+    ::pluss::throw_error("sparse::tune_ledger: tune report does not include ledger artifacts.");
+  }
+  return report.ledger;
+}
+
+[[nodiscard]] inline Series encoded_param_table(const TuneReport& report) {
+  return tune_ledger(report).encoded_params;
 }
 
 } // namespace sparse
@@ -1747,6 +1765,11 @@ namespace feature {
 
 using VariancePrune = ::pluss::ai::nodej::VariancePruneResult;
 using ScoreRankOptions = ::pluss::ai::nodej::ScoreRankOptions;
+using FeatureScoreMode = ::pluss::ai::nodej::FeatureScoreMode;
+using FeatureRankOptions = ::pluss::ai::nodej::FeatureRankOptions;
+using FeaturePickOptions = ::pluss::ai::nodej::FeaturePickOptions;
+using FeatureRankReport = ::pluss::ai::nodej::FeatureRankReport;
+using FeaturePickResult = ::pluss::ai::nodej::FeaturePickResult;
 
 [[nodiscard]] inline FeatureBatch take_features(const FeatureBatch& batch,
                                                 pluss::msharp::RangeView::Int feature_indices) {
@@ -1761,6 +1784,14 @@ using ScoreRankOptions = ::pluss::ai::nodej::ScoreRankOptions;
 
 [[nodiscard]] inline VariancePrune variance_prune(const FeatureBatch& batch, double variance_floor = 1e-12) {
   return resolve(::pluss::ai::nodej::variance_prune(batch, variance_floor), "feature::variance_prune");
+}
+
+[[nodiscard]] inline FeatureRankReport rank_features(const LabeledBatch& batch, const FeatureRankOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::rank_features(batch, options), "feature::rank_features");
+}
+
+[[nodiscard]] inline FeaturePickResult pick_features(const LabeledBatch& batch, const FeaturePickOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::pick_features(batch, options), "feature::pick_features");
 }
 
 [[nodiscard]] inline Series f_score_rank(const LabeledBatch& batch, const ScoreRankOptions& options = {}) {
@@ -2274,7 +2305,7 @@ private:
 
   [[nodiscard]] static std::vector<std::string> default_series_feature_names_(const pluss::table::DataFrame& frame,
                                                                                const char* where) {
-    const auto names = frame.series_features().feature_names();
+    const auto names = frame.series_features().features();
     if (names.empty()) {
       ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
@@ -2285,7 +2316,7 @@ private:
       const pluss::table::DataFrame& frame,
       const DataFrameBatchOptions& options,
       const char* where) {
-    std::vector<std::string> names = options.feature_names.empty() ? frame.feature_names() : options.feature_names;
+    std::vector<std::string> names = options.feature_names.empty() ? frame.features() : options.feature_names;
     if (options.label_feature.has_value()) {
       names.erase(std::remove(names.begin(), names.end(), *options.label_feature), names.end());
     }
@@ -2685,7 +2716,7 @@ struct FeatureSelectorOptions {
 
 [[nodiscard]] inline std::vector<std::string> make_feature_selector(const pluss::table::DataFrame& frame,
                                                                    FeatureSelectorOptions options = {}) {
-  const auto names = frame.feature_names();
+  const auto names = frame.features();
   std::vector<std::string> selected{};
   selected.reserve(names.size());
 
@@ -2802,7 +2833,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
 [[nodiscard]] inline std::vector<std::string> resolved_feature_order_for_features_(
     const pluss::table::DataFrame& frame,
     const DataFrameBatchOptions& data_options) {
-  std::vector<std::string> names = data_options.feature_names.empty() ? frame.feature_names() : data_options.feature_names;
+  std::vector<std::string> names = data_options.feature_names.empty() ? frame.features() : data_options.feature_names;
   if (data_options.label_feature.has_value()) {
     names.erase(std::remove(names.begin(), names.end(), *data_options.label_feature), names.end());
   }
@@ -3002,7 +3033,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
     const std::vector<workflow::feature::Branch>& branches,
     prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
   DataFrameBatchOptions options{};
-  options.feature_names = frame.feature_names();
+  options.feature_names = frame.features();
   return make_feature_transformer(frame, options, branches, remainder);
 }
 
@@ -3011,7 +3042,7 @@ PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftO
     pluss::msharp::RangeView::Of<workflow::feature::Branch> branches,
     prep::FeatureRemainderPolicy remainder = prep::FeatureRemainderPolicy::PassThrough) {
   DataFrameBatchOptions options{};
-  options.feature_names = frame.feature_names();
+  options.feature_names = frame.features();
   return make_feature_transformer(frame, options, branches, remainder);
 }
 
@@ -3790,7 +3821,7 @@ private:
     }
     return pinned_feature_names;
   }
-  const auto names = frame.series_features().feature_names();
+  const auto names = frame.series_features().features();
   if (names.empty()) {
     ::pluss::throw_error(std::string(where) + ": no Series-backed features found in input DataFrame.");
   }
@@ -5153,7 +5184,7 @@ private:
 
   [[nodiscard]] static std::vector<std::string> default_series_feature_names_(const pluss::table::DataFrame& frame,
                                                                                const char* where) {
-    const auto names = frame.series_features().feature_names();
+    const auto names = frame.series_features().features();
     if (names.empty()) {
       ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }
@@ -5295,7 +5326,7 @@ private:
 
   [[nodiscard]] static std::vector<std::string> default_series_feature_names_(const pluss::table::DataFrame& frame,
                                                                                const char* where) {
-    const auto names = frame.series_features().feature_names();
+    const auto names = frame.series_features().features();
     if (names.empty()) {
       ::pluss::throw_error(std::string(where) + ": input DataFrame has no Series features.");
     }

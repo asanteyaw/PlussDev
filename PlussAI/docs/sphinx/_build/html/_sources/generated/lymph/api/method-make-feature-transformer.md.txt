@@ -3,8 +3,14 @@
 ## API Signature
 
 - `make_feature_transformer(frame: const pluss::table::DataFrame&, data_options: const DataFrameBatchOptions&, branches: const std::vector<workflow::feature::Branch>&, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
+- `make_feature_transformer(frame: const pluss::table::DataFrame&, data_options: const DataFrameBatchOptions&, branches: RangeView::Of<workflow::feature::Branch>, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
+- `make_feature_transformer(frame: const pluss::table::DataFrame&, data_options: const DataFrameBatchOptions&, branches: std::initializer_list<workflow::feature::Branch>, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
 - `make_feature_transformer(frame: const pluss::table::DataFrame&, branches: const std::vector<workflow::feature::Branch>&, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
+- `make_feature_transformer(frame: const pluss::table::DataFrame&, branches: RangeView::Of<workflow::feature::Branch>, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
+- `make_feature_transformer(frame: const pluss::table::DataFrame&, branches: std::initializer_list<workflow::feature::Branch>, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
 - `make_feature_transformer(feature_order: const std::vector<std::string>&, branches: const std::vector<workflow::feature::Branch>&, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
+- `make_feature_transformer(feature_order: RangeView::Of<std::string>, branches: RangeView::Of<workflow::feature::Branch>, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
+- `make_feature_transformer(feature_order: std::initializer_list<std::string>, branches: std::initializer_list<workflow::feature::Branch>, remainder: prep::FeatureRemainderPolicy = prep::FeatureRemainderPolicy::PassThrough) -> ::pluss::ai::nodej::prep::FeatureTransformer`
 
 ## Notes
 
@@ -12,11 +18,11 @@ Namespace-level API function.
 
 ## Inputs
 
-- `branches` (`const std::vector<workflow::feature::Branch>&`)
+- `branches` (`RangeView::Of<workflow::feature::Branch> | const std::vector<workflow::feature::Branch>& | std::initializer_list<workflow::feature::Branch>`)
   List-like argument; pass values in the order expected by the signature.
 - `data_options` (`const DataFrameBatchOptions&`)
   Input feature data used by this call.
-- `feature_order` (`const std::vector<std::string>&`)
+- `feature_order` (`RangeView::Of<std::string> | const std::vector<std::string>& | std::initializer_list<std::string>`)
   Input feature data used by this call.
 - `frame` (`const pluss::table::DataFrame&`)
   Input feature data used by this call.
@@ -50,7 +56,7 @@ make_feature_transformer returned ::pluss::ai::nodej::prep::FeatureTransformer
 ### Example 2 (Demo Pattern)
 
 ```cpp
-  const auto categorical = housing.note_features().feature_names();
+  const auto categorical = housing.note_features().features();
 
   pluss::ai::nodej::DataFrameBatchOptions data_options{};
   data_options.feature_names = {"median_income", "ocean_proximity", "target"};

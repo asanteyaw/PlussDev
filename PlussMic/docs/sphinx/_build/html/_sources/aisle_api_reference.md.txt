@@ -1,41 +1,44 @@
 # Aisle API Reference
 
-# Practical Aisle API Reference
-
-## API Reference Style
-
 This page documents the full public `Aisle` surface for depth-stacked registries.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
+
+## A
 
 ### `apply_slot`
 
 #### Signature
 
 ```cpp
-Aisle::apply_slot(key: std::string_view, fn: const std::function<Slot(const Slot&)>&) -> Aisle
+Aisle::apply_slot(std::string_view key, const std::function<Slot(const Slot&)>& fn) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Applies a slot transform to one named key inside every registry and returns the updated aisle.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-`fn` : `const std::function<Slot(const Slot&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -49,7 +52,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.apply_slot("ids", [](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -61,6 +64,12 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 - `apply_slot(key, fn)` walks every registry in the aisle and rewrites that slot only where it exists.
 - Registries that do not have the requested key are left unchanged.
 
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#as_kindle">
+    <span class="label">Next</span>
+    <span class="title">as_kindle</span>
+  </a>
+</div>
 
 ### `as_kindle`
 
@@ -70,24 +79,22 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::as_kindle() -> pluss::kindle::Archive
 ```
 
-#### Notes
+#### What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts or reinterprets the current payload as another public Pluss type so downstream operations route through the right text, numeric, or temporal surface.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `pluss::kindle::Archive`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Convert the current object into the `kindle` representation before continuing with another type-specific workflow.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -101,7 +108,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.as_kindle();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
@@ -113,34 +120,44 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 - `as_kindle()` converts the aisle into the Archive model.
 - Use this when the next workflow is archive/catalog based rather than bundle based.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#apply_slot">
+    <span class="label">Previous</span>
+    <span class="title">apply_slot</span>
+  </a>
+  <a class="next-link" href="#concat_depth">
+    <span class="label">Next</span>
+    <span class="title">concat_depth</span>
+  </a>
+</div>
+
+## C
 
 ### `concat_depth`
 
 #### Signature
 
 ```cpp
-Aisle::concat_depth(other: const Aisle&) -> Aisle
+Aisle::concat_depth(const Aisle& other) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Appends the registries from another aisle onto the current depth axis.
 
-#### Inputs
+#### Parameters
 
-`other` : `const Aisle&`
+**other**
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -154,7 +171,7 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.concat_depth(aisle);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
@@ -168,6 +185,18 @@ depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))
 - `concat_depth(other)` appends the other aisle’s registries onto the current depth axis.
 - If both aisles have labels, the labels are concatenated too.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_kindle">
+    <span class="label">Previous</span>
+    <span class="title">as_kindle</span>
+  </a>
+  <a class="next-link" href="#defined">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
+  </a>
+</div>
+
+## D
 
 ### `defined`
 
@@ -177,24 +206,22 @@ depth3 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::defined() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `defined` property of the current object.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -208,11 +235,21 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.defined();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#concat_depth">
+    <span class="label">Previous</span>
+    <span class="title">concat_depth</span>
+  </a>
+  <a class="next-link" href="#depth">
+    <span class="label">Next</span>
+    <span class="title">depth</span>
+  </a>
+</div>
 
 ### `depth`
 
@@ -222,24 +259,22 @@ true
 Aisle::depth() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `depth` property of the current object.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -253,11 +288,23 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.depth();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 2
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#empty">
+    <span class="label">Next</span>
+    <span class="title">empty</span>
+  </a>
+</div>
+
+## E
 
 ### `empty`
 
@@ -267,24 +314,22 @@ auto out = aisle.depth();
 Aisle::empty() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object has no rows, entries, slots, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `empty` property of the current object.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -298,39 +343,49 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.empty();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 false
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#depth">
+    <span class="label">Previous</span>
+    <span class="title">depth</span>
+  </a>
+  <a class="next-link" href="#from_kindle">
+    <span class="label">Next</span>
+    <span class="title">from_kindle</span>
+  </a>
+</div>
+
+## F
 
 ### `from_kindle`
 
 #### Signature
 
 ```cpp
-Aisle::from_kindle(archive: const pluss::kindle::Archive&) -> Aisle
+Aisle::from_kindle(const pluss::kindle::Archive& archive) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`archive` : `const pluss::kindle::Archive&`
+**archive**
     Archive payload supplied to this overload.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -346,40 +401,50 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto out = pluss::bundle::Aisle::from_kindle(archive);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#empty">
+    <span class="label">Previous</span>
+    <span class="title">empty</span>
+  </a>
+  <a class="next-link" href="#head">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>
+
+## H
 
 ### `head`
 
 #### Signature
 
 ```cpp
-Aisle::head(n: std::int64_t) -> Aisle
+Aisle::head(std::int64_t n) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Returns the first `n` registries from the aisle depth axis.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the first part of the current object without changing the source data.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -393,12 +458,24 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.head(1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#from_kindle">
+    <span class="label">Previous</span>
+    <span class="title">from_kindle</span>
+  </a>
+  <a class="next-link" href="#kindelize">
+    <span class="label">Next</span>
+    <span class="title">kindelize</span>
+  </a>
+</div>
+
+## K
 
 ### `kindelize`
 
@@ -408,24 +485,22 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::kindelize() -> pluss::kindle::Archive
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `pluss::kindle::Archive`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -439,12 +514,24 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.kindelize();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="#labels">
+    <span class="label">Next</span>
+    <span class="title">labels</span>
+  </a>
+</div>
+
+## L
 
 ### `labels`
 
@@ -454,24 +541,22 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 Aisle::labels() -> const std::optional<Slot>&
 ```
 
-#### Notes
+#### What It Does
 
 Returns the current labels used to address fields, slots, rows, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::optional<Slot>&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -485,39 +570,49 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.labels();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ["train", "test"]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
+  </a>
+  <a class="next-link" href="#map">
+    <span class="label">Next</span>
+    <span class="title">map</span>
+  </a>
+</div>
+
+## M
 
 ### `map`
 
 #### Signature
 
 ```cpp
-Aisle::map(fn: const std::function<Registry(const Registry&)>&) -> Aisle
+Aisle::map(const std::function<Registry(const Registry&)>& fn) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Applies the same function to each registry and returns the transformed aisle.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<Registry(const Registry&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -531,12 +626,24 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.map([](const pluss::bundle::Registry& registry) { return registry; });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#labels">
+    <span class="label">Previous</span>
+    <span class="title">labels</span>
+  </a>
+  <a class="next-link" href="#registries">
+    <span class="label">Next</span>
+    <span class="title">registries</span>
+  </a>
+</div>
+
+## R
 
 ### `registries`
 
@@ -546,24 +653,22 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::registries() -> const std::vector<Registry>&
 ```
 
-#### Notes
+#### What It Does
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::vector<Registry>&`
     Borrowed collection of registries.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -577,39 +682,47 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.registries();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 [Registry(depth0), Registry(depth1)]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#map">
+    <span class="label">Previous</span>
+    <span class="title">map</span>
+  </a>
+  <a class="next-link" href="#registry">
+    <span class="label">Next</span>
+    <span class="title">registry</span>
+  </a>
+</div>
 
 ### `registry`
 
 #### Signature
 
 ```cpp
-Aisle::registry(i: std::int64_t) -> Registry
+Aisle::registry(std::int64_t i) -> Registry
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`i` : `std::int64_t`
+**i**
     Zero-based positional index used by this overload.
 
-#### Output
+#### Returns
 
 `Registry`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -623,40 +736,50 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.registry(0);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#registries">
+    <span class="label">Previous</span>
+    <span class="title">registries</span>
+  </a>
+  <a class="next-link" href="#select">
+    <span class="label">Next</span>
+    <span class="title">select</span>
+  </a>
+</div>
+
+## S
 
 ### `select`
 
 #### Signature
 
 ```cpp
-Aisle::select(keys: std::initializer_list<std::string_view>) -> Aisle
+Aisle::select(std::initializer_list<std::string_view> keys) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the named keys inside every registry in the aisle.
 
-#### Inputs
+#### Parameters
 
-`keys` : `std::initializer_list<std::string_view>`
+**keys**
     Collection of slot or stream names to keep, drop, or rewrite together.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several feature names inline.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -670,40 +793,48 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.select({"ids"});
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#registry">
+    <span class="label">Previous</span>
+    <span class="title">registry</span>
+  </a>
+  <a class="next-link" href="#show">
+    <span class="label">Next</span>
+    <span class="title">show</span>
+  </a>
+</div>
 
 ### `show`
 
 #### Signature
 
 ```cpp
-Aisle::show(os: std::ostream&) -> void
+Aisle::show(std::ostream& os) -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
-`os` : `std::ostream&`
+**os**
     Destination output stream used instead of the default display or print target.
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Write the output to a caller-provided stream.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -717,43 +848,51 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 aisle.show(std::cout);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#select">
+    <span class="label">Previous</span>
+    <span class="title">select</span>
+  </a>
+  <a class="next-link" href="#slice">
+    <span class="label">Next</span>
+    <span class="title">slice</span>
+  </a>
+</div>
 
 ### `slice`
 
 #### Signature
 
 ```cpp
-Aisle::slice(start: std::int64_t, stop: std::int64_t) -> Aisle
+Aisle::slice(std::int64_t start, std::int64_t stop) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Returns a contiguous depth slice `[start, stop)` from the aisle.
 
-#### Inputs
+#### Parameters
 
-`start` : `std::int64_t`
+**start**
     Inclusive starting position of the slice.
 
-`stop` : `std::int64_t`
+**stop**
     Exclusive ending position of the slice.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect one contiguous positional slice from the current object.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -767,40 +906,50 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.slice(0, 1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
+  </a>
+  <a class="next-link" href="#tail">
+    <span class="label">Next</span>
+    <span class="title">tail</span>
+  </a>
+</div>
+
+## T
 
 ### `tail`
 
 #### Signature
 
 ```cpp
-Aisle::tail(n: std::int64_t) -> Aisle
+Aisle::tail(std::int64_t n) -> Aisle
 ```
 
-#### Notes
+#### What It Does
 
 Returns the last `n` registries from the aisle depth axis.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Aisle`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the last part of the current object without changing the source data.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -814,12 +963,22 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.tail(1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#slice">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
+  <a class="next-link" href="#to_json">
+    <span class="label">Next</span>
+    <span class="title">to_json</span>
+  </a>
+</div>
 
 ### `to_json`
 
@@ -829,24 +988,22 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::to_json() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -860,12 +1017,22 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.to_json();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tail">
+    <span class="label">Previous</span>
+    <span class="title">tail</span>
+  </a>
+  <a class="next-link" href="#to_kindle">
+    <span class="label">Next</span>
+    <span class="title">to_kindle</span>
+  </a>
+</div>
 
 ### `to_kindle`
 
@@ -875,24 +1042,22 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::to_kindle() -> pluss::kindle::Archive
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `pluss::kindle::Archive`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -906,12 +1071,22 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.to_kindle();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_json">
+    <span class="label">Previous</span>
+    <span class="title">to_json</span>
+  </a>
+  <a class="next-link" href="#to_string">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
 
 ### `to_string`
 
@@ -921,24 +1096,22 @@ test  -> Catalog(metric -> Series([30.0, 40.0]))
 Aisle::to_string() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -952,12 +1125,24 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.to_string();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 depth0 -> Registry(ids -> Slot([Series(1), Series(2)]))
 depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_kindle">
+    <span class="label">Previous</span>
+    <span class="title">to_kindle</span>
+  </a>
+  <a class="next-link" href="#unique">
+    <span class="label">Next</span>
+    <span class="title">unique</span>
+  </a>
+</div>
+
+## U
 
 ### `unique`
 
@@ -967,24 +1152,22 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))
 Aisle::unique() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto r0 = pluss::bundle::Registry({
@@ -998,8 +1181,14 @@ auto aisle = pluss::bundle::Aisle({r0, r1});
 auto out = aisle.unique();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_string">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+</div>

@@ -35,6 +35,16 @@ struct FeaturePlan {
   std::vector<std::int64_t> right{};
 };
 
+std::vector<Thread> dataframe_columns(const DataFrame& frame) {
+  std::vector<Thread> columns;
+  const auto& names = frame.features();
+  columns.reserve(names.size());
+  for (const auto& name : names) {
+    columns.push_back(frame.features(name));
+  }
+  return columns;
+}
+
 pluss::codem::Platform thread_platform(const Thread& thread) {
   switch (thread.kind()) {
     case ThreadKind::Series:
@@ -61,8 +71,8 @@ pluss::Series bool_series_on(const std::vector<bool>& values,
 }
 
 std::vector<bool> thread_validity(const Thread& thread) {
-  if (thread.has_validity_mask()) {
-    return thread.validity_mask()->to_vec<bool>();
+  if (detail::has_validity_mask(thread)) {
+    return detail::validity_mask(thread)->to_vec<bool>();
   }
   return std::vector<bool>(static_cast<std::size_t>(thread.size()), true);
 }
@@ -231,16 +241,16 @@ Thread take_cases(const Thread& cases, const RowMap& rows) {
 
 std::optional<pluss::Series> joined_validity(
     const Thread& left,
-    const Thread& right,
-    const pluss::codem::Platform platform) {
-  if (!left.has_validity_mask() && !right.has_validity_mask()) {
+  const Thread& right,
+  const pluss::codem::Platform platform) {
+  if (!detail::has_validity_mask(left) && !detail::has_validity_mask(right)) {
     return std::nullopt;
   }
-  auto left_mask = left.has_validity_mask()
-      ? *left.validity_mask()
+  auto left_mask = detail::has_validity_mask(left)
+      ? *detail::validity_mask(left)
       : pluss::Series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
-  auto right_mask = right.has_validity_mask()
-      ? *right.validity_mask()
+  auto right_mask = detail::has_validity_mask(right)
+      ? *detail::validity_mask(right)
       : pluss::Series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
   if (left_mask.platform() != platform) {
     left_mask = left_mask.to(platform);
@@ -370,14 +380,14 @@ CasePlan plan_cases(
     const DataFrame& left,
     const DataFrame& right,
     const FrameMatchOptions& options) {
-  ensure_case_types_match(left.cases(), right.cases());
-  const auto left_keys = case_keys(left.cases());
-  const auto right_keys = case_keys(right.cases());
+  ensure_case_types_match(left.caselbl(), right.caselbl());
+  const auto left_keys = case_keys(left.caselbl());
+  const auto right_keys = case_keys(right.caselbl());
 
   if (left_keys == right_keys) {
     RowMap identity(left.ncases());
     std::iota(identity.begin(), identity.end(), std::int64_t{0});
-    return {identity, identity, left.cases()};
+    return {identity, identity, left.caselbl()};
   }
 
   const auto left_positions = positions_by_key(left_keys);
@@ -417,13 +427,13 @@ CasePlan plan_cases(
       for (std::int64_t row = 0; row < left.ncases(); ++row) {
         append_from_left(row);
       }
-      plan.output_cases = left.cases();
+      plan.output_cases = left.caselbl();
       break;
     case FrameMatchRule::KeepRight:
       for (std::int64_t row = 0; row < right.ncases(); ++row) {
         append_from_right(row);
       }
-      plan.output_cases = right.cases();
+      plan.output_cases = right.caselbl();
       break;
     case FrameMatchRule::Common: {
       RowMap output_rows;
@@ -438,7 +448,7 @@ CasePlan plan_cases(
         plan.right.push_back(found->second[occurrence]);
         output_rows.push_back(row);
       }
-      plan.output_cases = take_cases(left.cases(), output_rows);
+      plan.output_cases = take_cases(left.caselbl(), output_rows);
       break;
     }
     case FrameMatchRule::Unite: {
@@ -460,8 +470,8 @@ CasePlan plan_cases(
         right_only.push_back(row);
       }
       plan.output_cases = append_cases(
-          left.cases(),
-          take_cases(right.cases(), right_only));
+          left.caselbl(),
+          take_cases(right.caselbl(), right_only));
       break;
     }
   }
@@ -472,8 +482,8 @@ FeaturePlan plan_features(
     const DataFrame& left,
     const DataFrame& right,
     const FrameMatchRule rule) {
-  const auto& left_names = left.feature_names();
-  const auto& right_names = right.feature_names();
+  const auto& left_names = left.features();
+  const auto& right_names = right.features();
   std::unordered_map<std::string, std::int64_t> left_position;
   std::unordered_map<std::string, std::int64_t> right_position;
   left_position.reserve(left_names.size());
@@ -554,7 +564,7 @@ Thread null_thread_like(const Thread& reference, const std::int64_t size) {
       }
     }
   }
-  return values.with_validity_mask(bool_series_on(
+  return detail::with_validity_mask(values, bool_series_on(
       std::vector<bool>(static_cast<std::size_t>(size), false),
       thread_platform(values)));
 }
@@ -590,14 +600,14 @@ Thread remap_thread(const Thread& source, const RowMap& rows) {
 
   const auto platform = thread_platform(out);
   auto mask = bool_series_on(present, platform);
-  if (out.has_validity_mask()) {
-    auto prior = *out.validity_mask();
+  if (detail::has_validity_mask(out)) {
+    auto prior = *detail::validity_mask(out);
     if (prior.platform() != platform) {
       prior = prior.to(platform);
     }
     mask = prior.logical_and(mask);
   }
-  return out.with_validity_mask(mask);
+  return detail::with_validity_mask(out, mask);
 }
 
 DataFrame remap_frame(
@@ -607,8 +617,8 @@ DataFrame remap_frame(
     const FeaturePlan& features,
     const bool left_side,
     const Thread& output_cases) {
-  const auto source_columns = source.features();
-  const auto peer_columns = peer.features();
+  const auto source_columns = dataframe_columns(source);
+  const auto peer_columns = dataframe_columns(peer);
   const auto& source_positions = left_side ? features.left : features.right;
   const auto& peer_positions = left_side ? features.right : features.left;
 
@@ -646,8 +656,8 @@ FrameMatch DataFrame::match(
   PLUSS_CHECK(other.defined(), "DataFrame::match: right frame is undefined");
 
   if (options.repeated_cases == RepeatedCaseRule::PairInOrder &&
-      cases().shares_payload_with(other.cases()) &&
-      feature_names() == other.feature_names()) {
+      cases().shares_payload_with(other.caselbl()) &&
+      features() == other.features()) {
     return FrameMatch{*this, other};
   }
 
@@ -682,8 +692,8 @@ DataFrame DataFrame::extend_cases(
   PLUSS_CHECK(other.defined(), "DataFrame::extend_cases: right frame is undefined");
 
   const auto feature_plan = plan_features(*this, other, feature_rule);
-  const auto left_columns = features();
-  const auto right_columns = other.features();
+  const auto left_columns = dataframe_columns(*this);
+  const auto right_columns = dataframe_columns(other);
   std::vector<std::pair<std::string, Thread>> output;
   output.reserve(feature_plan.names.size());
 
@@ -717,7 +727,7 @@ DataFrame DataFrame::extend_cases(
         pluss::codem::ScalarType::Int64,
         pluss::codem::Platform::CPU));
   } else {
-    output_cases = append_cases(cases(), other.cases());
+    output_cases = append_cases(cases(), other.caselbl());
     if (reject_repeats) {
       const auto positions = positions_by_key(case_keys(output_cases));
       reject_repeated_cases(positions, "combined");

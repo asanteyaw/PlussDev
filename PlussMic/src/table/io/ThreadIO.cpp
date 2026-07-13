@@ -45,7 +45,7 @@ std::string Thread::info_string() const {
   out += "Thread Info\n";
   out += fmt::format("Name: {}\n", has_display_name() ? display_name() : "<unnamed>");
   out += fmt::format("Kind: {}\n", kind_name);
-  out += fmt::format("Dtype: {}\n", dtype_name());
+  out += fmt::format("Dtype: {}\n", dtype());
   out += fmt::format("Cases: {}\n", size());
   out += fmt::format("Non-Null Cases: {}\n", non_null);
   out += fmt::format("Null Cases: {}", null_count);

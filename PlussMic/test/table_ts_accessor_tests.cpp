@@ -219,6 +219,42 @@ void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
   expect(years[2] == 2000 && months[2] == 2 && days[2] == 29, "leap-day YYYYMMDD conversion mismatch");
 }
 
+void test_dataframe_cast_pair_payload_targets() {
+  DataFrame raw({
+      {"id", Thread(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
+      {"amount_text", Thread(pluss::make_note({"10.5", "Alice", "30"}))},
+      {"event_text", Thread(pluss::make_note({
+          "2024-01-01T00:00:00Z",
+          "2024-01-02T00:00:00Z",
+          "2024-01-03T00:00:00Z",
+      }))},
+  });
+
+  const auto casted = raw.cast({
+      {"id", ThreadCastTarget::Note},
+      {"amount_text", ThreadCastTarget::Series},
+      {"event_text", ThreadCastTarget::Timeline},
+  });
+
+  expect(casted.features("id").kind() == ThreadKind::Note,
+         "cast(pair target): Series -> Note should change payload kind");
+  expect(casted.features("amount_text").kind() == ThreadKind::Series,
+         "cast(pair target): Note -> Series should change payload kind");
+  expect(casted.features("event_text").kind() == ThreadKind::Timeline,
+         "cast(pair target): Note -> Timeline should change payload kind");
+  expect(pluss::table::detail::has_validity_mask(casted.features("amount_text")),
+         "cast(pair target): unparsable Note numeric value should set a validity mask");
+  expect(!pluss::table::detail::validity_mask(casted.features("amount_text"))->to_vec<bool>(1),
+         "cast(pair target): unparsable Note numeric value should become null");
+  expect(casted.features("event_text").tl().year().as_series().to_vec<std::int32_t>() ==
+             std::vector<std::int32_t>({2024, 2024, 2024}),
+         "cast(pair target): Timeline values should parse correctly");
+
+  const auto back_to_note = casted.cast({{"event_text", ThreadCastTarget::Note}});
+  expect(back_to_note.features("event_text").kind() == ThreadKind::Note,
+         "cast(pair target): Timeline -> Note should change payload kind");
+}
+
 void test_selection_first_note_tl_and_ts_time_rolling() {
   DataFrame raw({
       {"date_text", Thread(pluss::make_note({"2024-01-01", "bad", "2024-01-05"}))},
@@ -305,6 +341,11 @@ void test_payload_surfaces_reject_wrong_payloads() {
          "Thread.note() should still work for Note payloads");
   expect(df.features("date").tl().year().kind() == ThreadKind::Series,
          "Thread.tl() should still work for Timeline payloads");
+  expect(df.features("date").tl().period("month").tl().day().as_series().to_vec<std::int32_t>()
+             == std::vector<std::int32_t>({1, 1}),
+         "Thread.tl().period(month) should bucket timestamps to the first day of the month");
+  expect(df.features({"date"}).tl().period("D").features("date").kind() == ThreadKind::Timeline,
+         "DataFrame.tl().period(D) should delegate period bucketing to selected Timeline features");
 }
 
 } // namespace
@@ -314,6 +355,7 @@ int main() {
     test_dataframe_ts_one_feature_and_set();
     test_dataframe_ts_resample_reindex_blocks();
     test_dataframe_cast_timeline_from_yyyymmdd_ints();
+    test_dataframe_cast_pair_payload_targets();
     test_selection_first_note_tl_and_ts_time_rolling();
     test_payload_surfaces_reject_wrong_payloads();
     std::cout << "table_ts_accessor_tests passed\n";

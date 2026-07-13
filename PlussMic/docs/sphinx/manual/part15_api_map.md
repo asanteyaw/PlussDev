@@ -12,19 +12,19 @@ reference; it tells you where to look.
 | Inspect | `defined`, `ncases`, `nfeatures`, `feature_names`, `info`, `describe`, `to_string` |
 | Select features | `features`, `select`, `select_like`, `select_regex`, `series_features`, `note_features`, `timeline_features` |
 | Manage features | `insert`, `drop`, `reorder`, `rename`, `set_axis`, `add_prefix`, `add_suffix` |
-| Manage cases | `cases`, `cases_series`, `set_cases`, `reset_cases`, `align_cases` |
+| Manage cases | `cases`, `set_cases`, `reset_cases`, `align_cases` |
 | Row selection | `head`, `tail`, `view`, `cloc`, `slice`, `take`, `sample` |
 | Filter | `where`, `filter`, `query` |
 | Derive | `assign`, `set_features`, `set` |
 | Transform | `transform`, `cast`, `astype` |
 | Sort/rank | `sort_values`, `sort_cases`, `top`, `bottom` |
-| Missing data | `isnull`, `notnull`, `fillna`, `dropna`, `ffill`, `bfill` |
+| Missing data | `isnull`, `notnull`, `fillna`, `dropnull`, `ffill`, `bfill` |
 | Arithmetic | `add`, `sub`, `mul`, `div`, `truediv`, `floordiv`, `mod`, `pow`, reverse variants |
 | Comparison | `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare` |
 | Reductions | `sum`, `mean`, `median`, `min`, `max`, `std`, `var`, `count`, `corr`, `ndistinct` |
 | Grouping | `aggregate`, `group_by`, `count_by`, `mean_by`, `pivot`, `pivot_table` |
 | Time | `tl`, `ts`, `resample`, `rolling`, `window`, `tz_convert`, `tz_localize`, `to_utc`, `floor_time`, `ceil_time`, `round`, `shift` |
-| Combine | `join`, `update`, `combine`, `unify`, `conform_to` |
+| Combine | `join`, `update`, `combine`, `unify`, `conform` |
 | Plot | `plot`, `plot3d` |
 | SQL | `sql`, `prepare_sql` |
 | Convert | `kindelize`, `tabelize`, `unsqueeze` |
@@ -35,8 +35,8 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 
 | Task | Methods |
 | --- | --- |
-| Inspect | `defined`, `size`, `kind`, `dtype_name`, `info`, `to_string` |
-| Missing | `isnull`, `notnull`, `isnan`, `isfinite`, `fillna`, `dropna`, `ffill`, `bfill` |
+| Inspect | `defined`, `size`, `kind`, `dtype`, `info`, `to_string` |
+| Missing | `isnull`, `notnull`, `isnan`, `isfinite`, `fillna`, `dropnull`, `ffill`, `bfill` |
 | Row operations | `head`, `tail`, `view`, `shift`, `slice`, `take`, `filter`, `sort_values`, `distinct` |
 | Numeric | `abs`, `clip`, `log`, `exp`, reductions |
 | Text | `lower`, `replace`, `contains` |

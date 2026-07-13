@@ -2,17 +2,79 @@ Thread::Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl) : impl_(st
 
 Thread::Thread() = default;
 
+namespace {
+
+std::optional<pluss::Note> range_display_labels_from_options_(std::int64_t size,
+                                                              const ThreadOptions& options) {
+  if (!options.rangelbl) {
+    return std::nullopt;
+  }
+  PLUSS_CHECK(size >= 0, "Thread: range labels size must be non-negative");
+  std::vector<std::string> labels;
+  labels.reserve(static_cast<std::size_t>(size));
+  for (std::int64_t i = 0; i < size; ++i) {
+    labels.push_back(std::to_string(i));
+  }
+  return make_utf8_note(labels);
+}
+
+pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_thread_impl_with_options_(
+    Payload payload,
+    std::optional<pluss::Series> validity_mask,
+    const ThreadOptions& options) {
+  const auto size = std::visit([](const auto& value) { return infer_size(value); }, payload);
+  return build_impl(std::move(payload),
+                    std::move(validity_mask),
+                    range_display_labels_from_options_(size, options),
+                    std::nullopt,
+                    options.rangelbl ? LabelKind::Case : LabelKind::Default);
+}
+
+} // namespace
+
 Thread::Thread(const pluss::Series& data, std::optional<pluss::Series> validity_mask)
     : impl_(build_impl(Payload{data}, std::move(validity_mask))) {}
+
+Thread::Thread(const pluss::Series& data, const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::nullopt, options)) {}
+
+Thread::Thread(const pluss::Series& data,
+               std::optional<pluss::Series> validity_mask,
+               const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::move(validity_mask), options)) {}
 
 Thread::Thread(const pluss::Note& data, std::optional<pluss::Series> validity_mask)
     : impl_(build_impl(Payload{data}, std::move(validity_mask))) {}
 
+Thread::Thread(const pluss::Note& data, const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::nullopt, options)) {}
+
+Thread::Thread(const pluss::Note& data,
+               std::optional<pluss::Series> validity_mask,
+               const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::move(validity_mask), options)) {}
+
 Thread::Thread(const pluss::Timeline& data, std::optional<pluss::Series> validity_mask)
     : impl_(build_impl(Payload{data}, std::move(validity_mask))) {}
 
+Thread::Thread(const pluss::Timeline& data, const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::nullopt, options)) {}
+
+Thread::Thread(const pluss::Timeline& data,
+               std::optional<pluss::Series> validity_mask,
+               const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::move(validity_mask), options)) {}
+
 Thread::Thread(const pluss::TimeIndex& data, std::optional<pluss::Series> validity_mask)
     : impl_(build_impl(Payload{data}, std::move(validity_mask))) {}
+
+Thread::Thread(const pluss::TimeIndex& data, const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::nullopt, options)) {}
+
+Thread::Thread(const pluss::TimeIndex& data,
+               std::optional<pluss::Series> validity_mask,
+               const ThreadOptions& options)
+    : impl_(build_thread_impl_with_options_(Payload{data}, std::move(validity_mask), options)) {}
 
 Thread::Thread(const Thread& other) = default;
 Thread::Thread(Thread&& other) noexcept = default;
@@ -39,9 +101,31 @@ detail::ThreadImpl& Thread::mut_impl_() {
   return *impl_;
 }
 
+namespace detail {
+
+LabelKind label_kind(const Thread& thread) {
+  return thread.impl_ref_().label_kind_;
+}
+
+Thread with_label_kind(const Thread& thread, LabelKind kind) {
+  auto out = thread;
+  return with_label_kind_(out, kind);
+}
+
+Thread& with_label_kind_(Thread& thread, LabelKind kind) {
+  thread.mut_impl_().label_kind_ = kind;
+  return thread;
+}
+
+} // namespace detail
+
 std::int64_t Thread::size() const { return impl_ref_().size_; }
+std::int64_t Thread::ncases() const { return size(); }
+std::pair<std::int64_t, std::int64_t> Thread::shape() const {
+  return {size(), 1};
+}
 ThreadKind Thread::kind() const { return impl_ref_().kind_; }
-std::string Thread::dtype_name() const { return impl_ref_().dtype_name_; }
+std::string Thread::dtype() const { return impl_ref_().dtype_; }
 ThreadValue Thread::value() const { return ThreadValue(*this); }
 bool Thread::is_valid(std::int64_t row) const {
   const auto idx = normalize_index(row, size());
@@ -79,12 +163,104 @@ Thread Thread::with_display_labels(const Thread& labels) const {
   }
 
   const auto& src = impl_ref_();
-  return Thread(build_impl(src.payload_, src.validity_mask_, make_utf8_note(values), src.display_name_));
+  return Thread(build_impl(src.payload_,
+                           src.validity_mask_,
+                           make_utf8_note(values),
+                           src.display_name_,
+                           LabelKind::Custom));
+}
+
+Thread& Thread::with_display_labels_(const Thread& labels) {
+  PLUSS_CHECK(labels.defined(), "Thread::with_display_labels_: labels are undefined");
+  PLUSS_CHECK(labels.size() == size(), "Thread::with_display_labels_: labels length mismatch");
+
+  std::vector<std::string> values;
+  values.reserve(static_cast<std::size_t>(size()));
+  for (std::int64_t i = 0; i < size(); ++i) {
+    values.push_back(thread_scalar_string_at(labels, i));
+  }
+
+  auto& w = mut_impl_();
+  w.display_labels_ = make_utf8_note(values);
+  w.label_kind_ = LabelKind::Custom;
+  return *this;
 }
 
 Thread Thread::clear_display_labels() const {
   const auto& src = impl_ref_();
   return Thread(build_impl(src.payload_, src.validity_mask_, std::nullopt, src.display_name_));
+}
+
+Thread& Thread::clear_display_labels_() {
+  mut_impl_().display_labels_.reset();
+  mut_impl_().label_kind_ = LabelKind::Default;
+  return *this;
+}
+
+bool Thread::has_caselbl() const {
+  return has_cases();
+}
+
+Thread Thread::caselbl() const {
+  return cases();
+}
+
+Thread Thread::caselbl(const Thread& labels) const {
+  return cases(labels);
+}
+
+Thread& Thread::caselbl_(const Thread& labels) {
+  return cases_(labels);
+}
+
+Thread Thread::rangelbl() const {
+  auto out = with_display_labels(default_thread_cases_(size()));
+  return detail::with_label_kind(out, LabelKind::Case);
+}
+
+Thread& Thread::rangelbl_() {
+  with_display_labels_(default_thread_cases_(size()));
+  detail::with_label_kind_(*this, LabelKind::Case);
+  return *this;
+}
+
+Thread Thread::clear_caselbl() const {
+  return clear_cases();
+}
+
+Thread& Thread::clear_caselbl_() {
+  return clear_cases_();
+}
+
+Thread Thread::align(const Thread& target_labels, const AlignOptions& options) const {
+  return align_thread_to_label_values_(*this, target_labels, options, "Thread::align");
+}
+
+bool Thread::has_cases() const {
+  return defined();
+}
+
+Thread Thread::cases() const {
+  if (has_display_labels()) {
+    return display_labels();
+  }
+  return default_thread_cases_(size());
+}
+
+Thread Thread::cases(const Thread& labels) const {
+  return with_display_labels(labels);
+}
+
+Thread& Thread::cases_(const Thread& labels) {
+  return with_display_labels_(labels);
+}
+
+Thread Thread::clear_cases() const {
+  return clear_display_labels();
+}
+
+Thread& Thread::clear_cases_() {
+  return clear_display_labels_();
 }
 
 bool Thread::has_display_name() const {
@@ -100,17 +276,29 @@ std::string Thread::display_name() const {
 Thread Thread::with_display_name(std::string name) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(!name.empty(), "Thread::with_display_name: name must not be empty");
-  return Thread(build_impl(src.payload_, src.validity_mask_, src.display_labels_, std::move(name)));
+  return Thread(build_impl(src.payload_,
+                           src.validity_mask_,
+                           src.display_labels_,
+                           std::move(name),
+                           src.label_kind_));
 }
 
 Thread Thread::clear_display_name() const {
   const auto& src = impl_ref_();
-  return Thread(build_impl(src.payload_, src.validity_mask_, src.display_labels_, std::nullopt));
+  return Thread(build_impl(src.payload_,
+                           src.validity_mask_,
+                           src.display_labels_,
+                           std::nullopt,
+                           src.label_kind_));
 }
 
 Thread Thread::with_validity_mask(const pluss::Series& validity_mask) const {
   const auto& src = impl_ref_();
-  return Thread(build_impl(src.payload_, validity_mask, src.display_labels_, src.display_name_));
+  return Thread(build_impl(src.payload_,
+                           validity_mask,
+                           src.display_labels_,
+                           src.display_name_,
+                           src.label_kind_));
 }
 
 Thread& Thread::with_validity_mask_(const pluss::Series& validity_mask) {
@@ -122,7 +310,11 @@ Thread& Thread::with_validity_mask_(const pluss::Series& validity_mask) {
 
 Thread Thread::clear_validity_mask() const {
   const auto& src = impl_ref_();
-  return Thread(build_impl(src.payload_, std::nullopt, src.display_labels_, src.display_name_));
+  return Thread(build_impl(src.payload_,
+                           std::nullopt,
+                           src.display_labels_,
+                           src.display_name_,
+                           src.label_kind_));
 }
 
 Thread& Thread::clear_validity_mask_() {
@@ -132,11 +324,17 @@ Thread& Thread::clear_validity_mask_() {
 }
 
 Thread Thread::isnull() const {
-  return Thread(thread_non_missing_mask(*this).logical_not());
+  auto out = Thread(thread_non_missing_mask(*this).logical_not());
+  return detail::has_display_labels(*this)
+             ? detail::with_display_labels(out, detail::display_labels(*this))
+             : out;
 }
 
 Thread Thread::notnull() const {
-  return Thread(thread_non_missing_mask(*this));
+  auto out = Thread(thread_non_missing_mask(*this));
+  return detail::has_display_labels(*this)
+             ? detail::with_display_labels(out, detail::display_labels(*this))
+             : out;
 }
 
 Thread Thread::isnan() const {
@@ -235,21 +433,23 @@ std::optional<pluss::Series> nullify_matches_mask(const Thread& t,
 } // namespace
 
 Thread Thread::put(const Thread& bool_mask, const Thread& value) const {
-  const auto mask = thread_put_mask_(bool_mask, size(), "Thread::put");
-  validate_thread_put_value_(*this, value, "Thread::put");
+  const auto aligned_mask = align_thread_to_cases_(bool_mask, *this, "Thread::put(mask)");
+  const auto aligned_value = align_thread_to_cases_(value, *this, "Thread::put(value)", true);
+  const auto mask = thread_put_mask_(aligned_mask, size(), "Thread::put");
+  validate_thread_put_value_(*this, aligned_value, "Thread::put");
 
   if (kind() == ThreadKind::Note) {
     const auto hit = mask.to_vec<bool>();
     auto out_valid = notnull().as_series().to_vec<bool>();
     std::vector<std::string> out_values;
     out_values.reserve(static_cast<std::size_t>(size()));
-    const bool scalar_value = value.size() == 1;
+    const bool scalar_value = aligned_value.size() == 1;
     for (std::int64_t i = 0; i < size(); ++i) {
       const auto idx = static_cast<std::size_t>(i);
       if (hit[idx]) {
         const auto rhs_row = scalar_value ? static_cast<std::int64_t>(0) : i;
-        out_values.emplace_back(value.as_note().at(rhs_row));
-        out_valid[idx] = value.is_valid(rhs_row);
+        out_values.emplace_back(aligned_value.as_note().at(rhs_row));
+        out_valid[idx] = aligned_value.is_valid(rhs_row);
       } else {
         out_values.emplace_back(as_note().at(i));
       }
@@ -257,7 +457,7 @@ Thread Thread::put(const Thread& bool_mask, const Thread& value) const {
     return Thread(rebuild_note_like(as_note(), out_values), optional_mask_from_valid(out_valid));
   }
 
-  return select({Thread(mask)}, {value}, *this);
+  return select({aligned_mask}, {aligned_value}, *this);
 }
 
 Thread Thread::put(const Thread& bool_mask, double value) const {
@@ -273,7 +473,8 @@ Thread Thread::put(const Thread& bool_mask, std::string_view value) const {
 }
 
 Thread Thread::put(const Thread& bool_mask, pluss::null_t) const {
-  const auto mask = thread_put_mask_(bool_mask, size(), "Thread::put");
+  const auto aligned_mask = align_thread_to_cases_(bool_mask, *this, "Thread::put(mask)");
+  const auto mask = thread_put_mask_(aligned_mask, size(), "Thread::put");
   bool changed = false;
   const auto new_mask = nullify_matches_mask(*this, mask, changed);
   if (!changed) {
@@ -542,6 +743,16 @@ Thread Thread::clip(double min_value, double max_value) const {
   return Thread(as_series().clamp(min_value, max_value), validity_mask());
 }
 
+Thread Thread::round(std::int64_t decimals) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::round is only valid for Series payload");
+  auto s = as_series();
+  if (decimals == 0) {
+    return Thread(s.round(), validity_mask());
+  }
+  const auto scale = std::pow(10.0, static_cast<double>(decimals));
+  return Thread(s.mul(scale).round().div(scale), validity_mask());
+}
+
 Thread Thread::log() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::log is only valid for Series payload");
   auto s = as_series();
@@ -721,7 +932,11 @@ Thread Thread::take(std::span<const std::int64_t> indices) const {
     out_display_labels = make_utf8_note(note_take_strings(*src.display_labels_, indices, src.size_));
   }
 
-  return Thread(build_impl(std::move(out_payload), std::move(out_mask), std::move(out_display_labels), src.display_name_));
+  return Thread(build_impl(std::move(out_payload),
+                           std::move(out_mask),
+                           std::move(out_display_labels),
+                           src.display_name_,
+                           src.label_kind_));
 }
 
 Thread Thread::filter(const pluss::Series& bool_mask) const {
@@ -729,7 +944,7 @@ Thread Thread::filter(const pluss::Series& bool_mask) const {
   return take(indices);
 }
 
-Thread Thread::dropna() const {
+Thread Thread::dropnull() const {
   if (!has_validity_mask()) {
     return *this;
   }
@@ -896,12 +1111,66 @@ Thread Thread::sort_values(bool ascending, bool nulls_last) const {
   return take(indices);
 }
 
-Thread Thread::ffill() const {
-  return forward_fill_thread(*this);
+Thread Thread::ffill(std::int64_t limit) const {
+  return forward_fill_thread(*this, limit);
 }
 
-Thread Thread::bfill() const {
-  return backward_fill_thread(*this);
+Thread Thread::bfill(std::int64_t limit) const {
+  return backward_fill_thread(*this, limit);
+}
+
+Thread Thread::interp(std::int64_t limit) const {
+  PLUSS_CHECK(limit == -1 || limit >= 0, "Thread::interp: limit must be -1 or >= 0");
+  PLUSS_CHECK(kind() == ThreadKind::Series && is_numeric_series_type(as_series()),
+              "Thread::interp is only valid for numeric Series payload");
+  if (limit == 0 || size() == 0) {
+    return *this;
+  }
+  auto valid = notnull().as_series().to_vec<bool>();
+  if (all_true(valid)) {
+    return *this;
+  }
+
+  const auto source = as_series().to(pluss::codem::ScalarType::Float64);
+  const auto platform = as_series().platform();
+  const auto values = source.to_vec<double>();
+  std::vector<double> out = values;
+
+  std::int64_t left = -1;
+  for (std::int64_t i = 0; i < size(); ++i) {
+    if (valid[static_cast<std::size_t>(i)]) {
+      if (left >= 0 && i - left > 1) {
+        const auto gap = i - left - 1;
+        const auto fill_count = limit < 0 ? gap : std::min<std::int64_t>(gap, limit);
+        const auto left_value = values[static_cast<std::size_t>(left)];
+        const auto right_value = values[static_cast<std::size_t>(i)];
+        for (std::int64_t k = 1; k <= fill_count; ++k) {
+          const auto pos = left + k;
+          const auto weight = static_cast<double>(k) / static_cast<double>(gap + 1);
+          out[static_cast<std::size_t>(pos)] =
+              left_value + (right_value - left_value) * weight;
+          valid[static_cast<std::size_t>(pos)] = true;
+        }
+      }
+      left = i;
+    }
+  }
+
+  auto series = pluss::Series::empty(
+      {size()}, pluss::codem::ScalarType::Float64, platform);
+  if (!out.empty()) {
+    auto cpu = pluss::Series::empty({size()}, pluss::codem::ScalarType::Float64);
+    std::memcpy(cpu.raw_data(), out.data(), out.size() * sizeof(double));
+    series = platform == pluss::codem::Platform::CPU ? cpu : cpu.to(platform);
+  }
+  if (all_true(valid)) {
+    return Thread(series);
+  }
+  auto mask = bool_series_from_bools(valid);
+  if (mask.platform() != platform) {
+    mask = mask.to(platform);
+  }
+  return Thread(series, mask);
 }
 
 Thread Thread::bucketize(pluss::msharp::RangeView::Double bins,
@@ -975,7 +1244,7 @@ Thread Thread::bucketize(pluss::msharp::RangeView::Double bins,
   return Thread(out, assigned);
 }
 
-Thread Thread::distinct(bool dropna) const {
+Thread Thread::distinct(bool dropnull) const {
   std::vector<std::int64_t> keep_indices;
   keep_indices.reserve(static_cast<std::size_t>(size()));
 
@@ -991,7 +1260,7 @@ Thread Thread::distinct(bool dropna) const {
   for (std::int64_t i = 0; i < size(); ++i) {
     const bool is_valid = !valid.has_value() || (*valid)[static_cast<std::size_t>(i)];
     if (!is_valid) {
-      if (!dropna && !null_emitted) {
+      if (!dropnull && !null_emitted) {
         keep_indices.push_back(i);
         null_emitted = true;
       }
@@ -1007,7 +1276,7 @@ Thread Thread::distinct(bool dropna) const {
   return take(keep_indices);
 }
 
-DataFrameView Thread::tally(std::int64_t top_n, bool dropna, bool render) const {
+DataFrameView Thread::tally(std::int64_t top_n, bool dropnull, bool render) const {
   PLUSS_CHECK(top_n >= 0, "Thread::tally: top_n must be >= 0");
 
   struct TallyRow {
@@ -1027,7 +1296,7 @@ DataFrameView Thread::tally(std::int64_t top_n, bool dropna, bool render) const 
 
   for (std::int64_t i = 0; i < size(); ++i) {
     const bool is_valid = !valid.has_value() || (*valid)[static_cast<std::size_t>(i)];
-    if (!is_valid && dropna) {
+    if (!is_valid && dropnull) {
       continue;
     }
     const std::string key = is_valid ? thread_scalar_string_at(*this, i) : "NA";
@@ -1081,14 +1350,14 @@ DataFrameView Thread::tally(std::int64_t top_n, bool dropna, bool render) const 
   return DataFrameView(std::move(out), render, "tally", "");
 }
 
-Thread Thread::freq(std::int64_t top_n, bool dropna) const {
-  DataFrame frame = tally(top_n, dropna, false);
-  return frame.features("count").with_display_labels(frame.features("value")).with_display_name("freq");
+Thread Thread::freq(std::int64_t top_n, bool dropnull) const {
+  DataFrame frame = tally(top_n, dropnull, false);
+  return frame.features("count").caselbl(frame.features("value")).with_display_name("freq");
 }
 
-ThreadValue Thread::ndistinct(bool dropna) const {
+ThreadValue Thread::ndistinct(bool dropnull) const {
   auto value = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
-  reinterpret_cast<std::int64_t*>(value.raw_data())[0] = distinct(dropna).size();
+  reinterpret_cast<std::int64_t*>(value.raw_data())[0] = distinct(dropnull).size();
   return ThreadValue(Thread(value));
 }
 
@@ -1133,8 +1402,8 @@ ThreadView Thread::describe(bool render) const {
 
   if (kind() == ThreadKind::Note) {
     const auto non_null = count(true).as_series().item<std::int64_t>();
-    const auto distinct_count = distinct(/*dropna=*/true).count(true).as_series().item<std::int64_t>();
-    auto counts = tally(/*top_n=*/0, /*dropna=*/true, /*render=*/false);
+    const auto distinct_count = distinct(/*dropnull=*/true).count(true).as_series().item<std::int64_t>();
+    auto counts = tally(/*top_n=*/0, /*dropnull=*/true, /*render=*/false);
 
     std::string top_value = "NA";
     std::int64_t top_freq = 0;
@@ -1162,7 +1431,7 @@ ThreadView Thread::describe(bool render) const {
         std::span<const std::int64_t>(shape.data(), shape.size()));
 
     auto out = Thread(payload)
-                   .with_display_labels(Thread(make_utf8_note({"count", "unique", "top", "freq"})))
+                   .caselbl(Thread(make_utf8_note({"count", "unique", "top", "freq"})))
                    .with_display_name(name);
     return ThreadView(std::move(out), render, "describe");
   }
@@ -1267,7 +1536,7 @@ ThreadValue Thread::median() const {
 }
 
 ThreadValue Thread::min() const {
-  auto observed = has_validity_mask() ? dropna() : *this;
+  auto observed = has_validity_mask() ? dropnull() : *this;
   PLUSS_CHECK(observed.size() > 0, "Thread::min on an empty (all-null) selection");
   switch (observed.kind()) {
     case ThreadKind::Series:
@@ -1292,7 +1561,7 @@ ThreadValue Thread::min() const {
 }
 
 ThreadValue Thread::max() const {
-  auto observed = has_validity_mask() ? dropna() : *this;
+  auto observed = has_validity_mask() ? dropnull() : *this;
   PLUSS_CHECK(observed.size() > 0, "Thread::max on an empty (all-null) selection");
   switch (observed.kind()) {
     case ThreadKind::Series:
@@ -1351,9 +1620,12 @@ ThreadValue Thread::std(bool unbiased) const {
 double Thread::corr(const Thread& other, ThreadCorrMethod method) const {
   PLUSS_CHECK(kind() == ThreadKind::Series && other.kind() == ThreadKind::Series,
               "Thread::corr: both operands must be Series");
-  PLUSS_CHECK(size() == other.size(), "Thread::corr: size mismatch");
   PLUSS_CHECK(is_numeric_series_type(as_series()) && is_numeric_series_type(other.as_series()),
               "Thread::corr: both operands must be numeric Series");
+  const auto aligned = align_thread_pair_for_cases_(*this, other, "Thread::corr");
+  if (aligned.aligned) {
+    return aligned.left.corr(aligned.right, method);
+  }
 
   auto lhs = as_series().to(pluss::codem::ScalarType::Float64);
   auto rhs = other.as_series().to(pluss::codem::ScalarType::Float64);
@@ -1462,8 +1734,8 @@ Thread Thread::rstrip(std::string_view chars) const {
 namespace {
 
 std::optional<pluss::Series> nullify_matches_mask(const Thread& t, const pluss::Series& matches, bool& changed) {
-  auto valid = t.has_validity_mask() ? t.validity_mask()->to_vec<bool>()
-                                     : std::vector<bool>(static_cast<std::size_t>(t.size()), true);
+  auto valid = detail::has_validity_mask(t) ? detail::validity_mask(t)->to_vec<bool>()
+                                           : std::vector<bool>(static_cast<std::size_t>(t.size()), true);
   const auto hit = matches.to_vec<bool>();
 
   changed = false;
@@ -1476,7 +1748,7 @@ std::optional<pluss::Series> nullify_matches_mask(const Thread& t, const pluss::
   }
 
   if (!changed) {
-    return t.validity_mask();
+    return detail::validity_mask(t);
   }
   return optional_mask_from_valid(valid);
 }
@@ -1660,9 +1932,34 @@ Thread Thread::replace(pluss::null_t, const pluss::TimeIndex& to) const {
   return fillna(to);
 }
 
-pluss::Series Thread::contains(std::string_view needle) const {
-  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::contains is only valid for Note payload");
-  return bool_series_from_u8(as_note().contains(needle));
+Thread Thread::has(double value) const {
+  return eq(value);
+}
+
+Thread Thread::has(std::string_view value) const {
+  return eq(value);
+}
+
+Thread Thread::has(const Thread& values) const {
+  PLUSS_CHECK(values.defined(), "Thread::has: values Thread is undefined");
+  auto out = Thread(pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool));
+  if (detail::has_display_labels(*this)) {
+    out = detail::with_display_labels(out, detail::display_labels(*this));
+  }
+  for (std::int64_t i = 0; i < values.size(); ++i) {
+    if (!values.is_valid(i)) {
+      continue;
+    }
+    if (values.kind() == ThreadKind::Series && is_numeric_series_type(values.as_series())) {
+      double scalar = 0.0;
+      PLUSS_CHECK(extract_numeric_value(values.as_series(), i, scalar),
+                  "Thread::has: failed to extract numeric membership value");
+      out = out.lor(has(scalar));
+    } else {
+      out = out.lor(has(thread_scalar_string_at(values, i)));
+    }
+  }
+  return out;
 }
 
 Thread Thread::year() const {
@@ -1719,7 +2016,9 @@ Thread Thread::numeric_binary(double other, ThreadBinaryMathOp op, bool reverse)
   if (kind() != ThreadKind::Series || !is_numeric_series_type(as_series())) {
     return *this;
   }
-  return Thread(apply_math_series_scalar(as_series(), other, op, reverse), validity_mask());
+  return carry_case_labels_for_alignment_(
+      Thread(apply_math_series_scalar(as_series(), other, op, reverse), validity_mask()),
+      *this);
 }
 
 Thread Thread::numeric_binary(const Thread& other, ThreadBinaryMathOp op) const {
@@ -1728,14 +2027,14 @@ Thread Thread::numeric_binary(const Thread& other, ThreadBinaryMathOp op) const 
   }
   PLUSS_CHECK(other.kind() == ThreadKind::Series && is_numeric_series_type(other.as_series()),
               "Thread::numeric_binary: rhs must be numeric Series");
-  return Thread(
-      apply_math_series_series(as_series(), other.as_series(), op),
-      combine_validity_masks(*this, other));
+  return aligned_numeric_binary_(*this, other, op, "Thread::numeric_binary");
 }
 
 Thread Thread::compare(double other, ThreadBinaryCompareOp op) const {
   if (kind() == ThreadKind::Series) {
-    return Thread(apply_compare_series_scalar(as_series(), other, op), validity_mask());
+    return carry_case_labels_for_alignment_(
+        Thread(apply_compare_series_scalar(as_series(), other, op), validity_mask()),
+        *this);
   }
 
   auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
@@ -1762,7 +2061,7 @@ Thread Thread::compare(double other, ThreadBinaryCompareOp op) const {
       p[i] = false;
     }
   }
-  return Thread(out, validity_mask());
+  return carry_case_labels_for_alignment_(Thread(out, validity_mask()), *this);
 }
 
 Thread Thread::compare(std::string_view other, ThreadBinaryCompareOp op) const {
@@ -1788,7 +2087,7 @@ Thread Thread::compare(std::string_view other, ThreadBinaryCompareOp op) const {
         raw = (as_note() >= other);
         break;
     }
-    return Thread(bool_series_from_u8(raw), validity_mask());
+    return carry_case_labels_for_alignment_(Thread(bool_series_from_u8(raw), validity_mask()), *this);
   }
 
   auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
@@ -1827,108 +2126,72 @@ Thread Thread::compare(std::string_view other, ThreadBinaryCompareOp op) const {
         break;
     }
   }
-  return Thread(out, validity_mask());
+  return carry_case_labels_for_alignment_(Thread(out, validity_mask()), *this);
 }
 
 Thread Thread::compare(const pluss::Series& other, ThreadBinaryCompareOp op) const {
   PLUSS_CHECK(other.defined(), "Thread::compare(Series): rhs Series is undefined");
-  if (other.numel() == 1) {
+  if (other.dim() == 0) {
     double rhs_value = 0.0;
     PLUSS_CHECK(extract_numeric_value(other, 0, rhs_value),
                 "Thread::compare(Series): scalar rhs Series must be numeric or bool");
     return compare(rhs_value, op);
   }
   PLUSS_CHECK(other.dim() == 1, "Thread::compare(Series): rhs Series must be scalar or 1D");
+  if (other.numel() != size()) {
+    throw ::pluss::Error("Thread::compare(Series): positional comparison requires identical lengths");
+  }
   return compare(Thread(other), op);
 }
 
 Thread Thread::compare(const pluss::Note& other, ThreadBinaryCompareOp op) const {
   PLUSS_CHECK(other.defined(), "Thread::compare(Note): rhs Note is undefined");
-  if (other.numel() == 1) {
+  if (other.dim() == 0) {
     return compare(other.at(0), op);
   }
   PLUSS_CHECK(other.dim() == 1, "Thread::compare(Note): rhs Note must be scalar or 1D");
+  if (other.numel() != size()) {
+    throw ::pluss::Error("Thread::compare(Note): positional comparison requires identical lengths");
+  }
   return compare(Thread(other), op);
 }
 
 Thread Thread::compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) const {
   PLUSS_CHECK(other.defined(), "Thread::compare(Timeline): rhs Timeline is undefined");
-  if (other.numel() == 1 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
+  if (other.dim() == 0 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
     const auto& lhs = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
-    return Thread(apply_compare_timeline_timeline(lhs, other, op), validity_mask());
+    return carry_case_labels_for_alignment_(
+        Thread(apply_compare_timeline_timeline(lhs, other, op), validity_mask()),
+        *this);
   }
   PLUSS_CHECK(other.dim() == 1, "Thread::compare(Timeline): rhs Timeline must be scalar or 1D");
+  if (other.numel() != size()) {
+    throw ::pluss::Error("Thread::compare(Timeline): positional comparison requires identical lengths");
+  }
   return compare(Thread(other), op);
 }
 
 Thread Thread::compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const {
   PLUSS_CHECK(other.timeline().defined(), "Thread::compare(TimeIndex): rhs TimeIndex is undefined");
-  if (other.size() == 1 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
+  if (other.timeline().dim() == 0 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
     const auto& lhs = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
-    return Thread(
-        apply_compare_timeline_timeline(lhs, other.timeline(), op),
-        validity_mask());
+    return carry_case_labels_for_alignment_(
+        Thread(
+            apply_compare_timeline_timeline(lhs, other.timeline(), op),
+            validity_mask()),
+        *this);
+  }
+  if (other.size() != size()) {
+    throw ::pluss::Error("Thread::compare(TimeIndex): positional comparison requires identical lengths");
   }
   return compare(Thread(other), op);
 }
 
 Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
-  if (kind() == ThreadKind::Series && other.kind() == ThreadKind::Series) {
-    auto out = apply_compare_series_series(as_series(), other.as_series(), op);
-    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
+  if (other.size() != size()) {
+    throw ::pluss::Error("Thread::compare: positional alignment requires identical lengths");
   }
-
-  if (kind() == ThreadKind::Timeline && other.kind() == ThreadKind::Timeline) {
-    const auto& lhs = as_timeline();
-    const auto& rhs = other.as_timeline();
-    auto out = apply_compare_timeline_timeline(lhs, rhs, op);
-    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
-  }
-
-  if (kind() == ThreadKind::TimeIndex && other.kind() == ThreadKind::TimeIndex) {
-    const auto& lhs = as_timeindex().timeline();
-    const auto& rhs = other.as_timeindex().timeline();
-    auto out = apply_compare_timeline_timeline(lhs, rhs, op);
-    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
-  }
-
-  if (kind() == ThreadKind::Note && other.kind() == ThreadKind::Note) {
-    const auto& lhs = as_note();
-    const auto& rhs = other.as_note();
-    std::vector<std::uint8_t> raw;
-    switch (op) {
-      case ThreadBinaryCompareOp::Eq:
-        raw = (lhs == rhs);
-        break;
-      case ThreadBinaryCompareOp::Ne:
-        raw = (lhs != rhs);
-        break;
-      case ThreadBinaryCompareOp::Lt:
-        raw = (lhs < rhs);
-        break;
-      case ThreadBinaryCompareOp::Le:
-        raw = (lhs <= rhs);
-        break;
-      case ThreadBinaryCompareOp::Gt:
-        raw = (lhs > rhs);
-        break;
-      case ThreadBinaryCompareOp::Ge:
-        raw = (lhs >= rhs);
-        break;
-    }
-    auto out = bool_series_from_u8(raw);
-    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
-  }
-
-  if ((kind() == ThreadKind::Timeline && other.kind() == ThreadKind::TimeIndex)
-      || (kind() == ThreadKind::TimeIndex && other.kind() == ThreadKind::Timeline)) {
-    const auto lhs_t = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
-    const auto rhs_t = (other.kind() == ThreadKind::Timeline) ? other.as_timeline() : other.as_timeindex().timeline();
-    auto out = apply_compare_timeline_timeline(lhs_t, rhs_t, op);
-    return Thread(out, combine_validity_masks_broadcast(*this, other, out.numel()));
-  }
-
-  PLUSS_FAIL("Thread::compare: unsupported payload combination");
+  return aligned_compare_(*this, other, op, "Thread::compare");
 }
 
 Thread Thread::btw(double a, double b, bool inclusive) const {
@@ -1982,8 +2245,6 @@ Thread Thread::btw(const Thread& lo, const Thread& hi, bool inclusive) const {
 
 Thread Thread::btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
   PLUSS_CHECK(lo.defined() && hi.defined(), "Thread::btw(Thread,Thread,...): lower/upper bounds must be defined");
-  PLUSS_CHECK(size() == lo.size() && size() == hi.size(),
-              "Thread::btw(Thread,Thread,...): lower/upper bounds must match thread size");
   const auto left = include_left ? (*this >= lo) : (*this > lo);
   const auto right = include_right ? (*this <= hi) : (*this < hi);
   return (left & right);
@@ -2633,21 +2894,60 @@ Thread TimeSeriesAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode, 
   return Thread(pluss::subsp::stats::ts::fill_gaps(series_payload_("fill_gaps"), mode, constant));
 }
 
+namespace {
+
+std::string_view time_series_resample_op_key_(pluss::subsp::stats::ts::ResampleOp op) {
+  using ResampleOp = pluss::subsp::stats::ts::ResampleOp;
+  switch (op) {
+    case ResampleOp::Mean:
+      return "mean";
+    case ResampleOp::Sum:
+      return "sum";
+    case ResampleOp::Min:
+      return "min";
+    case ResampleOp::Max:
+      return "max";
+    case ResampleOp::First:
+      return "first";
+    case ResampleOp::Last:
+      return "last";
+    case ResampleOp::Count:
+      return "count";
+  }
+  PLUSS_FAIL("TimeSeriesAccessor::resample: unsupported ResampleOp");
+}
+
+}  // namespace
+
 TimeSeriesResample TimeSeriesAccessor::resample(const Thread& axis,
                                                 std::string_view freq,
                                                 pluss::subsp::stats::ts::ResampleOp op,
                                                 std::int64_t step) const {
+  return resample(axis,
+                  pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step},
+                  op);
+}
+
+TimeSeriesResample TimeSeriesAccessor::resample(
+    const Thread& axis,
+    const pluss::TimeIndex::ResampleOptions& options,
+    pluss::subsp::stats::ts::ResampleOp op) const {
   PLUSS_CHECK(axis.defined(), "TimeSeriesAccessor::resample: axis Thread is undefined");
   PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
               "TimeSeriesAccessor::resample: axis must be Timeline or TimeIndex");
   const auto time_index = (axis.kind() == ThreadKind::TimeIndex)
                               ? axis.as_timeindex()
                               : axis.as_timeline().to_timeindex(false);
-  const auto out = pluss::subsp::stats::ts::resample(
-      time_index, series_payload_("resample"), freq, op, step);
-  PLUSS_CHECK(out.labels.has_value(), "TimeSeriesAccessor::resample: missing resample labels");
+  const auto bins = time_index.resample_bins(options);
+  const auto values =
+      op == pluss::subsp::stats::ts::ResampleOp::Count
+          ? time_index.resample_sum(base_.notnull().as_series().to(pluss::codem::ScalarType::Int64), options)
+          : time_index.resample_agg(
+                series_payload_("resample"),
+                options,
+                time_series_resample_op_key_(op));
   return TimeSeriesResample{
-      .labels = Thread(*out.labels),
-      .values = Thread(out.values),
+      .labels = Thread(bins.labels),
+      .values = Thread(values),
   };
 }

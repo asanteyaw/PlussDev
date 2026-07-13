@@ -1,38 +1,41 @@
 # Atlas API Reference
 
-# Practical Atlas API Reference
-
-## API Reference Style
-
 This page documents the full public `Atlas` surface for frame-stack workflows.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
+
+## A
 
 ### `aggregate_over_frames`
 
 #### Signature
 
 ```cpp
-Atlas::aggregate_over_frames(fn: const std::function<DataFrame(const std::vector<DataFrame>&)>&) -> DataFrame
+Atlas::aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 Reduces the full frame stack to one output by applying an aggregation function across the contained frames.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<DataFrame(const std::vector<DataFrame>&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -46,7 +49,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.aggregate_over_frames([](const std::vector<pluss::table::DataFrame>& frames) { return frames.front(); });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
@@ -59,34 +62,38 @@ sales
 - `aggregate_over_frames(...)` hands the full frame vector to your reducer and expects one output object back.
 - Use it when the aggregation depends on multiple frames together rather than frame-by-frame mapping.
 
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#align_depth">
+    <span class="label">Next</span>
+    <span class="title">align_depth</span>
+  </a>
+</div>
 
 ### `align_depth`
 
 #### Signature
 
 ```cpp
-Atlas::align_depth(labels: const Thread&) -> Atlas
+Atlas::align_depth(const Thread& labels) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Reorders frames so their depth labels match the supplied label order.
 
-#### Inputs
+#### Parameters
 
-`labels` : `const Thread&`
+**labels**
     Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -101,7 +108,7 @@ auto labels = pluss::table::Thread(pluss::make_note({"baseline", "stress"}));
 auto out = atlas.align_depth(labels);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -120,6 +127,16 @@ sales
 - `align_depth(labels)` reorders frames to match the requested depth label order.
 - Use it when two atlases should share the same depth layout before comparison or combination.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#aggregate_over_frames">
+    <span class="label">Previous</span>
+    <span class="title">aggregate_over_frames</span>
+  </a>
+  <a class="next-link" href="#axis0_labels">
+    <span class="label">Next</span>
+    <span class="title">axis0_labels</span>
+  </a>
+</div>
 
 ### `axis0_labels`
 
@@ -129,24 +146,22 @@ sales
 Atlas::axis0_labels() -> const std::optional<Thread>&
 ```
 
-#### Notes
+#### What It Does
 
 Returns the current labels used to address fields, slots, rows, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::optional<Thread>&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -160,11 +175,23 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.axis0_labels();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ["train", "test"]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#align_depth">
+    <span class="label">Previous</span>
+    <span class="title">align_depth</span>
+  </a>
+  <a class="next-link" href="#column_names">
+    <span class="label">Next</span>
+    <span class="title">column_names</span>
+  </a>
+</div>
+
+## C
 
 ### `column_names`
 
@@ -174,24 +201,22 @@ auto out = atlas.axis0_labels();
 Atlas::column_names() -> const std::vector<std::string>&
 ```
 
-#### Notes
+#### What It Does
 
 Returns the current labels used to address fields, slots, rows, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::vector<std::string>&`
     Borrowed list of names.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several names together from a standard string container.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -205,11 +230,23 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.column_names();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ["sales"]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#axis0_labels">
+    <span class="label">Previous</span>
+    <span class="title">axis0_labels</span>
+  </a>
+  <a class="next-link" href="#defined">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
+  </a>
+</div>
+
+## D
 
 ### `defined`
 
@@ -219,24 +256,22 @@ auto out = atlas.column_names();
 Atlas::defined() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `defined` property of the current object.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -250,11 +285,21 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.defined();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#column_names">
+    <span class="label">Previous</span>
+    <span class="title">column_names</span>
+  </a>
+  <a class="next-link" href="#depth">
+    <span class="label">Next</span>
+    <span class="title">depth</span>
+  </a>
+</div>
 
 ### `depth`
 
@@ -264,24 +309,22 @@ true
 Atlas::depth() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `depth` property of the current object.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -295,39 +338,47 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.depth();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 2
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#dloc">
+    <span class="label">Next</span>
+    <span class="title">dloc</span>
+  </a>
+</div>
 
 ### `dloc`
 
 #### Signature
 
 ```cpp
-Atlas::dloc(index: std::int64_t) -> DataFrame
+Atlas::dloc(std::int64_t index) -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
+#### Parameters
 
-#### Inputs
-
-`index` : `std::int64_t`
+**index**
     Zero-based positional index used by this overload.
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -341,7 +392,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.dloc(1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
@@ -354,6 +405,18 @@ sales
 - `dloc(i)` is the positional depth-access alias for `frame(i)`.
 - Use it when you want the depth-axis wording to be explicit.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#depth">
+    <span class="label">Previous</span>
+    <span class="title">depth</span>
+  </a>
+  <a class="next-link" href="#empty">
+    <span class="label">Next</span>
+    <span class="title">empty</span>
+  </a>
+</div>
+
+## E
 
 ### `empty`
 
@@ -363,24 +426,22 @@ sales
 Atlas::empty() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object has no rows, entries, slots, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `empty` property of the current object.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -394,39 +455,49 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.empty();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 false
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#dloc">
+    <span class="label">Previous</span>
+    <span class="title">dloc</span>
+  </a>
+  <a class="next-link" href="#flow">
+    <span class="label">Next</span>
+    <span class="title">flow</span>
+  </a>
+</div>
+
+## F
 
 ### `flow`
 
 #### Signature
 
 ```cpp
-Atlas::flow(fn: const std::function<Atlas(const Atlas&)>&) -> Atlas
+Atlas::flow(const std::function<Atlas(const Atlas&)>& fn) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
+#### Parameters
 
-#### Inputs
-
-`fn` : `const std::function<Atlas(const Atlas&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -440,39 +511,47 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.flow();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#empty">
+    <span class="label">Previous</span>
+    <span class="title">empty</span>
+  </a>
+  <a class="next-link" href="#frame">
+    <span class="label">Next</span>
+    <span class="title">frame</span>
+  </a>
+</div>
 
 ### `frame`
 
 #### Signature
 
 ```cpp
-Atlas::frame(index: std::int64_t) -> DataFrame
+Atlas::frame(std::int64_t index) -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`index` : `std::int64_t`
+**index**
     Zero-based positional index used by this overload.
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -486,13 +565,23 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.frame(0);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
 10.0
 20.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#flow">
+    <span class="label">Previous</span>
+    <span class="title">flow</span>
+  </a>
+  <a class="next-link" href="#frames">
+    <span class="label">Next</span>
+    <span class="title">frames</span>
+  </a>
+</div>
 
 ### `frames`
 
@@ -502,24 +591,22 @@ sales
 Atlas::frames() -> const std::vector<DataFrame>&
 ```
 
-#### Notes
+#### What It Does
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::vector<DataFrame>&`
     Borrowed collection of frames.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -533,39 +620,49 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.frames();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 [frame0, frame1]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#frame">
+    <span class="label">Previous</span>
+    <span class="title">frame</span>
+  </a>
+  <a class="next-link" href="#head">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>
+
+## H
 
 ### `head`
 
 #### Signature
 
 ```cpp
-Atlas::head(n: std::int64_t = 5) -> Atlas
+Atlas::head(std::int64_t n = 5) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Returns the first `n` frames from the atlas depth axis.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the first part of the current object without changing the source data.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -579,7 +676,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.head(1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -592,88 +689,46 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#frames">
+    <span class="label">Previous</span>
+    <span class="title">frames</span>
+  </a>
+  <a class="next-link" href="#kindelize">
+    <span class="label">Next</span>
+    <span class="title">kindelize</span>
+  </a>
+</div>
+
+## K
 
 ### `kindelize`
 
-#### Signature
+#### Signatures
 
 ```cpp
 Atlas::kindelize() -> pluss::kindle::Archive
+
+Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) -> pluss::kindle::Archive
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`None`
-
-#### Output
-
-`pluss::kindle::Archive`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::kindelize(policy: const pluss::kindle::KindelizePolicy&) -> pluss::kindle::Archive`
-
-#### Examples
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.kindelize();
-```
-
-#### Expected output
-
-```text
-train -> Catalog(metric -> Series([10.0, 20.0]))
-test  -> Catalog(metric -> Series([30.0, 40.0]))
-```
-
-### `kindelize`
-
-#### Signature
-
-```cpp
-Atlas::kindelize(policy: const pluss::kindle::KindelizePolicy&) -> pluss::kindle::Archive
-```
-
-#### Notes
-
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
-
-#### Inputs
-
-`policy` : `const pluss::kindle::KindelizePolicy&`
+**policy**
     Policy object that changes the structural behavior of this overload.
 
-#### Output
+#### Returns
 
 `pluss::kindle::Archive`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::kindelize() -> pluss::kindle::Archive`
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -687,45 +742,74 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.kindelize();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 train -> Catalog(metric -> Series([10.0, 20.0]))
 test  -> Catalog(metric -> Series([30.0, 40.0]))
 ```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.kindelize();
+```
+
+##### Output
+
+```text
+train -> Catalog(metric -> Series([10.0, 20.0]))
+test  -> Catalog(metric -> Series([30.0, 40.0]))
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="#loc">
+    <span class="label">Next</span>
+    <span class="title">loc</span>
+  </a>
+</div>
+
+## L
 
 ### `loc`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Atlas::loc(label: const pluss::Timeline&) -> DataFrame
+Atlas::loc(const pluss::Timeline& label) -> DataFrame
+
+Atlas::loc(std::int64_t label) -> DataFrame
+
+Atlas::loc(std::string_view label) -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`label` : `const pluss::Timeline&`
+**label**
     Label or labels used by this overload.
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::loc(label: std::string_view) -> DataFrame`
-- `Atlas::loc(label: std::int64_t) -> DataFrame`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -740,46 +824,14 @@ auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_no
 auto out = labeled.loc("test");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
 10.0
 20.0
 ```
-
-### `loc`
-
-#### Signature
-
-```cpp
-Atlas::loc(label: std::int64_t) -> DataFrame
-```
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Inputs
-
-`label` : `std::int64_t`
-    Integer label or bucket code used by this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::loc(label: std::string_view) -> DataFrame`
-- `Atlas::loc(label: const pluss::Timeline&) -> DataFrame`
-
-#### Examples
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -794,46 +846,14 @@ auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_no
 auto out = labeled.loc("test");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
 10.0
 20.0
 ```
-
-### `loc`
-
-#### Signature
-
-```cpp
-Atlas::loc(label: std::string_view) -> DataFrame
-```
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Inputs
-
-`label` : `std::string_view`
-    Label or labels used by this overload.
-
-#### Output
-
-`DataFrame`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::loc(label: std::int64_t) -> DataFrame`
-- `Atlas::loc(label: const pluss::Timeline&) -> DataFrame`
-
-#### Examples
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -848,41 +868,51 @@ auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_no
 auto out = labeled.loc("test");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
 10.0
 20.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
+  </a>
+  <a class="next-link" href="#map">
+    <span class="label">Next</span>
+    <span class="title">map</span>
+  </a>
+</div>
+
+## M
 
 ### `map`
 
 #### Signature
 
 ```cpp
-Atlas::map(fn: const std::function<ThreadValue(const ThreadValue&)>&) -> Atlas
+Atlas::map(const std::function<ThreadValue(const ThreadValue&)>& fn) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<ThreadValue(const ThreadValue&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -896,39 +926,47 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.map();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#loc">
+    <span class="label">Previous</span>
+    <span class="title">loc</span>
+  </a>
+  <a class="next-link" href="#map_frames">
+    <span class="label">Next</span>
+    <span class="title">map_frames</span>
+  </a>
+</div>
 
 ### `map_frames`
 
 #### Signature
 
 ```cpp
-Atlas::map_frames(fn: const std::function<DataFrame(const DataFrame&)>&) -> Atlas
+Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Applies the same function to each frame and returns the transformed atlas.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<DataFrame(const DataFrame&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -942,7 +980,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.map_frames([](const pluss::table::DataFrame& frame) { return frame.head(1, false); });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -955,6 +993,18 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#map">
+    <span class="label">Previous</span>
+    <span class="title">map</span>
+  </a>
+  <a class="next-link" href="#ncases">
+    <span class="label">Next</span>
+    <span class="title">ncases</span>
+  </a>
+</div>
+
+## N
 
 ### `ncases`
 
@@ -964,24 +1014,22 @@ sales
 Atlas::ncases() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
-
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -995,11 +1043,21 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.ncases();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#map_frames">
+    <span class="label">Previous</span>
+    <span class="title">map_frames</span>
+  </a>
+  <a class="next-link" href="#nfeats">
+    <span class="label">Next</span>
+    <span class="title">nfeats</span>
+  </a>
+</div>
 
 ### `nfeats`
 
@@ -1009,24 +1067,22 @@ The call completes and returns the contract described under Output.
 Atlas::nfeats() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
-
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1040,92 +1096,51 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.nfeats();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ncases">
+    <span class="label">Previous</span>
+    <span class="title">ncases</span>
+  </a>
+  <a class="next-link" href="#plot">
+    <span class="label">Next</span>
+    <span class="title">plot</span>
+  </a>
+</div>
+
+## P
 
 ### `plot`
 
-#### Signature
+#### Signatures
 
 ```cpp
 Atlas::plot() -> AtlasPlotAccessor
+
+Atlas::plot(const AtlasPlotOptions& options) -> AtlasPlotAccessor
 ```
 
-#### Notes
+#### What It Does
 
 This opens the plotting accessor for the current data object.
 
-#### Inputs
+#### Parameters
 
-`None`
-
-#### Output
-
-`AtlasPlotAccessor`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::plot(options: const AtlasPlotOptions&) -> AtlasPlotAccessor`
-
-#### Examples
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto fig = atlas.plot(0).line("sales");
-```
-
-#### Expected output
-
-```text
-Figure(line)
-```
-
-### `plot`
-
-#### Signature
-
-```cpp
-Atlas::plot(options: const AtlasPlotOptions&) -> AtlasPlotAccessor
-```
-
-#### Notes
-
-This opens the plotting accessor for the current data object.
-
-#### Inputs
-
-`options` : `const AtlasPlotOptions&`
+**options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Output
+#### Returns
 
 `AtlasPlotAccessor`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::plot() -> AtlasPlotAccessor`
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1139,39 +1154,68 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto fig = atlas.plot(0).line("sales");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Figure(line)
 ```
+Example 2. Pass an explicit options object to control the operation.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto fig = atlas.plot(0).line("sales");
+```
+
+##### Output
+
+```text
+Figure(line)
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#nfeats">
+    <span class="label">Previous</span>
+    <span class="title">nfeats</span>
+  </a>
+  <a class="next-link" href="#relabel_depth">
+    <span class="label">Next</span>
+    <span class="title">relabel_depth</span>
+  </a>
+</div>
+
+## R
 
 ### `relabel_depth`
 
 #### Signature
 
 ```cpp
-Atlas::relabel_depth(labels: const Thread&) -> Atlas
+Atlas::relabel_depth(const Thread& labels) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Replaces the depth-label axis with the supplied labels while keeping frame contents unchanged.
 
-#### Inputs
+#### Parameters
 
-`labels` : `const Thread&`
+**labels**
     Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1186,7 +1230,7 @@ auto labels = pluss::table::Thread(pluss::make_note({"baseline", "stress"}));
 auto out = atlas.relabel_depth(labels);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1199,99 +1243,49 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#plot">
+    <span class="label">Previous</span>
+    <span class="title">plot</span>
+  </a>
+  <a class="next-link" href="#show">
+    <span class="label">Next</span>
+    <span class="title">show</span>
+  </a>
+</div>
+
+## S
 
 ### `show`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Atlas::show(options: const display::DisplayOptions& = {}) -> void
+Atlas::show(const display::DisplayOptions& options = {}) -> void
+
+Atlas::show(std::ostream& os, const display::DisplayOptions& options = {}) -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
-`options` : `const display::DisplayOptions&`
+**options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Output
-
-`void`
-    Performs the side effect and returns no value.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::show(os: std::ostream&, options: const display::DisplayOptions& = {}) -> void`
-
-#### Examples
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-atlas.show();
-```
-
-#### Expected output
-
-```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
-```
-
-### `show`
-
-#### Signature
-
-```cpp
-Atlas::show(os: std::ostream&, options: const display::DisplayOptions& = {}) -> void
-```
-
-#### Notes
-
-This renders a human-readable view for inspection instead of creating a new analytic object.
-
-#### Inputs
-
-`os` : `std::ostream&`
+**os**
     Destination output stream used instead of the default display or print target.
 
-`options` : `const display::DisplayOptions&`
-    Typed loader, renderer, SQL, plotting, or policy options for this overload.
-
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::show(options: const display::DisplayOptions& = {}) -> void`
-
 #### Examples
+
+Example 1. Pass an explicit options object to control the operation.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1305,7 +1299,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 atlas.show();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1318,37 +1312,72 @@ sales
 30.0
 40.0
 ```
+Example 2. Write the output to a caller-provided stream.
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+atlas.show();
+```
+
+##### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#relabel_depth">
+    <span class="label">Previous</span>
+    <span class="title">relabel_depth</span>
+  </a>
+  <a class="next-link" href="#slice_frames">
+    <span class="label">Next</span>
+    <span class="title">slice_frames</span>
+  </a>
+</div>
 
 ### `slice_frames`
 
 #### Signature
 
 ```cpp
-Atlas::slice_frames(start: std::int64_t, stop: std::int64_t) -> Atlas
+Atlas::slice_frames(std::int64_t start, std::int64_t stop) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Returns a contiguous depth slice `[start, stop)` from the atlas.
 
-#### Inputs
+#### Parameters
 
-`start` : `std::int64_t`
+**start**
     Inclusive starting position of the slice.
 
-`stop` : `std::int64_t`
+**stop**
     Exclusive ending position of the slice.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1362,7 +1391,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.slice_frames(0, 1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1375,37 +1404,45 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
+  </a>
+  <a class="next-link" href="#sort_depth">
+    <span class="label">Next</span>
+    <span class="title">sort_depth</span>
+  </a>
+</div>
 
 ### `sort_depth`
 
 #### Signature
 
 ```cpp
-Atlas::sort_depth(ascending: bool = true, nulls_last: bool = true) -> Atlas
+Atlas::sort_depth(bool ascending = true, bool nulls_last = true) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Sorts frames by their current depth labels.
 
-#### Inputs
+#### Parameters
 
-`ascending` : `bool`
+**ascending**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
-`nulls_last` : `bool`
+**nulls_last**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1420,7 +1457,7 @@ auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_no
 auto out = labeled.sort_depth(true, true);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1433,6 +1470,16 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#slice_frames">
+    <span class="label">Previous</span>
+    <span class="title">slice_frames</span>
+  </a>
+  <a class="next-link" href="#squeeze">
+    <span class="label">Next</span>
+    <span class="title">squeeze</span>
+  </a>
+</div>
 
 ### `squeeze`
 
@@ -1442,24 +1489,22 @@ sales
 Atlas::squeeze() -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 Collapses a depth-1 atlas back into a single `DataFrame`.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1473,102 +1518,56 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.squeeze();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 sales
 10.0
 20.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#sort_depth">
+    <span class="label">Previous</span>
+    <span class="title">sort_depth</span>
+  </a>
+  <a class="next-link" href="#tabelize">
+    <span class="label">Next</span>
+    <span class="title">tabelize</span>
+  </a>
+</div>
+
+## T
 
 ### `tabelize`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Atlas::tabelize(archive: const pluss::kindle::Archive&) -> Atlas
+Atlas::tabelize(const pluss::kindle::Archive& archive) -> Atlas
+
+Atlas::tabelize(const pluss::kindle::Archive& archive, const pluss::kindle::TabelizePolicy& policy) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`archive` : `const pluss::kindle::Archive&`
+**archive**
     Archive payload supplied to this overload.
 
-#### Output
-
-`Atlas`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::tabelize(archive: const pluss::kindle::Archive&, policy: const pluss::kindle::TabelizePolicy&) -> Atlas`
-
-#### Examples
-
-```cpp
-using namespace pluss::kindle::literals;
-auto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});
-auto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});
-auto archive = pluss::kindle::Archive({c0, c1});
-auto out = pluss::table::Atlas::tabelize(archive);
-```
-
-#### Expected output
-
-```text
-frame0:
-sales
-10.0
-20.0
-
-frame1:
-sales
-30.0
-40.0
-```
-
-### `tabelize`
-
-#### Signature
-
-```cpp
-Atlas::tabelize(archive: const pluss::kindle::Archive&, policy: const pluss::kindle::TabelizePolicy&) -> Atlas
-```
-
-#### Notes
-
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
-
-#### Inputs
-
-`archive` : `const pluss::kindle::Archive&`
-    Archive payload supplied to this overload.
-
-`policy` : `const pluss::kindle::TabelizePolicy&`
+**policy**
     Policy object that changes the structural behavior of this overload.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::tabelize(archive: const pluss::kindle::Archive&) -> Atlas`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 using namespace pluss::kindle::literals;
@@ -1578,7 +1577,7 @@ auto archive = pluss::kindle::Archive({c0, c1});
 auto out = pluss::table::Atlas::tabelize(archive);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1591,34 +1590,65 @@ sales
 30.0
 40.0
 ```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});
+auto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});
+auto archive = pluss::kindle::Archive({c0, c1});
+auto out = pluss::table::Atlas::tabelize(archive);
+```
+
+##### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#squeeze">
+    <span class="label">Previous</span>
+    <span class="title">squeeze</span>
+  </a>
+  <a class="next-link" href="#tail">
+    <span class="label">Next</span>
+    <span class="title">tail</span>
+  </a>
+</div>
 
 ### `tail`
 
 #### Signature
 
 ```cpp
-Atlas::tail(n: std::int64_t = 5) -> Atlas
+Atlas::tail(std::int64_t n = 5) -> Atlas
 ```
 
-#### Notes
+#### What It Does
 
 Returns the last `n` frames from the atlas depth axis.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Atlas`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the last part of the current object without changing the source data.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1632,7 +1662,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.tail(1);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1645,39 +1675,49 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tabelize">
+    <span class="label">Previous</span>
+    <span class="title">tabelize</span>
+  </a>
+  <a class="next-link" href="#tl">
+    <span class="label">Next</span>
+    <span class="title">tl</span>
+  </a>
+</div>
 
 ### `tl`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Atlas::tl(feature: std::string_view) -> AtlasTimelineAccessor
+Atlas::tl(pluss::RangeView<std::string_view> features = {}) -> AtlasTimelineAccessor
+
+Atlas::tl(std::initializer_list<std::string_view> features) -> AtlasTimelineAccessor
+
+Atlas::tl(std::string_view feature) -> AtlasTimelineAccessor
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the time-aware surface and expects timeline or time-index semantics.
 
-#### Inputs
+#### Parameters
 
-`feature` : `std::string_view`
+**features**
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+**feature**
     Name of the source feature used by the operation.
 
-#### Output
+#### Returns
 
 `AtlasTimelineAccessor`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::tl(features: std::initializer_list<std::string_view>) -> AtlasTimelineAccessor`
-- `Atlas::tl(features: pluss::RangeView<std::string_view> = {}) -> AtlasTimelineAccessor`
-
 #### Examples
+
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1691,44 +1731,12 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.tl();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
-
-### `tl`
-
-#### Signature
-
-```cpp
-Atlas::tl(features: pluss::RangeView<std::string_view> = {}) -> AtlasTimelineAccessor
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`AtlasTimelineAccessor`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::tl(feature: std::string_view) -> AtlasTimelineAccessor`
-- `Atlas::tl(features: std::initializer_list<std::string_view>) -> AtlasTimelineAccessor`
-
-#### Examples
+Example 2. Pass several feature names inline.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1742,44 +1750,12 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.tl();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
-
-### `tl`
-
-#### Signature
-
-```cpp
-Atlas::tl(features: std::initializer_list<std::string_view>) -> AtlasTimelineAccessor
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `std::initializer_list<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`AtlasTimelineAccessor`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::tl(feature: std::string_view) -> AtlasTimelineAccessor`
-- `Atlas::tl(features: pluss::RangeView<std::string_view> = {}) -> AtlasTimelineAccessor`
-
-#### Examples
+Example 3. Work with one named feature.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1793,39 +1769,47 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.tl();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tail">
+    <span class="label">Previous</span>
+    <span class="title">tail</span>
+  </a>
+  <a class="next-link" href="#to_string">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
 
 ### `to_string`
 
 #### Signature
 
 ```cpp
-Atlas::to_string(options: const display::DisplayOptions& = {}) -> std::string
+Atlas::to_string(const display::DisplayOptions& options = {}) -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
-`options` : `const display::DisplayOptions&`
+**options**
     Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass an explicit options object to control the operation.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1839,7 +1823,7 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.to_string();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 frame0:
@@ -1852,39 +1836,49 @@ sales
 30.0
 40.0
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tl">
+    <span class="label">Previous</span>
+    <span class="title">tl</span>
+  </a>
+  <a class="next-link" href="#ts">
+    <span class="label">Next</span>
+    <span class="title">ts</span>
+  </a>
+</div>
 
 ### `ts`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Atlas::ts(feature: std::string_view) -> AtlasTsAccessor
+Atlas::ts(pluss::RangeView<std::string_view> features = {}) -> AtlasTsAccessor
+
+Atlas::ts(std::initializer_list<std::string_view> features) -> AtlasTsAccessor
+
+Atlas::ts(std::string_view feature) -> AtlasTsAccessor
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the time-aware surface and expects timeline or time-index semantics.
 
-#### Inputs
+#### Parameters
 
-`feature` : `std::string_view`
+**features**
+    Feature name(s) that select the target DataFrame columns for the operation.
+
+**feature**
     Name of the source feature used by the operation.
 
-#### Output
+#### Returns
 
 `AtlasTsAccessor`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::ts(features: std::initializer_list<std::string_view>) -> AtlasTsAccessor`
-- `Atlas::ts(features: pluss::RangeView<std::string_view> = {}) -> AtlasTsAccessor`
-
 #### Examples
+
+Example 1. Work with a selected feature subset.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1898,44 +1892,12 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.ts();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
-
-### `ts`
-
-#### Signature
-
-```cpp
-Atlas::ts(features: pluss::RangeView<std::string_view> = {}) -> AtlasTsAccessor
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `pluss::RangeView<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`AtlasTsAccessor`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::ts(feature: std::string_view) -> AtlasTsAccessor`
-- `Atlas::ts(features: std::initializer_list<std::string_view>) -> AtlasTsAccessor`
-
-#### Examples
+Example 2. Pass several feature names inline.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -1949,44 +1911,12 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.ts();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
-
-### `ts`
-
-#### Signature
-
-```cpp
-Atlas::ts(features: std::initializer_list<std::string_view>) -> AtlasTsAccessor
-```
-
-#### Notes
-
-This is part of the time-aware surface and expects timeline or time-index semantics.
-
-#### Inputs
-
-`features` : `std::initializer_list<std::string_view>`
-    Feature name(s) that select the target DataFrame columns for the operation.
-
-#### Output
-
-`AtlasTsAccessor`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Atlas::ts(feature: std::string_view) -> AtlasTsAccessor`
-- `Atlas::ts(features: pluss::RangeView<std::string_view> = {}) -> AtlasTsAccessor`
-
-#### Examples
+Example 3. Work with one named feature.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -2000,11 +1930,23 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.ts();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 The call completes and returns the contract described under Output.
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_string">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+  <a class="next-link" href="#unique">
+    <span class="label">Next</span>
+    <span class="title">unique</span>
+  </a>
+</div>
+
+## U
 
 ### `unique`
 
@@ -2014,24 +1956,22 @@ The call completes and returns the contract described under Output.
 Atlas::unique() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
@@ -2045,8 +1985,14 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.unique();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ts">
+    <span class="label">Previous</span>
+    <span class="title">ts</span>
+  </a>
+</div>

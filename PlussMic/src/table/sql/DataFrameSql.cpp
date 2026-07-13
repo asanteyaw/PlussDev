@@ -931,13 +931,12 @@ const DataFrame& resolve_source(std::string_view source_name,
 
 DataFrame with_prefixed_columns(const DataFrame& frame, std::string_view prefix) {
   std::vector<std::pair<std::string, Thread>> cols;
-  const auto names = frame.feature_names();
-  const auto values = frame.features();
+  const auto names = frame.features();
   cols.reserve(names.size());
-  for (std::size_t i = 0; i < names.size(); ++i) {
-    cols.emplace_back(std::string(prefix) + names[i], values[i]);
+  for (const auto& name : names) {
+    cols.emplace_back(std::string(prefix) + name, frame.features(name));
   }
-  return DataFrame(std::move(cols), frame.cases());
+  return DataFrame(std::move(cols), frame.caselbl());
 }
 
 std::pair<std::string, std::string> resolve_join_keys(const DataFrame& left_frame,
@@ -1000,7 +999,7 @@ DataFrame project_frame(const DataFrame& frame,
     const auto resolved_source = resolve_feature_reference(proj.source, source_prefixes);
     Thread col;
     if (is_case_projection(proj.source, options) && !frame.has_feature(resolved_source)) {
-      col = frame.cases();
+      col = frame.caselbl();
     } else {
       col = frame.features(resolved_source);
     }
@@ -1032,7 +1031,7 @@ DataFrame project_frame(const DataFrame& frame,
     }
   }
 
-  return DataFrame(std::move(cols), frame.cases());
+  return DataFrame(std::move(cols), frame.caselbl());
 }
 
 } // namespace

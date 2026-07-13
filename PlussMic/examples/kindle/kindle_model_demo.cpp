@@ -79,9 +79,8 @@ void demo_stream_methods(const pluss::kindle::Catalog& catalog) {
   auto metric = catalog.stream("metric");
   std::cout << "metric: " << metric << "\n";
   std::cout << "kind: " << static_cast<int>(metric.kind())
-            << ", dtype: " << metric.dtype_name()
-            << ", has_mask: " << metric.has_validity_mask()
-            << ", has_cases: " << metric.has_cases() << "\n";
+            << ", dtype: " << metric.dtype()
+            << ", has_cases: " << metric.has_caselbl() << "\n";
 
   metric = metric.with_meta("source", "demo").with_meta("unit", "km");
   std::cout << "meta(source): " << metric.meta("source").value_or("none") << "\n";

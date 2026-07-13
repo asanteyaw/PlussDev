@@ -8,7 +8,7 @@ std::vector<std::string> normalize_ts_features_(const DataFrame& frame,
                                                 pluss::msharp::RangeView::Of<std::string_view> features,
                                                 std::string_view where) {
   if (features.size() == 0) {
-    const auto names = frame.feature_names();
+    const auto names = frame.features();
     PLUSS_CHECK(!names.empty(), std::string(where) + ": current frame has no features");
     std::vector<std::string> out;
     out.reserve(names.size());
@@ -38,13 +38,22 @@ std::vector<std::string> normalize_ts_features_(const DataFrame& frame,
   return out;
 }
 
+pluss::TimeIndex time_axis_to_index_(const Thread& axis, std::string_view where) {
+  if (axis.kind() == ThreadKind::TimeIndex) {
+    return axis.as_timeindex();
+  }
+  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline,
+              std::string(where) + ": axis feature must be Timeline/TimeIndex");
+  return axis.as_timeline().to_timeindex(false);
+}
+
 pluss::TimeIndex require_time_axis_index_(const DataFrame& frame, std::string_view time_feature, std::string_view where) {
   PLUSS_CHECK(frame.has_feature(time_feature), std::string(where) + ": unknown time feature '" + std::string(time_feature) + "'");
   return time_axis_to_index_(frame.features(time_feature), where);
 }
 
 pluss::TimeIndex require_case_time_axis_index_(const DataFrame& frame, std::string_view where) {
-  const auto axis = frame.cases();
+  const auto axis = frame.caselbl();
   PLUSS_CHECK(axis.defined(), std::string(where) + ": cases are undefined");
   PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
               std::string(where) + ": cases must be Timeline/TimeIndex. Use df.set_cases(\"date\") first");
@@ -135,6 +144,17 @@ Thread resample_target_axis_(const DataFrame& frame,
   return Thread(bins.labels);
 }
 
+Thread resample_target_axis_(const DataFrame& frame,
+                             std::string_view time_feature,
+                             const pluss::TimeIndex::ResampleOptions& options,
+                             std::string_view where) {
+  const auto source_ti = time_feature.empty()
+                             ? require_case_time_axis_index_(frame, where)
+                             : require_time_axis_index_(frame, time_feature, where);
+  const auto bins = source_ti.resample_bins(options);
+  return Thread(bins.labels);
+}
+
 } // namespace
 
 DataFrameTsAccessor::DataFrameTsAccessor(DataFrame frame, std::vector<std::string> features)
@@ -162,7 +182,7 @@ DataFrame DataFrameTsAccessor::returns(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().returns(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::log_returns(std::int64_t periods) const {
@@ -171,7 +191,7 @@ DataFrame DataFrameTsAccessor::log_returns(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().log_returns(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::diff(std::int64_t periods) const {
@@ -180,7 +200,7 @@ DataFrame DataFrameTsAccessor::diff(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().diff(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::lag(std::int64_t periods) const {
@@ -189,7 +209,7 @@ DataFrame DataFrameTsAccessor::lag(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().lag(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::lead(std::int64_t periods) const {
@@ -198,7 +218,7 @@ DataFrame DataFrameTsAccessor::lead(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().lead(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::rolling(
@@ -210,7 +230,7 @@ DataFrame DataFrameTsAccessor::rolling(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().rolling(window, statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::rolling(
@@ -218,7 +238,7 @@ DataFrame DataFrameTsAccessor::rolling(
     WindowStatistic statistic,
     const StatisticOptions& options,
     WindowClosure closure) const {
-  const auto axis = frame_.cases();
+  const auto axis = frame_.caselbl();
   (void)require_case_time_axis_index_(frame_, "DataFrameTsAccessor::rolling");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
@@ -226,6 +246,30 @@ DataFrame DataFrameTsAccessor::rolling(
     out.emplace_back(name, frame_.features(name).ts().rolling(axis, duration, statistic, options, closure));
   }
   return make_frame_from_columns_(std::move(out), axis);
+}
+
+DataFrame DataFrameTsAccessor::grouped(std::string_view group_feature,
+                                       std::int64_t window,
+                                       WindowStatistic statistic,
+                                       const WindowOptions& options) const {
+  PLUSS_CHECK(frame_.has_feature(group_feature),
+              "DataFrameTsAccessor::grouped: unknown group feature '" + std::string(group_feature) + "'");
+  return grouped(frame_.features(group_feature), window, statistic, options);
+}
+
+DataFrame DataFrameTsAccessor::grouped(const Thread& groups,
+                                       std::int64_t window,
+                                       WindowStatistic statistic,
+                                       const WindowOptions& options) const {
+  PLUSS_CHECK(groups.defined(), "DataFrameTsAccessor::grouped: groups Thread is undefined");
+  PLUSS_CHECK(groups.size() == frame_.ncases(),
+              "DataFrameTsAccessor::grouped: groups length must match DataFrame cases");
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  for (const auto& name : features_) {
+    out.emplace_back(name, frame_.features(name).ts().grouped(groups, window, statistic, options));
+  }
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::expanding(
@@ -236,7 +280,7 @@ DataFrame DataFrameTsAccessor::expanding(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().expanding(statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::ewm(
@@ -252,7 +296,7 @@ DataFrame DataFrameTsAccessor::ewm(
     out.emplace_back(name, frame_.features(name).ts().ewm(
         alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods, double epsilon) const {
@@ -263,7 +307,7 @@ DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t 
         name,
         Thread(pluss::subsp::stats::ts::zscore_rolling(frame_.features(name).as_series(), window, min_periods, epsilon)));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode, std::optional<double> constant) const {
@@ -272,7 +316,7 @@ DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mo
   for (const auto& name : features_) {
     out.emplace_back(name, Thread(pluss::subsp::stats::ts::fill_gaps(frame_.features(name).as_series(), mode, constant)));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::sort(bool ascending, bool nulls_last) const {
@@ -282,53 +326,79 @@ DataFrame DataFrameTsAccessor::sort(bool ascending, bool nulls_last) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name));
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases()).sort_cases(ascending, nulls_last);
+  return make_frame_from_columns_(std::move(out), frame_.caselbl()).sort_cases(ascending, nulls_last);
 }
 
 DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view time_feature,
                                                    std::string_view freq,
                                                    std::int64_t step) const {
-  return DataFrameTsResampler(frame_, features_, owned_name(time_feature), owned_name(freq), step);
+  return resample(time_feature, pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step});
+}
+
+DataFrameTsResampler DataFrameTsAccessor::resample(
+    std::string_view time_feature,
+    const pluss::TimeIndex::ResampleOptions& options) const {
+  return DataFrameTsResampler(frame_, features_, owned_name(time_feature), options);
 }
 
 DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view freq,
                                                    std::int64_t step) const {
-  return DataFrameTsResampler(frame_, features_, std::string{}, owned_name(freq), step);
+  return resample(pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step});
+}
+
+DataFrameTsResampler DataFrameTsAccessor::resample(
+    const pluss::TimeIndex::ResampleOptions& options) const {
+  return DataFrameTsResampler(frame_, features_, std::string{}, options);
 }
 
 DataFrame DataFrameTsAccessor::resample(std::string_view time_feature,
                                         std::string_view freq,
                                         pluss::subsp::stats::ts::ResampleOp op,
                                         std::int64_t step) const {
+  return resample(time_feature, pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, op);
+}
+
+DataFrame DataFrameTsAccessor::resample(
+    std::string_view time_feature,
+    const pluss::TimeIndex::ResampleOptions& options,
+    pluss::subsp::stats::ts::ResampleOp op) const {
   if (time_feature.empty()) {
-    return resample(freq, op, step);
+    return resample(options, op);
   }
-  std::vector<std::string_view> feature_views;
-  feature_views.reserve(features_.size());
+  PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::resample: expected at least one feature");
+  const auto axis_feature = owned_name(time_feature);
+  (void)require_time_axis_index_(frame_, axis_feature, "DataFrameTsAccessor::resample");
+  const auto axis = frame_.features(axis_feature);
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features_.size());
+  Thread out_cases;
   for (const auto& name : features_) {
-    feature_views.push_back(name);
+    const auto sampled = frame_.features(name).ts().resample(axis, options, op);
+    if (!out_cases.defined()) {
+      out_cases = sampled.labels;
+    }
+    out.emplace_back(name, sampled.values);
   }
-  return static_cast<DataFrame>(
-      frame_.resample(time_feature,
-                      pluss::msharp::RangeView::Of<std::string_view>(
-                          std::span<const std::string_view>(feature_views.data(), feature_views.size())),
-                      freq,
-                      resample_op_key_(op),
-                      step,
-                      false));
+  return make_frame_from_columns_(std::move(out), out_cases);
 }
 
 DataFrame DataFrameTsAccessor::resample(std::string_view freq,
                                         pluss::subsp::stats::ts::ResampleOp op,
                                         std::int64_t step) const {
+  return resample(pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, op);
+}
+
+DataFrame DataFrameTsAccessor::resample(
+    const pluss::TimeIndex::ResampleOptions& options,
+    pluss::subsp::stats::ts::ResampleOp op) const {
   PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::resample: expected at least one feature");
-  const auto axis = frame_.cases();
+  const auto axis = frame_.caselbl();
   (void)require_case_time_axis_index_(frame_, "DataFrameTsAccessor::resample");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
   Thread out_cases;
   for (const auto& name : features_) {
-    const auto sampled = frame_.features(name).ts().resample(axis, freq, op, step);
+    const auto sampled = frame_.features(name).ts().resample(axis, options, op);
     if (!out_cases.defined()) {
       out_cases = sampled.labels;
     }
@@ -343,10 +413,19 @@ DataFrame DataFrameTsAccessor::asfreq(std::string_view time_feature,
                                       pluss::subsp::stats::ts::GapFillMode fill_mode,
                                       std::optional<double> constant,
                                       pluss::subsp::stats::ts::ResampleOp op) const {
+  return asfreq(time_feature, pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, fill_mode, constant, op);
+}
+
+DataFrame DataFrameTsAccessor::asfreq(
+    std::string_view time_feature,
+    const pluss::TimeIndex::ResampleOptions& options,
+    pluss::subsp::stats::ts::GapFillMode fill_mode,
+    std::optional<double> constant,
+    pluss::subsp::stats::ts::ResampleOp op) const {
   if (time_feature.empty()) {
-    return asfreq(freq, step, fill_mode, constant, op);
+    return asfreq(options, fill_mode, constant, op);
   }
-  auto out = resample(time_feature, freq, op, step);
+  auto out = resample(time_feature, options, op);
   for (const auto& name : features_) {
     out.set_features_(name, Thread(pluss::subsp::stats::ts::fill_gaps(out.features(name).as_series(), fill_mode, constant)));
   }
@@ -358,7 +437,15 @@ DataFrame DataFrameTsAccessor::asfreq(std::string_view freq,
                                       pluss::subsp::stats::ts::GapFillMode fill_mode,
                                       std::optional<double> constant,
                                       pluss::subsp::stats::ts::ResampleOp op) const {
-  auto out = resample(freq, op, step);
+  return asfreq(pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, fill_mode, constant, op);
+}
+
+DataFrame DataFrameTsAccessor::asfreq(
+    const pluss::TimeIndex::ResampleOptions& options,
+    pluss::subsp::stats::ts::GapFillMode fill_mode,
+    std::optional<double> constant,
+    pluss::subsp::stats::ts::ResampleOp op) const {
+  auto out = resample(options, op);
   for (const auto& name : features_) {
     out.set_features_(name, Thread(pluss::subsp::stats::ts::fill_gaps(out.features(name).as_series(), fill_mode, constant)));
   }
@@ -450,20 +537,31 @@ DataFrameTsResampler::DataFrameTsResampler(DataFrame frame,
                                            std::string time_feature,
                                            std::string freq,
                                            std::int64_t step)
+    : DataFrameTsResampler(std::move(frame),
+                           std::move(features),
+                           std::move(time_feature),
+                           pluss::TimeIndex::ResampleOptions{.freq = std::move(freq), .step = step}) {}
+
+DataFrameTsResampler::DataFrameTsResampler(
+    DataFrame frame,
+    std::vector<std::string> features,
+    std::string time_feature,
+    pluss::TimeIndex::ResampleOptions options)
     : frame_(std::move(frame)),
       features_(std::move(features)),
       time_feature_(std::move(time_feature)),
-      freq_(std::move(freq)),
-      step_(step) {
+      freq_(options.freq),
+      step_(options.step),
+      options_(std::move(options)) {
   PLUSS_CHECK(!features_.empty(), "DataFrameTsResampler: expected at least one feature");
-  PLUSS_CHECK(!freq_.empty(), "DataFrameTsResampler: freq cannot be empty");
-  PLUSS_CHECK(step_ > 0, "DataFrameTsResampler: step must be positive");
+  PLUSS_CHECK(!options_.freq.empty(), "DataFrameTsResampler: freq cannot be empty");
+  PLUSS_CHECK(options_.step > 0, "DataFrameTsResampler: step must be positive");
 }
 
 DataFrame DataFrameTsResampler::aggregate_(pluss::subsp::stats::ts::ResampleOp op) const {
   return time_feature_.empty()
-             ? DataFrameTsAccessor(frame_, features_).resample(freq_, op, step_)
-             : DataFrameTsAccessor(frame_, features_).resample(time_feature_, freq_, op, step_);
+             ? DataFrameTsAccessor(frame_, features_).resample(options_, op)
+             : DataFrameTsAccessor(frame_, features_).resample(time_feature_, options_, op);
 }
 
 DataFrame DataFrameTsResampler::mean() const {
@@ -495,7 +593,7 @@ DataFrame DataFrameTsResampler::count() const {
 }
 
 DataFrame DataFrameTsResampler::asfreq(std::optional<double> fill_value) const {
-  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::asfreq");
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::asfreq");
   auto out = DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Exact);
   if (!fill_value.has_value()) {
     return out;
@@ -526,17 +624,17 @@ DataFrame DataFrameTsResampler::asfreq(std::optional<double> fill_value) const {
 }
 
 DataFrame DataFrameTsResampler::ffill() const {
-  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::ffill");
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::ffill");
   return DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Backward);
 }
 
 DataFrame DataFrameTsResampler::bfill() const {
-  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::bfill");
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::bfill");
   return DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Forward);
 }
 
 DataFrame DataFrameTsResampler::nearest() const {
-  const auto target_axis = resample_target_axis_(frame_, time_feature_, freq_, step_, "DataFrameTsResampler::nearest");
+  const auto target_axis = resample_target_axis_(frame_, time_feature_, options_, "DataFrameTsResampler::nearest");
   return DataFrameTsAccessor(frame_, features_).align_to(time_feature_, target_axis, TsAlignMode::Nearest);
 }
 
@@ -622,7 +720,7 @@ DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const {
   out.emplace_back(feature_suffix_(time_feature, "day"), axis.day());
   out.emplace_back(feature_suffix_(time_feature, "hour"), axis.hour());
   out.emplace_back(feature_suffix_(time_feature, "weekday"), axis.to_note_weekday());
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) const {
@@ -635,7 +733,7 @@ DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) con
       out.emplace_back(feature_suffix_(name, "lag", lag), Thread(pluss::subsp::stats::ts::lag(series, lag)));
     }
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }
 
 DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windows,
@@ -665,5 +763,5 @@ DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windo
       }
     }
   }
-  return make_frame_from_columns_(std::move(out), frame_.cases());
+  return make_frame_from_columns_(std::move(out), frame_.caselbl());
 }

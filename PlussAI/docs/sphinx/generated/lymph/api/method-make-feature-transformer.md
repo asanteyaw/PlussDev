@@ -56,7 +56,7 @@ make_feature_transformer returned ::pluss::ai::nodej::prep::FeatureTransformer
 ### Example 2 (Demo Pattern)
 
 ```cpp
-  const auto categorical = housing.note_features().feature_names();
+  const auto categorical = housing.note_features().features();
 
   pluss::ai::nodej::DataFrameBatchOptions data_options{};
   data_options.feature_names = {"median_income", "ocean_proximity", "target"};

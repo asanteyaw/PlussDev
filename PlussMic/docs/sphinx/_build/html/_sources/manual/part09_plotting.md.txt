@@ -129,7 +129,7 @@ gaps:
 
 ```cpp
 auto report = raw
-    .dropna({"timestamp", "close"})
+    .dropnull({"timestamp", "close"})
     .fillna(0.0, {"volume"});
 
 auto fig = report.plot().line({"close", "volume"}, "timestamp");
@@ -1310,7 +1310,7 @@ auto fig = df.plot().scatter("x", "missing_feature");
 ```
 
 The accessor asks the `DataFrame` for `"missing_feature"` and the frame throws.
-Check `df.feature_names()` before building dynamic plotting code.
+Check `df.features()` before building dynamic plotting code.
 
 ### Non-numeric features in numeric methods
 

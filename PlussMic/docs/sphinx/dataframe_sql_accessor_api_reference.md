@@ -1,42 +1,41 @@
 # DataFrameSqlAccessor API Reference
 
-# Practical DataFrameSqlAccessor API Reference
-
-## API Reference Style
-
 This page documents the public SQL accessor returned by `DataFrame::sql()`.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
 
 ## E
 
 ### `execute`
 
-#### API Signature
+#### Signature
 
 ```cpp
-DataFrameSqlAccessor::execute(statement: std::string_view) -> DataFrame
+DataFrameSqlAccessor::execute(std::string_view statement) -> DataFrame
 ```
 
-#### Notes
+#### What It Does
 
 Runs a SQL query against the current frame and returns the result as a new `DataFrame`.
 
-#### Inputs
+#### Parameters
 
-`statement` : `std::string_view`
+**statement**
     SQL query text run against the current frame. The frame is exposed to the statement as `self`.
 
-#### Output
+#### Returns
 
 `DataFrame`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
 
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -49,7 +48,7 @@ auto sql = df.sql();
 auto out = sql.execute("SELECT id, sales FROM self WHERE sales > 95");
 ```
 
-##### Expected output
+##### Output
 
 ```text
 id  sales
@@ -63,38 +62,40 @@ id  sales
 - The current frame is exposed inside the statement as `self`.
 - Use this for one-off queries. Use `prepare(...)` when the same statement shape will be executed repeatedly with different parameter values.
 
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#prepare">
+    <span class="label">Next</span>
+    <span class="title">prepare</span>
+  </a>
+</div>
 
 ## P
 
 ### `prepare`
 
-#### API Signature
+#### Signature
 
 ```cpp
-DataFrameSqlAccessor::prepare(statement: std::string_view) -> DataFrameSqlPrepared
+DataFrameSqlAccessor::prepare(std::string_view statement) -> DataFrameSqlPrepared
 ```
 
-#### Notes
+#### What It Does
 
 Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.
 
-#### Inputs
+#### Parameters
 
-`statement` : `std::string_view`
+**statement**
     Parameterized SQL statement template. Use placeholders such as `{min_sales}` when you plan to bind values later.
 
-#### Output
+#### Returns
 
 `DataFrameSqlPrepared`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
 
-Example 1. Use this overload when its parameter combination matches the result shape or control level you need.
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -107,7 +108,7 @@ auto sql = df.sql();
 auto out = sql.prepare("SELECT id, sales FROM self WHERE sales > {min_sales}");
 ```
 
-##### Expected output
+##### Output
 
 ```text
 Prepared statement ready
@@ -119,3 +120,9 @@ Prepared statement ready
 - Use placeholders such as `{min_sales}` for value parameters you will bind later.
 - Prepared execution is the better path when you want repeated queries without rebuilding the statement each time.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#execute">
+    <span class="label">Previous</span>
+    <span class="title">execute</span>
+  </a>
+</div>

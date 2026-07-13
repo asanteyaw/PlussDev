@@ -1,0 +1,78 @@
+summary = """
+Backward-fill missing values by borrowing the next observed value in the thread.
+
+`Thread::bfill(...)` is the one-dimensional backward-fill helper. Use it when each missing position should inherit from the next valid observation below it in the same thread.
+"""
+
+returns = """
+`Thread`
+    A new thread with backward-filled values.
+"""
+
+see_also = [
+  "<a href=\"#ffill\"><code>Thread::ffill</code></a>: propagate the last observed value forward instead.",
+  "<a href=\"dataframe_api_reference.html#bfill\"><code>DataFrame::bfill</code></a>: backward-fill several frame features together."
+]
+
+notes = [
+  """
+Trailing missing runs stay missing because there is no later observed value to borrow.
+"""
+]
+
+[[parameters]]
+name = "limit"
+body = """
+Maximum number of consecutive missing positions to fill per run.
+
+- `-1`: unlimited backward fill.
+- Positive integer: fill at most that many missing positions in each consecutive run.
+"""
+
+[[examples]]
+title = "Backward-fill every eligible missing position."
+code = """
+using namespace pluss::table;
+
+auto missing = Thread(pluss::make_series({
+    10.0,
+    std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(),
+    40.0,
+    50.0,
+}));
+
+auto out = missing.bfill();
+"""
+output = """
+0  10
+1  40
+2  40
+3  40
+4  50
+dtype: Series
+"""
+
+[[examples]]
+title = "Limit backward fill to one missing position per run."
+code = """
+using namespace pluss::table;
+
+auto missing = Thread(pluss::make_series({
+    10.0,
+    std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(),
+    40.0,
+    50.0,
+}));
+
+auto out = missing.bfill(1);
+"""
+output = """
+0  10
+1  NA
+2  40
+3  40
+4  50
+dtype: Series
+"""

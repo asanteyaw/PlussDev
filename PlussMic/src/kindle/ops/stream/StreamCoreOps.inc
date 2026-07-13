@@ -40,7 +40,7 @@ Stream Stream::filter(const pluss::Series& bool_mask) const {
 Stream Stream::dropna() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   const auto source = to_thread();
-  const auto out = source.dropna();
+  const auto out = source.dropnull();
   if (!has_cases()) return Stream::from_thread(out);
   const auto cases_out = cases()->filter(source.notnull().as_series());
   return Stream::from_thread(out, cases_out);

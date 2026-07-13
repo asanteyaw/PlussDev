@@ -323,7 +323,7 @@ struct DenseMatrix {
   }
   feature = feature.reshape({rows});
 
-  if (thread.has_validity_mask()) {
+  if (pluss::table::detail::has_validity_mask(thread)) {
     auto host = feature.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
     bool touched = false;
     for (std::int64_t i = 0; i < rows; ++i) {

@@ -154,11 +154,11 @@ pluss::Series thread_to_plot_numeric_series(const Thread& t) {
       break;
     }
     case ThreadKind::Timeline: {
-      numeric_thread = Thread(t.as_timeline().epoch_nanos(), t.validity_mask());
+      numeric_thread = Thread(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     }
     case ThreadKind::TimeIndex: {
-      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), t.validity_mask());
+      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     }
     case ThreadKind::Note: {
@@ -170,12 +170,12 @@ pluss::Series thread_to_plot_numeric_series(const Thread& t) {
   }
 
   auto values = numeric_thread.as_series().to(pluss::codem::ScalarType::Float64);
-  if (numeric_thread.has_validity_mask()) {
+  if (detail::has_validity_mask(numeric_thread)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
-    values = values.where(numeric_thread.validity_mask()->logical_not(), nan_fill);
+    values = values.where(detail::validity_mask(numeric_thread)->logical_not(), nan_fill);
   }
   return values.reshape({values.numel()});
 }
@@ -307,7 +307,7 @@ ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
                                    const DataFramePlotOptions& options) {
   const auto nrows = frame.ncases();
   const auto axis_name = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
-  const auto axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.cases();
+  const auto axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.caselbl();
 
   ResolvedPlotAxis axis;
   axis.label = axis_name;
@@ -408,7 +408,7 @@ void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOpt
 std::vector<std::string> labels_for_cases(const DataFrame& frame,
                                           std::string_view where,
                                           const DataFramePlotOptions& options) {
-  auto labels = thread_to_plot_labels(frame.cases(), options);
+  auto labels = thread_to_plot_labels(frame.caselbl(), options);
   require_plot_size(labels, frame.ncases(), "case", where);
   return labels;
 }
@@ -426,7 +426,7 @@ std::vector<std::string> numeric_feature_names(const DataFrame& frame,
                                                std::string_view where);
 
 std::vector<std::string> hue_feature_names(const DataFrame& frame) {
-  const auto features = frame.feature_names();
+  const auto features = frame.features();
   std::vector<std::string> names;
   names.reserve(features.size());
   std::copy_if(
@@ -462,7 +462,7 @@ std::vector<std::string> numeric_feature_names(const DataFrame& frame,
     return names;
   }
 
-  const auto features = frame.feature_names();
+  const auto features = frame.features();
   names.reserve(features.size());
   std::copy_if(
       features.begin(),
@@ -488,12 +488,12 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
             thread.kind() == ThreadKind::Series,
             std::string(where) + ": feature '" + name + "' is not a numeric Series");
         auto values = thread.as_series().to(pluss::codem::ScalarType::Float64).reshape({thread.as_series().numel()});
-        if (thread.has_validity_mask()) {
+        if (detail::has_validity_mask(thread)) {
           const auto nan_fill = pluss::Series::full(
               {values.numel()},
               std::numeric_limits<double>::quiet_NaN(),
               pluss::codem::ScalarType::Float64);
-          values = values.where(thread.validity_mask()->logical_not(), nan_fill);
+          values = values.where(detail::validity_mask(thread)->logical_not(), nan_fill);
         }
         return values;
       });
@@ -520,7 +520,7 @@ bool all_nonnegative_columns(const DataFrame& frame, const std::vector<std::stri
 }
 
 bool prefer_index_plot(const DataFrame& frame) {
-  return thread_prefers_labeled_axis(frame.cases()) || frame.ncases() > 24;
+  return thread_prefers_labeled_axis(frame.caselbl()) || frame.ncases() > 24;
 }
 
 pluss::Series columns_to_matrix_series(const std::vector<pluss::Series>& columns,
@@ -564,7 +564,7 @@ Studio corr_heatmap_from_names(const DataFrame& frame,
                                const CorrHeatmapPlotOptions& options,
                                const DataFramePlotOptions& plot_options) {
   const auto corr = frame.corr(false);
-  const auto corr_names = corr.feature_names();
+  const auto corr_names = corr.features();
   std::unordered_map<std::string, std::size_t> corr_index;
   corr_index.reserve(corr_names.size());
   for (std::size_t i = 0; i < corr_names.size(); ++i) {
@@ -1693,7 +1693,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature
   auto values = thread_to_plot_numeric_values(frame_.features(value_feature));
   require_plot_size(values, frame_.ncases(), value_feature);
   const auto labels = label_feature.has_value() ? thread_to_plot_labels(frame_.features(*label_feature), options_)
-                                                : thread_to_plot_labels(frame_.cases(), options_);
+                                                : thread_to_plot_labels(frame_.caselbl(), options_);
   require_plot_size(labels,
                     frame_.ncases(),
                     label_feature.has_value() ? *label_feature : std::string_view("case"),
@@ -1846,7 +1846,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
                                                       DataFrame::GroupOp op,
                                                       const HeatmapPlotOptions& options) const {
   auto pivoted = frame_.pivot_table(case_feature, feature_feature, value_feature, op, true, false);
-  const auto& pivot_features = pivoted.feature_names();
+  const auto& pivot_features = pivoted.features();
   PLUSS_CHECK(!pivot_features.empty(),
               "DataFrame::plot().heatmap: pivot produced no columns for feature '" + std::string(feature_feature) + "'");
 
@@ -1901,7 +1901,7 @@ PivotGrid3D build_pivot_grid_3d(const DataFrame& pivoted, std::string_view where
   PLUSS_CHECK(out.rows > 0, std::string(where) + ": pivot produced zero rows");
   PLUSS_CHECK(out.cols > 0, std::string(where) + ": pivot produced zero columns");
 
-  out.y_axis = thread_to_plot_numeric_values(pivoted.cases());
+  out.y_axis = thread_to_plot_numeric_values(pivoted.caselbl());
   std::size_t y_index = 0;
   std::for_each(out.y_axis.begin(), out.y_axis.end(), [&](double& value) {
     if (!std::isfinite(value)) {
@@ -1910,7 +1910,7 @@ PivotGrid3D build_pivot_grid_3d(const DataFrame& pivoted, std::string_view where
     ++y_index;
   });
 
-  const auto feature_names = pivoted.feature_names();
+  const auto feature_names = pivoted.features();
   out.x_axis.reserve(feature_names.size());
   std::size_t x_index = 0;
   std::transform(
@@ -1990,7 +1990,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(pluss::msharp::Rang
                                                              const ScatterMatrixPlotOptions& options) const {
   const auto scoped = features.size() > 0 ? frame_.features(features) : frame_;
   const auto series_only = scoped.series_features();
-  const auto names = series_only.feature_names();
+  const auto names = series_only.features();
   auto fig = scatter_matrix_from_names(series_only, names, resolve_scatter_matrix_pair_options(options), options_);
   apply_figure_options(fig);
   return fig;
@@ -2191,7 +2191,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView
   const bool explicit_features = features.size() > 0;
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot");
   if (names.size() == 1) {
-    if (thread_prefers_labeled_axis(frame_.cases()) && frame_.ncases() <= 16) {
+    if (thread_prefers_labeled_axis(frame_.caselbl()) && frame_.ncases() <= 16) {
       return bar(names.front());
     }
     return line(names.front());
@@ -2202,7 +2202,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView
       return scatter(names[0], names[1], hue_names.front());
     }
   }
-  if (names.size() <= 3 && thread_prefers_labeled_axis(frame_.cases()) && all_nonnegative_columns(frame_, names)) {
+  if (names.size() <= 3 && thread_prefers_labeled_axis(frame_.caselbl()) && all_nonnegative_columns(frame_, names)) {
     if (frame_.ncases() <= 12) {
       if (names.size() == 2) {
         return bar_stacked({names[0], names[1]});

@@ -11,6 +11,7 @@
 namespace {
 
 using pluss::table::DataFrame;
+using pluss::table::Axis;
 using pluss::table::FrameMatchOptions;
 using pluss::table::FrameMatchRule;
 using pluss::table::RepeatedCaseRule;
@@ -59,23 +60,32 @@ void test_union_matching_for_frame_math() {
       },
       {"B", "A"});
 
-  const auto result = left.add(right);
-  expect(result.feature_names() == std::vector<std::string>({"x", "y", "z"}),
+  const auto positional = left.add(right);
+  expect(positional.features() == std::vector<std::string>({"x", "y"}),
+         "default frame arithmetic should preserve left feature labels under positional semantics");
+  expect(positional.caselbl().as_note().vector() ==
+             std::vector<std::string_view>({"A", "C"}),
+         "default frame arithmetic should preserve left case labels under positional semantics");
+  expect(positional.features("x").as_series().to_vec<double>() ==
+             std::vector<double>({101.0, 202.0}),
+         "default frame arithmetic should pair values by position");
+  const auto result = left.add(right, {.align = pluss::table::AlignBy::Both});
+  expect(result.features() == std::vector<std::string>({"x", "y", "z"}),
          "union matching should preserve left feature order and append right-only features");
-  expect(result.cases().as_note().vector() ==
+  expect(result.caselbl().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "union matching should preserve left case order and append right-only cases");
 
   const auto y = result.features("y");
   expect(y.as_series().to_vec<double>().front() == 210.0,
          "matched arithmetic should pair values by case labels");
-  expect(y.validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(y)->to_vec<bool>() ==
              std::vector<bool>({true, false, false}),
          "matched arithmetic should mark one-sided values missing");
-  expect(result.features("x").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(result.features("x"))->to_vec<bool>() ==
              std::vector<bool>({false, false, false}),
          "left-only feature arithmetic should be entirely missing");
-  expect(result.features("z").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(result.features("z"))->to_vec<bool>() ==
              std::vector<bool>({false, false, false}),
          "right-only feature arithmetic should be entirely missing");
 }
@@ -99,9 +109,9 @@ void test_explicit_common_matching() {
   options.features = FrameMatchRule::Common;
   const auto matched = left.match(right, options);
 
-  expect(matched.left.feature_names() == std::vector<std::string>({"y"}),
+  expect(matched.left.features() == std::vector<std::string>({"y"}),
          "common feature matching should retain shared features only");
-  expect(matched.left.cases().as_note().vector() ==
+  expect(matched.left.caselbl().as_note().vector() ==
              std::vector<std::string_view>({"A"}),
          "common case matching should retain shared cases only");
   expect(matched.left.features("y").as_series().to_vec<double>() ==
@@ -120,11 +130,14 @@ void test_repeated_cases_pair_in_order() {
       {{"x", Thread(pluss::make_series(std::vector<double>{10.0}))}},
       {"A"});
 
-  const auto result = left.add(right);
+  expect_throw(
+      [&]() { (void)left.add(right); },
+      "default frame arithmetic should reject mismatched positional shape for repeated cases");
+  const auto result = left.add(right, {.align = pluss::table::AlignBy::Both});
   expect(result.ncases() == 2, "repeated cases should pair by occurrence without expansion");
   expect(result.features("x").as_series().to_vec<double>().front() == 11.0,
          "the first repeated occurrence should pair with the first peer occurrence");
-  expect(result.features("x").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(result.features("x"))->to_vec<bool>() ==
              std::vector<bool>({true, false}),
          "an unmatched repeated occurrence should be missing");
 
@@ -157,13 +170,13 @@ void test_case_aware_horizontal_composition() {
       {"B", "A"});
 
   const auto combined = left.combine(right);
-  expect(combined.cases().as_note().vector() ==
+  expect(combined.caselbl().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "horizontal composition should match cases by label");
-  expect(combined.features("x").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(combined.features("x"))->to_vec<bool>() ==
              std::vector<bool>({true, true, false}),
          "horizontal composition should null-mark missing left rows");
-  expect(combined.features("y").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(combined.features("y"))->to_vec<bool>() ==
              std::vector<bool>({true, false, true}),
          "horizontal composition should null-mark missing right rows");
   const auto y = combined.features("y").as_series().to_vec<double>();
@@ -174,7 +187,7 @@ void test_case_aware_horizontal_composition() {
       make_frame(
           {{"x", Thread(pluss::make_series(std::vector<double>{9.0}))}},
           {"A"}));
-  expect(updated.cases().as_note().vector() ==
+  expect(updated.caselbl().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "update should keep the left case axis");
   expect(updated.features("x").as_series().to_vec<double>() ==
@@ -197,24 +210,24 @@ void test_vertical_case_extension() {
       {"B", "A"});
 
   const auto extended = left.extend_cases(right);
-  expect(extended.feature_names() ==
+  expect(extended.features() ==
              std::vector<std::string>({"x", "y", "z"}),
          "case extension should use the stable feature union");
-  expect(extended.cases().as_note().vector() ==
+  expect(extended.caselbl().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B", "A"}),
          "case extension should append the full case axes");
-  expect(extended.features("x").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(extended.features("x"))->to_vec<bool>() ==
              std::vector<bool>({true, true, false, false}),
          "case extension should null-fill a missing right feature");
-  expect(extended.features("z").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(extended.features("z"))->to_vec<bool>() ==
              std::vector<bool>({false, false, true, true}),
          "case extension should null-fill a missing left feature");
 
   const auto common =
       left.extend_cases(right, FrameMatchRule::Common, true);
-  expect(common.feature_names() == std::vector<std::string>({"y"}),
+  expect(common.features() == std::vector<std::string>({"y"}),
          "common case extension should retain shared features only");
-  expect(common.cases().as_series().to_vec<std::int64_t>() ==
+  expect(common.caselbl().as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "fresh case extension should create one contiguous case axis");
 
@@ -252,10 +265,10 @@ void test_unify_modes() {
   expect(united.features("id").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({1, 2, 3}),
          "unite mode should coalesce a shared key feature");
-  expect(united.features("left_value").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(united.features("left_value"))->to_vec<bool>() ==
              std::vector<bool>({true, true, false}),
          "unite mode should null-mark missing left payloads");
-  expect(united.features("right_value").validity_mask()->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(united.features("right_value"))->to_vec<bool>() ==
              std::vector<bool>({false, true, true}),
          "unite mode should null-mark missing right payloads");
 
@@ -342,7 +355,7 @@ void test_lengthen_reshape() {
       Thread(pluss::make_note({"C1", "C2"})));
 
   const auto long_form = frame.lengthen({"id"}, {"a", "b"});
-  expect(long_form.feature_names() ==
+  expect(long_form.features() ==
              std::vector<std::string>({"id", "feature", "value"}),
          "lengthen should emit identifiers, source feature, and value");
   expect(long_form.features("id").as_note().vector() ==
@@ -354,13 +367,13 @@ void test_lengthen_reshape() {
   expect(long_form.features("value").as_series().to_vec<double>() ==
              std::vector<double>({1.0, 2.0, 3.0, 4.0}),
          "lengthen should concatenate homogeneous value payloads");
-  expect(long_form.cases().as_series().to_vec<std::int64_t>() ==
+  expect(long_form.caselbl().as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "lengthen should create fresh contiguous cases by default");
 
   const auto preserved =
       frame.lengthen({"id"}, {"a", "b"}, "source", "measure", false);
-  expect(preserved.cases().as_note().vector() ==
+  expect(preserved.caselbl().as_note().vector() ==
              std::vector<std::string_view>({"C1", "C2", "C1", "C2"}),
          "lengthen should tile original cases when requested");
 
@@ -455,7 +468,7 @@ void test_stack_unstack_hierarchical_cases() {
   const auto wide = frame.unstack("quarter");
   expect(wide.has_levels() &&
              wide.levels() == std::vector<std::string>({"region", "account"}) &&
-             wide.feature_names() == std::vector<std::string>({"Q1", "Q2"}) &&
+             wide.features() == std::vector<std::string>({"Q1", "Q2"}) &&
              wide.features("Q1").as_series().to_vec<double>() ==
                  std::vector<double>({10.0, 30.0}) &&
              wide.features("Q2").as_series().to_vec<double>() ==
@@ -503,7 +516,7 @@ void test_transform_axis_surface() {
          "Thread::transform(value_fn) should apply element-wise");
 }
 
-void test_category_catalogue() {
+void test_category_factor() {
   const auto validity = pluss::make_series(
       std::vector<bool>{true, true, true, true, false});
   const auto frame = DataFrame({
@@ -512,29 +525,29 @@ void test_category_catalogue() {
           validity)},
   });
 
-  const auto encoding = frame.catalogue("city");
+  const auto encoding = frame.factor("city");
   expect(encoding.levels.as_note().vector() ==
              std::vector<std::string_view>({"Calgary", "Edmonton", "Banff"}),
-         "catalogue should preserve stable first-seen level order");
+         "factor should preserve stable first-seen level order");
   expect(encoding.codes.as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 0, 2, -1}),
-         "catalogue should encode levels and reserve -1 for missing values");
-  expect(encoding.codes.validity_mask()->to_vec<bool>() ==
+         "factor should encode levels and reserve -1 for missing values");
+  expect(pluss::table::detail::validity_mask(encoding.codes)->to_vec<bool>() ==
              std::vector<bool>({true, true, true, true, false}),
-         "catalogue should preserve source missingness");
+         "factor should preserve source missingness");
   const auto decoded = encoding.decode();
   expect(decoded.as_note().vector()[0] == "Calgary" &&
              decoded.as_note().vector()[1] == "Edmonton" &&
              decoded.as_note().vector()[3] == "Banff",
          "category decoding should recover observed labels");
-  expect(!decoded.validity_mask()->to_vec<bool>()[4],
+  expect(!pluss::table::detail::validity_mask(decoded)->to_vec<bool>()[4],
          "category decoding should recover missingness");
 
-  const auto sorted = frame.catalogue("city", true, true);
+  const auto sorted = frame.factor("city", true, true);
   expect(sorted.ordered &&
              sorted.levels.as_note().vector() ==
                  std::vector<std::string_view>({"Banff", "Calgary", "Edmonton"}),
-         "catalogue should support explicit ordered sorted levels");
+         "factor should support explicit ordered sorted levels");
 }
 
 void test_streamed_csv_case_batches() {
@@ -570,6 +583,84 @@ void test_streamed_csv_case_batches() {
   std::filesystem::remove(path);
 }
 
+void test_case_aligned_set_and_reduction_axis_rules() {
+  auto df = DataFrame(
+      {
+          {"student", Thread(pluss::make_note({"Alice", "Bob", "Carol", "David"}))},
+          {"A1", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+          {"A2", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+      },
+      Thread(pluss::make_series(std::vector<std::int64_t>{1001, 1002, 1003, 1004})));
+
+  expect(df.shape() == std::pair<std::int64_t, std::int64_t>{4, 3},
+         "DataFrame::shape should report cases x features");
+  expect(df.features("A1").ncases() == 4 &&
+             df.features("A1").shape() == std::pair<std::int64_t, std::int64_t>{4, 1},
+         "Thread::ncases/shape should report a 1D case vector");
+
+  const auto row_totals = df.features({"A1", "A2"}).sum(Axis::Feature);
+  expect(row_totals.as_series().to_vec<double>() ==
+             std::vector<double>({11.0, 22.0, 33.0, 44.0}),
+         "Axis::Feature reduction should reduce across features row-wise");
+  df.set("Assignments") = row_totals;
+  expect(df.features("Assignments").as_series().to_vec<double>() ==
+             std::vector<double>({11.0, 22.0, 33.0, 44.0}),
+         "case-length row-wise reduction should assign cleanly");
+
+  const auto column_totals = df.features({"A1", "A2"}).sum();
+  expect(column_totals.as_series().to_vec<double>() ==
+             std::vector<double>({100.0, 10.0}),
+         "default DataFrame reduction should reduce down cases column-wise");
+  bool wrong_axis_default_threw = false;
+  try {
+    df.set("WrongAxis") = column_totals;
+  } catch (const std::exception&) {
+    wrong_axis_default_threw = true;
+  }
+  expect(wrong_axis_default_threw,
+         "default assignment should reject feature-indexed reduction length mismatch");
+  df.set("WrongAxis", {.align = pluss::table::AlignBy::Caselbl}) = column_totals;
+  expect(pluss::table::detail::validity_mask(df.features("WrongAxis"))->to_vec<bool>() ==
+             std::vector<bool>({false, false, false, false}),
+         "explicit case-label assignment should make feature-indexed reduction null when labels do not match");
+
+  const auto scholarship = Thread(pluss::make_series(
+                               std::vector<double>{1500.0, 2500.0, 1000.0}))
+                               .caselbl(Thread(pluss::make_series(
+                                   std::vector<std::int64_t>{1003, 1001, 1004})));
+  bool scholarship_default_threw = false;
+  try {
+    df.set("scholarship") = scholarship;
+  } catch (const std::exception&) {
+    scholarship_default_threw = true;
+  }
+  expect(scholarship_default_threw,
+         "default assignment should reject partial labeled rhs");
+  df.set("scholarship", {.align = pluss::table::AlignBy::Caselbl}) = scholarship;
+  const auto scholarship_values = df.features("scholarship").as_series().to_vec<double>();
+  expect(scholarship_values[0] == 2500.0 &&
+             scholarship_values[2] == 1500.0 &&
+             scholarship_values[3] == 1000.0,
+         "case-aligned assignment should gather matching rhs values");
+  expect(pluss::table::detail::validity_mask(df.features("scholarship"))->to_vec<bool>() ==
+             std::vector<bool>({true, false, true, true}),
+         "case-aligned assignment should mark missing target cases null");
+
+  df.set("flat") = pluss::make_series(7235.0);
+  expect(df.features("flat").as_series().to_vec<double>() ==
+             std::vector<double>({7235.0, 7235.0, 7235.0, 7235.0}),
+         "scalar Series assignment should broadcast over established cases");
+
+  bool one_row_default_threw = false;
+  try {
+    df.set("one_row_series") = Thread(pluss::make_series(std::vector<double>{7235.0}));
+  } catch (const std::exception&) {
+    one_row_default_threw = true;
+  }
+  expect(one_row_default_threw,
+         "plain 1D length-one Thread assignment should not broadcast or align by default");
+}
+
 } // namespace
 
 int main() {
@@ -585,7 +676,8 @@ int main() {
   test_hierarchical_case_axis_engine();
   test_stack_unstack_hierarchical_cases();
   test_transform_axis_surface();
-  test_category_catalogue();
+  test_category_factor();
   test_streamed_csv_case_batches();
+  test_case_aligned_set_and_reduction_axis_rules();
   return 0;
 }

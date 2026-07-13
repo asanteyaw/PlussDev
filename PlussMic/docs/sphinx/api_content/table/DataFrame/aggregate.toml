@@ -1,0 +1,132 @@
+summary = """
+Build a one-row summary view from one or more aggregation specifications.
+
+Use `DataFrame::aggregate(...)` when you want compact summary output rather than grouped rows. Each `SummarySpec` tells PlussMic which source feature to read, which summary operation to compute, and what output feature name to place in the one-row result.
+"""
+
+returns = """
+`DataFrameView`
+    A one-row summary view.
+
+    - The result contains one case labeled `summary`.
+    - Each requested metric becomes one output feature.
+    - The `render` flag controls whether the returned view may auto-render in temporary display contexts.
+"""
+
+see_also = [
+  "<a href=\"#describe\"><code>DataFrame::describe</code></a>: produce a broader canned descriptive summary.",
+  "<a href=\"#group\"><code>DataFrame::group</code></a>: aggregate within key-defined groups instead of collapsing the whole frame to one row.",
+  "<a href=\"#summarize\"><code>DataFrame::summarize</code></a>: return the summary result as a raw frame-oriented object when that surface is a better fit."
+]
+
+notes = [
+  """
+`aggregate(...)` returns a `DataFrameView`, not a raw `DataFrame`. This is useful when you want summary output that can display cleanly without manually calling a renderer first.
+""",
+  """
+If you leave the `output` field empty in a `SummarySpec`, PlussMic auto-generates a name from the source feature and operation, such as `assignment_mean`.
+""",
+  """
+Numeric summary operations expect numeric-compatible input. Count-like operations can summarize a broader set of feature kinds.
+"""
+]
+
+[[parameters]]
+name = "specs"
+body = """
+Collection of `SummarySpec` instructions.
+
+Each spec supplies three pieces of information:
+
+- `output`: the output feature name. Leave it empty when you want PlussMic to auto-name the metric.
+- `feature`: the source feature to summarize.
+- `op`: the summary operation to compute.
+
+Use one spec for one metric, or several specs when you want a compact dashboard row from one call.
+"""
+
+[[parameters]]
+name = "render"
+body = """
+Display policy for the returned `DataFrameView`.
+
+- `false`: return the view without enabling auto-render behavior.
+- `true`: allow the summary view to auto-render in temporary display contexts.
+
+Most library-style code should keep this `false` and render explicitly.
+"""
+
+[[examples]]
+title = "Compute one summary metric with an explicit output name."
+code = """
+using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen"})},
+    {"assignment", pluss::make_series({9.5, 8.0, 7.5})},
+    {"final", pluss::make_series({28.0, 24.0, 21.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("grades");
+
+auto out = grades.aggregate({
+    {"mean_final", "final", DataFrame::SummaryOp::Mean},
+}, false);
+"""
+output = """
+====================
+        | mean_final
+--------------------
+summary | 24.5
+--------------------
+[1 cs x 1 feat]
+"""
+
+[[examples]]
+title = "Compute several summary metrics in one pass."
+code = """
+using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen"})},
+    {"assignment", pluss::make_series({9.5, 8.0, 7.5})},
+    {"final", pluss::make_series({28.0, 24.0, 21.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("grades");
+
+auto out = grades.aggregate({
+    {"n_students", "final", DataFrame::SummaryOp::Count},
+    {"max_final", "final", DataFrame::SummaryOp::Max},
+    {"min_final", "final", DataFrame::SummaryOp::Min},
+}, false);
+"""
+output = """
+==========================================
+        | n_students  max_final  min_final
+------------------------------------------
+summary | 3           28         21.5
+------------------------------------------
+[1 cs x 3 feat]
+"""
+
+[[examples]]
+title = "Let PlussMic auto-name the output summary features."
+code = """
+using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen"})},
+    {"assignment", pluss::make_series({9.5, 8.0, 7.5})},
+    {"final", pluss::make_series({28.0, 24.0, 21.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("grades");
+
+auto out = grades.aggregate({
+    {"", "assignment", DataFrame::SummaryOp::Mean},
+    {"", "assignment", DataFrame::SummaryOp::Std},
+}, false);
+"""
+output = """
+=========================================
+        | assignment_mean  assignment_std
+-----------------------------------------
+summary | 8.333333333      1.040833
+-----------------------------------------
+[1 cs x 2 feat]
+"""

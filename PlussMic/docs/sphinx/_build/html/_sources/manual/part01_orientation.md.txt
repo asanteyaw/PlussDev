@@ -101,7 +101,7 @@ Common shape calls:
 ```cpp
 std::int64_t rows = df.ncases();
 std::int64_t cols = df.nfeatures();
-const auto& names = df.feature_names();
+const auto& names = df.features();
 ```
 
 Use this language when reading APIs:

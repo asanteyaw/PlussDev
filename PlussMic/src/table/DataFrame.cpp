@@ -418,8 +418,8 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
 }
 
 std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
+  if (detail::has_validity_mask(t)) {
+    const auto valid = detail::validity_mask(t)->to_vec<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return "NA";
     }
@@ -555,10 +555,10 @@ std::string window_op_name(ThreadWindowOp op) {
 }
 
 std::int64_t non_null_count(const Thread& t) {
-  if (!t.has_validity_mask()) {
+  if (!detail::has_validity_mask(t)) {
     return t.size();
   }
-  const auto valid = t.validity_mask()->to_vec<bool>();
+  const auto valid = detail::validity_mask(t)->to_vec<bool>();
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
@@ -566,8 +566,8 @@ std::int64_t distinct_non_null_count(const Thread& t) {
   std::unordered_set<std::string> seen;
   seen.reserve(static_cast<std::size_t>(t.size()));
   std::optional<std::vector<bool>> valid;
-  if (t.has_validity_mask()) {
-    valid = t.validity_mask()->to_vec<bool>();
+  if (detail::has_validity_mask(t)) {
+    valid = detail::validity_mask(t)->to_vec<bool>();
   }
   for (std::int64_t i = 0; i < t.size(); ++i) {
     if (valid.has_value() && !(*valid)[static_cast<std::size_t>(i)]) {
@@ -584,7 +584,7 @@ double numeric_reduce_value(const Thread& t, DataFrame::SummaryOp op) {
               "DataFrame::summarize: numeric reductions require numeric Series feature");
 
   // Delegate numeric reductions to Thread to keep 1D math semantics in Thread.
-  const auto clean = t.dropna();
+  const auto clean = t.dropnull();
   if (clean.size() == 0) {
     if (op == DataFrame::SummaryOp::Sum) {
       return 0.0;
@@ -992,10 +992,10 @@ bool parse_bool_like(std::string_view text, bool& out) {
 }
 
 bool row_valid_for_thread(const Thread& t, std::int64_t row) {
-  if (!t.has_validity_mask()) {
+  if (!detail::has_validity_mask(t)) {
     return true;
   }
-  const auto valid = t.validity_mask()->to_vec<bool>();
+  const auto valid = detail::validity_mask(t)->to_vec<bool>();
   return valid[static_cast<std::size_t>(row)];
 }
 
@@ -1121,115 +1121,89 @@ bool evaluate_in_list(const Thread& t, std::int64_t row, const std::vector<Query
 }
 
 Thread apply_math_thread_scalar(const Thread& col, double other, BinaryMathOp op, bool reverse) {
-  ThreadBinaryMathOp mapped = ThreadBinaryMathOp::Add;
+  if (col.kind() != ThreadKind::Series || !is_numeric_series_type(col.as_series())) {
+    return col;
+  }
   switch (op) {
     case BinaryMathOp::Add:
-      mapped = ThreadBinaryMathOp::Add;
-      break;
+      return reverse ? col.radd(other) : col.add(other);
     case BinaryMathOp::Sub:
-      mapped = ThreadBinaryMathOp::Sub;
-      break;
+      return reverse ? col.rsub(other) : col.sub(other);
     case BinaryMathOp::Mul:
-      mapped = ThreadBinaryMathOp::Mul;
-      break;
+      return reverse ? col.rmul(other) : col.mul(other);
     case BinaryMathOp::Div:
-      mapped = ThreadBinaryMathOp::Div;
-      break;
+      return reverse ? col.rdiv(other) : col.div(other);
     case BinaryMathOp::TrueDiv:
-      mapped = ThreadBinaryMathOp::TrueDiv;
-      break;
+      return reverse ? col.rtruediv(other) : col.truediv(other);
     case BinaryMathOp::FloorDiv:
-      mapped = ThreadBinaryMathOp::FloorDiv;
-      break;
+      return reverse ? col.rfloordiv(other) : col.floordiv(other);
     case BinaryMathOp::Mod:
-      mapped = ThreadBinaryMathOp::Mod;
-      break;
+      return reverse ? col.rmod(other) : col.mod(other);
     case BinaryMathOp::Pow:
-      mapped = ThreadBinaryMathOp::Pow;
-      break;
+      return reverse ? col.rpow(other) : col.pow(other);
   }
-  return col.numeric_binary(other, mapped, reverse);
+  PLUSS_FAIL("DataFrame::math: unsupported binary math op");
 }
 
 Thread apply_math_thread_pair(const Thread& lhs, const Thread& rhs, BinaryMathOp op) {
-  ThreadBinaryMathOp mapped = ThreadBinaryMathOp::Add;
+  if (lhs.kind() != ThreadKind::Series || !is_numeric_series_type(lhs.as_series())) {
+    return lhs;
+  }
   switch (op) {
     case BinaryMathOp::Add:
-      mapped = ThreadBinaryMathOp::Add;
-      break;
+      return lhs.add(rhs);
     case BinaryMathOp::Sub:
-      mapped = ThreadBinaryMathOp::Sub;
-      break;
+      return lhs.sub(rhs);
     case BinaryMathOp::Mul:
-      mapped = ThreadBinaryMathOp::Mul;
-      break;
+      return lhs.mul(rhs);
     case BinaryMathOp::Div:
-      mapped = ThreadBinaryMathOp::Div;
-      break;
+      return lhs.div(rhs);
     case BinaryMathOp::TrueDiv:
-      mapped = ThreadBinaryMathOp::TrueDiv;
-      break;
+      return lhs.truediv(rhs);
     case BinaryMathOp::FloorDiv:
-      mapped = ThreadBinaryMathOp::FloorDiv;
-      break;
+      return lhs.floordiv(rhs);
     case BinaryMathOp::Mod:
-      mapped = ThreadBinaryMathOp::Mod;
-      break;
+      return lhs.mod(rhs);
     case BinaryMathOp::Pow:
-      mapped = ThreadBinaryMathOp::Pow;
-      break;
+      return lhs.pow(rhs);
   }
-  return lhs.numeric_binary(rhs, mapped);
+  PLUSS_FAIL("DataFrame::math: unsupported binary math op");
 }
 
 Thread apply_cmp_thread_scalar(const Thread& col, double other, BinaryCmpOp op) {
-  ThreadBinaryCompareOp mapped = ThreadBinaryCompareOp::Eq;
   switch (op) {
     case BinaryCmpOp::Eq:
-      mapped = ThreadBinaryCompareOp::Eq;
-      break;
+      return col.eq(other);
     case BinaryCmpOp::Ne:
-      mapped = ThreadBinaryCompareOp::Ne;
-      break;
+      return col.ne(other);
     case BinaryCmpOp::Lt:
-      mapped = ThreadBinaryCompareOp::Lt;
-      break;
+      return col.lt(other);
     case BinaryCmpOp::Le:
-      mapped = ThreadBinaryCompareOp::Le;
-      break;
+      return col.le(other);
     case BinaryCmpOp::Gt:
-      mapped = ThreadBinaryCompareOp::Gt;
-      break;
+      return col.gt(other);
     case BinaryCmpOp::Ge:
-      mapped = ThreadBinaryCompareOp::Ge;
-      break;
+      return col.ge(other);
   }
-  return col.compare(other, mapped);
+  PLUSS_FAIL("DataFrame::compare: unsupported binary compare op");
 }
 
 Thread apply_cmp_thread_pair(const Thread& lhs, const Thread& rhs, BinaryCmpOp op) {
-  ThreadBinaryCompareOp mapped = ThreadBinaryCompareOp::Eq;
   switch (op) {
     case BinaryCmpOp::Eq:
-      mapped = ThreadBinaryCompareOp::Eq;
-      break;
+      return lhs.eq(rhs);
     case BinaryCmpOp::Ne:
-      mapped = ThreadBinaryCompareOp::Ne;
-      break;
+      return lhs.ne(rhs);
     case BinaryCmpOp::Lt:
-      mapped = ThreadBinaryCompareOp::Lt;
-      break;
+      return lhs.lt(rhs);
     case BinaryCmpOp::Le:
-      mapped = ThreadBinaryCompareOp::Le;
-      break;
+      return lhs.le(rhs);
     case BinaryCmpOp::Gt:
-      mapped = ThreadBinaryCompareOp::Gt;
-      break;
+      return lhs.gt(rhs);
     case BinaryCmpOp::Ge:
-      mapped = ThreadBinaryCompareOp::Ge;
-      break;
+      return lhs.ge(rhs);
   }
-  return lhs.compare(rhs, mapped);
+  PLUSS_FAIL("DataFrame::compare: unsupported binary compare op");
 }
 
 pluss::Series dataframe_column_from_matrix_(const pluss::Series& matrix, std::int64_t column) {
@@ -1405,9 +1379,21 @@ pluss::Series thread_valid_on_platform_(const Thread& value,
   return valid;
 }
 
+std::vector<Thread> dataframe_columns_(const DataFrame& frame) {
+  std::vector<Thread> columns;
+  const auto& names = frame.features();
+  columns.reserve(names.size());
+  for (const auto& name : names) {
+    columns.push_back(frame.features(name));
+  }
+  return columns;
+}
+
+Thread null_thread_like_(const Thread& value, std::int64_t size, std::string_view where);
+
 DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMathOp op, bool reverse) {
-  const auto cols = frame.features();
-  const auto& names = frame.feature_names();
+  const auto cols = dataframe_columns_(frame);
+  const auto& names = frame.features();
   std::vector<Thread> out(cols.size());
 
   std::map<NumericBatchKey_, std::vector<std::size_t>> batches;
@@ -1449,14 +1435,137 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), frame.cases());
+  return DataFrame(std::move(columns), frame.caselbl());
 }
 
+DataFrame dataframe_math_frame(const DataFrame& lhs,
+                               const DataFrame& rhs,
+                               const AlignOptions& options,
+                               BinaryMathOp op);
+
 DataFrame dataframe_math_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryMathOp op) {
-  const auto matched = lhs.match(rhs);
-  const auto lhs_cols = matched.left.features();
-  const auto rhs_cols = matched.right.features();
-  const auto& names = matched.left.feature_names();
+  return dataframe_math_frame(lhs, rhs, AlignOptions{}, op);
+}
+
+AlignOptions row_mask_default_options_() {
+  AlignOptions options;
+  options.align = AlignBy::Caselbl;
+  return options;
+}
+
+Thread fill_numeric_missing_for_alignment_(const Thread& value, const AlignOptions& options) {
+  if (!options.fill.has_value() || !value.defined() || value.kind() != ThreadKind::Series) {
+    return value;
+  }
+  return value.fillna(*options.fill);
+}
+
+DataFrame fill_numeric_missing_for_alignment_(const DataFrame& frame, const AlignOptions& options) {
+  if (!options.fill.has_value()) {
+    return frame;
+  }
+  const auto cols = dataframe_columns_(frame);
+  const auto& names = frame.features();
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(cols.size());
+  for (std::size_t i = 0; i < cols.size(); ++i) {
+    out.emplace_back(names[i], fill_numeric_missing_for_alignment_(cols[i], options));
+  }
+  return DataFrame(std::move(out), frame.caselbl()).title(frame.title());
+}
+
+DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
+                                   const DataFrame& rhs,
+                                   std::string_view where) {
+  if (lhs.ncases() != rhs.ncases() || lhs.nfeats() != rhs.nfeats()) {
+    throw ::pluss::Error(
+        fmt::format("{}: positional frame alignment requires identical shape (lhs=({}, {}), rhs=({}, {}))",
+                    where,
+                    lhs.ncases(),
+                    lhs.nfeats(),
+                    rhs.ncases(),
+                    rhs.nfeats()));
+  }
+  const auto rhs_cols = dataframe_columns_(rhs);
+  const auto& lhs_names = lhs.features();
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(rhs_cols.size());
+  for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
+    out.emplace_back(lhs_names[i], rhs_cols[i]);
+  }
+  return DataFrame(std::move(out), lhs.caselbl()).title(rhs.title());
+}
+
+FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
+                                             const DataFrame& rhs,
+                                             const AlignOptions& options,
+                                             std::string_view where) {
+  switch (options.align) {
+    case AlignBy::Pos:
+      return FrameMatch{lhs, positional_rhs_like_lhs_(lhs, rhs, where)};
+    case AlignBy::Caselbl: {
+      if (lhs.nfeats() != rhs.nfeats()) {
+        throw ::pluss::Error(fmt::format(
+            "{}: AlignBy::Caselbl requires identical feature count for positional feature pairing "
+            "(lhs={}, rhs={})",
+            where,
+            lhs.nfeats(),
+            rhs.nfeats()));
+      }
+      const auto rhs_cols = dataframe_columns_(rhs);
+      const auto& lhs_names = lhs.features();
+      std::vector<std::pair<std::string, Thread>> renamed;
+      renamed.reserve(rhs_cols.size());
+      for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
+        renamed.emplace_back(lhs_names[i], rhs_cols[i]);
+      }
+      const auto renamed_rhs = DataFrame(std::move(renamed), rhs.caselbl()).title(rhs.title());
+      return lhs.match(renamed_rhs, FrameMatchOptions{
+          .cases = FrameMatchRule::Unite,
+          .features = FrameMatchRule::KeepLeft,
+      });
+    }
+    case AlignBy::Feature: {
+      if (lhs.ncases() != rhs.ncases()) {
+        throw ::pluss::Error(fmt::format(
+            "{}: AlignBy::Feature requires identical case count for positional case pairing "
+            "(lhs={}, rhs={})",
+            where,
+            lhs.ncases(),
+            rhs.ncases()));
+      }
+      const auto rhs_cols = dataframe_columns_(rhs);
+      const auto& rhs_names = rhs.features();
+      std::vector<std::pair<std::string, Thread>> relabeled;
+      relabeled.reserve(rhs_cols.size());
+      for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
+        relabeled.emplace_back(rhs_names[i], rhs_cols[i]);
+      }
+      const auto relabeled_rhs = DataFrame(std::move(relabeled), lhs.caselbl()).title(rhs.title());
+      return lhs.match(relabeled_rhs, FrameMatchOptions{
+          .cases = FrameMatchRule::KeepLeft,
+          .features = FrameMatchRule::Unite,
+      });
+    }
+    case AlignBy::Both:
+      return lhs.match(rhs, FrameMatchOptions{
+          .cases = FrameMatchRule::Unite,
+          .features = FrameMatchRule::Unite,
+      });
+  }
+  PLUSS_FAIL(std::string(where) + ": unsupported alignment mode");
+}
+
+DataFrame dataframe_math_frame(const DataFrame& lhs,
+                               const DataFrame& rhs,
+                               const AlignOptions& options,
+                               BinaryMathOp op) {
+  auto matched = prepare_frame_pair_for_alignment_(lhs, rhs, options, "DataFrame::math(DataFrame)");
+  matched.left = fill_numeric_missing_for_alignment_(matched.left, options);
+  matched.right = fill_numeric_missing_for_alignment_(matched.right, options);
+  const auto lhs_cols = dataframe_columns_(matched.left);
+  const auto rhs_cols = dataframe_columns_(matched.right);
+  const auto& names = matched.left.features();
 
   std::vector<Thread> out(lhs_cols.size());
   std::map<NumericPairBatchKey_, std::vector<std::size_t>> batches;
@@ -1500,12 +1609,200 @@ DataFrame dataframe_math_frame(const DataFrame& lhs, const DataFrame& rhs, Binar
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), matched.left.cases()).title(lhs.title());
+  return DataFrame(std::move(columns), matched.left.caselbl()).title(lhs.title());
+}
+
+Thread align_thread_to_feature_axis_(
+    const DataFrame& frame,
+    const Thread& value,
+    std::string_view where) {
+  PLUSS_CHECK(value.defined(), std::string(where) + ": rhs Thread is undefined");
+  PLUSS_CHECK(value.kind() == ThreadKind::Series && is_numeric_series_type(value.as_series()),
+              std::string(where) + ": rhs Thread must be numeric Series-backed");
+  const auto feature_names = frame.features();
+  if (feature_names.empty()) {
+    return null_thread_like_(value, 0, where);
+  }
+
+  const auto labels = value.caselbl();
+  std::unordered_map<std::string, std::vector<std::int64_t>> positions;
+  positions.reserve(static_cast<std::size_t>(value.size()));
+  for (std::int64_t i = 0; i < value.size(); ++i) {
+    positions[thread_scalar_string_at(labels, i)].push_back(i);
+  }
+
+  std::unordered_map<std::string, std::size_t> seen;
+  seen.reserve(feature_names.size());
+  std::vector<std::int64_t> rows;
+  std::vector<bool> present;
+  rows.reserve(feature_names.size());
+  present.reserve(feature_names.size());
+  for (const auto& name : feature_names) {
+    const auto occurrence = seen[name]++;
+    const auto found = positions.find(name);
+    if (found != positions.end() && occurrence < found->second.size()) {
+      const auto row = found->second[occurrence];
+      rows.push_back(row);
+      present.push_back(value.is_valid(row));
+    } else {
+      rows.push_back(0);
+      present.push_back(false);
+    }
+  }
+
+  auto out = value.take(std::span<const std::int64_t>(rows.data(), rows.size()));
+  auto validity = bool_series_from_keep(present);
+  if (detail::has_validity_mask(out)) {
+    auto prior = *detail::validity_mask(out);
+    if (prior.platform() != validity.platform()) {
+      prior = prior.to(validity.platform());
+    }
+    validity = validity.logical_and(prior);
+  }
+  return detail::with_validity_mask(out, validity);
+}
+
+Thread align_thread_to_case_axis_(
+    const DataFrame& frame,
+    const Thread& value,
+    std::string_view where) {
+  PLUSS_CHECK(value.defined(), std::string(where) + ": rhs Thread is undefined");
+  PLUSS_CHECK(value.kind() == ThreadKind::Series && is_numeric_series_type(value.as_series()),
+              std::string(where) + ": rhs Thread must be numeric Series-backed");
+  if (frame.ncases() == 0) {
+    return null_thread_like_(value, 0, where);
+  }
+
+  const auto labels = value.caselbl();
+  std::unordered_map<std::string, std::vector<std::int64_t>> positions;
+  positions.reserve(static_cast<std::size_t>(value.size()));
+  for (std::int64_t i = 0; i < value.size(); ++i) {
+    positions[thread_scalar_string_at(labels, i)].push_back(i);
+  }
+
+  const auto target_cases = frame.caselbl();
+  std::unordered_map<std::string, std::size_t> seen;
+  seen.reserve(static_cast<std::size_t>(frame.ncases()));
+  std::vector<std::int64_t> rows;
+  std::vector<bool> present;
+  rows.reserve(static_cast<std::size_t>(frame.ncases()));
+  present.reserve(static_cast<std::size_t>(frame.ncases()));
+  for (std::int64_t i = 0; i < frame.ncases(); ++i) {
+    const auto key = thread_scalar_string_at(target_cases, i);
+    const auto occurrence = seen[key]++;
+    const auto found = positions.find(key);
+    if (found != positions.end() && occurrence < found->second.size()) {
+      const auto row = found->second[occurrence];
+      rows.push_back(row);
+      present.push_back(value.is_valid(row));
+    } else {
+      rows.push_back(0);
+      present.push_back(false);
+    }
+  }
+
+  auto out = value.take(std::span<const std::int64_t>(rows.data(), rows.size()));
+  auto validity = bool_series_from_keep(present);
+  if (detail::has_validity_mask(out)) {
+    auto prior = *detail::validity_mask(out);
+    if (prior.platform() != validity.platform()) {
+      prior = prior.to(validity.platform());
+    }
+    validity = validity.logical_and(prior);
+  }
+  return detail::with_validity_mask(out, validity);
+}
+
+DataFrame dataframe_math_thread(const DataFrame& frame,
+                                const Thread& other,
+                                Axis axis,
+                                BinaryMathOp op,
+                                bool reverse,
+                                const AlignOptions& options) {
+  PLUSS_CHECK(other.defined(), "DataFrame::math(Thread): rhs Thread is undefined");
+  PLUSS_CHECK(other.kind() == ThreadKind::Series && is_numeric_series_type(other.as_series()),
+              "DataFrame::math(Thread): rhs Thread must be numeric Series-backed");
+  const auto cols = dataframe_columns_(frame);
+  const auto& names = frame.features();
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(cols.size());
+
+  if (axis == Axis::Case) {
+    Thread aligned;
+    switch (options.align) {
+      case AlignBy::Pos:
+        if (other.size() != frame.ncases()) {
+          throw ::pluss::Error(fmt::format(
+              "DataFrame::math(Thread, Axis::Case): positional alignment requires rhs length to match "
+              "DataFrame cases (rhs={}, cases={})",
+              other.size(),
+              frame.ncases()));
+        }
+        aligned = other;
+        break;
+      case AlignBy::Caselbl:
+        aligned = align_thread_to_case_axis_(frame, other, "DataFrame::math(Thread, Axis::Case)");
+        break;
+      case AlignBy::Feature:
+        PLUSS_FAIL("DataFrame::math(Thread, Axis::Case): AlignBy::Feature is not valid for case-axis Thread alignment");
+      case AlignBy::Both:
+        PLUSS_FAIL("DataFrame::math(Thread): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+    }
+    aligned = fill_numeric_missing_for_alignment_(aligned, options);
+    for (std::size_t i = 0; i < cols.size(); ++i) {
+      columns.emplace_back(names[i], reverse ? apply_math_thread_pair(aligned, cols[i], op)
+                                             : apply_math_thread_pair(cols[i], aligned, op));
+    }
+    return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+  }
+
+  Thread aligned;
+  switch (options.align) {
+    case AlignBy::Pos:
+      if (other.size() != frame.nfeats()) {
+        throw ::pluss::Error(fmt::format(
+            "DataFrame::math(Thread, Axis::Feature): positional alignment requires rhs length to match "
+            "DataFrame features (rhs={}, features={})",
+            other.size(),
+            frame.nfeats()));
+      }
+      aligned = other;
+      break;
+    case AlignBy::Feature:
+      aligned = align_thread_to_feature_axis_(frame, other, "DataFrame::math(Thread, Axis::Feature)");
+      break;
+    case AlignBy::Caselbl:
+      PLUSS_FAIL("DataFrame::math(Thread, Axis::Feature): AlignBy::Caselbl is not valid for feature-axis Thread alignment");
+    case AlignBy::Both:
+      PLUSS_FAIL("DataFrame::math(Thread): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+  }
+  aligned = fill_numeric_missing_for_alignment_(aligned, options);
+  const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  for (std::size_t i = 0; i < cols.size(); ++i) {
+    if (!aligned.is_valid(static_cast<std::int64_t>(i))) {
+      columns.emplace_back(
+          names[i],
+          null_thread_like_(cols[i], frame.ncases(), "DataFrame::math(Thread, Axis::Feature)"));
+      continue;
+    }
+    columns.emplace_back(
+        names[i],
+        apply_math_thread_scalar(cols[i], values[i], op, reverse));
+  }
+  return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+}
+
+DataFrame dataframe_math_thread(const DataFrame& frame,
+                                const Thread& other,
+                                Axis axis,
+                                BinaryMathOp op,
+                                bool reverse) {
+  return dataframe_math_thread(frame, other, axis, op, reverse, AlignOptions{});
 }
 
 DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp op) {
-  const auto cols = frame.features();
-  const auto& names = frame.feature_names();
+  const auto cols = dataframe_columns_(frame);
+  const auto& names = frame.features();
   std::vector<Thread> out(cols.size());
 
   std::map<NumericBatchKey_, std::vector<std::size_t>> batches;
@@ -1547,14 +1844,28 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), frame.cases());
+  return DataFrame(std::move(columns), frame.caselbl());
 }
 
+DataFrame dataframe_cmp_frame(const DataFrame& lhs,
+                              const DataFrame& rhs,
+                              const AlignOptions& options,
+                              BinaryCmpOp op);
+
 DataFrame dataframe_cmp_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryCmpOp op) {
-  const auto matched = lhs.match(rhs);
-  const auto lhs_cols = matched.left.features();
-  const auto rhs_cols = matched.right.features();
-  const auto& names = matched.left.feature_names();
+  return dataframe_cmp_frame(lhs, rhs, AlignOptions{}, op);
+}
+
+DataFrame dataframe_cmp_frame(const DataFrame& lhs,
+                              const DataFrame& rhs,
+                              const AlignOptions& options,
+                              BinaryCmpOp op) {
+  auto matched = prepare_frame_pair_for_alignment_(lhs, rhs, options, "DataFrame::compare(DataFrame)");
+  matched.left = fill_numeric_missing_for_alignment_(matched.left, options);
+  matched.right = fill_numeric_missing_for_alignment_(matched.right, options);
+  const auto lhs_cols = dataframe_columns_(matched.left);
+  const auto rhs_cols = dataframe_columns_(matched.right);
+  const auto& names = matched.left.features();
 
   std::vector<Thread> out(lhs_cols.size());
   std::map<NumericPairBatchKey_, std::vector<std::size_t>> batches;
@@ -1598,7 +1909,87 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs, const DataFrame& rhs, Binary
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), matched.left.cases()).title(lhs.title());
+  return DataFrame(std::move(columns), matched.left.caselbl()).title(lhs.title());
+}
+
+DataFrame dataframe_cmp_thread(const DataFrame& frame,
+                               const Thread& other,
+                               Axis axis,
+                               BinaryCmpOp op,
+                               const AlignOptions& options) {
+  PLUSS_CHECK(other.defined(), "DataFrame::compare(Thread): rhs Thread is undefined");
+  const auto cols = dataframe_columns_(frame);
+  const auto& names = frame.features();
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(cols.size());
+
+  if (axis == Axis::Case) {
+    Thread aligned;
+    switch (options.align) {
+      case AlignBy::Pos:
+        if (other.size() != frame.ncases()) {
+          throw ::pluss::Error(fmt::format(
+              "DataFrame::compare(Thread, Axis::Case): positional alignment requires rhs length to match "
+              "DataFrame cases (rhs={}, cases={})",
+              other.size(),
+              frame.ncases()));
+        }
+        aligned = other;
+        break;
+      case AlignBy::Caselbl:
+        aligned = other.align(frame.caselbl(), options);
+        break;
+      case AlignBy::Feature:
+        PLUSS_FAIL("DataFrame::compare(Thread, Axis::Case): AlignBy::Feature is not valid for case-axis Thread alignment");
+      case AlignBy::Both:
+        PLUSS_FAIL("DataFrame::compare(Thread): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+    }
+    aligned = fill_numeric_missing_for_alignment_(aligned, options);
+    for (std::size_t i = 0; i < cols.size(); ++i) {
+      columns.emplace_back(names[i], apply_cmp_thread_pair(cols[i], aligned, op));
+    }
+    return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+  }
+
+  Thread aligned;
+  switch (options.align) {
+    case AlignBy::Pos:
+      if (other.size() != frame.nfeats()) {
+        throw ::pluss::Error(fmt::format(
+            "DataFrame::compare(Thread, Axis::Feature): positional alignment requires rhs length to match "
+            "DataFrame features (rhs={}, features={})",
+            other.size(),
+            frame.nfeats()));
+      }
+      aligned = other;
+      break;
+    case AlignBy::Feature:
+      aligned = align_thread_to_feature_axis_(frame, other, "DataFrame::compare(Thread, Axis::Feature)");
+      break;
+    case AlignBy::Caselbl:
+      PLUSS_FAIL("DataFrame::compare(Thread, Axis::Feature): AlignBy::Caselbl is not valid for feature-axis Thread alignment");
+    case AlignBy::Both:
+      PLUSS_FAIL("DataFrame::compare(Thread): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+  }
+  aligned = fill_numeric_missing_for_alignment_(aligned, options);
+  const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  for (std::size_t i = 0; i < cols.size(); ++i) {
+    if (!aligned.is_valid(static_cast<std::int64_t>(i))) {
+      columns.emplace_back(
+          names[i],
+          null_thread_like_(cols[i], frame.ncases(), "DataFrame::compare(Thread, Axis::Feature)"));
+      continue;
+    }
+    columns.emplace_back(names[i], apply_cmp_thread_scalar(cols[i], values[i], op));
+  }
+  return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+}
+
+DataFrame dataframe_cmp_thread(const DataFrame& frame,
+                               const Thread& other,
+                               Axis axis,
+                               BinaryCmpOp op) {
+  return dataframe_cmp_thread(frame, other, axis, op, AlignOptions{});
 }
 
 DataFrame arrange_impl_frame(
@@ -1698,7 +2089,7 @@ private:
   Thread resolve_feature(std::string_view ident) const {
     const auto low = lower_copy(owned_name(ident));
     if (low == "case" || low == "cases") {
-      return frame_.cases();
+      return frame_.caselbl();
     }
     return frame_.features(ident);
   }
@@ -1931,7 +2322,7 @@ detail::DataFrameImpl::DataFrameImpl(std::vector<std::string> names,
       case_axis_(std::move(case_axis)),
       title_(std::move(title)) {
   if (cases.has_value()) {
-    cases_ = *cases;
+    cases_ = detail::with_label_kind(*cases, LabelKind::Case);
   }
   validate_and_reindex_();
 }
@@ -1994,6 +2385,210 @@ namespace {
 pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::DataFrameImpl& src) {
   return pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, src.columns_, src.cases_, src.title_, src.case_axis_);
+}
+
+Thread clear_assignment_metadata_(const Thread& value) {
+  auto out = value;
+  if (detail::has_display_labels(out)) {
+    out = detail::clear_display_labels(out);
+  }
+  if (out.has_display_name()) {
+    out = out.clear_display_name();
+  }
+  return out;
+}
+
+Thread null_thread_like_(const Thread& value, std::int64_t size, std::string_view where) {
+  PLUSS_CHECK(size >= 0, std::string(where) + ": output size must be non-negative");
+  Thread out;
+  switch (value.kind()) {
+    case ThreadKind::Series:
+      out = Thread(pluss::Series::zeros(
+          {size}, value.as_series().scalar_type(), value.as_series().platform()));
+      break;
+    case ThreadKind::Note:
+      out = Thread(pluss::make_note(
+          std::vector<std::string>(static_cast<std::size_t>(size), std::string{})));
+      break;
+    case ThreadKind::Timeline:
+      out = Thread(pluss::make_timeline(
+          std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
+      break;
+    case ThreadKind::TimeIndex:
+      out = Thread(pluss::make_timeindex(
+          std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
+      break;
+  }
+  return clear_assignment_metadata_(detail::with_validity_mask(
+      out, pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool)));
+}
+
+Thread broadcast_assignment_thread_(const Thread& value, std::int64_t size, std::string_view where) {
+  PLUSS_CHECK(value.defined(), std::string(where) + ": input feature is undefined");
+  PLUSS_CHECK(value.size() == 1, std::string(where) + ": scalar broadcast requires a single value");
+  if (size == 0) {
+    return null_thread_like_(value, 0, where);
+  }
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(size), 0);
+  return clear_assignment_metadata_(value.take(indices));
+}
+
+Thread align_assignment_thread_(
+    const detail::DataFrameImpl& src,
+    const Thread& value,
+    std::string_view where) {
+  if (value.size() == 0) {
+    return null_thread_like_(value, src.nrows_, where);
+  }
+
+  const auto labels = value.caselbl();
+  std::unordered_map<std::string, std::int64_t> positions;
+  positions.reserve(static_cast<std::size_t>(value.size()));
+  for (std::int64_t i = 0; i < value.size(); ++i) {
+    const auto key = thread_scalar_string_at(labels, i);
+    PLUSS_CHECK(positions.emplace(key, i).second,
+                std::string(where) + ": duplicate rhs case label '" + key + "'");
+  }
+
+  std::vector<std::int64_t> take_indices;
+  take_indices.reserve(static_cast<std::size_t>(src.nrows_));
+  std::vector<bool> matched;
+  matched.reserve(static_cast<std::size_t>(src.nrows_));
+  for (std::int64_t row = 0; row < src.nrows_; ++row) {
+    const auto it = positions.find(thread_scalar_string_at(src.cases_, row));
+    if (it == positions.end()) {
+      take_indices.push_back(0);
+      matched.push_back(false);
+    } else {
+      take_indices.push_back(it->second);
+      matched.push_back(value.is_valid(it->second));
+    }
+  }
+
+  auto out = value.take(take_indices);
+  auto validity = bool_series_from_keep(matched);
+  if (detail::has_validity_mask(out)) {
+    if (validity.platform() != detail::validity_mask(out)->platform()) {
+      validity = validity.to(detail::validity_mask(out)->platform());
+    }
+    validity = validity.logical_and(*detail::validity_mask(out));
+  }
+  return clear_assignment_metadata_(detail::with_validity_mask(out, validity));
+}
+
+bool assignment_cases_match_(
+    const detail::DataFrameImpl& src,
+    const Thread& value) {
+  if (!value.defined() || value.size() != src.nrows_) {
+    return false;
+  }
+  const auto labels = value.caselbl();
+  for (std::int64_t row = 0; row < src.nrows_; ++row) {
+    if (thread_scalar_string_at(labels, row) != thread_scalar_string_at(src.cases_, row)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+enum class AlignUse_ : std::uint8_t {
+  Assignment = 0,
+  Mask = 1,
+};
+
+std::string align_use_name_(AlignUse_ use) {
+  switch (use) {
+    case AlignUse_::Assignment:
+      return "assignment";
+    case AlignUse_::Mask:
+      return "mask";
+  }
+  return "operation";
+}
+
+Thread prepare_thread_for_use_(
+    const detail::DataFrameImpl& src,
+    const Thread& value,
+    std::string_view where,
+    const AlignOptions& options,
+    AlignUse_ use) {
+  PLUSS_CHECK(value.defined(), std::string(where) + ": input Thread is undefined");
+  if (src.columns_.empty()) {
+    return clear_assignment_metadata_(value);
+  }
+
+  switch (options.align) {
+    case AlignBy::Pos:
+      if (value.size() != src.nrows_) {
+        throw ::pluss::Error(
+            fmt::format("{}: positional {} requires rhs length to match DataFrame cases "
+                        "(rhs={}, cases={})",
+                        where,
+                        align_use_name_(use),
+                        value.size(),
+                        src.nrows_));
+      }
+      return clear_assignment_metadata_(value);
+    case AlignBy::Caselbl:
+      if (assignment_cases_match_(src, value)) {
+        return clear_assignment_metadata_(value);
+      }
+      return clear_assignment_metadata_(value.align(src.cases_, options));
+    case AlignBy::Feature:
+      PLUSS_FAIL(std::string(where) + ": AlignBy::Feature is not valid here; "
+                 + align_use_name_(use) + " expects one value per case");
+    case AlignBy::Both:
+      PLUSS_FAIL(std::string(where) + ": AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
+  }
+  PLUSS_FAIL(std::string(where) + ": unsupported alignment mode");
+}
+
+Thread prepare_feature_assignment_(
+    const detail::DataFrameImpl& src,
+    const Thread& value,
+    std::string_view where,
+    const AlignOptions& options) {
+  return prepare_thread_for_use_(src, value, where, options, AlignUse_::Assignment);
+}
+
+Thread prepare_mask_thread_(
+    const detail::DataFrameImpl& src,
+    const Thread& bool_mask,
+    std::string_view where,
+    const AlignOptions& options) {
+  auto prepared = prepare_thread_for_use_(src, bool_mask, where, options, AlignUse_::Mask);
+  PLUSS_CHECK(prepared.kind() == ThreadKind::Series, std::string(where) + ": mask must be a Series thread");
+  return prepared;
+}
+
+Thread prepare_feature_assignment_(
+    const detail::DataFrameImpl& src,
+    const Thread& value,
+    std::string_view where) {
+  return prepare_feature_assignment_(src, value, where, AlignOptions{});
+}
+
+Thread prepare_mask_thread_(
+    const detail::DataFrameImpl& src,
+    const Thread& bool_mask,
+    std::string_view where) {
+  return prepare_mask_thread_(src, bool_mask, where, AlignOptions{});
+}
+
+void set_prepared_feature_(
+    detail::DataFrameImpl& frame,
+    std::string_view name,
+    const Thread& prepared) {
+  PLUSS_CHECK(prepared.defined(), "DataFrame::set: prepared feature is undefined");
+  const auto key = owned_name(name);
+  const auto it = frame.name_to_idx_.find(key);
+  if (it == frame.name_to_idx_.end()) {
+    frame.names_.push_back(key);
+    frame.columns_.push_back(prepared);
+  } else {
+    frame.columns_[it->second] = prepared;
+  }
+  frame.validate_and_reindex_();
 }
 
 } // namespace

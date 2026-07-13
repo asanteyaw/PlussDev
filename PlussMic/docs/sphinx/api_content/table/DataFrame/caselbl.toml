@@ -1,0 +1,50 @@
+summary = """
+Return the current case axis exactly as it is stored on the frame.
+
+Use `DataFrame::caselbl()` when you want the row labels themselves as a thread-like object. This is the axis accessor, not a row-selection method.
+"""
+
+returns = """
+`const Thread&`
+    Borrowed reference to the current case axis.
+
+    The payload family is preserved:
+    - note-backed cases stay note-backed,
+    - numeric cases stay series-backed,
+    - temporal cases stay timeline/time-index backed.
+"""
+
+see_also = [
+  "<a href=\"#case_study\"><code>DataFrame::case_study</code></a>: select rows by position, label, mask, or structured case key."
+]
+
+notes = [
+  """
+`caselbl()` does not copy or transform the axis. It exposes the current case labels in their native thread form.
+""",
+  """
+If you need row selection, use `case_study(...)`. If you need numeric labels as numeric data, call `caselbl().as_series()` explicitly when the case axis is series-backed.
+"""
+]
+
+[[examples]]
+title = "Inspect a labeled case axis directly."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
+    {"region", pluss::make_note({"south", "south", "middle", "north"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
+    {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
+}).caselbl(pluss::make_note({"A100", "B200", "B200", "D400"}));
+
+auto out = sales.caselbl();
+"""
+output = """
+0  A100
+1  B200
+2  B200
+3  D400
+dtype: Note
+"""

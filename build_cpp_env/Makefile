@@ -765,6 +765,19 @@ plussai_nodej_flow_bundle_demo/fast:
 .PHONY : plussai_nodej_flow_bundle_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_nodej_sklearn_gap_demo
+
+# Build rule for target.
+plussai_nodej_sklearn_gap_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodej_sklearn_gap_demo
+.PHONY : plussai_nodej_sklearn_gap_demo
+
+# fast build rule for target.
+plussai_nodej_sklearn_gap_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_sklearn_gap_demo.dir/build
+.PHONY : plussai_nodej_sklearn_gap_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussai_nodej_multiclass_demo
 
 # Build rule for target.
@@ -4600,6 +4613,71 @@ plussmic_dataframe_ab_reference_demo/fast:
 .PHONY : plussmic_dataframe_ab_reference_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_thread_a_reference_demo
+
+# Build rule for target.
+plussmic_thread_a_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_thread_a_reference_demo
+.PHONY : plussmic_thread_a_reference_demo
+
+# fast build rule for target.
+plussmic_thread_a_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build
+.PHONY : plussmic_thread_a_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_dataframe_b_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_b_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_b_reference_demo
+.PHONY : plussmic_dataframe_b_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_b_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/build
+.PHONY : plussmic_dataframe_b_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_thread_b_reference_demo
+
+# Build rule for target.
+plussmic_thread_b_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_thread_b_reference_demo
+.PHONY : plussmic_thread_b_reference_demo
+
+# fast build rule for target.
+plussmic_thread_b_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build
+.PHONY : plussmic_thread_b_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_dataframe_cd_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_cd_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_cd_reference_demo
+.PHONY : plussmic_dataframe_cd_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_cd_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/build
+.PHONY : plussmic_dataframe_cd_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_thread_cd_reference_demo
+
+# Build rule for target.
+plussmic_thread_cd_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_thread_cd_reference_demo
+.PHONY : plussmic_thread_cd_reference_demo
+
+# fast build rule for target.
+plussmic_thread_cd_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build
+.PHONY : plussmic_thread_cd_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_dataframe_view_demo
 
 # Build rule for target.
@@ -4702,6 +4780,19 @@ plussmic_dataframe_hijk_reference_demo: cmake_check_build_system
 plussmic_dataframe_hijk_reference_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_hijk_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_hijk_reference_demo.dir/build
 .PHONY : plussmic_dataframe_hijk_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_dataframe_rich_reference_demo
+
+# Build rule for target.
+plussmic_dataframe_rich_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_rich_reference_demo
+.PHONY : plussmic_dataframe_rich_reference_demo
+
+# fast build rule for target.
+plussmic_dataframe_rich_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build
+.PHONY : plussmic_dataframe_rich_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_us_accidents_eda_verbs_demo
@@ -7631,6 +7722,7 @@ help:
 	@echo "... plussai_nodej_multiclass_demo"
 	@echo "... plussai_nodej_online_demo"
 	@echo "... plussai_nodej_prep_split_demo"
+	@echo "... plussai_nodej_sklearn_gap_demo"
 	@echo "... plussai_nodej_unsupervised_demo"
 	@echo "... plussai_nodej_workflow_tuning_demo"
 	@echo "... plussai_outlier_holdout_parity_probe"
@@ -7708,12 +7800,15 @@ help:
 	@echo "... plussmic_bundle_model_tests"
 	@echo "... plussmic_csv_engine_bench"
 	@echo "... plussmic_dataframe_ab_reference_demo"
+	@echo "... plussmic_dataframe_b_reference_demo"
+	@echo "... plussmic_dataframe_cd_reference_demo"
 	@echo "... plussmic_dataframe_describe_demo"
 	@echo "... plussmic_dataframe_e_reference_demo"
 	@echo "... plussmic_dataframe_efg_reference_demo"
 	@echo "... plussmic_dataframe_hijk_reference_demo"
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
+	@echo "... plussmic_dataframe_rich_reference_demo"
 	@echo "... plussmic_dataframe_thread_values_demo"
 	@echo "... plussmic_dataframe_tl_batched_demo"
 	@echo "... plussmic_dataframe_versatile_methods_demo"
@@ -7734,6 +7829,9 @@ help:
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
+	@echo "... plussmic_thread_a_reference_demo"
+	@echo "... plussmic_thread_b_reference_demo"
+	@echo "... plussmic_thread_cd_reference_demo"
 	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"
 	@echo "... plusspl_2d_all_families_demo"

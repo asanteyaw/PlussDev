@@ -120,8 +120,8 @@ void test_stream_methods() {
   expect(metric.defined(), "metric stream should be defined");
   expect(metric.kind() == StreamKind::Series, "metric should be Series stream");
   expect(metric.size() == 5, "metric stream size mismatch");
-  expect(metric.has_cases(), "metric should carry cases after kindelize");
-  expect(metric.has_validity_mask(), "metric should carry validity mask");
+  expect(metric.has_caselbl(), "metric should carry cases after kindelize");
+  expect(pluss::kindle::detail::has_validity_mask(metric), "metric should carry validity mask");
 
   metric = metric.with_meta("source", "test");
   expect(metric.meta("source").value_or("") == "test", "meta write/read mismatch");
@@ -129,7 +129,7 @@ void test_stream_methods() {
   expect(!metric.meta("source").has_value(), "meta should be removed");
 
   const auto filled = metric.fillna(0.0);
-  expect(!filled.has_validity_mask(), "fillna should clear validity mask");
+  expect(!pluss::kindle::detail::has_validity_mask(filled), "fillna should clear validity mask");
   expect(filled.as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Stream::fillna(double) should preserve valid values and replace only null rows");
   const auto dropped = metric.dropna();
@@ -268,7 +268,7 @@ void test_catalog_sort_group_missing() {
   const auto note_filled = mixed_missing.fillna("missing", {"note_col"});
   expect(std::string(note_filled.stream("note_col").as_note().at(1)) == "missing",
          "Catalog::fillna(string, keys) should replace null Note values");
-  expect(!note_filled.stream("note_col").has_validity_mask(),
+  expect(!pluss::kindle::detail::has_validity_mask(note_filled.stream("note_col")),
          "Catalog::fillna(string, keys) should clear Note mask when fully resolved");
 
   const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
@@ -277,7 +277,7 @@ void test_catalog_sort_group_missing() {
   const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
   expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
          "Catalog::fillna(Timeline, keys) should replace null Timeline values");
-  expect(!ts_filled.stream("ts_col").has_validity_mask(),
+  expect(!pluss::kindle::detail::has_validity_mask(ts_filled.stream("ts_col")),
          "Catalog::fillna(Timeline, keys) should clear Timeline mask when fully resolved");
 
   const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
@@ -286,7 +286,7 @@ void test_catalog_sort_group_missing() {
   const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
          "Catalog::fillna(TimeIndex, keys) should replace null TimeIndex values");
-  expect(!ti_filled.stream("ti_col").has_validity_mask(),
+  expect(!pluss::kindle::detail::has_validity_mask(ti_filled.stream("ti_col")),
          "Catalog::fillna(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
 
   const auto id_as_note = base.cast({"id"}, pluss::table::ThreadCastTarget::Note);

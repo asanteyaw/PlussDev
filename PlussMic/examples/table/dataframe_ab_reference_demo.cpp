@@ -15,6 +15,7 @@ int main() {
   using pluss::codem::ScalarType;
   using pluss::make_note;
   using pluss::make_series;
+  using pluss::table::Axis;
   using pluss::table::DataFrame;
 
   auto sales = DataFrame({
@@ -92,12 +93,12 @@ int main() {
       {"", "assignment", DataFrame::SummaryOp::Std},
   }, false).to_string() << "\n\n";
 
-  std::cout << "ALIGN_CASES\n" << scratch.align_cases(grades.cases()).to_string() << "\n\n";
+  std::cout << "ALIGN_CASES\n" << scratch.align_cases(grades.caselbl()).to_string() << "\n\n";
 
   std::cout << "ALL_AXIS0\n" << flags.all().to_string() << "\n\n";
-  std::cout << "ALL_AXIS1\n" << flags.all(1).to_string() << "\n\n";
+  std::cout << "ALL_AXIS1\n" << flags.all(Axis::Case).to_string() << "\n\n";
   std::cout << "ANY_AXIS0\n" << flags.any().to_string() << "\n\n";
-  std::cout << "ANY_AXIS1\n" << flags.any(1).to_string() << "\n\n";
+  std::cout << "ANY_AXIS1\n" << flags.any(Axis::Case).to_string() << "\n\n";
 
   std::cout << "ASSIGN_THREAD\n";
   std::cout << grades.assign({
@@ -119,15 +120,25 @@ int main() {
   }).to_string() << "\n\n";
 
   std::cout << "ASTYPE\n" << raw.astype({"passed"}, ScalarType::Bool).to_string() << "\n\n";
-  std::cout << "AT\n" << grades.at(1, "student") << "\n\n";
+  std::cout << "ASTYPE_MULTI\n" << raw.astype({
+      {"student_id", ScalarType::Int64},
+      {"passed", ScalarType::Bool},
+  }).to_string() << "\n\n";
 
   std::cout << "BFILL\n" << missing_scores.bfill().to_string() << "\n\n";
   std::cout << "BOTTOM\n" << grades.bottom("final", 2).to_string() << "\n";
-  std::cout << "\nRESHUFFLE_ROWS\n" << grades.reshuffle(0, 7).to_string() << "\n\n";
-  std::cout << "RESHUFFLE_FEATURES\n" << grades.reshuffle(1, 7).to_string() << "\n\n";
-  std::cout << "RESAMPLE_COUNT\n" << ticks.resample("stamp", {"load", "city"}, "D", "count", 1, false).to_string() << "\n\n";
-  std::cout << "RESAMPLE_SIZE\n" << ticks.resample("stamp", {"load", "city"}, "D", "size", 1, false).to_string() << "\n\n";
-  std::cout << "RESAMPLE_MEAN\n" << ticks.resample("stamp", {"load"}, "D", "mean", 1, false).to_string() << "\n";
+  std::cout << "\nRESHUFFLE_ROWS\n" << grades.reshuffle(Axis::Case, 7).to_string() << "\n\n";
+  std::cout << "RESHUFFLE_FEATURES\n" << grades.reshuffle(Axis::Feature, 7).to_string() << "\n\n";
+  std::cout << "RESAMPLE_COUNT\n"
+            << ticks.ts("load")
+                   .resample("stamp", "D", pluss::subsp::stats::ts::ResampleOp::Count)
+                   .to_string()
+            << "\n\n";
+  std::cout << "RESAMPLE_MEAN\n"
+            << ticks.ts("load")
+                   .resample("stamp", "D", pluss::subsp::stats::ts::ResampleOp::Mean)
+                   .to_string()
+            << "\n";
 
   return 0;
 }

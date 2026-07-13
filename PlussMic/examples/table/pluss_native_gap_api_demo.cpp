@@ -87,9 +87,9 @@ int main() {
   auto df_quantiles = df.percentiles({0.1, 0.5, 0.9});
   auto df_modes = df.mode();
   auto df_ranks = df.rank(RankTieRule::Average, RankNullRule::Keep);
-  auto df_var = df.var(Axis::Feature, StatisticOptions{.ddof = 1, .min_count = 2});
-  auto df_std = df.std(Axis::Feature, StatisticOptions{.ddof = 1, .min_count = 2});
-  auto df_se = df.se(Axis::Feature, ErrorTarget::Mean, StatisticOptions{.ddof = 1, .min_count = 2});
+  auto df_var = df.var(Axis::Case, StatisticOptions{.ddof = 1, .min_count = 2});
+  auto df_std = df.std(Axis::Case, StatisticOptions{.ddof = 1, .min_count = 2});
+  auto df_se = df.se(Axis::Case, ErrorTarget::Mean, StatisticOptions{.ddof = 1, .min_count = 2});
   auto df_skew = df.skew();
   auto df_kurt = df.kurtosis();
   auto df_scan = df.scan(ScanStatistic::Sum);
@@ -149,7 +149,7 @@ int main() {
         return value.note("label").upper();
       });
 
-  auto df_nulls_dropped = df.dropna({"score", "label"}, true);
+  auto df_nulls_dropped = df.dropnull({"score", "label"}, true);
   auto df_ndistinct = df.ndistinct({"group", "label"}, true);
   auto df_freq = df.freq({"group"}, 0, true);
   auto df_duplicated = df.duplicated({"score"});

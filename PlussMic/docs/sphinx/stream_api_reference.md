@@ -1,10 +1,15 @@
 # Stream API Reference
 
-# Practical Stream API Reference
-
-## API Reference Style
-
 This page documents the full public `Stream` surface for the Kindle model.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
+
+## A
 
 ### `abs`
 
@@ -14,24 +19,22 @@ This page documents the full public `Stream` surface for the Kindle model.
 Stream::abs() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns a numeric stream whose values are the absolute values of the current numeric payload.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply `abs` elementwise and inspect the returned result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -39,11 +42,17 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.abs();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#as_note">
+    <span class="label">Next</span>
+    <span class="title">as_note</span>
+  </a>
+</div>
 
 ### `as_note`
 
@@ -53,24 +62,22 @@ Series([10.0, 20.0, 30.0])
 Stream::as_note() -> const pluss::Note&
 ```
 
-#### Notes
+#### What It Does
 
 Interprets or converts the current payload as a note/text stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const pluss::Note&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Convert the current object into the `note` representation before continuing with another type-specific workflow.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
@@ -78,7 +85,7 @@ auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}
 auto out = stream.as_note();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Note(["Accra", "Tema", "Kumasi"])
@@ -89,6 +96,16 @@ Note(["Accra", "Tema", "Kumasi"])
 - These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
 - `astype(...)` is the direct numeric-series dtype path.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#abs">
+    <span class="label">Previous</span>
+    <span class="title">abs</span>
+  </a>
+  <a class="next-link" href="#as_series">
+    <span class="label">Next</span>
+    <span class="title">as_series</span>
+  </a>
+</div>
 
 ### `as_series`
 
@@ -98,24 +115,22 @@ Note(["Accra", "Tema", "Kumasi"])
 Stream::as_series() -> const pluss::Series&
 ```
 
-#### Notes
+#### What It Does
 
 Interprets or converts the current payload as a numeric series stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const pluss::Series&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Convert the current object into the `series` representation before continuing with another type-specific workflow.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -123,7 +138,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.as_series();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -134,6 +149,16 @@ Series([10.0, 20.0, 30.0])
 - These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
 - `astype(...)` is the direct numeric-series dtype path.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_note">
+    <span class="label">Previous</span>
+    <span class="title">as_note</span>
+  </a>
+  <a class="next-link" href="#as_timeindex">
+    <span class="label">Next</span>
+    <span class="title">as_timeindex</span>
+  </a>
+</div>
 
 ### `as_timeindex`
 
@@ -143,24 +168,22 @@ Series([10.0, 20.0, 30.0])
 Stream::as_timeindex() -> const pluss::TimeIndex&
 ```
 
-#### Notes
+#### What It Does
 
 Interprets or converts the current payload as a time-index stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const pluss::TimeIndex&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Convert the current object into the `timeindex` representation before continuing with another type-specific workflow.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
@@ -168,10 +191,10 @@ auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z
 auto out = stream.as_timeindex();
 ```
 
-#### Expected output
+##### Output
 
 ```text
-Timeline([...])
+TimeIndex([...])
 ```
 
 #### Conversion Rules
@@ -179,6 +202,16 @@ Timeline([...])
 - These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
 - `astype(...)` is the direct numeric-series dtype path.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_series">
+    <span class="label">Previous</span>
+    <span class="title">as_series</span>
+  </a>
+  <a class="next-link" href="#as_timeline">
+    <span class="label">Next</span>
+    <span class="title">as_timeline</span>
+  </a>
+</div>
 
 ### `as_timeline`
 
@@ -188,24 +221,22 @@ Timeline([...])
 Stream::as_timeline() -> const pluss::Timeline&
 ```
 
-#### Notes
+#### What It Does
 
 Interprets or converts the current payload as a timeline stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const pluss::Timeline&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Convert the current object into the `timeline` representation before continuing with another type-specific workflow.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z", "2024-01-01T10:05:00Z"}));
@@ -213,7 +244,7 @@ auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z"
 auto out = stream.as_timeline();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Timeline([...])
@@ -224,34 +255,42 @@ Timeline([...])
 - These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
 - `astype(...)` is the direct numeric-series dtype path.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_timeindex">
+    <span class="label">Previous</span>
+    <span class="title">as_timeindex</span>
+  </a>
+  <a class="next-link" href="#astype">
+    <span class="label">Next</span>
+    <span class="title">astype</span>
+  </a>
+</div>
 
 ### `astype`
 
 #### Signature
 
 ```cpp
-Stream::astype(dtype: pluss::ScalarType) -> Stream
+Stream::astype(pluss::ScalarType dtype) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This changes the semantic or numeric type so later operations route through the correct implementation path.
 
-#### Inputs
+#### Parameters
 
-`dtype` : `pluss::ScalarType`
+**dtype**
     Target scalar dtype used by this conversion overload.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -259,7 +298,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.astype(pluss::ScalarType::Float64);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -270,6 +309,18 @@ Series([10.0, 20.0, 30.0])
 - These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
 - `astype(...)` is the direct numeric-series dtype path.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_timeline">
+    <span class="label">Previous</span>
+    <span class="title">as_timeline</span>
+  </a>
+  <a class="next-link" href="#bfill">
+    <span class="label">Next</span>
+    <span class="title">bfill</span>
+  </a>
+</div>
+
+## B
 
 ### `bfill`
 
@@ -279,33 +330,30 @@ Series([10.0, 20.0, 30.0])
 Stream::bfill() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Backward-fills one stream while preserving its case labels and stream-level structure.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
 
+Example 1. Call the simplest overload.
+
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0, 0.0}));
-stream = stream.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::ScalarType::Bool));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0, std::numeric_limits<double>::quiet_NaN()}));
 
 auto out = stream.bfill();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 30.0, 30.0, null])
@@ -316,6 +364,18 @@ Series([10.0, 30.0, 30.0, null])
 - `bfill()` applies thread-level backward fill while preserving the stream case labels.
 - Use this when you want the fill behavior of `Thread::bfill()` but you are already operating in Kindle/Stream workflows.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#astype">
+    <span class="label">Previous</span>
+    <span class="title">astype</span>
+  </a>
+  <a class="next-link" href="#cases">
+    <span class="label">Next</span>
+    <span class="title">cases</span>
+  </a>
+</div>
+
+## C
 
 ### `cases`
 
@@ -325,67 +385,73 @@ Series([10.0, 30.0, 30.0, null])
 Stream::cases() -> const std::optional<pluss::table::Thread>&
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::optional<pluss::table::Thread>&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.cases();
+auto out = stream.caselbl();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 ["cs0", "cs1", "cs2"]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#bfill">
+    <span class="label">Previous</span>
+    <span class="title">bfill</span>
+  </a>
+  <a class="next-link" href="#cast">
+    <span class="label">Next</span>
+    <span class="title">cast</span>
+  </a>
+</div>
 
 ### `cast`
 
 #### Signature
 
 ```cpp
-Stream::cast(target: pluss::table::ThreadCastTarget, series_dtype: std::optional<pluss::ScalarType> = std::nullopt) -> Stream
+Stream::cast(pluss::table::ThreadCastTarget target, std::optional<pluss::ScalarType> series_dtype = std::nullopt) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This changes the semantic or numeric type so later operations route through the correct implementation path.
 
-#### Inputs
+#### Parameters
 
-`target` : `pluss::table::ThreadCastTarget`
+**target**
     Target payload family chosen by this cast overload.
 
-`series_dtype` : `std::optional<pluss::ScalarType>`
+**series_dtype**
     Optional scalar dtype used when the cast target is a numeric `Series`.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"1.0", "2.0", "3.0"}));
@@ -393,7 +459,7 @@ auto stream = pluss::kindle::Stream(pluss::make_note({"1.0", "2.0", "3.0"}));
 auto out = stream.cast(pluss::table::ThreadCastTarget::Series, pluss::ScalarType::Float64);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -404,6 +470,16 @@ Series([10.0, 20.0, 30.0])
 - These methods convert the underlying payload while keeping stream-level structure such as cases and metadata in view.
 - `astype(...)` is the direct numeric-series dtype path.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#cases">
+    <span class="label">Previous</span>
+    <span class="title">cases</span>
+  </a>
+  <a class="next-link" href="#clear_cases">
+    <span class="label">Next</span>
+    <span class="title">clear_cases</span>
+  </a>
+</div>
 
 ### `clear_cases`
 
@@ -413,36 +489,44 @@ Series([10.0, 20.0, 30.0])
 Stream::clear_cases() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns a stream with its case labels removed.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Return an updated copy after changing structural metadata, cases, or validity state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.clear_cases();
+auto out = stream.clear_caselbl();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#cast">
+    <span class="label">Previous</span>
+    <span class="title">cast</span>
+  </a>
+  <a class="next-link" href="#clear_cases_">
+    <span class="label">Next</span>
+    <span class="title">clear_cases_</span>
+  </a>
+</div>
 
 ### `clear_cases_`
 
@@ -452,24 +536,22 @@ Series([10.0, 20.0, 30.0])
 Stream::clear_cases_() -> Stream&
 ```
 
-#### Notes
+#### What It Does
 
 Removes the stream case labels in place.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Mutate the current object in place, then inspect the updated state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -477,120 +559,50 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 stream.clear_cases_();
 ```
 
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `clear_validity_mask`
-
-#### Signature
-
-```cpp
-Stream::clear_validity_mask() -> Stream
-```
-
-#### Notes
-
-Returns a stream with the validity mask removed, so all entries are treated as valid again.
-
-#### Inputs
-
-`None`
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = stream.clear_validity_mask();
-```
-
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
-
-### `clear_validity_mask_`
-
-#### Signature
-
-```cpp
-Stream::clear_validity_mask_() -> Stream&
-```
-
-#### Notes
-
-Removes the validity mask in place, so all entries are treated as valid again.
-
-#### Inputs
-
-`None`
-
-#### Output
-
-`Stream&`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-stream.clear_validity_mask_();
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#clear_cases">
+    <span class="label">Previous</span>
+    <span class="title">clear_cases</span>
+  </a>
+  <a class="next-link" href="#clip">
+    <span class="label">Next</span>
+    <span class="title">clip</span>
+  </a>
+</div>
 
 ### `clip`
 
 #### Signature
 
 ```cpp
-Stream::clip(min_value: double, max_value: double) -> Stream
+Stream::clip(double min_value, double max_value) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Clamps numeric stream values to the supplied lower and upper bounds.
 
-#### Inputs
+#### Parameters
 
-`min_value` : `scalar`
+**min_value**
     Lower/upper boundary used by this overload.
 
-`max_value` : `scalar`
+**max_value**
     Lower/upper boundary used by this overload.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply `clip` elementwise and inspect the returned result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -598,11 +610,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.clip(0.0, 25.0);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#clear_cases_">
+    <span class="label">Previous</span>
+    <span class="title">clear_cases_</span>
+  </a>
+  <a class="next-link" href="#defined">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
+  </a>
+</div>
+
+## D
 
 ### `defined`
 
@@ -612,24 +636,22 @@ Series([10.0, 20.0, 30.0])
 Stream::defined() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `defined` property of the current object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -637,39 +659,47 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.defined();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#clip">
+    <span class="label">Previous</span>
+    <span class="title">clip</span>
+  </a>
+  <a class="next-link" href="#drop_meta">
+    <span class="label">Next</span>
+    <span class="title">drop_meta</span>
+  </a>
+</div>
 
 ### `drop_meta`
 
 #### Signature
 
 ```cpp
-Stream::drop_meta(key: std::string_view) -> Stream
+Stream::drop_meta(std::string_view key) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns a stream with one metadata key removed.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Return an updated copy after changing structural metadata, cases, or validity state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -678,7 +708,7 @@ stream = stream.with_meta("unit", "km");
 auto out = stream.drop_meta("unit");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
@@ -689,34 +719,42 @@ Series([10.0, 20.0, 30.0])
 - These methods remove one metadata key only.
 - Payload values, cases, and validity remain unchanged.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#drop_meta_">
+    <span class="label">Next</span>
+    <span class="title">drop_meta_</span>
+  </a>
+</div>
 
 ### `drop_meta_`
 
 #### Signature
 
 ```cpp
-Stream::drop_meta_(key: std::string_view) -> Stream&
+Stream::drop_meta_(std::string_view key) -> Stream&
 ```
 
-#### Notes
+#### What It Does
 
 Removes one metadata key in place.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `Stream&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Mutate the current object in place, then inspect the updated state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -725,10 +763,10 @@ stream = stream.with_meta("unit", "km");
 stream.drop_meta_("unit");
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+Series([10.0, 20.0, 30.0])
 ```
 
 #### Practical Behavior
@@ -736,6 +774,16 @@ The call completes and returns the contract described under Output.
 - These methods remove one metadata key only.
 - Payload values, cases, and validity remain unchanged.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#drop_meta">
+    <span class="label">Previous</span>
+    <span class="title">drop_meta</span>
+  </a>
+  <a class="next-link" href="#dropna">
+    <span class="label">Next</span>
+    <span class="title">dropna</span>
+  </a>
+</div>
 
 ### `dropna`
 
@@ -745,33 +793,30 @@ The call completes and returns the contract described under Output.
 Stream::dropna() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
 
+Example 1. Call the simplest overload.
+
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}));
-stream = stream.with_validity_mask(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));
 
 auto out = stream.dropna();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 30.0])
@@ -782,45 +827,65 @@ Series([10.0, 30.0])
 - `dropna()` removes invalid entries from the stream while preserving stream semantics for the remaining entries.
 - Use it when rows with null payload values should be removed entirely.
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#drop_meta_">
+    <span class="label">Previous</span>
+    <span class="title">drop_meta_</span>
+  </a>
+  <a class="next-link" href="#dtype">
+    <span class="label">Next</span>
+    <span class="title">dtype</span>
+  </a>
+</div>
 
-### `dtype_name`
+### `dtype`
 
 #### Signature
 
 ```cpp
-Stream::dtype_name() -> std::string
+Stream::dtype() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Returns the scalar dtype name used by the current numeric payload.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `dtype` property of the current object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.dtype_name();
+auto out = stream.dtype();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Float64
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#dropna">
+    <span class="label">Previous</span>
+    <span class="title">dropna</span>
+  </a>
+  <a class="next-link" href="#exp">
+    <span class="label">Next</span>
+    <span class="title">exp</span>
+  </a>
+</div>
+
+## E
 
 ### `exp`
 
@@ -830,24 +895,22 @@ Float64
 Stream::exp() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Applies the elementwise exponential to a numeric stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply `exp` elementwise and inspect the returned result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -855,11 +918,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.exp();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#dtype">
+    <span class="label">Previous</span>
+    <span class="title">dtype</span>
+  </a>
+  <a class="next-link" href="#ffill">
+    <span class="label">Next</span>
+    <span class="title">ffill</span>
+  </a>
+</div>
+
+## F
 
 ### `ffill`
 
@@ -869,24 +944,22 @@ Series([10.0, 20.0, 30.0])
 Stream::ffill() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -894,46 +967,55 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.ffill();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#exp">
+    <span class="label">Previous</span>
+    <span class="title">exp</span>
+  </a>
+  <a class="next-link" href="#fillna">
+    <span class="label">Next</span>
+    <span class="title">fillna</span>
+  </a>
+</div>
 
 ### `fillna`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Stream::fillna(value: const char*) -> Stream
+Stream::fillna(const char* value) -> Stream
+
+Stream::fillna(const pluss::TimeIndex& value) -> Stream
+
+Stream::fillna(const pluss::Timeline& value) -> Stream
+
+Stream::fillna(double value) -> Stream
+
+Stream::fillna(std::string_view value) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
-`value` : `const char*`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::fillna(value: double) -> Stream`
-- `Stream::fillna(value: std::string_view) -> Stream`
-- `Stream::fillna(value: const pluss::Timeline&) -> Stream`
-- `Stream::fillna(value: const pluss::TimeIndex&) -> Stream`
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
@@ -941,46 +1023,12 @@ auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}
 auto out = stream.fillna("Unknown");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Stream::fillna(value: const pluss::TimeIndex&) -> Stream
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `const pluss::TimeIndex&`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::fillna(value: double) -> Stream`
-- `Stream::fillna(value: std::string_view) -> Stream`
-- `Stream::fillna(value: const char*) -> Stream`
-- `Stream::fillna(value: const pluss::Timeline&) -> Stream`
-
-#### Examples
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
@@ -988,46 +1036,12 @@ auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z
 auto out = stream.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Stream::fillna(value: const pluss::Timeline&) -> Stream
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `const pluss::Timeline&`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::fillna(value: double) -> Stream`
-- `Stream::fillna(value: std::string_view) -> Stream`
-- `Stream::fillna(value: const char*) -> Stream`
-- `Stream::fillna(value: const pluss::TimeIndex&) -> Stream`
-
-#### Examples
+Example 3. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z", "2024-01-01T10:05:00Z"}));
@@ -1035,46 +1049,12 @@ auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z"
 auto out = stream.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"));
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Stream::fillna(value: double) -> Stream
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `scalar`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::fillna(value: std::string_view) -> Stream`
-- `Stream::fillna(value: const char*) -> Stream`
-- `Stream::fillna(value: const pluss::Timeline&) -> Stream`
-- `Stream::fillna(value: const pluss::TimeIndex&) -> Stream`
-
-#### Examples
+Example 4. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1082,46 +1062,12 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.fillna(0.0);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Note(["Accra", "Tema", "Kumasi"])
 ```
-
-### `fillna`
-
-#### Signature
-
-```cpp
-Stream::fillna(value: std::string_view) -> Stream
-```
-
-#### Notes
-
-This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
-
-#### Inputs
-
-`value` : `std::string_view`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::fillna(value: double) -> Stream`
-- `Stream::fillna(value: const char*) -> Stream`
-- `Stream::fillna(value: const pluss::Timeline&) -> Stream`
-- `Stream::fillna(value: const pluss::TimeIndex&) -> Stream`
-
-#### Examples
+Example 5. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
@@ -1129,39 +1075,47 @@ auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}
 auto out = stream.fillna("Unknown");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Note(["Accra", "Tema", "Kumasi"])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#ffill">
+    <span class="label">Previous</span>
+    <span class="title">ffill</span>
+  </a>
+  <a class="next-link" href="#filter">
+    <span class="label">Next</span>
+    <span class="title">filter</span>
+  </a>
+</div>
 
 ### `filter`
 
 #### Signature
 
 ```cpp
-Stream::filter(bool_mask: const pluss::Series&) -> Stream
+Stream::filter(const pluss::Series& bool_mask) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the entries where the supplied boolean mask is true.
 
-#### Inputs
+#### Parameters
 
-`bool_mask` : `const pluss::Series&`
+**bool_mask**
     Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1170,42 +1124,50 @@ auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto out = stream.filter(mask);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#fillna">
+    <span class="label">Previous</span>
+    <span class="title">fillna</span>
+  </a>
+  <a class="next-link" href="#from_thread">
+    <span class="label">Next</span>
+    <span class="title">from_thread</span>
+  </a>
+</div>
 
 ### `from_thread`
 
 #### Signature
 
 ```cpp
-Stream::from_thread(thread: const pluss::table::Thread&, cases: std::optional<pluss::table::Thread> = std::nullopt) -> Stream
+Stream::from_thread(const pluss::table::Thread& thread, std::optional<pluss::table::Thread> cases = std::nullopt) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Builds a Kindle stream from a table thread.
 
-#### Inputs
+#### Parameters
 
-`thread` : `const pluss::table::Thread&`
+**thread**
     Thread payload supplied to this overload.
 
-`cases` : `std::optional<pluss::table::Thread>`
+**cases**
     Case-label thread to attach to the current object.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1213,11 +1175,23 @@ auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = pluss::kindle::Stream::from_thread(thread);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter">
+    <span class="label">Previous</span>
+    <span class="title">filter</span>
+  </a>
+  <a class="next-link" href="#has_cases">
+    <span class="label">Next</span>
+    <span class="title">has_cases</span>
+  </a>
+</div>
+
+## H
 
 ### `has_cases`
 
@@ -1227,64 +1201,70 @@ Series([10.0, 20.0, 30.0])
 Stream::has_cases() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the stream currently carries explicit case labels.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.has_cases();
+auto out = stream.has_caselbl();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#from_thread">
+    <span class="label">Previous</span>
+    <span class="title">from_thread</span>
+  </a>
+  <a class="next-link" href="#has_meta">
+    <span class="label">Next</span>
+    <span class="title">has_meta</span>
+  </a>
+</div>
 
 ### `has_meta`
 
 #### Signature
 
 ```cpp
-Stream::has_meta(key: std::string_view) -> bool
+Stream::has_meta(std::string_view key) -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether a metadata key exists on the stream.
 
-#### Inputs
+#### Parameters
 
-`key` : `std::string_view`
+**key**
     Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1293,78 +1273,47 @@ stream = stream.with_meta("unit", "km");
 auto out = stream.has_meta("unit");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
-
-### `has_validity_mask`
-
-#### Signature
-
-```cpp
-Stream::has_validity_mask() -> bool
-```
-
-#### Notes
-
-Reports whether the stream currently carries a validity mask.
-
-#### Inputs
-
-`None`
-
-#### Output
-
-`bool`
-    Boolean status or membership result.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = stream.has_validity_mask();
-```
-
-#### Expected output
-
-```text
-true
-```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#has_cases">
+    <span class="label">Previous</span>
+    <span class="title">has_cases</span>
+  </a>
+  <a class="next-link" href="#head">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>
 
 ### `head`
 
 #### Signature
 
 ```cpp
-Stream::head(n: std::int64_t) -> Stream
+Stream::head(std::int64_t n) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the first `n` entries of the stream.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the first part of the current object without changing the source data.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1372,11 +1321,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.head();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#has_meta">
+    <span class="label">Previous</span>
+    <span class="title">has_meta</span>
+  </a>
+  <a class="next-link" href="#isnull">
+    <span class="label">Next</span>
+    <span class="title">isnull</span>
+  </a>
+</div>
+
+## I
 
 ### `isnull`
 
@@ -1386,24 +1347,22 @@ Series([10.0, 20.0, 30.0])
 Stream::isnull() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1411,11 +1370,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.isnull();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="#kind">
+    <span class="label">Next</span>
+    <span class="title">kind</span>
+  </a>
+</div>
+
+## K
 
 ### `kind`
 
@@ -1425,24 +1396,22 @@ Series([10.0, 20.0, 30.0])
 Stream::kind() -> StreamKind
 ```
 
-#### Notes
+#### What It Does
 
 Returns which payload kind this stream currently stores, such as Series, Note, Timeline, or TimeIndex.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `StreamKind`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `kind` property of the current object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1450,11 +1419,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.kind();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#isnull">
+    <span class="label">Previous</span>
+    <span class="title">isnull</span>
+  </a>
+  <a class="next-link" href="#log">
+    <span class="label">Next</span>
+    <span class="title">log</span>
+  </a>
+</div>
+
+## L
 
 ### `log`
 
@@ -1464,24 +1445,22 @@ Series
 Stream::log() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Applies the elementwise natural logarithm to a numeric stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply `log` elementwise and inspect the returned result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1489,11 +1468,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.log();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kind">
+    <span class="label">Previous</span>
+    <span class="title">kind</span>
+  </a>
+  <a class="next-link" href="#max">
+    <span class="label">Next</span>
+    <span class="title">max</span>
+  </a>
+</div>
+
+## M
 
 ### `max`
 
@@ -1503,24 +1494,22 @@ Series([10.0, 20.0, 30.0])
 Stream::max() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the maximum value of a numeric stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `max` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1528,11 +1517,21 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.max();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#log">
+    <span class="label">Previous</span>
+    <span class="title">log</span>
+  </a>
+  <a class="next-link" href="#mean">
+    <span class="label">Next</span>
+    <span class="title">mean</span>
+  </a>
+</div>
 
 ### `mean`
 
@@ -1542,24 +1541,22 @@ Series([20.0])
 Stream::mean() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the mean value of a numeric stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `mean` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1567,87 +1564,52 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.mean();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#max">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
+  <a class="next-link" href="#meta">
+    <span class="label">Next</span>
+    <span class="title">meta</span>
+  </a>
+</div>
 
 ### `meta`
 
-#### Signature
+#### Signatures
 
 ```cpp
 Stream::meta() -> const std::unordered_map<std::string, std::string>&
+
+Stream::meta(std::string_view key) -> std::optional<std::string>
 ```
 
-#### Notes
+#### What It Does
 
 Returns the value stored under one metadata key.
 
-#### Inputs
+#### Parameters
 
-`None`
+**key**
+    Name of the target slot or stream.
 
-#### Output
+#### Returns
 
 `const std::unordered_map<std::string, std::string>&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::meta(key: std::string_view) -> std::optional<std::string>`
-
-#### Examples
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-stream = stream.with_meta("unit", "km");
-auto out = stream.meta("unit");
-```
-
-#### Expected output
-
-```text
-km
-```
-
-### `meta`
-
-#### Signature
-
-```cpp
-Stream::meta(key: std::string_view) -> std::optional<std::string>
-```
-
-#### Notes
-
-Returns the value stored under one metadata key.
-
-#### Inputs
-
-`key` : `std::string_view`
-    Name of the target slot or stream.
-
-#### Output
-
 `std::optional<std::string>`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::meta() -> const std::unordered_map<std::string, std::string>&`
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1656,11 +1618,35 @@ stream = stream.with_meta("unit", "km");
 auto out = stream.meta("unit");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 km
 ```
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream = stream.with_meta("unit", "km");
+auto out = stream.meta("unit");
+```
+
+##### Output
+
+```text
+km
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#mean">
+    <span class="label">Previous</span>
+    <span class="title">mean</span>
+  </a>
+  <a class="next-link" href="#min">
+    <span class="label">Next</span>
+    <span class="title">min</span>
+  </a>
+</div>
 
 ### `min`
 
@@ -1670,24 +1656,22 @@ km
 Stream::min() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the minimum value of a numeric stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `min` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1695,11 +1679,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.min();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#meta">
+    <span class="label">Previous</span>
+    <span class="title">meta</span>
+  </a>
+  <a class="next-link" href="#notnull">
+    <span class="label">Next</span>
+    <span class="title">notnull</span>
+  </a>
+</div>
+
+## N
 
 ### `notnull`
 
@@ -1709,24 +1705,22 @@ Series([20.0])
 Stream::notnull() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1734,39 +1728,49 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.notnull();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#min">
+    <span class="label">Previous</span>
+    <span class="title">min</span>
+  </a>
+  <a class="next-link" href="#show">
+    <span class="label">Next</span>
+    <span class="title">show</span>
+  </a>
+</div>
+
+## S
 
 ### `show`
 
 #### Signature
 
 ```cpp
-Stream::show(os: std::ostream&) -> void
+Stream::show(std::ostream& os) -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
-`os` : `std::ostream&`
+**os**
     Destination output stream used instead of the default display or print target.
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Write the output to a caller-provided stream.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1774,11 +1778,21 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 stream.show(std::cout);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#notnull">
+    <span class="label">Previous</span>
+    <span class="title">notnull</span>
+  </a>
+  <a class="next-link" href="#size">
+    <span class="label">Next</span>
+    <span class="title">size</span>
+  </a>
+</div>
 
 ### `size`
 
@@ -1788,24 +1802,22 @@ Series([10.0, 20.0, 30.0])
 Stream::size() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `size` property of the current object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1813,42 +1825,50 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.size();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 3
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
+  </a>
+  <a class="next-link" href="#slice">
+    <span class="label">Next</span>
+    <span class="title">slice</span>
+  </a>
+</div>
 
 ### `slice`
 
 #### Signature
 
 ```cpp
-Stream::slice(start: std::int64_t, stop: std::int64_t) -> Stream
+Stream::slice(std::int64_t start, std::int64_t stop) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns a contiguous slice `[start, stop)` of the stream.
 
-#### Inputs
+#### Parameters
 
-`start` : `std::int64_t`
+**start**
     Inclusive starting position of the slice.
 
-`stop` : `std::int64_t`
+**stop**
     Exclusive ending position of the slice.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect one contiguous positional slice from the current object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1856,39 +1876,47 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.slice(0, 2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#size">
+    <span class="label">Previous</span>
+    <span class="title">size</span>
+  </a>
+  <a class="next-link" href="#std">
+    <span class="label">Next</span>
+    <span class="title">std</span>
+  </a>
+</div>
 
 ### `std`
 
 #### Signature
 
 ```cpp
-Stream::std(unbiased: bool = true) -> Stream
+Stream::std(bool unbiased = true) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the standard deviation of a numeric stream.
 
-#### Inputs
+#### Parameters
 
-`unbiased` : `bool`
+**unbiased**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `std` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1896,11 +1924,21 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.std(true);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#slice">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
+  <a class="next-link" href="#sum">
+    <span class="label">Next</span>
+    <span class="title">sum</span>
+  </a>
+</div>
 
 ### `sum`
 
@@ -1910,24 +1948,22 @@ Series([20.0])
 Stream::sum() -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the sum of a numeric stream.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `sum` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1935,39 +1971,49 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.sum();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#std">
+    <span class="label">Previous</span>
+    <span class="title">std</span>
+  </a>
+  <a class="next-link" href="#tail">
+    <span class="label">Next</span>
+    <span class="title">tail</span>
+  </a>
+</div>
+
+## T
 
 ### `tail`
 
 #### Signature
 
 ```cpp
-Stream::tail(n: std::int64_t) -> Stream
+Stream::tail(std::int64_t n) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the last `n` entries of the stream.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the last part of the current object without changing the source data.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -1975,39 +2021,47 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.tail();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#sum">
+    <span class="label">Previous</span>
+    <span class="title">sum</span>
+  </a>
+  <a class="next-link" href="#take">
+    <span class="label">Next</span>
+    <span class="title">take</span>
+  </a>
+</div>
 
 ### `take`
 
 #### Signature
 
 ```cpp
-Stream::take(indices: std::span<const std::int64_t>) -> Stream
+Stream::take(std::span<const std::int64_t> indices) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the entries at the requested integer positions.
 
-#### Inputs
+#### Parameters
 
-`indices` : `std::span<const std::int64_t>`
+**indices**
     Integer positions used to select, reorder, or address entries.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several integer positions together.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2016,11 +2070,21 @@ std::vector<std::int64_t> picks{0, 2};
 auto out = stream.take(picks);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tail">
+    <span class="label">Previous</span>
+    <span class="title">tail</span>
+  </a>
+  <a class="next-link" href="#to_json">
+    <span class="label">Next</span>
+    <span class="title">to_json</span>
+  </a>
+</div>
 
 ### `to_json`
 
@@ -2030,24 +2094,22 @@ Series([10.0, 20.0, 30.0])
 Stream::to_json() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2055,11 +2117,21 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.to_json();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#take">
+    <span class="label">Previous</span>
+    <span class="title">take</span>
+  </a>
+  <a class="next-link" href="#to_string">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
 
 ### `to_string`
 
@@ -2069,24 +2141,22 @@ Series([10.0, 20.0, 30.0])
 Stream::to_string() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2094,42 +2164,52 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.to_string();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_json">
+    <span class="label">Previous</span>
+    <span class="title">to_json</span>
+  </a>
+  <a class="next-link" href="#to_thread">
+    <span class="label">Next</span>
+    <span class="title">to_thread</span>
+  </a>
+</div>
 
 ### `to_thread`
 
-#### Signature
+#### Signatures
 
 ```cpp
 Stream::to_thread() -> pluss::table::Thread
+
+Stream::to_thread(std::int64_t start, std::int64_t stop) -> pluss::table::Thread
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`None`
+**start**
+    Inclusive starting position of the slice.
 
-#### Output
+**stop**
+    Exclusive ending position of the slice.
+
+#### Returns
 
 `pluss::table::Thread`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::to_thread(start: std::int64_t, stop: std::int64_t) -> pluss::table::Thread`
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2137,46 +2217,12 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.to_thread();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 [10.0, 20.0, 30.0]
 ```
-
-### `to_thread`
-
-#### Signature
-
-```cpp
-Stream::to_thread(start: std::int64_t, stop: std::int64_t) -> pluss::table::Thread
-```
-
-#### Notes
-
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
-
-#### Inputs
-
-`start` : `std::int64_t`
-    Inclusive starting position of the slice.
-
-`stop` : `std::int64_t`
-    Exclusive ending position of the slice.
-
-#### Output
-
-`pluss::table::Thread`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::to_thread() -> pluss::table::Thread`
-
-#### Examples
+Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2184,11 +2230,23 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.to_thread(0, 2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 [10.0, 20.0, 30.0]
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_string">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+  <a class="next-link" href="#unique">
+    <span class="label">Next</span>
+    <span class="title">unique</span>
+  </a>
+</div>
+
+## U
 
 ### `unique`
 
@@ -2198,24 +2256,22 @@ auto out = stream.to_thread(0, 2);
 Stream::unique() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2223,78 +2279,49 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.unique();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_thread">
+    <span class="label">Previous</span>
+    <span class="title">to_thread</span>
+  </a>
+  <a class="next-link" href="#var">
+    <span class="label">Next</span>
+    <span class="title">var</span>
+  </a>
+</div>
 
-### `validity_mask`
-
-#### Signature
-
-```cpp
-Stream::validity_mask() -> const std::optional<pluss::Series>&
-```
-
-#### Notes
-
-Returns the current validity mask as a boolean series.
-
-#### Inputs
-
-`None`
-
-#### Output
-
-`const std::optional<pluss::Series>&`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = stream.validity_mask();
-```
-
-#### Expected output
-
-```text
-[true, false, true]
-```
+## V
 
 ### `var`
 
 #### Signature
 
 ```cpp
-Stream::var(unbiased: bool = true) -> Stream
+Stream::var(bool unbiased = true) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns the variance of a numeric stream.
 
-#### Inputs
+#### Parameters
 
-`unbiased` : `bool`
+**unbiased**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Compute `var` and inspect the resulting summary value or summary object.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2302,125 +2329,155 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.var(true);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([20.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#unique">
+    <span class="label">Previous</span>
+    <span class="title">unique</span>
+  </a>
+  <a class="next-link" href="#with_cases">
+    <span class="label">Next</span>
+    <span class="title">with_cases</span>
+  </a>
+</div>
+
+## W
 
 ### `with_cases`
 
 #### Signature
 
 ```cpp
-Stream::with_cases(cases: const pluss::table::Thread&) -> Stream
+Stream::with_cases(const pluss::table::Thread& cases) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns a new stream with the supplied case labels attached.
 
-#### Inputs
+#### Parameters
 
-`cases` : `const pluss::table::Thread&`
+**cases**
     Case-label thread to attach to the current object.
 
-#### Output
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Return an updated copy after changing structural metadata, cases, or validity state.
 
 ```cpp
 auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.with_cases(cases);
+auto out = stream.caselbl(cases);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#var">
+    <span class="label">Previous</span>
+    <span class="title">var</span>
+  </a>
+  <a class="next-link" href="#with_cases_">
+    <span class="label">Next</span>
+    <span class="title">with_cases_</span>
+  </a>
+</div>
 
 ### `with_cases_`
 
 #### Signature
 
 ```cpp
-Stream::with_cases_(cases: const pluss::table::Thread&) -> Stream&
+Stream::with_cases_(const pluss::table::Thread& cases) -> Stream&
 ```
 
-#### Notes
+#### What It Does
 
 Attaches the supplied case labels in place.
 
-#### Inputs
+#### Parameters
 
-`cases` : `const pluss::table::Thread&`
+**cases**
     Case-label thread to attach to the current object.
 
-#### Output
+#### Returns
 
 `Stream&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Mutate the current object in place, then inspect the updated state.
 
 ```cpp
 auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-stream.with_cases_(cases);
+stream.caselbl_( cases);
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#with_cases">
+    <span class="label">Previous</span>
+    <span class="title">with_cases</span>
+  </a>
+  <a class="next-link" href="#with_meta">
+    <span class="label">Next</span>
+    <span class="title">with_meta</span>
+  </a>
+</div>
 
 ### `with_meta`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Stream::with_meta(items: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Stream
+Stream::with_meta(std::initializer_list<std::pair<std::string_view, std::string_view>> items) -> Stream
+
+Stream::with_meta(std::string key, std::string value) -> Stream
 ```
 
-#### Notes
+#### What It Does
 
 Returns a new stream with one metadata key/value attached.
 
-#### Inputs
+#### Parameters
 
-`items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
+**items**
     Inline collection passed directly at the call site.
 
-#### Output
+**key**
+    Name of the target slot or stream.
+
+**value**
+    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
+
+#### Returns
 
 `Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::with_meta(key: std::string, value: std::string) -> Stream`
-
 #### Examples
+
+Example 1. Return an updated copy after changing structural metadata, cases, or validity state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2428,46 +2485,12 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.with_meta("unit", "km");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
-
-### `with_meta`
-
-#### Signature
-
-```cpp
-Stream::with_meta(key: std::string, value: std::string) -> Stream
-```
-
-#### Notes
-
-Returns a new stream with one metadata key/value attached.
-
-#### Inputs
-
-`key` : `std::string`
-    Name of the target slot or stream.
-
-`value` : `std::string`
-    Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::with_meta(items: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Stream`
-
-#### Examples
+Example 2. Return an updated copy after changing structural metadata, cases, or validity state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2475,90 +2498,55 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = stream.with_meta("unit", "km");
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#with_cases_">
+    <span class="label">Previous</span>
+    <span class="title">with_cases_</span>
+  </a>
+  <a class="next-link" href="#with_meta_">
+    <span class="label">Next</span>
+    <span class="title">with_meta_</span>
+  </a>
+</div>
 
 ### `with_meta_`
 
-#### Signature
+#### Signatures
 
 ```cpp
-Stream::with_meta_(items: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Stream&
+Stream::with_meta_(std::initializer_list<std::pair<std::string_view, std::string_view>> items) -> Stream&
+
+Stream::with_meta_(std::string key, std::string value) -> Stream&
 ```
 
-#### Notes
+#### What It Does
 
 Adds or updates one metadata key/value in place.
 
-#### Inputs
+#### Parameters
 
-`items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
+**items**
     Inline collection passed directly at the call site.
 
-#### Output
-
-`Stream&`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::with_meta_(key: std::string, value: std::string) -> Stream&`
-
-#### Examples
-
-```cpp
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-stream.with_meta_("unit", "km");
-```
-
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `with_meta_`
-
-#### Signature
-
-```cpp
-Stream::with_meta_(key: std::string, value: std::string) -> Stream&
-```
-
-#### Notes
-
-Adds or updates one metadata key/value in place.
-
-#### Inputs
-
-`key` : `std::string`
+**key**
     Name of the target slot or stream.
 
-`value` : `std::string`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Stream&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### See also
-
-- `Stream::with_meta_(items: std::initializer_list<std::pair<std::string_view, std::string_view>>) -> Stream&`
-
 #### Examples
+
+Example 1. Mutate the current object in place, then inspect the updated state.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -2566,90 +2554,27 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 stream.with_meta_("unit", "km");
 ```
 
-#### Expected output
-
-```text
-The call completes and returns the contract described under Output.
-```
-
-### `with_validity_mask`
-
-#### Signature
-
-```cpp
-Stream::with_validity_mask(mask: const pluss::Series&) -> Stream
-```
-
-#### Notes
-
-Returns a new stream with the supplied validity mask attached.
-
-#### Inputs
-
-`mask` : `const pluss::Series&`
-    Boolean mask used by this overload to decide which rows, values, or items participate.
-
-#### Output
-
-`Stream`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
-auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-
-auto out = stream.with_validity_mask(mask);
-```
-
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
-
-### `with_validity_mask_`
-
-#### Signature
+Example 2. Mutate the current object in place, then inspect the updated state.
 
 ```cpp
-Stream::with_validity_mask_(mask: const pluss::Series&) -> Stream&
-```
-
-#### Notes
-
-Attaches the supplied validity mask in place.
-
-#### Inputs
-
-`mask` : `const pluss::Series&`
-    Boolean mask used by this overload to decide which rows, values, or items participate.
-
-#### Output
-
-`Stream&`
-    Value produced by this call.
-
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
-#### Examples
-
-```cpp
-auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-stream.with_validity_mask_(mask);
+stream.with_meta_("unit", "km");
 ```
 
-#### Expected output
+##### Output
 
 ```text
-The call completes and returns the contract described under Output.
+Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#with_meta">
+    <span class="label">Previous</span>
+    <span class="title">with_meta</span>
+  </a>
+</div>

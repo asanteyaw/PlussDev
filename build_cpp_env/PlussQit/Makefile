@@ -7843,6 +7843,30 @@ tests/CodeM/test_shape_cat_stack_math.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_shape_cat_stack_math.cpp.s
 .PHONY : tests/CodeM/test_shape_cat_stack_math.cpp.s
 
+tests/CodeM/test_validate_warn.o: tests/CodeM/test_validate_warn.cpp.o
+.PHONY : tests/CodeM/test_validate_warn.o
+
+# target to build an object file
+tests/CodeM/test_validate_warn.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_validate_warn.cpp.o
+.PHONY : tests/CodeM/test_validate_warn.cpp.o
+
+tests/CodeM/test_validate_warn.i: tests/CodeM/test_validate_warn.cpp.i
+.PHONY : tests/CodeM/test_validate_warn.i
+
+# target to preprocess a source file
+tests/CodeM/test_validate_warn.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_validate_warn.cpp.i
+.PHONY : tests/CodeM/test_validate_warn.cpp.i
+
+tests/CodeM/test_validate_warn.s: tests/CodeM/test_validate_warn.cpp.s
+.PHONY : tests/CodeM/test_validate_warn.s
+
+# target to generate assembly for a file
+tests/CodeM/test_validate_warn.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_validate_warn.cpp.s
+.PHONY : tests/CodeM/test_validate_warn.cpp.s
+
 tests/CodeM/test_where_maskedfill_nonzero_take_put.o: tests/CodeM/test_where_maskedfill_nonzero_take_put.cpp.o
 .PHONY : tests/CodeM/test_where_maskedfill_nonzero_take_put.o
 
@@ -9111,6 +9135,9 @@ help:
 	@echo "... tests/CodeM/test_shape_cat_stack_math.o"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.i"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.s"
+	@echo "... tests/CodeM/test_validate_warn.o"
+	@echo "... tests/CodeM/test_validate_warn.i"
+	@echo "... tests/CodeM/test_validate_warn.s"
 	@echo "... tests/CodeM/test_where_maskedfill_nonzero_take_put.o"
 	@echo "... tests/CodeM/test_where_maskedfill_nonzero_take_put.i"
 	@echo "... tests/CodeM/test_where_maskedfill_nonzero_take_put.s"

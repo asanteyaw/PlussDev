@@ -23,7 +23,7 @@ Inspect a thread:
 thread.defined();
 thread.size();
 thread.kind();
-thread.dtype_name();
+thread.dtype();
 thread.info();
 ```
 
@@ -44,7 +44,7 @@ missing values from input files.
 auto missing = thread.isnull();
 auto present = thread.notnull();
 auto filled = thread.fillna(0.0);
-auto complete = thread.dropna();
+auto complete = thread.dropnull();
 ```
 
 Numeric threads also support `isnan` and `isfinite`.
@@ -66,7 +66,7 @@ Shape and schema:
 df.defined();
 df.ncases();
 df.nfeatures();
-df.feature_names();
+df.features();
 df.info();
 ```
 
@@ -88,7 +88,7 @@ std::cout << sales.to_string() << '\n';
 std::cout << "ncases=" << sales.ncases()
           << ", nfeatures=" << sales.nfeatures() << '\n';
 std::cout << "features:";
-for (const auto& name : sales.feature_names()) {
+for (const auto& name : sales.features()) {
   std::cout << ' ' << name;
 }
 std::cout << '\n';
@@ -114,7 +114,7 @@ This table is the exact string returned by `sales.to_string()` in the current
 build. `head()` also renders a table because it returns a renderable
 `DataFrameView`, but its implementation is not used to produce this output.
 The display has four cases and four features. The default case axis is the
-integer axis shown at the left. `feature_names()` preserves insertion order:
+integer axis shown at the left. `features()` preserves insertion order:
 `city`, `region`, `units`, then `price`.
 
 Feature selection:

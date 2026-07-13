@@ -1,0 +1,40 @@
+summary = """
+Report whether the frame currently owns a usable backing object.
+
+This is the lightweight integrity check for `DataFrame` itself, not a missing-value scan across its cells.
+
+Use it when you need to distinguish “this frame object exists and can be used” from “this frame contains missing values somewhere inside the data.”
+"""
+
+returns = """
+`bool`
+    `true` when the frame object is defined and ready for ordinary table operations.
+"""
+
+notes = [
+  """
+`defined()` answers whether the frame exists as a real object. It does not mean every cell is non-missing.
+""",
+  """
+Use missing-data methods such as `dropnull()`, `isnull()`, `notnull()`, or per-feature validity-aware logic when your question is about nulls rather than object existence.
+""",
+  """
+`defined()` is therefore most useful around factory code, optional construction branches, or defensive API boundaries. It is not a substitute for data-quality checks.
+"""
+]
+
+[[examples]]
+title = "Check whether a freshly constructed frame is defined."
+code = """
+using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen"})},
+    {"score", pluss::make_series({88.0, 79.0, 91.0})},
+});
+
+auto out = grades.defined();
+"""
+output = """
+true
+"""

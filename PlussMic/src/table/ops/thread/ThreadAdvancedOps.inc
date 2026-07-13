@@ -388,7 +388,7 @@ pluss::Series bool_from_u8_(const std::vector<std::uint8_t>& values) {
 
 Thread note_bool_result_(const Thread& source,
                          const std::vector<std::uint8_t>& values) {
-  return Thread(bool_from_u8_(values), source.validity_mask());
+  return Thread(bool_from_u8_(values), detail::validity_mask(source));
 }
 
 std::regex compile_regex_(std::string_view pattern,
@@ -409,8 +409,10 @@ ThreadValue Thread::covar(
     const StatisticOptions& options) const {
   require_numeric_thread_(*this, "Thread::covar");
   require_numeric_thread_(other, "Thread::covar");
-  PLUSS_CHECK(size() == other.size(),
-              "Thread::covar: operands must have equal length");
+  const auto aligned = align_thread_pair_for_cases_(*this, other, "Thread::covar");
+  if (aligned.aligned) {
+    return aligned.left.covar(aligned.right, options);
+  }
   PLUSS_CHECK(options.ddof >= 0 && options.min_count >= 0,
               "Thread::covar: ddof and min_count must be >= 0");
   const auto platform = as_series().platform();
@@ -449,7 +451,7 @@ Thread Thread::percentiles(
               "Thread::percentiles: expected at least one point");
   PLUSS_CHECK(min_count >= 0,
               "Thread::percentiles: min_count must be >= 0");
-  auto clean = dropna().as_series();
+  auto clean = dropnull().as_series();
   std::vector<pluss::Series> values;
   values.reserve(points.size());
   for (const auto point : points) {
@@ -798,14 +800,32 @@ Thread Thread::scan(ScanStatistic statistic, bool skip_nulls) const {
   PLUSS_FAIL("Thread::scan: unsupported statistic");
 }
 
+Thread Thread::cumsum(bool skip_nulls) const {
+  return scan(ScanStatistic::Sum, skip_nulls);
+}
+
+Thread Thread::cumprod(bool skip_nulls) const {
+  return scan(ScanStatistic::Product, skip_nulls);
+}
+
+Thread Thread::cummin(bool skip_nulls) const {
+  return scan(ScanStatistic::Minimum, skip_nulls);
+}
+
+Thread Thread::cummax(bool skip_nulls) const {
+  return scan(ScanStatistic::Maximum, skip_nulls);
+}
+
 ThreadValue Thread::corr_with(
     const Thread& other,
     ThreadCorrMethod method,
     std::int64_t min_count) const {
   require_numeric_thread_(*this, "Thread::corr_with");
   require_numeric_thread_(other, "Thread::corr_with");
-  PLUSS_CHECK(size() == other.size(),
-              "Thread::corr_with: operands must have equal length");
+  const auto aligned = align_thread_pair_for_cases_(*this, other, "Thread::corr_with");
+  if (aligned.aligned) {
+    return aligned.left.corr_with(aligned.right, method, min_count);
+  }
   PLUSS_CHECK(min_count >= 1,
               "Thread::corr_with: min_count must be >= 1");
   PLUSS_CHECK(as_series().platform() == other.as_series().platform(),
@@ -855,6 +875,10 @@ ThreadValue Thread::corr_with(
 ThreadValue Thread::matmul(const Thread& other) const {
   require_numeric_thread_(*this, "Thread::matmul");
   require_numeric_thread_(other, "Thread::matmul");
+  const auto aligned = align_thread_pair_for_cases_(*this, other, "Thread::matmul");
+  if (aligned.aligned) {
+    return aligned.left.matmul(aligned.right);
+  }
   PLUSS_CHECK(!has_validity_mask() && !other.has_validity_mask(),
               "Thread::matmul: null values are not supported");
   return ThreadValue(Thread(as_series().matmul(other.as_series()).reshape({1})));
@@ -920,11 +944,11 @@ Thread exponential_mean_thread_(
   const auto count = valid.to(dtype).cumsum(0);
   if (!adjusted) {
     PLUSS_CHECK(
-        !source.has_validity_mask(),
+        !detail::has_validity_mask(source),
         "Thread::decay(adjusted=false): nullable input requires "
         "adjusted=true");
     auto result = Thread(pluss::subsp::stats::ts::ema(values, alpha));
-    return result.with_validity_mask(
+    return detail::with_validity_mask(result,
         count.ge(static_cast<double>(min_count)));
   }
   if (alpha == 1.0) {
@@ -969,7 +993,7 @@ Thread exponential_variance_thread_(
   const auto centered =
       (values - origin).where(valid.logical_not(), 0.0);
   const auto centered_thread =
-      Thread(centered, source.validity_mask());
+      Thread(centered, detail::validity_mask(source));
   const auto mean = exponential_mean_thread_(centered_thread,
       alpha, adjusted, 1, ignore_nulls).as_series();
   pluss::Series second;
@@ -997,7 +1021,7 @@ Thread exponential_variance_thread_(
     }
   } else {
     PLUSS_CHECK(
-        !source.has_validity_mask(),
+        !detail::has_validity_mask(source),
         "Thread::decay(adjusted=false): nullable input "
         "requires adjusted=true");
     second = pluss::subsp::stats::ts::ema(
@@ -1767,16 +1791,16 @@ const pluss::Timeline& tl_payload_(const Thread& base, std::string_view where) {
 
 pluss::Series tl_validity_(const Thread& base, std::string_view where) {
   auto valid = tl_payload_(base, where).isvalid();
-  if (base.has_validity_mask()) {
-    valid = valid.logical_and(*base.validity_mask());
+  if (detail::has_validity_mask(base)) {
+    valid = valid.logical_and(*detail::validity_mask(base));
   }
   return valid;
 }
 
 Thread tl_series_(const Thread& base, const pluss::Series& values, std::string_view where) {
   auto out = Thread(values.reshape({base.size()}), tl_validity_(base, where));
-  if (base.has_display_labels()) {
-    out = out.with_display_labels(base.display_labels());
+  if (detail::has_display_labels(base)) {
+    out = detail::with_display_labels(out, detail::display_labels(base));
   }
   if (base.has_display_name()) {
     out = out.with_display_name(base.display_name());
@@ -1786,8 +1810,8 @@ Thread tl_series_(const Thread& base, const pluss::Series& values, std::string_v
 
 Thread tl_note_(const Thread& base, const pluss::Note& values, std::string_view where) {
   auto out = Thread(values, tl_validity_(base, where));
-  if (base.has_display_labels()) {
-    out = out.with_display_labels(base.display_labels());
+  if (detail::has_display_labels(base)) {
+    out = detail::with_display_labels(out, detail::display_labels(base));
   }
   if (base.has_display_name()) {
     out = out.with_display_name(base.display_name());
@@ -1797,10 +1821,10 @@ Thread tl_note_(const Thread& base, const pluss::Note& values, std::string_view 
 
 Thread tl_temporal_(const Thread& base, const pluss::Timeline& values) {
   auto out = base.kind() == ThreadKind::TimeIndex
-                 ? Thread(values.to_timeindex(false), base.validity_mask())
-                 : Thread(values, base.validity_mask());
-  if (base.has_display_labels()) {
-    out = out.with_display_labels(base.display_labels());
+                 ? Thread(values.to_timeindex(false), detail::validity_mask(base))
+                 : Thread(values, detail::validity_mask(base));
+  if (detail::has_display_labels(base)) {
+    out = detail::with_display_labels(out, detail::display_labels(base));
   }
   if (base.has_display_name()) {
     out = out.with_display_name(base.display_name());
@@ -1945,6 +1969,11 @@ Thread ThreadTimelineAccessor::shift(std::int64_t periods, std::string_view freq
   return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().shift").shift(static_cast<int>(periods), freq));
 }
 
+Thread ThreadTimelineAccessor::period(std::string_view freq) const {
+  PLUSS_CHECK(!freq.empty(), "Thread::tl().period: freq cannot be empty");
+  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().period").to_period(freq));
+}
+
 Thread ThreadTimelineAccessor::tz(std::string_view name) const {
   PLUSS_CHECK(!name.empty(), "Thread::tl().tz: timezone cannot be empty");
   return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().tz").tz_convert(name));
@@ -1967,8 +1996,8 @@ Thread ThreadTimelineAccessor::index(bool require_sorted) const {
     return base_;
   }
   auto out = Thread(base_.as_timeline().to_timeindex(require_sorted), base_.validity_mask());
-  if (base_.has_display_labels()) {
-    out = out.with_display_labels(base_.display_labels());
+  if (detail::has_display_labels(base_)) {
+    out = detail::with_display_labels(out, detail::display_labels(base_));
   }
   if (base_.has_display_name()) {
     out = out.with_display_name(base_.display_name());

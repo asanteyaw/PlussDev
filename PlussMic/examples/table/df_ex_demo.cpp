@@ -31,10 +31,10 @@ int main() {
    pluss::Timeline updated_date = df.features("Updated Date").value();
    std::cout << "Updated Date feature numel: " << updated_date.numel() << "\n";
    auto all_features = df.features();
-   std::cout << "features() returns " << all_features.size() << " Thread payloads\n";
-   std::cout << "cell[0, Agency Code]: " << df.cases(0, "Agency Code") << "\n";
-   df.cases(0).head();
-   df.cases({1, 5}).head();
+   std::cout << "features() returns " << all_features.size() << " feature names\n";
+   std::cout << "cell[0, Agency Code]: " << df.caselbl(0, "Agency Code") << "\n";
+   df.caselbl(0).head();
+   df.caselbl({1, 5}).head();
 
    // positional overload for quick loads
    auto raw_df = pluss::table::DataFrame::load_csv(

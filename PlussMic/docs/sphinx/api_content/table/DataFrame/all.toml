@@ -1,0 +1,100 @@
+summary = """
+Return whether every participating value is truthy along the requested axis.
+
+`DataFrame::all(...)` is the boolean reduction you use when one falsey value should invalidate the whole reduction result. It is useful for row-level eligibility checks, completeness gates, and feature-level assertions such as “is every observed value in this flag column true?”.
+"""
+
+returns = """
+`Thread`
+    Boolean reduction result.
+
+    - With the default feature-wise reduction, the output contains one boolean per participating feature.
+    - With `pluss::Axis::Case`, the output contains one boolean per row across the selected features.
+"""
+
+see_also = [
+  "<a href=\"#any\"><code>DataFrame::any</code></a>: require only one truthy value instead of all of them.",
+  "<a href=\"thread_api_reference.html#all\"><code>Thread::all</code></a>: reduce one boolean thread to one truth result."
+]
+
+notes = [
+  """
+Only compatible boolean-like or numeric features participate in the reduction. Text and temporal features are not coerced into truth values for this method.
+""",
+  """
+When you omit `axis`, PlussMic reduces feature-wise and returns one boolean per selected feature.
+""",
+  """
+Use `pluss::Axis::Case` when you are building row-level policies such as “did this student satisfy every required condition?”.
+"""
+]
+
+[[parameters]]
+name = "features"
+body = """
+Optional feature subset to reduce.
+
+- Leave this empty to reduce every compatible feature in the frame.
+- Pass a subset when only specific policy columns should participate in the truth test.
+- Output order follows the exact left-to-right order of the selected features.
+"""
+
+[[parameters]]
+name = "skipna"
+body = """
+Missing-value policy for the reduction.
+
+- `true`: ignore missing values while reducing truthiness.
+- `false`: missing values can affect whether the reduced result is valid.
+
+Most workflows keep the default `true`.
+"""
+
+[[parameters]]
+name = "axis"
+body = """
+Reduction axis.
+
+- `pluss::Axis::Feature`: reduce down each participating feature and return one boolean per feature.
+- `pluss::Axis::Case`: reduce across the selected features inside each row and return one boolean per case.
+"""
+
+[[examples]]
+title = "Reduce feature-wise using the default axis."
+code = """
+using namespace pluss::table;
+
+auto flags = DataFrame({
+    {"quiz_ok", pluss::make_series(std::vector<bool>{true, true, false})},
+    {"exam_ok", pluss::make_series(std::vector<bool>{true, false, false})},
+    {"bonus_ok", pluss::make_series(std::vector<bool>{true, true, true})},
+}).title("flags");
+
+auto out = flags.all();
+"""
+output = """
+ quiz_ok  false
+ exam_ok  false
+bonus_ok  true
+dtype: Series
+"""
+
+[[examples]]
+title = "Reduce row-wise to require every selected flag in each case to be true."
+code = """
+using namespace pluss::table;
+
+auto flags = DataFrame({
+    {"quiz_ok", pluss::make_series(std::vector<bool>{true, true, false})},
+    {"exam_ok", pluss::make_series(std::vector<bool>{true, false, false})},
+    {"bonus_ok", pluss::make_series(std::vector<bool>{true, true, true})},
+}).title("flags");
+
+auto out = flags.all(pluss::Axis::Case);
+"""
+output = """
+0  true
+1  false
+2  false
+dtype: Series
+"""

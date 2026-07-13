@@ -71,8 +71,8 @@ int main() {
   std::cout << "Batched scalar compare\n" << compared.head(4) << "\n";
   std::cout << "Batched frame math\n" << frame_pair.head(4) << "\n";
 
-  auto reduced_by_feature = renamed_all.features({"sales", "expense", "margin"}).sum(Axis::Feature);
-  auto reduced_by_case = renamed_all.features({"sales", "expense", "margin"}).sum(Axis::Case);
+  auto reduced_by_feature = renamed_all.features({"sales", "expense", "margin"}).sum(Axis::Case);
+  auto reduced_by_case = renamed_all.features({"sales", "expense", "margin"}).sum(Axis::Feature);
   std::cout << "DF reduction to Thread over features\n" << reduced_by_feature << "\n";
   std::cout << "DF reduction to Thread over cases\n" << reduced_by_case << "\n";
   std::cout << "Thread reduction to ThreadValue\n" << renamed_all.features("sales").sum() << "\n";

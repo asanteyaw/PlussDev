@@ -78,8 +78,8 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
 }
 
 bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t row) {
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
+  if (pluss::table::detail::has_validity_mask(t)) {
+    const auto valid = pluss::table::detail::validity_mask(t)->to_vec<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;
     }
@@ -1062,8 +1062,12 @@ void save_excel(const pluss::table::DataFrame& frame,
   auto guard = std::unique_ptr<zip_t, decltype(&zip_discard)>(archive, &zip_discard);
 
   const auto sheet_name = options.sheet_name.empty() ? std::string("Sheet1") : options.sheet_name;
-  const auto names = frame.feature_names();
-  const auto cols = frame.features();
+  const auto names = frame.features();
+  std::vector<pluss::table::Thread> cols;
+  cols.reserve(names.size());
+  for (const auto& name : names) {
+    cols.push_back(frame.features(name));
+  }
   const bool include_cases = options.add_cases || options.cases;
 
   std::string sheet_xml;
@@ -1094,7 +1098,7 @@ void save_excel(const pluss::table::DataFrame& frame,
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {
-      row.push_back(thread_value_for_excel(frame.cases(), r, options.na_rep));
+      row.push_back(thread_value_for_excel(frame.caselbl(), r, options.na_rep));
     }
     for (const auto& c : cols) {
       row.push_back(thread_value_for_excel(c, r, options.na_rep));

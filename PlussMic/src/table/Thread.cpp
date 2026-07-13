@@ -33,6 +33,7 @@
 namespace pluss::table {
 
 #include "table/ops/thread/ThreadInternals.inc"
+#include "table/ops/thread/ThreadAlignment.inc"
 #include "table/ops/thread/ThreadCoreOps.inc"
 #include "table/ops/thread/ThreadAdvancedOps.inc"
 #include "table/ops/thread/ThreadOperatorsAndValue.inc"

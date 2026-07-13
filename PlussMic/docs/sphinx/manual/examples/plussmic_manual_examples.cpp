@@ -82,7 +82,7 @@ void example_01_construct_and_inspect() {
   std::cout << sales.to_string() << '\n';
   std::cout << "ncases=" << sales.ncases() << ", nfeatures=" << sales.nfeatures() << '\n';
   std::cout << "features:";
-  for (const auto& name : sales.feature_names()) {
+  for (const auto& name : sales.features()) {
     std::cout << ' ' << name;
   }
   std::cout << '\n';
@@ -178,7 +178,7 @@ void example_06_csv_options(const std::filesystem::path& dir) {
 
   auto df = DataFrame::load_csv(path.string(), options);
   std::cout << df.to_string() << '\n';
-  std::cout << "case dtype=" << df.cases().dtype_name() << '\n';
+  std::cout << "case dtype=" << df.caselbl().dtype() << '\n';
 }
 
 void example_07_thread_operations() {
@@ -187,7 +187,7 @@ void example_07_thread_operations() {
   auto units = sales.features("units");
   auto city = sales.features("city");
 
-  std::cout << "units dtype=" << units.dtype_name() << '\n';
+  std::cout << "units dtype=" << units.dtype() << '\n';
   std::cout << "units clipped:\n" << units.clip(6.0, 10.0).to_string() << '\n';
   std::cout << "city lower:\n" << city.lower().to_string() << '\n';
   std::cout << "city contains 'a':\n" << Thread(city.contains("a")).to_string() << '\n';
@@ -291,7 +291,7 @@ void example_12_thread_missing_and_rows() {
   std::cout << "score:\n" << score.to_string() << '\n';
   std::cout << "isnull:\n" << score.isnull().to_string() << '\n';
   std::cout << "fillna:\n" << score.fillna(99.0).to_string() << '\n';
-  std::cout << "dropna:\n" << score.dropna().to_string() << '\n';
+  std::cout << "dropnull:\n" << score.dropnull().to_string() << '\n';
   std::cout << "shift(2):\n" << score.shift(2).to_string() << '\n';
   std::cout << "sort asc nulls first:\n" << score.sort_values(true, false).to_string() << '\n';
   std::cout << "take 4,1,0:\n" << score.take(std::vector<std::int64_t>{4, 1, 0}).to_string() << '\n';
@@ -329,9 +329,9 @@ void example_14_csv_roundtrip(const std::filesystem::path& dir) {
   auto df = pluss::loader::load_csv_records(records, read_options);
 
   std::cout << df.to_string() << '\n';
-  std::cout << "city dtype=" << df.features("city").dtype_name() << '\n';
-  std::cout << "units dtype=" << df.features("units").dtype_name() << '\n';
-  std::cout << "active dtype=" << df.features("active").dtype_name() << '\n';
+  std::cout << "city dtype=" << df.features("city").dtype() << '\n';
+  std::cout << "units dtype=" << df.features("units").dtype() << '\n';
+  std::cout << "active dtype=" << df.features("active").dtype() << '\n';
 
   pluss::loader::WriteCsvOptions write_options;
   write_options.sep = ';';

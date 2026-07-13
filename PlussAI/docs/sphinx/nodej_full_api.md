@@ -5,7 +5,7 @@ Each page follows **API Signature -> Inputs -> Output -> Options -> Examples (wi
 Options/enums are documented under the methods that consume them.
 
 - Method pages: **169**
-- Data-type pages: **31**
+- Data-type pages: **34**
 - Overloads covered: **184**
 
 ## Function and Method Reference

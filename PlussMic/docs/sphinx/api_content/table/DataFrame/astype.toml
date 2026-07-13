@@ -1,0 +1,111 @@
+summary = """
+Cast one or more existing features to new scalar dtypes.
+
+`DataFrame::astype(...)` is the typed conversion surface for DataFrame features. Use it when you want to normalize imported columns, switch numeric precision, or convert flag-like numeric columns into booleans before later filtering or aggregation.
+"""
+
+returns = """
+`DataFrame`
+    A new frame with the requested feature casts applied.
+
+    Features not mentioned in the cast request are preserved unchanged.
+"""
+
+see_also = [
+  "<a href=\"#cast_series\"><code>DataFrame::cast_series</code></a>: force selected features onto the Series payload family before working numerically.",
+  "<a href=\"#cast_note\"><code>DataFrame::cast_note</code></a>: force selected features onto the Note payload family before text-oriented operations.",
+  "<a href=\"thread_api_reference.html#astype\"><code>Thread::astype</code></a>: cast one thread directly outside a frame."
+]
+
+notes = [
+  """
+Use the feature-list overload when several features should land on the same target dtype.
+""",
+  """
+Use the mapping overload when each feature needs its own target dtype.
+""",
+  """
+This method returns a new frame. It does not mutate the current DataFrame in place.
+"""
+]
+
+[[parameters]]
+name = "features"
+body = """
+Feature names to cast when you want one shared target dtype.
+
+- Every listed feature is cast to the same `dtype`.
+- Features not listed are left unchanged.
+"""
+
+[[parameters]]
+name = "dtype"
+body = """
+Shared target scalar dtype for the feature-list overload.
+
+Common choices include:
+
+- `pluss::ScalarType::Bool`
+- `pluss::ScalarType::Int64`
+- `pluss::ScalarType::Float64`
+
+Pick the narrowest dtype that still matches the downstream operations you plan to run.
+"""
+
+[[parameters]]
+name = "feature_dtypes"
+body = """
+Collection of `(feature_name, dtype)` pairs for mixed casting.
+
+- Use this overload when each selected feature should land on a different dtype.
+- Each pair targets one existing feature explicitly.
+"""
+
+[[examples]]
+title = "Cast one selected feature to a shared target dtype."
+code = """
+using namespace pluss::table;
+
+auto raw = DataFrame({
+    {"student_id", pluss::make_series({101.0, 102.0, 103.0})},
+    {"passed", pluss::make_series({1.0, 0.0, 1.0})},
+}).title("raw");
+
+auto out = raw.astype({"passed"}, pluss::ScalarType::Bool);
+"""
+output = """
+=========================
+     | student_id  passed
+-------------------------
+0    | 101         true
+1    | 102         false
+2    | 103         true
+-------------------------
+[3 cs x 2 feat]
+"""
+
+[[examples]]
+title = "Cast several features to different dtypes in one call."
+code = """
+using namespace pluss::table;
+
+auto raw = DataFrame({
+    {"student_id", pluss::make_series({101.0, 102.0, 103.0})},
+    {"passed", pluss::make_series({1.0, 0.0, 1.0})},
+}).title("raw");
+
+auto out = raw.astype({
+    {"student_id", pluss::ScalarType::Int64},
+    {"passed", pluss::ScalarType::Bool},
+});
+"""
+output = """
+=========================
+     | student_id  passed
+-------------------------
+0    | 101         true
+1    | 102         false
+2    | 103         true
+-------------------------
+[3 cs x 2 feat]
+"""

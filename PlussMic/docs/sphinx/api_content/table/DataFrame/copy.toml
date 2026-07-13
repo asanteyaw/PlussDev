@@ -1,0 +1,39 @@
+summary = """
+Return a detached copy of the current frame.
+
+Use this when you want to make it explicit that later edits should happen on an independent value rather than the current object.
+"""
+
+returns = """
+`DataFrame`
+    Independent copy of the current frame.
+"""
+
+notes = [
+  """
+`copy()` preserves the current case axis, feature order, payloads, and values.
+"""
+]
+
+[[examples]]
+title = "Copy a frame before downstream mutation or experimentation."
+code = """
+using namespace pluss::table;
+
+auto scores = DataFrame({
+    {"math", pluss::make_series({80.0, 90.0, 70.0})},
+    {"science", pluss::make_series({75.0, 88.0, 92.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = scores.copy();
+"""
+output = """
+====================
+     | math  science
+--------------------
+s1   | 80    75     
+s2   | 90    88     
+s3   | 70    92     
+--------------------
+[3 cs x 2 feat]
+"""

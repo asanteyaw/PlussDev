@@ -99,7 +99,7 @@ auto df = pluss::loader::load_csv_records(records);
 pluss::OutputEngine out;
 out.writeln("ncases", df.ncases());
 out.writeln("nfeatures", df.nfeatures());
-out.writeln("feature_names", df.feature_names());
+out.writeln("feature_names", df.features());
 ```
 
 Expected output:
@@ -567,7 +567,7 @@ auto df = pluss::loader::load_csv("data/bank-full.csv", {
 });
 
 out.writeln("shape", df.ncases(), df.nfeatures());
-out.writeln("features", df.feature_names());
+out.writeln("features", df.features());
 
 pluss::loader::save_json(df, "outputs/bank_subset.json");
 out.writeln("saved", "outputs/bank_subset.json");

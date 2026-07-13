@@ -291,7 +291,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
   fig.mosaic(1, 2, 18.0, 18.0);
   fig.tight_layout(true, 4.0);
 
-  const auto x = thread_as_numeric(registered.cases());
+  const auto x = thread_as_numeric(registered.caselbl());
   std::vector<std::string> x_labels;
   x_labels.reserve(x.size());
   for (const auto value : x) {
@@ -326,7 +326,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
 
 void draw_grouped_bar_panel(pl::Pane& pane, const DataFrame& pivoted, std::string_view x_label) {
   configure_pane(pane, true);
-  const auto x = thread_as_numeric(pivoted.cases());
+  const auto x = thread_as_numeric(pivoted.caselbl());
   std::vector<std::string> x_labels;
   x_labels.reserve(x.size());
   for (const auto value : x) {
@@ -480,7 +480,7 @@ int main(int argc, char** argv) {
   df.describe(true);
 
   std::cout << "\n=== Missing values summary (per column) ===\n";
-  for (const auto& feature : df.feature_names()) {
+  for (const auto& feature : df.features()) {
     const auto missing = df.features(feature).isnull().count().to_vec<std::int64_t>();
     const auto null_count = missing.empty() ? static_cast<std::int64_t>(0) : missing.front();
     if (null_count > 0) {

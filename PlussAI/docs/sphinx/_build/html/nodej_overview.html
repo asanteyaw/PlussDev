@@ -219,6 +219,10 @@
   
 
   
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
 </div>
 
     </header>
@@ -386,6 +390,90 @@
 <li><p>io</p></li>
 </ul>
 <p>The full method-by-method surface is documented in <a class="reference internal" href="nodej_full_api.html"><span class="std std-doc">NodeJ Full API Reference</span></a>.</p>
+<section id="estimator-family-additions">
+<h2>Estimator Family Additions<a class="headerlink" href="#estimator-family-additions" title="Link to this heading">#</a></h2>
+<section id="api-signature">
+<h3>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ModelSpec(task:</span> <span class="pre">Classification|Regression,</span> <span class="pre">family:</span> <span class="pre">Kernel,</span> <span class="pre">options:</span> <span class="pre">KernelFamilyOptions)</span> <span class="pre">-&gt;</span> <span class="pre">ModelSpec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ModelSpec(task:</span> <span class="pre">Transform,</span> <span class="pre">family:</span> <span class="pre">Kernel,</span> <span class="pre">options:</span> <span class="pre">KernelFamilyOptions{.form</span> <span class="pre">=</span> <span class="pre">OneClass})</span> <span class="pre">-&gt;</span> <span class="pre">ModelSpec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ModelSpec(task:</span> <span class="pre">Classification|Regression,</span> <span class="pre">family:</span> <span class="pre">Bayes,</span> <span class="pre">options:</span> <span class="pre">BayesFamilyOptions)</span> <span class="pre">-&gt;</span> <span class="pre">ModelSpec</span></code></p></li>
+</ul>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h3>
+<p>Kernel family options now cover C-style SVM, Nu-style SVM, and one-class kernel transform workflows. One-class flows use the transform lifecycle and can be saved/restored with fitted transform state.</p>
+<p>Bayes family options now cover Gaussian, Bernoulli, Multinomial, and Complement likelihoods for classification. Multinomial and Complement modes treat features as count-like inputs and reject negative counts during learn/infer. Multinomial Bayes regression also rejects negative labels. Complement Bayes is classifier-only.</p>
+</section>
+<section id="inputs">
+<h3>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">KernelFamilyOptions</span></code> with <code class="docutils literal notranslate"><span class="pre">form</span> <span class="pre">=</span> <span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">Nu</span></code>, or <code class="docutils literal notranslate"><span class="pre">OneClass</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BayesFamilyOptions</span></code> with <code class="docutils literal notranslate"><span class="pre">likelihood</span> <span class="pre">=</span> <span class="pre">Gaussian</span></code>, <code class="docutils literal notranslate"><span class="pre">Bernoulli</span></code>, <code class="docutils literal notranslate"><span class="pre">Multinomial</span></code>, or <code class="docutils literal notranslate"><span class="pre">Complement</span></code></p></li>
+</ul>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>trained classifiers/regressors for supervised specs</p></li>
+<li><p>mapped inlier/outlier labels for one-class transform specs</p></li>
+<li><p>explicit <code class="docutils literal notranslate"><span class="pre">InvalidArgument</span></code> status for invalid multinomial/complement count inputs</p></li>
+<li><p>explicit <code class="docutils literal notranslate"><span class="pre">NotImplemented</span></code> status for complement Bayes regression</p></li>
+</ul>
+</section>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">KernelFamilyOptions::nu</span></code> controls Nu and one-class behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BayesFamilyOptions::smoothing</span></code> applies to all Bayes likelihoods.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">namespace</span><span class="w"> </span><span class="nn">nje</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">ai</span><span class="o">::</span><span class="nn">nodej</span><span class="p">;</span>
+
+<span class="n">nje</span><span class="o">::</span><span class="n">ModelSpec</span><span class="w"> </span><span class="n">one_class</span><span class="p">{</span>
+<span class="w">  </span><span class="p">.</span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">TaskKind</span><span class="o">::</span><span class="n">Transform</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">ModelFamily</span><span class="o">::</span><span class="n">Kernel</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">KernelFamilyOptions</span><span class="p">{</span>
+<span class="w">      </span><span class="p">.</span><span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">KernelKind</span><span class="o">::</span><span class="n">Rbf</span><span class="p">,</span>
+<span class="w">      </span><span class="p">.</span><span class="n">form</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">KernelForm</span><span class="o">::</span><span class="n">OneClass</span><span class="p">,</span>
+<span class="w">      </span><span class="p">.</span><span class="n">gamma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span>
+<span class="w">      </span><span class="p">.</span><span class="n">nu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">nje</span><span class="o">::</span><span class="n">ModelSpec</span><span class="w"> </span><span class="n">multinomial</span><span class="p">{</span>
+<span class="w">  </span><span class="p">.</span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">TaskKind</span><span class="o">::</span><span class="n">Classification</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">ModelFamily</span><span class="o">::</span><span class="n">Bayes</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">BayesFamilyOptions</span><span class="p">{</span>
+<span class="w">      </span><span class="p">.</span><span class="n">likelihood</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">BayesLikelihood</span><span class="o">::</span><span class="n">Multinomial</span><span class="p">,</span>
+<span class="w">      </span><span class="p">.</span><span class="n">smoothing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">nje</span><span class="o">::</span><span class="n">ModelSpec</span><span class="w"> </span><span class="n">complement</span><span class="p">{</span>
+<span class="w">  </span><span class="p">.</span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">TaskKind</span><span class="o">::</span><span class="n">Classification</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">ModelFamily</span><span class="o">::</span><span class="n">Bayes</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">BayesFamilyOptions</span><span class="p">{</span>
+<span class="w">      </span><span class="p">.</span><span class="n">likelihood</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nje</span><span class="o">::</span><span class="n">BayesLikelihood</span><span class="o">::</span><span class="n">Complement</span><span class="p">,</span>
+<span class="w">      </span><span class="p">.</span><span class="n">smoothing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="expected-output">
+<h3>Expected output<a class="headerlink" href="#expected-output" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>one-class kernel specs produce transform flows.</p></li>
+<li><p>multinomial Bayes specs accept non-negative counts and reject negative counts.</p></li>
+<li><p>complement Bayes specs accept non-negative counts for classification and reject regression specs.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 
@@ -422,6 +510,33 @@
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimator-family-additions">Estimator Family Additions</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-signature">API Signature</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs">Inputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expected-output">Expected output</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

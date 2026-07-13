@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import json
 import pathlib
 import re
+import tomllib
 from dataclasses import dataclass
 from typing import Callable
 
 ROOT = pathlib.Path('/Users/yawasante/software/cxx/PlussDev')
 DOCS = ROOT / 'PlussMic/docs/sphinx'
+API_CONTENT = DOCS / 'api_content'
+PER_METHOD_CLASSES = {'DataFrame', 'Thread'}
 GENERIC_CSV_PATH = "path/to/data.csv"
 GENERIC_XLSX_PATH = "path/to/data.xlsx"
 GENERIC_JSON_PATH = "path/to/data.json"
@@ -17,6 +21,7 @@ GENERIC_OUTPUT_XLSX_PATH = "path/to/output.xlsx"
 GENERIC_OUTPUT_JSON_PATH = "path/to/output.json"
 GENERIC_OUTPUT_PARQUET_PATH = "path/to/output.parquet"
 GENERIC_OUTPUT_TXT_PATH = "path/to/output.txt"
+API_NAV_JS = DOCS / '_static' / 'api_nav.js'
 
 @dataclass
 class Method:
@@ -126,6 +131,11 @@ CLASS_CONFIG = {
         'subtitle': 'Practical Aisle API Reference',
         'intro': 'This page documents the full public `Aisle` surface for depth-stacked registries.',
     },
+}
+
+METHOD_PAGE_DIR = {
+    'DataFrame': 'dataframe',
+    'Thread': 'thread',
 }
 
 
@@ -433,7 +443,7 @@ def user_signature(method: Method, class_name: str) -> str:
             typ = public_cpp_type(without_default)
             name = f'arg{index}'
         rendered_params.append(
-            f'{name}: {typ}' + (f' {default}' if default else '')
+            f'{typ} {name}' + (f' {default}' if default else '')
         )
     ret = public_cpp_type(method.return_type)
     return f'{class_name}::{method.name}({", ".join(rendered_params)}) -> {ret}'
@@ -461,6 +471,264 @@ def returns_doc(ret: str) -> str:
     }
     desc = descriptions.get(base, 'Value produced by this call.')
     return f'`{base}`\n    {desc}'
+
+
+def method_content_path(class_name: str, method_name: str) -> pathlib.Path:
+    namespace = {
+        'DataFrame': 'table/DataFrame',
+        'Thread': 'table/Thread',
+        'Atlas': 'table/Atlas',
+        'ColumnRef': 'table/ColumnRef',
+        'DataFramePlotAccessor': 'table/DataFramePlotAccessor',
+        'DataFrameSqlAccessor': 'table/DataFrameSqlAccessor',
+        'DataFrameSqlPrepared': 'table/DataFrameSqlPrepared',
+        'ThreadValue': 'table/ThreadValue',
+        'Stream': 'kindle/Stream',
+        'Catalog': 'kindle/Catalog',
+        'Archive': 'kindle/Archive',
+        'Slot': 'bundle/Slot',
+        'Registry': 'bundle/Registry',
+        'Aisle': 'bundle/Aisle',
+    }.get(class_name, class_name)
+    return API_CONTENT / namespace / f'{method_name}.toml'
+
+
+def load_method_content(class_name: str, method_name: str) -> dict | None:
+    path = method_content_path(class_name, method_name)
+    if not path.exists():
+        return None
+    with path.open('rb') as fh:
+        return tomllib.load(fh)
+
+
+def render_named_markdown_blocks(items: list[dict], section_name: str) -> list[str]:
+    lines: list[str] = [f'#### {section_name}', '']
+    for item in items:
+        name = item['name']
+        body = item.get('body', '').strip()
+        lines.append(f'**{name}**')
+        lines.append('')
+        if body:
+            lines.extend(body.splitlines())
+        else:
+            lines.append('No additional details yet.')
+        lines.append('')
+    return lines
+
+
+def render_string_list_section(title: str, items: list[str]) -> list[str]:
+    if not items:
+        return []
+    lines: list[str] = [f'#### {title}', '']
+    for item in items:
+        lines.append(f'- {item}')
+    lines.append('')
+    return lines
+
+
+def render_admonitions(kind: str, items: list[dict]) -> list[str]:
+    lines: list[str] = []
+    for item in items:
+        title = item.get('title', kind.title())
+        body = item.get('body', '').strip()
+        lines.append(f'```{{{kind}}} {title}')
+        if body:
+            lines.append('')
+            lines.extend(body.splitlines())
+        lines.append('```')
+        lines.append('')
+    return lines
+
+
+def render_structured_method_page(
+    class_name: str,
+    name: str,
+    overloads: list[Method],
+    content: dict,
+) -> list[str]:
+    lines: list[str] = [f'### `{name}`', '']
+    lines.append('#### Signatures' if len(overloads) > 1 else '#### Signature')
+    lines.append('')
+    lines.append('```cpp')
+    for idx, overload in enumerate(overloads):
+        if idx:
+            lines.append('')
+        lines.append(user_signature(overload, class_name))
+    lines.append('```')
+    lines.append('')
+
+    summary = str(content.get('summary', '')).strip()
+    if summary:
+        lines.append(summary)
+        lines.append('')
+
+    warnings = content.get('warnings', [])
+    if isinstance(warnings, list):
+        lines.extend(render_admonitions('warning', warnings))
+
+    parameters = content.get('parameters', [])
+    if isinstance(parameters, list) and parameters:
+        lines.extend(render_named_markdown_blocks(parameters, 'Parameters'))
+    else:
+        lines.append('#### Parameters')
+        lines.append('')
+        lines.append('`None`')
+        lines.append('')
+
+    returns_text = str(content.get('returns', '')).strip()
+    if returns_text:
+        lines.append('#### Returns')
+        lines.append('')
+        lines.extend(returns_text.splitlines())
+        lines.append('')
+
+    see_also = content.get('see_also', [])
+    if isinstance(see_also, list):
+        lines.extend(render_string_list_section('See Also', [str(item) for item in see_also]))
+
+    notes = content.get('notes', [])
+    if isinstance(notes, list) and notes:
+        lines.append('#### Notes')
+        lines.append('')
+        for note in notes:
+            note_text = str(note).strip()
+            if not note_text:
+                continue
+            lines.extend(note_text.splitlines())
+            lines.append('')
+
+    examples = content.get('examples', [])
+    if isinstance(examples, list) and examples:
+        lines.append('#### Examples')
+        lines.append('')
+        for index, example in enumerate(examples, start=1):
+            title = str(example.get('title', f'Example {index}')).strip()
+            code = str(example.get('code', '')).strip()
+            output = str(example.get('output', '')).strip()
+            lines.append(f'Example {index}. {title}')
+            lines.append('')
+            if code:
+                lines.append('```cpp')
+                lines.extend(code.splitlines())
+                lines.append('```')
+                lines.append('')
+            lines.append('##### Output')
+            lines.append('')
+            lines.append('```text')
+            lines.extend(output.splitlines() if output else ['Output not captured yet.'])
+            lines.append('```')
+            lines.append('')
+    return lines
+
+
+def render_method_prev_next(prev_name: str | None, next_name: str | None) -> list[str]:
+    if not prev_name and not next_name:
+        return []
+    lines = ['<div class="pluss-inline-prev-next">']
+    if prev_name:
+        lines.extend([
+            f'  <a class="prev-link" href="#{prev_name}">',
+            '    <span class="label">Previous</span>',
+            f'    <span class="title">{prev_name}</span>',
+            '  </a>',
+        ])
+    if next_name:
+        lines.extend([
+            f'  <a class="next-link" href="#{next_name}">',
+            '    <span class="label">Next</span>',
+            f'    <span class="title">{next_name}</span>',
+            '  </a>',
+        ])
+    lines.append('</div>')
+    lines.append('')
+    return lines
+
+
+def ordered_method_names(methods: list[Method]) -> list[str]:
+    grouped_names = sorted({m.name for m in methods}, key=str.lower)
+    by_letter: dict[str, list[str]] = {}
+    for name in grouped_names:
+        by_letter.setdefault(name[0].upper(), []).append(name)
+    return [name for letter in sorted(by_letter.keys()) for name in by_letter[letter]]
+
+
+def method_page_root(class_name: str) -> pathlib.Path:
+    return DOCS / 'api' / METHOD_PAGE_DIR[class_name]
+
+
+def method_page_doc_path(class_name: str, method_name: str) -> pathlib.Path:
+    return method_page_root(class_name) / f'{method_name}.md'
+
+
+def method_page_rel_from_index(class_name: str, method_name: str) -> str:
+    return f'api/{METHOD_PAGE_DIR[class_name]}/{method_name}'
+
+
+def method_page_rel_from_method(current_class: str, target_class: str, method_name: str) -> str:
+    if current_class == target_class:
+        return f'{method_name}'
+    return f'../{METHOD_PAGE_DIR[target_class]}/{method_name}'
+
+
+def method_page_html_rel_from_method(current_class: str, target_class: str, method_name: str) -> str:
+    return f'{method_page_rel_from_method(current_class, target_class, method_name)}.html'
+
+
+def first_paragraph(text: str) -> str:
+    stripped = text.strip()
+    if not stripped:
+        return ''
+    parts = re.split(r'\n\s*\n', stripped, maxsplit=1)
+    return parts[0].strip()
+
+
+def method_summary(class_name: str, overloads: list[Method]) -> str:
+    structured = load_method_content(class_name, overloads[0].name)
+    if structured is not None:
+        return first_paragraph(str(structured.get('summary', '')))
+    return generic_note(class_name, overloads[0]).strip()
+
+
+def strip_inline_prev_next(text: str) -> str:
+    return re.sub(r'\n?<div class="pluss-inline-prev-next">.*?</div>\n?', '\n', text, flags=re.S)
+
+
+def rewrite_method_links(text: str,
+                         current_class: str,
+                         known_methods: dict[str, set[str]]) -> str:
+    def replace_href(match: re.Match[str]) -> str:
+        href = match.group(1)
+        new_href = href
+        if href.startswith('#'):
+            target = href[1:]
+            if target in known_methods.get(current_class, set()):
+                new_href = method_page_html_rel_from_method(current_class, current_class, target)
+        else:
+            same_class_target = re.fullmatch(r'([A-Za-z_][A-Za-z0-9_]*)\.md', href)
+            if same_class_target:
+                target = same_class_target.group(1)
+                if target in known_methods.get(current_class, set()):
+                    new_href = method_page_html_rel_from_method(current_class, current_class, target)
+            target_match = re.fullmatch(r'(?:\.\./)*(dataframe|thread)_api_reference\.(?:md|html)#([A-Za-z_][A-Za-z0-9_]*)', href)
+            if target_match:
+                target_class = 'DataFrame' if target_match.group(1) == 'dataframe' else 'Thread'
+                target = target_match.group(2)
+                if target in known_methods.get(target_class, set()):
+                    new_href = method_page_html_rel_from_method(current_class, target_class, target)
+        return f'href="{new_href}"'
+
+    text = re.sub(r'href="([^"]+)"', replace_href, text)
+
+    def replace_md_link(match: re.Match[str]) -> str:
+        doc = match.group(1)
+        target = match.group(2)
+        target_class = 'DataFrame' if doc == 'dataframe' else 'Thread'
+        if target in known_methods.get(target_class, set()):
+            return f'({method_page_rel_from_method(current_class, target_class, target)})'
+        return match.group(0)
+
+    text = re.sub(r'\((?:\.\./)*(dataframe|thread)_api_reference\.(?:md|html)#([A-Za-z_][A-Za-z0-9_]*)\)', replace_md_link, text)
+    return text
 
 
 def fallback_param_note(name: str, label_type: str) -> str:
@@ -533,8 +801,6 @@ def fallback_param_note(name: str, label_type: str) -> str:
         return 'Lower/upper boundary used by this overload.'
     if name == 'default_value':
         return 'Fallback value written anywhere the input is missing or unmatched.'
-    if name == 'validity_mask':
-        return 'Boolean validity mask attached to the payload. `true` marks observed entries and `false` marks missing entries.'
     if name == 'dtype':
         return 'Target scalar dtype used by this conversion overload.'
     if name == 'series_dtype':
@@ -761,6 +1027,18 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Spearman', 'Rank correlation.'),
                 ('KendallTau', 'Rank-concordance correlation.'),
             ]),
+        ('DataFrame', 'corr_with', 'other'):
+            'Right-hand frame to compare against. Only common numeric features participate, and rows are aligned by the shared case axis before correlation is computed.',
+        ('DataFrame', 'corr_with', 'others'):
+            'Comparison frames to correlate against the current frame in one call. Each comparison frame becomes one output feature in the returned result frame.',
+        ('DataFrame', 'corr_with', 'method'):
+            enum_note('Correlation method used for each participating numeric feature pair.', [
+                ('Pearson', 'Ordinary linear correlation on observed numeric values.'),
+                ('Spearman', 'Rank correlation after converting each numeric feature to ranks.'),
+                ('KendallTau', 'Rank-concordance correlation for monotonic association.'),
+            ]),
+        ('DataFrame', 'corr_with', 'min_count'):
+            'Minimum number of pairwise-complete observations required before a correlation value is reported for a feature.',
         ('DataFrame', 'covariance', 'options'):
             '`StatisticOptions` controls `ddof` (denominator correction) and `min_count` (minimum pairwise-complete cases).',
         ('DataFrame', 'mean_error', 'options'):
@@ -801,6 +1079,10 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('`pluss::table::cols(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
                 ('`pluss::table::col_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
             ]),
+        ('DataFrame', 'level', 'name'):
+            'Case-level name to extract from a multi-level case axis. The returned thread has one value per row in the current frame order.',
+        ('DataFrame', 'level', 'position'):
+            'Zero-based case-level position to extract from a multi-level case axis. Negative positions count backward from the end.',
         ('DataFrame', 'observe', 'row'):
             'Zero-based row position to preview as a one-row `DataFrameView`.',
         ('DataFrame', 'observe', 'start'):
@@ -921,9 +1203,22 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'replace', 'features'):
             'Optional feature subset. Leave empty to apply the replacement across every compatible feature of the relevant kind.',
         ('DataFrame', 'rolling', 'specs'):
-            'Window specs that define the output name, source feature, rolling operation, window width, and minimum observation policy.',
+            enum_note('Rolling feature specs. Each `WindowSpec` has these fields.', [
+                ('`output`', 'Name of the derived feature to create.'),
+                ('`feature`', 'Source numeric feature to read from.'),
+                ('`op`', 'Rolling statistic such as `RollingMean`, `RollingSum`, `RollingMin`, or `RollingMax`.'),
+                ('`window`', 'Fixed trailing window width in cases.'),
+                ('`min_periods`', 'Minimum observed values required before the output becomes valid.'),
+            ]),
         ('DataFrame', 'rolling', 'keep_input'):
             'When `true`, the original features stay in the output and rolling features are appended. When `false`, only the derived rolling outputs are returned.',
+        ('DataFrame', 'scan', 'statistic'):
+            enum_note('Cumulative statistic to compute down each numeric feature.', [
+                ('Sum', 'Running sum from the first row through the current row.'),
+                ('Product', 'Running product from the first row through the current row.'),
+                ('Minimum', 'Running minimum seen so far.'),
+                ('Maximum', 'Running maximum seen so far.'),
+            ]),
         ('DataFrame', 'select_like', 'needle'):
             'Substring token used to match feature names.',
         ('DataFrame', 'select_like', 'case_sensitive'):
@@ -987,6 +1282,15 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('first', 'Take the first observed value within each bucket.'),
                 ('last', 'Take the last observed value within each bucket.'),
             ]),
+        ('DataFrame', 'unstack', 'level'):
+            'Case level whose distinct values should become new output columns in the reshaped frame.',
+        ('DataFrame', 'unstack', 'options'):
+            enum_note('Unstack behavior bundle.', [
+                ('`level`', 'Case level whose distinct values are pivoted into output columns.'),
+                ('`drop`', 'When `true`, the remaining case levels stay as case levels instead of also staying as ordinary columns.'),
+                ('`sort`', 'When `true`, the pivoted column labels are sorted before the new columns are built.'),
+                ('`separator`', 'Separator inserted between the source value-feature name and the pivoted level value when several value features are present.'),
+            ]),
         ('DataFrame', 'unify', 'right'):
             'Right-hand frame whose rows are matched against the left frame by the requested key features.',
         ('DataFrame', 'unique_cases', 'features'):
@@ -1001,6 +1305,14 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Boolean row mask. Rows where the mask is true are kept; rows where it is false are dropped.',
         ('DataFrame', 'window', 'keep_input'):
             'When `true`, the original input features are preserved and engineered window outputs are appended. When `false`, only the engineered outputs are returned.',
+        ('DataFrame', 'window', 'specs'):
+            enum_note('Window feature specs. Each `WindowSpec` has these fields.', [
+                ('`output`', 'Name of the derived feature to create.'),
+                ('`feature`', 'Source numeric feature to read from.'),
+                ('`op`', 'Window statistic such as `RollingMean`, `RollingSum`, `RollingMin`, or `RollingMax`.'),
+                ('`window`', 'Fixed trailing window width in cases.'),
+                ('`min_periods`', 'Minimum observed values required before the output becomes valid.'),
+            ]),
         ('ColumnRef', 'name', 'None'):
             '',
         ('ColumnRef', 'head', 'n'):
@@ -1101,6 +1413,13 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                 ('Spearman', 'Rank correlation.'),
                 ('KendallTau', 'Rank-concordance correlation.'),
             ]),
+        'ScanStatistic':
+            enum_note('', [
+                ('Sum', 'Compute a cumulative sum down the feature.'),
+                ('Product', 'Compute a cumulative product down the feature.'),
+                ('Minimum', 'Compute the running minimum down the feature.'),
+                ('Maximum', 'Compute the running maximum down the feature.'),
+            ]),
         'SummaryOp':
             enum_note('', [
                 ('Count', 'Count observed values.'),
@@ -1172,8 +1491,12 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Collection of `TransformSpec` items. Each item identifies one target feature and the thread-transform expression to apply to it.',
         'pluss::msharp::RangeView::Of<ArrangeSpec>':
             'Collection of `ArrangeSpec` items. Each item provides `feature`, `ascending`, and `nulls_last`.',
+        'pluss::RangeView<DataFrame>':
+            'Reusable view over several comparison frames passed together in one call.',
         'pluss::RangeView<ReorderSpec>':
             'Collection of `ReorderSpec` items applied sequentially from left to right. Use this overload when you want to move several column groups in one call while preserving every untouched column.',
+        'pluss::RangeView<WindowSpec>':
+            'Collection of `WindowSpec` items. Each item provides `output`, `feature`, `op`, `window`, and `min_periods` for one derived window feature.',
         'pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>>':
             'Collection of `(feature_name, dtype)` pairs used to cast several existing features to explicit scalar dtypes in one call.',
         'pluss::msharp::RangeView::Of<std::pair<std::string, Thread>>':
@@ -1184,6 +1507,8 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Reusable feature-name range object. Use it when the same projected column subset will be passed to several calls.',
         'const ReorderSpec&':
             'Structured partial-order instruction that moves only selected features and preserves the relative order of every untouched feature.',
+        'const UnstackOptions&':
+            'Structured reshape policy that selects the case level to pivot, whether remaining levels stay as row labels, whether pivoted columns are sorted, and how multi-value output names are separated.',
     }
     lines = []
     for name, typ in params:
@@ -1193,7 +1518,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
                                           name,
                                           type_notes.get(typ, type_notes.get(label_type, fallback_param_note(name, label_type))),
                                       ))
-        lines.append(f'`{name}` : `{label_type}`\n{indent_note(note)}')
+        lines.append(f'**{name}**\n{indent_note(note)}')
     return '\n\n'.join(lines)
 
 
@@ -1204,14 +1529,28 @@ def generic_note(class_name: str, method: Method) -> str:
             'aggregate': 'Builds a compact summary frame from one or more aggregation specs, so you can inspect computed metrics instead of the full row set.',
             'bottom': 'Returns the rows with the smallest values in the selected feature.',
             'bucketize': 'Buckets numeric `Series` features into interval labels while preserving the rest of the frame unchanged.',
+            'bounded': 'Computes variable-width window statistics where each row chooses its own bounds through a callback.',
             'case_study': 'Selects rows and columns from a `DataFrame` using explicit positional, label-based, or boolean-mask selector objects. It is the single row/column indexing surface for table selection.',
             'catalogue': 'Builds a compact level-and-code encoding for a low-cardinality feature while preserving missingness.',
             'cases': 'Returns the current case axis itself. Use this when you want the row labels as data rather than selecting rows from the frame.',
-            'cases_series': 'Returns the current case axis as a `Series`, which is useful when you need the row labels as data.',
             'combine': 'Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.',
+            'corr': 'Computes a correlation matrix across numeric features, optionally for a selected subset and a selected correlation method.',
+            'corr_with': 'Computes aligned feature-wise correlations between this frame and one or more other frames.',
+            'covar': 'Computes the pairwise covariance matrix across numeric features.',
             'covariance': 'Computes the pairwise covariance matrix for numeric features using pairwise-complete observations.',
             'percentiles': 'Computes requested numeric distribution points for every numeric feature.',
+            'csmax': 'Computes one row-wise maximum across the selected numeric features.',
+            'csmin': 'Computes one row-wise minimum across the selected numeric features.',
+            'drop_duplicates': 'Removes duplicate rows, optionally considering only a selected feature subset.',
+            'drop_levels': 'Removes one or more named levels from a multi-level case axis.',
+            'dropnull': 'Drops rows according to an explicit missing-data policy object.',
+            'dtypes': 'Returns the public dtype summary for each current feature.',
+            'duplicated': 'Builds a boolean mask marking which rows are duplicates of earlier or later rows under the selected keep policy.',
             'most_frequent': 'Returns the most frequently occurring value in every supported feature.',
+            'factor': 'Factorizes selected features into compact integer codes together with the corresponding observed levels.',
+            'flow': 'Computes a cumulative directional summary across numeric features for each row.',
+            'fold': 'Reduces rows into one or more summary values using a folding-style aggregation route.',
+            'freq': 'Counts the most frequent values or value-combinations across the selected features.',
             'ranks': 'Assigns numeric ranks while controlling tie, null, direction, and percentage behavior.',
             'asymmetry': 'Computes bias-corrected sample skewness across cases or features.',
             'tail_weight': 'Computes bias-corrected Fisher excess kurtosis across cases or features.',
@@ -1253,17 +1592,31 @@ def generic_note(class_name: str, method: Method) -> str:
             'drop': 'Removes one or more features and returns the remaining frame.',
             'extend_cases': 'Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.',
             'equals': 'Checks whether two frames have the same structure, labels, and values.',
+            'feature_ref': 'Returns a lightweight reference object for one feature so you can inspect metadata or switch into column-oriented operations without materializing a new frame.',
             'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
+            'has_levels': 'Reports whether the current case axis carries named levels rather than only a flat label thread.',
             'head': 'Returns the first `n` rows of the frame.',
+            'height': 'Returns the row count of the current frame.',
             'iat': 'Returns one cell as text using positional row and positional feature coordinates.',
+            'interp': 'Interpolates missing numeric values across selected features using the requested interpolation strategy.',
             'with_cases': 'Replaces the current case axis with the supplied thread. The row values stay in the same order, but later case-aware operations now use the new labels.',
             'with_cases_': 'Replaces the current case axis in place. The row values stay in the same order, but later case-aware operations now use the new labels.',
             'insert': 'Inserts a new feature at the requested position and shifts the later features to the right.',
             'join': 'Adds compatible features from another frame, aligning rows by the shared case axis.',
+            'kurtosis': 'Computes row-wise or column-wise sample kurtosis for numeric data.',
             'lengthen': 'Reshapes a wide frame into long form by tiling identifier features and stacking homogeneous value features.',
+            'level': 'Extracts one case-axis level as a full thread, which is useful after you build multi-level row labels with `set_cases({...})`.',
+            'levels': 'Lists the current case-level names in order from outermost to innermost.',
             'match': 'Returns a pair of frames whose cases and features have been matched according to explicit Pluss-native matching rules.',
+            'matmul': 'Treats the numeric part of the frame as a matrix and returns the matrix product against another numeric frame.',
+            'mask': 'Keeps original values where a boolean mask is false and substitutes new values where the mask is true.',
+            'median': 'Computes per-feature medians for the selected numeric features.',
+            'ncases': 'Returns the number of rows in the current frame.',
+            'ndistinct': 'Counts distinct observed values or distinct value-combinations across the selected features.',
+            'nfeats': 'Returns the number of features in the current frame.',
+            'note': 'Returns one named feature as a note-backed thread.',
             'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
             'set_cases': 'Promotes one feature to become the case axis. With the default `drop_feature=true`, that feature stops being a normal column and becomes the row labels instead.',
             'reset_cases': 'Materializes the current case axis as a normal feature, then restores the default positional cases `0..n-1`.',
@@ -1279,19 +1632,27 @@ def generic_note(class_name: str, method: Method) -> str:
             'pivot': 'Reshapes long-form rows into a wider table indexed by one feature and expanded by another.',
             'pivot_table': 'Builds a pivoted summary table using an aggregation function when multiple rows map to the same cell.',
             'place': 'Moves one existing feature relative to an anchor feature, or inserts a brand-new feature directly before or after that anchor.',
+            'plot3d': 'Opens the 3D plotting accessor for the current frame.',
             'prod': 'Computes per-feature or per-row products across numeric data.',
             'put': 'Writes a replacement value only where a boolean mask is true and returns the updated frame.',
             'put_': 'Writes a replacement value only where a boolean mask is true and mutates the frame in place.',
             'query': 'Filters rows using an expression written against feature names.',
+            'rank': 'Assigns numeric ranks to each compatible feature while controlling tie, null, order, and percentage policy.',
             'matrix': 'Packs same-kind features into matrix-shaped pluss blocks so lower-level numeric, text, or temporal kernels can consume them efficiently.',
+            'mode': 'Returns the most frequently observed value for each compatible feature.',
             'rename': 'Renames one feature without changing its values.',
             'rename_': 'Renames one feature in place without changing its values.',
             'rename': 'Renames one feature, several features, or the full feature axis without changing row values.',
+            'rename_levels': 'Renames one or more case-axis levels without changing row order or row values.',
             'reorder': 'Moves selected features into a new relative position while preserving row data and the untouched feature order.',
+            'reorder_levels': 'Reorders the current case-axis levels and recomputes the composite row labels from that new level order.',
             'repeated_cases': 'Returns the rows whose current case labels are duplicates of an earlier row.',
             'replace': 'Replaces matched scalar or pluss-typed values across selected compatible features and returns the updated frame.',
             'rolling': 'Computes rolling-window features and returns them as a derived frame.',
+            'reshuffle': 'Randomly permutes rows or features, depending on the selected axis.',
+            'se': 'Computes row-wise or column-wise standard error summaries for numeric data.',
             'sample': 'Returns a random sample of rows.',
+            'scan': 'Computes cumulative numeric statistics such as running sums or running maxima down each feature.',
             'save_csv': 'Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.',
             'save_excel': 'Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.',
             'save_json': 'Writes the frame to JSON using the table export route for later reload or interchange.',
@@ -1300,6 +1661,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'save_as': 'Writes the frame using the explicitly supplied output format selector rather than a dedicated saver overload.',
             'select_like': 'Selects only the features whose names contain the requested substring.',
             'select_regex': 'Selects only the features whose names match the requested regular expression.',
+            'select': 'Projects a selected feature subset into a new frame while preserving row order and case alignment.',
             'series_features': 'Returns only the numeric series-backed features.',
             'assign': 'Adds or replaces derived features computed from the current frame. Use this when the new column depends on one or more existing columns.',
             'set': 'Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.',
@@ -1308,7 +1670,10 @@ def generic_note(class_name: str, method: Method) -> str:
             'set_features': 'Adds or replaces one or more features and returns the updated frame.',
             'set_features_': 'Adds or replaces one or more features in place.',
             'slice': 'Returns a contiguous row slice `[start, stop)` from the frame.',
+            'shuffle': 'Randomly permutes row order while keeping the feature axis unchanged.',
             'sort_values': 'Reorders rows using one or more feature values as sort keys.',
+            'skew': 'Computes row-wise or column-wise skewness for numeric data.',
+            'stack': 'Pivots the current feature axis into long form by creating feature/value columns.',
             'std': 'Computes per-feature standard deviations for the selected numeric features.',
             'sum': 'Computes per-feature sums for the selected numeric features.',
             'tail': 'Returns the last `n` rows of the frame.',
@@ -1326,14 +1691,16 @@ def generic_note(class_name: str, method: Method) -> str:
             'ts': 'Returns the time-series accessor bound to one or more selected features.',
             'unique_cases': 'Keeps only the first occurrence of each case label and drops later duplicates.',
             'unify': 'Combines two frames by key values. Use `right_on=""` when both frames use the same key name, Pluss-native modes such as `"common"` or `"unite"` to choose retained keys, and `validate` for duplicate-key checks.',
+            'unstack': 'Pivots one case level out of a multi-level case axis so its distinct values become new output columns.',
             'unsqueeze': 'Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.',
             'query': 'Keeps only the rows that satisfy the supplied filter expression or mask-producing query.',
             'where': 'Keeps only the rows where the supplied boolean mask is true.',
             'filter': 'Keeps only the rows where the supplied boolean mask is true.',
-            'conform_to': 'Reorders and aligns this frame so it is compatible with another frame for downstream joins or arithmetic.',
+            'conform': 'Reorders and aligns this frame so it is compatible with another frame for downstream joins or arithmetic.',
             'update': 'Overlays matching features from another frame onto this frame using aligned cases.',
             'var': 'Computes per-feature variances for the selected numeric features.',
             'view': 'Returns a lightweight row view of the requested slice.',
+            'weigh': 'Computes weighted trailing window statistics over numeric features using an explicit weight vector.',
             'window': 'Computes one or more window-based features such as rolling means over selected columns.',
             'set_features': 'Returns a new frame with one added or replaced feature.',
             'set_features_': 'Adds or replaces one feature in place.',
@@ -1445,40 +1812,78 @@ def generic_note(class_name: str, method: Method) -> str:
             'as_timeindex': 'Interprets or converts the current payload as a time-index thread.',
             'as_timeline': 'Interprets or converts the current payload as a timeline thread.',
             'bfill': 'Backward-fills one thread by pulling the next valid value upward within the same payload.',
+            'bounded': 'Computes variable-width window statistics where each entry chooses its own bounds through a callback.',
             'bucketize': 'Places numeric values into interval bins and returns the assigned bin labels as a new thread.',
             'btw': 'Builds a boolean mask telling you whether each row falls between lower and upper bounds.',
-            'clear_validity_mask': 'Returns a thread with the validity mask removed, so all entries are treated as valid again.',
-            'clear_validity_mask_': 'Removes the validity mask in place, so all entries are treated as valid again.',
+            'casefold': 'Applies Unicode-aware case folding to note-backed text values.',
             'clip': 'Clamps numeric values to the supplied lower and upper bounds.',
             'compare_rows': 'Compares two positions inside the same thread and returns the comparison result.',
-            'dtype_name': 'Returns the scalar dtype name used by the current numeric payload.',
+            'corr': 'Computes the correlation between two numeric threads.',
+            'corr_with': 'Computes one correlation value between this numeric thread and another numeric thread.',
+            'covar': 'Computes the covariance between two numeric threads.',
+            'distinct': 'Returns the distinct observed values from the current thread in stable first-seen order.',
+            'dtype': 'Returns the scalar dtype name used by the current numeric payload.',
+            'dropnull': 'Removes entries marked missing from the thread.',
+            'duplicated': 'Builds a boolean mask marking duplicated entries in the thread.',
+            'encode': 'Encodes note-backed text values into numeric codes or related compact representations.',
+            'ends': 'Checks whether each note-backed text value ends with the requested suffix.',
             'exp': 'Applies the elementwise exponential to a numeric thread.',
+            'extract': 'Extracts text submatches or text-derived pieces from note-backed values.',
             'filter': 'Keeps only the entries where the supplied boolean mask is true.',
-            'has_validity_mask': 'Reports whether the thread currently carries a validity mask.',
+            'flow': 'Computes a cumulative directional summary across the thread values.',
+            'fold': 'Reduces the thread through a folding-style aggregation route.',
+            'freq': 'Counts the most frequent observed values in the thread.',
+            'fullmatch': 'Checks whether each note-backed text value fully matches the requested regular expression.',
+            'has_display_labels': 'Reports whether the thread currently carries explicit display labels.',
+            'has_display_name': 'Reports whether the thread currently carries an explicit display name.',
             'head': 'Returns the first `n` entries of the thread.',
+            'indicate': 'Returns a boolean indicator thread showing which entries satisfy the requested predicate.',
+            'interp': 'Interpolates missing numeric values inside the thread.',
             'is_valid': 'Checks whether the value at one position is marked valid by the thread validity mask.',
             'kind': 'Returns which payload kind this thread currently stores, such as Series, Note, Timeline, or TimeIndex.',
+            'kurtosis': 'Computes sample kurtosis of a numeric thread.',
+            'length': 'Returns the element count of the current thread.',
             'log': 'Applies the elementwise natural logarithm to a numeric thread.',
             'max': 'Returns the maximum value of a numeric thread.',
+            'matches': 'Checks whether each note-backed text value matches the requested regular expression.',
+            'matmul': 'Computes the dot-product-style matrix multiplication between two numeric threads.',
             'mean': 'Returns the mean value of a numeric thread.',
+            'median': 'Returns the median of a numeric thread.',
             'min': 'Returns the minimum value of a numeric thread.',
+            'mode': 'Returns the most frequently observed value in the thread.',
+            'ndistinct': 'Counts distinct observed values in the thread.',
             'note': 'Returns the current payload as a note/text object.',
+            'normalize': 'Normalizes note-backed text values into the requested Unicode normalization form.',
+            'pad': 'Pads note-backed text values to a target width.',
+            'partition': 'Splits note-backed text values around a separator or boundary rule.',
+            'percentiles': 'Computes requested percentile points for a numeric thread.',
+            'put': 'Writes replacement values into positions selected by a boolean mask.',
+            'rank': 'Assigns numeric ranks to thread values while controlling ties and null handling.',
             'strip': 'Trims note-backed text values. Use `strip()` for whitespace or `strip(chars)` for an explicit trim set.',
             'lstrip': 'Trims only the left edge of note-backed text values. This is useful for prefixes such as leading `#` in IDs.',
             'rstrip': 'Trims only the right edge of note-backed text values. Use it when trailing markers should be removed without touching the left side.',
             'series': 'Returns the current payload as a numeric series object.',
+            'scan': 'Computes a cumulative statistic such as running sum, product, min, or max down the thread.',
+            'se': 'Returns the standard error summary for a numeric thread.',
+            'shares_payload_with': 'Reports whether two threads point at the same underlying payload storage.',
             'slice': 'Returns a contiguous slice `[start, stop)` of the thread.',
+            'skew': 'Returns sample skewness of a numeric thread.',
+            'sort_values': 'Reorders thread entries by their values while keeping the payload type unchanged.',
+            'split': 'Splits note-backed text values into pieces using the requested delimiter or rule.',
             'std': 'Returns the standard deviation of a numeric thread.',
+            'starts': 'Checks whether each note-backed text value starts with the requested prefix.',
             'sum': 'Returns the sum of a numeric thread.',
             'tail': 'Returns the last `n` entries of the thread.',
             'take': 'Returns the entries at the requested integer positions.',
             'timeindex': 'Returns the current payload as a time-index object.',
             'timeline': 'Returns the current payload as a timeline object.',
-            'validity_mask': 'Returns the current validity mask as a boolean series.',
+            'titlecase': 'Converts note-backed text values into title case.',
+            'upper': 'Converts note-backed text values to uppercase.',
             'var': 'Returns the variance of a numeric thread.',
+            'weigh': 'Computes a weighted trailing window statistic over the thread using an explicit weight vector.',
             'window': 'Computes a window-based transformation such as a rolling mean over the thread values.',
-            'with_validity_mask': 'Returns a new thread with the supplied validity mask attached.',
-            'with_validity_mask_': 'Attaches the supplied validity mask in place.',
+            'with_display_labels': 'Attaches display labels to the thread without changing the underlying values.',
+            'with_display_name': 'Attaches a display name to the thread without changing the underlying values.',
         },
         'Stream': {
             'abs': 'Returns a numeric stream whose values are the absolute values of the current numeric payload.',
@@ -1489,18 +1894,15 @@ def generic_note(class_name: str, method: Method) -> str:
             'bfill': 'Backward-fills one stream while preserving its case labels and stream-level structure.',
             'clear_cases': 'Returns a stream with its case labels removed.',
             'clear_cases_': 'Removes the stream case labels in place.',
-            'clear_validity_mask': 'Returns a stream with the validity mask removed, so all entries are treated as valid again.',
-            'clear_validity_mask_': 'Removes the validity mask in place, so all entries are treated as valid again.',
             'clip': 'Clamps numeric stream values to the supplied lower and upper bounds.',
             'drop_meta': 'Returns a stream with one metadata key removed.',
             'drop_meta_': 'Removes one metadata key in place.',
-            'dtype_name': 'Returns the scalar dtype name used by the current numeric payload.',
+            'dtype': 'Returns the scalar dtype name used by the current numeric payload.',
             'exp': 'Applies the elementwise exponential to a numeric stream.',
             'filter': 'Keeps only the entries where the supplied boolean mask is true.',
             'from_thread': 'Builds a Kindle stream from a table thread.',
             'has_cases': 'Reports whether the stream currently carries explicit case labels.',
             'has_meta': 'Reports whether a metadata key exists on the stream.',
-            'has_validity_mask': 'Reports whether the stream currently carries a validity mask.',
             'head': 'Returns the first `n` entries of the stream.',
             'kind': 'Returns which payload kind this stream currently stores, such as Series, Note, Timeline, or TimeIndex.',
             'log': 'Applies the elementwise natural logarithm to a numeric stream.',
@@ -1513,14 +1915,11 @@ def generic_note(class_name: str, method: Method) -> str:
             'sum': 'Returns the sum of a numeric stream.',
             'tail': 'Returns the last `n` entries of the stream.',
             'take': 'Returns the entries at the requested integer positions.',
-            'validity_mask': 'Returns the current validity mask as a boolean series.',
             'var': 'Returns the variance of a numeric stream.',
             'with_cases': 'Returns a new stream with the supplied case labels attached.',
             'with_cases_': 'Attaches the supplied case labels in place.',
             'with_meta': 'Returns a new stream with one metadata key/value attached.',
             'with_meta_': 'Adds or updates one metadata key/value in place.',
-            'with_validity_mask': 'Returns a new stream with the supplied validity mask attached.',
-            'with_validity_mask_': 'Attaches the supplied validity mask in place.',
         },
         'Atlas': {
             'aggregate_over_frames': 'Reduces the full frame stack to one output by applying an aggregation function across the contained frames.',
@@ -1632,12 +2031,26 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Reports whether the current object has no rows, entries, slots, or depth items.'
     if name in {'nrows', 'ncols', 'nfeatures', 'nstreams', 'nfields', 'nslots', 'depth', 'size', 'count'}:
         return 'Returns a size/count summary for the current object without changing it.'
+    if name in {'all', 'any'}:
+        return 'Reduces boolean-like values across the current object and returns whether every value or at least one value satisfies the requested truth test.'
+    if name.startswith('as_'):
+        return 'Converts or reinterprets the current payload as another public Pluss type so downstream operations route through the right text, numeric, or temporal surface.'
+    if name in {'abs', 'clip', 'log', 'exp', 'lower', 'strip', 'lstrip', 'rstrip'}:
+        return 'Applies an elementwise cleanup or transformation while preserving the surrounding alignment, labels, and payload family whenever possible.'
+    if name == 'chars':
+        return 'Extracts positional character slices from each note-backed text value in the current object.'
+    if name.startswith('display_') or name.startswith('clear_display_'):
+        return 'Reads or clears display-only metadata without changing the underlying payload values.'
     if name in {'column_names', 'feature_names', 'field_names', 'keys', 'labels', 'axis0_labels', 'depth_labels'}:
         return 'Returns the current labels used to address fields, slots, rows, or depth items.'
     if name in {'columns', 'values', 'features', 'streams', 'slots', 'frames', 'catalogs', 'registries'}:
         return 'Materializes the current members as a collection you can inspect or reuse elsewhere.'
     if name in {'get', 'feature_ref', 'stream', 'slot', 'frame', 'catalog', 'registry', 'at', 'iat', 'iloc', 'loc', 'value', 'cases'}:
         return 'Fetches one value, member, or slice from the current object without changing the source object.'
+    if name in {'meta'}:
+        return 'Reads one metadata value from the current object without changing the payload.'
+    if name in {'with_meta', 'with_meta_', 'drop_meta', 'drop_meta_', 'with_cases', 'with_cases_', 'clear_cases', 'clear_cases_'}:
+        return 'Updates object-level structure such as metadata, case labels, or validity state while preserving the underlying values and alignment model. Underscore forms mutate in place.'
     if name in {'head', 'tail', 'slice', 'slice_depth', 'slice_frames', 'take', 'sample', 'iloc', 'loc', 'view'}:
         return 'Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.'
     if name in {'fillna', 'fillna_', 'dropna', 'ffill', 'bfill', 'isnull', 'notnull', 'isnan', 'isfinite'}:
@@ -1658,7 +2071,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Changes names or labels only. The underlying payload values, row order, and aligned structure stay the same.'
     if name in {'join', 'update', 'combine', 'merge', 'unify', 'combine_values', 'concat', 'concat_values', 'concat_depth'}:
         return 'Use this when you need to merge compatible objects or extend the current one with another input.'
-    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_cases', 'with_cases_', 'with_validity_mask', 'with_validity_mask_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_', 'clear', 'clear_', 'drop_empty_slots', 'drop_empty_slots_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
+    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_cases', 'with_cases_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_', 'clear', 'clear_', 'drop_empty_slots', 'drop_empty_slots_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
         return 'Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.'
     if name in {'sql', 'prep_sql'}:
         return 'Use this when the transformation is easier to express as SQL than as a chained sequence of table verbs.'
@@ -1777,12 +2190,12 @@ INSPECTABLE_RETURN_PREFIXES = (
 
 
 NO_BEFORE_AFTER = {
-    'defined', 'unique', 'size', 'kind', 'dtype_name', 'nrows', 'ncols', 'nfeatures', 'nstreams',
+    'defined', 'unique', 'size', 'kind', 'dtype', 'nrows', 'ncols', 'nfeatures', 'nstreams',
     'nfields', 'depth', 'empty', 'count', 'count_null_rows', 'has', 'has_any', 'has_all',
     'has_stream', 'has_slot', 'has_meta', 'is_stream_compatible', 'ensure_stream_compatible',
     'keys', 'field_names', 'column_names', 'feature_names', 'values', 'streams', 'slots',
     'frames', 'catalogs', 'registries', 'axis0_labels', 'depth_labels', 'labels',
-    'cases_series', 'to_string', 'to_json', 'info_string', 'begin', 'end',
+    'to_string', 'to_json', 'info_string', 'begin', 'end',
 }
 
 
@@ -1919,12 +2332,36 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'CorrMethod method' in sig:
                 return 'Find the correlation across all numeric columns using a non-default correlation method.'
             return 'Find the correlation across all numeric columns using the default correlation method.'
+        if n == 'corr_with':
+            if 'RangeView::Of<DataFrame> others' in sig:
+                return 'Compare the current frame against several other frames and return one correlation thread per comparison frame.'
+            return 'Compare the current frame against one other frame and return one correlation value per shared numeric feature.'
         if n == 'case_study':
             if 'std::string_view feature_name' in sig:
                 return 'Look up one cell using a row position and a column label.'
             if 'std::int64_t start, std::int64_t stop' in sig:
                 return 'Study a contiguous row window by position.'
             return 'Study one row by position.'
+        if n == 'drop':
+            return 'Drop the named columns and keep the remaining schema unchanged.'
+        if n == 'drop_levels':
+            if 'initializer_list<std::string_view>' in sig:
+                return 'Drop one or more case levels by naming them inline.'
+            return 'Drop one or more case levels from a reusable level-name range.'
+        if n == 'feature_ref':
+            return 'Open a reusable column reference without copying the feature into a new frame.'
+        if n == 'level':
+            if 'std::string_view name' in sig:
+                return 'Extract one case level by its level name.'
+            return 'Extract one case level by its zero-based level position.'
+        if n == 'levels':
+            return 'List the current case-level names in order.'
+        if n == 'matmul':
+            return 'Multiply the numeric matrix represented by this frame with another numeric frame.'
+        if n == 'mode':
+            return 'Find the most frequent observed value in each compatible feature.'
+        if n == 'percentiles':
+            return 'Compute several requested percentile points for each numeric feature.'
         if n in {'sum', 'mean', 'median', 'min', 'max', 'std', 'var', 'count'}:
             if 'std::int64_t axis' in sig or 'int axis' in sig:
                 return f'Compute `{n}` across rows instead of returning one summary value per numeric column.'
@@ -1975,6 +2412,8 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'std::string_view name' in sig:
                 return 'Extract one feature thread by name.'
             return 'Materialize every feature thread in left-to-right order.'
+        if n == 'select':
+            return 'Project only the named columns into a new frame.'
         if n in {'fillna', 'fillna_'}:
             mutate = 'Fill missing values in place' if n.endswith('_') else 'Fill missing values in a returned copy'
             if 'RangeView::Of<std::string_view> features' in sig:
@@ -1990,6 +2429,8 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'std::int64_t start, std::int64_t stop' in sig:
                 return 'Preview a contiguous row window without changing the underlying frame.'
             return 'Preview one row without changing the underlying frame.'
+        if n == 'join':
+            return 'Attach columns from another case-aligned frame, adding the collision suffix only when names overlap.'
         if n == 'reorder':
             if 'initializer_list<ReorderSpec>' in sig:
                 return 'Apply an inline multi-step reorder plan that moves only the columns you care about.'
@@ -1998,6 +2439,8 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'ReorderSpec' in sig:
                 return 'Move selected columns to the front, back, or around an anchor while preserving the rest.'
             return 'Move the named columns to the front while preserving the relative order of every untouched column.'
+        if n in {'rolling', 'window'}:
+            return 'Build one or more derived rolling/window features from structured `WindowSpec` instructions.'
         if n == 'sample':
             if ' frac' in sig and 'std::uint64_t random_state' in sig:
                 return 'Sample a fraction of the selected axis with an explicit random seed.'
@@ -2008,6 +2451,8 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'bool replace, int axis' in sig:
                 return 'Sample rows or features while controlling replacement and axis directly.'
             return 'Sample rows with the default settings.'
+        if n == 'scan':
+            return 'Run one cumulative statistic down each numeric feature.'
         if n == 'shuffle':
             return 'Shuffle row order while keeping the feature order unchanged.'
         if n == 'reshuffle':
@@ -2026,6 +2471,28 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'DataFramePlotOptions' in sig:
                 return 'Create the 3D plotting accessor with an explicit plot-options object.'
             return 'Create the 3D plotting accessor with default plot options.'
+        if n == 'query':
+            return 'Filter rows with a boolean expression written against feature names.'
+        if n == 'rename':
+            if 'old_name, new_name' in user_signature(method, class_name):
+                return 'Rename one column by giving its old name and its new name.'
+            if 'initializer_list<std::pair<std::string_view, std::string_view>>' in sig:
+                return 'Rename several columns at once with an inline old-name/new-name mapping.'
+            if 'RangeView::Of<std::pair<std::string_view, std::string_view>>' in sig:
+                return 'Rename several columns at once with a reusable old-name/new-name mapping.'
+            if 'initializer_list<const char*>' in sig:
+                return 'Replace the full feature axis by listing every final column name inline as C strings.'
+            return 'Replace the full feature axis by passing every final column name in order.'
+        if n == 'rename_':
+            return 'Rename one column in place by giving its old name and its new name.'
+        if n == 'select':
+            return 'Project only the named columns into a new frame.'
+        if n == 'unstack':
+            if 'std::string_view level' in sig:
+                return 'Pivot one named case level into output columns using the default unstack options.'
+            return 'Pivot one named case level into output columns while controlling drop, sort, and separator behavior.'
+        if n == 'update':
+            return 'Overlay another aligned frame onto the current one and resolve collisions with the overwrite switch.'
         if n == 'info':
             if 'std::ostream& os' in sig:
                 return 'Write the frame summary to a caller-provided output stream.'
@@ -2149,6 +2616,18 @@ def example_caption(class_name: str, method: Method) -> str:
                 return f'{verbs[n]} each compatible numeric cell against another aligned frame.'
             return f'{verbs[n]} each compatible numeric cell against one broadcast scalar value.'
 
+    if class_name == 'Thread':
+        if n in {'all', 'any'}:
+            return f'Reduce the current thread with `{n}()` and inspect the scalar-like result.'
+        if n == 'chars':
+            return 'Extract a character slice from each text entry using explicit start, stop, and step controls.'
+        if n.startswith('clear_display_'):
+            return 'Remove display-only metadata from the thread while leaving the underlying values unchanged.'
+        if n.startswith('display_'):
+            return 'Inspect display-only metadata attached to the current thread.'
+        if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'}:
+            return f'Extract the `{n}` component from each temporal value in the current thread.'
+
     if class_name == 'DataFramePlotAccessor':
         if n == 'area':
             if 'AreaPlotOptions' in sig:
@@ -2248,11 +2727,41 @@ def example_caption(class_name: str, method: Method) -> str:
         return 'Work with one named feature.'
     if 'Options& options' in sig:
         return 'Pass an explicit options object to control the operation.'
+    if n.startswith('as_'):
+        target = n.removeprefix('as_').replace('_', ' ')
+        return f'Convert the current object into the `{target}` representation before continuing with another type-specific workflow.'
+    if n in {'head', 'tail'}:
+        direction = 'first' if n == 'head' else 'last'
+        return f'Inspect the {direction} part of the current object without changing the source data.'
+    if n == 'slice':
+        return 'Inspect one contiguous positional slice from the current object.'
+    if n == 'take':
+        return 'Inspect explicitly chosen positions from the current object in the order you requested.'
+    if n in {'abs', 'clip', 'log', 'exp'}:
+        return f'Apply `{n}` elementwise and inspect the returned result.'
+    if n in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count'}:
+        return f'Compute `{n}` and inspect the resulting summary value or summary object.'
+    if n in {'defined', 'empty', 'kind', 'dtype', 'size', 'depth'}:
+        return f'Inspect the `{n}` property of the current object.'
+    if n in {'with_meta', 'drop_meta', 'with_cases', 'clear_cases'}:
+        return 'Return an updated copy after changing structural metadata, cases, or validity state.'
+    if n in {'with_meta_', 'drop_meta_', 'with_cases_', 'clear_cases_'}:
+        return 'Mutate the current object in place, then inspect the updated state.'
+    if n in {'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'map'}:
+        return 'Apply a user function and inspect the transformed result.'
+    if class_name == 'Thread':
+        if method.return_type.strip() in {'Thread', 'Thread&'}:
+            if method.params:
+                names = ', '.join(name for name, _ in method.params)
+                return f'Apply `{n}` to the current thread using explicit `{names}` arguments.'
+            return f'Apply `{n}` to the current thread values and inspect the result.'
+        if method.return_type.strip() == 'ThreadValue':
+            return f'Compute `{n}` and inspect the scalar-like thread result.'
     if '(' in sig:
         inside = sig.split('(', 1)[1].rsplit(')', 1)[0].strip()
         if inside in {'self', ''}:
             return 'Call the simplest overload.'
-    return 'Use this overload when its parameter combination matches the result shape or control level you need.'
+    return 'Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.'
 
 
 DF_BASE_OUT = """id  sales  city
@@ -2474,6 +2983,50 @@ Kumasi  12.0""",
             """price
 3.0""",
         ),
+        (
+            'Count backward from the end with a negative row position.',
+            base + '\n\nauto out = sales.case_study(pos(-1), cols({"city", "price"}));',
+            """city    price
+Tamale  5.0""",
+        ),
+        (
+            'Match one structured case level with `CasePick` after `set_cases(...)`.',
+            """using namespace pluss::table;
+
+auto indexed = DataFrame({
+    {"region", pluss::make_note({"West", "West", "East", "East"})},
+    {"account", pluss::make_series({101.0, 101.0, 201.0, 201.0})},
+    {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
+    {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
+    {"cost", pluss::make_series({4.0, 8.0, 12.0, 16.0})},
+}).set_cases({"region", "account", "quarter"}, false);
+
+auto out = indexed.case_study(DataFrame::CasePick{
+    .level = "region",
+    .value = "West",
+}).features({"sales", "cost"});""",
+            """sales  cost
+10.0   4.0
+20.0   8.0""",
+        ),
+        (
+            'Look up one full structured case key with `CasePick`.',
+            """using namespace pluss::table;
+
+auto indexed = DataFrame({
+    {"region", pluss::make_note({"West", "West", "East", "East"})},
+    {"account", pluss::make_series({101.0, 101.0, 201.0, 201.0})},
+    {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
+    {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
+    {"cost", pluss::make_series({4.0, 8.0, 12.0, 16.0})},
+}).set_cases({"region", "account", "quarter"}, false);
+
+auto out = indexed.case_study(DataFrame::CasePick{
+    .key = {"East", "201", "Q2"},
+}).features({"sales", "cost"});""",
+            """sales  cost
+40.0   16.0""",
+        ),
     ]
 
 
@@ -2498,7 +3051,40 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('')
     lines.append('#### Parameters')
     lines.append('')
-    lines.append(params_doc(merged_params_list, class_name, method.name))
+    lines.append('**pick**')
+    lines.append('    Structured-case selector used when the DataFrame has named case levels created by `set_cases(...)`.')
+    lines.append('')
+    lines.append('    Use this overload for hierarchical case lookup rather than ordinary row slicing.')
+    lines.append('')
+    lines.append('    Supported forms:')
+    lines.append('    - `.level = "region", .value = "West"` selects every row whose named case level equals the supplied value.')
+    lines.append('    - `.levels = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case levels at once.')
+    lines.append('    - `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-level order.')
+    lines.append('    - `.drop = true` removes the matched case level(s) from the returned structured case metadata after selection.')
+    lines.append('')
+    lines.append('**rows**')
+    lines.append('    Row selector used for ordinary case-axis lookup and positional indexing.')
+    lines.append('')
+    lines.append('    Supported forms:')
+    lines.append('    - `pluss::table::pos(row)` selects one row by zero-based position. Negative positions count from the end.')
+    lines.append('    - `pluss::table::pos(start, stop)` selects a half-open positional slice `[start, stop)`.')
+    lines.append('    - `pluss::table::pos({r1, r2, ...})` selects explicit row positions in the exact output order you request.')
+    lines.append('    - `pluss::table::label(value)` selects every row whose current case label equals `value`.')
+    lines.append('    - `pluss::table::labels({...})` selects several labels in the requested order. Duplicate labels expand to all matching rows.')
+    lines.append('    - `pluss::table::label_range(start, stop)` selects an inclusive case-label window from the first `start` match through the last `stop` match.')
+    lines.append('    - `pluss::table::mask(bool_thread)` selects rows using a boolean thread with one value per case.')
+    lines.append('')
+    lines.append('**features**')
+    lines.append('    Optional feature selector applied after the row selection has been resolved.')
+    lines.append('')
+    lines.append('    Supported forms:')
+    lines.append('    - `pluss::table::all_features()` keeps every feature in source order.')
+    lines.append('    - `pluss::table::col("name")` keeps one named feature.')
+    lines.append('    - `pluss::table::col(position)` keeps one feature by zero-based position.')
+    lines.append('    - `pluss::table::cols({"a", "b"})` keeps named features in the requested order.')
+    lines.append('    - `pluss::table::cols({0, 2})` keeps feature positions in the requested order.')
+    lines.append('    - `pluss::table::cols(start, stop)` keeps a half-open positional feature slice `[start, stop)`.')
+    lines.append('    - `pluss::table::col_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.')
     lines.append('')
     lines.append('#### Returns')
     lines.append('')
@@ -2507,7 +3093,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('')
     lines.append('#### What It Does')
     lines.append('')
-    lines.append('`case_study(...)` is the unified DataFrame indexing surface. Use selector helpers to choose rows by position, by case label, or by boolean mask, then optionally project one or more features in the same call.')
+    lines.append('`case_study(...)` is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-level case lookup through `CasePick` when the frame has hierarchical cases.')
     lines.append('')
     lines.append('#### Selector Rules')
     lines.append('')
@@ -2517,7 +3103,16 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('- `label(value)` returns every matching row, so duplicate case labels are preserved instead of collapsed.')
     lines.append('- `label_range(start, stop)` is inclusive on both ends and walks the current case-axis order.')
     lines.append('- Feature-position slices are half-open, while `col_range(start, stop)` is inclusive on both ends.')
+    lines.append('- `CasePick` reads named case levels created by `set_cases(...)`; it does not inspect ordinary feature columns.')
+    lines.append('- Partial `CasePick` matches preserve the existing row order already stored on the frame.')
     lines.append('- Because `case_study(...)` always returns a frame, you do not need separate `at(...)` or `iat(...)` methods for single-cell access.')
+    lines.append('')
+    lines.append('#### Notes')
+    lines.append('')
+    lines.append('- Use `features({...})` when you only need feature projection and no row lookup.')
+    lines.append('- Use `filter(mask)` when you already have a boolean row mask and want full-row retention with no feature projection in the same call.')
+    lines.append('- Use `observe(start, stop)` for display-oriented middle slices. Use `case_study(...)` when the selected result itself is part of later computation.')
+    lines.append('- If your current case axis is numeric and you want those labels as numeric data, call `cases().as_series()` explicitly.')
     lines.append('')
     lines.append('#### Examples')
     lines.append('')
@@ -2528,6 +3123,8 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
         lines.append(code)
         lines.append('```')
         lines.append('')
+        lines.append('##### Output')
+        lines.append('')
         lines.append('```text')
         lines.append(output)
         lines.append('```')
@@ -2535,10 +3132,1404 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('#### Behavior Notes')
     lines.append('')
     lines.append('- `cases()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.')
+    lines.append('- `CasePick` is the structured-case overload. Use it only after `set_cases(...)` has created named case levels.')
+    lines.append('- Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.')
     lines.append('- When you only want to preview a row window instead of materializing a selection result for later work, use `observe(...)`.')
     lines.append('- If you already know the final feature order and only need column projection, `features({...})` is still the lighter-weight feature-only path.')
     lines.append('')
     return lines
+
+
+def render_custom_method_page(
+    class_name: str,
+    name: str,
+    overloads: list[Method],
+    what_it_does: str,
+    parameter_lines: list[str],
+    returns_lines: list[str],
+    examples: list[tuple[str, str, str]],
+    note_lines: list[str] | None = None,
+) -> list[str]:
+    lines: list[str] = []
+    lines.append(f'### `{name}`')
+    lines.append('')
+    lines.append('#### Signatures' if len(overloads) > 1 else '#### Signature')
+    lines.append('')
+    lines.append('```cpp')
+    for idx, overload in enumerate(overloads):
+        if idx:
+            lines.append('')
+        lines.append(user_signature(overload, class_name))
+    lines.append('```')
+    lines.append('')
+    lines.append('#### What It Does')
+    lines.append('')
+    lines.append(what_it_does)
+    lines.append('')
+    lines.append('#### Parameters')
+    lines.append('')
+    lines.extend(parameter_lines)
+    lines.append('')
+    lines.append('#### Returns')
+    lines.append('')
+    lines.extend(returns_lines)
+    lines.append('')
+    if note_lines:
+        lines.append('#### Notes')
+        lines.append('')
+        lines.extend(note_lines)
+        lines.append('')
+    lines.append('#### Examples')
+    lines.append('')
+    for idx, (caption, code, output) in enumerate(examples, start=1):
+        lines.append(f'Example {idx}. {caption}')
+        lines.append('')
+        lines.append('```cpp')
+        lines.append(code)
+        lines.append('```')
+        lines.append('')
+        lines.append('##### Output')
+        lines.append('')
+        lines.append('```text')
+        lines.append(output)
+        lines.append('```')
+        lines.append('')
+    return lines
+
+
+def df_a_sales_base() -> str:
+    return """using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+    {"price", pluss::make_series({3.0, 4.0, 2.5})},
+}).title("sales");"""
+
+
+def df_a_frame_add_base() -> str:
+    return """using namespace pluss::table;
+
+auto left = DataFrame({
+    {"midterm_1", pluss::make_series({15.0, 18.0, 12.0})},
+    {"midterm_2", pluss::make_series({16.0, 14.0, 13.0})},
+}).title("left");
+
+auto curve = DataFrame({
+    {"midterm_1", pluss::make_series({1.0, 1.0, 1.0})},
+    {"midterm_2", pluss::make_series({0.5, 0.5, 0.5})},
+}).title("curve");"""
+
+
+def df_a_grades_base() -> str:
+    return """using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen"})},
+    {"assignment", pluss::make_series({9.5, 8.0, 7.5})},
+    {"final", pluss::make_series({28.0, 24.0, 21.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("grades");"""
+
+
+def df_a_scratch_base() -> str:
+    return """using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen"})},
+    {"assignment", pluss::make_series({9.5, 8.0, 7.5})},
+    {"final", pluss::make_series({28.0, 24.0, 21.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("grades");
+
+auto scratch = DataFrame({
+    {"score", pluss::make_series({88.0, 79.0, 91.0})},
+}, pluss::make_note({"s2", "s3", "s1"})).title("scratch");"""
+
+
+def df_a_flags_base() -> str:
+    return """using namespace pluss::table;
+
+auto flags = DataFrame({
+    {"quiz_ok", pluss::make_series(std::vector<bool>{true, true, false})},
+    {"exam_ok", pluss::make_series(std::vector<bool>{true, false, false})},
+    {"bonus_ok", pluss::make_series(std::vector<bool>{true, true, true})},
+}).title("flags");"""
+
+
+def df_a_raw_base() -> str:
+    return """using namespace pluss::table;
+using pluss::ScalarType;
+
+auto raw = DataFrame({
+    {"student_id", pluss::make_series({101.0, 102.0, 103.0})},
+    {"passed", pluss::make_series({1.0, 0.0, 1.0})},
+}).title("raw");"""
+
+
+def thread_a_scores_base() -> str:
+    return """using pluss::table::Thread;
+
+auto scores = Thread(pluss::make_series({-2.5, 0.0, 3.5}));"""
+
+
+def thread_a_flags_base() -> str:
+    return """using pluss::table::Thread;
+
+auto flags = Thread(pluss::make_series(std::vector<bool>{true, false, true}));"""
+
+
+def thread_a_names_base() -> str:
+    return """using pluss::table::Thread;
+
+auto names = Thread(pluss::make_note({" Ada ", "BOLA", " chen "}));"""
+
+
+def thread_a_timeline_base() -> str:
+    return """using pluss::table::Thread;
+
+auto stamps = Thread(pluss::make_timeline({
+    "2024-01-01T09:10:00Z",
+    "2024-02-01T11:00:00Z",
+    "2024-03-05T15:30:00Z",
+}));"""
+
+
+def thread_a_timeindex_base() -> str:
+    return """using pluss::table::Thread;
+
+auto ticks = Thread(pluss::make_timeindex({
+    "2024-01-01T00:10:00Z",
+    "2024-01-01T00:20:00Z",
+    "2024-01-01T01:10:00Z",
+    "2024-01-02T00:15:00Z",
+}, true));"""
+
+
+def thread_a_ints_base() -> str:
+    return """using pluss::ScalarType;
+using pluss::table::Thread;
+
+auto ints = Thread(pluss::make_series({1.0, 0.0, 1.0}));"""
+
+
+def df_b_missing_base() -> str:
+    return """using namespace pluss::table;
+
+auto missing = DataFrame({
+    {"score", pluss::make_series({72.0, std::numeric_limits<double>::quiet_NaN(), 81.0,
+                                  std::numeric_limits<double>::quiet_NaN(), 95.0})},
+    {"cost", pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(),
+                                 std::numeric_limits<double>::quiet_NaN(), 40.0,
+                                 std::numeric_limits<double>::quiet_NaN()})},
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale", "Sunyani"})},
+}).title("missing");"""
+
+
+def df_b_grades_base() -> str:
+    return """using namespace pluss::table;
+
+auto grades = DataFrame({
+    {"student", pluss::make_note({"Ada", "Bola", "Chen", "Dede"})},
+    {"assignment", pluss::make_series({9.5, 8.0, 7.5, 9.0})},
+    {"final", pluss::make_series({28.0, 24.0, 21.5, 26.0})},
+}, pluss::make_note({"s1", "s2", "s3", "s4"})).title("grades");"""
+
+
+def df_b_metrics_base() -> str:
+    return """using namespace pluss::table;
+
+auto metrics = DataFrame({
+    {"sales", pluss::make_series({12.0, 27.0, 35.0, 49.0})},
+    {"cost", pluss::make_series({5.0, 18.0, 33.0, 60.0})},
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
+}).title("metrics");
+
+auto numeric = metrics.features({"sales", "cost"});"""
+
+
+def thread_b_missing_base() -> str:
+    return """using pluss::table::Thread;
+
+auto missing = Thread(pluss::make_series({
+    10.0,
+    std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(),
+    40.0,
+    50.0,
+}));"""
+
+
+def thread_b_scores_base() -> str:
+    return """using pluss::table::Thread;
+
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));"""
+
+
+def thread_b_dates_base() -> str:
+    return """using pluss::table::Thread;
+
+auto dates = Thread(pluss::make_timeline({
+    "2024-01-01T00:00:00Z",
+    "2024-01-02T00:00:00Z",
+    "2024-01-03T00:00:00Z",
+}));"""
+
+
+def thread_b_rowwise_base() -> str:
+    return """using pluss::table::Thread;
+
+auto scores = Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto lower = Thread(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
+auto upper = Thread(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));"""
+
+
+def render_dataframe_a_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
+    if class_name != 'DataFrame':
+        return None
+
+    if name == 'add':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Adds numeric data either against one scalar or against another frame. This is the method-form of DataFrame arithmetic when you want the addition intent to be explicit instead of relying on `operator+`.',
+            [
+                '`other` : `double`',
+                '    Broadcast the same scalar across every numeric feature in the frame. Non-numeric features such as `Note`, `Timeline`, and `TimeIndex` are passed through unchanged.',
+                '',
+                '`other` : `DataFrame`',
+                '    Add one frame to another. PlussMic aligns by the frame labels it already carries, then applies numeric addition where the participating features are compatible.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame with the same row structure as the left-hand input and the updated numeric payloads.',
+            ],
+            [
+                (
+                'Scalar arithmetic against every numeric feature.',
+                df_a_sales_base() + '\n\nauto out = sales.add(1.0);',
+                """===========================
+     | city    units  price
+---------------------------
+0    | Accra   11     4
+1    | Tema    8      5
+2    | Kumasi  13     3.5
+---------------------------
+[3 cs x 3 feat]""",
+            ),
+                (
+                'Feature-aligned addition against another frame.',
+                df_a_frame_add_base() + '\n\nauto out = left.add(curve);',
+                """===========================
+     | midterm_1  midterm_2
+---------------------------
+0    | 16         16.5
+1    | 19         14.5
+2    | 13         13.5
+---------------------------
+[3 cs x 2 feat]""",
+            ),
+            ],
+            [
+                '- `add(1.0)` and `df + 1.0` are the same operation.',
+                '- Use the method form when you want chainable, self-documenting arithmetic inside a longer pipeline.',
+            ],
+        )
+
+    if name == 'add_prefix':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Prepends the same text to every feature name in the current frame. Only the column labels change; row order, case labels, and payload values stay exactly the same.',
+            [
+                '`prefix` : `std::string_view`',
+                '    Text inserted before every feature name from left to right.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame with renamed features and unchanged values.',
+            ],
+            [
+                (
+                    'Prefix a projected subset before a downstream merge or export.',
+                    df_a_sales_base() + '\n\nauto out = sales.features({"units", "price"}).add_prefix("exam_");',
+                    """=============================
+     | exam_units  exam_price
+-----------------------------
+0    | 10          3
+1    | 7           4
+2    | 12          2.5
+-----------------------------
+[3 cs x 2 feat]""",
+                ),
+            ],
+            [
+                '- `add_prefix(...)` is useful when you want to disambiguate a block of features before `join(...)`, `unify(...)`, or export.',
+                '- Because the payload is untouched, it is safe for text, numeric, and temporal features alike.',
+            ],
+        )
+
+    if name == 'add_suffix':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Appends the same text to every feature name in the current frame. Use this when the suffix communicates provenance, season, model stage, or any other output tag.',
+            [
+                '`suffix` : `std::string_view`',
+                '    Text appended after every feature name.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame with renamed features and unchanged values.',
+            ],
+            [
+                (
+                    'Suffix a feature block to preserve source provenance.',
+                    df_a_sales_base() + '\n\nauto out = sales.features({"units", "price"}).add_suffix("_winter");',
+                    """=================================
+     | units_winter  price_winter
+---------------------------------
+0    | 10            3
+1    | 7             4
+2    | 12            2.5
+---------------------------------
+[3 cs x 2 feat]""",
+                ),
+            ],
+            [
+                '- `add_suffix(...)` is the symmetric label operation to `add_prefix(...)`.',
+                '- This is often cleaner than renaming each feature one-by-one when the rename pattern is uniform.',
+            ],
+        )
+
+    if name == 'aggregate':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Builds a compact summary view from one or more aggregation specs. Use it when you want one summary row instead of grouped rows or the full underlying frame.',
+            [
+                '`specs` : `pluss::RangeView<SummarySpec>`',
+                '    Aggregation specifications. Each `SummarySpec` has three fields:',
+                '    - `output`: output feature name. Leave it empty when you want PlussMic to auto-name the result.',
+                '    - `feature`: source feature to summarize.',
+                '    - `op`: summary statistic to compute.',
+                '',
+                '    `op` supports:',
+                '    - `Count`: count observed values.',
+                '    - `Nunique`: count distinct observed values.',
+                '    - `Sum`: numeric sum.',
+                '    - `Mean`: arithmetic mean.',
+                '    - `Median`: median.',
+                '    - `Min`: minimum.',
+                '    - `Max`: maximum.',
+                '    - `Std`: sample standard deviation.',
+                '    - `Var`: sample variance.',
+                '    - `Prod`: numeric product.',
+                '',
+                '`render` : `bool`, optional',
+                '    When `true`, the returned `DataFrameView` can auto-render immediately in temporary display contexts. Keep it `false` when you want to call `.to_string()` or `.show()` yourself.',
+            ],
+            [
+                '`DataFrameView`',
+                '    A one-row summary view. The case label is `summary`.',
+            ],
+            [
+                (
+                    'One summary metric with an explicit output name.',
+                    df_a_grades_base() + '\n\nauto out = grades.aggregate({\n    {"mean_final", "final", DataFrame::SummaryOp::Mean},\n}, false);',
+                    """====================
+        | mean_final
+--------------------
+summary | 24.5
+--------------------
+[1 cs x 1 feat]""",
+                ),
+                (
+                    'Several summary metrics at once.',
+                    df_a_grades_base() + '\n\nauto out = grades.aggregate({\n    {"n_students", "final", DataFrame::SummaryOp::Count},\n    {"max_final", "final", DataFrame::SummaryOp::Max},\n    {"min_final", "final", DataFrame::SummaryOp::Min},\n}, false);',
+                    """==========================================
+        | n_students  max_final  min_final
+------------------------------------------
+summary | 3           28         21.5
+------------------------------------------
+[1 cs x 3 feat]""",
+                ),
+                (
+                    'Let PlussMic auto-name the outputs when the statistic names are already clear.',
+                    df_a_grades_base() + '\n\nauto out = grades.aggregate({\n    {"", "assignment", DataFrame::SummaryOp::Mean},\n    {"", "assignment", DataFrame::SummaryOp::Std},\n}, false);',
+                    """=========================================
+        | assignment_mean  assignment_std
+-----------------------------------------
+summary | 8.333333333      1.040833
+-----------------------------------------
+[1 cs x 2 feat]""",
+                ),
+            ],
+            [
+                '- `aggregate(...)` returns a summary view, not grouped rows.',
+                '- `Count` and `Nunique` are valid on non-numeric features; the numeric summary ops expect numeric input.',
+            ],
+        )
+
+    if name == 'align_cases':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Reorders the current frame so its case axis follows the supplied case order. This is the row-alignment helper to use when you already know the target case ordering you want to conform to.',
+            [
+                '`new_cases` : `Thread`',
+                '    Target case labels in the exact order you want the output rows to follow.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame whose rows and case labels follow `new_cases`.',
+            ],
+            [
+                (
+                    'Match one frame to the case order of another frame.',
+                    df_a_scratch_base() + '\n\nauto out = scratch.align_cases(grades.cases());',
+                    """============
+     | score
+------------
+s1   | 91
+s2   | 88
+s3   | 79
+------------
+[3 cs x 1 feat]""",
+                ),
+            ],
+            [
+                '- Every requested case must already exist in the source frame.',
+                '- This is row-order alignment only. It does not add or remove features.',
+            ],
+        )
+
+    if name == 'all':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Reduces boolean features with logical AND. Use it when you want to know whether every selected value is true either feature-wise or row-wise.',
+            [
+                '`axis` : `Axis`, optional',
+                '    - `Axis::Feature`: reduce down rows and return one result per feature.',
+                '    - `Axis::Case`: reduce across features and return one result per row.',
+                '',
+                '`features` : `pluss::RangeView<std::string_view>`, optional',
+                '    Restrict the reduction to a boolean feature subset. Leave it empty to use every compatible boolean feature in the frame.',
+                '',
+                '`skipna` : `bool`, optional',
+                '    When `true`, missing boolean values are skipped. When `false`, missing state participates instead of being ignored.',
+            ],
+            [
+                '`Thread`',
+                '    A boolean-like thread holding the reduction result for the chosen axis.',
+            ],
+            [
+                (
+                    'Feature-wise logical AND across the selected boolean features.',
+                    df_a_flags_base() + '\n\nauto out = flags.all();',
+                    """ quiz_ok  false
+ exam_ok  false
+bonus_ok  true
+dtype: Series""",
+                ),
+                (
+                    'Row-wise logical AND across features.',
+                    df_a_flags_base() + '\n\nusing pluss::table::Axis;\nauto out = flags.all(Axis::Case);',
+                    """0  true
+1  false
+2  false
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `all()` is a boolean reduction, not a numeric reducer.',
+                '- If you want feature-wise truth tests on only part of the frame, pass the feature subset explicitly.',
+            ],
+        )
+
+    if name == 'any':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Reduces boolean features with logical OR. Use it when you want to know whether at least one selected value is true either feature-wise or row-wise.',
+            [
+                '`axis` : `Axis`, optional',
+                '    - `Axis::Feature`: reduce down rows and return one result per feature.',
+                '    - `Axis::Case`: reduce across features and return one result per row.',
+                '',
+                '`features` : `pluss::RangeView<std::string_view>`, optional',
+                '    Restrict the reduction to a boolean feature subset. Leave it empty to use every compatible boolean feature in the frame.',
+                '',
+                '`skipna` : `bool`, optional',
+                '    When `true`, missing boolean values are skipped. When `false`, missing state participates instead of being ignored.',
+            ],
+            [
+                '`Thread`',
+                '    A boolean-like thread holding the reduction result for the chosen axis.',
+            ],
+            [
+                (
+                    'Feature-wise logical OR across the selected boolean features.',
+                    df_a_flags_base() + '\n\nauto out = flags.any();',
+                    """ quiz_ok  true
+ exam_ok  true
+bonus_ok  true
+dtype: Series""",
+                ),
+                (
+                    'Row-wise logical OR across features.',
+                    df_a_flags_base() + '\n\nusing pluss::table::Axis;\nauto out = flags.any(Axis::Case);',
+                    """0  true
+1  true
+2  true
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `any()` is the usual row/feature existence test before masked writes or filtering.',
+                '- Pair it with `put(...)` when the boolean result should immediately drive a replacement policy.',
+            ],
+        )
+
+    if name == 'assign':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Adds or replaces derived features without mutating the source frame. This is the frame-level “build one or more new columns” helper when the new values depend on the current DataFrame.',
+            [
+                '`assignments` : `pluss::RangeView<std::pair<std::string, Thread>>`',
+                '    Use this form when you already computed the replacement thread outside the call. Each pair is `{feature_name, thread_value}`.',
+                '',
+                '`specs` : `pluss::RangeView<DeriveSpec>`',
+                '    Use this form when the frame should compute the new feature inside the call. Each `DeriveSpec` has:',
+                '    - `feature`: output feature name.',
+                '    - `expr`: callable with signature `Thread(const DataFrame&)`.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame containing the original features plus the derived ones, or replacements where the names already existed.',
+            ],
+            [
+                (
+                    'Assign one already-computed thread.',
+                    df_a_grades_base() + '\n\nauto total_grade = [](const DataFrame& df) {\n    return df.features("assignment") + df.features("final");\n};\n\nauto out = grades.assign({\n    std::pair<std::string, Thread>{"total", total_grade(grades)},\n});',
+                    """========================================
+     | student  assignment  final  total
+----------------------------------------
+s1   | Ada      9.5         28     37.5
+s2   | Bola     8           24     32
+s3   | Chen     7.5         21.5   29
+----------------------------------------
+[3 cs x 4 feat]""",
+                ),
+                (
+                    'Assign several derived features computed from the frame inside the call.',
+                    df_a_grades_base() + '\n\nauto total_grade = [](const DataFrame& df) {\n    return df.features("assignment") + df.features("final");\n};\n\nauto out = grades.assign({\n    DataFrame::DeriveSpec{\n        .feature = "total",\n        .expr = total_grade,\n    },\n    DataFrame::DeriveSpec{\n        .feature = "passed",\n        .expr = [](const DataFrame& df) {\n            return total_grade(df) >= 30.0;\n        },\n    },\n});',
+                    """================================================
+     | student  assignment  final  total  passed
+------------------------------------------------
+s1   | Ada      9.5         28     37.5   true
+s2   | Bola     8           24     32     true
+s3   | Chen     7.5         21.5   29     false
+------------------------------------------------
+[3 cs x 5 feat]""",
+                ),
+            ],
+            [
+                '- Every derived thread must match the frame case count.',
+                '- Use the pair form when the new data already exists. Use `DeriveSpec` when you want the frame to compute it from its current state inside the call.',
+            ],
+        )
+
+    if name == 'astype':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Casts selected Series-backed features to new scalar dtypes while leaving every other feature unchanged. This is the direct DataFrame dtype-conversion path when you already know which numeric columns should change type.',
+            [
+                '`features` : `pluss::RangeView<std::string_view>`',
+                '    Feature subset to cast together with one shared target dtype.',
+                '',
+                '`dtype` : `pluss::ScalarType`',
+                '    Target numeric scalar type applied to every selected feature in the two-argument overload.',
+                '',
+                '`feature_dtypes` : `pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>>`',
+                '    Per-feature dtype mapping for the overload where different columns should cast to different target dtypes in the same call.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame with the selected Series-backed features rewritten to the requested dtypes.',
+            ],
+            [
+                (
+                    'Cast one numeric indicator column to bool.',
+                    df_a_raw_base() + '\n\nauto out = raw.astype({"passed"}, ScalarType::Bool);',
+                    """=========================
+     | student_id  passed
+-------------------------
+0    | 101         true
+1    | 102         false
+2    | 103         true
+-------------------------
+[3 cs x 2 feat]""",
+                ),
+                (
+                    'Cast several features with one mapping object.',
+                    df_a_raw_base() + '\n\nauto out = raw.astype({\n    {"student_id", ScalarType::Int64},\n    {"passed", ScalarType::Bool},\n});',
+                    """=========================
+     | student_id  passed
+-------------------------
+0    | 101         true
+1    | 102         false
+2    | 103         true
+-------------------------
+[3 cs x 2 feat]""",
+                ),
+            ],
+            [
+                '- Only the selected features are cast. Every other feature is passed through unchanged.',
+                '- This is the Series-dtype path. For broader target-family conversion, use `cast(...)` instead.',
+            ],
+        )
+
+    return None
+
+
+def render_thread_a_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
+    if class_name != 'Thread':
+        return None
+
+    if name == 'abs':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Applies absolute value elementwise to a numeric Series-backed thread.',
+            [
+                '`None`',
+            ],
+            [
+                '`Thread`',
+                '    A numeric thread with every value replaced by its absolute magnitude.',
+            ],
+            [
+                (
+                    'Take the magnitude of each numeric value.',
+                    thread_a_scores_base() + '\n\nauto out = scores.abs();',
+                    """0  2.5
+1  0
+2  3.5
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `abs()` is elementwise and preserves the thread length.',
+                '- For frame-wide absolute values, use `DataFrame::transform(...)` or select the target feature block first.',
+            ],
+        )
+
+    if name == 'all':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Reduces one boolean thread with logical AND.',
+            [
+                '`skipna` : `bool`, optional',
+                '    When `true`, missing boolean values are skipped during the reduction.',
+            ],
+            [
+                '`ThreadValue`',
+                '    One scalar-like result representing whether every participating value is true.',
+            ],
+            [
+                (
+                    'Reduce a boolean thread to one truth value.',
+                    thread_a_flags_base() + '\n\nauto out = flags.all().to_str();',
+                    'false',
+                ),
+            ],
+            [
+                '- `all()` returns `ThreadValue`, not a full thread.',
+                '- Calling `.to_str()`, `.to_int()`, or `.host()` is often the cleanest way to surface the scalar result in user code.',
+            ],
+        )
+
+    if name == 'any':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Reduces one boolean thread with logical OR.',
+            [
+                '`skipna` : `bool`, optional',
+                '    When `true`, missing boolean values are skipped during the reduction.',
+            ],
+            [
+                '`ThreadValue`',
+                '    One scalar-like result representing whether any participating value is true.',
+            ],
+            [
+                (
+                    'Reduce a boolean thread to one truth value.',
+                    thread_a_flags_base() + '\n\nauto out = flags.any().to_str();',
+                    'true',
+                ),
+            ],
+            [
+                '- `any()` is the scalar truth test companion to `Thread::filter(...)`, `Thread::put(...)`, and `DataFrame::where(...)`.',
+            ],
+        )
+
+    if name == 'as_note':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Exposes the underlying `pluss::Note` payload directly so you can use the native text surface.',
+            [
+                '`None`',
+            ],
+            [
+                '`const pluss::Note&`',
+                '    The underlying Note payload.',
+            ],
+            [
+                (
+                    'Hop into the native Note surface, then wrap back into Thread for display.',
+                    thread_a_names_base() + '\n\nauto out = Thread(names.as_note().strip().lower());',
+                    """0  ada
+1  bola
+2  chen
+dtype: Note""",
+                ),
+            ],
+            [
+                '- `as_note()` itself does not create a new `Thread`; it returns the native payload.',
+                '- When the next API expects a `Thread` again, wrapping with `Thread(...)` is enough because `Thread` is constructible from Pluss types.',
+            ],
+        )
+
+    if name == 'as_series':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Exposes the underlying `pluss::Series` payload directly so you can use native numeric operations and Series methods.',
+            [
+                '`None`',
+            ],
+            [
+                '`const pluss::Series&`',
+                '    The underlying Series payload.',
+            ],
+            [
+                (
+                    'Use the native Series arithmetic surface, then wrap back into Thread for display.',
+                    thread_a_scores_base() + '\n\nauto out = Thread(scores.as_series() + 5.0);',
+                    """0  2.5
+1  5
+2  8.5
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `as_series()` is the native escape hatch when the operation you want lives on Series rather than on Thread.',
+            ],
+        )
+
+    if name == 'as_timeline':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Exposes the underlying `pluss::Timeline` payload directly so you can use native temporal methods.',
+            [
+                '`None`',
+            ],
+            [
+                '`const pluss::Timeline&`',
+                '    The underlying Timeline payload.',
+            ],
+            [
+                (
+                    'Use a native temporal extraction method, then wrap the result back into a Thread.',
+                    thread_a_timeline_base() + '\n\nauto out = Thread(stamps.as_timeline().year());',
+                    """0  2024
+1  2024
+2  2024
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `as_timeline()` is the native path for calendar fields, formatting, rounding, timezone work, and other temporal operations that live below Thread.',
+            ],
+        )
+
+    if name == 'as_timeindex':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Exposes the underlying `pluss::TimeIndex` payload directly so you can use native index-aware temporal methods such as resampling.',
+            [
+                '`None`',
+            ],
+            [
+                '`const pluss::TimeIndex&`',
+                '    The underlying TimeIndex payload.',
+            ],
+            [
+                (
+                    'Call a native TimeIndex resampling method directly.',
+                    thread_a_timeindex_base() + '\n\nauto out = Thread(ticks.as_timeindex().resample_count("D", 1));',
+                    """0  3
+1  1
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `as_timeindex()` is the native path for index-style temporal operations rather than plain timestamp-field extraction.',
+            ],
+        )
+
+    if name == 'astype':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Casts a Series-backed thread to a new numeric scalar dtype.',
+            [
+                '`dtype` : `pluss::ScalarType`',
+                '    Target numeric scalar dtype.',
+            ],
+            [
+                '`Thread`',
+                '    A new thread carrying the converted Series payload.',
+            ],
+            [
+                (
+                    'Turn numeric indicator values into booleans.',
+                    thread_a_ints_base() + '\n\nauto out = ints.astype(ScalarType::Bool);',
+                    """0  true
+1  false
+2  true
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `astype(...)` is the direct Series dtype conversion path on Thread.',
+                '- For conversion between payload families, use `cast(...)` instead of `astype(...)`.',
+            ],
+        )
+
+    return None
+
+
+def render_dataframe_b_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
+    if class_name != 'DataFrame':
+        return None
+
+    if name == 'bfill':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Backward-fills missing values feature-by-feature by pulling the next valid value upward. Use it when a later observed value should repair a preceding missing gap.',
+            [
+                '`limit` : `std::int64_t`, optional',
+                '    Maximum number of consecutive missing rows to fill within each gap. Use `-1` for no limit.',
+                '',
+                '`options` : `FillOptions`',
+                '    Structured fill configuration for the overload that targets selected features.',
+                '    - `features`: feature subset to fill. Leave it empty to fill every compatible feature.',
+                '    - `limit`: maximum number of consecutive rows to fill per gap.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame with the selected missing values backward-filled.',
+            ],
+            [
+                (
+                    'Backward-fill every compatible feature with the default unlimited policy.',
+                    df_b_missing_base() + '\n\nauto out = missing.bfill();',
+                    """===========================
+     | score  cost  city
+---------------------------
+0    | 72     10    Accra
+1    | 81     40    Tema
+2    | 81     40    Kumasi
+3    | 95     40    Tamale
+4    | 95     NA    Sunyani
+---------------------------
+[5 cs x 3 feat]""",
+                ),
+                (
+                    'Backward-fill only one feature with a feature-scoped FillOptions object.',
+                    df_b_missing_base() + '\n\nDataFrame::FillOptions fill_options;\nfill_options.features = {"score"};\nfill_options.limit = 1;\n\nauto out = missing.bfill(fill_options);',
+                    """===========================
+     | score  cost  city
+---------------------------
+0    | 72     10    Accra
+1    | 81     nan   Tema
+2    | 81     nan   Kumasi
+3    | 95     40    Tamale
+4    | 95     nan   Sunyani
+---------------------------
+[5 cs x 3 feat]""",
+                ),
+            ],
+            [
+                '- `bfill(...)` operates independently inside each feature.',
+                '- Trailing missing runs remain missing when there is no later value to pull from.',
+            ],
+        )
+
+    if name == 'bottom':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Returns the lowest `n` rows after sorting ascending by one feature.',
+            [
+                '`feature` : `std::string_view`',
+                '    Feature used for the ascending sort key.',
+                '',
+                '`n` : `std::int64_t`',
+                '    Number of rows to keep from the bottom of the ascending ordering.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame containing the selected bottom rows.',
+            ],
+            [
+                (
+                    'Pick the two lowest rows by final score.',
+                    df_b_grades_base() + '\n\nauto out = grades.bottom("final", 2);',
+                    """=================================
+     | student  assignment  final
+---------------------------------
+s3   | Chen     7.5         21.5
+s2   | Bola     8           24
+---------------------------------
+[2 cs x 3 feat]""",
+                ),
+            ],
+            [
+                '- `bottom(feature, n)` is the lower-tail companion to `top(feature, n)`.',
+                '- The output preserves the full row payload for every selected case.',
+            ],
+        )
+
+    if name == 'bounded':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Applies a window statistic using caller-supplied window bounds instead of a fixed rolling width. This is the escape hatch for advanced vectorized window definitions that do not fit ordinary rolling or expanding patterns.',
+            [
+                '`bounds` : `WindowBoundsFn`',
+                '    Callable with signature `(size, options) -> pair(starts, ends)` where each row receives one half-open window `[start, end)`.',
+                '',
+                '`statistic` : `WindowStatistic`, optional',
+                '    Reduction applied inside each window:',
+                '    - `Sum`: sum inside each window.',
+                '    - `Mean`: arithmetic mean inside each window.',
+                '    - `Minimum`: minimum inside each window.',
+                '    - `Maximum`: maximum inside each window.',
+                '    - `Var`: variance inside each window.',
+                '    - `Std`: standard deviation inside each window.',
+                '    - `Sem`: standard error of the mean.',
+                '    - `Skew`: skewness.',
+                '    - `Kurtosis`: kurtosis.',
+                '',
+                '`options` : `WindowOptions`, optional',
+                '    Additional validity/statistics controls.',
+                '    - `min_count`: minimum non-null observations required for a valid output.',
+                '    - `ddof`: degrees of freedom for variance-style statistics.',
+                '    - `centered`: centering flag used by APIs that interpret a natural window center.',
+                '    - `closure`: interval-closure policy used by APIs that interpret left/right boundary semantics.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame containing one windowed result per input row and per selected feature.',
+            ],
+            [
+                (
+                    'Build an expanding mean by making every window start at row zero.',
+                    df_b_metrics_base() + '\n\nauto out = numeric.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);\n        std::vector<std::int64_t> ends;\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) ends.push_back(row + 1);\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean);\n',
+                    """===============================
+     | sales        cost
+-------------------------------
+0    | 12           5
+1    | 19.5         11.5
+2    | 24.66666667  18.66666667
+3    | 30.75        29
+-------------------------------
+[4 cs x 2 feat]""",
+                ),
+                (
+                    'Build a trailing-two mean with a minimum-count requirement.',
+                    df_b_metrics_base() + '\n\nauto out = numeric.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts;\n        std::vector<std::int64_t> ends;\n        starts.reserve(static_cast<std::size_t>(size));\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) {\n            starts.push_back(std::max<std::int64_t>(0, row - 1));\n            ends.push_back(row + 1);\n        }\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean,\n    WindowOptions{.min_count = 2});\n',
+                    """==================
+     | sales  cost
+------------------
+0    | NA     NA
+1    | 19.5   11.5
+2    | 31     25.5
+3    | 42     46.5
+------------------
+[4 cs x 2 feat]""",
+                ),
+            ],
+            [
+                '- `bounded(...)` is the lower-level custom-window surface behind more regular rolling and expanding helpers.',
+                '- The bounds function defines the window shape; the statistic and options define how each window is reduced.',
+            ],
+        )
+
+    if name == 'bucketize':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Places numeric values into interval bins and returns the bin labels as numeric outputs. Use it when you want coarse interval categories while keeping the operation inside the DataFrame pipeline.',
+            [
+                '`feature_name` / `feature_names` : feature selector',
+                '    Choose one feature, several features, or leave the selector out entirely to apply bucketing across every compatible numeric feature.',
+                '',
+                '`bins` : `pluss::RangeView<double>`',
+                '    Strictly increasing interval edges.',
+                '',
+                '`labels` : `pluss::RangeView<std::int64_t>`, optional',
+                '    Explicit output labels for each interval. Leave it empty to get `0, 1, 2, ...`.',
+                '',
+                '`right` : `bool`, optional',
+                '    When `true`, intervals are right-closed. When `false`, intervals are left-closed and right-open.',
+                '',
+                '`include_lowest` : `bool`, optional',
+                '    When `true`, the first interval includes its left edge.',
+            ],
+            [
+                '`DataFrame`',
+                '    A new frame where the selected numeric features hold their assigned bucket labels.',
+            ],
+            [
+                (
+                    'Bucketize every compatible numeric feature with auto-generated labels.',
+                    df_b_metrics_base().replace('\nauto numeric = metrics.features({"sales", "cost"});', '') + '\n\nauto out = metrics.bucketize({0.0, 20.0, 40.0, 60.0});',
+                    """==========================
+     | sales  cost  city
+--------------------------
+0    | 0      0     Accra
+1    | 1      0     Tema
+2    | 1      1     Kumasi
+3    | 2      2     Tamale
+--------------------------
+[4 cs x 3 feat]""",
+                ),
+                (
+                    'Bucketize one named feature with explicit labels.',
+                    df_b_metrics_base().replace('\nauto numeric = metrics.features({"sales", "cost"});', '') + '\n\nauto out = metrics.bucketize("sales", {0.0, 20.0, 40.0, 60.0}, {10, 20, 30});',
+                    """==========================
+     | sales  cost  city
+--------------------------
+0    | 10     5     Accra
+1    | 20     18    Tema
+2    | 20     33    Kumasi
+3    | 30     60    Tamale
+--------------------------
+[4 cs x 3 feat]""",
+                ),
+                (
+                    'Bucketize a selected subset while leaving the other features untouched.',
+                    """using namespace pluss::table;
+
+auto metrics = DataFrame({
+    {"sales", pluss::make_series({12.0, 27.0, 35.0, 49.0})},
+    {"cost", pluss::make_series({5.0, 18.0, 33.0, 60.0})},
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
+}).title("metrics");
+std::array<std::string_view, 2> pair_features{"sales", "cost"};
+
+auto out = metrics.bucketize(pair_features, {0.0, 25.0, 50.0, 75.0}, {1, 2, 3});""",
+                    """==========================
+     | sales  cost  city
+--------------------------
+0    | 1      1     Accra
+1    | 2      1     Tema
+2    | 2      2     Kumasi
+3    | 2      3     Tamale
+--------------------------
+[4 cs x 3 feat]""",
+                ),
+            ],
+            [
+                '- Bucketing changes only the selected numeric features.',
+                '- Non-selected and non-numeric features pass through unchanged.',
+            ],
+        )
+
+    return None
+
+
+def render_thread_b_page(name: str, overloads: list[Method], class_name: str) -> list[str] | None:
+    if class_name != 'Thread':
+        return None
+
+    if name == 'bfill':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Backward-fills one thread by pulling the next valid value upward within the same payload.',
+            [
+                '`limit` : `std::int64_t`, optional',
+                '    Maximum number of consecutive missing entries to fill in each gap. Use `-1` for no limit.',
+            ],
+            [
+                '`Thread`',
+                '    A new thread with backward-filled values.',
+            ],
+            [
+                (
+                    'Backward-fill the whole gap with no limit.',
+                    thread_b_missing_base() + '\n\nauto out = missing.bfill();',
+                    """0  10
+1  40
+2  40
+3  40
+4  50
+dtype: Series""",
+                ),
+                (
+                    'Limit the backward fill to one value per gap.',
+                    thread_b_missing_base() + '\n\nauto out = missing.bfill(1);',
+                    """0  10
+1  NA
+2  40
+3  40
+4  50
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `bfill(limit)` works within one thread only.',
+                '- A limited fill can leave part of a longer missing run untouched.',
+            ],
+        )
+
+    if name == 'bounded':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Applies a window statistic using caller-supplied row bounds instead of a fixed rolling width.',
+            [
+                '`bounds` : `WindowBoundsFn`',
+                '    Callable returning one `[start, end)` window per row.',
+                '',
+                '`statistic` : `WindowStatistic`, optional',
+                '    Supported values:',
+                '    - `Sum`',
+                '    - `Mean`',
+                '    - `Minimum`',
+                '    - `Maximum`',
+                '    - `Var`',
+                '    - `Std`',
+                '    - `Sem`',
+                '    - `Skew`',
+                '    - `Kurtosis`',
+                '',
+                '`options` : `WindowOptions`, optional',
+                '    Additional validity/statistics controls.',
+                '    - `min_count`',
+                '    - `ddof`',
+                '    - `centered`',
+                '    - `closure`',
+            ],
+            [
+                '`Thread`',
+                '    A new thread with one reduced value per input row.',
+            ],
+            [
+                (
+                    'Create an expanding mean by anchoring every window at row zero.',
+                    thread_b_scores_base() + '\n\nauto out = scores.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts(static_cast<std::size_t>(size), 0);\n        std::vector<std::int64_t> ends;\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) ends.push_back(row + 1);\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean);',
+                    """0  10
+1  15
+2  20
+3  25
+4  30
+dtype: Series""",
+                ),
+                (
+                    'Create a trailing-two mean with a minimum-count requirement.',
+                    thread_b_scores_base() + '\n\nauto out = scores.bounded(\n    [](std::int64_t size, const WindowOptions&) {\n        std::vector<std::int64_t> starts;\n        std::vector<std::int64_t> ends;\n        starts.reserve(static_cast<std::size_t>(size));\n        ends.reserve(static_cast<std::size_t>(size));\n        for (std::int64_t row = 0; row < size; ++row) {\n            starts.push_back(std::max<std::int64_t>(0, row - 1));\n            ends.push_back(row + 1);\n        }\n        return std::pair{std::move(starts), std::move(ends)};\n    },\n    WindowStatistic::Mean,\n    WindowOptions{.min_count = 2});',
+                    """0  NA
+1  15
+2  25
+3  35
+4  45
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `bounded(...)` is the thread-level custom-window primitive.',
+                '- The bounds function controls which rows participate in each output position.',
+            ],
+        )
+
+    if name == 'btw':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Checks whether each value falls between lower and upper bounds. The supported overloads cover numeric scalar bounds, temporal string bounds, and row-wise thread bounds.',
+            [
+                '`a`, `b` : `double`',
+                '    Lower and upper numeric bounds for Series-backed numeric threads.',
+                '',
+                '`lo`, `hi` : `std::string_view`',
+                '    Lower and upper temporal bounds for Timeline/TimeIndex-backed threads.',
+                '',
+                '`lo`, `hi` : `Thread`',
+                '    Row-wise lower and upper bounds. Both bound threads must match the source thread length.',
+                '',
+                '`inclusive` : `bool`, optional',
+                '    Shortcut flag that applies the same closed/open choice to both sides.',
+                '',
+                '`include_left`, `include_right` : `bool`, optional',
+                '    Side-specific boundary control for asymmetric intervals.',
+            ],
+            [
+                '`Thread`',
+                '    A boolean-like thread indicating whether each value falls inside the requested interval.',
+            ],
+            [
+                (
+                    'Numeric bounds with one shared inclusivity flag.',
+                    thread_b_scores_base() + '\n\nauto out = scores.btw(20.0, 40.0, true);',
+                    """0  false
+1  true
+2  true
+3  true
+4  false
+dtype: Series""",
+                ),
+                (
+                    'Numeric bounds with separate left and right boundary rules.',
+                    thread_b_scores_base() + '\n\nauto out = scores.btw(20.0, 40.0, false, true);',
+                    """0  false
+1  false
+2  true
+3  true
+4  false
+dtype: Series""",
+                ),
+                (
+                    'Temporal string bounds with one shared inclusivity flag.',
+                    thread_b_dates_base() + '\n\nauto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);',
+                    """0  true
+1  true
+2  false
+dtype: Series""",
+                ),
+                (
+                    'Temporal string bounds with asymmetric closure.',
+                    thread_b_dates_base() + '\n\nauto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true);',
+                    """0  false
+1  true
+2  true
+dtype: Series""",
+                ),
+                (
+                    'Row-wise thread bounds with one shared inclusivity flag.',
+                    thread_b_rowwise_base() + '\n\nauto out = scores.btw(lower, upper, true);',
+                    """0  true
+1  true
+2  false
+3  true
+4  true
+dtype: Series""",
+                ),
+                (
+                    'Row-wise thread bounds with asymmetric closure.',
+                    thread_b_rowwise_base() + '\n\nauto out = scores.btw(lower, upper, false, true);',
+                    """0  false
+1  false
+2  false
+3  true
+4  true
+dtype: Series""",
+                ),
+            ],
+            [
+                '- Use the numeric overloads for numeric Series payloads.',
+                '- Use the string-bound overloads for Timeline or TimeIndex payloads.',
+                '- Use the thread-bound overloads when each row needs its own interval.',
+            ],
+        )
+
+    if name == 'bucketize':
+        return render_custom_method_page(
+            class_name,
+            name,
+            overloads,
+            'Places numeric thread values into interval bins and returns the assigned labels.',
+            [
+                '`bins` : `pluss::RangeView<double>`',
+                '    Strictly increasing interval edges.',
+                '',
+                '`labels` : `pluss::RangeView<std::int64_t>`, optional',
+                '    Explicit labels for the intervals. Leave it empty to get `0, 1, 2, ...`.',
+                '',
+                '`right` : `bool`, optional',
+                '    When `true`, intervals are right-closed.',
+                '',
+                '`include_lowest` : `bool`, optional',
+                '    When `true`, the first interval includes its left edge.',
+            ],
+            [
+                '`Thread`',
+                '    A numeric thread holding one bucket label per input value.',
+            ],
+            [
+                (
+                    'Bucketize with automatically generated labels.',
+                    thread_b_scores_base() + '\n\nauto out = scores.bucketize({0.0, 20.0, 40.0, 60.0});',
+                    """0  0
+1  0
+2  1
+3  1
+4  2
+dtype: Series""",
+                ),
+                (
+                    'Bucketize with explicit labels.',
+                    thread_b_scores_base() + '\n\nauto out = scores.bucketize({0.0, 20.0, 40.0, 60.0}, {10, 20, 30}, true, true);',
+                    """0  10
+1  10
+2  20
+3  20
+4  30
+dtype: Series""",
+                ),
+            ],
+            [
+                '- `bucketize(...)` is the thread-level primitive behind DataFrame bucketization.',
+            ],
+        )
+
+    return None
 
 THREAD_SERIES_OUT = "[10.0, 20.0, 30.0]"
 THREAD_NOTE_OUT = '["Accra", "Tema", "Kumasi"]'
@@ -2683,8 +4674,8 @@ Sheet2 -> [3 cs x 3 feat]"""
             return '3'
         if n in {'column_names', 'feature_names'}:
             return '["id", "sales", "city"]'
-        if n == 'cases_series':
-            return '[0, 1, 2]'
+        if n == 'levels':
+            return '["student", "term"]'
         if n in {'columns', 'values', 'features'} and 'string_view' not in method.signature and 'initializer_list' not in method.signature:
             return '[Thread(id), Thread(sales), Thread(city)]'
         if n in {'at', 'iat', 'cases'} and ('feature_name' in method.signature or 'feature_idx' in method.signature):
@@ -2700,6 +4691,8 @@ Sheet2 -> [3 cs x 3 feat]"""
 2   120.0  Tema"""
         if n in {'get', 'column', 'features'} and 'string_view' in method.signature:
             return 'Thread([100.0, 120.0, 90.0])'
+        if n == 'feature_ref':
+            return 'ColumnRef(name="sales")'
         if n in {'has_feature', 'equals'}:
             return 'true'
         if n in {'with_cases'}:
@@ -2739,6 +4732,8 @@ id  sales  city
 Accra   1   100.0
 Tema    2   120.0
 Kumasi  3    90.0"""
+        if n == 'level':
+            return '["Ada", "Ada", "Kojo", "Kojo"]' if 'std::string_view name' in method.signature else '["mid", "final", "mid", "final"]'
         if n in {'drop'}:
             return DF_DROP_OUT
         if n == 'dropna':
@@ -2814,7 +4809,7 @@ West    Esi      84.0"""
             return """matched.left.cases():
 ["A", "C", "B"]
 
-matched.left.feature_names():
+matched.left.features():
 ["x", "y", "z"]"""
         if n == 'extend_cases':
             return """case  x     y     z
@@ -2830,7 +4825,7 @@ r1  b        3.0
 r2  b        4.0"""
         if n == 'repeated_cases':
             return '[false, true, false]'
-        if n in {'sort_values', 'sort_cases', 'reindex_like', 'reindex_cases', 'conform_to'}:
+        if n in {'sort_values', 'sort_cases', 'reindex_like', 'reindex_cases', 'conform'}:
             if n == 'sort_values':
                 return """id  sales  city
 2   120.0  Tema
@@ -2865,7 +4860,7 @@ STAT300  30            93       STAT300      30        99"""
 30            93       99"""
         if n == 'reorder':
             if 'initializer_list<ReorderSpec>' in method.signature:
-                return """out.feature_names():
+                return """out.features():
 ["col_25", "col_10", "col_1", "col_2", "col_3", "col_4", "col_20", "col_5", "col_6", "col_7", "col_8", "col_15", "col_16", "col_17", "col_9", "col_21", "col_22", "col_23", "col_24"]
 
 out.head():
@@ -2915,20 +4910,43 @@ Kumasi  3    90.0"""
 70.0       75.0
 80.0       85.0
 90.0       95.0"""
+        if n == 'select':
+            return """id  sales
+1   100.0
+2   120.0
+3    90.0"""
         if n == 'corr':
             return DF_CORR_OUT
+        if n == 'corr_with':
+            if 'RangeView::Of<DataFrame> others' in method.signature:
+                return """frame_0  frame_1
+[1.0, 1.0]  [1.0, 1.0]"""
+            return """id     sales
+1.0000 0.981981"""
         if n in {'describe'}:
             return DF_DESCRIBE_OUT
         if n in {'transpose'}:
             return DF_TRANSPOSE_OUT
+        if n == 'matmul':
+            return """c     d
+23.0  31.0
+34.0  46.0"""
         if n == 'count':
             return DF_COUNT_OUT
+        if n == 'percentiles':
+            return """p      id   sales
+0.25   1.5  95.0
+0.50   2.0  100.0
+0.75   2.5  110.0"""
         if n == 'prod':
             if 'axis' in method.signature:
                 return """[2.0, 8.0, 15.0]"""
             return """feature  value
 a        6.0
 b        40.0"""
+        if n == 'mode':
+            return """id  sales  city
+1   90.0   Accra"""
         if n == 'sum':
             return """feature  value
 id       6
@@ -3124,6 +5142,11 @@ id  sales  city
 100.0
 110.0
 105.0"""
+        if n == 'scan':
+            return """id  sales
+1   100.0
+3   220.0
+6   310.0"""
         if n == 'replace':
             if 'std::string_view from, std::string_view to' in method.signature or 'const char* from, const char* to' in method.signature:
                 return """midterm_1  midterm_2  city
@@ -3191,6 +5214,10 @@ id  sales  city
 2   120.0"""
         if n == 'prep_sql':
             return 'SQL accessor / prepared statement created'
+        if n == 'unstack':
+            return """score_mid  score_final
+88.0       91.0
+84.0       89.0"""
         if n in {'unsqueeze'}:
             return ATLAS_BASE_OUT
         return DF_BASE_OUT if ret.startswith('DataFrame') else ''
@@ -3202,7 +5229,7 @@ id  sales  city
             return '3'
         if n == 'kind':
             return 'Series'
-        if n == 'dtype_name':
+        if n == 'dtype':
             return 'Float64'
         if n in {'value'}:
             return '10.0'
@@ -3263,6 +5290,20 @@ id  sales  city
             return THREAD_SERIES_OUT
         if n == 'show':
             return THREAD_SERIES_OUT
+        if ret == 'Thread':
+            if n in {'chars', 'lower', 'strip', 'lstrip', 'rstrip'}:
+                return THREAD_NOTE_OUT
+            if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'}:
+                return '[2024, 2024, 2024]' if n == 'year' else '[1, 2, 3]'
+            if n in {'clear_display_labels', 'clear_display_name'}:
+                return THREAD_SERIES_OUT
+            return THREAD_SERIES_OUT
+        if ret == 'Thread&':
+            return THREAD_SERIES_OUT
+        if ret == 'ThreadValue':
+            return 'true' if n in {'all', 'any'} else '10.0'
+        if ret == 'std::string':
+            return 'sales'
         return ''
 
     if class_name == 'ThreadValue':
@@ -3274,6 +5315,10 @@ id  sales  city
             return '[10.0]'
         if n in {'as_series', 'as_note', 'as_timeline', 'as_timeindex'}:
             return '[10.0]' if 'series' in n else '["Accra"]' if 'note' in n else '["2024-01-01T09:10:00Z"]'
+        if ret == 'bool':
+            return 'true'
+        if ret == 'std::string':
+            return 'Series'
         return ''
 
     if class_name == 'ColumnRef':
@@ -3386,11 +5431,11 @@ id  sales  city
             return '3'
         if n == 'kind':
             return 'Series'
-        if n == 'dtype_name':
+        if n == 'dtype':
             return 'Float64'
-        if n in {'has_validity_mask', 'has_cases', 'has_meta'}:
+        if n in {'has_cases', 'has_meta'}:
             return 'true'
-        if n in {'validity_mask'}:
+        if n in {}:
             return '[true, false, true]'
         if n in {'cases'}:
             return '["cs0", "cs1", "cs2"]'
@@ -3402,16 +5447,20 @@ id  sales  city
             return STREAM_BFILL_OUT
         if n == 'dropna':
             return 'Series([10.0, 30.0])'
-        if n in {'fillna', 'abs', 'clip', 'log', 'exp', 'with_validity_mask', 'clear_validity_mask', 'with_cases', 'clear_cases', 'with_meta', 'drop_meta', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'cast', 'astype'}:
+        if n in {'fillna', 'fillna_', 'abs', 'clip', 'log', 'exp', 'with_cases', 'with_cases_', 'clear_cases', 'clear_cases_', 'with_meta', 'with_meta_', 'drop_meta', 'drop_meta_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'cast', 'astype'}:
             return STREAM_SERIES_OUT if 'Note' not in method.signature and n not in {'fillna'} else STREAM_NOTE_OUT
         if n in {'sum', 'mean', 'min', 'max', 'var', 'std'}:
             return 'Series([20.0])'
+        if n in {'all', 'any'}:
+            return 'true'
         if n in {'as_series'}:
             return STREAM_SERIES_OUT
         if n in {'as_note'}:
             return STREAM_NOTE_OUT
-        if n in {'as_timeline', 'as_timeindex'}:
+        if n == 'as_timeline':
             return 'Timeline([...])'
+        if n == 'as_timeindex':
+            return 'TimeIndex([...])'
         if n in {'to_thread'}:
             return THREAD_SERIES_OUT
         if n in {'to_string', 'to_json', 'show'}:
@@ -3449,7 +5498,7 @@ id  sales  city
             return CATALOG_TEXT_STATS_OUT
         if n == 'compute_similarity':
             return CATALOG_SIMILARITY_OUT
-        if n in {'series', 'note', 'timeline', 'timeindex', 'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'filter', 'where', 'query', 'masked_select', 'select', 'rename', 'sort', 'sort_by', 'fillna', 'ffill', 'isnull', 'notnull', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'astype', 'merge', 'apply', 'apply_all', 'transform', 'text_preprocess', 'filter_by_text', 'tfidf', 'set_stream', 'set', 'set_streams'}:
+        if n in {'series', 'note', 'timeline', 'timeindex', 'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'filter', 'where', 'query', 'masked_select', 'select', 'rename', 'rename_', 'sort', 'sort_by', 'fillna', 'fillna_', 'ffill', 'isnull', 'notnull', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'astype', 'merge', 'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'text_preprocess', 'filter_by_text', 'tfidf', 'set_stream', 'set_stream_', 'set', 'set_', 'set_streams', 'set_streams_'}:
             return labeled_pair('ct.head()', CATALOG_BASE_OUT, CATALOG_BASE_OUT)
         if n in {'sum', 'mean', 'min', 'max'}:
             return 'Series([20.0])'
@@ -3536,7 +5585,7 @@ id  sales  city
             return REGISTRY_DROP_OUT
         if n == 'drop_empty_slots':
             return REGISTRY_DROP_EMPTY_OUT
-        if n in {'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'select', 'rename', 'apply', 'apply_all', 'map', 'clear', 'set_slot', 'set_slots', 'push', 'push_all', 'filter_values', 'transform_values', 'take_values', 'concat_values'}:
+        if n in {'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'select', 'rename', 'rename_', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'clear', 'clear_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'push', 'push_', 'push_all', 'push_all_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
             return labeled_pair('rg.head()', REGISTRY_BASE_OUT, REGISTRY_BASE_OUT)
         if n in {'slot_sizes'}:
             return '{"ids": 3, "city": 3}'
@@ -3576,6 +5625,37 @@ id  sales  city
         if n in {'to_string', 'to_json', 'show'}:
             return AISLE_BASE_OUT
         return ''
+
+    if ret in {'bool'}:
+        return 'true'
+    if ret in {'std::int64_t', 'std::size_t', 'int'}:
+        return '3'
+    if ret in {'double', 'float', 'Float'}:
+        return '20.0'
+    if ret in {'ThreadValue'}:
+        if n in {'all', 'any', 'defined'}:
+            return 'true'
+        return '10.0'
+    if ret in {'std::string', 'std::string_view'}:
+        return 'demo'
+    if ret in {'Catalog&'}:
+        return labeled_pair('ct.head()', CATALOG_BASE_OUT, CATALOG_BASE_OUT)
+    if ret in {'Registry&'}:
+        return labeled_pair('rg.head()', REGISTRY_BASE_OUT, REGISTRY_BASE_OUT)
+    if ret in {'Slot&'}:
+        return SLOT_BASE_OUT
+    if ret in {'Stream&'}:
+        return STREAM_SERIES_OUT
+    if ret in {'Thread&'}:
+        return THREAD_SERIES_OUT
+    if ret in {'Aisle&'}:
+        return AISLE_BASE_OUT
+    if ret in {'Atlas&'}:
+        return ATLAS_BASE_OUT
+    if ret in {'Archive&'}:
+        return ARCHIVE_BASE_OUT
+    if ret in {'DataFrame&'}:
+        return DF_BASE_OUT
 
     return ''
 
@@ -3686,6 +5766,41 @@ def df_unique_subset() -> str:
     {\"student\", pluss::table::Thread(pluss::make_note({\"Ada\", \"Kojo\", \"Esi\"}))},
     {\"score\", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0}))},
 });"""
+
+
+def df_duplicate_rows() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"campus\", pluss::table::Thread(pluss::make_note({\"North\", \"North\", \"West\", \"North\"}))},
+    {\"student\", pluss::table::Thread(pluss::make_note({\"Ada\", \"Ada\", \"Esi\", \"Kojo\"}))},
+    {\"score\", pluss::table::Thread(pluss::make_series({88.0, 88.0, 84.0, 91.0}))},
+});"""
+
+
+def df_small_bool() -> str:
+    return """auto df = pluss::table::DataFrame({
+    {\"passed_math\", pluss::table::Thread(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
+    {\"passed_lab\", pluss::table::Thread(pluss::make_series({true, false, false}, pluss::ScalarType::Bool))},
+});"""
+
+
+def df_small_matmul_pair() -> str:
+    return """auto left = pluss::table::DataFrame({
+    {\"a\", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
+    {\"b\", pluss::table::Thread(pluss::make_series({3.0, 4.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {\"c\", pluss::table::Thread(pluss::make_series({5.0, 6.0}))},
+    {\"d\", pluss::table::Thread(pluss::make_series({7.0, 8.0}))},
+});"""
+
+
+def df_case_levels_base() -> str:
+    return """auto grades = pluss::table::DataFrame({
+    {\"student\", pluss::table::Thread(pluss::make_note({\"Ada\", \"Ada\", \"Kojo\", \"Kojo\"}))},
+    {\"term\", pluss::table::Thread(pluss::make_note({\"mid\", \"final\", \"mid\", \"final\"}))},
+    {\"score\", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
+});
+auto indexed = grades.set_cases({\"student\", \"term\"}, true, \"|\");"""
 
 
 def thread_series() -> str:
@@ -3814,6 +5929,65 @@ def call_line(obj: str, method: str, args: str, assign: bool = True) -> str:
     if assign:
         return f'auto out = {obj}.{method}({args});' if args else f'auto out = {obj}.{method}();'
     return f'{obj}.{method}({args});' if args else f'{obj}.{method}();'
+
+
+def thread_fallback_args(method: Method) -> tuple[str, str]:
+    args: list[str] = []
+    prelude: list[str] = []
+    for name, typ in method.params:
+        if name in {'skipna', 'ascending', 'inclusive', 'right', 'include_lowest', 'dropna', 'unbiased'} or typ == 'bool':
+            args.append('true')
+        elif name == 'start':
+            args.append('0')
+        elif name == 'stop':
+            args.append('2')
+        elif name == 'step':
+            args.append('1')
+        elif name in {'limit', 'window', 'periods'} or typ in {'std::int64_t', 'std::size_t', 'int'}:
+            args.append('2')
+        elif name in {'min_value', 'max_value', 'a', 'b', 'lo', 'hi'} or typ in {'double', 'float', 'Float'}:
+            if name in {'min_value', 'a', 'lo'}:
+                args.append('0.0')
+            elif name in {'max_value', 'b', 'hi'}:
+                args.append('25.0')
+            else:
+                args.append('10.0')
+        elif 'std::optional<std::int64_t>' in typ:
+            args.append('std::nullopt')
+        elif 'std::string_view' in typ or 'std::string' in typ or 'const char*' in typ:
+            if name in {'needle', 'pattern'}:
+                args.append('"Acc"')
+            elif name == 'chars':
+                args.append('"#"')
+            else:
+                args.append('"demo"')
+        elif 'pluss::ScalarType' in typ:
+            args.append('pluss::ScalarType::Float64')
+        elif 'ThreadCastTarget' in typ:
+            args.append('pluss::table::ThreadCastTarget::Series')
+        elif 'ThreadBinaryMathOp' in typ:
+            args.append('pluss::table::ThreadBinaryMathOp::Add')
+        elif 'ThreadBinaryCompareOp' in typ:
+            args.append('pluss::table::ThreadBinaryCompareOp::Gt')
+        elif 'ThreadCorrMethod' in typ:
+            args.append('pluss::table::ThreadCorrMethod::Pearson')
+        elif 'ThreadWindowOp' in typ:
+            args.append('pluss::table::ThreadWindowOp::RollingMean')
+        elif 'const Thread&' in typ:
+            prelude.append('auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));')
+            args.append('other')
+        elif 'std::vector<std::int64_t>' in typ or 'RangeView::Int' in typ or 'std::span<const std::int64_t>' in typ:
+            prelude.append('std::vector<std::int64_t> picks{0, 2};')
+            args.append('picks')
+        elif 'RangeView<double>' in typ or 'std::vector<double>' in typ:
+            prelude.append('std::vector<double> bins{0.0, 20.0, 30.0, 40.0};')
+            args.append('bins')
+        elif 'RangeView<std::int64_t>' in typ or 'std::vector<std::int64_t>' in typ:
+            prelude.append('std::vector<std::int64_t> labels{0, 1, 2};')
+            args.append('labels')
+        else:
+            args.append('{}')
+    return '\n'.join(prelude), ', '.join(args)
 
 
 def example_for(class_name: str, method: Method) -> str:
@@ -3983,7 +6157,7 @@ def example_for(class_name: str, method: Method) -> str:
                     + 'auto out = df.kindelize(policy);'
                 )
             return df_base() + '\n\nauto out = df.kindelize();'
-        if n in {'nrows','ncols','nfeatures','values','feature_names','cases_series'}:
+        if n in {'nrows','ncols','nfeatures','values','feature_names'}:
             return df_base() + f'\n\nauto out = df.{n}();'
         if n == 'cases':
             if 'pair<' in sig:
@@ -3995,6 +6169,12 @@ def example_for(class_name: str, method: Method) -> str:
             if 'row' in sig:
                 return df_base() + '\n\nauto out = df.cases(0);'
             return df_base() + '\n\nauto out = df.cases();'
+        if n == 'levels':
+            return df_case_levels_base() + '\n\nauto out = indexed.levels();'
+        if n == 'level':
+            if 'std::string_view name' in sig:
+                return df_case_levels_base() + '\n\nauto out = indexed.level("student");'
+            return df_case_levels_base() + '\n\nauto out = indexed.level(1);'
         if n in {'iloc','iat','at','get','has_feature','feature_ref'}:
             args = {
                 'iloc': '1' if 'start' not in sig else '0, 2',
@@ -4008,6 +6188,8 @@ def example_for(class_name: str, method: Method) -> str:
             if 'string_view' in sig:
                 return df_base() + '\n\nauto out = df.features("sales");'
             return df_base() + '\n\nauto out = df.features();'
+        if n == 'select':
+            return df_base() + '\n\nauto out = df.select({"id", "sales"});'
         if n in {'series_features','note_features','timeline_features','with_cases','with_cases_','cast_series','cast_note','cast_timeline','cast_timeindex'}:
             if n == 'with_cases':
                 return df_base() + '\n\nauto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.with_cases(cases);'
@@ -4092,7 +6274,25 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'add_suffix':
                 return df_base() + '\n\nauto out = df.add_suffix("_2024");'
             if n == 'rename':
-                return df_base() + '\n\nauto out = df.rename("sales", "revenue");'
+                if 'old_name' in sig:
+                    return df_base() + '\n\nauto out = df.rename("sales", "revenue");'
+                if 'initializer_list<std::pair<std::string_view, std::string_view>>' in sig:
+                    return df_base() + '\n\nauto out = df.rename({{"sales", "revenue"}, {"city", "location"}});'
+                if 'RangeView::Of<std::pair<std::string_view, std::string_view>>' in sig:
+                    return (
+                        df_base()
+                        + '\n\n'
+                        + 'std::vector<std::pair<std::string_view, std::string_view>> renames{{"sales", "revenue"}, {"city", "location"}};\n'
+                        + 'auto out = df.rename(renames);'
+                    )
+                if 'initializer_list<const char*>' in sig:
+                    return df_base() + '\n\nauto out = df.rename({"id_new", "revenue", "location"});'
+                return (
+                    df_base()
+                    + '\n\n'
+                    + 'std::vector<std::string_view> names{"id_new", "revenue", "location"};\n'
+                    + 'auto out = df.rename(names);'
+                )
             if n == 'rename_':
                 return df_base() + '\n\ndf.rename_("sales", "revenue");'
             if n == 'rename_features':
@@ -4187,8 +6387,8 @@ def example_for(class_name: str, method: Method) -> str:
                 '});\n'
                 'auto out = wide.lengthen({"id"}, {"a", "b"});'
             )
-        if n in {'join','update','conform_to','reindex_like','reindex_cases','stitch_on','combine'}:
-            if n == 'conform_to' or n == 'reindex_like':
+        if n in {'join','update','conform','reindex_like','reindex_cases','stitch_on','combine'}:
+            if n == 'conform' or n == 'reindex_like':
                 return df_two() + f'\n\nauto out = left.{n}(right);'
             if n == 'reindex_cases':
                 return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.reindex_cases(cases);'
@@ -4315,6 +6515,19 @@ def example_for(class_name: str, method: Method) -> str:
             return df_named_metrics() + '\n\nauto out = df.select_like("midterm");'
         if n == 'select_regex':
             return df_named_metrics() + '\n\nauto out = df.select_regex("^midterm_[12]$");'
+        if n == 'unstack':
+            if 'std::string_view level' in sig:
+                return df_case_levels_base() + '\n\nauto out = indexed.unstack("term");'
+            return (
+                df_case_levels_base()
+                + '\n\n'
+                + 'pluss::table::DataFrame::UnstackOptions options;\n'
+                + 'options.level = "term";\n'
+                + 'options.drop = true;\n'
+                + 'options.sort = true;\n'
+                + 'options.separator = "_";\n'
+                + 'auto out = indexed.unstack(options);'
+            )
         if n == 'replace':
             if 'std::string_view from, std::string_view to' in sig or 'const char* from, const char* to' in sig:
                 return df_replace_numeric() + '\n\nauto out = df.replace("Tema", "Tamale", {"city"});'
@@ -4426,6 +6639,33 @@ def example_for(class_name: str, method: Method) -> str:
             if 'CorrMethod method' in sig:
                 return df_base() + '\n\nauto out = df.corr(pluss::table::DataFrame::CorrMethod::Spearman, false);'
             return df_base() + '\n\nauto out = df.corr(false);'
+        if n == 'corr_with':
+            if 'RangeView::Of<DataFrame> others' in sig:
+                return (
+                    df_small_numeric()
+                    + '\n\n'
+                    + 'auto other0 = pluss::table::DataFrame({\n'
+                    + '    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},\n'
+                    + '    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},\n'
+                    + '});\n'
+                    + 'auto other1 = pluss::table::DataFrame({\n'
+                    + '    {"a", pluss::table::Thread(pluss::make_series({3.0, 2.0, 1.0}))},\n'
+                    + '    {"b", pluss::table::Thread(pluss::make_series({5.0, 4.0, 2.0}))},\n'
+                    + '});\n'
+                    + 'std::vector<pluss::table::DataFrame> others{other0, other1};\n'
+                    + 'auto out = df.corr_with(others, pluss::table::DataFrame::CorrMethod::Pearson, 1);'
+                )
+            return (
+                df_small_numeric()
+                + '\n\n'
+                + 'auto other = pluss::table::DataFrame({\n'
+                + '    {"a", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},\n'
+                + '    {"b", pluss::table::Thread(pluss::make_series({2.0, 4.0, 5.0}))},\n'
+                + '});\n'
+                + 'auto out = df.corr_with(other, pluss::table::DataFrame::CorrMethod::Pearson, 1);'
+            )
+        if n == 'matmul':
+            return df_small_matmul_pair() + '\n\nauto out = left.matmul(right);'
         if n in {'add','sub','subtract','mul','multiply','div','divide','truediv','floordiv','mod','pow','eq','ne','lt','le','gt','ge','compare'}:
             if 'const DataFrame&' in sig:
                 if n == 'pow':
@@ -4480,6 +6720,12 @@ def example_for(class_name: str, method: Method) -> str:
                     return df_small_numeric() + f'\n\nauto out = df.{n}(static_cast<std::int64_t>(1), true);'
                 return df_base() + f'\n\nauto out = df.{n}(false);'
             return df_base() + f'\n\nauto out = df.{n}(false);'
+        if n == 'mode':
+            return df_duplicate_rows() + '\n\nauto out = df.mode(true);'
+        if n == 'percentiles':
+            return df_base() + '\n\nstd::vector<double> points{0.25, 0.5, 0.75};\nauto out = df.percentiles(points, 1);'
+        if n == 'scan':
+            return df_base() + '\n\nauto out = df.scan(pluss::table::ScanStatistic::Sum, true);'
         if n in {'all', 'any'}:
             base = (
                 'auto df = pluss::table::DataFrame({\n'
@@ -4493,8 +6739,7 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'isna','isnull','notna','notnull'}:
             if n in {'notna', 'notnull'}:
                 return (
-                    'auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))\n'
-                    '                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));\n'
+                    'auto sales = pluss::table::Thread(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
                     'auto df = pluss::table::DataFrame({\n'
                     '    {"sales", sales},\n'
                     '});\n\n'
@@ -4519,8 +6764,7 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\nauto out = df.count_null_rows();'
             if n == 'bfill':
                 return (
-                    'auto score = pluss::table::Thread(pluss::make_series({71.0, 0.0, 88.0, 0.0}))\n'
-                    '                 .with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));\n'
+                    'auto score = pluss::table::Thread(pluss::make_series({71.0, std::numeric_limits<double>::quiet_NaN(), 88.0, std::numeric_limits<double>::quiet_NaN()}));\n'
                     'auto df = pluss::table::DataFrame({\n'
                     '    {"score", score},\n'
                     '    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},\n'
@@ -4530,8 +6774,7 @@ def example_for(class_name: str, method: Method) -> str:
                 )
             if n == 'dropna':
                 return (
-                    'auto sales = pluss::table::Thread(pluss::make_series({100.0, 0.0, 90.0}))\n'
-                    '                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));\n'
+                    'auto sales = pluss::table::Thread(pluss::make_series({100.0, std::numeric_limits<double>::quiet_NaN(), 90.0}));\n'
                     'auto df = pluss::table::DataFrame({\n'
                     '    {"id", pluss::make_series({1, 2, 3})},\n'
                     '    {"sales", sales},\n'
@@ -5059,27 +7302,20 @@ def example_for(class_name: str, method: Method) -> str:
         return base + f'\n\nauto out = stmt.{n}();'
 
     if class_name == 'Thread':
-        if n in {'defined','unique','size','kind','dtype_name','value','values','has_validity_mask','validity_mask'}:
+        if n in {'defined','unique','size','kind','dtype','value','values'}:
             base = thread_series()
             return base + f'\n\nauto out = thread.{n}();'
         if n == 'is_valid':
             return thread_series() + '\n\nauto out = thread.is_valid(0);'
-        if n in {'with_validity_mask','with_validity_mask_','clear_validity_mask','clear_validity_mask_'}:
-            mask = 'auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\n' + thread_series()
-            if n.endswith('_'):
-                return mask + f'\n\nthread.{n}(mask);' if 'with_' in n else mask + '\n\nthread.clear_validity_mask_();'
-            return mask + f'\n\nauto out = thread.{n}(mask);' if 'with_' in n else mask + '\n\nauto out = thread.clear_validity_mask();'
         if n in {'isnull','notnull','isnan','isfinite','abs','log','exp','dropna','ffill','bfill','sum','mean','min','max'}:
             if n == 'dropna':
                 return (
-                    'auto thread = pluss::table::Thread(pluss::make_series({10.0, 0.0, 30.0}));\n'
-                    'thread = thread.with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));\n\n'
+                    'auto thread = pluss::table::Thread(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n\n'
                     'auto out = thread.dropna();'
                 )
             if n == 'bfill':
                 return (
-                    'auto thread = pluss::table::Thread(pluss::make_series({10.0, 0.0, 30.0, 0.0}));\n'
-                    'thread = thread.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));\n\n'
+                    'auto thread = pluss::table::Thread(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0, std::numeric_limits<double>::quiet_NaN()}));\n\n'
                     'auto out = thread.bfill();'
                 )
             return thread_series() + f'\n\nauto out = thread.{n}();'
@@ -5115,8 +7351,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'count': return 'auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));\n\nauto out = thread.count(true);'
             if n == 'bucketize':
                 return (
-                    'auto thread = pluss::table::Thread(pluss::make_series({12.0, 18.0, 27.0, 35.0, 0.0}));\n'
-                    'thread = thread.with_validity_mask(pluss::make_series({true, true, true, true, false}, pluss::codem::ScalarType::Bool));\n'
+                    'auto thread = pluss::table::Thread(pluss::make_series({12.0, 18.0, 27.0, 35.0, std::numeric_limits<double>::quiet_NaN()}));\n'
                     'std::vector<double> bins{0.0, 20.0, 30.0, 40.0};\n\n'
                     'auto out = thread.bucketize(bins, {}, true, true);'
                 )
@@ -5173,7 +7408,9 @@ def example_for(class_name: str, method: Method) -> str:
             return thread_series() + '\n\nauto out = thread.compare(15.0, pluss::table::ThreadBinaryCompareOp::Gt);'
         if n in {'to_string','show'}:
             return thread_series() + ('\n\nauto out = thread.to_string();' if n == 'to_string' else '\n\nthread.show();')
-        return thread_series() + f'\n\nauto out = thread.{n}();'
+        base = thread_note() if n in {'chars', 'lower', 'strip', 'lstrip', 'rstrip'} else thread_time() if n in {'year', 'month', 'day', 'hour', 'to_note_weekday'} else thread_series()
+        prelude, args = thread_fallback_args(method)
+        return base + ('\n' + prelude if prelude else '') + f'\n\n{call_line("thread", n, args)}'
 
     if class_name == 'ThreadValue':
         base = thread_value_base()
@@ -5211,26 +7448,24 @@ def example_for(class_name: str, method: Method) -> str:
 
     if class_name == 'Stream':
         base = stream_series()
-        if n in {'defined','unique','size','kind','dtype_name','has_validity_mask','validity_mask','has_cases','cases','to_string','to_json'}:
+        if n in {'defined','unique','size','kind','dtype','has_cases','cases','to_string','to_json'}:
             return base + f'\n\nauto out = stream.{n}();'
-        if n in {'isnull','notnull','abs','log','exp','clear_validity_mask','clear_validity_mask_','clear_cases','clear_cases_','head','tail','dropna','ffill','bfill','sum','mean','min','max'}:
+        if n in {'isnull','notnull','abs','log','exp','clear_cases','clear_cases_','head','tail','dropna','ffill','bfill','sum','mean','min','max'}:
             if n == 'bfill':
                 return (
-                    'auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0, 0.0}));\n'
-                    'stream = stream.with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool));\n\n'
+                    'auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0, std::numeric_limits<double>::quiet_NaN()}));\n\n'
                     'auto out = stream.bfill();'
                 )
             if n == 'dropna':
                 return (
-                    'auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}));\n'
-                    'stream = stream.with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));\n\n'
+                    'auto stream = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n\n'
                     'auto out = stream.dropna();'
                 )
             if n.endswith('_'): return base + f'\n\nstream.{n}();'
             return base + f'\n\nauto out = stream.{n}();'
         if n in {'var','std'}:
             return base + f'\n\nauto out = stream.{n}(true);'
-        if n in {'fillna','clip','with_validity_mask','with_validity_mask_','with_cases','with_cases_','with_meta','with_meta_','drop_meta','drop_meta_','meta','has_meta','take','filter','slice','cast','astype','to_thread'}:
+        if n in {'fillna','clip','with_cases','with_cases_','with_meta','with_meta_','drop_meta','drop_meta_','meta','has_meta','take','filter','slice','cast','astype','to_thread'}:
             if n == 'fillna':
                 if 'std::string_view' in sig or 'const char*' in sig:
                     return stream_note() + '\n\nauto out = stream.fillna("Unknown");'
@@ -5240,9 +7475,6 @@ def example_for(class_name: str, method: Method) -> str:
                     return 'auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));'
                 return base + '\n\nauto out = stream.fillna(0.0);'
             if n == 'clip': return base + '\n\nauto out = stream.clip(0.0, 25.0);'
-            if n == 'with_validity_mask' or n == 'with_validity_mask_':
-                snippet = 'auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);\n' + base
-                return snippet + ('\n\nauto out = stream.with_validity_mask(mask);' if not n.endswith('_') else '\n\nstream.with_validity_mask_(mask);')
             if n == 'with_cases' or n == 'with_cases_':
                 snippet = 'auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\n' + base
                 return snippet + ('\n\nauto out = stream.with_cases(cases);' if not n.endswith('_') else '\n\nstream.with_cases_(cases);')
@@ -5316,8 +7548,8 @@ def example_for(class_name: str, method: Method) -> str:
                 return (
                     'using namespace pluss::kindle::literals;\n'
                     'auto catalog = pluss::kindle::Catalog({\n'
-                    '    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, 0.0, 88.0, 0.0})).with_validity_mask(pluss::make_series({true, false, true, false}, pluss::codem::ScalarType::Bool)),\n'
-                    '    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, 0.0, 75.0, 91.0})).with_validity_mask(pluss::make_series({true, false, true, true}, pluss::codem::ScalarType::Bool)),\n'
+                    '    "Final Points Grade"_k = pluss::kindle::Stream(pluss::make_series({71.0, std::numeric_limits<double>::quiet_NaN(), 88.0, std::numeric_limits<double>::quiet_NaN()})),\n'
+                    '    "Midterm 3"_k = pluss::kindle::Stream(pluss::make_series({60.0, std::numeric_limits<double>::quiet_NaN(), 75.0, 91.0})),\n'
                     '    "Name"_k = pluss::kindle::Stream(pluss::make_note({"A", "B", "C", "D"})),\n'
                     '});\n\n'
                     'auto out = catalog.bfill({"Final Points Grade", "Midterm 3"});'
@@ -5325,8 +7557,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'dropna':
                 return (
                     'using namespace pluss::kindle::literals;\n'
-                    'auto metric = pluss::kindle::Stream(pluss::make_series({10.0, 0.0, 30.0}))\n'
-                    '                 .with_validity_mask(pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool));\n'
+                    'auto metric = pluss::kindle::Stream(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0}));\n'
                     'auto catalog = pluss::kindle::Catalog({\n'
                     '    "metric"_k = metric,\n'
                     '    "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),\n'
@@ -5721,7 +7952,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`cases()` returns the current case axis exactly as it is stored on the frame.',
                 'The case axis can be numeric, note-based, timeline-based, or time-index based.',
                 'Use `case_study(...)` when you want row selection; use `cases()` when you want the row labels themselves.',
-                'Use `cases_series()` only when the case axis is actually Series-backed.',
+                'When you need numeric row labels as data, call `cases().as_series()` explicitly so the conversion stays visible.',
             ])
         if class_name == 'DataFrame' and n == 'ceil_time':
             return bullets('Practical Behavior', [
@@ -5756,9 +7987,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'It returns a boolean-like frame you can inspect directly or reuse as a mask.',
                 'Use `eq/ne/lt/le/gt/ge` when you want the comparison intent spelled out directly.',
             ])
-        if class_name == 'DataFrame' and n == 'conform_to':
+        if class_name == 'DataFrame' and n == 'conform':
             return bullets('Practical Behavior', [
-                '`conform_to(other)` first reorders features to match `other.feature_names()` and then aligns the case axis to `other.cases()`.',
+                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.cases()`.',
                 'Both frames must have the same feature count and the same feature name set.',
                 'Use this before arithmetic or updates when structure compatibility matters more than preserving the current order.',
             ])
@@ -6089,11 +8320,6 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '- `include_lowest=true` makes the first bucket include its left edge even when `right=true`.',
                 '',
             ]
-        if class_name == 'Thread' and n == 'clear_validity_mask':
-            return bullets('Practical Behavior', [
-                '`clear_validity_mask()` keeps the payload values but drops null-tracking, so every entry becomes valid again.',
-                'Use this when null semantics should be discarded rather than filled.',
-            ])
         if class_name == 'Thread' and n == 'clip':
             return bullets('Practical Behavior', [
                 '`clip(min, max)` clamps numeric series values into the closed interval `[min, max]`.',
@@ -6148,9 +8374,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 '`dropna()` removes invalid entries from the thread and compacts the result.',
                 'Use this when null rows should disappear rather than be filled.',
             ])
-        if class_name == 'Thread' and n == 'dtype_name':
+        if class_name == 'Thread' and n == 'dtype':
             return bullets('Practical Behavior', [
-                '`dtype_name()` reports the scalar dtype used by a numeric series payload.',
+                '`dtype()` reports the scalar dtype used by a numeric series payload.',
                 'Use it when debugging type-dependent behavior or conversion steps.',
             ])
         if class_name == 'Stream' and n == 'bfill':
@@ -6571,26 +8797,28 @@ def build_page(class_name: str, methods: list[Method]) -> str:
     lines = [
         f'# {cfg["title"]}',
         '',
-        f'# {cfg["subtitle"]}',
-        '',
-        '## API Reference Style',
-        '',
         cfg['intro'],
+        '',
+        '## How To Use This Page',
+        '',
+        '- Methods are grouped alphabetically so you can jump quickly from the left rail.',
+        '- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.',
+        '- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.',
+        '- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.',
         '',
     ]
     lines.extend(class_specific_intro_sections())
-    grouped_method_pages = {
-        'DataFrame',
-        'ColumnRef',
-        'DataFramePlotAccessor',
-        'DataFrameSqlAccessor',
-        'DataFrameSqlPrepared',
-    }
-    if class_name in grouped_method_pages:
+    if True:
         names_by_letter: dict[str, list[str]] = {}
         for name in sorted(grouped.keys(), key=str.lower):
             letter = name[0].upper()
             names_by_letter.setdefault(letter, []).append(name)
+        ordered_names = [name for letter in sorted(names_by_letter.keys()) for name in names_by_letter[letter]]
+        prev_next_by_name: dict[str, tuple[str | None, str | None]] = {}
+        for idx, name in enumerate(ordered_names):
+            prev_name = ordered_names[idx - 1] if idx > 0 else None
+            next_name = ordered_names[idx + 1] if idx < len(ordered_names) - 1 else None
+            prev_next_by_name[name] = (prev_name, next_name)
 
         def merged_params(overloads: list[Method]) -> list[tuple[str, str]]:
             seen: set[str] = set()
@@ -6617,13 +8845,33 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             lines.append('')
             for name in names_by_letter[letter]:
                 overloads = sorted(grouped[name], key=lambda m: user_signature(m, class_name).lower())
+                prev_name, next_name = prev_next_by_name[name]
+                structured_content = load_method_content(class_name, name)
+                if structured_content is not None:
+                    lines.extend(render_structured_method_page(class_name, name, overloads, structured_content))
+                    lines.extend(render_method_prev_next(prev_name, next_name))
+                    lines.append('')
+                    continue
+                custom_page = render_dataframe_a_page(name, overloads, class_name)
+                if custom_page is None:
+                    custom_page = render_thread_a_page(name, overloads, class_name)
+                if custom_page is None:
+                    custom_page = render_dataframe_b_page(name, overloads, class_name)
+                if custom_page is None:
+                    custom_page = render_thread_b_page(name, overloads, class_name)
+                if custom_page is not None:
+                    lines.extend(custom_page)
+                    lines.extend(render_method_prev_next(prev_name, next_name))
+                    lines.append('')
+                    continue
                 if class_name == 'DataFrame' and name == 'case_study':
                     lines.extend(render_case_study_page(overloads, class_name))
+                    lines.extend(render_method_prev_next(prev_name, next_name))
                     lines.append('')
                     continue
                 lines.append(f'### `{name}`')
                 lines.append('')
-                lines.append('#### API Signatures' if len(overloads) > 1 else '#### API Signature')
+                lines.append('#### Signatures' if len(overloads) > 1 else '#### Signature')
                 lines.append('')
                 lines.append('```cpp')
                 for idx, overload in enumerate(overloads):
@@ -6632,24 +8880,19 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                     lines.append(user_signature(overload, class_name))
                 lines.append('```')
                 lines.append('')
-                lines.append('#### Notes')
+                lines.append('#### What It Does')
                 lines.append('')
                 note = generic_note(class_name, overloads[0]).strip()
-                lines.append(note or 'Use this method through the public contract shown above.')
+                lines.append(note or 'Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.')
                 lines.append('')
-                lines.append('#### Inputs')
+                lines.append('#### Parameters')
                 lines.append('')
                 lines.append(params_doc(merged_params(overloads), class_name, overloads[0].name))
                 lines.append('')
-                lines.append('#### Output')
+                lines.append('#### Returns')
                 lines.append('')
                 lines.append(merged_returns(overloads))
                 lines.append('')
-                lines.append('#### Options')
-                lines.append('')
-                lines.append('Option and enum values, when present, are listed with their effects under **Inputs**.')
-                lines.append('')
-
                 rendered_any = False
                 example_count = 0
                 for overload in overloads:
@@ -6668,7 +8911,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                     lines.append('```')
                     preview = normalize_user_names(class_name, output_for(class_name, overload)).strip()
                     lines.append('')
-                    lines.append('##### Expected output')
+                    lines.append('##### Output')
                     lines.append('')
                     lines.append('```text')
                     lines.append(preview or 'The call completes and returns the contract described under Output.')
@@ -6678,66 +8921,166 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                     if lines[-1] != '':
                         lines.append('')
                     lines.extend(extra)
-                lines.append('')
-    else:
-        for method in sorted(methods, key=lambda m: (m.name.lower(), user_signature(m, class_name).lower())):
-            lines.append(f'### `{method.name}`')
-            lines.append('')
-            lines.append('#### Signature')
-            lines.append('')
-            lines.append('```cpp')
-            lines.append(user_signature(method, class_name))
-            lines.append('```')
-            lines.append('')
-            lines.append('#### Notes')
-            lines.append('')
-            lines.append(generic_note(class_name, method))
-            lines.append('')
-            lines.append('#### Inputs')
-            lines.append('')
-            lines.append(params_doc(method.params, class_name, method.name))
-            lines.append('')
-            lines.append('#### Output')
-            lines.append('')
-            lines.append(returns_doc(method.return_type))
-            lines.append('')
-            lines.append('#### Options')
-            lines.append('')
-            lines.append('Option and enum values, when present, are listed with their effects under **Inputs**.')
-            if len(grouped[method.name]) > 1:
-                sibs = [m for m in grouped[method.name] if m.signature != method.signature]
-                if sibs:
-                    lines.append('')
-                    lines.append('#### See also')
-                    lines.append('')
-                    for sib in sibs:
-                        lines.append(f'- `{user_signature(sib, class_name)}`')
-            lines.append('')
-            lines.append('#### Examples')
-            lines.append('')
-            lines.append('```cpp')
-            lines.append(normalize_user_names(class_name, example_for(class_name, method)))
-            lines.append('```')
-            preview = normalize_user_names(class_name, output_for(class_name, method))
-            lines.append('')
-            lines.append('#### Expected output')
-            lines.append('')
-            lines.append('```text')
-            lines.append(preview or 'The call completes and returns the contract described under Output.')
-            lines.append('```')
-            extra = extra_sections_for_method(method)
-            if extra:
-                lines.append('')
-                lines.extend(extra)
-            lines.append('')
+                lines.extend(render_method_prev_next(prev_name, next_name))
     return '\n'.join(lines)
 
 
+def extract_method_chunks(full_page: str) -> dict[str, str]:
+    chunks: dict[str, list[str]] = {}
+    current_name: str | None = None
+    current_lines: list[str] = []
+    for line in full_page.splitlines():
+        method_match = re.match(r'^### `([^`]+)`$', line)
+        if method_match:
+            if current_name is not None:
+                chunks[current_name] = current_lines
+            current_name = method_match.group(1)
+            current_lines = [line]
+            continue
+        if current_name is None:
+            continue
+        if re.match(r'^## [A-Z]$', line):
+            continue
+        current_lines.append(line)
+    if current_name is not None:
+        chunks[current_name] = current_lines
+    return {name: '\n'.join(lines).strip() for name, lines in chunks.items()}
+
+
+def build_method_index_page(class_name: str, methods: list[Method]) -> str:
+    cfg = CLASS_CONFIG[class_name]
+    ordered_names = ordered_method_names(methods)
+
+    lines = [
+        f'# {cfg["title"]}',
+        '',
+        cfg['intro'],
+        '',
+        '## Using This Reference',
+        '',
+        '- Use the left sidebar to open one method page at a time.',
+        '- Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.',
+        '- This landing page stays intentionally short so the content panel is not one giant scroll of every method.',
+        '',
+    ]
+    lines.extend([
+        '## Method Pages',
+        '',
+        'The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.',
+        '',
+    ])
+
+    lines.extend([
+        '```{toctree}',
+        ':hidden:',
+        ':maxdepth: 1',
+        '',
+    ])
+    for name in ordered_names:
+        lines.append(method_page_rel_from_index(class_name, name))
+    lines.extend(['```', ''])
+    return '\n'.join(lines)
+
+
+def build_method_page_markdown(class_name: str,
+                               method_name: str,
+                               chunk: str,
+                               prev_name: str | None,
+                               next_name: str | None,
+                               known_methods: dict[str, set[str]]) -> str:
+    lines = chunk.splitlines()
+    if lines and re.match(r'^### `[^`]+`$', lines[0]):
+        lines = lines[1:]
+    body = '\n'.join(lines).strip()
+    body = strip_inline_prev_next(body)
+    body = rewrite_method_links(body, current_class=class_name, known_methods=known_methods)
+    body = re.sub(r'(?m)^####\s+', '## ', body)
+    body = re.sub(r'(?m)^#####\s+', '### ', body)
+
+    prev_link = method_page_html_rel_from_method(class_name, class_name, prev_name) if prev_name else None
+    next_link = method_page_html_rel_from_method(class_name, class_name, next_name) if next_name else None
+
+    out = [
+        f'# {class_name}::{method_name}',
+        '',
+        f'[Back to {class_name} API Reference](../../{CLASS_CONFIG[class_name]["output"].stem})',
+        '',
+        body,
+        '',
+        '<div class="pluss-inline-prev-next">',
+    ]
+    if prev_name and prev_link:
+        out.extend([
+            f'  <a class="prev-link" href="{prev_link}">',
+            '    <span class="label">Previous</span>',
+            f'    <span class="title">{prev_name}</span>',
+            '  </a>',
+        ])
+    if next_name and next_link:
+        out.extend([
+            f'  <a class="next-link" href="{next_link}">',
+            '    <span class="label">Next</span>',
+            f'    <span class="title">{next_name}</span>',
+            '  </a>',
+        ])
+    out.extend(['</div>', ''])
+    return '\n'.join(out)
+
+
+def write_api_nav_manifest(extracted: dict[str, list[Method]]) -> None:
+    payload = {
+        'DataFrame': {
+            'title': 'DataFrame',
+            'slug': 'dataframe',
+            'landing': 'dataframe_api_reference.html',
+            'methods': ordered_method_names(extracted.get('DataFrame', [])),
+        },
+        'Thread': {
+            'title': 'Thread',
+            'slug': 'thread',
+            'landing': 'thread_api_reference.html',
+            'methods': ordered_method_names(extracted.get('Thread', [])),
+        },
+    }
+    API_NAV_JS.write_text(f'window.PLUSS_API_NAV = {json.dumps(payload, indent=2)};\n')
+
+
 def main() -> None:
+    extracted: dict[str, list[Method]] = {}
     for class_name, cfg in CLASS_CONFIG.items():
         methods = extract_methods(class_name, cfg['header'])
         methods = [m for m in methods if m.name not in {'begin', 'end'} or class_name in {'Catalog', 'Registry'}]
-        cfg['output'].write_text(build_page(class_name, methods))
+        extracted[class_name] = methods
+
+    write_api_nav_manifest(extracted)
+
+    known_methods = {class_name: set(ordered_method_names(methods)) for class_name, methods in extracted.items()}
+
+    for class_name, cfg in CLASS_CONFIG.items():
+        methods = extracted[class_name]
+        if class_name in PER_METHOD_CLASSES:
+            full_page = build_page(class_name, methods)
+            chunks = extract_method_chunks(full_page)
+            ordered_names = ordered_method_names(methods)
+            page_root = method_page_root(class_name)
+            page_root.mkdir(parents=True, exist_ok=True)
+            for idx, name in enumerate(ordered_names):
+                prev_name = ordered_names[idx - 1] if idx > 0 else None
+                next_name = ordered_names[idx + 1] if idx < len(ordered_names) - 1 else None
+                chunk = chunks.get(name, '')
+                method_page_doc_path(class_name, name).write_text(
+                    build_method_page_markdown(
+                        class_name,
+                        name,
+                        chunk,
+                        prev_name,
+                        next_name,
+                        known_methods,
+                    )
+                )
+            cfg['output'].write_text(build_method_index_page(class_name, methods))
+        else:
+            cfg['output'].write_text(build_page(class_name, methods))
         print(f'{class_name}: wrote {len(methods)} methods -> {cfg["output"].name}')
 
 

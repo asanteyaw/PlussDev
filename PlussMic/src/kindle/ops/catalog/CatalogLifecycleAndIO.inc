@@ -24,8 +24,8 @@ Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const Kindelize
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(frame.nfeatures()) + (policy.materialize_case_stream ? 1u : 0u));
 
-  const auto case_axis = frame.cases();
-  for (const auto& key : frame.feature_names()) {
+  const auto case_axis = frame.caselbl();
+  for (const auto& key : frame.features()) {
     auto s = Stream::from_thread(frame.features(key),
                                  policy.attach_cases_to_streams ? std::optional<pluss::table::Thread>{case_axis}
                                                                  : std::nullopt);
@@ -33,8 +33,8 @@ Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const Kindelize
   }
 
   if (policy.materialize_case_stream) {
-    PLUSS_CHECK(frame.feature_names().end() ==
-                    std::find(frame.feature_names().begin(), frame.feature_names().end(), policy.case_stream_name),
+    PLUSS_CHECK(frame.features().end() ==
+                    std::find(frame.features().begin(), frame.features().end(), policy.case_stream_name),
                 "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
     out.emplace_back(policy.case_stream_name, Stream::from_thread(case_axis));
   }

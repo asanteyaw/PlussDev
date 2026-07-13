@@ -72,7 +72,7 @@ int main() {
   ts.info();
 
   std::cout << "df.mean() over numeric features:\n";
-  std::cout << ts.mean(false) << "\n";
+  std::cout << ts.mean() << "\n";
 
   auto ts_enriched = ts.assign({
       {"year", [](const DataFrame& df) { return df.features("event_time").as_timeline().year(); }},
@@ -88,8 +88,8 @@ int main() {
   std::cout << "features(\"event_time\").as_timeindex().resample_count(\"H\", 6):\n";
   std::cout << pluss::print_series(bins) << "\n";
 
-  std::cout << "DataFrame::resample(\"event_time\", {\"load_mw\", \"speed_mph\"}, \"H\", \"mean\", 6):\n";
-  ts_idx.resample("event_time", {"load_mw", "speed_mph"}, "H", "mean", 6, true);
+  std::cout << "df.ts({\"load_mw\", \"speed_mph\"}).resample(\"event_time\", \"6H\").mean():\n";
+  ts_idx.ts({"load_mw", "speed_mph"}).resample("event_time", "6H").mean().show();
 
   std::cout << "\n=== manual Note/DataFrame demo ===\n";
   auto txt = make_note_df();

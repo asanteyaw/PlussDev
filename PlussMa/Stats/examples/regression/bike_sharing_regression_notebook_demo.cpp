@@ -118,7 +118,7 @@ int main() {
     ohe.features({cat_name});
     const auto train_hot = ohe.learn_map(train.features({cat_name}));
     const auto test_hot = ohe.map(test.features({cat_name}));
-    const auto hot_names = train_hot.series_features().feature_names();
+    const auto hot_names = train_hot.series_features().features();
     for (const auto& hot_name : hot_names) {
       train_x_frame = train_x_frame.set_features(hot_name, train_hot.features(hot_name));
       test_x_frame = test_x_frame.set_features(hot_name, test_hot.features(hot_name));

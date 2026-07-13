@@ -69,7 +69,7 @@ policies, selected features, and case-column options.
 ```cpp
 std::int64_t nrows = df.ncases();
 std::int64_t ncols = df.nfeatures();
-const auto& names = df.feature_names();
+const auto& names = df.features();
 
 df.head(5);
 df.tail(5);

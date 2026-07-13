@@ -46,7 +46,7 @@ df.describe();
 
 auto city = df.features("city");
 auto sales = df.features("sales");
-auto case_axis = df.cases();
+auto case_axis = df.caselbl();
 
 auto first_row = df.case_study(pluss::table::pos(0));
 auto first_value = df.case_study(
@@ -57,7 +57,7 @@ auto first_value = df.case_study(
 Notes:
 
 - `features("name")` returns a typed `Thread`
-- `cases()` is the row axis, not just a display index
+- `caselbl()` is the row axis, not just a display index
 - `case_study(...)` is the row/column selection surface
 - `describe()` is the fastest way to check whether numeric casts and missing values look right
 
@@ -287,10 +287,10 @@ to stack every non-identifier feature.
 
 ## Low-Cardinality Encoding
 
-Use `catalogue(...)` when repeated labels should have compact integer codes:
+Use `factor(...)` when repeated labels should have compact integer codes:
 
 ```cpp
-auto city = df.catalogue("city");
+auto city = df.factor("city");
 auto codes = city.codes;
 auto levels = city.levels;
 auto restored = city.decode();
@@ -359,7 +359,7 @@ auto stats = df.aggregate({
 
 ```cpp
 auto cleaned = df.fillna(0.0, {"sales"});
-auto dropped = df.dropna();
+auto dropped = df.dropnull();
 auto carried = df.ffill();
 
 auto rolling = df.window({

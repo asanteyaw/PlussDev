@@ -63,7 +63,7 @@ private:
     for (const auto& name : options.extra_features) blocked.insert(name);
 
     std::vector<std::string> out;
-    for (const auto& name : df.feature_names()) {
+    for (const auto& name : df.features()) {
       if (blocked.contains(name)) continue;
       if (df.features(name).kind() == ThreadKind::Series) out.push_back(name);
     }

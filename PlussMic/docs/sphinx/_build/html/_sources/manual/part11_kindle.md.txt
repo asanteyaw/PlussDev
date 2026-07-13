@@ -17,7 +17,7 @@ Common stream operations:
 ```cpp
 stream.size();
 stream.kind();
-stream.dtype_name();
+stream.dtype();
 
 stream.isnull();
 stream.notnull();

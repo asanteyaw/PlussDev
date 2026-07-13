@@ -12,7 +12,7 @@ Catalog Catalog::text_preprocess(std::string_view field) const {
       }
       out.push_back(std::move(joined));
     }
-    return Stream(pluss::make_note(out), s.validity_mask(), s.cases());
+    return Stream(pluss::make_note(out), detail::validity_mask(s), s.cases());
   });
 }
 

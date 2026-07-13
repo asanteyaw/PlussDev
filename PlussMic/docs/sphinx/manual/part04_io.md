@@ -141,7 +141,7 @@ options.case_col_idx = 0;
 After loading, inspect the case axis:
 
 ```cpp
-std::cout << df.cases().dtype_name() << '\n';
+std::cout << df.caselbl().dtype() << '\n';
 ```
 
 Move a case axis back into the feature axis later with:
@@ -174,7 +174,7 @@ options.ncases = 3;
 
 auto df = DataFrame::load_csv("sales.csv", options);
 std::cout << df.to_string() << '\n';
-std::cout << "case dtype=" << df.cases().dtype_name() << '\n';
+std::cout << "case dtype=" << df.caselbl().dtype() << '\n';
 ```
 
 Output:
@@ -213,9 +213,9 @@ read_options.case_col = "id";
 auto df = pluss::loader::load_csv_records(records, read_options);
 
 std::cout << df.to_string() << '\n';
-std::cout << "city dtype=" << df.features("city").dtype_name() << '\n';
-std::cout << "units dtype=" << df.features("units").dtype_name() << '\n';
-std::cout << "active dtype=" << df.features("active").dtype_name() << '\n';
+std::cout << "city dtype=" << df.features("city").dtype() << '\n';
+std::cout << "units dtype=" << df.features("units").dtype() << '\n';
+std::cout << "active dtype=" << df.features("active").dtype() << '\n';
 
 pluss::loader::WriteCsvOptions write_options;
 write_options.sep = ';';

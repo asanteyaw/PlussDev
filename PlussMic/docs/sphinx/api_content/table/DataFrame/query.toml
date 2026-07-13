@@ -1,0 +1,134 @@
+summary = """
+Filter rows with a boolean expression written against DataFrame feature names.
+
+`DataFrame::query(...)` is the string-expression row filter for PlussMic. It lets you write one compact predicate instead of building a boolean mask by hand, which is especially useful when you are exploring data interactively or translating logic from notebook-style workflows into C++.
+"""
+
+returns = """
+`DataFrame`
+    A filtered frame containing only the rows where the expression evaluates to `true`.
+
+    The returned frame preserves:
+    - the original feature set,
+    - the original feature order,
+    - the original case labels for rows that survive the filter.
+"""
+
+see_also = [
+  "<a href=\"#filter\"><code>DataFrame::filter</code></a>: filter rows from an explicit boolean mask instead of a query string.",
+  "<a href=\"#where\"><code>DataFrame::where</code></a>: row filter using a boolean mask that has already been computed.",
+  "<a href=\"#case_study\"><code>DataFrame::case_study</code></a>: select rows by position, label, or mask when you do not want an expression parser."
+]
+
+notes = [
+  """
+The expression is evaluated row by row against the current frame. Feature names are available directly inside the query string.
+""",
+  """
+String literals must be quoted. For example, write `region == 'south'`, not `region == south`.
+""",
+  """
+Feature-to-feature comparison is supported. For example, `units > price` compares the two features row by row.
+""",
+  """
+Use backticks around feature names that contain spaces or punctuation, such as `` `First Name` == 'Laurel' ``.
+""",
+  """
+This method is for row filtering. It does not rewrite values, create columns, or mutate the current frame in place.
+"""
+]
+
+[[warnings]]
+title = "Expression Input"
+body = """
+Treat the query string as code-like input owned by the developer.
+
+Do not pass untrusted raw user input directly into `DataFrame::query(...)` without validation or a safer higher-level policy layer around it.
+"""
+
+[[parameters]]
+name = "expression"
+body = """
+Boolean filter expression to evaluate against each row.
+
+Common patterns include:
+
+- numeric comparison: `units >= 10`
+- string comparison: `region == 'south'`
+- combined predicates: `units >= 10 and region == 'south'`
+- feature-to-feature comparison: `units > price`
+- spaced feature names via backticks: `` `First Name` == 'Laurel' ``
+
+The result must be a row-level truth decision.
+"""
+
+[[examples]]
+title = "Filter rows with a combined numeric and string predicate."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"region", pluss::make_note({"south", "south", "middle"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+    {"price", pluss::make_series({3.0, 4.0, 2.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("sales");
+
+auto out = sales.query("units >= 10 and region == 'south'");
+"""
+output = """
+==================================
+     | city   region  units  price
+----------------------------------
+s1   | Accra  south   10     3
+----------------------------------
+[1 cs x 4 feat]
+"""
+
+[[examples]]
+title = "Query a feature whose name contains a space by using backticks."
+code = """
+using namespace pluss::table;
+
+auto people = DataFrame({
+    {"First Name", pluss::make_note({"Laurel", "Bola", "Laurel"})},
+    {"Last Name", pluss::make_note({"Ork", "Mensah", "Kirk"})},
+    {"Age", pluss::make_series({21.0, 19.0, 23.0})},
+}).title("people");
+
+auto out = people.query("`First Name` == 'Laurel'");
+"""
+output = """
+==================================
+     | First Name  Last Name  Age
+----------------------------------
+0    | Laurel      Ork        21
+2    | Laurel      Kirk       23
+----------------------------------
+[2 cs x 3 feat]
+"""
+
+[[examples]]
+title = "Compare one feature against another feature inside the same row."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"region", pluss::make_note({"south", "south", "middle"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+    {"price", pluss::make_series({3.0, 4.0, 2.5})},
+}, pluss::make_note({"s1", "s2", "s3"})).title("sales");
+
+auto out = sales.query("units > price");
+"""
+output = """
+===================================
+     | city    region  units  price
+-----------------------------------
+s1   | Accra   south   10     3
+s2   | Tema    south   7      4
+s3   | Kumasi  middle  12     2.5
+-----------------------------------
+[3 cs x 4 feat]
+"""

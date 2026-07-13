@@ -37,8 +37,48 @@ bool DataFrame::consume_stream_suppression_() const {
 std::int64_t DataFrame::ncases() const { return impl_ref_().nrows_; }
 std::int64_t DataFrame::nfeats() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
 std::int64_t DataFrame::nfeatures() const { return nfeats(); }
+std::pair<std::int64_t, std::int64_t> DataFrame::shape() const {
+  return {ncases(), nfeats()};
+}
 
-std::vector<Thread> DataFrame::features() const { return impl_ref_().columns_; }
+DataFrame::DTypes::DTypes(std::vector<Entry> entries) : entries_(std::move(entries)) {}
+
+std::int64_t DataFrame::DTypes::size() const noexcept {
+  return static_cast<std::int64_t>(entries_.size());
+}
+
+bool DataFrame::DTypes::empty() const noexcept { return entries_.empty(); }
+
+bool DataFrame::DTypes::contains(std::string_view feature) const noexcept {
+  return std::any_of(entries_.begin(), entries_.end(), [&](const Entry& entry) {
+    return entry.first == feature;
+  });
+}
+
+const std::string& DataFrame::DTypes::at(std::string_view feature) const {
+  const auto it = std::find_if(entries_.begin(), entries_.end(), [&](const Entry& entry) {
+    return entry.first == feature;
+  });
+  PLUSS_CHECK(it != entries_.end(), "DataFrame::DTypes::at: unknown feature '" + std::string(feature) + "'");
+  return it->second;
+}
+
+const std::string& DataFrame::DTypes::operator[](std::string_view feature) const {
+  return at(feature);
+}
+
+const std::vector<DataFrame::DTypes::Entry>& DataFrame::DTypes::entries() const noexcept {
+  return entries_;
+}
+
+DataFrame::DTypes::const_iterator DataFrame::DTypes::begin() const noexcept {
+  return entries_.begin();
+}
+
+DataFrame::DTypes::const_iterator DataFrame::DTypes::end() const noexcept {
+  return entries_.end();
+}
+
 DataFrame::MatrixValues DataFrame::matrix() const {
   DataFrame::MatrixValues out{};
   auto& series_out = std::get<0>(out);
@@ -82,9 +122,42 @@ DataFrame::MatrixValues DataFrame::matrix() const {
 
   return out;
 }
-const std::vector<std::string>& DataFrame::feature_names() const { return impl_ref_().names_; }
+const std::vector<std::string>& DataFrame::features() const { return impl_ref_().names_; }
+
+DataFrame::DTypes DataFrame::dtypes() const {
+  const auto& src = impl_ref_();
+  std::vector<DTypes::Entry> entries;
+  entries.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto dtype = [&]() -> std::string {
+      switch (src.columns_[i].kind()) {
+        case ThreadKind::Series:
+          return "Series";
+        case ThreadKind::Note:
+          return "Note";
+        case ThreadKind::Timeline:
+          return "Timeline";
+        case ThreadKind::TimeIndex:
+          return "TimeIndex";
+      }
+      return "Unknown";
+    }();
+    entries.emplace_back(src.names_[i], dtype);
+  }
+  return DTypes(std::move(entries));
+}
 
 const Thread& DataFrame::cases() const { return impl_ref_().cases_; }
+
+const Thread& DataFrame::caselbl() const { return cases(); }
+
+DataFrame DataFrame::caselbl(const Thread& labels) const {
+  return with_cases(labels);
+}
+
+DataFrame& DataFrame::caselbl_(const Thread& labels) {
+  return with_cases_(labels);
+}
 
 namespace {
 
@@ -108,7 +181,7 @@ std::unordered_map<std::string, std::vector<std::int64_t>> build_case_lookup_(co
   std::unordered_map<std::string, std::vector<std::int64_t>> lookup;
   lookup.reserve(static_cast<std::size_t>(std::max<std::int64_t>(8, frame.ncases() * 2)));
   for (std::int64_t i = 0; i < frame.ncases(); ++i) {
-    lookup[thread_scalar_string_at(frame.cases(), i)].push_back(i);
+    lookup[thread_scalar_string_at(frame.caselbl(), i)].push_back(i);
   }
   return lookup;
 }
@@ -264,7 +337,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
       break;
   }
 
-  const auto& names = frame.feature_names();
+  const auto& names = frame.features();
   std::unordered_map<std::string, std::size_t> by_name;
   by_name.reserve(names.size());
   for (std::size_t i = 0; i < names.size(); ++i) {
@@ -308,7 +381,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
 }
 
 DataFrame project_feature_positions_(const DataFrame& frame, pluss::RangeView<std::size_t> indices) {
-  const auto& source_names = frame.feature_names();
+  const auto& source_names = frame.features();
   std::vector<std::string_view> names;
   names.reserve(indices.size());
   for (const auto idx : indices) {
@@ -320,11 +393,6 @@ DataFrame project_feature_positions_(const DataFrame& frame, pluss::RangeView<st
 }
 
 } // namespace
-
-pluss::Series DataFrame::cases_series() const {
-  PLUSS_CHECK(cases().kind() == ThreadKind::Series, "DataFrame::cases_series requires a Series-backed case axis");
-  return cases().as_series();
-}
 
 bool DataFrame::has_levels() const {
   return impl_ref_().case_axis_.defined();
@@ -637,14 +705,15 @@ DataFrame DataFrame::with_cases(const Thread& case_idx) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(case_idx.defined(), "DataFrame::with_cases: cases are undefined");
   PLUSS_CHECK(case_idx.size() == src.nrows_, "DataFrame::with_cases: case length mismatch");
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, case_idx));
+  auto labels = detail::with_label_kind(case_idx, LabelKind::Case);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, labels));
 }
 
 DataFrame& DataFrame::with_cases_(const Thread& case_idx) {
   auto& w = mut_impl_();
   PLUSS_CHECK(case_idx.defined(), "DataFrame::with_cases_: cases are undefined");
   PLUSS_CHECK(case_idx.size() == w.nrows_, "DataFrame::with_cases_: case length mismatch");
-  w.cases_ = case_idx;
+  w.cases_ = detail::with_label_kind(case_idx, LabelKind::Case);
   w.validate_and_reindex_();
   return *this;
 }
@@ -677,7 +746,8 @@ Thread DataFrame::features(std::string_view name) {
   const auto feature_name = owned_name(name);
   const auto it = src.name_to_idx_.find(feature_name);
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
-  return src.columns_[it->second].with_display_labels(src.cases_).with_display_name(std::move(feature_name));
+  return detail::with_display_labels(src.columns_[it->second], src.cases_)
+      .with_display_name(std::move(feature_name));
 }
 
 Thread DataFrame::features(std::string_view name) const {
@@ -685,7 +755,8 @@ Thread DataFrame::features(std::string_view name) const {
   const auto feature_name = owned_name(name);
   const auto it = src.name_to_idx_.find(feature_name);
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
-  return src.columns_[it->second].with_display_labels(src.cases_).with_display_name(std::move(feature_name));
+  return detail::with_display_labels(src.columns_[it->second], src.cases_)
+      .with_display_name(std::move(feature_name));
 }
 
 ColumnRef DataFrame::feature_ref(std::string_view name) const {
@@ -1380,7 +1451,7 @@ DataFrame DataFrame::set_cases(const SetCasesOptions& options) const {
 
   Thread case_values;
   if (names.size() == 1) {
-    case_values = axis.levels.front().values.clear_display_labels().clear_display_name();
+    case_values = detail::clear_display_labels(axis.levels.front().values).clear_display_name();
   } else {
     std::vector<std::string> labels;
     labels.reserve(static_cast<std::size_t>(ncases()));
@@ -1441,7 +1512,14 @@ DataFrame DataFrame::reset_cases(const ResetCasesOptions& options) const {
                    : src.case_axis_.levels[i].name;
       }
       PLUSS_CHECK(!out.has_feature(name), "DataFrame::reset_cases: feature already exists '" + name + "'");
-      out = out.set_features(name, src.case_axis_.levels[i].values);
+      auto level_values = src.case_axis_.levels[i].values;
+      if (detail::has_display_labels(level_values)) {
+        level_values = detail::clear_display_labels(level_values);
+      }
+      if (level_values.has_display_name()) {
+        level_values = level_values.clear_display_name();
+      }
+      set_prepared_feature_(out.mut_impl_(), name, clear_assignment_metadata_(level_values));
     }
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
@@ -1655,8 +1733,8 @@ std::vector<std::string> numeric_unify_key_parts(
 
 std::vector<std::string> unify_key_parts(const Thread& values) {
   const auto count = static_cast<std::size_t>(values.size());
-  auto valid = values.has_validity_mask()
-      ? values.validity_mask()->to_vec<bool>()
+  auto valid = detail::has_validity_mask(values)
+      ? detail::validity_mask(values)->to_vec<bool>()
       : std::vector<bool>(count, true);
 
   switch (values.kind()) {
@@ -1775,7 +1853,7 @@ std::vector<std::string> make_unify_keys(
 }
 
 [[noreturn]] void fail_unify_validate(std::string_view validate, std::string_view side) {
-  PLUSS_FAIL(fmt::format(
+  throw ::pluss::Error(fmt::format(
       "DataFrame::unify: validate='{}' requires unique {} keys",
       validate.empty() ? "many_to_many" : std::string(validate),
       side));
@@ -1871,8 +1949,8 @@ Thread take_rows_for_unify(const Thread& source, const std::vector<std::int64_t>
   safe_rows.reserve(rows.size());
   std::vector<bool> out_valid(rows.size(), true);
   std::optional<std::vector<bool>> src_valid = std::nullopt;
-  if (source.has_validity_mask()) {
-    src_valid = source.validity_mask()->to_vec<bool>();
+  if (detail::has_validity_mask(source)) {
+    src_valid = detail::validity_mask(source)->to_vec<bool>();
   }
 
   bool all_valid = !src_valid.has_value();
@@ -1893,7 +1971,7 @@ Thread take_rows_for_unify(const Thread& source, const std::vector<std::int64_t>
 
   auto out = source.take(safe_rows);
   if (all_valid) {
-    return out.has_validity_mask() ? out.clear_validity_mask() : out;
+    return detail::has_validity_mask(out) ? detail::clear_validity_mask(out) : out;
   }
   pluss::codem::Platform platform = pluss::codem::Platform::CPU;
   if (out.kind() == ThreadKind::Series) {
@@ -1903,7 +1981,7 @@ Thread take_rows_for_unify(const Thread& source, const std::vector<std::int64_t>
   } else if (out.kind() == ThreadKind::TimeIndex) {
     platform = out.as_timeindex().timeline().epoch_nanos().platform();
   }
-  return out.with_validity_mask(bool_mask_from_values(out_valid, platform));
+  return detail::with_validity_mask(out, bool_mask_from_values(out_valid, platform));
 }
 
 Thread take_unified_key_rows(
@@ -1911,8 +1989,8 @@ Thread take_unified_key_rows(
     const Thread& right,
     const std::vector<std::int64_t>& left_rows,
     const std::vector<std::int64_t>& right_rows) {
-  auto output = take_rows_for_unify(left, left_rows);
-  const auto fallback = take_rows_for_unify(right, right_rows);
+  auto output = detail::clear_display_labels(take_rows_for_unify(left, left_rows));
+  const auto fallback = detail::clear_display_labels(take_rows_for_unify(right, right_rows));
   std::vector<bool> use_right(left_rows.size(), false);
   std::transform(
       left_rows.begin(),
@@ -1935,12 +2013,12 @@ Thread take_unified_key_rows(
 
 } // namespace
 
-CategoryEncoding DataFrame::catalogue(
+CategoryEncoding DataFrame::factor(
     const std::string_view feature,
     const bool ordered,
     const bool sort_levels) const {
   const auto source = features(feature);
-  auto levels = source.dropna().distinct(false);
+  auto levels = source.dropnull().distinct(false);
   if (sort_levels) {
     levels = levels.sort_values(true, true);
   }
@@ -1966,7 +2044,7 @@ CategoryEncoding DataFrame::catalogue(
     const auto found = code_by_level.find(source_parts[row]);
     PLUSS_CHECK(
         found != code_by_level.end(),
-        "DataFrame::catalogue: internal level lookup failure");
+        "DataFrame::factor: internal level lookup failure");
     codes[row] = found->second;
   }
 
@@ -2057,8 +2135,8 @@ Thread CategoryEncoding::decode() const {
         break;
     }
   }
-  if (codes.has_validity_mask()) {
-    auto mask = *codes.validity_mask();
+  if (detail::has_validity_mask(codes)) {
+    auto mask = *detail::validity_mask(codes);
     const auto platform =
         output.kind() == ThreadKind::Series
             ? output.as_series().platform()
@@ -2070,7 +2148,7 @@ Thread CategoryEncoding::decode() const {
     if (mask.platform() != platform) {
       mask = mask.to(platform);
     }
-    output = output.with_validity_mask(mask);
+    output = detail::with_validity_mask(output, mask);
   }
   return output;
 }
@@ -2079,8 +2157,17 @@ DataFrame::LetSlot DataFrame::set(std::string_view name) {
   return LetSlot(*this, owned_name(name));
 }
 
+DataFrame::LetSlot DataFrame::set(std::string_view name, const AlignOptions& options) {
+  return LetSlot(*this, owned_name(name), options);
+}
+
 DataFrame::LetSlots DataFrame::set(pluss::msharp::RangeView::Of<std::string_view> names) {
   return LetSlots(*this, normalize_name_list(names));
+}
+
+DataFrame::LetSlots DataFrame::set(pluss::msharp::RangeView::Of<std::string_view> names,
+                                   const AlignOptions& options) {
+  return LetSlots(*this, normalize_name_list(names), options);
 }
 
 DataFrame::LetSlots DataFrame::set(std::initializer_list<const char*> names) {
@@ -2092,12 +2179,24 @@ DataFrame::LetSlots DataFrame::set(std::initializer_list<const char*> names) {
   return set(pluss::msharp::RangeView::Of<std::string_view>(views));
 }
 
+DataFrame::LetSlots DataFrame::set(std::initializer_list<const char*> names,
+                                   const AlignOptions& options) {
+  std::vector<std::string_view> views;
+  views.reserve(names.size());
+  for (const auto* name : names) {
+    views.emplace_back(name != nullptr ? name : "");
+  }
+  return set(pluss::msharp::RangeView::Of<std::string_view>(views), options);
+}
+
 DataFrame DataFrame::set_features(std::string_view name, const Thread& value) const {
+  return set_features(name, value, AlignOptions{});
+}
+
+DataFrame DataFrame::set_features(std::string_view name, const Thread& value, const AlignOptions& options) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(value.defined(), "DataFrame::set_features: input feature is undefined");
-  if (!src.columns_.empty()) {
-    PLUSS_CHECK(value.size() == src.nrows_, "DataFrame::set_features: row count mismatch");
-  }
+  const auto prepared = prepare_feature_assignment_(src, value, "DataFrame::set_features", options);
 
   auto out_names = src.names_;
   auto out_cols = src.columns_;
@@ -2105,28 +2204,30 @@ DataFrame DataFrame::set_features(std::string_view name, const Thread& value) co
   const auto it = src.name_to_idx_.find(key);
   if (it == src.name_to_idx_.end()) {
     out_names.push_back(key);
-    out_cols.push_back(value);
+    out_cols.push_back(prepared);
   } else {
-    out_cols[it->second] = value;
+    out_cols[it->second] = prepared;
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
 DataFrame& DataFrame::set_features_(std::string_view name, const Thread& value) {
+  return set_features_(name, value, AlignOptions{});
+}
+
+DataFrame& DataFrame::set_features_(std::string_view name, const Thread& value, const AlignOptions& options) {
   auto& w = mut_impl_();
   PLUSS_CHECK(value.defined(), "DataFrame::set_features_: input feature is undefined");
-  if (!w.columns_.empty()) {
-    PLUSS_CHECK(value.size() == w.nrows_, "DataFrame::set_features_: row count mismatch");
-  }
+  const auto prepared = prepare_feature_assignment_(w, value, "DataFrame::set_features_", options);
 
   const auto key = owned_name(name);
   const auto it = w.name_to_idx_.find(key);
   if (it == w.name_to_idx_.end()) {
     w.names_.push_back(key);
-    w.columns_.push_back(value);
+    w.columns_.push_back(prepared);
   } else {
-    w.columns_[it->second] = value;
+    w.columns_[it->second] = prepared;
   }
   w.validate_and_reindex_();
   return *this;
@@ -2224,11 +2325,11 @@ DataFrame DataFrame::set_axis(pluss::msharp::RangeView::Of<std::string_view> fea
   return rename(feature_names);
 }
 
-DataFrame DataFrame::conform_to(const DataFrame& other) const {
+DataFrame DataFrame::conform(const DataFrame& other) const {
   const auto& src = impl_ref_();
-  const auto ordered = other.feature_names();
+  const auto ordered = other.features();
   PLUSS_CHECK(ordered.size() == src.names_.size(),
-              "DataFrame::conform_to: both frames must have same feature count");
+              "DataFrame::conform: both frames must have same feature count");
 
   std::vector<std::string> out_names;
   std::vector<Thread> out_cols;
@@ -2237,15 +2338,15 @@ DataFrame DataFrame::conform_to(const DataFrame& other) const {
   std::unordered_set<std::string> seen;
   seen.reserve(ordered.size());
   for (const auto& n : ordered) {
-    PLUSS_CHECK(seen.insert(n).second, "DataFrame::conform_to: duplicate feature in target '" + n + "'");
+    PLUSS_CHECK(seen.insert(n).second, "DataFrame::conform: duplicate feature in target '" + n + "'");
     const auto it = src.name_to_idx_.find(n);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::conform_to: missing feature '" + n + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::conform: missing feature '" + n + "'");
     out_names.push_back(n);
     out_cols.push_back(src.columns_[it->second]);
   }
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
-  return out.align_cases(other.cases());
+  return out.align_cases(other.caselbl());
 }
 
 DataFrame DataFrame::unify(std::string_view left_on,

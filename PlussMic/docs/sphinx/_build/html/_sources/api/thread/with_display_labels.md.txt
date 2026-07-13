@@ -1,0 +1,52 @@
+# Thread::with_display_labels
+
+[Back to Thread API Reference](../../thread_api_reference)
+
+## Signature
+
+```cpp
+Thread::with_display_labels(const Thread& labels) -> Thread
+```
+
+## What It Does
+
+Attaches display labels to the thread without changing the underlying values.
+
+## Parameters
+
+**labels**
+    Optional integer labels assigned to the output buckets. Leave empty to let PlussMic use `0, 1, 2, ...`.
+
+## Returns
+
+`Thread`
+    Value produced by this call.
+
+## Examples
+
+Example 1. Apply `with_display_labels` to the current thread using explicit `labels` arguments.
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+auto other = pluss::table::Thread(pluss::make_series({15.0, 10.0, 35.0}));
+
+auto out = thread.with_display_labels(other);
+```
+
+### Output
+
+```text
+[10.0, 20.0, 30.0]
+```
+
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="window.html">
+    <span class="label">Previous</span>
+    <span class="title">window</span>
+  </a>
+  <a class="next-link" href="with_display_name.html">
+    <span class="label">Next</span>
+    <span class="title">with_display_name</span>
+  </a>
+</div>

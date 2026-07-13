@@ -13,8 +13,16 @@
 
 namespace pluss::kindle {
 
+class Stream;
+
 namespace detail {
 class StreamImpl;
+bool has_validity_mask(const Stream& stream);
+const std::optional<pluss::Series>& validity_mask(const Stream& stream);
+Stream with_validity_mask(const Stream& stream, const pluss::Series& mask);
+Stream& with_validity_mask_(Stream& stream, const pluss::Series& mask);
+Stream clear_validity_mask(const Stream& stream);
+Stream& clear_validity_mask_(Stream& stream);
 }
 
 enum class StreamKind : std::uint8_t {
@@ -52,7 +60,7 @@ public:
   bool unique() const noexcept;
   std::int64_t size() const;
   StreamKind kind() const;
-  std::string dtype_name() const;
+  std::string dtype() const;
 
   // Stream-native missing/predicate helpers (delegates to Thread).
   Stream isnull() const;
@@ -70,13 +78,6 @@ public:
   Stream clip(double min_value, double max_value) const;
   Stream log() const;
   Stream exp() const;
-
-  bool has_validity_mask() const;
-  const std::optional<pluss::Series>& validity_mask() const;
-  Stream with_validity_mask(const pluss::Series& mask) const;
-  Stream& with_validity_mask_(const pluss::Series& mask);
-  Stream clear_validity_mask() const;
-  Stream& clear_validity_mask_();
 
   bool has_cases() const;
   const std::optional<pluss::table::Thread>& cases() const;
@@ -132,12 +133,51 @@ public:
   void show(std::ostream& os) const;
 
 private:
+  friend bool detail::has_validity_mask(const Stream& stream);
+  friend const std::optional<pluss::Series>& detail::validity_mask(const Stream& stream);
+  friend Stream detail::with_validity_mask(const Stream& stream, const pluss::Series& mask);
+  friend Stream& detail::with_validity_mask_(Stream& stream, const pluss::Series& mask);
+  friend Stream detail::clear_validity_mask(const Stream& stream);
+  friend Stream& detail::clear_validity_mask_(Stream& stream);
+
   explicit Stream(pluss::msharp::intrusive_ptr<detail::StreamImpl> impl);
+  bool has_validity_mask() const;
+  const std::optional<pluss::Series>& validity_mask() const;
+  Stream with_validity_mask(const pluss::Series& mask) const;
+  Stream& with_validity_mask_(const pluss::Series& mask);
+  Stream clear_validity_mask() const;
+  Stream& clear_validity_mask_();
   detail::StreamImpl& mut_impl_();
   const detail::StreamImpl& impl_ref_() const;
 
   pluss::msharp::intrusive_ptr<detail::StreamImpl> impl_{nullptr};
 };
+
+namespace detail {
+inline bool has_validity_mask(const Stream& stream) {
+  return stream.has_validity_mask();
+}
+
+inline const std::optional<pluss::Series>& validity_mask(const Stream& stream) {
+  return stream.validity_mask();
+}
+
+inline Stream with_validity_mask(const Stream& stream, const pluss::Series& mask) {
+  return stream.with_validity_mask(mask);
+}
+
+inline Stream& with_validity_mask_(Stream& stream, const pluss::Series& mask) {
+  return stream.with_validity_mask_(mask);
+}
+
+inline Stream clear_validity_mask(const Stream& stream) {
+  return stream.clear_validity_mask();
+}
+
+inline Stream& clear_validity_mask_(Stream& stream) {
+  return stream.clear_validity_mask_();
+}
+} // namespace detail
 
 std::ostream& operator<<(std::ostream& os, const Stream& stream);
 

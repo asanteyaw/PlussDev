@@ -97,7 +97,7 @@ Audit, then fill or drop:
 ```cpp
 df.isna().head(20);
 auto clean = df.fillna(0.0, {"amount"});
-auto complete = clean.dropna();
+auto complete = clean.dropnull();
 ```
 
 ## Query returns no rows
@@ -113,7 +113,7 @@ df.query("age >= 45 and job != 'unknown'").head();
 Check feature names exactly:
 
 ```cpp
-for (const auto& name : df.feature_names()) {
+for (const auto& name : df.features()) {
   std::cout << "[" << name << "]\n";
 }
 ```
@@ -145,7 +145,7 @@ Check:
 ```cpp
 auto plot_df = df
     .features({"date", "close"})
-    .dropna();
+    .dropnull();
 
 plot_df.info();
 plot_df.plot();

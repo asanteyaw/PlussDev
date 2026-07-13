@@ -30,6 +30,8 @@ Option semantics used by this method:
     Controls fold/trial/count sizing.
   - `bool stratified = false`
     Option field used by this method.
+  - `Series groups = Series::undefined()`
+    Option field used by this method.
   - `bool reliability_defaults = true`
     Option field used by this method.
   - `bool shuffle = true`

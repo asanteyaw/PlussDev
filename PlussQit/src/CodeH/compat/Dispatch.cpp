@@ -73,6 +73,17 @@ inline const Duration* arg_optional_duration(const Args& args, std::size_t i) {
   return *p;
 }
 
+inline TimeIndex::ResampleOptions arg_resample_options(const Args& args, std::size_t freq_index) {
+  return TimeIndex::ResampleOptions{
+      .freq = std::string(arg_sv(args, freq_index)),
+      .step = arg_i64(args, freq_index + 1),
+      .closed = static_cast<TimeIndex::ResampleClosed>(arg_i64(args, freq_index + 2)),
+      .label = static_cast<TimeIndex::ResampleLabel>(arg_i64(args, freq_index + 3)),
+      .origin = static_cast<TimeIndex::ResampleOrigin>(arg_i64(args, freq_index + 4)),
+      .offset_nanos = arg_i64(args, freq_index + 5),
+  };
+}
+
 } // namespace
 
 Timeline call_timeline(std::string_view op, const Timeline& self, const Args& args) {
@@ -232,13 +243,21 @@ pluss::codem::Series call_series_timeindex(std::string_view op, const TimeIndex&
   if (op == "slice") return ::pluss::codeh::_compat::detail::Access::slice(self, arg_as<Timeline>(args, 0), arg_as<Timeline>(args, 1));
   if (op == "slice_time") return ::pluss::codeh::_compat::detail::Access::slice_time(self, arg_sv(args, 0), arg_sv(args, 1));
   if (op == "resample_count") return ::pluss::codeh::_compat::detail::Access::resample_count(self, arg_sv(args, 0), arg_i64(args, 1));
+  if (op == "resample_count_opts") return ::pluss::codeh::_compat::detail::Access::resample_count(self, arg_resample_options(args, 0));
   if (op == "resample_sum") return ::pluss::codeh::_compat::detail::Access::resample_sum(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_sum_opts") return ::pluss::codeh::_compat::detail::Access::resample_sum(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "resample_mean") return ::pluss::codeh::_compat::detail::Access::resample_mean(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_mean_opts") return ::pluss::codeh::_compat::detail::Access::resample_mean(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "resample_min") return ::pluss::codeh::_compat::detail::Access::resample_min(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_min_opts") return ::pluss::codeh::_compat::detail::Access::resample_min(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "resample_max") return ::pluss::codeh::_compat::detail::Access::resample_max(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_max_opts") return ::pluss::codeh::_compat::detail::Access::resample_max(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "resample_first") return ::pluss::codeh::_compat::detail::Access::resample_first(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_first_opts") return ::pluss::codeh::_compat::detail::Access::resample_first(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "resample_last") return ::pluss::codeh::_compat::detail::Access::resample_last(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_last_opts") return ::pluss::codeh::_compat::detail::Access::resample_last(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "resample_ohlc") return ::pluss::codeh::_compat::detail::Access::resample_ohlc(self, arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_i64(args, 2));
+  if (op == "resample_ohlc_opts") return ::pluss::codeh::_compat::detail::Access::resample_ohlc(self, arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1));
   if (op == "rolling_count") return ::pluss::codeh::_compat::detail::Access::rolling_count(self, arg_as<Duration>(args, 0));
   if (op == "rolling_sum") return ::pluss::codeh::_compat::detail::Access::rolling_sum(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Duration>(args, 1));
   if (op == "join_asof") {
@@ -252,6 +271,10 @@ pluss::codem::Series call_series_timeindex(std::string_view op, const TimeIndex&
   if (op == "resample_agg") {
     return ::pluss::codeh::_compat::detail::Access::resample_agg(self,
       arg_as<pluss::codem::Series>(args, 0), arg_sv(args, 1), arg_sv(args, 2), arg_i64(args, 3));
+  }
+  if (op == "resample_agg_opts") {
+    return ::pluss::codeh::_compat::detail::Access::resample_agg(self,
+      arg_as<pluss::codem::Series>(args, 0), arg_resample_options(args, 1), arg_sv(args, 7));
   }
   if (op == "rolling_agg") {
     return ::pluss::codeh::_compat::detail::Access::rolling_agg(self,
@@ -308,6 +331,7 @@ TimeIndex call_timeindex(std::string_view op, const TimeIndex& self, const Args&
 
 TimeIndex::ResampleBins call_resamplebins_timeindex(std::string_view op, const TimeIndex& self, const Args& args) {
   if (op == "resample_bins") return ::pluss::codeh::_compat::detail::Access::resample_bins(self, arg_sv(args, 0), arg_i64(args, 1));
+  if (op == "resample_bins_opts") return ::pluss::codeh::_compat::detail::Access::resample_bins(self, arg_resample_options(args, 0));
   CODEM_FAIL("CodeH invoke: unknown TimeIndex->ResampleBins op");
 }
 

@@ -14,7 +14,7 @@ auto raw = DataFrame::load_csv("input.csv", {
 
 auto clean = raw
     .fillna(0.0)
-    .dropna({"id"}, true)
+    .dropnull({"id"}, true)
     .sort_values({"id"});
 
 clean.describe();

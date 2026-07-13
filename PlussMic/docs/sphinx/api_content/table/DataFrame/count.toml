@@ -1,0 +1,72 @@
+summary = """
+Count non-missing values along the requested axis.
+
+`DataFrame::count(...)` can summarize by feature or by case depending on the axis you choose.
+"""
+
+returns = """
+`Thread`
+    Count result whose labels follow the retained axis.
+"""
+
+notes = [
+  """
+`Axis::Feature` counts down each feature and returns one count per feature.
+""",
+  """
+`Axis::Case` counts across the selected features for each row and returns one count per case.
+"""
+]
+
+[[parameters]]
+name = "axis"
+body = """
+Reduction direction.
+
+- `Axis::Feature`: one count per feature.
+- `Axis::Case`: one count per row across the currently selected features.
+"""
+
+[[examples]]
+title = "Count valid values per feature."
+code = """
+using namespace pluss::table;
+
+auto corr_base = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
+    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
+    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
+    {"city", pluss::make_note({"A", "B", "C", "D"})},
+});
+
+auto out = corr_base.count(Axis::Feature);
+"""
+output = """
+   x  4
+   y  4
+   z  4
+city  4
+dtype: Series
+"""
+
+[[examples]]
+title = "Count valid values across selected features for each row."
+code = """
+using namespace pluss::table;
+
+auto corr_base = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
+    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
+    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
+    {"city", pluss::make_note({"A", "B", "C", "D"})},
+});
+
+auto out = corr_base.features({"x", "y", "z"}).count(Axis::Case);
+"""
+output = """
+0  3
+1  3
+2  3
+3  3
+dtype: Series
+"""

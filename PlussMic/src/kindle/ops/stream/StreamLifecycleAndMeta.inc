@@ -32,13 +32,13 @@ Stream Stream::from_thread(const pluss::table::Thread& thread, std::optional<plu
   PLUSS_CHECK(thread.defined(), "Stream::from_thread requires a defined thread");
   switch (thread.kind()) {
     case pluss::table::ThreadKind::Series:
-      return Stream(thread.as_series(), thread.validity_mask(), std::move(cases));
+      return Stream(thread.as_series(), pluss::table::detail::validity_mask(thread), std::move(cases));
     case pluss::table::ThreadKind::Note:
-      return Stream(thread.as_note(), thread.validity_mask(), std::move(cases));
+      return Stream(thread.as_note(), pluss::table::detail::validity_mask(thread), std::move(cases));
     case pluss::table::ThreadKind::Timeline:
-      return Stream(thread.as_timeline(), thread.validity_mask(), std::move(cases));
+      return Stream(thread.as_timeline(), pluss::table::detail::validity_mask(thread), std::move(cases));
     case pluss::table::ThreadKind::TimeIndex:
-      return Stream(thread.as_timeindex(), thread.validity_mask(), std::move(cases));
+      return Stream(thread.as_timeindex(), pluss::table::detail::validity_mask(thread), std::move(cases));
   }
   pluss::codem::throw_error("Stream::from_thread: unsupported thread kind");
 }
@@ -56,9 +56,9 @@ StreamKind Stream::kind() const {
   return impl_ref_().kind_;
 }
 
-std::string Stream::dtype_name() const {
+std::string Stream::dtype() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return impl_ref_().dtype_name_;
+  return impl_ref_().dtype_;
 }
 
 Stream Stream::isnull() const {

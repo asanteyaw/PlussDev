@@ -1,0 +1,101 @@
+summary = """
+Compute descriptive statistics for the numeric features in the current frame.
+
+`describe()` is the compact whole-frame summary route when you want counts, central tendency, spread, and quartiles instead of the original rows.
+
+For ordinary numeric grading, sales, or sensor tables, this is the fastest way to inspect distribution shape before you start filtering, grouping, modeling, or plotting.
+"""
+
+returns = """
+`DataFrameView`
+    Summary view whose rows are statistics such as `count`, `mean`, and percentiles, and whose columns are the participating numeric features.
+"""
+
+see_also = [
+  "<a href=\"#mean\"><code>DataFrame::mean</code></a>, <a href=\"#std\"><code>DataFrame::std</code></a>: one specific statistic instead of the full descriptive table.",
+  "<a href=\"../../thread_api_reference.md#describe\"><code>Thread::describe</code></a>: summarize one extracted feature directly."
+]
+
+notes = [
+  """
+`describe()` summarizes numeric series features only. Note, timeline, and other non-numeric payloads are skipped instead of coerced.
+""",
+  """
+Missing numeric values are ignored while the summary statistics are computed.
+""",
+  """
+The summary rows are returned in a fixed statistical order: `count`, `mean`, `std`, `min`, `25%`, `50%`, `75%`, `max`.
+""",
+  """
+`render` changes display behavior only. It does not change which statistics are computed or how missing values are handled.
+"""
+]
+
+[[parameters]]
+name = "render"
+body = """
+Display toggle for the returned view.
+
+- `false`: keep explicit control over when and how you print or render the result.
+- `true`: allow the returned `DataFrameView` to auto-render in temporary display contexts.
+"""
+
+[[examples]]
+title = "Summarize every numeric feature in the frame."
+code = """
+using namespace pluss::table;
+
+auto corr_base = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
+    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
+    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
+    {"city", pluss::make_note({"A", "B", "C", "D"})},
+});
+
+auto out = corr_base.describe(false);
+"""
+output = """
+=============================================
+      | x            y            z
+---------------------------------------------
+count | 4            4            4
+mean  | 2.5          5            2.5
+std   | 1.290994449  2.581988897  1.290994449
+min   | 1            2            1
+25%   | 1.75         3.5          1.75
+50%   | 2.5          5            2.5
+75%   | 3.25         6.5          3.25
+max   | 4            8            4
+---------------------------------------------
+[8 cs x 3 feat]
+"""
+
+[[examples]]
+title = "Use `describe()` to confirm that non-numeric features are ignored rather than coerced."
+code = """
+using namespace pluss::table;
+
+auto corr_base = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0, 3.0, 4.0})},
+    {"y", pluss::make_series({2.0, 4.0, 6.0, 8.0})},
+    {"z", pluss::make_series({4.0, 1.0, 3.0, 2.0})},
+    {"city", pluss::make_note({"A", "B", "C", "D"})},
+});
+
+auto out = corr_base.describe(false);
+"""
+output = """
+=============================================
+      | x            y            z
+---------------------------------------------
+count | 4            4            4
+mean  | 2.5          5            2.5
+std   | 1.290994449  2.581988897  1.290994449
+min   | 1            2            1
+25%   | 1.75         3.5          1.75
+50%   | 2.5          5            2.5
+75%   | 3.25         6.5          3.25
+max   | 4            8            4
+---------------------------------------------
+[8 cs x 3 feat]
+"""

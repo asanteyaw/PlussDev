@@ -87,14 +87,15 @@ thread.defined();
 thread.unique();
 thread.size();
 thread.kind();
-thread.dtype_name();
-thread.has_validity_mask();
+thread.dtype();
 thread.is_valid(0);
+thread.isnull();
+thread.notnull();
 ```
 
-`dtype_name()` reports the payload dtype, such as `float64` or `utf8`. It does
-not tell you whether the thread has missing values. Use `has_validity_mask()`,
-`isnull()`, `notnull()`, or `is_valid(row)` for that.
+`dtype()` reports the payload dtype, such as `float64` or `utf8`. It does
+not tell you whether the thread has missing values. Use `isnull()`,
+`notnull()`, or `is_valid(row)` for that.
 
 Display and debug methods:
 
@@ -117,7 +118,7 @@ auto sales = sales_frame();
 auto units = sales.features("units");
 auto city = sales.features("city");
 
-std::cout << "units dtype=" << units.dtype_name() << '\n';
+std::cout << "units dtype=" << units.dtype() << '\n';
 std::cout << "units clipped:\n" << units.clip(6.0, 10.0).to_string() << '\n';
 std::cout << "city lower:\n" << city.lower().to_string() << '\n';
 std::cout << "city contains 'a':\n" << Thread(city.contains("a")).to_string() << '\n';
@@ -169,12 +170,12 @@ thread.slice(10, 20);
 thread.take(std::vector<std::int64_t>{0, 3, 8});
 thread.shift(1);
 thread.sort_values(true, true);
-thread.dropna();
+thread.dropnull();
 thread.distinct(true);
 ```
 
 `head`, `tail`, and `view` return `ThreadView`, which can auto-render. `slice`,
-`take`, `shift`, `sort_values`, `dropna`, and `distinct` return ordinary
+`take`, `shift`, `sort_values`, `dropnull`, and `distinct` return ordinary
 `Thread` values.
 
 `slice(start, stop)` is half-open. `take(indices)` keeps exactly the requested
@@ -194,7 +195,7 @@ Common methods:
 ```cpp
 auto missing = thread.isnull();
 auto present = thread.notnull();
-auto complete = thread.dropna();
+auto complete = thread.dropnull();
 auto forward = thread.ffill();
 auto backward = thread.bfill();
 ```
@@ -220,7 +221,7 @@ Thread score(
 std::cout << "score:\n" << score.to_string() << '\n';
 std::cout << "isnull:\n" << score.isnull().to_string() << '\n';
 std::cout << "fillna:\n" << score.fillna(99.0).to_string() << '\n';
-std::cout << "dropna:\n" << score.dropna().to_string() << '\n';
+std::cout << "dropnull:\n" << score.dropnull().to_string() << '\n';
 std::cout << "shift(2):\n" << score.shift(2).to_string() << '\n';
 std::cout << "sort asc nulls first:\n" << score.sort_values(true, false).to_string() << '\n';
 std::cout << "take 4,1,0:\n" << score.take(std::vector<std::int64_t>{4, 1, 0}).to_string() << '\n';
@@ -250,7 +251,7 @@ fillna:
 3  3
 4  2
 dtype: Series
-dropna:
+dropnull:
 0  4
 1  1
 2  3
@@ -281,7 +282,7 @@ The `score` payload has five numeric values, but row 2 is masked as missing,
 so it displays as `NA`. `isnull()` is the logical inverse of the validity mask.
 
 `fillna(99.0)` keeps the valid values `4`, `1`, `3`, and `2`, and replaces only
-the masked row with `99`. `dropna()` removes the masked row. `shift(2)` moves
+the masked row with `99`. `dropnull()` removes the masked row. `shift(2)` moves
 values down by two rows, marks rows 0 and 1 missing because there are no source
 values for them, and also carries the original missing row forward so row 4 is
 missing. `sort_values` with `nulls_last=false` places the missing value first,
@@ -604,8 +605,6 @@ trailing underscore:
 
 ```cpp
 thread.fillna_(0.0);
-thread.with_validity_mask_(mask);
-thread.clear_validity_mask_();
 ```
 
 Use mutating methods when mutation is intentional and local. Use functional

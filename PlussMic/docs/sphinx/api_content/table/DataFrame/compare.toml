@@ -1,0 +1,89 @@
+summary = """
+Compare this frame against a scalar or another frame and return a boolean-style result frame.
+
+`DataFrame::compare(...)` is the frame-level not-equal alias. It is useful when you want a mask-like result without spelling `ne(...)` directly.
+"""
+
+returns = """
+`DataFrame`
+    Boolean-style frame whose cells mark where the compared values differ.
+"""
+
+see_also = [
+  "<a href=\"#ne\"><code>DataFrame::ne</code></a>: explicit not-equal comparison.",
+  "<a href=\"#eq\"><code>DataFrame::eq</code></a>: equality comparison.",
+  "<a href=\"../../thread_api_reference.md#compare\"><code>Thread::compare</code></a>: lower-level typed comparison surface."
+]
+
+notes = [
+  """
+Scalar comparison broadcasts the scalar across every selected cell in the current frame.
+""",
+  """
+Frame-to-frame comparison requires compatible structure on the participating features and rows.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand comparison target.
+
+This can be:
+- a scalar, which broadcasts across the current frame selection, or
+- another frame, which is compared cell by cell after alignment.
+"""
+
+[[examples]]
+title = "Broadcast one scalar across selected numeric features."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
+    {"region", pluss::make_note({"south", "south", "middle", "north"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
+    {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
+}).caselbl(pluss::make_note({"A100", "B200", "B200", "D400"}));
+
+auto out = sales.features({"units", "price"}).compare(5.0);
+"""
+output = """
+===================
+     | units  price
+-------------------
+A100 | true   true 
+B200 | true   true 
+B200 | true   true 
+D400 | false  false
+-------------------
+[4 cs x 2 feat]
+"""
+
+[[examples]]
+title = "Compare two aligned frames row by row and feature by feature."
+code = """
+using namespace pluss::table;
+
+auto left = DataFrame({
+    {"math", pluss::make_series({80.0, 90.0, 70.0})},
+    {"science", pluss::make_series({75.0, 88.0, 92.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto right = DataFrame({
+    {"math", pluss::make_series({80.0, 91.0, 70.0})},
+    {"science", pluss::make_series({75.0, 80.0, 92.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = left.compare(right);
+"""
+output = """
+=====================
+     | math   science
+---------------------
+s1   | false  false  
+s2   | true   true   
+s3   | false  false  
+---------------------
+[3 cs x 2 feat]
+"""

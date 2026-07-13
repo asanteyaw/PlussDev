@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
@@ -22,12 +23,31 @@
 
 namespace pluss::table {
 
+class Thread;
+enum class LabelKind : std::uint8_t;
+
 namespace detail {
 class ThreadImpl;
+bool has_validity_mask(const Thread& thread);
+const std::optional<pluss::Series>& validity_mask(const Thread& thread);
+Thread with_validity_mask(const Thread& thread, const pluss::Series& validity_mask);
+Thread& with_validity_mask_(Thread& thread, const pluss::Series& validity_mask);
+Thread clear_validity_mask(const Thread& thread);
+Thread& clear_validity_mask_(Thread& thread);
+bool has_display_labels(const Thread& thread);
+Thread display_labels(const Thread& thread);
+Thread with_display_labels(const Thread& thread, const Thread& labels);
+Thread& with_display_labels_(Thread& thread, const Thread& labels);
+Thread clear_display_labels(const Thread& thread);
+Thread& clear_display_labels_(Thread& thread);
+LabelKind label_kind(const Thread& thread);
+Thread with_label_kind(const Thread& thread, LabelKind kind);
+Thread& with_label_kind_(Thread& thread, LabelKind kind);
 }
 class ThreadValue;
 class DataFrame;
 class DataFrameView;
+class Atlas;
 class ThreadView;
 class ThreadNoteAccessor;
 class ThreadTimelineAccessor;
@@ -42,9 +62,33 @@ enum class ThreadKind : std::uint8_t {
 
 std::string_view thread_kind_name(ThreadKind kind) noexcept;
 
+enum class LabelKind : std::uint8_t {
+  Default = 0,
+  Case = 1,
+  Feature = 2,
+  Custom = 3,
+  Time = 4,
+};
+
 enum class Axis : std::uint8_t {
   Feature = 0,
   Case = 1,
+};
+
+enum class AlignBy : std::uint8_t {
+  Pos = 0,
+  Caselbl = 1,
+  Feature = 2,
+  Both = 3,
+};
+
+struct AlignOptions {
+  AlignBy align{AlignBy::Pos};
+  std::optional<double> fill{std::nullopt};
+};
+
+struct ThreadOptions {
+  bool rangelbl{false};
 };
 
 enum class ThreadBinaryMathOp : std::uint8_t {
@@ -204,9 +248,25 @@ class Thread {
 public:
   Thread();
   Thread(const pluss::Series& data, std::optional<pluss::Series> validity_mask = std::nullopt);
+  Thread(const pluss::Series& data, const ThreadOptions& options);
+  Thread(const pluss::Series& data,
+         std::optional<pluss::Series> validity_mask,
+         const ThreadOptions& options);
   Thread(const pluss::Note& data, std::optional<pluss::Series> validity_mask = std::nullopt);
+  Thread(const pluss::Note& data, const ThreadOptions& options);
+  Thread(const pluss::Note& data,
+         std::optional<pluss::Series> validity_mask,
+         const ThreadOptions& options);
   Thread(const pluss::Timeline& data, std::optional<pluss::Series> validity_mask = std::nullopt);
+  Thread(const pluss::Timeline& data, const ThreadOptions& options);
+  Thread(const pluss::Timeline& data,
+         std::optional<pluss::Series> validity_mask,
+         const ThreadOptions& options);
   Thread(const pluss::TimeIndex& data, std::optional<pluss::Series> validity_mask = std::nullopt);
+  Thread(const pluss::TimeIndex& data, const ThreadOptions& options);
+  Thread(const pluss::TimeIndex& data,
+         std::optional<pluss::Series> validity_mask,
+         const ThreadOptions& options);
   Thread(const Thread& other);
   Thread(Thread&& other) noexcept;
   Thread& operator=(const Thread& other);
@@ -217,17 +277,12 @@ public:
   bool unique() const noexcept;
   bool shares_payload_with(const Thread& other) const noexcept;
   std::int64_t size() const;
+  std::int64_t ncases() const;
+  std::pair<std::int64_t, std::int64_t> shape() const;
   ThreadKind kind() const;
-  std::string dtype_name() const;
+  std::string dtype() const;
   ThreadValue value() const;
   bool is_valid(std::int64_t row) const;
-
-  bool has_validity_mask() const;
-  const std::optional<pluss::Series>& validity_mask() const;
-  Thread with_validity_mask(const pluss::Series& validity_mask) const;
-  Thread& with_validity_mask_(const pluss::Series& validity_mask);
-  Thread clear_validity_mask() const;
-  Thread& clear_validity_mask_();
 
   Thread isnull() const;
   Thread notnull() const;
@@ -244,6 +299,7 @@ public:
   Thread fillna(const pluss::TimeIndex& value) const;
   Thread abs() const;
   Thread clip(double min_value, double max_value) const;
+  Thread round(std::int64_t decimals = 0) const;
   Thread log() const;
   Thread exp() const;
 
@@ -264,12 +320,13 @@ public:
   Thread slice(std::int64_t start, std::int64_t stop) const;
   Thread take(std::span<const std::int64_t> indices) const;
   Thread filter(const pluss::Series& bool_mask) const;
-  Thread dropna() const;
+  Thread dropnull() const;
   Thread sort_values(bool ascending = true, bool nulls_last = true) const;
-  Thread ffill() const;
-  Thread bfill() const;
-  Thread distinct(bool dropna = true) const;
-  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = false) const;
+  Thread ffill(std::int64_t limit = -1) const;
+  Thread bfill(std::int64_t limit = -1) const;
+  Thread interp(std::int64_t limit = -1) const;
+  Thread distinct(bool dropnull = true) const;
+  DataFrameView tally(std::int64_t top_n = 0, bool dropnull = true, bool render = false) const;
   ThreadView describe(bool render = false) const;
   Thread bucketize(pluss::msharp::RangeView::Double bins,
                    pluss::msharp::RangeView::Int labels = {},
@@ -306,12 +363,16 @@ public:
   ThreadValue skew(std::int64_t min_count = 3) const;
   ThreadValue kurtosis(std::int64_t min_count = 4) const;
   Thread scan(ScanStatistic statistic, bool skip_nulls = true) const;
+  Thread cumsum(bool skip_nulls = true) const;
+  Thread cumprod(bool skip_nulls = true) const;
+  Thread cummin(bool skip_nulls = true) const;
+  Thread cummax(bool skip_nulls = true) const;
   ThreadValue corr_with(const Thread& other,
                         ThreadCorrMethod method = ThreadCorrMethod::Pearson,
                         std::int64_t min_count = 1) const;
   ThreadValue matmul(const Thread& other) const;
-  ThreadValue ndistinct(bool dropna = true) const;
-  Thread freq(std::int64_t top_n = 0, bool dropna = true) const;
+  ThreadValue ndistinct(bool dropnull = true) const;
+  Thread freq(std::int64_t top_n = 0, bool dropnull = true) const;
   Thread duplicated(bool keep_first = true, bool keep_last = false) const;
 
   Thread weigh(pluss::msharp::RangeView::Double weights,
@@ -482,7 +543,10 @@ public:
         pluss::msharp::RangeView::Of<Thread>(choices),
         default_value);
   }
-  pluss::Series contains(std::string_view needle) const;
+  Thread has(double value) const;
+  Thread has(std::string_view value) const;
+  Thread has(const char* value) const { return has(std::string_view{value != nullptr ? value : ""}); }
+  Thread has(const Thread& values) const;
 
   // Time operations (Timeline / TimeIndex payload only).
   Thread year() const;
@@ -494,6 +558,38 @@ public:
   // Binary operations for DataFrame-level delegation.
   Thread numeric_binary(double other, ThreadBinaryMathOp op, bool reverse = false) const;
   Thread numeric_binary(const Thread& other, ThreadBinaryMathOp op) const;
+  Thread add(double other) const;
+  Thread add(const Thread& other) const;
+  Thread radd(double other) const;
+  Thread radd(const Thread& other) const;
+  Thread sub(double other) const;
+  Thread sub(const Thread& other) const;
+  Thread rsub(double other) const;
+  Thread rsub(const Thread& other) const;
+  Thread mul(double other) const;
+  Thread mul(const Thread& other) const;
+  Thread rmul(double other) const;
+  Thread rmul(const Thread& other) const;
+  Thread div(double other) const;
+  Thread div(const Thread& other) const;
+  Thread rdiv(double other) const;
+  Thread rdiv(const Thread& other) const;
+  Thread truediv(double other) const;
+  Thread truediv(const Thread& other) const;
+  Thread rtruediv(double other) const;
+  Thread rtruediv(const Thread& other) const;
+  Thread floordiv(double other) const;
+  Thread floordiv(const Thread& other) const;
+  Thread rfloordiv(double other) const;
+  Thread rfloordiv(const Thread& other) const;
+  Thread mod(double other) const;
+  Thread mod(const Thread& other) const;
+  Thread rmod(double other) const;
+  Thread rmod(const Thread& other) const;
+  Thread pow(double other) const;
+  Thread pow(const Thread& other) const;
+  Thread rpow(double other) const;
+  Thread rpow(const Thread& other) const;
   Thread compare(double other, ThreadBinaryCompareOp op) const;
   Thread compare(std::string_view other, ThreadBinaryCompareOp op) const;
   Thread compare(const char* other, ThreadBinaryCompareOp op) const {
@@ -504,12 +600,58 @@ public:
   Thread compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) const;
   Thread compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const;
   Thread compare(const Thread& other, ThreadBinaryCompareOp op) const;
+  Thread eq(double other) const;
+  Thread eq(std::string_view other) const;
+  Thread eq(const char* other) const { return eq(std::string_view{other != nullptr ? other : ""}); }
+  Thread eq(const Thread& other) const;
+  Thread ne(double other) const;
+  Thread ne(std::string_view other) const;
+  Thread ne(const char* other) const { return ne(std::string_view{other != nullptr ? other : ""}); }
+  Thread ne(const Thread& other) const;
+  Thread lt(double other) const;
+  Thread lt(std::string_view other) const;
+  Thread lt(const char* other) const { return lt(std::string_view{other != nullptr ? other : ""}); }
+  Thread lt(const Thread& other) const;
+  Thread le(double other) const;
+  Thread le(std::string_view other) const;
+  Thread le(const char* other) const { return le(std::string_view{other != nullptr ? other : ""}); }
+  Thread le(const Thread& other) const;
+  Thread gt(double other) const;
+  Thread gt(std::string_view other) const;
+  Thread gt(const char* other) const { return gt(std::string_view{other != nullptr ? other : ""}); }
+  Thread gt(const Thread& other) const;
+  Thread ge(double other) const;
+  Thread ge(std::string_view other) const;
+  Thread ge(const char* other) const { return ge(std::string_view{other != nullptr ? other : ""}); }
+  Thread ge(const Thread& other) const;
+  Thread land(const Thread& other) const;
+  Thread rand(const Thread& other) const;
+  Thread lor(const Thread& other) const;
+  Thread ror(const Thread& other) const;
+  Thread lxor(const Thread& other) const;
+  Thread rxor(const Thread& other) const;
   Thread btw(double a, double b, bool inclusive = false) const;
   Thread btw(double a, double b, bool include_left, bool include_right) const;
   Thread btw(std::string_view lo, std::string_view hi, bool inclusive = true) const;
   Thread btw(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const;
   Thread btw(const Thread& lo, const Thread& hi, bool inclusive = true) const;
   Thread btw(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const;
+  Thread between(double a, double b, bool inclusive = false) const { return btw(a, b, inclusive); }
+  Thread between(double a, double b, bool include_left, bool include_right) const {
+    return btw(a, b, include_left, include_right);
+  }
+  Thread between(std::string_view lo, std::string_view hi, bool inclusive = true) const {
+    return btw(lo, hi, inclusive);
+  }
+  Thread between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const {
+    return btw(lo, hi, include_left, include_right);
+  }
+  Thread between(const Thread& lo, const Thread& hi, bool inclusive = true) const {
+    return btw(lo, hi, inclusive);
+  }
+  Thread between(const Thread& lo, const Thread& hi, bool include_left, bool include_right) const {
+    return btw(lo, hi, include_left, include_right);
+  }
   int compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last = true) const;
   Thread window(std::int64_t window, ThreadWindowOp op, std::int64_t min_periods = 1) const;
   Thread cast(ThreadCastTarget target, const ThreadCastOptions& options = {}) const;
@@ -523,10 +665,15 @@ public:
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
   void info() const;
   void info(std::ostream& os) const;
-  bool has_display_labels() const;
-  Thread display_labels() const;
-  Thread with_display_labels(const Thread& labels) const;
-  Thread clear_display_labels() const;
+  bool has_caselbl() const;
+  Thread caselbl() const;
+  Thread caselbl(const Thread& labels) const;
+  Thread& caselbl_(const Thread& labels);
+  Thread rangelbl() const;
+  Thread& rangelbl_();
+  Thread clear_caselbl() const;
+  Thread& clear_caselbl_();
+  Thread align(const Thread& target_labels, const AlignOptions& options = {}) const;
   bool has_display_name() const;
   std::string display_name() const;
   Thread with_display_name(std::string name) const;
@@ -540,9 +687,50 @@ public:
   TimeSeriesAccessor ts() const;
 
 private:
+  friend class Atlas;
+  friend class DataFrame;
+  friend class DataFrameView;
+  friend class ThreadNoteAccessor;
+  friend class ThreadTimelineAccessor;
+  friend class ThreadValue;
+  friend class ThreadView;
   friend class TimeSeriesAccessor;
+  friend bool detail::has_validity_mask(const Thread& thread);
+  friend const std::optional<pluss::Series>& detail::validity_mask(const Thread& thread);
+  friend Thread detail::with_validity_mask(const Thread& thread, const pluss::Series& validity_mask);
+  friend Thread& detail::with_validity_mask_(Thread& thread, const pluss::Series& validity_mask);
+  friend Thread detail::clear_validity_mask(const Thread& thread);
+  friend Thread& detail::clear_validity_mask_(Thread& thread);
+  friend bool detail::has_display_labels(const Thread& thread);
+  friend Thread detail::display_labels(const Thread& thread);
+  friend Thread detail::with_display_labels(const Thread& thread, const Thread& labels);
+  friend Thread& detail::with_display_labels_(Thread& thread, const Thread& labels);
+  friend Thread detail::clear_display_labels(const Thread& thread);
+  friend Thread& detail::clear_display_labels_(Thread& thread);
+  friend LabelKind detail::label_kind(const Thread& thread);
+  friend Thread detail::with_label_kind(const Thread& thread, LabelKind kind);
+  friend Thread& detail::with_label_kind_(Thread& thread, LabelKind kind);
 
   explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
+
+  bool has_validity_mask() const;
+  const std::optional<pluss::Series>& validity_mask() const;
+  Thread with_validity_mask(const pluss::Series& validity_mask) const;
+  Thread& with_validity_mask_(const pluss::Series& validity_mask);
+  Thread clear_validity_mask() const;
+  Thread& clear_validity_mask_();
+  bool has_display_labels() const;
+  Thread display_labels() const;
+  Thread with_display_labels(const Thread& labels) const;
+  Thread& with_display_labels_(const Thread& labels);
+  Thread clear_display_labels() const;
+  Thread& clear_display_labels_();
+  bool has_cases() const;
+  Thread cases() const;
+  Thread cases(const Thread& labels) const;
+  Thread& cases_(const Thread& labels);
+  Thread clear_cases() const;
+  Thread& clear_cases_();
 
   Thread moving(std::int64_t window,
                 WindowStatistic statistic = WindowStatistic::Mean,
@@ -570,6 +758,56 @@ private:
 
   pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl_{nullptr};
 };
+
+namespace detail {
+inline bool has_validity_mask(const Thread& thread) {
+  return thread.has_validity_mask();
+}
+
+inline const std::optional<pluss::Series>& validity_mask(const Thread& thread) {
+  return thread.validity_mask();
+}
+
+inline Thread with_validity_mask(const Thread& thread, const pluss::Series& validity_mask) {
+  return thread.with_validity_mask(validity_mask);
+}
+
+inline Thread& with_validity_mask_(Thread& thread, const pluss::Series& validity_mask) {
+  return thread.with_validity_mask_(validity_mask);
+}
+
+inline Thread clear_validity_mask(const Thread& thread) {
+  return thread.clear_validity_mask();
+}
+
+inline Thread& clear_validity_mask_(Thread& thread) {
+  return thread.clear_validity_mask_();
+}
+
+inline bool has_display_labels(const Thread& thread) {
+  return thread.has_display_labels();
+}
+
+inline Thread display_labels(const Thread& thread) {
+  return thread.display_labels();
+}
+
+inline Thread with_display_labels(const Thread& thread, const Thread& labels) {
+  return thread.with_display_labels(labels);
+}
+
+inline Thread& with_display_labels_(Thread& thread, const Thread& labels) {
+  return thread.with_display_labels_(labels);
+}
+
+inline Thread clear_display_labels(const Thread& thread) {
+  return thread.clear_display_labels();
+}
+
+inline Thread& clear_display_labels_(Thread& thread) {
+  return thread.clear_display_labels_();
+}
+} // namespace detail
 
 struct TimeSeriesResample {
   Thread labels{};
@@ -621,6 +859,11 @@ class TimeSeriesAccessor {
                               pluss::subsp::stats::ts::ResampleOp op =
                                   pluss::subsp::stats::ts::ResampleOp::Mean,
                               std::int64_t step = 1) const;
+  TimeSeriesResample resample(
+      const Thread& axis,
+      const pluss::TimeIndex::ResampleOptions& options,
+      pluss::subsp::stats::ts::ResampleOp op =
+          pluss::subsp::stats::ts::ResampleOp::Mean) const;
 
  private:
   const pluss::Series& series_payload_(const char* op) const;
@@ -726,6 +969,7 @@ public:
   Thread date() const;
   Thread time() const;
   Thread shift(std::int64_t periods, std::string_view freq) const;
+  Thread period(std::string_view freq) const;
   Thread tz(std::string_view name) const;
   Thread localize(const TimelineLocalizeOptions& options = {}) const;
   Thread utc() const;
@@ -752,6 +996,7 @@ Thread operator%(double lhs, const Thread& rhs);
 Thread operator%(const Thread& lhs, const Thread& rhs);
 Thread operator&(const Thread& lhs, const Thread& rhs);
 Thread operator|(const Thread& lhs, const Thread& rhs);
+Thread operator^(const Thread& lhs, const Thread& rhs);
 Thread operator==(const Thread& lhs, double rhs);
 Thread operator==(double lhs, const Thread& rhs);
 Thread operator==(const Thread& lhs, std::string_view rhs);
@@ -823,6 +1068,39 @@ class ThreadValue {
 public:
   using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
 
+  class HostAny {
+  public:
+    enum class Kind : std::uint8_t {
+      Bool = 0,
+      Int = 1,
+      UInt = 2,
+      Double = 3,
+      String = 4,
+      Time = 5,
+    };
+
+    using Storage = std::variant<bool, std::int64_t, std::uint64_t, double, std::string>;
+
+    HostAny() = default;
+    static HostAny boolean(bool value);
+    static HostAny integer(std::int64_t value);
+    static HostAny unsigned_integer(std::uint64_t value);
+    static HostAny floating(double value);
+    static HostAny string(std::string value);
+    static HostAny time(std::int64_t epoch_nanos, std::string iso);
+
+    Kind kind() const noexcept;
+    const Storage& storage() const noexcept;
+    double to_dbl() const;
+    std::int64_t to_int() const;
+    std::string to_str() const;
+
+  private:
+    Kind kind_{Kind::Int};
+    Storage storage_{std::int64_t{0}};
+    std::string display_{};
+  };
+
   ThreadValue() = default;
   explicit ThreadValue(Thread thread);
 
@@ -835,6 +1113,10 @@ public:
   pluss::Note as_note() const;
   pluss::Timeline as_timeline() const;
   pluss::TimeIndex as_timeindex() const;
+  HostAny host() const;
+  double to_dbl() const;
+  std::int64_t to_int() const;
+  std::string to_str() const;
 
   operator pluss::Series() const;
   operator pluss::Note() const;
@@ -851,5 +1133,6 @@ std::ostream& operator<<(std::ostream& os, const ThreadView& thread);
 void output_render(std::ostream& os, const ThreadView& thread);
 std::ostream& operator<<(std::ostream& os, const ThreadValue& value);
 void output_render(std::ostream& os, const ThreadValue& value);
+std::ostream& operator<<(std::ostream& os, const ThreadValue::HostAny& value);
 
 } // namespace pluss::table

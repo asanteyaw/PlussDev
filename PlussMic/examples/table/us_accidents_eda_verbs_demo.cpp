@@ -484,8 +484,8 @@ void run_verb_walkthrough(const DataFrame& df) {
   auto miss_isnull = df.isnull({"Visibility(mi)", "Precipitation(in)", "Weather_Condition"});
   auto miss_notnull = df.notnull({"Visibility(mi)", "Precipitation(in)"});
   auto miss_fill = df.fillna(0.0, {"Precipitation(in)"});
-  auto miss_drop_any = df.dropna();
-  auto miss_drop_all = df.dropna_all({"Precipitation(in)", "Visibility(mi)"});
+  auto miss_drop_any = df.dropnull();
+  auto miss_drop_all = df.dropnull({"Precipitation(in)", "Visibility(mi)"}, true);
   auto miss_ffill = df.ffill();
   auto miss_bfill = df.bfill();
   (void)miss_isnull;

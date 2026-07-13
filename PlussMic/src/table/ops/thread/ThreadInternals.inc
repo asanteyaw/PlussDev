@@ -7,15 +7,17 @@ public:
   ThreadImpl(Payload payload,
              std::optional<pluss::Series> validity_mask,
              std::optional<pluss::Note> display_labels,
-             std::optional<std::string> display_name);
+             std::optional<std::string> display_name,
+             LabelKind label_kind);
 
   Payload payload_;
   ThreadKind kind_{ThreadKind::Series};
   std::int64_t size_{0};
-  std::string dtype_name_;
+  std::string dtype_;
   std::optional<pluss::Series> validity_mask_;
   std::optional<pluss::Note> display_labels_;
   std::optional<std::string> display_name_;
+  LabelKind label_kind_{LabelKind::Default};
 };
 
 } // namespace detail
@@ -65,6 +67,13 @@ pluss::Series int64_index_series(const std::vector<std::int64_t>& values) {
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
   return out;
+}
+
+Thread default_thread_cases_(std::int64_t size) {
+  PLUSS_CHECK(size >= 0, "Thread: default cases size must be non-negative");
+  std::vector<std::int64_t> values(static_cast<std::size_t>(size));
+  std::iota(values.begin(), values.end(), static_cast<std::int64_t>(0));
+  return Thread(int64_index_series(values));
 }
 
 std::vector<bool> bool_vec_from_series(const pluss::Series& s, std::int64_t expected_size, std::string_view where) {
@@ -142,8 +151,8 @@ bool series_uses_nan_missing(const pluss::Series& s) {
 }
 
 pluss::Series thread_non_missing_mask(const Thread& t) {
-  auto valid = t.has_validity_mask()
-                   ? *t.validity_mask()
+  auto valid = detail::has_validity_mask(t)
+                   ? *detail::validity_mask(t)
                    : pluss::Series::ones({t.size()}, pluss::codem::ScalarType::Bool);
   if (t.kind() != ThreadKind::Series) {
     return valid;
@@ -278,7 +287,7 @@ double kendall_tau_b_from_vectors_(const std::vector<double>& x, const std::vect
   return std::clamp(tau, -1.0, 1.0);
 }
 
-std::string infer_dtype_name(const Payload& payload) {
+std::string infer_dtype(const Payload& payload) {
   return std::visit([](const auto& v) -> std::string {
     using T = std::decay_t<decltype(v)>;
     if constexpr (std::is_same_v<T, pluss::Series>) {
@@ -297,7 +306,8 @@ pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask,
     std::optional<pluss::Note> display_labels = std::nullopt,
-    std::optional<std::string> display_name = std::nullopt);
+    std::optional<std::string> display_name = std::nullopt,
+    LabelKind label_kind = LabelKind::Default);
 
 std::vector<std::int64_t> true_indices_from_mask(const pluss::Series& mask, std::int64_t expected_size) {
   const auto keep = bool_vec_from_series(mask, expected_size, "Thread::filter");
@@ -342,14 +352,18 @@ pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int
 detail::ThreadImpl::ThreadImpl(Payload payload,
                                std::optional<pluss::Series> validity_mask,
                                std::optional<pluss::Note> display_labels,
-                               std::optional<std::string> display_name)
+                               std::optional<std::string> display_name,
+                               LabelKind label_kind)
     : payload_(std::move(payload)),
       kind_(infer_kind(payload_)),
       size_(infer_size(payload_)),
-      dtype_name_(infer_dtype_name(payload_)),
+      dtype_(infer_dtype(payload_)),
       validity_mask_(std::move(validity_mask)),
       display_labels_(std::move(display_labels)),
-      display_name_(std::move(display_name)) {
+      display_name_(std::move(display_name)),
+      label_kind_(display_labels_.has_value()
+                      ? (label_kind == LabelKind::Default ? LabelKind::Custom : label_kind)
+                      : LabelKind::Default) {
   validate_validity_mask(validity_mask_, size_);
   validate_display_labels(display_labels_, size_);
 }
@@ -360,13 +374,18 @@ pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask,
     std::optional<pluss::Note> display_labels,
-    std::optional<std::string> display_name) {
+    std::optional<std::string> display_name,
+    LabelKind label_kind) {
   return pluss::msharp::make_intrusive<detail::ThreadImpl>(
-      std::move(payload), std::move(validity_mask), std::move(display_labels), std::move(display_name));
+      std::move(payload),
+      std::move(validity_mask),
+      std::move(display_labels),
+      std::move(display_name),
+      label_kind);
 }
 
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> clone_impl(const detail::ThreadImpl& src) {
-  return build_impl(src.payload_, src.validity_mask_, src.display_labels_, src.display_name_);
+  return build_impl(src.payload_, src.validity_mask_, src.display_labels_, src.display_name_, src.label_kind_);
 }
 
 pluss::Series scalar_like_column(const pluss::Series& reference, double value) {
@@ -526,14 +545,14 @@ pluss::Series apply_compare_series_scalar(
 }
 
 std::optional<pluss::Series> combine_validity_masks(const Thread& lhs, const Thread& rhs) {
-  if (lhs.has_validity_mask() && rhs.has_validity_mask()) {
-    return lhs.validity_mask()->logical_and(*rhs.validity_mask());
+  if (detail::has_validity_mask(lhs) && detail::has_validity_mask(rhs)) {
+    return detail::validity_mask(lhs)->logical_and(*detail::validity_mask(rhs));
   }
-  if (lhs.has_validity_mask()) {
-    return lhs.validity_mask();
+  if (detail::has_validity_mask(lhs)) {
+    return detail::validity_mask(lhs);
   }
-  if (rhs.has_validity_mask()) {
-    return rhs.validity_mask();
+  if (detail::has_validity_mask(rhs)) {
+    return detail::validity_mask(rhs);
   }
   return std::nullopt;
 }
@@ -568,8 +587,8 @@ std::optional<pluss::Series> combine_validity_masks_broadcast(
     const Thread& lhs,
     const Thread& rhs,
     std::int64_t output_size) {
-  auto lhs_mask = broadcast_validity_mask_to_size(lhs.validity_mask(), output_size, "Thread::compare");
-  auto rhs_mask = broadcast_validity_mask_to_size(rhs.validity_mask(), output_size, "Thread::compare");
+  auto lhs_mask = broadcast_validity_mask_to_size(detail::validity_mask(lhs), output_size, "Thread::compare");
+  auto rhs_mask = broadcast_validity_mask_to_size(detail::validity_mask(rhs), output_size, "Thread::compare");
   if (lhs_mask.has_value() && rhs_mask.has_value()) {
     return lhs_mask->logical_and(*rhs_mask);
   }
@@ -870,9 +889,13 @@ std::optional<pluss::Series> merge_masks(
   return std::nullopt;
 }
 
-Thread forward_fill_thread(const Thread& t) {
+Thread forward_fill_thread(const Thread& t, std::int64_t limit = -1) {
+  PLUSS_CHECK(limit == -1 || limit >= 0, "Thread::ffill: limit must be -1 or >= 0");
   const auto non_missing = thread_non_missing_mask(t);
-  if (!t.has_validity_mask() && non_missing.all().item<bool>()) {
+  if (!detail::has_validity_mask(t) && non_missing.all().item<bool>()) {
+    return t;
+  }
+  if (limit == 0) {
     return t;
   }
   auto valid = non_missing.to_vec<bool>();
@@ -883,10 +906,17 @@ Thread forward_fill_thread(const Thread& t) {
   switch (t.kind()) {
     case ThreadKind::Series: {
       auto out = t.as_series().clone();
+      std::int64_t filled_run = 0;
       for (std::int64_t i = 1; i < t.size(); ++i) {
-        if (!valid[static_cast<std::size_t>(i)] && valid[static_cast<std::size_t>(i - 1)]) {
+        if (valid[static_cast<std::size_t>(i)]) {
+          filled_run = 0;
+          continue;
+        }
+        if (valid[static_cast<std::size_t>(i - 1)] &&
+            (limit < 0 || filled_run < limit)) {
           copy_series_value(out, i - 1, out, i);
           valid[static_cast<std::size_t>(i)] = true;
+          ++filled_run;
         }
       }
       if (all_true(valid)) {
@@ -900,10 +930,17 @@ Thread forward_fill_thread(const Thread& t) {
       for (std::int64_t i = 0; i < t.size(); ++i) {
         values.emplace_back(t.as_note().at(i));
       }
+      std::int64_t filled_run = 0;
       for (std::int64_t i = 1; i < t.size(); ++i) {
-        if (!valid[static_cast<std::size_t>(i)] && valid[static_cast<std::size_t>(i - 1)]) {
+        if (valid[static_cast<std::size_t>(i)]) {
+          filled_run = 0;
+          continue;
+        }
+        if (valid[static_cast<std::size_t>(i - 1)] &&
+            (limit < 0 || filled_run < limit)) {
           values[static_cast<std::size_t>(i)] = values[static_cast<std::size_t>(i - 1)];
           valid[static_cast<std::size_t>(i)] = true;
+          ++filled_run;
         }
       }
       auto out = rebuild_note_like(t.as_note(), values);
@@ -914,10 +951,17 @@ Thread forward_fill_thread(const Thread& t) {
     }
     case ThreadKind::Timeline: {
       auto ticks = t.as_timeline().to_epoch_nanos_vector();
+      std::int64_t filled_run = 0;
       for (std::int64_t i = 1; i < t.size(); ++i) {
-        if (!valid[static_cast<std::size_t>(i)] && valid[static_cast<std::size_t>(i - 1)]) {
+        if (valid[static_cast<std::size_t>(i)]) {
+          filled_run = 0;
+          continue;
+        }
+        if (valid[static_cast<std::size_t>(i - 1)] &&
+            (limit < 0 || filled_run < limit)) {
           ticks[static_cast<std::size_t>(i)] = ticks[static_cast<std::size_t>(i - 1)];
           valid[static_cast<std::size_t>(i)] = true;
+          ++filled_run;
         }
       }
       auto out = rebuild_timeline_like(t.as_timeline(), ticks);
@@ -927,22 +971,26 @@ Thread forward_fill_thread(const Thread& t) {
       return Thread(out, bool_series_from_bools(valid));
     }
     case ThreadKind::TimeIndex: {
-      auto base = Thread(t.as_timeindex().timeline(), t.validity_mask());
-      auto filled = forward_fill_thread(base);
+      auto base = Thread(t.as_timeindex().timeline(), detail::validity_mask(t));
+      auto filled = forward_fill_thread(base, limit);
       auto out = filled.as_timeline().to_timeindex(false);
-      if (!filled.has_validity_mask()) {
+      if (!detail::has_validity_mask(filled)) {
         return Thread(out);
       }
-      return Thread(out, *filled.validity_mask());
+      return Thread(out, *detail::validity_mask(filled));
     }
     default:
       return t;
   }
 }
 
-Thread backward_fill_thread(const Thread& t) {
+Thread backward_fill_thread(const Thread& t, std::int64_t limit = -1) {
+  PLUSS_CHECK(limit == -1 || limit >= 0, "Thread::bfill: limit must be -1 or >= 0");
   const auto non_missing = thread_non_missing_mask(t);
-  if (!t.has_validity_mask() && non_missing.all().item<bool>()) {
+  if (!detail::has_validity_mask(t) && non_missing.all().item<bool>()) {
+    return t;
+  }
+  if (limit == 0) {
     return t;
   }
   auto valid = non_missing.to_vec<bool>();
@@ -953,10 +1001,17 @@ Thread backward_fill_thread(const Thread& t) {
   switch (t.kind()) {
     case ThreadKind::Series: {
       auto out = t.as_series().clone();
+      std::int64_t filled_run = 0;
       for (std::int64_t i = t.size() - 2; i >= 0; --i) {
-        if (!valid[static_cast<std::size_t>(i)] && valid[static_cast<std::size_t>(i + 1)]) {
+        if (valid[static_cast<std::size_t>(i)]) {
+          filled_run = 0;
+          continue;
+        }
+        if (valid[static_cast<std::size_t>(i + 1)] &&
+            (limit < 0 || filled_run < limit)) {
           copy_series_value(out, i + 1, out, i);
           valid[static_cast<std::size_t>(i)] = true;
+          ++filled_run;
         }
       }
       if (all_true(valid)) {
@@ -970,10 +1025,17 @@ Thread backward_fill_thread(const Thread& t) {
       for (std::int64_t i = 0; i < t.size(); ++i) {
         values.emplace_back(t.as_note().at(i));
       }
+      std::int64_t filled_run = 0;
       for (std::int64_t i = t.size() - 2; i >= 0; --i) {
-        if (!valid[static_cast<std::size_t>(i)] && valid[static_cast<std::size_t>(i + 1)]) {
+        if (valid[static_cast<std::size_t>(i)]) {
+          filled_run = 0;
+          continue;
+        }
+        if (valid[static_cast<std::size_t>(i + 1)] &&
+            (limit < 0 || filled_run < limit)) {
           values[static_cast<std::size_t>(i)] = values[static_cast<std::size_t>(i + 1)];
           valid[static_cast<std::size_t>(i)] = true;
+          ++filled_run;
         }
       }
       auto out = rebuild_note_like(t.as_note(), values);
@@ -984,10 +1046,17 @@ Thread backward_fill_thread(const Thread& t) {
     }
     case ThreadKind::Timeline: {
       auto ticks = t.as_timeline().to_epoch_nanos_vector();
+      std::int64_t filled_run = 0;
       for (std::int64_t i = t.size() - 2; i >= 0; --i) {
-        if (!valid[static_cast<std::size_t>(i)] && valid[static_cast<std::size_t>(i + 1)]) {
+        if (valid[static_cast<std::size_t>(i)]) {
+          filled_run = 0;
+          continue;
+        }
+        if (valid[static_cast<std::size_t>(i + 1)] &&
+            (limit < 0 || filled_run < limit)) {
           ticks[static_cast<std::size_t>(i)] = ticks[static_cast<std::size_t>(i + 1)];
           valid[static_cast<std::size_t>(i)] = true;
+          ++filled_run;
         }
       }
       auto out = rebuild_timeline_like(t.as_timeline(), ticks);
@@ -997,13 +1066,13 @@ Thread backward_fill_thread(const Thread& t) {
       return Thread(out, bool_series_from_bools(valid));
     }
     case ThreadKind::TimeIndex: {
-      auto base = Thread(t.as_timeindex().timeline(), t.validity_mask());
-      auto filled = backward_fill_thread(base);
+      auto base = Thread(t.as_timeindex().timeline(), detail::validity_mask(t));
+      auto filled = backward_fill_thread(base, limit);
       auto out = filled.as_timeline().to_timeindex(false);
-      if (!filled.has_validity_mask()) {
+      if (!detail::has_validity_mask(filled)) {
         return Thread(out);
       }
-      return Thread(out, *filled.validity_mask());
+      return Thread(out, *detail::validity_mask(filled));
     }
     default:
       return t;

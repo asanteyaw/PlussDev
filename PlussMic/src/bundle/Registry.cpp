@@ -111,8 +111,8 @@ Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
       source_col_index,
       one,
       options);
-  if (inferred.has_validity_mask()) {
-    const auto valid = inferred.validity_mask()->to_vec<bool>();
+  if (pluss::table::detail::has_validity_mask(inferred)) {
+    const auto valid = pluss::table::detail::validity_mask(inferred)->to_vec<bool>();
     if (valid.size() == 1 && !valid[0]) {
       return std::monostate{};
     }

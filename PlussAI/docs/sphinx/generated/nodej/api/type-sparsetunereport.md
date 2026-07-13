@@ -25,6 +25,7 @@ Public fields on this type:
 - `MetricKind objective_metric = MetricKind::Accuracy`
 - `SparseObjectivePolicy objective_policy = SparseObjectivePolicy::Auto`
 - `std::vector<std::int64_t> objective_rank{}`
+- `SparseTuneLedger ledger{}`
 
 ## Examples
 

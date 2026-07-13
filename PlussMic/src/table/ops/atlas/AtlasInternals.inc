@@ -47,14 +47,14 @@ void validate_axis0_labels(const std::optional<Thread>& labels, std::int64_t dep
 void validate_schema_compat(const DataFrame& ref, const DataFrame& cur) {
   PLUSS_CHECK(ref.ncases() == cur.ncases(), "Atlas: all frames must have identical row count (strict cube)");
   PLUSS_CHECK(ref.nfeats() == cur.nfeats(), "Atlas: all frames must have identical column count");
-  PLUSS_CHECK(ref.feature_names() == cur.feature_names(), "Atlas: all frames must have identical column names/order");
+  PLUSS_CHECK(ref.features() == cur.features(), "Atlas: all frames must have identical column names/order");
 
-  const auto ref_cols = ref.features();
-  const auto cur_cols = cur.features();
-  PLUSS_CHECK(ref_cols.size() == cur_cols.size(), "Atlas: internal schema mismatch");
-  for (std::size_t i = 0; i < ref_cols.size(); ++i) {
-    PLUSS_CHECK(ref_cols[i].kind() == cur_cols[i].kind(), "Atlas: column kind mismatch across frames");
-    PLUSS_CHECK(ref_cols[i].dtype_name() == cur_cols[i].dtype_name(), "Atlas: column dtype mismatch across frames");
+  const auto& ref_names = ref.features();
+  for (const auto& name : ref_names) {
+    const auto ref_col = ref.features(name);
+    const auto cur_col = cur.features(name);
+    PLUSS_CHECK(ref_col.kind() == cur_col.kind(), "Atlas: column kind mismatch across frames");
+    PLUSS_CHECK(ref_col.dtype() == cur_col.dtype(), "Atlas: column dtype mismatch across frames");
   }
 }
 
@@ -148,7 +148,7 @@ void detail::AtlasImpl::validate_() {
   PLUSS_CHECK(ref.defined(), "Atlas: frame[0] is undefined");
   nrows_ = ref.ncases();
   ncols_ = ref.nfeats();
-  names_ = ref.feature_names();
+  names_ = ref.features();
 
   for (std::size_t i = 0; i < frames_.size(); ++i) {
     PLUSS_CHECK(frames_[i].defined(), "Atlas: frame[" + std::to_string(i) + "] is undefined");

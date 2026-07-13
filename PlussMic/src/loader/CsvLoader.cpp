@@ -122,8 +122,8 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
 }
 
 bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t row) {
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
+  if (pluss::table::detail::has_validity_mask(t)) {
+    const auto valid = pluss::table::detail::validity_mask(t)->to_vec<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;
     }
@@ -1224,8 +1224,12 @@ void save_csv(const pluss::table::DataFrame& frame,
   PLUSS_CHECK(out.is_open(), "save_csv: failed to open output file '" + std::string(filepath) + "'");
 
   const auto sep = options.sep;
-  const auto names = frame.feature_names();
-  const auto cols = frame.features();
+  const auto names = frame.features();
+  std::vector<pluss::table::Thread> cols;
+  cols.reserve(names.size());
+  for (const auto& name : names) {
+    cols.push_back(frame.features(name));
+  }
   const bool include_cases = options.add_cases || options.cases;
 
   if (options.header) {
@@ -1247,7 +1251,7 @@ void save_csv(const pluss::table::DataFrame& frame,
   for (std::int64_t r = 0; r < frame.ncases(); ++r) {
     bool first = true;
     if (include_cases) {
-      out << escape_csv_cell(thread_value_for_csv(frame.cases(), r, options), options);
+      out << escape_csv_cell(thread_value_for_csv(frame.caselbl(), r, options), options);
       first = false;
     }
     for (const auto& col : cols) {
@@ -1354,7 +1358,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
   const auto batch = build_batch_from_records(records, batch_options, nullptr);
   output = pluss::table::DataFrame(batch.features, batch.cases);
   if (impl_->schema_names.empty()) {
-    impl_->schema_names = output.feature_names();
+    impl_->schema_names = output.features();
     impl_->schema_kinds.reserve(static_cast<std::size_t>(output.nfeatures()));
     impl_->schema_series_types.reserve(static_cast<std::size_t>(output.nfeatures()));
     for (const auto& feature : impl_->schema_names) {
@@ -1367,9 +1371,13 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
     }
   } else {
     PLUSS_CHECK(
-        output.feature_names() == impl_->schema_names,
+        output.features() == impl_->schema_names,
         "CsvCaseReader::next: feature schema changed between batches");
-    auto columns = output.features();
+    std::vector<pluss::table::Thread> columns;
+    columns.reserve(impl_->schema_names.size());
+    for (const auto& name : impl_->schema_names) {
+      columns.push_back(output.features(name));
+    }
     bool converted_any = false;
     for (std::size_t i = 0; i < impl_->schema_names.size(); ++i) {
       const auto& column = columns[i];
@@ -1421,7 +1429,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
       converted_any = true;
     }
     if (converted_any) {
-      auto cases = output.cases();
+      auto cases = output.caselbl();
       std::vector<std::pair<std::string, pluss::table::Thread>> typed_columns;
       typed_columns.reserve(columns.size());
       for (std::size_t i = 0; i < columns.size(); ++i) {

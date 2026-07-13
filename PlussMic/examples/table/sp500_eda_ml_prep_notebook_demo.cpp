@@ -252,7 +252,7 @@ int main() {
   let volume_prev_1 = numeric.shift({"Volume"}, 1).features({"Volume"}).rename("Volume", "VolumePrev1");
   let close_next_1 = numeric.shift({"Close"}, -1).features({"Close"}).rename("Close", "CloseNext1");
 
-  ml_frame = ml_frame.combine(close_prev_1).combine(close_prev_5).combine(volume_prev_1).combine(close_next_1).dropna();
+  ml_frame = ml_frame.combine(close_prev_1).combine(close_prev_5).combine(volume_prev_1).combine(close_next_1).dropnull();
   ml_frame.set({"Ret1D", "Ret5D", "VolumeChange1D", "TargetNextRet"}) = {
       (ml_frame.features("Close") / ml_frame.features("ClosePrev1")) - 1.0,
       (ml_frame.features("Close") / ml_frame.features("ClosePrev5")) - 1.0,

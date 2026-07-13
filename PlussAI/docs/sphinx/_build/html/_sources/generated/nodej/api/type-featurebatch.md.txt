@@ -102,37 +102,3 @@ kmeans labels (first 10): 0 0 0 0 0 0 0 0 0 0
 pca output shape: [80, 2]
 nodej_unsupervised_demo complete
 ```
-
-### Example 3
-
-```cpp
-                                          -2.0, -1.0,
-                                          -1.8, -0.9,
-                                          -1.6, -0.8,
-                                           1.2,  1.1,
-                                           1.4,  1.2,
-                                           1.6,  1.3},
-                                      {6, 2},
-                                      cfg);
-  const FeatureBatch batch{
-      .x = x,
-      .layout = ObservationLayout::Rows,
-  };
-
-  auto kmeans_or = pluss::ai::lymph::quick::kmeans_clusterer(batch, 2);
-  if (!kmeans_or.ok()) {
-    std::cerr << "lymph::kmeans_clusterer failed: " << kmeans_or.status().message << "\n";
-    return 1;
-  }
-  auto labels_or = kmeans_or.value()->map(batch);
-  if (!labels_or.ok()) {
-    std::cerr << "kmeans map failed: " << labels_or.status().message << "\n";
-```
-
-**Expected output**
-
-```text
-lymph kmeans labels: 1 1 1 0 0 0
-lymph pca output shape: [40, 2]
-lymph_unsupervised_demo complete
-```

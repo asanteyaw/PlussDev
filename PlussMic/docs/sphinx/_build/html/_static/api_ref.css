@@ -250,6 +250,55 @@ div.clearer {
   white-space: nowrap;
 }
 
+.pluss-inline-prev-next {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--pluss-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(30, 50, 70, 0.1);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin: 1.1rem 0 0;
+  padding: 0.5rem 0.6rem;
+}
+
+.pluss-inline-prev-next a {
+  background: #f4f8fc;
+  border: 1px solid var(--pluss-border);
+  border-radius: 8px;
+  color: #12364f;
+  display: block;
+  flex: 0 1 320px;
+  max-width: 320px;
+  min-width: 220px;
+  padding: 0.5rem 0.7rem;
+  text-decoration: none;
+}
+
+.pluss-inline-prev-next a.prev-link {
+  margin-right: auto;
+}
+
+.pluss-inline-prev-next a.next-link {
+  margin-left: auto;
+  text-align: right;
+}
+
+.pluss-inline-prev-next a .label {
+  color: #4a5e72;
+  display: block;
+  font-size: 0.78rem;
+}
+
+.pluss-inline-prev-next a .title {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #api-reference-style {
   border-top: 1px solid #d8dbe2;
   margin-top: 1.8rem;
@@ -374,6 +423,12 @@ section.pluss-api-root-hidden {
   }
 
   #pluss-prev-next a {
+    flex-basis: 46%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .pluss-inline-prev-next a {
     flex-basis: 46%;
     max-width: none;
     min-width: 0;

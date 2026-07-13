@@ -1,10 +1,15 @@
 # Slot API Reference
 
-# Practical Slot API Reference
-
-## API Reference Style
-
 This page documents the full public `Slot` surface for one-dimensional heterogeneous bundles.
+
+## How To Use This Page
+
+- Methods are grouped alphabetically so you can jump quickly from the left rail.
+- Each method page section starts with the public signatures, then explains what the method does, how each parameter changes behavior, and what the call returns.
+- Overloaded methods include several examples so you can see the supported call shapes instead of reverse-engineering them from signatures alone.
+- Each example is followed immediately by verified output captured from the current compiled examples so the result shape is visible before you move to the next overload.
+
+## A
 
 ### `as_kindle`
 
@@ -14,24 +19,22 @@ This page documents the full public `Slot` surface for one-dimensional heterogen
 Slot::as_kindle() -> pluss::kindle::Stream
 ```
 
-#### Notes
+#### What It Does
 
-This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+Converts or reinterprets the current payload as another public Pluss type so downstream operations route through the right text, numeric, or temporal surface.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `pluss::kindle::Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Convert the current object into the `kindle` representation before continuing with another type-specific workflow.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -39,39 +42,43 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.as_kindle();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#at">
+    <span class="label">Next</span>
+    <span class="title">at</span>
+  </a>
+</div>
 
 ### `at`
 
 #### Signature
 
 ```cpp
-Slot::at(i: std::int64_t) -> const Value&
+Slot::at(std::int64_t i) -> const Value&
 ```
 
-#### Notes
+#### What It Does
 
 Fetches one value, member, or slice from the current object without changing the source object.
 
-#### Inputs
+#### Parameters
 
-`i` : `std::int64_t`
+**i**
     Zero-based positional index used by this overload.
 
-#### Output
+#### Returns
 
 `const Value&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -79,39 +86,49 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.at(0);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series(1)
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_kindle">
+    <span class="label">Previous</span>
+    <span class="title">as_kindle</span>
+  </a>
+  <a class="next-link" href="#concat">
+    <span class="label">Next</span>
+    <span class="title">concat</span>
+  </a>
+</div>
+
+## C
 
 ### `concat`
 
 #### Signature
 
 ```cpp
-Slot::concat(other: const Slot&) -> Slot
+Slot::concat(const Slot& other) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Appends the values from another slot and returns the combined slot.
 
-#### Inputs
+#### Parameters
 
-`other` : `const Slot&`
+**other**
     Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -120,11 +137,23 @@ auto other = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)})
 auto out = slot.concat(other);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#at">
+    <span class="label">Previous</span>
+    <span class="title">at</span>
+  </a>
+  <a class="next-link" href="#defined">
+    <span class="label">Next</span>
+    <span class="title">defined</span>
+  </a>
+</div>
+
+## D
 
 ### `defined`
 
@@ -134,24 +163,22 @@ Slot([Series(1), Series(2), Series(3)])
 Slot::defined() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `defined` property of the current object.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -159,11 +186,23 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.defined();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#concat">
+    <span class="label">Previous</span>
+    <span class="title">concat</span>
+  </a>
+  <a class="next-link" href="#empty">
+    <span class="label">Next</span>
+    <span class="title">empty</span>
+  </a>
+</div>
+
+## E
 
 ### `empty`
 
@@ -173,24 +212,22 @@ true
 Slot::empty() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the current object has no rows, entries, slots, or depth items.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `empty` property of the current object.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -198,39 +235,49 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.empty();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 false
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#defined">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="#filter">
+    <span class="label">Next</span>
+    <span class="title">filter</span>
+  </a>
+</div>
+
+## F
 
 ### `filter`
 
 #### Signature
 
 ```cpp
-Slot::filter(predicate: const std::function<bool(const Value&)>&) -> Slot
+Slot::filter(const std::function<bool(const Value&)>& predicate) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Keeps only the slot values that satisfy the supplied predicate.
 
-#### Inputs
+#### Parameters
 
-`predicate` : `const std::function<bool(const Value&)>&`
+**predicate**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), pluss::make_series(3)});
@@ -238,39 +285,47 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), 
 auto out = slot.filter([](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#empty">
+    <span class="label">Previous</span>
+    <span class="title">empty</span>
+  </a>
+  <a class="next-link" href="#from_kindle">
+    <span class="label">Next</span>
+    <span class="title">from_kindle</span>
+  </a>
+</div>
 
 ### `from_kindle`
 
 #### Signature
 
 ```cpp
-Slot::from_kindle(stream: const pluss::kindle::Stream&) -> Slot
+Slot::from_kindle(const pluss::kindle::Stream& stream) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
-`stream` : `const pluss::kindle::Stream&`
+**stream**
     Stream payload supplied to this overload.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
@@ -278,39 +333,49 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto out = pluss::bundle::Slot::from_kindle(stream);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#filter">
+    <span class="label">Previous</span>
+    <span class="title">filter</span>
+  </a>
+  <a class="next-link" href="#head">
+    <span class="label">Next</span>
+    <span class="title">head</span>
+  </a>
+</div>
+
+## H
 
 ### `head`
 
 #### Signature
 
 ```cpp
-Slot::head(n: std::int64_t) -> Slot
+Slot::head(std::int64_t n) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Returns the first `n` values from the slot.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the first part of the current object without changing the source data.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -318,11 +383,23 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.head(2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#from_kindle">
+    <span class="label">Previous</span>
+    <span class="title">from_kindle</span>
+  </a>
+  <a class="next-link" href="#kindelize">
+    <span class="label">Next</span>
+    <span class="title">kindelize</span>
+  </a>
+</div>
+
+## K
 
 ### `kindelize`
 
@@ -332,24 +409,22 @@ Slot([Series(1), Series(2), Series(3)])
 Slot::kindelize() -> pluss::kindle::Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `pluss::kindle::Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -357,39 +432,49 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.kindelize();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#head">
+    <span class="label">Previous</span>
+    <span class="title">head</span>
+  </a>
+  <a class="next-link" href="#push">
+    <span class="label">Next</span>
+    <span class="title">push</span>
+  </a>
+</div>
+
+## P
 
 ### `push`
 
 #### Signature
 
 ```cpp
-Slot::push(value: const Value&) -> Slot
+Slot::push(const Value& value) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Returns a new slot with one additional value appended.
 
-#### Inputs
+#### Parameters
 
-`value` : `const Value&`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -397,39 +482,47 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.push(pluss::make_note("tail"));
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#kindelize">
+    <span class="label">Previous</span>
+    <span class="title">kindelize</span>
+  </a>
+  <a class="next-link" href="#push_">
+    <span class="label">Next</span>
+    <span class="title">push_</span>
+  </a>
+</div>
 
 ### `push_`
 
 #### Signature
 
 ```cpp
-Slot::push_(value: const Value&) -> Slot&
+Slot::push_(const Value& value) -> Slot&
 ```
 
-#### Notes
+#### What It Does
 
 Appends one additional value to the slot in place.
 
-#### Inputs
+#### Parameters
 
-`value` : `const Value&`
+**value**
     Replacement, fill, or write value used by mutation-style methods such as `put(...)`, `fillna(...)`, or `replace(...)`.
 
-#### Output
+#### Returns
 
 `Slot&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -437,39 +530,49 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 slot.push_(pluss::make_note("tail"));
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#push">
+    <span class="label">Previous</span>
+    <span class="title">push</span>
+  </a>
+  <a class="next-link" href="#show">
+    <span class="label">Next</span>
+    <span class="title">show</span>
+  </a>
+</div>
+
+## S
 
 ### `show`
 
 #### Signature
 
 ```cpp
-Slot::show(os: std::ostream&) -> void
+Slot::show(std::ostream& os) -> void
 ```
 
-#### Notes
+#### What It Does
 
 This renders a human-readable view for inspection instead of creating a new analytic object.
 
-#### Inputs
+#### Parameters
 
-`os` : `std::ostream&`
+**os**
     Destination output stream used instead of the default display or print target.
 
-#### Output
+#### Returns
 
 `void`
     Performs the side effect and returns no value.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Write the output to a caller-provided stream.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -477,11 +580,21 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 slot.show(std::cout);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#push_">
+    <span class="label">Previous</span>
+    <span class="title">push_</span>
+  </a>
+  <a class="next-link" href="#size">
+    <span class="label">Next</span>
+    <span class="title">size</span>
+  </a>
+</div>
 
 ### `size`
 
@@ -491,24 +604,22 @@ Slot([Series(1), Series(2), Series(3)])
 Slot::size() -> std::int64_t
 ```
 
-#### Notes
+#### What It Does
 
 Returns a size/count summary for the current object without changing it.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::int64_t`
     Integer count, size, or positional result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the `size` property of the current object.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -516,42 +627,50 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.size();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 3
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#show">
+    <span class="label">Previous</span>
+    <span class="title">show</span>
+  </a>
+  <a class="next-link" href="#slice">
+    <span class="label">Next</span>
+    <span class="title">slice</span>
+  </a>
+</div>
 
 ### `slice`
 
 #### Signature
 
 ```cpp
-Slot::slice(start: std::int64_t, stop: std::int64_t) -> Slot
+Slot::slice(std::int64_t start, std::int64_t stop) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Returns a contiguous positional slice `[start, stop)` from the slot.
 
-#### Inputs
+#### Parameters
 
-`start` : `std::int64_t`
+**start**
     Inclusive starting position of the slice.
 
-`stop` : `std::int64_t`
+**stop**
     Exclusive ending position of the slice.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect one contiguous positional slice from the current object.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -559,39 +678,49 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.slice(0, 2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#size">
+    <span class="label">Previous</span>
+    <span class="title">size</span>
+  </a>
+  <a class="next-link" href="#tail">
+    <span class="label">Next</span>
+    <span class="title">tail</span>
+  </a>
+</div>
+
+## T
 
 ### `tail`
 
 #### Signature
 
 ```cpp
-Slot::tail(n: std::int64_t) -> Slot
+Slot::tail(std::int64_t n) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Returns the last `n` values from the slot.
 
-#### Inputs
+#### Parameters
 
-`n` : `std::int64_t`
+**n**
     Number of rows, entries, or depth items to keep in the preview.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Inspect the last part of the current object without changing the source data.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -599,39 +728,47 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.tail(2);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#slice">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
+  <a class="next-link" href="#take">
+    <span class="label">Next</span>
+    <span class="title">take</span>
+  </a>
+</div>
 
 ### `take`
 
 #### Signature
 
 ```cpp
-Slot::take(indices: std::span<const std::int64_t>) -> Slot
+Slot::take(std::span<const std::int64_t> indices) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Returns the values at the requested integer positions.
 
-#### Inputs
+#### Parameters
 
-`indices` : `std::span<const std::int64_t>`
+**indices**
     Integer positions used to select, reorder, or address entries.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Pass several integer positions together.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -640,11 +777,21 @@ std::vector<std::int64_t> picks{0, 2};
 auto out = slot.take(picks);
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#tail">
+    <span class="label">Previous</span>
+    <span class="title">tail</span>
+  </a>
+  <a class="next-link" href="#to_json">
+    <span class="label">Next</span>
+    <span class="title">to_json</span>
+  </a>
+</div>
 
 ### `to_json`
 
@@ -654,24 +801,22 @@ Slot([Series(1), Series(2), Series(3)])
 Slot::to_json() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -679,11 +824,21 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.to_json();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#take">
+    <span class="label">Previous</span>
+    <span class="title">take</span>
+  </a>
+  <a class="next-link" href="#to_kindle">
+    <span class="label">Next</span>
+    <span class="title">to_kindle</span>
+  </a>
+</div>
 
 ### `to_kindle`
 
@@ -693,24 +848,22 @@ Slot([Series(1), Series(2), Series(3)])
 Slot::to_kindle() -> pluss::kindle::Stream
 ```
 
-#### Notes
+#### What It Does
 
 This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `pluss::kindle::Stream`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -718,11 +871,21 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.to_kindle();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Series([10.0, 20.0, 30.0])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_json">
+    <span class="label">Previous</span>
+    <span class="title">to_json</span>
+  </a>
+  <a class="next-link" href="#to_string">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
 
 ### `to_string`
 
@@ -732,24 +895,22 @@ Series([10.0, 20.0, 30.0])
 Slot::to_string() -> std::string
 ```
 
-#### Notes
+#### What It Does
 
 Serializes or renders the current object into a text form you can inspect, log, or export.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::string`
     Rendered string result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -757,39 +918,47 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.to_string();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_kindle">
+    <span class="label">Previous</span>
+    <span class="title">to_kindle</span>
+  </a>
+  <a class="next-link" href="#transform">
+    <span class="label">Next</span>
+    <span class="title">transform</span>
+  </a>
+</div>
 
 ### `transform`
 
 #### Signature
 
 ```cpp
-Slot::transform(fn: const std::function<Value(const Value&)>&) -> Slot
+Slot::transform(const std::function<Value(const Value&)>& fn) -> Slot
 ```
 
-#### Notes
+#### What It Does
 
 Applies a value-wise transform to each slot entry and returns the updated slot.
 
-#### Inputs
+#### Parameters
 
-`fn` : `const std::function<Value(const Value&)>&`
+**fn**
     Callback function used by this overload. The callable signature shown in the type tells you what input is provided and what you must return.
 
-#### Output
+#### Returns
 
 `Slot`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Apply a user function and inspect the transformed result.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -797,11 +966,21 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.transform([](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#to_string">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+  <a class="next-link" href="#type_counts">
+    <span class="label">Next</span>
+    <span class="title">type_counts</span>
+  </a>
+</div>
 
 ### `type_counts`
 
@@ -811,24 +990,22 @@ Slot([Series(1), Series(2), Series(3)])
 Slot::type_counts() -> std::unordered_map<std::string, std::int64_t>
 ```
 
-#### Notes
+#### What It Does
 
 Counts how many slot entries belong to each stored pluss type.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `std::unordered_map<std::string, std::int64_t>`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), pluss::make_series(3)});
@@ -836,11 +1013,23 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_note("ok"), 
 auto out = slot.type_counts();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 {"Series": 2, "Note": 1}
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#transform">
+    <span class="label">Previous</span>
+    <span class="title">transform</span>
+  </a>
+  <a class="next-link" href="#unique">
+    <span class="label">Next</span>
+    <span class="title">unique</span>
+  </a>
+</div>
+
+## U
 
 ### `unique`
 
@@ -850,24 +1039,22 @@ auto out = slot.type_counts();
 Slot::unique() -> bool
 ```
 
-#### Notes
+#### What It Does
 
 Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `bool`
     Boolean status or membership result.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -875,11 +1062,23 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.unique();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 true
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#type_counts">
+    <span class="label">Previous</span>
+    <span class="title">type_counts</span>
+  </a>
+  <a class="next-link" href="#values">
+    <span class="label">Next</span>
+    <span class="title">values</span>
+  </a>
+</div>
+
+## V
 
 ### `values`
 
@@ -889,24 +1088,22 @@ true
 Slot::values() -> const std::vector<Value>&
 ```
 
-#### Notes
+#### What It Does
 
 Materializes the current members as a collection you can inspect or reuse elsewhere.
 
-#### Inputs
+#### Parameters
 
 `None`
 
-#### Output
+#### Returns
 
 `const std::vector<Value>&`
     Value produced by this call.
 
-#### Options
-
-Option and enum values, when present, are listed with their effects under **Inputs**.
-
 #### Examples
+
+Example 1. Call the simplest overload.
 
 ```cpp
 auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
@@ -914,8 +1111,14 @@ auto slot = pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), p
 auto out = slot.values();
 ```
 
-#### Expected output
+##### Output
 
 ```text
 Slot([Series(1), Series(2), Series(3)])
 ```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#unique">
+    <span class="label">Previous</span>
+    <span class="title">unique</span>
+  </a>
+</div>

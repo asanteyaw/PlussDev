@@ -234,7 +234,7 @@ Shape and labels:
 ```cpp
 auto ncs = df.nrows();      // number of cases
 auto nfeat = df.ncols();    // number of features
-auto names = df.feature_names();
+auto names = df.features();
 ```
 
 Access features:
@@ -247,11 +247,11 @@ auto subset = df.features({"price", "qty"});  // DataFrame subset
 Access case axis:
 
 ```cpp
-auto case_axis = df.cases();           // Thread
-auto one_case_df = df.cases(10);       // single case as DataFrame
-auto case_slice = df.cases({5, 10});   // [5,10) as DataFrame
-auto cell1 = df.cases(3, 2);           // row+feature-index cell (string view materialized to string)
-auto cell2 = df.cases(3, "price");     // row+feature-name cell
+auto case_axis = df.caselbl();           // Thread
+auto one_case_df = df.caselbl(10);       // single case as DataFrame
+auto case_slice = df.caselbl({5, 10});   // [5,10) as DataFrame
+auto cell1 = df.caselbl(3, 2);           // row+feature-index cell (string view materialized to string)
+auto cell2 = df.caselbl(3, "price");     // row+feature-name cell
 ```
 
 Extract underlying pluss payload type:
@@ -322,7 +322,7 @@ The API uses focused canonical names:
 
 Complete method index (current public surface, grouped):
 
-- Access: `nrows`, `ncols`, `nfeatures`, `feature_names`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
+- Access: `nrows`, `ncols`, `nfeatures`, `features`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
 - Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
 - Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
 - Derivation/aggregation/grouping: `assign`, `transform`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `tally`, `describe`, `transpose`
@@ -354,7 +354,7 @@ auto a2 = df.unsqueeze(label);
 - `head`, `tail`, `view`, `slice`, `take`, `sample`
 - `iloc`, `at`, `iat`, `get`
 - `features("name")`, `features({"a","b"})`
-- `cases()`, `cases(i)`, `cases({i,k})`, `cases(i, j_or_name)`
+- `caselbl()`, `case_study(...)`, `iloc(...)`, `at(...)`, `iat(...)`
 
 ### 7.2 projection/select
 
@@ -511,14 +511,14 @@ auto dup = df.repeated_cases({"city"});
 auto dedup = df.unique_cases({"city"});
 auto cased = df.set_cases("city", true);
 auto reset = cased.reset_cases("city_case");
-auto aligned = reset.align_cases(reset.cases());
+auto aligned = reset.align_cases(reset.caselbl());
 auto renamed = df.rename_features({{"price", "price_usd"}});
 auto relabeled = df.relabel_features({"feat_a", "feat_b", "feat_c"});
 auto relabeled2 = df.set_axis({"feat_a", "feat_b", "feat_c"});
 auto relabeled3 = df.set_axis({"feat_a", "feat_b", "feat_c"}); // alias
 auto conformed = df.conform_to(other_df);
 auto reindexed_like = df.reindex_like(other_df);
-auto reindexed_cases = df.reindex_cases(other_df.cases());
+auto reindexed_cases = df.reindex_cases(other_df.caselbl());
 auto stitched = left_df.stitch_on("id", right_df, "id", "_r");
 auto stitched2 = left_df.stitch_on({"id", "bucket"}, right_df, {"id", "bucket"}, "_r");
 ```
