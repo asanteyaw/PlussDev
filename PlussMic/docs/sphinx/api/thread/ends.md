@@ -8,35 +8,51 @@
 Thread::ends(std::string_view suffix) -> Thread
 ```
 
-## What It Does
+Check whether each note value ends with the supplied suffix.
 
-Checks whether each note-backed text value ends with the requested suffix.
+`ends(...)` is the note-thread suffix test. Use it when you are building filename filters, extension masks, code-family checks, or any text workflow where the tail of the string matters.
 
 ## Parameters
 
 **suffix**
-    Text suffix appended after the existing label or value.
+
+Literal trailing text to test for at the end of each note value.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    Boolean-style thread marking which note values end with the supplied suffix.
+
+## See Also
+
+- <a href="starts.html"><code>Thread::starts</code></a>: prefix-based companion check.
+- <a href="matches.html"><code>Thread::matches</code></a>: regex-oriented matching instead of literal suffix checks.
+
+## Notes
+
+`ends(...)` is note-only. It is intended for textual payloads.
 
 ## Examples
 
-Example 1. Apply `ends` to the current thread using explicit `suffix` arguments.
+Example 1. Build a suffix mask for filename-like values.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.ends("demo");
+auto names = Thread(pluss::make_note({"Ada.csv", "Bola.txt", "Chen.csv"}));
+
+auto out = names.ends(".csv");
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  true
+1  false
+2  true
+dtype: Series
 ```
+
 
 
 <div class="pluss-inline-prev-next">
@@ -44,8 +60,8 @@ auto out = thread.ends("demo");
     <span class="label">Previous</span>
     <span class="title">encode</span>
   </a>
-  <a class="next-link" href="exp.html">
+  <a class="next-link" href="eq.html">
     <span class="label">Next</span>
-    <span class="title">exp</span>
+    <span class="title">eq</span>
   </a>
 </div>

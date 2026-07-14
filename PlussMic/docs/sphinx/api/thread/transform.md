@@ -63,8 +63,8 @@ auto out = thread.transform({});
     <span class="label">Previous</span>
     <span class="title">to_string</span>
   </a>
-  <a class="next-link" href="ts.html">
+  <a class="next-link" href="truediv.html">
     <span class="label">Next</span>
-    <span class="title">ts</span>
+    <span class="title">truediv</span>
   </a>
 </div>

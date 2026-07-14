@@ -53,9 +53,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="distinct.html">
+  <a class="prev-link" href="div.html">
     <span class="label">Previous</span>
-    <span class="title">distinct</span>
+    <span class="title">div</span>
   </a>
   <a class="next-link" href="dtype.html">
     <span class="label">Next</span>

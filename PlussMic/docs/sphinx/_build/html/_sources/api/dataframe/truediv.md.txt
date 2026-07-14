@@ -7,6 +7,14 @@
 ```cpp
 DataFrame::truediv(const DataFrame& other) -> DataFrame
 
+DataFrame::truediv(const DataFrame& other, const AlignOptions& options) -> DataFrame
+
+DataFrame::truediv(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
+
+DataFrame::truediv(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
+
+DataFrame::truediv(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
+
 DataFrame::truediv(double other) -> DataFrame
 ```
 
@@ -18,6 +26,12 @@ Applies elementwise true division to compatible numeric features.
 
 **other**
     Scalar divisor or right-hand frame used for elementwise true division.
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+**axis**
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
 
 ## Returns
 
@@ -49,7 +63,90 @@ id    sales
 1.0   1.090909
 0.75  0.9
 ```
-Example 2. Divide each compatible numeric cell against one broadcast scalar value.
+Example 2. Divide each compatible numeric cell against another aligned frame.
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
+});
+
+auto out = left.truediv(right);
+```
+
+### Output
+
+```text
+id    sales
+0.5   0.909091
+1.0   1.090909
+0.75  0.9
+```
+Example 3. Divide each compatible numeric cell against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.truediv(10);
+```
+
+### Output
+
+```text
+id  sales  city
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi
+```
+Example 4. Divide each compatible numeric cell against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.truediv(10);
+```
+
+### Output
+
+```text
+id  sales  city
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi
+```
+Example 5. Divide each compatible numeric cell against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.truediv(10);
+```
+
+### Output
+
+```text
+id  sales  city
+0.1  10.0  Accra
+0.2  12.0  Tema
+0.3   9.0  Kumasi
+```
+Example 6. Divide each compatible numeric cell against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({

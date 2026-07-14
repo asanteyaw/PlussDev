@@ -51,8 +51,8 @@ auto out = scores.covar(other);
     <span class="label">Previous</span>
     <span class="title">count</span>
   </a>
-  <a class="next-link" href="day.html">
+  <a class="next-link" href="csmax.html">
     <span class="label">Next</span>
-    <span class="title">day</span>
+    <span class="title">csmax</span>
   </a>
 </div>

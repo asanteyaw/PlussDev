@@ -882,6 +882,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'encoding': 'Text encoding used when reading or writing text-based files.',
         'on_bad_lines': 'Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.',
         'new_cases': 'Replacement case labels in the exact order you want the rows to follow.',
+        'new_caselbl': 'Replacement case labels in the exact order you want the rows to follow.',
         'cases': 'Case-label thread to attach to the current object.',
         'rows': enum_note(
             'Selector describing which rows `case_study(...)` should return.',
@@ -1532,7 +1533,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'bounded': 'Computes variable-width window statistics where each row chooses its own bounds through a callback.',
             'case_study': 'Selects rows and columns from a `DataFrame` using explicit positional, label-based, or boolean-mask selector objects. It is the single row/column indexing surface for table selection.',
             'catalogue': 'Builds a compact level-and-code encoding for a low-cardinality feature while preserving missingness.',
-            'cases': 'Returns the current case axis itself. Use this when you want the row labels as data rather than selecting rows from the frame.',
+            'caselbl': 'Returns the current case axis itself. Use this when you want the row labels as data rather than selecting rows from the frame.',
             'combine': 'Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.',
             'corr': 'Computes a correlation matrix across numeric features, optionally for a selected subset and a selected correlation method.',
             'corr_with': 'Computes aligned feature-wise correlations between this frame and one or more other frames.',
@@ -1620,7 +1621,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
             'set_cases': 'Promotes one feature to become the case axis. With the default `drop_feature=true`, that feature stops being a normal column and becomes the row labels instead.',
             'reset_cases': 'Materializes the current case axis as a normal feature, then restores the default positional cases `0..n-1`.',
-            'align_cases': 'Reorders rows so their case labels match the supplied `new_cases` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
+            'align_caselbl': 'Reorders rows so their case labels match the supplied `new_caselbl` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
             'sort_cases': 'Sorts rows by the current case axis rather than by a data feature.',
             'add_prefix': 'Prepends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
             'add_suffix': 'Appends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
@@ -2045,11 +2046,11 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Returns the current labels used to address fields, slots, rows, or depth items.'
     if name in {'columns', 'values', 'features', 'streams', 'slots', 'frames', 'catalogs', 'registries'}:
         return 'Materializes the current members as a collection you can inspect or reuse elsewhere.'
-    if name in {'get', 'feature_ref', 'stream', 'slot', 'frame', 'catalog', 'registry', 'at', 'iat', 'iloc', 'loc', 'value', 'cases'}:
+    if name in {'get', 'feature_ref', 'stream', 'slot', 'frame', 'catalog', 'registry', 'at', 'iat', 'iloc', 'loc', 'value', 'caselbl'}:
         return 'Fetches one value, member, or slice from the current object without changing the source object.'
     if name in {'meta'}:
         return 'Reads one metadata value from the current object without changing the payload.'
-    if name in {'with_meta', 'with_meta_', 'drop_meta', 'drop_meta_', 'with_cases', 'with_cases_', 'clear_cases', 'clear_cases_'}:
+    if name in {'with_meta', 'with_meta_', 'drop_meta', 'drop_meta_', 'with_cases', 'with_cases_', 'clear_cases', 'clear_cases_', 'clear_caselbl', 'clear_caselbl_'}:
         return 'Updates object-level structure such as metadata, case labels, or validity state while preserving the underlying values and alignment model. Underscore forms mutate in place.'
     if name in {'head', 'tail', 'slice', 'slice_depth', 'slice_frames', 'take', 'sample', 'iloc', 'loc', 'view'}:
         return 'Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.'
@@ -2249,7 +2250,7 @@ def example_caption(class_name: str, method: Method) -> str:
             if 'CastSpec' in sig:
                 return 'Cast selected features with explicit target-family and dtype control.'
             return 'Cast selected features into another Pluss payload family.'
-        if n == 'cases':
+        if n == 'caselbl':
             if 'std::pair<std::int64_t, std::int64_t> row_span' in sig:
                 return 'Extract a contiguous row span by case position.'
             if 'std::size_t feature_idx' in sig:
@@ -2743,9 +2744,9 @@ def example_caption(class_name: str, method: Method) -> str:
         return f'Compute `{n}` and inspect the resulting summary value or summary object.'
     if n in {'defined', 'empty', 'kind', 'dtype', 'size', 'depth'}:
         return f'Inspect the `{n}` property of the current object.'
-    if n in {'with_meta', 'drop_meta', 'with_cases', 'clear_cases'}:
+    if n in {'with_meta', 'drop_meta', 'with_cases', 'clear_cases', 'clear_caselbl'}:
         return 'Return an updated copy after changing structural metadata, cases, or validity state.'
-    if n in {'with_meta_', 'drop_meta_', 'with_cases_', 'clear_cases_'}:
+    if n in {'with_meta_', 'drop_meta_', 'with_cases_', 'clear_cases_', 'clear_caselbl_'}:
         return 'Mutate the current object in place, then inspect the updated state.'
     if n in {'apply', 'apply_', 'apply_all', 'apply_all_', 'transform', 'map'}:
         return 'Apply a user function and inspect the transformed result.'
@@ -2779,10 +2780,10 @@ DF_SUFFIX_OUT = """id_2024  sales_2024  city_2024
 2        120.0       Tema
 3         90.0       Kumasi"""
 
-DF_WITH_CASES_OUT = """df.cases():
+DF_WITH_CASES_OUT = """df.caselbl():
 [0, 1, 2]
 
-out.cases():
+out.caselbl():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -2797,7 +2798,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.cases():
+out.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():
@@ -2806,10 +2807,10 @@ id  sales
 2   120.0
 3    90.0"""
 
-DF_RESET_CASES_OUT = """with_cases.cases():
+DF_RESET_CASES_OUT = """with_cases.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
-out.cases():
+out.caselbl():
 [0, 1, 2]
 
 out.head():
@@ -2818,10 +2819,10 @@ id  sales  case
 2   120.0  Tema
 3    90.0  Kumasi"""
 
-DF_ALIGN_CASES_OUT = """df.cases():
+DF_ALIGN_CASES_OUT = """df.caselbl():
 ["cs0", "cs1", "cs2"]
 
-out.cases():
+out.caselbl():
 ["cs1", "cs0", "cs2"]
 
 out.head():
@@ -3099,7 +3100,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('')
     lines.append('- Positional row selectors use zero-based indexing. Negative positions count from the end.')
     lines.append('- Positional row slices are half-open: `pos(start, stop)` means `[start, stop)`.')
-    lines.append('- Label selectors match against the current case axis returned by `cases()`.')
+    lines.append('- Label selectors match against the current case axis returned by `caselbl()`.')
     lines.append('- `label(value)` returns every matching row, so duplicate case labels are preserved instead of collapsed.')
     lines.append('- `label_range(start, stop)` is inclusive on both ends and walks the current case-axis order.')
     lines.append('- Feature-position slices are half-open, while `col_range(start, stop)` is inclusive on both ends.')
@@ -3112,7 +3113,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('- Use `features({...})` when you only need feature projection and no row lookup.')
     lines.append('- Use `filter(mask)` when you already have a boolean row mask and want full-row retention with no feature projection in the same call.')
     lines.append('- Use `observe(start, stop)` for display-oriented middle slices. Use `case_study(...)` when the selected result itself is part of later computation.')
-    lines.append('- If your current case axis is numeric and you want those labels as numeric data, call `cases().as_series()` explicitly.')
+    lines.append('- If your current case axis is numeric and you want those labels as numeric data, call `caselbl().as_series()` explicitly.')
     lines.append('')
     lines.append('#### Examples')
     lines.append('')
@@ -3131,7 +3132,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
         lines.append('')
     lines.append('#### Behavior Notes')
     lines.append('')
-    lines.append('- `cases()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.')
+    lines.append('- `caselbl()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.')
     lines.append('- `CasePick` is the structured-case overload. Use it only after `set_cases(...)` has created named case levels.')
     lines.append('- Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.')
     lines.append('- When you only want to preview a row window instead of materializing a selection result for later work, use `observe(...)`.')
@@ -3573,24 +3574,24 @@ summary | 8.333333333      1.040833
             ],
         )
 
-    if name == 'align_cases':
+    if name == 'align_caselbl':
         return render_custom_method_page(
             class_name,
             name,
             overloads,
             'Reorders the current frame so its case axis follows the supplied case order. This is the row-alignment helper to use when you already know the target case ordering you want to conform to.',
             [
-                '`new_cases` : `Thread`',
+                '`new_caselbl` : `Thread`',
                 '    Target case labels in the exact order you want the output rows to follow.',
             ],
             [
                 '`DataFrame`',
-                '    A new frame whose rows and case labels follow `new_cases`.',
+                '    A new frame whose rows and case labels follow `new_caselbl`.',
             ],
             [
                 (
                     'Match one frame to the case order of another frame.',
-                    df_a_scratch_base() + '\n\nauto out = scratch.align_cases(grades.cases());',
+                    df_a_scratch_base() + '\n\nauto out = scratch.align_caselbl(grades.caselbl());',
                     """============
      | score
 ------------
@@ -4676,9 +4677,26 @@ Sheet2 -> [3 cs x 3 feat]"""
             return '["id", "sales", "city"]'
         if n == 'levels':
             return '["student", "term"]'
+        if n == 'caselbl':
+            if 'const Thread& labels' in method.signature:
+                return """df.caselbl():
+["r0", "r1", "r2"]
+
+out.caselbl():
+["cs0", "cs1", "cs2"]"""
+            return '["r0", "r1", "r2"]'
+        if n == 'caselbl_':
+            return """df.caselbl():
+["cs0", "cs1", "cs2"]
+
+df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
         if n in {'columns', 'values', 'features'} and 'string_view' not in method.signature and 'initializer_list' not in method.signature:
             return '[Thread(id), Thread(sales), Thread(city)]'
-        if n in {'at', 'iat', 'cases'} and ('feature_name' in method.signature or 'feature_idx' in method.signature):
+        if n in {'at', 'iat'} and ('feature_name' in method.signature or 'feature_idx' in method.signature):
             return 'Accra' if 'feature_name' in method.signature else '1'
         if n == 'case_study':
             if 'feature_name' in method.signature:
@@ -4698,7 +4716,7 @@ Sheet2 -> [3 cs x 3 feat]"""
         if n in {'with_cases'}:
             return DF_WITH_CASES_OUT
         if n in {'with_cases_'}:
-            return """df.cases():
+            return """df.caselbl():
 ["cs0", "cs1", "cs2"]
 
 df.head():
@@ -4803,10 +4821,10 @@ West    Esi      84.0"""
             return DF_SET_CASES_OUT
         if n in {'reset_cases'}:
             return DF_RESET_CASES_OUT
-        if n in {'align_cases'}:
+        if n in {'align_caselbl'}:
             return DF_ALIGN_CASES_OUT
         if n == 'match':
-            return """matched.left.cases():
+            return """matched.left.caselbl():
 ["A", "C", "B"]
 
 matched.left.features():
@@ -4832,10 +4850,10 @@ r2  b        4.0"""
 1   100.0  Accra
 3    90.0  Kumasi"""
             if n == 'sort_cases':
-                return """with_cases.cases():
+                return """with_cases.caselbl():
 ["cs2", "cs0", "cs1"]
 
-out.cases():
+out.caselbl():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -5241,8 +5259,6 @@ id  sales  city
             return THREAD_TIME_OUT
         if n in {'isnull', 'notnull', 'isnan', 'isfinite'}:
             return '[true, false, true]'
-        if n == 'contains':
-            return THREAD_CONTAINS_OUT
         if n == 'distinct':
             return THREAD_DISTINCT_OUT
         if n == 'display_labels':
@@ -5251,7 +5267,7 @@ id  sales  city
             return THREAD_DISPLAY_NAME_OUT
         if n == 'describe':
             return THREAD_DESCRIBE_NUMERIC_OUT
-        if n == 'btw':
+        if n in {'btw', 'between'}:
             if 'double a, double b' in method.signature:
                 return THREAD_BTW_NUMERIC_OUT
             if 'std::string_view lo, std::string_view hi' in method.signature:
@@ -5270,7 +5286,7 @@ id  sales  city
             return THREAD_BFILL_OUT
         if n == 'dropna':
             return '[10.0, 30.0]'
-        if n in {'abs', 'clip', 'log', 'exp', 'fillna', 'fillna_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'lower', 'replace', 'window', 'cast', 'astype'}:
+        if n in {'abs', 'clip', 'log', 'exp', 'fillna', 'fillna_', 'head', 'tail', 'slice', 'take', 'filter', 'ffill', 'lower', 'replace', 'window', 'cast', 'astype', 'clear_caselbl', 'clear_caselbl_'}:
             return THREAD_SERIES_OUT if 'Note' not in method.signature and n not in {'lower', 'replace'} else THREAD_NOTE_OUT
         if n == 'count':
             return THREAD_COUNT_OUT
@@ -5290,6 +5306,16 @@ id  sales  city
             return THREAD_SERIES_OUT
         if n == 'show':
             return THREAD_SERIES_OUT
+        if n == 'has_caselbl':
+            return 'true'
+        if n == 'caselbl':
+            if 'const Thread& labels' in method.signature:
+                return """thread.caselbl():
+["row0", "row1", "row2"]
+
+out.caselbl():
+["A", "B", "C"]"""
+            return '["row0", "row1", "row2"]'
         if ret == 'Thread':
             if n in {'chars', 'lower', 'strip', 'lstrip', 'rstrip'}:
                 return THREAD_NOTE_OUT
@@ -6159,16 +6185,12 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.kindelize();'
         if n in {'nrows','ncols','nfeatures','values','feature_names'}:
             return df_base() + f'\n\nauto out = df.{n}();'
-        if n == 'cases':
-            if 'pair<' in sig:
-                return df_base() + '\n\nauto out = df.cases({0, 2});'
-            if 'feature_idx' in sig:
-                return df_base() + '\n\nauto out = df.cases(0, 0);'
-            if 'feature_name' in sig:
-                return df_base() + '\n\nauto out = df.cases(0, "city");'
-            if 'row' in sig:
-                return df_base() + '\n\nauto out = df.cases(0);'
-            return df_base() + '\n\nauto out = df.cases();'
+        if n == 'caselbl':
+            if 'const Thread& labels' in sig:
+                return df_base() + '\n\nauto labels = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.caselbl(labels);'
+            return df_base() + '\n\nauto out = df.caselbl();'
+        if n == 'caselbl_':
+            return df_base() + '\n\nauto labels = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.caselbl_(labels);'
         if n == 'levels':
             return df_case_levels_base() + '\n\nauto out = indexed.levels();'
         if n == 'level':
@@ -6333,7 +6355,7 @@ def example_for(class_name: str, method: Method) -> str:
             if 'std::int64_t start, std::int64_t stop' in sig:
                 return df_base() + '\n\nauto preview = df.observe(0, 2, false);\npreview.show();'
             return df_base() + '\n\nauto preview = df.observe(1, false);\npreview.show();'
-        if n in {'sort_values','sort_cases','top','bottom','repeated_cases','unique_cases','set_cases','reset_cases','align_cases'}:
+        if n in {'sort_values','sort_cases','top','bottom','repeated_cases','unique_cases','set_cases','reset_cases','align_caselbl'}:
             if n == 'sort_values':
                 if 'ArrangeSpec' in sig:
                     return df_base() + '\n\nauto out = df.sort_values({{.feature = "sales", .ascending = false}});'
@@ -6352,8 +6374,8 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\nauto out = df.set_cases("city");'
             if n == 'reset_cases':
                 return df_base() + '\n\nauto with_cases = df.set_cases("city", true);\nauto out = with_cases.reset_cases("case");'
-            if n == 'align_cases':
-                return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.align_cases(new_cases);'
+            if n == 'align_caselbl':
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_caselbl = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.align_caselbl(new_caselbl);'
         if n == 'match':
             return (
                 'auto left = pluss::table::DataFrame(\n'
@@ -7302,9 +7324,41 @@ def example_for(class_name: str, method: Method) -> str:
         return base + f'\n\nauto out = stmt.{n}();'
 
     if class_name == 'Thread':
-        if n in {'defined','unique','size','kind','dtype','value','values'}:
+        if n in {'defined','unique','size','kind','dtype','value','values','has_caselbl'}:
             base = thread_series()
             return base + f'\n\nauto out = thread.{n}();'
+        if n == 'caselbl':
+            if 'const Thread& labels' in sig:
+                return (
+                    'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}))'
+                    '.caselbl(pluss::table::Thread(pluss::make_note({"row0", "row1", "row2"})));\n'
+                    'auto labels = pluss::table::Thread(pluss::make_note({"A", "B", "C"}));\n\n'
+                    'auto out = thread.caselbl(labels);'
+                )
+            return (
+                'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}))'
+                '.caselbl(pluss::table::Thread(pluss::make_note({"row0", "row1", "row2"})));\n\n'
+                'auto out = thread.caselbl();'
+            )
+        if n == 'caselbl_':
+            return (
+                'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));\n'
+                'auto labels = pluss::table::Thread(pluss::make_note({"A", "B", "C"}));\n\n'
+                'thread.caselbl_(labels);'
+            )
+        if n in {'clear_caselbl', 'clear_caselbl_'}:
+            base = (
+                'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}))'
+                '.caselbl(pluss::table::Thread(pluss::make_note({"row0", "row1", "row2"})));'
+            )
+            return base + ('\n\nauto out = thread.clear_caselbl();' if n == 'clear_caselbl' else '\n\nthread.clear_caselbl_();')
+        if n == 'align':
+            return (
+                'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}))'
+                '.caselbl(pluss::table::Thread(pluss::make_note({"s1", "s2", "s3"})));\n'
+                'auto target = pluss::table::Thread(pluss::make_note({"s3", "s1", "s2"}));\n\n'
+                'auto out = thread.align(target);'
+            )
         if n == 'is_valid':
             return thread_series() + '\n\nauto out = thread.is_valid(0);'
         if n in {'isnull','notnull','isnan','isfinite','abs','log','exp','dropna','ffill','bfill','sum','mean','min','max'}:
@@ -7337,7 +7391,7 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'series','note','timeline','timeindex','as_series','as_note','as_timeline','as_timeindex'}:
             base = thread_series() if 'series' in n else thread_note() if 'note' in n else thread_time()
             return base + f'\n\nauto out = thread.{n}();'
-        if n in {'head','tail','slice','take','filter','window','cast','astype','bucketize','btw','contains','corr','count'}:
+        if n in {'head','tail','slice','take','filter','window','cast','astype','bucketize','btw','between','corr','count'}:
             if n == 'head': return thread_series() + '\n\nauto out = thread.head(2);'
             if n == 'tail': return thread_series() + '\n\nauto out = thread.tail(2);'
             if n == 'slice': return thread_series() + '\n\nauto out = thread.slice(0, 2);'
@@ -7346,7 +7400,6 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'window': return thread_series() + '\n\nauto out = thread.window(2, pluss::table::ThreadWindowOp::RollingMean, 1);'
             if n == 'cast': return 'auto thread = pluss::table::Thread(pluss::make_note({"1.0", "2.0", "3.0"}));\n\nauto out = thread.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);'
             if n == 'astype': return thread_series() + '\n\nauto out = thread.astype(pluss::codem::ScalarType::Float64);'
-            if n == 'contains': return 'auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));\n\nauto out = thread.contains("Acc");'
             if n == 'corr': return 'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));\nauto other = pluss::table::Thread(pluss::make_series({12.0, 18.0, 29.0}));\n\nauto out = thread.corr(other, pluss::table::ThreadCorrMethod::Pearson);'
             if n == 'count': return 'auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));\n\nauto out = thread.count(true);'
             if n == 'bucketize':
@@ -7355,11 +7408,11 @@ def example_for(class_name: str, method: Method) -> str:
                     'std::vector<double> bins{0.0, 20.0, 30.0, 40.0};\n\n'
                     'auto out = thread.bucketize(bins, {}, true, true);'
                 )
-            if n == 'btw':
+            if n in {'btw', 'between'}:
                 if 'double a, double b' in sig:
                     return (
                         'auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0, 101.0}));\n\n'
-                        'auto out = thread.btw(50.0, 100.0, true);'
+                        f'auto out = thread.{n}(50.0, 100.0, true);'
                     )
                 if 'std::string_view lo, std::string_view hi' in sig:
                     return (
@@ -7368,15 +7421,15 @@ def example_for(class_name: str, method: Method) -> str:
                         '    "2024-01-18T12:00:00Z",\n'
                         '    "2024-02-02T08:00:00Z",\n'
                         '}));\n\n'
-                        'auto out = thread.btw("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);'
+                        f'auto out = thread.{n}("2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z", true);'
                     )
                 return (
                     'auto thread = pluss::table::Thread(pluss::make_series({45.0, 65.0, 82.0}));\n'
                     'auto lo = pluss::table::Thread(pluss::make_series({40.0, 60.0, 80.0}));\n'
                     'auto hi = pluss::table::Thread(pluss::make_series({50.0, 70.0, 81.0}));\n\n'
-                    'auto out = thread.btw(lo, hi, true);'
+                    f'auto out = thread.{n}(lo, hi, true);'
                 )
-        if n in {'lower','replace','contains','strip','lstrip','rstrip','distinct','describe','display_labels','display_name'}:
+        if n in {'lower','replace','strip','lstrip','rstrip','distinct','describe','display_labels','display_name'}:
             if n == 'lower': return thread_note() + '\n\nauto out = thread.lower();'
             if n == 'replace': return thread_note() + '\n\nauto out = thread.replace("Tema", "Tamale");'
             if n == 'distinct': return 'auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Accra"}));\n\nauto out = thread.distinct(true);'
@@ -7395,7 +7448,7 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'std::string_view chars' in sig:
                     return 'auto thread = pluss::table::Thread(pluss::make_note({"#203930", "##7788", "4455##"}));\n\nauto out = thread.rstrip("#");'
                 return thread_note() + '\n\nauto out = thread.rstrip();'
-            return thread_note() + '\n\nauto out = thread.contains("Accra");'
+            return thread_note() + '\n\nauto out = thread.lower();'
         if n in {'year','month','day','hour','to_note_weekday'}:
             return thread_time() + f'\n\nauto out = thread.{n}();'
         if n in {'numeric_binary','compare','compare_rows'}:
@@ -7888,11 +7941,11 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Numeric payloads and validity masks stay on their source platform; key hashing and arbitrary-value distinct counting require one bulk host materialization.',
                 'Output key features retain their original Thread kind and dtype.',
             ])
-        if class_name == 'DataFrame' and n == 'align_cases':
+        if class_name == 'DataFrame' and n == 'align_caselbl':
             return bullets('Practical Behavior', [
-                '`align_cases(new_cases)` reorders rows by matching the existing case labels against `new_cases`.',
+                '`align_caselbl(new_caselbl)` reorders rows by matching the existing case labels against `new_caselbl`.',
                 'Every requested case label must already exist or the call throws.',
-                'The output case axis is rewritten to `new_cases`, so both the row order and the labels now follow that target order.',
+                'The output case axis is rewritten to `new_caselbl`, so both the row order and the labels now follow that target order.',
             ])
         if class_name == 'DataFrame' and n == 'match':
             return bullets('Matching Rules', [
@@ -7947,12 +8000,12 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'The row is positional here; it does not look up by case label.',
                 'Use this for quick single-cell inspection, not for typed column work.',
             ])
-        if class_name == 'DataFrame' and n == 'cases':
+        if class_name == 'DataFrame' and n == 'caselbl':
             return bullets('Practical Behavior', [
-                '`cases()` returns the current case axis exactly as it is stored on the frame.',
+                '`caselbl()` returns the current case axis exactly as it is stored on the frame.',
                 'The case axis can be numeric, note-based, timeline-based, or time-index based.',
-                'Use `case_study(...)` when you want row selection; use `cases()` when you want the row labels themselves.',
-                'When you need numeric row labels as data, call `cases().as_series()` explicitly so the conversion stays visible.',
+                'Use `case_study(...)` when you want row selection; use `caselbl()` when you want the row labels themselves.',
+                'When you need numeric row labels as data, call `caselbl().as_series()` explicitly so the conversion stays visible.',
             ])
         if class_name == 'DataFrame' and n == 'ceil_time':
             return bullets('Practical Behavior', [
@@ -7989,7 +8042,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'DataFrame' and n == 'conform':
             return bullets('Practical Behavior', [
-                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.cases()`.',
+                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.caselbl()`.',
                 'Both frames must have the same feature count and the same feature name set.',
                 'Use this before arithmetic or updates when structure compatibility matters more than preserving the current order.',
             ])
@@ -8331,11 +8384,6 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Thread-vs-thread comparisons are row-wise and require compatible sizes.',
                 'Text and temporal comparisons route through the payload-specific kernels rather than forcing everything through numeric conversion.',
             ])
-        if class_name == 'Thread' and n == 'contains':
-            return bullets('Practical Behavior', [
-                '`contains(needle)` is only valid for note-backed threads.',
-                'It returns a boolean series telling you which text entries contain the requested substring.',
-            ])
         if class_name == 'Thread' and n == 'corr':
             return bullets('Practical Behavior', [
                 '`corr(other, method)` requires both threads to be numeric series of the same size.',
@@ -8352,6 +8400,17 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`day()` is valid only for timeline/timeindex payloads.',
                 'The result preserves the validity mask while projecting the day component.',
+            ])
+        if class_name == 'Thread' and n == 'caselbl':
+            return bullets('Practical Behavior', [
+                '`caselbl()` returns the current thread label axis exactly as stored.',
+                'The setter overload returns a relabeled copy while preserving payload values and the validity mask.',
+                'Use this when you want to inspect or rewrite row labels on one thread directly.',
+            ])
+        if class_name == 'Thread' and n in {'clear_caselbl', 'clear_caselbl_'}:
+            return bullets('Practical Behavior', [
+                f'`{n}()` removes explicit case labels from the thread without rewriting the payload values.',
+                'Use the underscore form when the label removal should happen in place.',
             ])
         if class_name == 'Thread' and n == 'describe':
             return bullets('Practical Behavior', [

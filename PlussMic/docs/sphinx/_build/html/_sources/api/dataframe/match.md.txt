@@ -44,7 +44,7 @@ auto matched = left.match(right);
 ### Output
 
 ```text
-matched.left.cases():
+matched.left.caselbl():
 ["A", "C", "B"]
 
 matched.left.features():

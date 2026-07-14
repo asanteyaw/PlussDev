@@ -8,61 +8,157 @@
 DataFrame::extend_cases(const DataFrame& other, FrameMatchRule features = FrameMatchRule::Unite, bool fresh_cases = false, bool reject_repeated_cases = false) -> DataFrame
 ```
 
-## What It Does
+Append the cases of another frame under the current frame while reconciling the feature set.
 
-Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.
+`extend_cases(...)` is the vertical extension surface for table-shaped data. Use it when you want more rows from another frame and you need a policy for how the two feature sets should be combined.
 
 ## Parameters
 
 **other**
-    Frame whose cases should be appended beneath this frame.
+
+Frame whose cases should be appended after the current frame's cases.
 
 **features**
-    Feature matching rule for the non-extension axis. `Unite` keeps the stable union; `Common` keeps shared features.
+
+Feature reconciliation rule used before the append.
+
+- `FrameMatchRule::Unite`: keep all features seen on either side.
+- `FrameMatchRule::Common`: keep only shared features.
+- `FrameMatchRule::KeepLeft`: keep the left/current frame's feature set.
+- `FrameMatchRule::KeepRight`: keep the right/other frame's feature set.
 
 **fresh_cases**
-    When `true`, replace the appended case labels with contiguous integer cases starting at zero.
+
+Case-axis policy after the append.
+
+- `false`: preserve and concatenate the existing case labels.
+- `true`: replace the final case axis with a fresh integer-like sequence.
 
 **reject_repeated_cases**
-    When `true`, fail if preserving the two case axes would produce repeated case labels.
+
+Whether repeated case labels should be rejected after concatenation when the final case axis is being preserved.
 
 ## Returns
 
 `DataFrame`
-    Value produced by this call.
+    New frame whose cases are the current frame's cases followed by the other frame's cases.
+
+    Feature handling depends on `features`:
+
+    - `FrameMatchRule::Unite`: keep the union of feature names.
+    - `FrameMatchRule::Common`: keep only shared feature names.
+    - other feature-match rules follow the same structural interpretation used across frame matching.
+
+## See Also
+
+- <a href="combine.html"><code>DataFrame::combine</code></a>: horizontal or policy-driven composition instead of row appending.
+- <a href="align.html"><code>DataFrame::align</code></a>: conform the current frame before or after extending cases.
+
+## Notes
+
+When one side does not have a participating feature, PlussMic creates a null column segment of the correct length so the appended result remains rectangular.
+
+`fresh_cases = true` discards the original case labels and emits a fresh integer-like case axis for the appended result.
+
+This method appends rows. It does not try to match rows by label.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Append two frames while keeping the union of features.
 
 ```cpp
-auto left = pluss::table::DataFrame(
-    {{"x", pluss::make_series({1.0, 2.0})},
-     {"y", pluss::make_series({3.0, 4.0})}},
-    pluss::table::Thread(pluss::make_note({"A", "C"})));
-auto right = pluss::table::DataFrame(
-    {{"y", pluss::make_series({5.0, 6.0})},
-     {"z", pluss::make_series({7.0, 8.0})}},
-    pluss::table::Thread(pluss::make_note({"B", "A"})));
+using namespace pluss::table;
+
+auto left = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0})},
+    {"y", pluss::make_series({10.0, 20.0})},
+}, pluss::make_note({"A", "B"}));
+
+auto right = DataFrame({
+    {"y", pluss::make_series({30.0, 40.0})},
+    {"z", pluss::make_series({300.0, 400.0})},
+}, pluss::make_note({"C", "D"}));
+
 auto out = left.extend_cases(right);
 ```
 
 ### Output
 
 ```text
-case  x     y     z
-A     1.0   3.0   null
-C     2.0   4.0   null
-B     null  5.0   7.0
-A     null  6.0   8.0
+=======================
+     | x     y     z
+-----------------------
+A    | 1     10    NA
+B    | 2     20    NA
+C    | NA    30    300
+D    | NA    40    400
+-----------------------
+[4 cs x 3 feat]
 ```
 
-## Extension Rules
+Example 2. Keep only shared features while appending cases.
 
-- `extend_cases(other)` appends cases vertically and matches features by name.
-- The default `Unite` feature rule preserves left feature order, appends right-only features, and null-fills one-sided payloads.
-- Matching numeric features must have the same dtype and platform; other matching features must have the same Thread kind.
-- Use `fresh_cases=true` for contiguous integer cases or `reject_repeated_cases=true` to require a unique preserved case axis.
+```cpp
+using namespace pluss::table;
+
+auto left = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0})},
+    {"y", pluss::make_series({10.0, 20.0})},
+}, pluss::make_note({"A", "B"}));
+
+auto right = DataFrame({
+    {"y", pluss::make_series({30.0, 40.0})},
+    {"z", pluss::make_series({300.0, 400.0})},
+}, pluss::make_note({"C", "D"}));
+
+auto out = left.extend_cases(right, FrameMatchRule::Common);
+```
+
+### Output
+
+```text
+===========
+     | y
+-----------
+A    | 10
+B    | 20
+C    | 30
+D    | 40
+-----------
+[4 cs x 1 feat]
+```
+
+Example 3. Request fresh case labels after the append.
+
+```cpp
+using namespace pluss::table;
+
+auto left = DataFrame({
+    {"x", pluss::make_series({1.0, 2.0})},
+    {"y", pluss::make_series({10.0, 20.0})},
+}, pluss::make_note({"A", "B"}));
+
+auto right = DataFrame({
+    {"y", pluss::make_series({30.0, 40.0})},
+    {"z", pluss::make_series({300.0, 400.0})},
+}, pluss::make_note({"C", "D"}));
+
+auto out = left.extend_cases(right, FrameMatchRule::Unite, true);
+```
+
+### Output
+
+```text
+=======================
+     | x     y     z
+-----------------------
+0    | 1     10    NA
+1    | 2     20    NA
+2    | NA    30    300
+3    | NA    40    400
+-----------------------
+[4 cs x 3 feat]
+```
 
 
 

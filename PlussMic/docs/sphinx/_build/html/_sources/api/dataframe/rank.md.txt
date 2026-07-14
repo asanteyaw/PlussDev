@@ -56,9 +56,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="radd.html">
+  <a class="prev-link" href="rand.html">
     <span class="label">Previous</span>
-    <span class="title">radd</span>
+    <span class="title">rand</span>
   </a>
   <a class="next-link" href="rdiv.html">
     <span class="label">Next</span>

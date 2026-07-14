@@ -1,0 +1,30 @@
+summary = """
+Remove explicit case labels from the current thread in place.
+
+Use `Thread::clear_caselbl_()` when the payload should keep its values but the label removal should mutate the current thread object.
+"""
+
+returns = """
+`Thread&`
+    Reference to the same thread after its explicit case labels have been removed.
+"""
+
+notes = [
+  """
+Only the label axis is cleared. The payload values and validity mask remain unchanged.
+"""
+]
+
+[[examples]]
+title = "Clear thread labels in place."
+code = """
+using namespace pluss::table;
+
+auto thread = Thread(pluss::make_series({10.0, 20.0, 30.0}))
+    .caselbl(Thread(pluss::make_note({"row0", "row1", "row2"})));
+
+thread.clear_caselbl_();
+"""
+output = """
+[10, 20, 30]
+"""

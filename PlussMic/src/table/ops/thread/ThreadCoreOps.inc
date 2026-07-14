@@ -198,19 +198,22 @@ Thread& Thread::clear_display_labels_() {
 }
 
 bool Thread::has_caselbl() const {
-  return has_cases();
+  return defined();
 }
 
 Thread Thread::caselbl() const {
-  return cases();
+  if (has_display_labels()) {
+    return display_labels();
+  }
+  return default_thread_cases_(size());
 }
 
 Thread Thread::caselbl(const Thread& labels) const {
-  return cases(labels);
+  return with_display_labels(labels);
 }
 
 Thread& Thread::caselbl_(const Thread& labels) {
-  return cases_(labels);
+  return with_display_labels_(labels);
 }
 
 Thread Thread::rangelbl() const {
@@ -225,42 +228,15 @@ Thread& Thread::rangelbl_() {
 }
 
 Thread Thread::clear_caselbl() const {
-  return clear_cases();
+  return clear_display_labels();
 }
 
 Thread& Thread::clear_caselbl_() {
-  return clear_cases_();
+  return clear_display_labels_();
 }
 
 Thread Thread::align(const Thread& target_labels, const AlignOptions& options) const {
   return align_thread_to_label_values_(*this, target_labels, options, "Thread::align");
-}
-
-bool Thread::has_cases() const {
-  return defined();
-}
-
-Thread Thread::cases() const {
-  if (has_display_labels()) {
-    return display_labels();
-  }
-  return default_thread_cases_(size());
-}
-
-Thread Thread::cases(const Thread& labels) const {
-  return with_display_labels(labels);
-}
-
-Thread& Thread::cases_(const Thread& labels) {
-  return with_display_labels_(labels);
-}
-
-Thread Thread::clear_cases() const {
-  return clear_display_labels();
-}
-
-Thread& Thread::clear_cases_() {
-  return clear_display_labels_();
 }
 
 bool Thread::has_display_name() const {
@@ -820,6 +796,155 @@ ThreadView Thread::tail(std::int64_t n, bool render) const {
 ThreadView Thread::view(std::int64_t start, std::int64_t stop, bool render) const {
   auto out = slice(start, stop);
   return ThreadView(std::move(out), render, "view");
+}
+
+ThreadView Thread::top(std::int64_t n, bool render) const {
+  PLUSS_CHECK(n >= 0, "Thread::top: n must be >= 0");
+  const auto clipped = std::clamp<std::int64_t>(n, 0, size());
+  auto out = sort_values(false, true).slice(0, clipped);
+  return ThreadView(std::move(out), render, "top");
+}
+
+ThreadView Thread::bottom(std::int64_t n, bool render) const {
+  PLUSS_CHECK(n >= 0, "Thread::bottom: n must be >= 0");
+  const auto clipped = std::clamp<std::int64_t>(n, 0, size());
+  auto out = sort_values(true, true).slice(0, clipped);
+  return ThreadView(std::move(out), render, "bottom");
+}
+
+namespace {
+
+std::optional<pluss::Series> append_validity_mask_(const Thread& left,
+                                                   const Thread& right,
+                                                   pluss::codem::Platform platform) {
+  if (!detail::has_validity_mask(left) && !detail::has_validity_mask(right)) {
+    return std::nullopt;
+  }
+  auto left_mask = detail::has_validity_mask(left)
+      ? *detail::validity_mask(left)
+      : pluss::Series::ones({left.size()}, pluss::codem::ScalarType::Bool, platform);
+  auto right_mask = detail::has_validity_mask(right)
+      ? *detail::validity_mask(right)
+      : pluss::Series::ones({right.size()}, pluss::codem::ScalarType::Bool, platform);
+  if (left_mask.platform() != platform) {
+    left_mask = left_mask.to(platform);
+  }
+  if (right_mask.platform() != platform) {
+    right_mask = right_mask.to(platform);
+  }
+  std::vector<pluss::Series> tail{right_mask};
+  return left_mask.unite(tail, 0);
+}
+
+Thread append_payload_(const Thread& left, const Thread& right, std::string_view where) {
+  PLUSS_CHECK(left.kind() == right.kind(),
+              std::string(where) + ": payload kinds must match");
+  switch (left.kind()) {
+    case ThreadKind::Series: {
+      PLUSS_CHECK(left.as_series().scalar_type() == right.as_series().scalar_type(),
+                  std::string(where) + ": Series dtypes must match");
+      PLUSS_CHECK(left.as_series().platform() == right.as_series().platform(),
+                  std::string(where) + ": Series platforms must match");
+      std::vector<pluss::Series> tail{right.as_series()};
+      auto values = left.as_series().unite(tail, 0);
+      return Thread(values, append_validity_mask_(left, right, values.platform()));
+    }
+    case ThreadKind::Note: {
+      std::vector<std::string> values;
+      values.reserve(static_cast<std::size_t>(left.size() + right.size()));
+      for (const auto value : left.as_note().vector()) {
+        values.emplace_back(value);
+      }
+      for (const auto value : right.as_note().vector()) {
+        values.emplace_back(value);
+      }
+      return Thread(pluss::make_note(values),
+                    append_validity_mask_(left, right, pluss::codem::Platform::CPU));
+    }
+    case ThreadKind::Timeline: {
+      PLUSS_CHECK(thread_payload_platform_(left) == thread_payload_platform_(right),
+                  std::string(where) + ": Timeline platforms must match");
+      auto values = left.as_timeline().concat(right.as_timeline());
+      return Thread(values, append_validity_mask_(left, right, thread_payload_platform_(left)));
+    }
+    case ThreadKind::TimeIndex: {
+      PLUSS_CHECK(thread_payload_platform_(left) == thread_payload_platform_(right),
+                  std::string(where) + ": TimeIndex platforms must match");
+      auto values = left.as_timeindex()
+                        .timeline()
+                        .concat(right.as_timeindex().timeline())
+                        .to_timeindex(false);
+      return Thread(values, append_validity_mask_(left, right, thread_payload_platform_(left)));
+    }
+  }
+  PLUSS_FAIL(std::string(where) + ": unsupported Thread kind");
+}
+
+std::vector<std::int64_t> thread_sample_indices_(std::int64_t total,
+                                                 std::int64_t draw,
+                                                 bool replace,
+                                                 std::mt19937_64& rng) {
+  std::vector<std::int64_t> idx;
+  idx.reserve(static_cast<std::size_t>(draw));
+  if (draw == 0 || total == 0) {
+    return idx;
+  }
+  if (replace) {
+    std::uniform_int_distribution<std::int64_t> dist(0, total - 1);
+    for (std::int64_t i = 0; i < draw; ++i) {
+      idx.push_back(dist(rng));
+    }
+    return idx;
+  }
+
+  idx.resize(static_cast<std::size_t>(total));
+  std::iota(idx.begin(), idx.end(), std::int64_t{0});
+  std::shuffle(idx.begin(), idx.end(), rng);
+  idx.resize(static_cast<std::size_t>(draw));
+  return idx;
+}
+
+} // namespace
+
+Thread Thread::append(const Thread& other) const {
+  auto out = append_payload_(*this, other, "Thread::append");
+  PLUSS_CHECK(has_caselbl() == other.has_caselbl(),
+              "Thread::append: both Threads must either have case labels or both be unlabeled");
+  if (has_caselbl()) {
+    out = out.caselbl(append_payload_(caselbl(), other.caselbl(), "Thread::append(caselbl)"));
+  }
+  return out;
+}
+
+Thread Thread::sample(std::int64_t n) const {
+  return sample(n, std::random_device{}(), false);
+}
+
+Thread Thread::sample(std::int64_t n, std::uint64_t random_state, bool replace) const {
+  PLUSS_CHECK(n >= 0, "Thread::sample: n must be >= 0");
+  const auto total = size();
+  const auto draw = replace ? n : std::min<std::int64_t>(n, total);
+  std::mt19937_64 rng(random_state);
+  return take(thread_sample_indices_(total, draw, replace, rng));
+}
+
+Thread Thread::sample_fraction_(double frac,
+                                std::optional<std::uint64_t> random_state,
+                                bool replace) const {
+  PLUSS_CHECK(std::isfinite(frac), "Thread::sample: frac must be finite");
+  PLUSS_CHECK(frac >= 0.0, "Thread::sample: frac must be >= 0");
+  PLUSS_CHECK(replace || frac <= 1.0, "Thread::sample: frac > 1 requires replace = true");
+  const auto draw = static_cast<std::int64_t>(
+      std::llround(frac * static_cast<double>(size())));
+  return sample(draw, random_state.value_or(std::random_device{}()), replace);
+}
+
+Thread Thread::shuffle(std::optional<std::uint64_t> random_state) const {
+  std::vector<std::int64_t> idx(static_cast<std::size_t>(size()));
+  std::iota(idx.begin(), idx.end(), std::int64_t{0});
+  std::mt19937_64 rng(random_state.value_or(std::random_device{}()));
+  std::shuffle(idx.begin(), idx.end(), rng);
+  return take(idx);
 }
 
 Thread Thread::shift(std::int64_t periods) const {
@@ -1449,6 +1574,16 @@ ThreadValue Thread::sum() const {
   return ThreadValue(Thread(s.sum().reshape({1})));
 }
 
+ThreadValue Thread::prod() const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::prod is only valid for Series payload");
+  auto s = as_series();
+  if (has_validity_mask()) {
+    s = s.masked_select(notnull().as_series());
+  }
+  PLUSS_CHECK(s.numel() > 0, "Thread::prod on an empty (all-null) selection");
+  return ThreadValue(Thread(s.prod().reshape({1})));
+}
+
 ThreadValue Thread::count(bool count_true) const {
   if (kind() == ThreadKind::Series) {
     auto s = as_series();
@@ -1583,6 +1718,38 @@ ThreadValue Thread::max() const {
     }
   }
   PLUSS_FAIL("Thread::max: unsupported payload kind");
+}
+
+ThreadValue Thread::csmin() const {
+  PLUSS_CHECK(size() > 0, "Thread::csmin on an empty Thread");
+  std::int64_t best = -1;
+  for (std::int64_t row = 0; row < size(); ++row) {
+    if (!is_valid(row)) {
+      continue;
+    }
+    if (best < 0 || compare_rows(row, best, true) < 0) {
+      best = row;
+    }
+  }
+  PLUSS_CHECK(best >= 0, "Thread::csmin on an all-null Thread");
+  const std::array<std::int64_t, 1> index{best};
+  return ThreadValue(caselbl().take(std::span<const std::int64_t>(index.data(), index.size())));
+}
+
+ThreadValue Thread::csmax() const {
+  PLUSS_CHECK(size() > 0, "Thread::csmax on an empty Thread");
+  std::int64_t best = -1;
+  for (std::int64_t row = 0; row < size(); ++row) {
+    if (!is_valid(row)) {
+      continue;
+    }
+    if (best < 0 || compare_rows(row, best, true) > 0) {
+      best = row;
+    }
+  }
+  PLUSS_CHECK(best >= 0, "Thread::csmax on an all-null Thread");
+  const std::array<std::int64_t, 1> index{best};
+  return ThreadValue(caselbl().take(std::span<const std::int64_t>(index.data(), index.size())));
 }
 
 ThreadValue Thread::var(bool unbiased) const {
@@ -2794,6 +2961,139 @@ TimeWindowStatistic to_time_window_stat_(WindowStatistic statistic, std::string_
   }
 }
 
+pluss::TimeIndex ts_axis_to_index_(const Thread& axis, std::string_view where) {
+  PLUSS_CHECK(axis.defined(), std::string(where) + ": time axis is undefined");
+  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
+              std::string(where) + ": time axis must be Timeline or TimeIndex");
+  return axis.kind() == ThreadKind::TimeIndex ? axis.as_timeindex()
+                                              : axis.as_timeline().to_timeindex(false);
+}
+
+pluss::TimeIndex::AsofDirection ts_asof_direction_(TsAlignMode mode) {
+  switch (mode) {
+    case TsAlignMode::Backward:
+      return pluss::TimeIndex::AsofDirection::Backward;
+    case TsAlignMode::Forward:
+      return pluss::TimeIndex::AsofDirection::Forward;
+    case TsAlignMode::Nearest:
+      return pluss::TimeIndex::AsofDirection::Nearest;
+    case TsAlignMode::Exact:
+    default:
+      return pluss::TimeIndex::AsofDirection::Backward;
+  }
+}
+
+void ts_require_numeric_thread_(const Thread& value, std::string_view where) {
+  PLUSS_CHECK(value.defined(), std::string(where) + ": values are undefined");
+  PLUSS_CHECK(value.kind() == ThreadKind::Series && is_numeric_series_type(value.as_series()),
+              std::string(where) + ": values must be numeric Series");
+}
+
+Thread ts_align_right_to_left_(const Thread& left,
+                               const Thread& right,
+                               const Thread& left_axis,
+                               const Thread& right_axis,
+                               TsAlignMode mode,
+                               std::string_view where) {
+  ts_require_numeric_thread_(left, where);
+  ts_require_numeric_thread_(right, where);
+  const auto left_ti = ts_axis_to_index_(left_axis, where);
+  const auto right_ti = ts_axis_to_index_(right_axis, where);
+  const auto n_left = left_ti.size();
+  const auto n_right = right_ti.size();
+  PLUSS_CHECK(left.size() == n_left,
+              std::string(where) + ": left values and left time axis length mismatch");
+  PLUSS_CHECK(right.size() == n_right,
+              std::string(where) + ": right values and right time axis length mismatch");
+
+  if (mode == TsAlignMode::Exact) {
+    if (n_right == 0) {
+      const auto platform = right.as_series().platform();
+      return Thread(pluss::full({n_left},
+                                std::numeric_limits<double>::quiet_NaN(),
+                                pluss::Config{}.with_dtype(pluss::codem::ScalarType::Float64).with_platform(platform)),
+                    pluss::Series::zeros({n_left}, pluss::codem::ScalarType::Bool, platform))
+          .caselbl(left_axis);
+    }
+
+    const auto left_ticks = left_ti.timeline().epoch_nanos().to_vec<std::int64_t>();
+    const auto right_ticks = right_ti.timeline().epoch_nanos().to_vec<std::int64_t>();
+    std::unordered_map<std::int64_t, std::vector<std::int64_t>> positions;
+    positions.reserve(right_ticks.size());
+    for (std::int64_t row = 0; row < n_right; ++row) {
+      const auto tick = right_ticks[static_cast<std::size_t>(row)];
+      if (tick != pluss::Timeline::kNaT) {
+        positions[tick].push_back(row);
+      }
+    }
+
+    std::unordered_map<std::int64_t, std::size_t> seen;
+    seen.reserve(left_ticks.size());
+    std::vector<std::int64_t> rows;
+    std::vector<bool> present;
+    rows.reserve(left_ticks.size());
+    present.reserve(left_ticks.size());
+    for (const auto tick : left_ticks) {
+      const auto occurrence = seen[tick]++;
+      const auto found = positions.find(tick);
+      if (tick != pluss::Timeline::kNaT && found != positions.end() && occurrence < found->second.size()) {
+        const auto row = found->second[occurrence];
+        rows.push_back(row);
+        present.push_back(right.is_valid(row));
+      } else {
+        rows.push_back(0);
+        present.push_back(false);
+      }
+    }
+
+    auto out = right.take(std::span<const std::int64_t>(rows.data(), rows.size()));
+    auto valid = bool_series_from_bools(present);
+    const auto platform = right.as_series().platform();
+    if (valid.platform() != platform) {
+      valid = valid.to(platform);
+    }
+    if (detail::has_validity_mask(out)) {
+      auto prior = *detail::validity_mask(out);
+      if (prior.platform() != platform) {
+        prior = prior.to(platform);
+      }
+      valid = valid.logical_and(prior);
+    }
+    auto values = out.as_series().to(pluss::codem::ScalarType::Float64);
+    return Thread(values.masked_fill(valid.logical_not(), std::numeric_limits<double>::quiet_NaN()),
+                  valid)
+        .caselbl(left_axis);
+  }
+
+  pluss::Series idx;
+  if (n_right == 0) {
+    idx = pluss::full({n_left}, -1.0, pluss::codem::ScalarType::Int64);
+  } else {
+    idx = left_ti.join_asof(right_ti, ts_asof_direction_(mode), nullptr, true);
+  }
+
+  auto valid = idx.ge(0.0);
+  if (n_left == 0 || n_right == 0) {
+    const auto platform = right.as_series().platform();
+    return Thread(pluss::full({n_left},
+                              std::numeric_limits<double>::quiet_NaN(),
+                              pluss::Config{}.with_dtype(pluss::codem::ScalarType::Float64).with_platform(platform)),
+                  valid.to(platform));
+  }
+
+  const auto platform = right.as_series().platform();
+  const auto safe_idx = idx.to(pluss::codem::ScalarType::Float64)
+                            .clamp(0.0, static_cast<double>(n_right - 1))
+                            .to(pluss::codem::ScalarType::Int64)
+                            .to(platform);
+  const auto gathered = right.as_series().to(pluss::codem::ScalarType::Float64).index_select(0, safe_idx);
+  auto gathered_valid = right.notnull().as_series().to(platform).index_select(0, safe_idx);
+  auto out_valid = valid.to(platform).logical_and(gathered_valid);
+  auto out = Thread(gathered.masked_fill(out_valid.logical_not(), std::numeric_limits<double>::quiet_NaN()),
+                    out_valid);
+  return out.caselbl(left_axis);
+}
+
 } // namespace
 
 const pluss::Series& TimeSeriesAccessor::series_payload_(const char* op) const {
@@ -2894,6 +3194,71 @@ Thread TimeSeriesAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode, 
   return Thread(pluss::subsp::stats::ts::fill_gaps(series_payload_("fill_gaps"), mode, constant));
 }
 
+Thread TimeSeriesAccessor::align_to(const Thread& source_axis,
+                                    const Thread& target_axis,
+                                    TsAlignMode mode) const {
+  const auto& source = series_payload_("align_to");
+  const auto target_ti = ts_axis_to_index_(target_axis, "TimeSeriesAccessor::align_to");
+  const auto platform = source.platform();
+  auto target_values = Thread(
+      pluss::Series::zeros({target_ti.size()}, pluss::codem::ScalarType::Float64, platform));
+  return ts_align_right_to_left_(
+      target_values, base_, target_axis, source_axis, mode, "TimeSeriesAccessor::align_to");
+}
+
+Thread TimeSeriesAccessor::align_to(const Thread& source_axis,
+                                    const Thread& target_axis,
+                                    TsAlignMode mode,
+                                    pluss::subsp::stats::ts::GapFillMode fill_mode,
+                                    std::optional<double> constant) const {
+  return align_to(source_axis, target_axis, mode).ts().fill_gaps(fill_mode, constant);
+}
+
+DataFrame TimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) const {
+  PLUSS_CHECK(lags.size() > 0, "TimeSeriesAccessor::lag_block: expected at least one lag");
+  const auto& series = series_payload_("lag_block");
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(lags.size());
+  for (const auto lag : lags) {
+    out.emplace_back("lag" + std::to_string(lag), Thread(pluss::subsp::stats::ts::lag(series, lag)));
+  }
+  return DataFrame(std::move(out), base_.caselbl());
+}
+
+DataFrame TimeSeriesAccessor::rolling_block(pluss::msharp::RangeView::Int windows,
+                                            const TsRollingBlockOptions& options) const {
+  PLUSS_CHECK(windows.size() > 0, "TimeSeriesAccessor::rolling_block: expected at least one window");
+  const auto& series = series_payload_("rolling_block");
+  std::vector<std::pair<std::string, Thread>> out;
+  for (const auto w : windows) {
+    if (options.include_mean) {
+      out.emplace_back("roll_mean_w" + std::to_string(w),
+                       Thread(pluss::subsp::stats::ts::rolling_mean(series, w, options.min_periods)));
+    }
+    if (options.include_std) {
+      out.emplace_back("roll_std_w" + std::to_string(w),
+                       Thread(pluss::subsp::stats::ts::rolling_std(series, w, options.min_periods)));
+    }
+    if (options.include_min) {
+      out.emplace_back("roll_min_w" + std::to_string(w),
+                       Thread(pluss::subsp::stats::ts::rolling_min(series, w, options.min_periods)));
+    }
+    if (options.include_max) {
+      out.emplace_back("roll_max_w" + std::to_string(w),
+                       Thread(pluss::subsp::stats::ts::rolling_max(series, w, options.min_periods)));
+    }
+    if (options.include_sum) {
+      out.emplace_back("roll_sum_w" + std::to_string(w),
+                       Thread(pluss::subsp::stats::ts::rolling_sum(series, w, options.min_periods)));
+    }
+    if (options.include_var) {
+      out.emplace_back("roll_var_w" + std::to_string(w),
+                       Thread(pluss::subsp::stats::ts::rolling_var(series, w, options.min_periods)));
+    }
+  }
+  return DataFrame(std::move(out), base_.caselbl());
+}
+
 namespace {
 
 std::string_view time_series_resample_op_key_(pluss::subsp::stats::ts::ResampleOp op) {
@@ -2950,4 +3315,84 @@ TimeSeriesResample TimeSeriesAccessor::resample(
       .labels = Thread(bins.labels),
       .values = Thread(values),
   };
+}
+
+Thread TimeSeriesAccessor::add(const Thread& other,
+                               const Thread& left_axis,
+                               const Thread& right_axis,
+                               TsAlignMode mode) const {
+  (void)series_payload_("add");
+  return base_.add(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::add"));
+}
+
+Thread TimeSeriesAccessor::sub(const Thread& other,
+                               const Thread& left_axis,
+                               const Thread& right_axis,
+                               TsAlignMode mode) const {
+  (void)series_payload_("sub");
+  return base_.sub(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::sub"));
+}
+
+Thread TimeSeriesAccessor::mul(const Thread& other,
+                               const Thread& left_axis,
+                               const Thread& right_axis,
+                               TsAlignMode mode) const {
+  (void)series_payload_("mul");
+  return base_.mul(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::mul"));
+}
+
+Thread TimeSeriesAccessor::div(const Thread& other,
+                               const Thread& left_axis,
+                               const Thread& right_axis,
+                               TsAlignMode mode) const {
+  (void)series_payload_("div");
+  return base_.div(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::div"));
+}
+
+Thread TimeSeriesAccessor::eq(const Thread& other,
+                              const Thread& left_axis,
+                              const Thread& right_axis,
+                              TsAlignMode mode) const {
+  (void)series_payload_("eq");
+  return base_.eq(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::eq"));
+}
+
+Thread TimeSeriesAccessor::ne(const Thread& other,
+                              const Thread& left_axis,
+                              const Thread& right_axis,
+                              TsAlignMode mode) const {
+  (void)series_payload_("ne");
+  return base_.ne(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::ne"));
+}
+
+Thread TimeSeriesAccessor::lt(const Thread& other,
+                              const Thread& left_axis,
+                              const Thread& right_axis,
+                              TsAlignMode mode) const {
+  (void)series_payload_("lt");
+  return base_.lt(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::lt"));
+}
+
+Thread TimeSeriesAccessor::le(const Thread& other,
+                              const Thread& left_axis,
+                              const Thread& right_axis,
+                              TsAlignMode mode) const {
+  (void)series_payload_("le");
+  return base_.le(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::le"));
+}
+
+Thread TimeSeriesAccessor::gt(const Thread& other,
+                              const Thread& left_axis,
+                              const Thread& right_axis,
+                              TsAlignMode mode) const {
+  (void)series_payload_("gt");
+  return base_.gt(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::gt"));
+}
+
+Thread TimeSeriesAccessor::ge(const Thread& other,
+                              const Thread& left_axis,
+                              const Thread& right_axis,
+                              TsAlignMode mode) const {
+  (void)series_payload_("ge");
+  return base_.ge(ts_align_right_to_left_(base_, other, left_axis, right_axis, mode, "TimeSeriesAccessor::ge"));
 }

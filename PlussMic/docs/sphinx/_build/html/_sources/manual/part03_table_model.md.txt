@@ -136,7 +136,7 @@ The case axis is the row label/index axis. It may be default integer labels or
 loaded from a feature.
 
 ```cpp
-auto cases = df.cases();
+auto cases = df.caselbl();
 auto first_case = df.case_study(0);
 auto first_ten = df.case_study(0, 10);
 

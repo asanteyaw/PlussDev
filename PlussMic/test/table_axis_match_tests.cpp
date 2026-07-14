@@ -455,6 +455,26 @@ void test_hierarchical_case_axis_engine() {
   expect(reset.has_feature("region_case") && reset.has_feature("account_case") &&
              !reset.has_levels(),
          "reset_cases should materialize levels as ordinary features and clear hierarchy");
+
+  const auto collision_left = DataFrame({
+      {"region", Thread(pluss::make_note({"A"}))},
+      {"account", Thread(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{10.0}))},
+  }).set_cases({"region", "account"}, false, "\x1F")
+    .features({"value"});
+  const auto collision_right = DataFrame({
+      {"region", Thread(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
+      {"account", Thread(pluss::make_note({"C"}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0}))},
+  }).set_cases({"region", "account"}, false, "\x1F")
+    .features({"value"});
+  const auto collision = collision_left.add(
+      collision_right,
+      pluss::table::AlignOptions{.align = pluss::table::AlignBy::Both});
+  expect(collision.ncases() == 2 &&
+             !collision.features("value").is_valid(0) &&
+             !collision.features("value").is_valid(1),
+         "structured case alignment should use typed level tuples, not flattened display labels");
 }
 
 void test_stack_unstack_hierarchical_cases() {
@@ -661,6 +681,47 @@ void test_case_aligned_set_and_reduction_axis_rules() {
          "plain 1D length-one Thread assignment should not broadcast or align by default");
 }
 
+void test_align_reindex_equivalent() {
+  const auto frame = make_frame(
+      {
+          {"A", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"B", Thread(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+      },
+      {"r1", "r2"});
+
+  const auto cases = frame.align_caselbl(Thread(pluss::make_note({"r2", "missing", "r1"})));
+  expect(cases.caselbl().as_note().vector() ==
+             std::vector<std::string_view>({"r2", "missing", "r1"}),
+         "align_caselbl should conform the case-label axis exactly");
+  const auto case_values = cases.features("A").as_series().to_vec<double>();
+  expect(case_values[0] == 20.0 && case_values[2] == 10.0,
+         "align_caselbl should gather existing rows by case label");
+  expect(pluss::table::detail::validity_mask(cases.features("A"))->to_vec<bool>() ==
+             std::vector<bool>({true, false, true}),
+         "align_caselbl should mark missing case labels null");
+
+  const auto both = frame.align(DataFrame::AlignSpec{
+      .caselbl = Thread(pluss::make_note({"r2", "missing"})),
+      .features = {"B", "C", "A"},
+      .fill = 0.0,
+  });
+  expect(both.features() == std::vector<std::string>({"B", "C", "A"}),
+         "align should conform feature labels exactly");
+  expect(both.caselbl().as_note().vector() ==
+             std::vector<std::string_view>({"r2", "missing"}),
+         "align should conform case labels exactly");
+  expect(both.features("A").as_series().to_vec<double>() ==
+             std::vector<double>({20.0, 0.0}),
+         "align(fill) should fill missing numeric case-label rows");
+  expect(both.features("C").as_series().to_vec<double>() ==
+             std::vector<double>({0.0, 0.0}),
+         "align(fill) should create filled numeric features for missing feature labels");
+  expect(!pluss::table::detail::has_validity_mask(both.features("C")) ||
+             pluss::table::detail::validity_mask(both.features("C"))->to_vec<bool>() ==
+                 std::vector<bool>({true, true}),
+         "align(fill) missing numeric features should be valid filled values");
+}
+
 } // namespace
 
 int main() {
@@ -679,5 +740,6 @@ int main() {
   test_category_factor();
   test_streamed_csv_case_batches();
   test_case_aligned_set_and_reduction_axis_rules();
+  test_align_reindex_equivalent();
   return 0;
 }

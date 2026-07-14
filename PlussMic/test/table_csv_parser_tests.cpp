@@ -1609,8 +1609,8 @@ void test_versatile_dataframe_families() {
          "set_cases(drop_feature=true) should move feature to case axis");
   const auto case_reset = case_df.reset_cases("job_case");
   expect(case_reset.has_feature("job_case"), "reset_cases should restore previous case axis as feature");
-  const auto re_aligned = case_reset.align_cases(case_reset.caselbl());
-  expect(re_aligned.ncases() == case_reset.ncases(), "align_cases should reorder by provided case axis");
+  const auto re_aligned = case_reset.align_caselbl(case_reset.caselbl());
+  expect(re_aligned.ncases() == case_reset.ncases(), "align_caselbl should conform to provided case labels");
   const auto jleft = df.features({"age", "job"}).head(6, false);
   const auto jright = df.features({"age", "balance"}).head(6, false);
   const auto joined = jleft.join(jright, "_r");
@@ -1638,10 +1638,33 @@ void test_versatile_dataframe_families() {
          "conform should align case axis to target frame");
   const auto reindexed_like = jleft.conform(reordered);
   expect(reindexed_like.features() == reordered.features(),
-         "reindex_like should alias conform");
-  const auto reindexed_cases = jleft.align_cases(jleft.caselbl());
+         "conform should provide frame-shape matching");
+  const auto reindexed_cases = jleft.align_caselbl(jleft.caselbl());
   expect(reindexed_cases.ncases() == jleft.ncases(),
-         "reindex_cases should alias align_cases");
+         "align_caselbl should preserve existing labels when target matches");
+  const auto align_base = DataFrame({
+      {"A", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+      {"B", pluss::table::Thread(pluss::make_series({100.0, 200.0}))},
+  }, pluss::make_note({"r1", "r2"}));
+  const auto aligned_labels = align_base.align_caselbl(pluss::table::Thread(pluss::make_note({"r2", "missing", "r1"})));
+  expect(aligned_labels.ncases() == 3 && aligned_labels.features("A").is_valid(0) &&
+             !aligned_labels.features("A").is_valid(1) && aligned_labels.features("A").is_valid(2),
+         "align_caselbl should insert nulls for missing case labels");
+  const auto aligned_label_vals = aligned_labels.features("A").as_series().to_vec<double>();
+  expect(std::fabs(aligned_label_vals[0] - 20.0) < 1e-9 && std::fabs(aligned_label_vals[2] - 10.0) < 1e-9,
+         "align_caselbl should reorder matched case labels");
+  const auto align_filled =
+      align_base.align(DataFrame::AlignSpec{.caselbl = pluss::table::Thread(pluss::make_note({"r2", "missing"})),
+                                            .features = {"B", "C", "A"},
+                                            .fill = 0.0});
+  expect(align_filled.features()[0] == "B" && align_filled.features()[1] == "C" &&
+             align_filled.features()[2] == "A",
+         "align should conform feature labels and preserve requested order");
+  expect(align_filled.features("C").is_valid(0) && align_filled.features("C").is_valid(1),
+         "align(fill) should fill entirely missing numeric features");
+  const auto filled_a = align_filled.features("A").as_series().to_vec<double>();
+  expect(std::fabs(filled_a[0] - 20.0) < 1e-9 && std::fabs(filled_a[1]) < 1e-9,
+         "align(fill) should fill missing case-label rows for numeric features");
   const auto sleft = df.features({"job", "age"}).head(12, false);
   const auto sright = df.features({"job", "duration"}).head(12, false);
   const auto stitched = sleft.unify("job", sright, "job", "common", "_rhs");

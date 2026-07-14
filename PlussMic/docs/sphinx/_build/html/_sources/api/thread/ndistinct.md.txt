@@ -44,8 +44,8 @@ auto out = thread.ndistinct(true);
     <span class="label">Previous</span>
     <span class="title">ncases</span>
   </a>
-  <a class="next-link" href="normalize.html">
+  <a class="next-link" href="ne.html">
     <span class="label">Next</span>
-    <span class="title">normalize</span>
+    <span class="title">ne</span>
   </a>
 </div>

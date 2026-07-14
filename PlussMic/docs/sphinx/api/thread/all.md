@@ -58,9 +58,9 @@ false
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="abs.html">
+  <a class="prev-link" href="align.html">
     <span class="label">Previous</span>
-    <span class="title">abs</span>
+    <span class="title">align</span>
   </a>
   <a class="next-link" href="any.html">
     <span class="label">Next</span>

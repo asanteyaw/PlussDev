@@ -76,7 +76,7 @@ Whether the upper boundary is included.
 
 ## See Also
 
-- <a href="#ge"><code>Thread::ge</code></a> and <a href="#le"><code>Thread::le</code></a>: spell out the two comparisons manually when you want the lower and upper tests separately.
+- <a href="ge.html"><code>Thread::ge</code></a> and <a href="le.html"><code>Thread::le</code></a>: spell out the two comparisons manually when you want the lower and upper tests separately.
 - <a href="../dataframe/filter.html"><code>DataFrame::filter</code></a>: use the boolean result as a row mask inside a frame workflow.
 
 ## Notes

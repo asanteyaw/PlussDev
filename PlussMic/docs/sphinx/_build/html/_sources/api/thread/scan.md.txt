@@ -47,9 +47,9 @@ auto out = thread.scan({}, true);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rstrip.html">
+  <a class="prev-link" href="rxor.html">
     <span class="label">Previous</span>
-    <span class="title">rstrip</span>
+    <span class="title">rxor</span>
   </a>
   <a class="next-link" href="se.html">
     <span class="label">Next</span>

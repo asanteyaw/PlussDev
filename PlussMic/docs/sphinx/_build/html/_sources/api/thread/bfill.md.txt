@@ -94,9 +94,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="astype.html">
+  <a class="prev-link" href="between.html">
     <span class="label">Previous</span>
-    <span class="title">astype</span>
+    <span class="title">between</span>
   </a>
   <a class="next-link" href="bounded.html">
     <span class="label">Next</span>

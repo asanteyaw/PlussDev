@@ -39,9 +39,9 @@ auto out = thread.lower();
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="log.html">
+  <a class="prev-link" href="lor.html">
     <span class="label">Previous</span>
-    <span class="title">log</span>
+    <span class="title">lor</span>
   </a>
   <a class="next-link" href="lstrip.html">
     <span class="label">Next</span>

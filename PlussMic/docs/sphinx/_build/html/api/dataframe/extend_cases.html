@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,60 +44,146 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">extend_cases</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Unite</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">fresh_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">reject_repeated_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-</section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Appends another frame beneath this frame after matching the feature schemas and null-filling one-sided features.</p>
+<p>Append the cases of another frame under the current frame while reconciling the feature set.</p>
+<p><code class="docutils literal notranslate"><span class="pre">extend_cases(...)</span></code> is the vertical extension surface for table-shaped data. Use it when you want more rows from another frame and you need a policy for how the two feature sets should be combined.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Frame whose cases should be appended beneath this frame.</p>
-<p><strong>features</strong>
-Feature matching rule for the non-extension axis. <code class="docutils literal notranslate"><span class="pre">Unite</span></code> keeps the stable union; <code class="docutils literal notranslate"><span class="pre">Common</span></code> keeps shared features.</p>
-<p><strong>fresh_cases</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, replace the appended case labels with contiguous integer cases starting at zero.</p>
-<p><strong>reject_repeated_cases</strong>
-When <code class="docutils literal notranslate"><span class="pre">true</span></code>, fail if preserving the two case axes would produce repeated case labels.</p>
+<p><strong>other</strong></p>
+<p>Frame whose cases should be appended after the current frame’s cases.</p>
+<p><strong>features</strong></p>
+<p>Feature reconciliation rule used before the append.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">FrameMatchRule::Unite</span></code>: keep all features seen on either side.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FrameMatchRule::Common</span></code>: keep only shared features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FrameMatchRule::KeepLeft</span></code>: keep the left/current frame’s feature set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FrameMatchRule::KeepRight</span></code>: keep the right/other frame’s feature set.</p></li>
+</ul>
+<p><strong>fresh_cases</strong></p>
+<p>Case-axis policy after the append.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: preserve and concatenate the existing case labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: replace the final case axis with a fresh integer-like sequence.</p></li>
+</ul>
+<p><strong>reject_repeated_cases</strong></p>
+<p>Whether repeated case labels should be rejected after concatenation when the final case axis is being preserved.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+New frame whose cases are the current frame’s cases followed by the other frame’s cases.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Feature handling depends on `features`:
+
+- `FrameMatchRule::Unite`: keep the union of feature names.
+- `FrameMatchRule::Common`: keep only shared feature names.
+- other feature-match rules follow the same structural interpretation used across frame matching.
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a href="combine.html"><code>DataFrame::combine</code></a>: horizontal or policy-driven composition instead of row appending.</p></li>
+<li><p><a href="align.html"><code>DataFrame::align</code></a>: conform the current frame before or after extending cases.</p></li>
+</ul>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p>When one side does not have a participating feature, PlussMic creates a null column segment of the correct length so the appended result remains rectangular.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fresh_cases</span> <span class="pre">=</span> <span class="pre">true</span></code> discards the original case labels and emits a fresh integer-like case axis for the appended result.</p>
+<p>This method appends rows. It does not try to match rows by label.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">})}},</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">})));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">})},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">})}},</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">})));</span>
+<p>Example 1. Append two frames while keeping the union of features.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">300.0</span><span class="p">,</span><span class="w"> </span><span class="mf">400.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">}));</span>
+
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>case  x     y     z
-A     1.0   3.0   null
-C     2.0   4.0   null
-B     null  5.0   7.0
-A     null  6.0   8.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
+     | x     y     z
+-----------------------
+A    | 1     10    NA
+B    | 2     20    NA
+C    | NA    30    300
+D    | NA    40    400
+-----------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+<p>Example 2. Keep only shared features while appending cases.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">300.0</span><span class="p">,</span><span class="w"> </span><span class="mf">400.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Common</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | y
+-----------
+A    | 10
+B    | 20
+C    | 30
+D    | 40
+-----------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>Example 3. Request fresh case labels after the append.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">300.0</span><span class="p">,</span><span class="w"> </span><span class="mf">400.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">extend_cases</span><span class="p">(</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">FrameMatchRule</span><span class="o">::</span><span class="n">Unite</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
 </section>
-<section id="extension-rules">
-<h2>Extension Rules<a class="headerlink" href="#extension-rules" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">extend_cases(other)</span></code> appends cases vertically and matches features by name.</p></li>
-<li><p>The default <code class="docutils literal notranslate"><span class="pre">Unite</span></code> feature rule preserves left feature order, appends right-only features, and null-fills one-sided payloads.</p></li>
-<li><p>Matching numeric features must have the same dtype and platform; other matching features must have the same Thread kind.</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">fresh_cases=true</span></code> for contiguous integer cases or <code class="docutils literal notranslate"><span class="pre">reject_repeated_cases=true</span></code> to require a unique preserved case axis.</p></li>
-</ul>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
+     | x     y     z
+-----------------------
+0    | 1     10    NA
+1    | 2     20    NA
+2    | NA    30    300
+3    | NA    40    400
+-----------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="equals.html">
     <span class="label">Previous</span>
@@ -108,6 +194,7 @@ A     null  6.0   8.0
     <span class="title">factor</span>
   </a>
 </div>
+</section>
 </section>
 </section>
 

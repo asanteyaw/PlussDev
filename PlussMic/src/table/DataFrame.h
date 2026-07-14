@@ -306,6 +306,12 @@ public:
     std::string prefix{"case"};
   };
 
+  struct AlignSpec {
+    std::optional<Thread> caselbl{};
+    std::vector<std::string> features{};
+    std::optional<double> fill{std::nullopt};
+  };
+
   struct CasePick {
     std::string level{};
     std::string value{};
@@ -759,7 +765,10 @@ public:
   }
   FrameMatch match(const DataFrame& other,
                    const FrameMatchOptions& options = {}) const;
-  DataFrame align_cases(const Thread& new_cases) const;
+  DataFrame align(const AlignSpec& spec) const;
+  DataFrame align(const Thread& new_caselbl) const;
+  DataFrame align_caselbl(const Thread& new_caselbl) const;
+  DataFrame align_caselbl(const Thread& new_caselbl, std::optional<double> fill) const;
   DataFrame join(const DataFrame& other, std::string collision_suffix = "_right") const;
   DataFrame update(const DataFrame& other, bool overwrite = true) const;
   DataFrame unify(std::string_view left_on,
@@ -944,6 +953,8 @@ public:
   DataFrame abs() const;
   DataFrame clip(double min_value, double max_value) const;
   DataFrame round(std::int64_t decimals = 0) const;
+  DataFrame log() const;
+  DataFrame exp() const;
   DataFrame shift(pluss::msharp::RangeView::Of<std::string_view> features,
                   int periods,
                   std::string_view freq) const;
@@ -1175,10 +1186,15 @@ public:
             ErrorTarget target = ErrorTarget::Mean,
             const StatisticOptions& options = {}) const;
   DataFrame scan(ScanStatistic statistic, bool skip_nulls = true) const;
+  DataFrame scan(ScanStatistic statistic, Axis axis, bool skip_nulls = true) const;
   DataFrame cumsum(bool skip_nulls = true) const;
+  DataFrame cumsum(Axis axis, bool skip_nulls = true) const;
   DataFrame cumprod(bool skip_nulls = true) const;
+  DataFrame cumprod(Axis axis, bool skip_nulls = true) const;
   DataFrame cummin(bool skip_nulls = true) const;
+  DataFrame cummin(Axis axis, bool skip_nulls = true) const;
   DataFrame cummax(bool skip_nulls = true) const;
+  DataFrame cummax(Axis axis, bool skip_nulls = true) const;
   Thread corr_with(const DataFrame& other,
                    CorrMethod method = CorrMethod::Pearson,
                    std::int64_t min_count = 1) const;
@@ -1443,7 +1459,7 @@ private:
   explicit DataFrame(pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl);
   detail::DataFrameImpl& mut_impl_();
   const detail::DataFrameImpl& impl_ref_() const;
-  const Thread& cases() const;
+  const Thread& case_labels_() const;
   DataFrame with_cases(const Thread& cases) const;
   DataFrame& with_cases_(const Thread& cases);
   void suppress_next_stream_() const;
@@ -1610,29 +1626,12 @@ class DataFrameTimelineAccessor {
   std::vector<std::string> features_{};
 };
 
-enum class TsAlignMode : std::uint8_t {
-  Exact = 0,
-  Backward = 1,
-  Forward = 2,
-  Nearest = 3,
-};
-
 enum class TsReindexFill : std::uint8_t {
   None = 0,
   Forward = 1,
   Backward = 2,
   Zero = 3,
   Constant = 4,
-};
-
-struct TsRollingBlockOptions {
-  bool include_mean{true};
-  bool include_std{true};
-  bool include_min{false};
-  bool include_max{false};
-  bool include_sum{false};
-  bool include_var{false};
-  std::int64_t min_periods{1};
 };
 
 class DataFrameTsAccessor {
@@ -1720,17 +1719,21 @@ class DataFrameTsAccessor {
   DataFrame align_to(std::string_view time_feature,
                      const Thread& target_axis,
                      TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame align_to(std::string_view time_feature,
+                     const Thread& target_axis,
+                     TsAlignMode mode,
+                     TsReindexFill fill,
+                     std::optional<double> constant = std::nullopt) const;
   DataFrame align_to(const Thread& target_axis,
                      TsAlignMode mode = TsAlignMode::Exact) const;
-  DataFrame reindex_time(std::string_view time_feature,
-                         const Thread& target_axis,
-                         TsAlignMode mode = TsAlignMode::Exact,
-                         TsReindexFill fill = TsReindexFill::None,
-                         std::optional<double> constant = std::nullopt) const;
-  DataFrame reindex_time(const Thread& target_axis,
-                         TsAlignMode mode = TsAlignMode::Exact,
-                         TsReindexFill fill = TsReindexFill::None,
-                         std::optional<double> constant = std::nullopt) const;
+  DataFrame align_to(const Thread& target_axis,
+                     TsAlignMode mode,
+                     TsReindexFill fill,
+                     std::optional<double> constant = std::nullopt) const;
+  DataFrame add(const DataFrame& other, TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame sub(const DataFrame& other, TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame mul(const DataFrame& other, TsAlignMode mode = TsAlignMode::Exact) const;
+  DataFrame div(const DataFrame& other, TsAlignMode mode = TsAlignMode::Exact) const;
 
   DataFrame calendar(std::string_view time_feature) const;
   DataFrame lag_block(pluss::msharp::RangeView::Int lags) const;

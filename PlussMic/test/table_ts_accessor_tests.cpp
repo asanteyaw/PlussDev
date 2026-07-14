@@ -181,7 +181,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
       std::span<const std::string_view>(target_iso.data(), target_iso.size()),
       std::span<const std::int64_t>(t_shape.data(), t_shape.size()));
 
-  auto reindexed = df.ts("Adj Close").reindex_time("date", Thread(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
+  auto reindexed = df.ts("Adj Close").align_to("date", Thread(target_timeline), TsAlignMode::Exact, TsReindexFill::Forward);
   expect(reindexed.ncases() == static_cast<std::int64_t>(target_iso.size()), "reindexed row count mismatch");
 
   auto lag_block = df.ts({"Adj Close", "Volume"}).lag_block({1, 2});

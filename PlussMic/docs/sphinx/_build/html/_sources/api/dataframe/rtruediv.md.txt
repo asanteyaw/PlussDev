@@ -50,8 +50,8 @@ a         b
     <span class="label">Previous</span>
     <span class="title">rsub</span>
   </a>
-  <a class="next-link" href="sample.html">
+  <a class="next-link" href="rxor.html">
     <span class="label">Next</span>
-    <span class="title">sample</span>
+    <span class="title">rxor</span>
   </a>
 </div>

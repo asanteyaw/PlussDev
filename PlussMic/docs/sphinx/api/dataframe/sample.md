@@ -178,9 +178,9 @@ sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rtruediv.html">
+  <a class="prev-link" href="rxor.html">
     <span class="label">Previous</span>
-    <span class="title">rtruediv</span>
+    <span class="title">rxor</span>
   </a>
   <a class="next-link" href="save_as.html">
     <span class="label">Next</span>

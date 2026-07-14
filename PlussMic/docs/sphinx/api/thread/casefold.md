@@ -53,8 +53,8 @@ dtype: Note
     <span class="label">Previous</span>
     <span class="title">bucketize</span>
   </a>
-  <a class="next-link" href="cases.html">
+  <a class="next-link" href="caselbl.html">
     <span class="label">Next</span>
-    <span class="title">cases</span>
+    <span class="title">caselbl</span>
   </a>
 </div>

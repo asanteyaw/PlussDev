@@ -43,8 +43,8 @@ auto out = thread.min();
     <span class="label">Previous</span>
     <span class="title">median</span>
   </a>
-  <a class="next-link" href="mode.html">
+  <a class="next-link" href="mod.html">
     <span class="label">Next</span>
-    <span class="title">mode</span>
+    <span class="title">mod</span>
   </a>
 </div>

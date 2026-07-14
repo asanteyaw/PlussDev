@@ -39,9 +39,9 @@ auto out = thread.sum();
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="strip.html">
+  <a class="prev-link" href="sub.html">
     <span class="label">Previous</span>
-    <span class="title">strip</span>
+    <span class="title">sub</span>
   </a>
   <a class="next-link" href="tail.html">
     <span class="label">Next</span>

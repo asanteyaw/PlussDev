@@ -83,8 +83,8 @@ dtype: Note
     <span class="label">Previous</span>
     <span class="title">cast</span>
   </a>
-  <a class="next-link" href="clear_cases.html">
+  <a class="next-link" href="clear_caselbl.html">
     <span class="label">Next</span>
-    <span class="title">clear_cases</span>
+    <span class="title">clear_caselbl</span>
   </a>
 </div>

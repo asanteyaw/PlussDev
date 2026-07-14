@@ -60,8 +60,8 @@ dtype: Note
     <span class="label">Previous</span>
     <span class="title">display_name</span>
   </a>
-  <a class="next-link" href="dropnull.html">
+  <a class="next-link" href="div.html">
     <span class="label">Next</span>
-    <span class="title">dropnull</span>
+    <span class="title">div</span>
   </a>
 </div>

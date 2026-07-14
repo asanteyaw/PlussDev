@@ -40,9 +40,9 @@ auto out = thread.normalize({});
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ndistinct.html">
+  <a class="prev-link" href="ne.html">
     <span class="label">Previous</span>
-    <span class="title">ndistinct</span>
+    <span class="title">ne</span>
   </a>
   <a class="next-link" href="note.html">
     <span class="label">Next</span>

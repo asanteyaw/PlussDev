@@ -43,8 +43,8 @@ auto out = thread.log();
     <span class="label">Previous</span>
     <span class="title">length</span>
   </a>
-  <a class="next-link" href="lower.html">
+  <a class="next-link" href="lor.html">
     <span class="label">Next</span>
-    <span class="title">lower</span>
+    <span class="title">lor</span>
   </a>
 </div>

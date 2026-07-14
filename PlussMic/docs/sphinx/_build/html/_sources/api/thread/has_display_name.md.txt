@@ -39,9 +39,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="has_cases.html">
+  <a class="prev-link" href="has_caselbl.html">
     <span class="label">Previous</span>
-    <span class="title">has_cases</span>
+    <span class="title">has_caselbl</span>
   </a>
   <a class="next-link" href="head.html">
     <span class="label">Next</span>

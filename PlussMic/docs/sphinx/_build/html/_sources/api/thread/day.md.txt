@@ -57,9 +57,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="covar.html">
+  <a class="prev-link" href="cumsum.html">
     <span class="label">Previous</span>
-    <span class="title">covar</span>
+    <span class="title">cumsum</span>
   </a>
   <a class="next-link" href="defined.html">
     <span class="label">Next</span>

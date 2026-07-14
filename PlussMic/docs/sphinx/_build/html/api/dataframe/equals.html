@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,39 +44,70 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">equals</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
 </pre></div>
 </div>
-</section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks whether two frames have the same structure, labels, and values.</p>
+<p>Check whether two frames are exactly equal as whole DataFrame objects.</p>
+<p><code class="docutils literal notranslate"><span class="pre">equals(...)</span></code> is the whole-object identity check. Use it when you need one <code class="docutils literal notranslate"><span class="pre">bool</span></code> answer rather than a per-cell mask.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>other</strong>
-Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.</p>
+<p><strong>other</strong></p>
+<p>Frame to compare against the current frame.</p>
+<p>The comparison is structural and value-wise at the same time. PlussMic does not attempt to realign <code class="docutils literal notranslate"><span class="pre">other</span></code> before deciding; it checks the two frames exactly as they are supplied.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-Boolean status or membership result.</p>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> only when both frames have the same case count, feature count, feature names, case-label type, case-label values, payload kinds, validity pattern, and visible cell values.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a href="eq.html"><code>DataFrame::eq</code></a>: elementwise equality mask instead of one boolean answer.</p></li>
+<li><p><a href="copy.html"><code>DataFrame::copy</code></a>: useful for producing a structurally identical frame before testing exact equality.</p></li>
+</ul>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">equals(...)</span></code> is stricter than visual similarity. Two frames that look similar in print can still return <code class="docutils literal notranslate"><span class="pre">false</span></code> if their feature order, case-label dtype, missingness pattern, or payload kinds differ.</p>
+<p>Missingness is part of the equality contract. A valid cell and a null cell do not compare equal.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;cost&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">55.0</span><span class="p">}))},</span>
-<span class="p">});</span>
+<p>Example 1. Two frames with identical structure and values compare equal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">equals</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">official</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">84.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">72.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">official</span><span class="p">.</span><span class="n">equals</span><span class="p">(</span><span class="n">official</span><span class="p">.</span><span class="n">copy</span><span class="p">());</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p>Example 2. One changed value is enough for <code class="docutils literal notranslate"><span class="pre">equals(...)</span></code> to return false.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">official</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">84.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">72.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;quiz&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">83.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">72.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;s1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s3&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">official</span><span class="p">.</span><span class="n">equals</span><span class="p">(</span><span class="n">changed</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">

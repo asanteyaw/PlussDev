@@ -44,9 +44,9 @@ true
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="gt.html">
+  <a class="prev-link" href="has.html">
     <span class="label">Previous</span>
-    <span class="title">gt</span>
+    <span class="title">has</span>
   </a>
   <a class="next-link" href="has_levels.html">
     <span class="label">Next</span>

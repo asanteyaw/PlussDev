@@ -41,9 +41,9 @@ auto out = thread.flow(other);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="filter.html">
+  <a class="prev-link" href="floordiv.html">
     <span class="label">Previous</span>
-    <span class="title">filter</span>
+    <span class="title">floordiv</span>
   </a>
   <a class="next-link" href="fold.html">
     <span class="label">Next</span>

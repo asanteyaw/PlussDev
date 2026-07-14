@@ -8,35 +8,95 @@
 Thread::encode(std::string_view encoding = "base64") -> Thread
 ```
 
-## What It Does
+Encode each note value using one of the built-in text encodings.
 
-Encodes note-backed text values into numeric codes or related compact representations.
+`encode(...)` is the text-column surface for turning raw note values into encoded representations such as Base64, hexadecimal text, or URL-safe escaped text.
 
 ## Parameters
 
 **encoding**
-    Text encoding used when reading or writing text-based files.
+
+Encoding algorithm to apply.
+
+- `base64`: Base64 text representation.
+- `hex`: hexadecimal text representation.
+- `url`: percent-escaped URL-style representation.
 
 ## Returns
 
 `Thread`
-    Value produced by this call.
+    Note-backed thread containing the encoded text.
+
+## See Also
+
+- <a href="extract.html"><code>Thread::extract</code></a>: structured regex extraction from note values instead of encoding them.
+- <a href="chars.html"><code>Thread::chars</code></a>: slice or transform text at the character level before encoding.
+
+## Notes
+
+`encode(...)` is note-only. Call `as_note()` or select a note-backed feature first when the current thread is not already textual.
+
+Supported encodings are exactly `base64`, `hex`, and `url`. Any other encoding name throws.
 
 ## Examples
 
-Example 1. Apply `encode` to the current thread using explicit `encoding` arguments.
+Example 1. Encode note values as Base64 text.
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+using namespace pluss::table;
 
-auto out = thread.encode("demo");
+auto urls = Thread(pluss::make_note({"A B", "C&D", "email@example.com"}));
+
+auto out = urls.encode("base64");
 ```
 
 ### Output
 
 ```text
-[10.0, 20.0, 30.0]
+0  QSBC
+1  QyZE
+2  ZW1haWxAZXhhbXBsZS5jb~
+dtype: Note
 ```
+
+Example 2. Encode note values as hexadecimal text.
+
+```cpp
+using namespace pluss::table;
+
+auto urls = Thread(pluss::make_note({"A B", "C&D", "email@example.com"}));
+
+auto out = urls.encode("hex");
+```
+
+### Output
+
+```text
+0  412042
+1  432644
+2  656d61696c406578616d7~
+dtype: Note
+```
+
+Example 3. Encode note values with URL escaping.
+
+```cpp
+using namespace pluss::table;
+
+auto urls = Thread(pluss::make_note({"A B", "C&D", "email@example.com"}));
+
+auto out = urls.encode("url");
+```
+
+### Output
+
+```text
+0  A%20B
+1  C%26D
+2  email%40example.com
+dtype: Note
+```
+
 
 
 <div class="pluss-inline-prev-next">

@@ -20,7 +20,7 @@ Reference frame whose structure should be mirrored.
 
 The result follows:
 - `other.features()` for feature order, and
-- `other.cases()` for case order.
+- `other.caselbl()` for case order.
 
 ## Returns
 
@@ -29,7 +29,7 @@ The result follows:
 
 ## See Also
 
-- <a href="align_cases.html"><code>DataFrame::align_cases</code></a>: case-axis-only alignment.
+- <a href="align_caselbl.html"><code>DataFrame::align_caselbl</code></a>: case-axis-only alignment.
 - <a href="combine.html"><code>DataFrame::combine</code></a>: combine two already-compatible frames.
 - <a href="unify.html"><code>DataFrame::unify</code></a>: key-based merge rather than structure conformance.
 

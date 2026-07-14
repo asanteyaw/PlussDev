@@ -44,8 +44,8 @@ auto out = thread.fullmatch("Acc");
     <span class="label">Previous</span>
     <span class="title">freq</span>
   </a>
-  <a class="next-link" href="has_cases.html">
+  <a class="next-link" href="ge.html">
     <span class="label">Next</span>
-    <span class="title">has_cases</span>
+    <span class="title">ge</span>
   </a>
 </div>

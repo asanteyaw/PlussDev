@@ -163,7 +163,7 @@ DataFrame df = DataFrame::load_csv("prices.csv").cast({
 auto s = df.features("Adj Close");
 auto lr = s.ts().log_returns();
 auto z = s.ts().rolling(30, pluss::table::WindowStatistic::Mean, {.min_count = 10});
-auto r7 = s.ts().rolling(df.cases(), "7D", pluss::table::WindowStatistic::Mean);
+auto r7 = s.ts().rolling(df.caselbl(), "7D", pluss::table::WindowStatistic::Mean);
 auto rs = s.ts().resample(df.features("date"), "W", pluss::subsp::stats::ts::ResampleOp::Last, 1);
 ```
 

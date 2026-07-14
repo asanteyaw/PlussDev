@@ -44,9 +44,9 @@ Thread([100.0, 120.0, 90.0])
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="freq.html">
+  <a class="prev-link" href="ge.html">
     <span class="label">Previous</span>
-    <span class="title">freq</span>
+    <span class="title">ge</span>
   </a>
   <a class="next-link" href="group_by.html">
     <span class="label">Next</span>

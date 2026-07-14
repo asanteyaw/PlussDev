@@ -55,12 +55,12 @@ auto out = thread.rstrip("#");
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="replace.html">
+  <a class="prev-link" href="rpow.html">
     <span class="label">Previous</span>
-    <span class="title">replace</span>
+    <span class="title">rpow</span>
   </a>
-  <a class="next-link" href="scan.html">
+  <a class="next-link" href="rsub.html">
     <span class="label">Next</span>
-    <span class="title">scan</span>
+    <span class="title">rsub</span>
   </a>
 </div>

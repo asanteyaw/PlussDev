@@ -24,7 +24,7 @@ Return the elementwise absolute value of a numeric thread.
 ## See Also
 
 - <a href="clip.html"><code>Thread::clip</code></a>: cap values into a range instead of removing sign.
-- <a href="#pow"><code>Thread::pow</code></a>: apply power transformations after magnitude cleanup when needed.
+- <a href="pow.html"><code>Thread::pow</code></a>: apply power transformations after magnitude cleanup when needed.
 
 ## Notes
 
@@ -56,8 +56,8 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="all.html">
+  <a class="next-link" href="add.html">
     <span class="label">Next</span>
-    <span class="title">all</span>
+    <span class="title">add</span>
   </a>
 </div>

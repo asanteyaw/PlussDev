@@ -24,7 +24,7 @@ Expose the underlying `pluss::TimeIndex` payload directly.
 ## See Also
 
 - <a href="as_timeline.html"><code>Thread::as_timeline</code></a>: expose a timeline payload instead of a time index.
-- <a href="../dataframe/resample.html"><code>DataFrame::resample</code></a>: resample full frames by a temporal feature.
+- <a href="dataframe_api_reference.html#resample"><code>DataFrame::resample</code></a>: resample full frames by a temporal feature.
 
 ## Notes
 

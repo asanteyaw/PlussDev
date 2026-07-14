@@ -68,8 +68,8 @@ dtype: Series
     <span class="label">Previous</span>
     <span class="title">as_timeline</span>
   </a>
-  <a class="next-link" href="bfill.html">
+  <a class="next-link" href="between.html">
     <span class="label">Next</span>
-    <span class="title">bfill</span>
+    <span class="title">between</span>
   </a>
 </div>

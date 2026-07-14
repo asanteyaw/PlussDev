@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,34 +44,85 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">extract</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-</section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Extracts text submatches or text-derived pieces from note-backed values.</p>
+<p>Extract one or more regex capture groups from a note-backed thread into a DataFrame.</p>
+<p><code class="docutils literal notranslate"><span class="pre">extract(...)</span></code> is the structured regex parsing surface for text columns. Use it when one note column contains several embedded fields and you want each capture group broken out into its own feature.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>pattern</strong>
-Pattern string used for matching or extraction.</p>
-<p><strong>names</strong>
-Collection of feature, slot, or stream names supplied in positional order.</p>
+<p><strong>pattern</strong></p>
+<p>Regular expression with one or more capture groups.</p>
+<p>Only capture groups become output features. Surround the pieces you want to extract with parentheses.</p>
+<p><strong>names</strong></p>
+<p>Optional feature names for the capture groups.</p>
+<ul class="simple">
+<li><p>leave it empty to receive generated names such as <code class="docutils literal notranslate"><span class="pre">group_0</span></code>, <code class="docutils literal notranslate"><span class="pre">group_1</span></code>, …</p></li>
+<li><p>pass one name per capture group when you want semantic output feature names</p></li>
+</ul>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-Value produced by this call.</p>
+Frame with one note-backed feature per capture group.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Rows that do not match the regex stay present in the output, but the unmatched capture-group cells are marked missing.
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a href="matches.html"><code>Thread::matches</code></a>: boolean regex test when you only need a mask.</p></li>
+<li><p><a href="split.html"><code>Thread::split</code></a>: delimiter-based decomposition instead of regex capture groups.</p></li>
+</ul>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p>The pattern must contain at least one capture group. A regex with no capture groups throws.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">names</span></code> is supplied, its length must match the number of capture groups exactly.</p>
+<p>The output features are note-backed because regex capture groups produce text fragments.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Extract two capture groups with explicit output feature names.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span><span class="s">&quot;Acc&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;demo&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A-100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B-205&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D-400&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span><span class="s">&quot;([A-Z])-([0-9]+)&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">});</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | code  id
+-----------------
+0    | A     100
+1    | B     205
+2    | NA    NA
+3    | D     400
+-----------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>Example 2. Let PlussMic generate feature names for the capture groups.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A-100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B-205&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D-400&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">extract</span><span class="p">(</span><span class="s">&quot;([A-Z])-([0-9]+)&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=======================
+     | group_0  group_1
+-----------------------
+0    | A        100
+1    | B        205
+2    | NA       NA
+3    | D        400
+-----------------------
+[4 cs x 2 feat]
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">

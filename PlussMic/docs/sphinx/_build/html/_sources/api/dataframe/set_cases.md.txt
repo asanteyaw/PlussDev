@@ -66,7 +66,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.cases():
+out.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():
@@ -96,7 +96,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.cases():
+out.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():
@@ -126,7 +126,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.cases():
+out.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():
@@ -156,7 +156,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.cases():
+out.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():

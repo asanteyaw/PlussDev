@@ -199,6 +199,52 @@ std::vector<std::string> case_keys(const Thread& cases) {
   return keys;
 }
 
+void ensure_case_types_match(const Thread& left, const Thread& right);
+
+void append_key_part_(std::string& out, const std::string& part) {
+  const auto n = static_cast<std::uint64_t>(part.size());
+  out.append(reinterpret_cast<const char*>(&n), sizeof(n));
+  out.append(part);
+}
+
+std::vector<std::string> structured_case_keys(const DataFrame& frame) {
+  const auto names = frame.levels();
+  PLUSS_CHECK(!names.empty(), "DataFrame::match: structured case axis has no levels");
+  std::vector<std::vector<std::string>> level_keys;
+  level_keys.reserve(names.size());
+  for (const auto& name : names) {
+    level_keys.push_back(case_keys(frame.level(name)));
+  }
+
+  std::vector<std::string> out(static_cast<std::size_t>(frame.ncases()));
+  for (std::int64_t row = 0; row < frame.ncases(); ++row) {
+    auto& key = out[static_cast<std::size_t>(row)];
+    key.push_back('\4');
+    for (const auto& keys : level_keys) {
+      append_key_part_(key, keys[static_cast<std::size_t>(row)]);
+    }
+  }
+  return out;
+}
+
+void ensure_structured_case_axes_match(const DataFrame& left, const DataFrame& right) {
+  if (!left.has_levels() || !right.has_levels()) {
+    return;
+  }
+  PLUSS_CHECK(
+      left.levels() == right.levels(),
+      "DataFrame::match: structured case levels differ; reorder/rename levels before aligning");
+  const auto names = left.levels();
+  for (const auto& name : names) {
+    ensure_case_types_match(left.level(name), right.level(name));
+  }
+}
+
+std::vector<std::string> frame_case_keys(const DataFrame& frame) {
+  return frame.has_levels() ? structured_case_keys(frame)
+                            : case_keys(frame.caselbl());
+}
+
 void ensure_case_types_match(const Thread& left, const Thread& right) {
   PLUSS_CHECK(
       left.kind() == right.kind(),
@@ -321,68 +367,19 @@ Thread append_feature_values(const Thread& left, const Thread& right) {
   PLUSS_CHECK(
       left.kind() == right.kind(),
       "DataFrame::extend_cases: matching features must use the same Thread kind");
-  if (left.kind() == ThreadKind::Series) {
-    PLUSS_CHECK(
-        left.as_series().scalar_type() == right.as_series().scalar_type(),
-        "DataFrame::extend_cases: matching numeric features must use the same dtype");
-    PLUSS_CHECK(
-        left.as_series().platform() == right.as_series().platform(),
-        "DataFrame::extend_cases: matching numeric features must use the same platform");
-  }
-
-  switch (left.kind()) {
-    case ThreadKind::Series: {
-      std::vector<pluss::Series> tail{right.as_series()};
-      auto values = left.as_series().unite(tail, 0);
-      return Thread(
-          values,
-          joined_validity(left, right, values.platform()));
-    }
-    case ThreadKind::Note: {
-      std::vector<std::string> values;
-      values.reserve(static_cast<std::size_t>(left.size() + right.size()));
-      for (const auto value : left.as_note().vector()) {
-        values.emplace_back(value);
-      }
-      for (const auto value : right.as_note().vector()) {
-        values.emplace_back(value);
-      }
-      return Thread(
-          pluss::make_note(values),
-          joined_validity(left, right, pluss::codem::Platform::CPU));
-    }
-    case ThreadKind::Timeline: {
-      PLUSS_CHECK(
-          thread_platform(left) == thread_platform(right),
-          "DataFrame::extend_cases: matching timelines must use the same platform");
-      auto values = left.as_timeline().concat(right.as_timeline());
-      return Thread(
-          values,
-          joined_validity(left, right, thread_platform(left)));
-    }
-    case ThreadKind::TimeIndex: {
-      PLUSS_CHECK(
-          thread_platform(left) == thread_platform(right),
-          "DataFrame::extend_cases: matching time indexes must use the same platform");
-      auto values = left.as_timeindex()
-                        .timeline()
-                        .concat(right.as_timeindex().timeline())
-                        .to_timeindex(false);
-      return Thread(
-          values,
-          joined_validity(left, right, thread_platform(left)));
-    }
-  }
-  PLUSS_FAIL("DataFrame::extend_cases: unsupported feature payload kind");
+  return left.append(right);
 }
 
 CasePlan plan_cases(
     const DataFrame& left,
     const DataFrame& right,
     const FrameMatchOptions& options) {
-  ensure_case_types_match(left.caselbl(), right.caselbl());
-  const auto left_keys = case_keys(left.caselbl());
-  const auto right_keys = case_keys(right.caselbl());
+  ensure_structured_case_axes_match(left, right);
+  if (!left.has_levels() || !right.has_levels()) {
+    ensure_case_types_match(left.caselbl(), right.caselbl());
+  }
+  const auto left_keys = frame_case_keys(left);
+  const auto right_keys = frame_case_keys(right);
 
   if (left_keys == right_keys) {
     RowMap identity(left.ncases());
@@ -656,7 +653,7 @@ FrameMatch DataFrame::match(
   PLUSS_CHECK(other.defined(), "DataFrame::match: right frame is undefined");
 
   if (options.repeated_cases == RepeatedCaseRule::PairInOrder &&
-      cases().shares_payload_with(other.caselbl()) &&
+      case_labels_().shares_payload_with(other.caselbl()) &&
       features() == other.features()) {
     return FrameMatch{*this, other};
   }
@@ -727,7 +724,7 @@ DataFrame DataFrame::extend_cases(
         pluss::codem::ScalarType::Int64,
         pluss::codem::Platform::CPU));
   } else {
-    output_cases = append_cases(cases(), other.caselbl());
+    output_cases = append_cases(case_labels_(), other.caselbl());
     if (reject_repeats) {
       const auto positions = positions_by_key(case_keys(output_cases));
       reject_repeated_cases(positions, "combined");

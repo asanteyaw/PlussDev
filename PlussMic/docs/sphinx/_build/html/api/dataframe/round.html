@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::rpow" href="rpow.html" />
-    <link rel="prev" title="DataFrame::rolling" href="rolling.html" />
+    <link rel="prev" title="DataFrame::ror" href="ror.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -39,9 +39,11 @@
   <section id="dataframe-round">
 <h1>DataFrame::round<a class="headerlink" href="#dataframe-round" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
-<section id="signature">
-<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">round</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">round</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">decimals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -55,6 +57,8 @@
 Feature name(s) that select the target DataFrame columns for the operation.</p>
 <p><strong>unit</strong>
 Temporal rounding unit such as <code class="docutils literal notranslate"><span class="pre">&quot;hour&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>.</p>
+<p><strong>decimals</strong>
+Parameter used by this overload. The examples below show the supported call shapes and how the argument changes behavior.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -81,10 +85,29 @@ Value produced by this call.</p>
 3    90.0  Kumasi
 </pre></div>
 </div>
+<p>Example 2. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">round</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+</pre></div>
+</div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rolling.html">
+  <a class="prev-link" href="ror.html">
     <span class="label">Previous</span>
-    <span class="title">rolling</span>
+    <span class="title">ror</span>
   </a>
   <a class="next-link" href="rpow.html">
     <span class="label">Next</span>
@@ -142,7 +165,7 @@ Value produced by this call.</p>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
-      <li>Previous: <a href="rolling.html" title="previous chapter">DataFrame::rolling</a></li>
+      <li>Previous: <a href="ror.html" title="previous chapter">DataFrame::ror</a></li>
       <li>Next: <a href="rpow.html" title="next chapter">DataFrame::rpow</a></li>
   </ul></li>
   </ul></li>

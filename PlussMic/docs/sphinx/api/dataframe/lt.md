@@ -5,9 +5,21 @@
 ## Signatures
 
 ```cpp
+DataFrame::lt(const char* other, bool strict = true) -> DataFrame
+
 DataFrame::lt(const DataFrame& other, bool strict = true) -> DataFrame
 
+DataFrame::lt(const DataFrame& other, const AlignOptions& options, bool strict = true) -> DataFrame
+
+DataFrame::lt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) -> DataFrame
+
+DataFrame::lt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) -> DataFrame
+
+DataFrame::lt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) -> DataFrame
+
 DataFrame::lt(double other, bool strict = true) -> DataFrame
+
+DataFrame::lt(std::string_view other, bool strict = true) -> DataFrame
 ```
 
 ## What It Does
@@ -22,6 +34,12 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 **strict**
     Boolean switch that changes how this overload behaves. Read the method notes and examples to see the effect of `true` versus `false`.
 
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
+
+**axis**
+    Axis selector. On `DataFrame`, `0` usually means rows/cases and `1` means features/columns.
+
 ## Returns
 
 `DataFrame`
@@ -29,7 +47,27 @@ This produces a comparison-style result you can inspect directly or reuse as a m
 
 ## Examples
 
-Example 1. Compare each compatible cell using the `<` relation against another aligned frame.
+Example 1. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.lt(110);
+```
+
+### Output
+
+```text
+id  sales
+1   true
+2   false
+3   true
+```
+Example 2. Compare each compatible cell using the `<` relation against another aligned frame.
 
 ```cpp
 auto left = pluss::table::DataFrame({
@@ -52,7 +90,110 @@ id  sales
 2   false
 3   true
 ```
-Example 2. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+Example 3. Compare each compatible cell using the `<` relation against another aligned frame.
+
+```cpp
+auto left = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+});
+auto right = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({2, 2, 4}))},
+    {"sales", pluss::table::Thread(pluss::make_series({110.0, 110.0, 100.0}))},
+});
+
+auto out = left.lt(right);
+```
+
+### Output
+
+```text
+id  sales
+1   true
+2   false
+3   true
+```
+Example 4. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.lt(110);
+```
+
+### Output
+
+```text
+id  sales
+1   true
+2   false
+3   true
+```
+Example 5. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.lt(110);
+```
+
+### Output
+
+```text
+id  sales
+1   true
+2   false
+3   true
+```
+Example 6. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.lt(110);
+```
+
+### Output
+
+```text
+id  sales
+1   true
+2   false
+3   true
+```
+Example 7. Compare each compatible cell using the `<` relation against one broadcast scalar value.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.lt(110);
+```
+
+### Output
+
+```text
+id  sales
+1   true
+2   false
+3   true
+```
+Example 8. Compare each compatible cell using the `<` relation against one broadcast scalar value.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -82,12 +223,12 @@ id  sales
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="load_txt.html">
+  <a class="prev-link" href="lor.html">
     <span class="label">Previous</span>
-    <span class="title">load_txt</span>
+    <span class="title">lor</span>
   </a>
-  <a class="next-link" href="map.html">
+  <a class="next-link" href="lxor.html">
     <span class="label">Next</span>
-    <span class="title">map</span>
+    <span class="title">lxor</span>
   </a>
 </div>

@@ -8,35 +8,47 @@
 DataFrame::equals(const DataFrame& other) -> bool
 ```
 
-## What It Does
+Check whether two frames are exactly equal as whole DataFrame objects.
 
-Checks whether two frames have the same structure, labels, and values.
+`equals(...)` is the whole-object identity check. Use it when you need one `bool` answer rather than a per-cell mask.
 
 ## Parameters
 
 **other**
-    Second frame, thread, or scalar operand supplied for binary combination, comparison, alignment, or join-style work.
+
+Frame to compare against the current frame.
+
+The comparison is structural and value-wise at the same time. PlussMic does not attempt to realign `other` before deciding; it checks the two frames exactly as they are supplied.
 
 ## Returns
 
 `bool`
-    Boolean status or membership result.
+    `true` only when both frames have the same case count, feature count, feature names, case-label type, case-label values, payload kinds, validity pattern, and visible cell values.
+
+## See Also
+
+- <a href="eq.html"><code>DataFrame::eq</code></a>: elementwise equality mask instead of one boolean answer.
+- <a href="copy.html"><code>DataFrame::copy</code></a>: useful for producing a structurally identical frame before testing exact equality.
+
+## Notes
+
+`equals(...)` is stricter than visual similarity. Two frames that look similar in print can still return `false` if their feature order, case-label dtype, missingness pattern, or payload kinds differ.
+
+Missingness is part of the equality contract. A valid cell and a null cell do not compare equal.
 
 ## Examples
 
-Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
+Example 1. Two frames with identical structure and values compare equal.
 
 ```cpp
-auto left = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-});
-auto right = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"cost", pluss::table::Thread(pluss::make_series({60.0, 80.0, 55.0}))},
-});
+using namespace pluss::table;
 
-auto out = left.equals(right);
+auto official = DataFrame({
+    {"quiz", pluss::make_series({84.0, 90.0, 84.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = official.equals(official.copy());
 ```
 
 ### Output
@@ -44,6 +56,31 @@ auto out = left.equals(right);
 ```text
 true
 ```
+
+Example 2. One changed value is enough for `equals(...)` to return false.
+
+```cpp
+using namespace pluss::table;
+
+auto official = DataFrame({
+    {"quiz", pluss::make_series({84.0, 90.0, 84.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto changed = DataFrame({
+    {"quiz", pluss::make_series({84.0, 90.0, 83.0})},
+    {"final", pluss::make_series({84.0, 88.0, 72.0})},
+}, pluss::make_note({"s1", "s2", "s3"}));
+
+auto out = official.equals(changed);
+```
+
+### Output
+
+```text
+false
+```
+
 
 
 <div class="pluss-inline-prev-next">

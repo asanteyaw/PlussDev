@@ -87,6 +87,13 @@ struct AlignOptions {
   std::optional<double> fill{std::nullopt};
 };
 
+enum class TsAlignMode : std::uint8_t {
+  Exact = 0,
+  Backward = 1,
+  Forward = 2,
+  Nearest = 3,
+};
+
 struct ThreadOptions {
   bool rangelbl{false};
 };
@@ -316,6 +323,22 @@ public:
   ThreadView head(std::int64_t n = 5, bool render = false) const;
   ThreadView tail(std::int64_t n = 5, bool render = false) const;
   ThreadView view(std::int64_t start, std::int64_t stop, bool render = false) const;
+  ThreadView top(std::int64_t n, bool render = false) const;
+  ThreadView bottom(std::int64_t n, bool render = false) const;
+  Thread append(const Thread& other) const;
+  Thread sample(std::int64_t n) const;
+  Thread sample(std::int64_t n, std::uint64_t random_state, bool replace = false) const;
+  template <class Float>
+    requires std::floating_point<Float>
+  Thread sample(Float frac) const {
+    return sample_fraction_(static_cast<double>(frac), std::nullopt, false);
+  }
+  template <class Float>
+    requires std::floating_point<Float>
+  Thread sample(Float frac, std::uint64_t random_state, bool replace = false) const {
+    return sample_fraction_(static_cast<double>(frac), random_state, replace);
+  }
+  Thread shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const;
   Thread shift(std::int64_t periods = 1) const;
   Thread slice(std::int64_t start, std::int64_t stop) const;
   Thread take(std::span<const std::int64_t> indices) const;
@@ -338,6 +361,7 @@ public:
 
   // Reductions return scalar payloads where the operation is valid.
   ThreadValue sum() const;
+  ThreadValue prod() const;
   ThreadValue count(bool count_true = true) const;
   ThreadValue any(bool skipna = true) const;
   ThreadValue all(bool skipna = true) const;
@@ -345,6 +369,8 @@ public:
   ThreadValue median() const;
   ThreadValue min() const;
   ThreadValue max() const;
+  ThreadValue csmin() const;
+  ThreadValue csmax() const;
   ThreadValue var(bool unbiased = true) const;
   ThreadValue var(const StatisticOptions& options) const;
   ThreadValue std(bool unbiased = true) const;
@@ -725,13 +751,9 @@ private:
   Thread& with_display_labels_(const Thread& labels);
   Thread clear_display_labels() const;
   Thread& clear_display_labels_();
-  bool has_cases() const;
-  Thread cases() const;
-  Thread cases(const Thread& labels) const;
-  Thread& cases_(const Thread& labels);
-  Thread clear_cases() const;
-  Thread& clear_cases_();
-
+  Thread sample_fraction_(double frac,
+                          std::optional<std::uint64_t> random_state,
+                          bool replace) const;
   Thread moving(std::int64_t window,
                 WindowStatistic statistic = WindowStatistic::Mean,
                 const WindowOptions& options = {}) const;
@@ -814,6 +836,16 @@ struct TimeSeriesResample {
   Thread values{};
 };
 
+struct TsRollingBlockOptions {
+  bool include_mean{true};
+  bool include_std{true};
+  bool include_min{false};
+  bool include_max{false};
+  bool include_sum{false};
+  bool include_var{false};
+  std::int64_t min_periods{1};
+};
+
 class TimeSeriesAccessor {
  public:
   explicit TimeSeriesAccessor(Thread base);
@@ -854,6 +886,17 @@ class TimeSeriesAccessor {
   Thread fill_gaps(pluss::subsp::stats::ts::GapFillMode mode =
                        pluss::subsp::stats::ts::GapFillMode::Forward,
                    std::optional<double> constant = std::nullopt) const;
+  Thread align_to(const Thread& source_axis,
+                  const Thread& target_axis,
+                  TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread align_to(const Thread& source_axis,
+                  const Thread& target_axis,
+                  TsAlignMode mode,
+                  pluss::subsp::stats::ts::GapFillMode fill_mode,
+                  std::optional<double> constant = std::nullopt) const;
+  DataFrame lag_block(pluss::msharp::RangeView::Int lags) const;
+  DataFrame rolling_block(pluss::msharp::RangeView::Int windows,
+                          const TsRollingBlockOptions& options = {}) const;
   TimeSeriesResample resample(const Thread& axis,
                               std::string_view freq,
                               pluss::subsp::stats::ts::ResampleOp op =
@@ -864,6 +907,46 @@ class TimeSeriesAccessor {
       const pluss::TimeIndex::ResampleOptions& options,
       pluss::subsp::stats::ts::ResampleOp op =
           pluss::subsp::stats::ts::ResampleOp::Mean) const;
+  Thread add(const Thread& other,
+             const Thread& left_axis,
+             const Thread& right_axis,
+             TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread sub(const Thread& other,
+             const Thread& left_axis,
+             const Thread& right_axis,
+             TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread mul(const Thread& other,
+             const Thread& left_axis,
+             const Thread& right_axis,
+             TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread div(const Thread& other,
+             const Thread& left_axis,
+             const Thread& right_axis,
+             TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread eq(const Thread& other,
+            const Thread& left_axis,
+            const Thread& right_axis,
+            TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread ne(const Thread& other,
+            const Thread& left_axis,
+            const Thread& right_axis,
+            TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread lt(const Thread& other,
+            const Thread& left_axis,
+            const Thread& right_axis,
+            TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread le(const Thread& other,
+            const Thread& left_axis,
+            const Thread& right_axis,
+            TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread gt(const Thread& other,
+            const Thread& left_axis,
+            const Thread& right_axis,
+            TsAlignMode mode = TsAlignMode::Exact) const;
+  Thread ge(const Thread& other,
+            const Thread& left_axis,
+            const Thread& right_axis,
+            TsAlignMode mode = TsAlignMode::Exact) const;
 
  private:
   const pluss::Series& series_payload_(const char* op) const;

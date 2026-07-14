@@ -68,8 +68,4 @@ sales_roll
     <span class="label">Previous</span>
     <span class="title">where</span>
   </a>
-  <a class="next-link" href="with_cases.html">
-    <span class="label">Next</span>
-    <span class="title">with_cases</span>
-  </a>
 </div>

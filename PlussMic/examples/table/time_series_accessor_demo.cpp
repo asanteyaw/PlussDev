@@ -63,7 +63,7 @@ int main() {
       std::span<const std::string_view>(target_iso.data(), target_iso.size()),
       std::span<const std::int64_t>(target_shape.data(), target_shape.size()));
   auto aligned = df.ts("adj_close").align_to("date", Thread(target_t), TsAlignMode::Nearest);
-  auto reindexed = df.ts("adj_close").reindex_time("date", Thread(target_t), TsAlignMode::Exact, TsReindexFill::Forward);
+  auto reindexed = df.ts("adj_close").align_to("date", Thread(target_t), TsAlignMode::Exact, TsReindexFill::Forward);
 
   // One-liner assignment pattern.
   df.set("log_returns") = df.ts("adj_close").log_returns();

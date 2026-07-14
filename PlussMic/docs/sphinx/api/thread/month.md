@@ -43,8 +43,8 @@ auto out = thread.month();
     <span class="label">Previous</span>
     <span class="title">mode</span>
   </a>
-  <a class="next-link" href="ncases.html">
+  <a class="next-link" href="mul.html">
     <span class="label">Next</span>
-    <span class="title">ncases</span>
+    <span class="title">mul</span>
   </a>
 </div>

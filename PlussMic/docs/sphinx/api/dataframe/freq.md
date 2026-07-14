@@ -54,8 +54,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">fold</span>
   </a>
-  <a class="next-link" href="get.html">
+  <a class="next-link" href="ge.html">
     <span class="label">Next</span>
-    <span class="title">get</span>
+    <span class="title">ge</span>
   </a>
 </div>

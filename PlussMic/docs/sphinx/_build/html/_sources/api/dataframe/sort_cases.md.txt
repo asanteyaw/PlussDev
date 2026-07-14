@@ -48,10 +48,10 @@ auto out = with_cases.sort_cases(true, true);
 ### Output
 
 ```text
-with_cases.cases():
+with_cases.caselbl():
 ["cs2", "cs0", "cs1"]
 
-out.cases():
+out.caselbl():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -76,10 +76,10 @@ auto out = with_cases.sort_cases(true, true);
 ### Output
 
 ```text
-with_cases.cases():
+with_cases.caselbl():
 ["cs2", "cs0", "cs1"]
 
-out.cases():
+out.caselbl():
 ["cs0", "cs1", "cs2"]
 
 out.head():

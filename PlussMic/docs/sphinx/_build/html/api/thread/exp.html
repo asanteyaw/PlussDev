@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Thread::extract" href="extract.html" />
-    <link rel="prev" title="Thread::ends" href="ends.html" />
+    <link rel="prev" title="Thread::eq" href="eq.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -44,10 +44,8 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">exp</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
-</section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Applies the elementwise exponential to a numeric thread.</p>
+<p>Apply the natural exponential function elementwise to a numeric thread.</p>
+<p><code class="docutils literal notranslate"><span class="pre">exp()</span></code> is the thread-level <code class="docutils literal notranslate"><span class="pre">e^x</span></code> surface for series payloads. It is useful in probability, growth, soft transforms, and any workflow where you need exponential recovery after a log-domain transformation.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -56,25 +54,40 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-Value produced by this call.</p>
+Numeric thread containing <code class="docutils literal notranslate"><span class="pre">exp(x)</span></code> for each valid entry.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a href="log.html"><code>Thread::log</code></a>: inverse natural-log transform.</p></li>
+<li><p><a href="pow.html"><code>Thread::pow</code></a>: more general exponentiation surface.</p></li>
+</ul>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">exp()</span></code> is only valid for numeric series payloads.</p>
+<p>Integer-like numeric series are promoted internally to a floating type before the exponential is computed.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Apply <code class="docutils literal notranslate"><span class="pre">exp</span></code> elementwise and inspect the returned result.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<p>Example 1. Exponentiate a small numeric thread.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">exp</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})).</span><span class="n">exp</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0, 20.0, 30.0]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  1
+1  2.718281828
+2  7.389056099
+dtype: Series
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ends.html">
+  <a class="prev-link" href="eq.html">
     <span class="label">Previous</span>
-    <span class="title">ends</span>
+    <span class="title">eq</span>
   </a>
   <a class="next-link" href="extract.html">
     <span class="label">Next</span>
@@ -132,7 +145,7 @@ Value produced by this call.</p>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
-      <li>Previous: <a href="ends.html" title="previous chapter">Thread::ends</a></li>
+      <li>Previous: <a href="eq.html" title="previous chapter">Thread::eq</a></li>
       <li>Next: <a href="extract.html" title="next chapter">Thread::extract</a></li>
   </ul></li>
   </ul></li>

@@ -60,6 +60,11 @@ void test_statistics() {
          "Thread::ncases should match Thread length");
   expect(frame.features("x").shape() == std::make_pair<std::int64_t, std::int64_t>(4, 1),
          "Thread::shape should report cases by one feature");
+  const auto logged_x = frame.log().features("x").as_series().to_vec<double>();
+  near(logged_x[0], 0.0, 1e-6, "DataFrame::log should delegate numeric features to Thread::log");
+  near(logged_x[1], std::log(2.0), 1e-6, "DataFrame::log should preserve numeric log values");
+  const auto exp_x = frame.exp().features("x").as_series().to_vec<double>();
+  near(exp_x[0], std::exp(1.0), 1e-5, "DataFrame::exp should delegate numeric features to Thread::exp");
 
   const auto axis_frame = DataFrame({
       {"A1", Thread(pluss::make_series(std::vector<double>{10, 20, 30, 40}))},
@@ -302,6 +307,45 @@ void test_statistics() {
              .as_series()
              .to_vec<double>() == std::vector<double>({1.0, 3.0, 6.0}),
          "Thread::cumsum should delegate to Thread::scan");
+  near(Thread(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0}))
+           .prod()
+           .to_dbl(),
+       24.0,
+       1e-12,
+       "Thread::prod should expose the 1D product reduction");
+  const auto labelled_scores =
+      Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0}))
+          .caselbl(Thread(pluss::make_note({"Alice", "Bob", "Carol"})));
+  expect(labelled_scores.csmin().to_str() == "Bob",
+         "Thread::csmin should return the case label at the minimum value");
+  expect(labelled_scores.csmax().to_str() == "Carol",
+         "Thread::csmax should return the case label at the maximum value");
+  expect(labelled_scores.top(2, false).as_series().to_vec<double>() ==
+             std::vector<double>({30.0, 20.0}),
+         "Thread::top should return the largest values in descending order");
+  expect(labelled_scores.bottom(2, false).as_series().to_vec<double>() ==
+             std::vector<double>({10.0, 20.0}),
+         "Thread::bottom should return the smallest values in ascending order");
+  const auto appended_scores =
+      labelled_scores.append(Thread(pluss::make_series(std::vector<double>{40.0}))
+                                 .caselbl(Thread(pluss::make_note({"David"}))));
+  expect(appended_scores.as_series().to_vec<double>() ==
+             std::vector<double>({20.0, 10.0, 30.0, 40.0}),
+         "Thread::append should concatenate 1D Series payloads");
+  expect(appended_scores.caselbl().as_note().vector() ==
+             std::vector<std::string_view>({"Alice", "Bob", "Carol", "David"}),
+         "Thread::append should preserve and concatenate case labels");
+  expect(Thread(pluss::make_note({"x", "y"}))
+             .append(Thread(pluss::make_note({"z"})))
+             .as_note()
+             .vector() == std::vector<std::string_view>({"x", "y", "z"}),
+         "Thread::append should concatenate Note payloads");
+  expect(labelled_scores.sample(2, std::uint64_t{7}).ncases() == 2,
+         "Thread::sample should expose deterministic 1D sampling");
+  expect(labelled_scores.sample(5, std::uint64_t{7}, true).ncases() == 5,
+         "Thread::sample should support replacement");
+  expect(labelled_scores.shuffle(7).ncases() == labelled_scores.ncases(),
+         "Thread::shuffle should preserve the 1D row count");
   expect(Thread(pluss::make_note({"alpha", "beta", "gamma"}))
              .has("beta")
              .as_series()
@@ -577,6 +621,30 @@ void test_statistics() {
   expect(frame.scan(ScanStatistic::Product).features("x").as_series().to_vec<double>() ==
              std::vector<double>({1, 2, 6, 24}),
          "running product values");
+  const auto row_scan = DataFrame({
+      {"a", Thread(pluss::make_series(std::vector<double>{1, 10}))},
+      {"b", Thread(pluss::make_series(std::vector<double>{2, 20}))},
+      {"c", Thread(pluss::make_series(std::vector<double>{3, 30}))},
+  }).cumsum(Axis::Feature);
+  expect(row_scan.features("a").as_series().to_vec<double>() ==
+             std::vector<double>({1, 10}) &&
+             row_scan.features("b").as_series().to_vec<double>() ==
+                 std::vector<double>({3, 30}) &&
+             row_scan.features("c").as_series().to_vec<double>() ==
+                 std::vector<double>({6, 60}),
+         "Axis::Feature cumsum should scan across features per case like pandas axis=1");
+  const auto row_max = DataFrame({
+      {"a", Thread(pluss::make_series(std::vector<double>{3, 10}))},
+      {"b", Thread(pluss::make_series(std::vector<double>{2, 40}))},
+      {"c", Thread(pluss::make_series(std::vector<double>{5, 30}))},
+  }).cummax(Axis::Feature);
+  expect(row_max.features("a").as_series().to_vec<double>() ==
+             std::vector<double>({3, 10}) &&
+             row_max.features("b").as_series().to_vec<double>() ==
+                 std::vector<double>({3, 40}) &&
+             row_max.features("c").as_series().to_vec<double>() ==
+                 std::vector<double>({5, 40}),
+         "Axis::Feature cummax should scan across features per case");
   auto nullable_valid = pluss::Series::ones(
       {4}, pluss::codem::ScalarType::Bool);
   reinterpret_cast<bool*>(nullable_valid.raw_data())[1] = false;
@@ -591,6 +659,19 @@ void test_statistics() {
   expect(pluss::table::detail::validity_mask(nullable.scan(ScanStatistic::Sum, false).features("x"))->to_vec<bool>() ==
              std::vector<bool>({true, false, false, false}),
          "strict cumulative validity stops after a null");
+  auto row_valid = pluss::Series::ones({2}, pluss::codem::ScalarType::Bool);
+  reinterpret_cast<bool*>(row_valid.raw_data())[0] = false;
+  const auto row_nullable = DataFrame({
+      {"a", Thread(pluss::make_series(std::vector<double>{1, 10}))},
+      {"b", Thread(pluss::make_series(std::vector<double>{2, 20}), row_valid)},
+      {"c", Thread(pluss::make_series(std::vector<double>{3, 30}))},
+  });
+  expect(pluss::table::detail::validity_mask(row_nullable.cumsum(Axis::Feature, true).features("c"))->to_vec<bool>() ==
+             std::vector<bool>({true, true}),
+         "Axis::Feature skip-null cumulative validity should resume after row nulls");
+  expect(pluss::table::detail::validity_mask(row_nullable.cumsum(Axis::Feature, false).features("c"))->to_vec<bool>() ==
+             std::vector<bool>({false, true}),
+         "Axis::Feature strict cumulative validity should propagate row nulls to later features");
 
   const auto related = frame.corr_with(frame);
   near(related.as_series().to_vec<double>(0), 1.0, 1e-9,
@@ -776,6 +857,42 @@ void test_thread_delegation_and_advanced_windows() {
              frame_right_labeled.features("x").as_series().to_vec<double>() ==
              std::vector<double>({3.0, 3.0}),
          "DataFrame ts resample should delegate options through Thread");
+
+  const auto lhs_axis = Thread(pluss::make_timeline({
+      "2024-01-01T00:00:00Z",
+      "2024-01-02T00:00:00Z",
+      "2024-01-03T00:00:00Z",
+  }));
+  const auto rhs_axis = Thread(pluss::make_timeline({
+      "2024-01-03T00:00:00Z",
+      "2024-01-01T00:00:00Z",
+  }));
+  const auto lhs_values =
+      Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}));
+  const auto rhs_values =
+      Thread(pluss::make_series(std::vector<double>{1.0, 2.0}));
+  const auto ts_sum = lhs_values.ts().add(rhs_values, lhs_axis, rhs_axis);
+  expect(ts_sum.is_valid(0) && !ts_sum.is_valid(1) && ts_sum.is_valid(2),
+         "Thread ts binary add should null-mark unmatched exact timestamps");
+  expect(std::fabs(ts_sum.as_series().to_vec<double>(0) - 12.0) < 1e-9 &&
+             std::fabs(ts_sum.as_series().to_vec<double>(2) - 31.0) < 1e-9,
+         "Thread ts binary add should align by timestamp labels");
+
+  const auto lhs_frame = DataFrame({
+      {"when", lhs_axis},
+      {"x", lhs_values},
+  }).set_cases("when", true);
+  const auto rhs_frame = DataFrame({
+      {"when", rhs_axis},
+      {"x", rhs_values},
+  }).set_cases("when", true);
+  const auto frame_ts_sum = lhs_frame.ts("x").add(rhs_frame);
+  expect(frame_ts_sum.features("x").is_valid(0) &&
+             !frame_ts_sum.features("x").is_valid(1) &&
+             frame_ts_sum.features("x").is_valid(2) &&
+             std::fabs(frame_ts_sum.features("x").as_series().to_vec<double>(0) - 12.0) < 1e-9 &&
+             std::fabs(frame_ts_sum.features("x").as_series().to_vec<double>(2) - 31.0) < 1e-9,
+         "DataFrame ts binary add should align on time case labels");
 
   const auto centered = source.ts().rolling(
       3, WindowStatistic::Mean,

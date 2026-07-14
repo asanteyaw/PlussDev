@@ -44,8 +44,8 @@ auto out = thread.kurtosis(2);
     <span class="label">Previous</span>
     <span class="title">kind</span>
   </a>
-  <a class="next-link" href="length.html">
+  <a class="next-link" href="land.html">
     <span class="label">Next</span>
-    <span class="title">length</span>
+    <span class="title">land</span>
   </a>
 </div>

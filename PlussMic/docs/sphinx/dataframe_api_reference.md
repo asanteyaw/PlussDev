@@ -16,11 +16,13 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/dataframe/abs
 api/dataframe/add
 api/dataframe/add_prefix
 api/dataframe/add_suffix
 api/dataframe/aggregate
-api/dataframe/align_cases
+api/dataframe/align
+api/dataframe/align_caselbl
 api/dataframe/all
 api/dataframe/any
 api/dataframe/assign
@@ -30,8 +32,10 @@ api/dataframe/bottom
 api/dataframe/bounded
 api/dataframe/bucketize
 api/dataframe/case_study
-api/dataframe/cases
+api/dataframe/caselbl
+api/dataframe/caselbl_
 api/dataframe/cast
+api/dataframe/clip
 api/dataframe/combine
 api/dataframe/compare
 api/dataframe/conform
@@ -43,6 +47,10 @@ api/dataframe/count_by
 api/dataframe/covar
 api/dataframe/csmax
 api/dataframe/csmin
+api/dataframe/cummax
+api/dataframe/cummin
+api/dataframe/cumprod
+api/dataframe/cumsum
 api/dataframe/defined
 api/dataframe/describe
 api/dataframe/div
@@ -66,9 +74,11 @@ api/dataframe/floordiv
 api/dataframe/flow
 api/dataframe/fold
 api/dataframe/freq
+api/dataframe/ge
 api/dataframe/get
 api/dataframe/group_by
 api/dataframe/gt
+api/dataframe/has
 api/dataframe/has_feature
 api/dataframe/has_levels
 api/dataframe/head
@@ -81,6 +91,8 @@ api/dataframe/isnull
 api/dataframe/join
 api/dataframe/kindelize
 api/dataframe/kurtosis
+api/dataframe/land
+api/dataframe/le
 api/dataframe/lengthen
 api/dataframe/level
 api/dataframe/levels
@@ -90,7 +102,9 @@ api/dataframe/load_excel
 api/dataframe/load_json
 api/dataframe/load_parquet
 api/dataframe/load_txt
+api/dataframe/lor
 api/dataframe/lt
+api/dataframe/lxor
 api/dataframe/map
 api/dataframe/mask
 api/dataframe/match
@@ -126,6 +140,7 @@ api/dataframe/put
 api/dataframe/put_
 api/dataframe/query
 api/dataframe/radd
+api/dataframe/rand
 api/dataframe/rank
 api/dataframe/rdiv
 api/dataframe/rename
@@ -135,17 +150,18 @@ api/dataframe/reorder
 api/dataframe/reorder_levels
 api/dataframe/repeated_cases
 api/dataframe/replace
-api/dataframe/resample
 api/dataframe/reset_cases
 api/dataframe/reshuffle
 api/dataframe/rfloordiv
 api/dataframe/rmod
 api/dataframe/rmul
 api/dataframe/rolling
+api/dataframe/ror
 api/dataframe/round
 api/dataframe/rpow
 api/dataframe/rsub
 api/dataframe/rtruediv
+api/dataframe/rxor
 api/dataframe/sample
 api/dataframe/save_as
 api/dataframe/save_csv
@@ -205,6 +221,4 @@ api/dataframe/view
 api/dataframe/weigh
 api/dataframe/where
 api/dataframe/window
-api/dataframe/with_cases
-api/dataframe/with_cases_
 ```

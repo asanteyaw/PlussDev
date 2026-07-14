@@ -59,8 +59,8 @@ auto out = thread.strip("# ");
     <span class="label">Previous</span>
     <span class="title">std</span>
   </a>
-  <a class="next-link" href="sum.html">
+  <a class="next-link" href="sub.html">
     <span class="label">Next</span>
-    <span class="title">sum</span>
+    <span class="title">sub</span>
   </a>
 </div>

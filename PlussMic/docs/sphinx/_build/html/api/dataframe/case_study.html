@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::cases" href="cases.html" />
+    <link rel="next" title="DataFrame::caselbl" href="caselbl.html" />
     <link rel="prev" title="DataFrame::bucketize" href="bucketize.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -99,7 +99,7 @@ Always returns a <code class="docutils literal notranslate"><span class="pre">Da
 <ul class="simple">
 <li><p>Positional row selectors use zero-based indexing. Negative positions count from the end.</p></li>
 <li><p>Positional row slices are half-open: <code class="docutils literal notranslate"><span class="pre">pos(start,</span> <span class="pre">stop)</span></code> means <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code>.</p></li>
-<li><p>Label selectors match against the current case axis returned by <code class="docutils literal notranslate"><span class="pre">cases()</span></code>.</p></li>
+<li><p>Label selectors match against the current case axis returned by <code class="docutils literal notranslate"><span class="pre">caselbl()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">label(value)</span></code> returns every matching row, so duplicate case labels are preserved instead of collapsed.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">label_range(start,</span> <span class="pre">stop)</span></code> is inclusive on both ends and walks the current case-axis order.</p></li>
 <li><p>Feature-position slices are half-open, while <code class="docutils literal notranslate"><span class="pre">col_range(start,</span> <span class="pre">stop)</span></code> is inclusive on both ends.</p></li>
@@ -114,7 +114,7 @@ Always returns a <code class="docutils literal notranslate"><span class="pre">Da
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">features({...})</span></code> when you only need feature projection and no row lookup.</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">filter(mask)</span></code> when you already have a boolean row mask and want full-row retention with no feature projection in the same call.</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">observe(start,</span> <span class="pre">stop)</span></code> for display-oriented middle slices. Use <code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> when the selected result itself is part of later computation.</p></li>
-<li><p>If your current case axis is numeric and you want those labels as numeric data, call <code class="docutils literal notranslate"><span class="pre">cases().as_series()</span></code> explicitly.</p></li>
+<li><p>If your current case axis is numeric and you want those labels as numeric data, call <code class="docutils literal notranslate"><span class="pre">caselbl().as_series()</span></code> explicitly.</p></li>
 </ul>
 </section>
 <section id="examples">
@@ -385,7 +385,7 @@ Tamale  5.0
 <section id="behavior-notes">
 <h2>Behavior Notes<a class="headerlink" href="#behavior-notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">cases()</span></code> remains the accessor for the case axis itself. It no longer doubles as a row-selection API.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">caselbl()</span></code> remains the accessor for the case axis itself. It no longer doubles as a row-selection API.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> is the structured-case overload. Use it only after <code class="docutils literal notranslate"><span class="pre">set_cases(...)</span></code> has created named case levels.</p></li>
 <li><p>Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.</p></li>
 <li><p>When you only want to preview a row window instead of materializing a selection result for later work, use <code class="docutils literal notranslate"><span class="pre">observe(...)</span></code>.</p></li>
@@ -396,9 +396,9 @@ Tamale  5.0
     <span class="label">Previous</span>
     <span class="title">bucketize</span>
   </a>
-  <a class="next-link" href="cases.html">
+  <a class="next-link" href="caselbl.html">
     <span class="label">Next</span>
-    <span class="title">cases</span>
+    <span class="title">caselbl</span>
   </a>
 </div>
 </section>
@@ -452,7 +452,7 @@ Tamale  5.0
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
       <li>Previous: <a href="bucketize.html" title="previous chapter">DataFrame::bucketize</a></li>
-      <li>Next: <a href="cases.html" title="next chapter">DataFrame::cases</a></li>
+      <li>Next: <a href="caselbl.html" title="next chapter">DataFrame::caselbl</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

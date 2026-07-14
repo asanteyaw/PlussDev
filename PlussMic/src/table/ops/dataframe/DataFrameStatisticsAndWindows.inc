@@ -193,6 +193,57 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
   return DataFrame(std::move(columns), src.cases_);
 }
 
+RunningOp_ running_op_from_scan_(ScanStatistic statistic, std::string_view where) {
+  switch (statistic) {
+    case ScanStatistic::Sum:
+      return RunningOp_::Sum;
+    case ScanStatistic::Product:
+      return RunningOp_::Product;
+    case ScanStatistic::Minimum:
+      return RunningOp_::Minimum;
+    case ScanStatistic::Maximum:
+      return RunningOp_::Maximum;
+  }
+  PLUSS_FAIL(std::string(where) + ": unsupported scan statistic");
+}
+
+DataFrame running_statistic_matrix_(const detail::DataFrameImpl& src,
+                                    RunningOp_ op,
+                                    std::int64_t axis,
+                                    bool skip_nulls,
+                                    std::string_view where) {
+  const auto matrix = numeric_reduce_matrix_(src, where);
+  auto values = matrix.values;
+  auto valid = matrix.valid;
+  if (valid.platform() != values.platform()) {
+    valid = valid.to(values.platform());
+  }
+  const auto invalid = valid.logical_not();
+
+  pluss::Series result;
+  switch (op) {
+    case RunningOp_::Sum:
+      result = values.where(invalid, 0.0).cumsum(axis);
+      break;
+    case RunningOp_::Product:
+      result = values.where(invalid, 1.0).cumprod(axis);
+      break;
+    case RunningOp_::Minimum:
+      result = values.where(invalid, std::numeric_limits<double>::infinity()).cummin(axis);
+      break;
+    case RunningOp_::Maximum:
+      result = values.where(invalid, -std::numeric_limits<double>::infinity()).cummax(axis);
+      break;
+  }
+
+  auto out_valid = skip_nulls
+                       ? valid
+                       : valid.to(pluss::codem::ScalarType::Int64)
+                             .cummin(axis)
+                             .to(pluss::codem::ScalarType::Bool);
+  return frame_from_matrix_(result, out_valid, matrix.names, src.cases_);
+}
+
 enum class MovingOp_ : std::uint8_t {
   Sum,
   Mean,
@@ -432,6 +483,18 @@ DataFrame DataFrame::clip(double min_value, double max_value) const {
 DataFrame DataFrame::round(std::int64_t decimals) const {
   return delegate_numeric_threads_(impl_ref_(), [decimals](const Thread& source) {
     return source.round(decimals);
+  });
+}
+
+DataFrame DataFrame::log() const {
+  return delegate_numeric_threads_(impl_ref_(), [](const Thread& source) {
+    return source.log();
+  });
+}
+
+DataFrame DataFrame::exp() const {
+  return delegate_numeric_threads_(impl_ref_(), [](const Thread& source) {
+    return source.exp();
   });
 }
 
@@ -678,26 +741,48 @@ Thread DataFrame::se(Axis axis,
 }
 
 DataFrame DataFrame::scan(ScanStatistic statistic, bool skip_nulls) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [statistic, skip_nulls](const Thread& source) {
-        return source.scan(statistic, skip_nulls);
-      });
+  return scan(statistic, Axis::Case, skip_nulls);
+}
+
+DataFrame DataFrame::scan(ScanStatistic statistic, Axis axis, bool skip_nulls) const {
+  const auto normalized = normalize_reduce_axis_(axis, "DataFrame::scan");
+  const auto op = running_op_from_scan_(statistic, "DataFrame::scan");
+  if (normalized == 0) {
+    return running_statistic_(impl_ref_(), op, skip_nulls, "DataFrame::scan");
+  }
+  return running_statistic_matrix_(impl_ref_(), op, normalized, skip_nulls, "DataFrame::scan");
 }
 
 DataFrame DataFrame::cumsum(bool skip_nulls) const {
   return scan(ScanStatistic::Sum, skip_nulls);
 }
 
+DataFrame DataFrame::cumsum(Axis axis, bool skip_nulls) const {
+  return scan(ScanStatistic::Sum, axis, skip_nulls);
+}
+
 DataFrame DataFrame::cumprod(bool skip_nulls) const {
   return scan(ScanStatistic::Product, skip_nulls);
+}
+
+DataFrame DataFrame::cumprod(Axis axis, bool skip_nulls) const {
+  return scan(ScanStatistic::Product, axis, skip_nulls);
 }
 
 DataFrame DataFrame::cummin(bool skip_nulls) const {
   return scan(ScanStatistic::Minimum, skip_nulls);
 }
 
+DataFrame DataFrame::cummin(Axis axis, bool skip_nulls) const {
+  return scan(ScanStatistic::Minimum, axis, skip_nulls);
+}
+
 DataFrame DataFrame::cummax(bool skip_nulls) const {
   return scan(ScanStatistic::Maximum, skip_nulls);
+}
+
+DataFrame DataFrame::cummax(Axis axis, bool skip_nulls) const {
+  return scan(ScanStatistic::Maximum, axis, skip_nulls);
 }
 
 Thread DataFrame::corr_with(const DataFrame& other,

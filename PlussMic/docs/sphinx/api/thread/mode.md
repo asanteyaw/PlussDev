@@ -40,9 +40,9 @@ auto out = thread.mode(true);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="min.html">
+  <a class="prev-link" href="mod.html">
     <span class="label">Previous</span>
-    <span class="title">min</span>
+    <span class="title">mod</span>
   </a>
   <a class="next-link" href="month.html">
     <span class="label">Next</span>

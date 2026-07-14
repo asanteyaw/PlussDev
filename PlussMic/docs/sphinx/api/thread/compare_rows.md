@@ -62,8 +62,8 @@ auto out = duplicated.compare_rows(0, 2, true);
     <span class="label">Previous</span>
     <span class="title">compare</span>
   </a>
-  <a class="next-link" href="contains.html">
+  <a class="next-link" href="corr.html">
     <span class="label">Next</span>
-    <span class="title">contains</span>
+    <span class="title">corr</span>
   </a>
 </div>

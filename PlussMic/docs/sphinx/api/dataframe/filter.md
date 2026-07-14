@@ -8,6 +8,8 @@
 DataFrame::filter(const pluss::Series& bool_mask) -> DataFrame
 
 DataFrame::filter(const Thread& bool_mask) -> DataFrame
+
+DataFrame::filter(const Thread& bool_mask, const AlignOptions& options) -> DataFrame
 ```
 
 ## What It Does
@@ -18,6 +20,9 @@ Keeps only the rows where the supplied boolean mask is true.
 
 **bool_mask**
     Boolean row mask. `true` keeps or rewrites the corresponding row, while `false` leaves it out or leaves the original value unchanged depending on the method.
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 ## Returns
 
@@ -47,6 +52,26 @@ id  sales  city
 3    90.0  Kumasi
 ```
 Example 2. Filter rows using a boolean mask built from an existing frame expression.
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = df.features("sales") >= 95.0;
+auto out = df.filter(mask);
+```
+
+### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+Example 3. Filter rows using a boolean mask built from an existing frame expression.
 
 ```cpp
 auto df = pluss::table::DataFrame({

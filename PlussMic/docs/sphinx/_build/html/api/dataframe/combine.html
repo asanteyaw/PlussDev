@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=b6f65cc0"></script>
+    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::compare" href="compare.html" />
-    <link rel="prev" title="DataFrame::cast" href="cast.html" />
+    <link rel="prev" title="DataFrame::clip" href="clip.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -91,7 +91,7 @@ Combined frame produced by the chosen combine policy.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">with_cases</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
+<span class="p">}).</span><span class="n">caselbl</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">extra</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
@@ -122,7 +122,7 @@ D400 | Tamale  north   5      5      north         1
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">with_cases</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
+<span class="p">}).</span><span class="n">caselbl</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">patch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">70.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">})},</span>
@@ -152,9 +152,9 @@ D400 | Tamale  north   5      5
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cast.html">
+  <a class="prev-link" href="clip.html">
     <span class="label">Previous</span>
-    <span class="title">cast</span>
+    <span class="title">clip</span>
   </a>
   <a class="next-link" href="compare.html">
     <span class="label">Next</span>
@@ -212,7 +212,7 @@ D400 | Tamale  north   5      5
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
-      <li>Previous: <a href="cast.html" title="previous chapter">DataFrame::cast</a></li>
+      <li>Previous: <a href="clip.html" title="previous chapter">DataFrame::clip</a></li>
       <li>Next: <a href="compare.html" title="next chapter">DataFrame::compare</a></li>
   </ul></li>
   </ul></li>

@@ -7,6 +7,14 @@
 ```cpp
 DataFrame::add(const DataFrame& other) -> DataFrame
 
+DataFrame::add(const DataFrame& other, const AlignOptions& options) -> DataFrame
+
+DataFrame::add(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
+
+DataFrame::add(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
+
+DataFrame::add(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
+
 DataFrame::add(double other) -> DataFrame
 ```
 
@@ -110,6 +118,10 @@ auto out = left.add(curve);
 
 
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="abs.html">
+    <span class="label">Previous</span>
+    <span class="title">abs</span>
+  </a>
   <a class="next-link" href="add_prefix.html">
     <span class="label">Next</span>
     <span class="title">add_prefix</span>

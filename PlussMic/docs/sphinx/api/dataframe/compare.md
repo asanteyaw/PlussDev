@@ -7,6 +7,14 @@
 ```cpp
 DataFrame::compare(const DataFrame& other) -> DataFrame
 
+DataFrame::compare(const DataFrame& other, const AlignOptions& options) -> DataFrame
+
+DataFrame::compare(const Thread& other, Axis axis = Axis::Feature) -> DataFrame
+
+DataFrame::compare(const Thread& other, Axis axis, const AlignOptions& options) -> DataFrame
+
+DataFrame::compare(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) -> DataFrame
+
 DataFrame::compare(double other) -> DataFrame
 ```
 
@@ -53,7 +61,7 @@ auto sales = DataFrame({
     {"region", pluss::make_note({"south", "south", "middle", "north"})},
     {"units", pluss::make_series({10.0, 7.0, 12.0, 5.0})},
     {"price", pluss::make_series({3.0, 4.0, 2.5, 5.0})},
-}).with_cases(pluss::make_note({"A100", "B200", "B200", "D400"}));
+}).caselbl(pluss::make_note({"A100", "B200", "B200", "D400"}));
 
 auto out = sales.features({"units", "price"}).compare(5.0);
 ```

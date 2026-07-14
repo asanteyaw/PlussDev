@@ -72,9 +72,9 @@ auto out = scores.corr(other, ThreadCorrMethod::Spearman);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="contains.html">
+  <a class="prev-link" href="compare_rows.html">
     <span class="label">Previous</span>
-    <span class="title">contains</span>
+    <span class="title">compare_rows</span>
   </a>
   <a class="next-link" href="corr_with.html">
     <span class="label">Next</span>

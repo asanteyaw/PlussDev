@@ -387,7 +387,7 @@ Stream::cases() -> const std::optional<pluss::table::Thread>&
 
 #### What It Does
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 

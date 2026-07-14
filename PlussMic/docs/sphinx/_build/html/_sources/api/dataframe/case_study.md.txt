@@ -60,7 +60,7 @@ DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& features)
 
 - Positional row selectors use zero-based indexing. Negative positions count from the end.
 - Positional row slices are half-open: `pos(start, stop)` means `[start, stop)`.
-- Label selectors match against the current case axis returned by `cases()`.
+- Label selectors match against the current case axis returned by `caselbl()`.
 - `label(value)` returns every matching row, so duplicate case labels are preserved instead of collapsed.
 - `label_range(start, stop)` is inclusive on both ends and walks the current case-axis order.
 - Feature-position slices are half-open, while `col_range(start, stop)` is inclusive on both ends.
@@ -73,7 +73,7 @@ DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& features)
 - Use `features({...})` when you only need feature projection and no row lookup.
 - Use `filter(mask)` when you already have a boolean row mask and want full-row retention with no feature projection in the same call.
 - Use `observe(start, stop)` for display-oriented middle slices. Use `case_study(...)` when the selected result itself is part of later computation.
-- If your current case axis is numeric and you want those labels as numeric data, call `cases().as_series()` explicitly.
+- If your current case axis is numeric and you want those labels as numeric data, call `caselbl().as_series()` explicitly.
 
 ## Examples
 
@@ -363,7 +363,7 @@ sales  cost
 
 ## Behavior Notes
 
-- `cases()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.
+- `caselbl()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.
 - `CasePick` is the structured-case overload. Use it only after `set_cases(...)` has created named case levels.
 - Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.
 - When you only want to preview a row window instead of materializing a selection result for later work, use `observe(...)`.
@@ -376,8 +376,8 @@ sales  cost
     <span class="label">Previous</span>
     <span class="title">bucketize</span>
   </a>
-  <a class="next-link" href="cases.html">
+  <a class="next-link" href="caselbl.html">
     <span class="label">Next</span>
-    <span class="title">cases</span>
+    <span class="title">caselbl</span>
   </a>
 </div>

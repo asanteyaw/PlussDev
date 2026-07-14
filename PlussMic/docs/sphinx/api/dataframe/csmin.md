@@ -62,8 +62,8 @@ dtype: Series
     <span class="label">Previous</span>
     <span class="title">csmax</span>
   </a>
-  <a class="next-link" href="defined.html">
+  <a class="next-link" href="cummax.html">
     <span class="label">Next</span>
-    <span class="title">defined</span>
+    <span class="title">cummax</span>
   </a>
 </div>

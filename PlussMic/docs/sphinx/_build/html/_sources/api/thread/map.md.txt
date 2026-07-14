@@ -40,9 +40,9 @@ auto out = thread.map({});
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lstrip.html">
+  <a class="prev-link" href="lxor.html">
     <span class="label">Previous</span>
-    <span class="title">lstrip</span>
+    <span class="title">lxor</span>
   </a>
   <a class="next-link" href="matches.html">
     <span class="label">Next</span>

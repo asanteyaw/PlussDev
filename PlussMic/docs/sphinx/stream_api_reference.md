@@ -387,7 +387,7 @@ Stream::cases() -> const std::optional<pluss::table::Thread>&
 
 #### What It Does
 
-Fetches one value, member, or slice from the current object without changing the source object.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -405,7 +405,7 @@ Example 1. Call the simplest overload.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.caselbl();
+auto out = stream.cases();
 ```
 
 ##### Output
@@ -509,7 +509,7 @@ Example 1. Return an updated copy after changing structural metadata, cases, or 
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.clear_caselbl();
+auto out = stream.clear_cases();
 ```
 
 ##### Output
@@ -1221,7 +1221,7 @@ Example 1. Call the simplest overload.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.has_caselbl();
+auto out = stream.has_cases();
 ```
 
 ##### Output
@@ -2377,7 +2377,7 @@ Example 1. Return an updated copy after changing structural metadata, cases, or 
 auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = stream.caselbl(cases);
+auto out = stream.with_cases(cases);
 ```
 
 ##### Output
@@ -2426,7 +2426,7 @@ Example 1. Mutate the current object in place, then inspect the updated state.
 auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 
-stream.caselbl_( cases);
+stream.with_cases_(cases);
 ```
 
 ##### Output

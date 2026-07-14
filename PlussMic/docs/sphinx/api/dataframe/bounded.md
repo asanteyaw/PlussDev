@@ -63,7 +63,7 @@ For the most common bounded workflows, `min_count` is the field you will tune mo
 
 - <a href="window.html"><code>DataFrame::window</code></a>: derive several named rolling features from explicit window specs.
 - <a href="../thread/bounded.html"><code>Thread::bounded</code></a>: apply the same custom-bounds idea to one thread directly.
-- <a href="resample.html"><code>DataFrame::resample</code></a>: aggregate by time bins instead of custom row bounds.
+- <a href="#resample"><code>DataFrame::resample</code></a>: aggregate by time bins instead of custom row bounds.
 
 ## Notes
 

@@ -147,9 +147,9 @@ DataFrame::DTypes DataFrame::dtypes() const {
   return DTypes(std::move(entries));
 }
 
-const Thread& DataFrame::cases() const { return impl_ref_().cases_; }
+const Thread& DataFrame::case_labels_() const { return impl_ref_().cases_; }
 
-const Thread& DataFrame::caselbl() const { return cases(); }
+const Thread& DataFrame::caselbl() const { return case_labels_(); }
 
 DataFrame DataFrame::caselbl(const Thread& labels) const {
   return with_cases(labels);
@@ -1290,7 +1290,7 @@ DataFrame DataFrame::sort_values(pluss::msharp::RangeView::Of<ArrangeSpec> specs
 DataFrame DataFrame::sort_cases(bool ascending, bool nulls_last) const {
   std::vector<std::int64_t> idx(static_cast<std::size_t>(ncases()));
   std::iota(idx.begin(), idx.end(), 0);
-  const auto& case_axis = cases();
+  const auto& case_axis = case_labels_();
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
     const auto cmp = case_axis.compare_rows(a, b, nulls_last);
     return ascending ? (cmp < 0) : (cmp > 0);
@@ -1494,7 +1494,7 @@ DataFrame DataFrame::reset_cases(const ResetCasesOptions& options) const {
   if (!src.case_axis_.defined()) {
     if (!options.drop) {
       const auto name = !options.names.empty() ? options.names.front() : options.prefix;
-      out = out.set_features(name.empty() ? "case" : name, cases());
+      out = out.set_features(name.empty() ? "case" : name, case_labels_());
     }
     return out.with_cases(default_cases(out.ncases()));
   }
@@ -1589,24 +1589,148 @@ DataFrame DataFrame::drop_levels(pluss::msharp::RangeView::Of<std::string_view> 
       src.names_, src.columns_, std::move(out_cases), src.title_, std::move(axis)));
 }
 
-DataFrame DataFrame::align_cases(const Thread& new_cases) const {
-  PLUSS_CHECK(new_cases.defined(), "DataFrame::align_cases: new cases are undefined");
-  std::unordered_map<std::string, std::int64_t> old_pos;
-  old_pos.reserve(static_cast<std::size_t>(ncases()));
-  for (std::int64_t i = 0; i < ncases(); ++i) {
-    old_pos.emplace(thread_scalar_string_at(cases(), i), i);
+namespace {
+
+std::vector<std::string> align_target_features_(const DataFrame& frame,
+                                                const DataFrame::AlignSpec& spec,
+                                                std::string_view where) {
+  if (spec.features.empty()) {
+    return frame.features();
+  }
+  std::vector<std::string> out;
+  out.reserve(spec.features.size());
+  std::unordered_set<std::string> seen;
+  seen.reserve(spec.features.size());
+  for (const auto& name : spec.features) {
+    PLUSS_CHECK(!name.empty(), std::string(where) + ": feature label cannot be empty");
+    PLUSS_CHECK(seen.insert(name).second,
+                std::string(where) + ": duplicate target feature '" + name + "'");
+    out.push_back(name);
+  }
+  return out;
+}
+
+Thread null_align_feature_(std::int64_t size, std::optional<double> fill, std::string_view where) {
+  PLUSS_CHECK(size >= 0, std::string(where) + ": output size must be non-negative");
+  const double value = fill.value_or(std::numeric_limits<double>::quiet_NaN());
+  auto values = pluss::Series::full({size},
+                                    value,
+                                    pluss::codem::ScalarType::Float64,
+                                    pluss::codem::Platform::CPU);
+  if (fill.has_value()) {
+    return Thread(values);
+  }
+  return Thread(values, pluss::Series::zeros({size}, pluss::codem::ScalarType::Bool));
+}
+
+Thread remap_align_feature_(const Thread& source,
+                            const Thread& target_caselbl,
+                            std::optional<double> fill,
+                            std::string_view where) {
+  PLUSS_CHECK(source.defined(), std::string(where) + ": source feature is undefined");
+  PLUSS_CHECK(target_caselbl.defined(), std::string(where) + ": target case labels are undefined");
+
+  const auto out_size = target_caselbl.size();
+  if (out_size == 0) {
+    return null_thread_like_(source, 0, where);
+  }
+  if (source.size() == 0) {
+    auto out = null_thread_like_(source, out_size, where);
+    if (fill.has_value() && out.kind() == ThreadKind::Series) {
+      out = out.fillna(*fill);
+    }
+    return out;
   }
 
-  std::vector<std::int64_t> indices;
-  indices.reserve(static_cast<std::size_t>(new_cases.size()));
-  for (std::int64_t i = 0; i < new_cases.size(); ++i) {
-    const auto key = thread_scalar_string_at(new_cases, i);
-    const auto it = old_pos.find(key);
-    PLUSS_CHECK(it != old_pos.end(),
-                "DataFrame::align_cases: case label not found '" + key + "'");
-    indices.push_back(it->second);
+  std::unordered_map<std::string, std::vector<std::int64_t>> positions;
+  positions.reserve(static_cast<std::size_t>(source.caselbl().size()));
+  const auto source_labels = source.caselbl();
+  for (std::int64_t row = 0; row < source_labels.size(); ++row) {
+    positions[thread_scalar_string_at(source_labels, row)].push_back(row);
   }
-  return take(indices).with_cases(new_cases);
+
+  std::unordered_map<std::string, std::size_t> seen;
+  seen.reserve(static_cast<std::size_t>(target_caselbl.size()));
+  std::vector<std::int64_t> take_rows;
+  std::vector<bool> present;
+  take_rows.reserve(static_cast<std::size_t>(target_caselbl.size()));
+  present.reserve(static_cast<std::size_t>(target_caselbl.size()));
+  for (std::int64_t row = 0; row < target_caselbl.size(); ++row) {
+    const auto key = thread_scalar_string_at(target_caselbl, row);
+    const auto occurrence = seen[key]++;
+    const auto it = positions.find(key);
+    if (it != positions.end() && occurrence < it->second.size()) {
+      take_rows.push_back(it->second[occurrence]);
+      present.push_back(true);
+    } else {
+      take_rows.push_back(0);
+      present.push_back(false);
+    }
+  }
+
+  auto out = source.take(std::span<const std::int64_t>(take_rows.data(), take_rows.size()));
+  if (fill.has_value() && out.kind() == ThreadKind::Series) {
+    auto missing = bool_series_from_keep(present).logical_not();
+    if (missing.platform() != out.as_series().platform()) {
+      missing = missing.to(out.as_series().platform());
+    }
+    out = Thread(out.as_series().where(missing, *fill), detail::validity_mask(out));
+  }
+
+  const bool all_present = std::all_of(present.begin(), present.end(), [](bool ok) { return ok; });
+  if (!all_present || detail::has_validity_mask(out)) {
+    std::vector<bool> valid;
+    valid.reserve(present.size());
+    for (std::int64_t row = 0; row < static_cast<std::int64_t>(present.size()); ++row) {
+      const auto idx = static_cast<std::size_t>(row);
+      if (!present[idx]) {
+        valid.push_back(fill.has_value() && out.kind() == ThreadKind::Series);
+      } else {
+        valid.push_back(out.is_valid(row));
+      }
+    }
+    auto validity = bool_series_from_keep(valid);
+    if (out.kind() == ThreadKind::Series && validity.platform() != out.as_series().platform()) {
+      validity = validity.to(out.as_series().platform());
+    }
+    out = detail::with_validity_mask(out, validity);
+  }
+  return out;
+}
+
+} // namespace
+
+DataFrame DataFrame::align(const AlignSpec& spec) const {
+  const auto& src = impl_ref_();
+  const Thread target_caselbl = spec.caselbl.has_value() ? *spec.caselbl : src.cases_;
+  PLUSS_CHECK(target_caselbl.defined(), "DataFrame::align: target case labels are undefined");
+
+  const auto target_features = align_target_features_(*this, spec, "DataFrame::align");
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(target_features.size());
+  for (const auto& name : target_features) {
+    const auto it = src.name_to_idx_.find(name);
+    if (it == src.name_to_idx_.end()) {
+      out.emplace_back(name, null_align_feature_(target_caselbl.size(), spec.fill, "DataFrame::align"));
+      continue;
+    }
+    auto column = detail::with_display_labels(src.columns_[it->second], src.cases_);
+    out.emplace_back(name, remap_align_feature_(column, target_caselbl, spec.fill, "DataFrame::align"));
+  }
+
+  return DataFrame(std::move(out), target_caselbl).title(src.title_);
+}
+
+DataFrame DataFrame::align(const Thread& new_caselbl) const {
+  return align(AlignSpec{.caselbl = new_caselbl});
+}
+
+DataFrame DataFrame::align_caselbl(const Thread& new_caselbl) const {
+  return align(AlignSpec{.caselbl = new_caselbl});
+}
+
+DataFrame DataFrame::align_caselbl(const Thread& new_caselbl, std::optional<double> fill) const {
+  return align(AlignSpec{.caselbl = new_caselbl, .fill = fill});
 }
 
 DataFrame DataFrame::join(const DataFrame& other, std::string collision_suffix) const {
@@ -2346,7 +2470,7 @@ DataFrame DataFrame::conform(const DataFrame& other) const {
   }
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
-  return out.align_cases(other.caselbl());
+  return out.align_caselbl(other.caselbl());
 }
 
 DataFrame DataFrame::unify(std::string_view left_on,

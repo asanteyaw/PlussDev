@@ -151,8 +151,8 @@ summary | 8.333333333      1.040833
     <span class="label">Previous</span>
     <span class="title">add_suffix</span>
   </a>
-  <a class="next-link" href="align_cases.html">
+  <a class="next-link" href="align.html">
     <span class="label">Next</span>
-    <span class="title">align_cases</span>
+    <span class="title">align</span>
   </a>
 </div>

@@ -59,8 +59,8 @@ auto out = thread.lstrip("#");
     <span class="label">Previous</span>
     <span class="title">lower</span>
   </a>
-  <a class="next-link" href="map.html">
+  <a class="next-link" href="lt.html">
     <span class="label">Next</span>
-    <span class="title">map</span>
+    <span class="title">lt</span>
   </a>
 </div>

@@ -141,7 +141,7 @@ options.case_col_idx = 0;
 After loading, inspect the case axis:
 
 ```cpp
-std::cout << df.cases().dtype() << '\n';
+std::cout << df.caselbl().dtype() << '\n';
 ```
 
 Move a case axis back into the feature axis later with:
@@ -174,7 +174,7 @@ options.ncases = 3;
 
 auto df = DataFrame::load_csv("sales.csv", options);
 std::cout << df.to_string() << '\n';
-std::cout << "case dtype=" << df.cases().dtype() << '\n';
+std::cout << "case dtype=" << df.caselbl().dtype() << '\n';
 ```
 
 Output:

@@ -47,8 +47,8 @@ auto out = thread.percentiles({}, 2);
     <span class="label">Previous</span>
     <span class="title">partition</span>
   </a>
-  <a class="next-link" href="put.html">
+  <a class="next-link" href="pow.html">
     <span class="label">Next</span>
-    <span class="title">put</span>
+    <span class="title">pow</span>
   </a>
 </div>

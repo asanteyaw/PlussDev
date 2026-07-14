@@ -45,8 +45,8 @@ auto out = thread.filter(mask);
     <span class="label">Previous</span>
     <span class="title">fillna_</span>
   </a>
-  <a class="next-link" href="flow.html">
+  <a class="next-link" href="floordiv.html">
     <span class="label">Next</span>
-    <span class="title">flow</span>
+    <span class="title">floordiv</span>
   </a>
 </div>

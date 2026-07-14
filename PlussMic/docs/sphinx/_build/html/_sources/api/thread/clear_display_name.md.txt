@@ -45,9 +45,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clear_cases_.html">
+  <a class="prev-link" href="clear_caselbl_.html">
     <span class="label">Previous</span>
-    <span class="title">clear_cases_</span>
+    <span class="title">clear_caselbl_</span>
   </a>
   <a class="next-link" href="clip.html">
     <span class="label">Next</span>

@@ -185,12 +185,12 @@ auto out = thread.put(other, "demo");
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="percentiles.html">
+  <a class="prev-link" href="prod.html">
     <span class="label">Previous</span>
-    <span class="title">percentiles</span>
+    <span class="title">prod</span>
   </a>
-  <a class="next-link" href="rank.html">
+  <a class="next-link" href="radd.html">
     <span class="label">Next</span>
-    <span class="title">rank</span>
+    <span class="title">radd</span>
   </a>
 </div>

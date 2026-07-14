@@ -50,9 +50,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lt.html">
+  <a class="prev-link" href="lxor.html">
     <span class="label">Previous</span>
-    <span class="title">lt</span>
+    <span class="title">lxor</span>
   </a>
   <a class="next-link" href="mask.html">
     <span class="label">Next</span>

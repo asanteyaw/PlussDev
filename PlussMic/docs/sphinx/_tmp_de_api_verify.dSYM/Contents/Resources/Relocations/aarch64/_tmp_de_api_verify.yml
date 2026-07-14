@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'PlussMic/docs/sphinx/_tmp_de_api_verify'
+relocations:     []
+...

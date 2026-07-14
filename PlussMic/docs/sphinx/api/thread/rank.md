@@ -49,12 +49,12 @@ auto out = thread.rank({}, {}, true, true);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="put.html">
+  <a class="prev-link" href="rangelbl_.html">
     <span class="label">Previous</span>
-    <span class="title">put</span>
+    <span class="title">rangelbl_</span>
   </a>
-  <a class="next-link" href="replace.html">
+  <a class="next-link" href="rdiv.html">
     <span class="label">Next</span>
-    <span class="title">replace</span>
+    <span class="title">rdiv</span>
   </a>
 </div>

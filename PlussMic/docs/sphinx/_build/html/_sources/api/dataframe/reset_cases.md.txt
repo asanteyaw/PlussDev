@@ -45,10 +45,10 @@ auto out = with_cases.reset_cases("case");
 ### Output
 
 ```text
-with_cases.cases():
+with_cases.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
-out.cases():
+out.caselbl():
 [0, 1, 2]
 
 out.head():
@@ -73,10 +73,10 @@ auto out = with_cases.reset_cases("case");
 ### Output
 
 ```text
-with_cases.cases():
+with_cases.caselbl():
 ["Accra", "Tema", "Kumasi"]
 
-out.cases():
+out.caselbl():
 [0, 1, 2]
 
 out.head():
@@ -88,9 +88,9 @@ id  sales  case
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="resample.html">
+  <a class="prev-link" href="replace.html">
     <span class="label">Previous</span>
-    <span class="title">resample</span>
+    <span class="title">replace</span>
   </a>
   <a class="next-link" href="reshuffle.html">
     <span class="label">Next</span>

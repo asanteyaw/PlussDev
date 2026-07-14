@@ -248,7 +248,7 @@ DataFrameView DataFrame::transpose(bool render) const {
 
   for (std::int64_t r = 0; r < rows; ++r) {
     std::string feature_name;
-    feature_name = normalize_case_label(case_label_from_axis(cases(), r));
+    feature_name = normalize_case_label(case_label_from_axis(caselbl(), r));
     feature_name = unique_feature_name(std::move(feature_name), used_names, r);
 
     std::vector<std::string> values;
@@ -358,7 +358,7 @@ DataFrame DataFrame::lengthen(
             1.0,
             pluss::codem::ScalarType::Int64,
             pluss::codem::Platform::CPU))
-      : cases().take(tiled_rows);
+      : caselbl().take(tiled_rows);
   return DataFrame(std::move(output), output_cases).title(title());
 }
 
@@ -381,7 +381,7 @@ DataFrame DataFrame::stack(std::string feature_name,
     }
   } else {
     case_level_names.push_back("case");
-    case_level_values.push_back(cases());
+    case_level_values.push_back(caselbl());
   }
 
   std::unordered_set<std::string> output_names;

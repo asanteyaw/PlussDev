@@ -67,9 +67,9 @@ r2  b        4.0
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="kurtosis.html">
+  <a class="prev-link" href="le.html">
     <span class="label">Previous</span>
-    <span class="title">kurtosis</span>
+    <span class="title">le</span>
   </a>
   <a class="next-link" href="level.html">
     <span class="label">Next</span>

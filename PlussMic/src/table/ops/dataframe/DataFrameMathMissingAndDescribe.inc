@@ -2421,17 +2421,17 @@ bool DataFrame::equals(const DataFrame& other) const {
   if (features() != other.features()) {
     return false;
   }
-  if (cases().dtype() != other.caselbl().dtype()) {
+  if (case_labels_().dtype() != other.caselbl().dtype()) {
     return false;
   }
   for (std::int64_t r = 0; r < ncases(); ++r) {
-    if (cases().is_valid(r) != other.caselbl().is_valid(r)) {
+    if (case_labels_().is_valid(r) != other.caselbl().is_valid(r)) {
       return false;
     }
-    if (!cases().is_valid(r)) {
+    if (!case_labels_().is_valid(r)) {
       continue;
     }
-    if (thread_scalar_string_at(cases(), r) != thread_scalar_string_at(other.caselbl(), r)) {
+    if (thread_scalar_string_at(case_labels_(), r) != thread_scalar_string_at(other.caselbl(), r)) {
       return false;
     }
   }

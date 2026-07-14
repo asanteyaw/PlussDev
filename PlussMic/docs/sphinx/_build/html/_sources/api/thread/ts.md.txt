@@ -39,9 +39,9 @@ The call completes and returns the contract described under Output.
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="transform.html">
+  <a class="prev-link" href="truediv.html">
     <span class="label">Previous</span>
-    <span class="title">transform</span>
+    <span class="title">truediv</span>
   </a>
   <a class="next-link" href="unique.html">
     <span class="label">Next</span>

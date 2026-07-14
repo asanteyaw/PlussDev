@@ -504,8 +504,8 @@ midterm_1  midterm_2  city
     <span class="label">Previous</span>
     <span class="title">repeated_cases</span>
   </a>
-  <a class="next-link" href="resample.html">
+  <a class="next-link" href="reset_cases.html">
     <span class="label">Next</span>
-    <span class="title">resample</span>
+    <span class="title">reset_cases</span>
   </a>
 </div>

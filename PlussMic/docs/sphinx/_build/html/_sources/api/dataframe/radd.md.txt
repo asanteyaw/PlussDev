@@ -50,8 +50,8 @@ a    b
     <span class="label">Previous</span>
     <span class="title">query</span>
   </a>
-  <a class="next-link" href="rank.html">
+  <a class="next-link" href="rand.html">
     <span class="label">Next</span>
-    <span class="title">rank</span>
+    <span class="title">rand</span>
   </a>
 </div>
