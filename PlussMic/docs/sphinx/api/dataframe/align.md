@@ -7,7 +7,7 @@
 ```cpp
 DataFrame::align(const AlignSpec& spec) -> DataFrame
 
-DataFrame::align(const Thread& new_caselbl) -> DataFrame
+DataFrame::align(const Thread& new_label) -> DataFrame
 ```
 
 Realign the current frame to a target case axis, a target feature axis, or both at once.
@@ -24,13 +24,13 @@ Structured alignment description used by the full overload.
 
 `AlignSpec` has three public fields:
 
-- `caselbl`: optional target case labels. When present, the output rows are reordered and expanded to match these labels.
+- `label`: optional target case labels. When present, the output rows are reordered and expanded to match these labels.
 - `features`: optional target feature order. When non-empty, the output features are emitted in exactly this order.
 - `fill`: optional numeric fill scalar. When provided, newly introduced numeric gaps are filled with that value instead of remaining null.
 
 You do not need to populate every field. Leave the fields you do not care about at their defaults and specify only the axis you want to control.
 
-**new_caselbl**
+**new_label**
 
 Replacement case axis used by the case-label-only overload.
 
@@ -47,13 +47,13 @@ Pass a note-backed or otherwise defined `Thread` containing the output row label
 
 ## See Also
 
-- <a href="align_caselbl.html"><code>DataFrame::align_caselbl</code></a>: shorter case-axis-only surface when you are not also conforming features.
+- <a href="#label().align"><code>DataFrame::label().align</code></a>: shorter case-axis-only surface when you are not also conforming features.
 - <a href="conform.html"><code>DataFrame::conform</code></a>: align this frame to another frame's schema and labels in one call.
 - <a href="../thread/align.html"><code>Thread::align</code></a>: lower-level alignment for a single extracted column.
 
 ## Notes
 
-`align(const Thread& new_caselbl)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
+`align(const Thread& new_label)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
 
 `align(const AlignSpec& spec)` is the full structured form. Use it when you need to control target case labels, target feature order, and numeric fill behavior together.
 
@@ -102,7 +102,7 @@ auto base = DataFrame({
 }, pluss::make_note({"r1", "r2", "r3"}));
 
 auto out = base.align(DataFrame::AlignSpec{
-    .caselbl = pluss::make_note({"r2", "missing", "r1"}),
+    .label = pluss::make_note({"r2", "missing", "r1"}),
     .fill = 0.0,
 });
 ```
@@ -159,7 +159,7 @@ auto base = DataFrame({
 }, pluss::make_note({"r1", "r2", "r3"}));
 
 auto out = base.align(DataFrame::AlignSpec{
-    .caselbl = pluss::make_note({"r3", "r1"}),
+    .label = pluss::make_note({"r3", "r1"}),
     .features = {"B", "C", "A"},
 });
 ```
@@ -187,7 +187,7 @@ auto base = DataFrame({
 }, pluss::make_note({"r1", "r2", "r3"}));
 
 auto out = base.align(DataFrame::AlignSpec{
-    .caselbl = pluss::make_note({"r3", "r1"}),
+    .label = pluss::make_note({"r3", "r1"}),
     .features = {"B", "C", "A"},
     .fill = 0.0,
 });
@@ -219,7 +219,7 @@ auto case_driver = DataFrame({
     {"score", pluss::make_series({100.0, 200.0})},
 }, pluss::make_note({"r3", "r1"}));
 
-auto out = base.align(case_driver.caselbl());
+auto out = base.align(case_driver.label().values());
 ```
 
 ### Output
@@ -272,7 +272,7 @@ auto base = DataFrame({
     {"B", pluss::make_series({10.0, 20.0, 30.0})},
 }, pluss::make_note({"r1", "r2", "r3"}));
 
-auto out = base.align(base.caselbl());
+auto out = base.align(base.label().values());
 ```
 
 ### Output
@@ -295,8 +295,8 @@ r3   | 3     30
     <span class="label">Previous</span>
     <span class="title">aggregate</span>
   </a>
-  <a class="next-link" href="align_caselbl.html">
+  <a class="next-link" href="all.html">
     <span class="label">Next</span>
-    <span class="title">align_caselbl</span>
+    <span class="title">all</span>
   </a>
 </div>

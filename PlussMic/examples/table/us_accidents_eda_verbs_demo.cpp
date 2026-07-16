@@ -598,7 +598,7 @@ int main(int argc, char** argv) {
 
   auto df = DataFrame::load_csv(options.filepath, options);
 
-  std::cout << fmt::format("Loaded US accidents dataset: [ {} cs x {} feat ]\n", df.ncases(), df.nfeats());
+  std::cout << fmt::format("Loaded US accidents dataset: [ {} cs x {} feat ]\n", df.ncases(), df.nfeatures());
   std::cout << "Use argv[1]=0 or omit for full file; pass a positive integer for a quick sample.\n";
 
   run_verb_walkthrough(df);

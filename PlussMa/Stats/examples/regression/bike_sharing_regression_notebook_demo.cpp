@@ -54,7 +54,7 @@ int main() {
                       pluss::ScalarType::Float64)
                   .cast_note({"season", "is_holiday", "weather_condition", "is_workingday"});
 
-  std::cout << "[Cell 1] dataset shape: (" << bike.ncases() << ", " << bike.nfeats() << ")\n";
+  std::cout << "[Cell 1] dataset shape: (" << bike.ncases() << ", " << bike.nfeatures() << ")\n";
   bike.head(8);
 
   //======= Cell Two=======
@@ -248,7 +248,7 @@ int main() {
       {"fold", pluss::table::Thread(pluss::make_series(fold_axis_values, {k_folds}, f64_cfg))},
       {"r2", pluss::table::Thread(pluss::make_series(cv_r2_scores, {k_folds}, f64_cfg))},
       {"neg_mse", pluss::table::Thread(pluss::make_series(cv_mse_scores, {k_folds}, f64_cfg))},
-  }).set_cases("fold", false);
+  }).label().set("fold", false);
   cv_score_df.plot().line("r2").headline("Cross-validation R-squared by fold").save_pdf("03_cv_r2_by_fold.pdf");
 
   //======= Cell Eight=======

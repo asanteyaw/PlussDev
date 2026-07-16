@@ -81,9 +81,9 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 
 | Area | sklearn capability | NodeJ today | Gap |
 |---|---|---|---|
-| Search engines | `GridSearchCV`, `RandomizedSearchCV`, Halving search CV | Grid, random, Bayesian-style sampler, and successive-halving search paths exist; sklearn-style estimator wrapper/results-table ergonomics remain | Medium |
-| CV splitter breadth | broad cross-validator set including grouped strategies | Holdout, KFold, StratifiedKFold, and GroupKFold execution paths exist; richer splitters remain | Small/Medium |
-| Search artifacts | rich `cv_results_`, ranking, refit pipelines | Tune report is lighter; no sklearn-style results table | Medium |
+| Search engines | `GridSearchCV`, `RandomizedSearchCV`, Halving search CV | Grid, random, Bayesian-style sampler, and successive-halving search paths exist; reference-style estimator wrapper/results-table ergonomics remain | Medium |
+| CV splitter breadth | broad cross-validator set including repeated, grouped, and temporal strategies | Holdout, CrossVal, StratifiedCrossVal with `repeats`, TSCrossVal, and GroupCrossVal execution paths exist; richer splitters remain | Small |
+| Search artifacts | rich `cv_results_`, ranking, refit pipelines | Tune report is lighter; no reference-style results table | Medium |
 
 ## 6) Metrics, inspection, feature selection
 
@@ -105,7 +105,7 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 
 ## Closure roadmap (prioritized)
 
-## Milestone A: “sklearn-like workflow parity core” (highest value)
+## Milestone A: “reference-aligned workflow parity core” (highest value)
 
 ### Goals
 
@@ -116,8 +116,8 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 
 1. Implement true search strategies behind existing `SearchKind`:
    - `Grid`, `Random`, `SuccessiveHalving`.
-2. Add `GroupKFold` execution path in `cross_assess`.
-3. Expand tune result payload toward sklearn-like `cv_results_` (params + per-fold + rank).
+2. Add `GroupCrossVal` execution path in `cross_assess`.
+3. Expand tune result payload toward reference-aligned `cv_results_` (params + per-fold + rank).
 4. Add nested parameter addressing for flow stages (`stage__param` style).
 
 ### Files to extend
@@ -257,7 +257,7 @@ NodeJ already has a solid Phase-0 base (linear/tree/ensemble/neighbor/kernel/bay
 
 ## Risks and mitigation
 
-- API drift risk from adding sklearn-like behaviors:
+- API drift risk from adding reference-aligned behaviors:
   - Mitigate with additive APIs; keep current `learn/infer/assess` stable.
 - Performance regressions from richer search:
   - Mitigate via bounded parallelism defaults and benchmark gates.

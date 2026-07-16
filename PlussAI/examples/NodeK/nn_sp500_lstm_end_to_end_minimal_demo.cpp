@@ -93,7 +93,7 @@ int main() {
   auto df = pluss::table::DataFrame::load_csv(csv_path.string(), read_opts);
   df = df.rename("Price", "Date");
   std::cout << "source=" << csv_path << "\n";
-  std::cout << "raw rows=" << df.ncases() << " features=" << df.nfeats() << "\n";
+  std::cout << "raw rows=" << df.ncases() << " features=" << df.nfeatures() << "\n";
   std::cout << fmt::format("feature names=[{}]\n", fmt::join(df.features(), ", "));
 
   auto work = df.features({"Date", "Adj Close", "High", "Low", "Volume"});
@@ -103,10 +103,10 @@ int main() {
       (work.features("High") - work.features("Low")) / work.features("Adj Close"),
       (work.features("Volume") + 1.0).log(),
   };
-  work = work.dropnull().set_cases("Date", true);
+  work = work.dropnull().label().set("Date", true);
   // Full-history mode: keep all available rows for stress coverage.
   work.head(10);
-  std::cout << "prepared rows=" << work.ncases() << " features=" << work.nfeats() << "\n";
+  std::cout << "prepared rows=" << work.ncases() << " features=" << work.nfeatures() << "\n";
   
   const pluss::Platform platform = pluss::mps::is_ready() ? pluss::pMPS : pluss::pCPU;
   const ScalarType dtype = ScalarType::Float32;

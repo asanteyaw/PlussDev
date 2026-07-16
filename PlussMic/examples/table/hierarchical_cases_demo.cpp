@@ -15,20 +15,20 @@ int main() {
       {"cost", Thread(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
   });
 
-  auto indexed = sales.set_cases(DataFrame::SetCasesOptions{
+  auto indexed = sales.label().set(DataFrame::SetLabelOptions{
       .features = {"region", "account", "quarter"},
       .drop = false,
       .verify = true,
       .sort = false,
   });
   std::cout << "Structured case levels\n";
-  for (const auto& name : indexed.levels()) {
+  for (const auto& name : indexed.label().names()) {
     std::cout << "- " << name << "\n";
   }
   std::cout << indexed.features({"sales", "cost"}).head(4) << "\n";
 
   auto west = indexed.case_study(DataFrame::CasePick{
-      .level = "region",
+      .label = "region",
       .value = "West",
   });
   std::cout << "Partial level selection: region=West\n";
@@ -40,8 +40,8 @@ int main() {
   std::cout << "Full structured key selection: East / 201 / Q2\n";
   std::cout << one_cell.features({"sales", "cost"}).head(2) << "\n";
 
-  auto sorted = indexed.sort_cases(DataFrame::SortCasesOptions{
-      .levels = {"region", "account", "quarter"},
+  auto sorted = indexed.label().sort(DataFrame::SortLabelOptions{
+      .names = {"region", "account", "quarter"},
       .ascending = true,
       .nulls_last = true,
   });
@@ -54,26 +54,26 @@ int main() {
       {"n", "", DataFrame::GroupOp::Count},
   };
   auto by_region = static_cast<DataFrame>(
-      indexed.group_by(DataFrame::CaseGroup{.level = "region"}, group_specs));
+      indexed.group_by(DataFrame::LabelGroup{.label = "region"}, group_specs));
   std::cout << "Grouped by case level: region\n";
   std::cout << by_region << "\n";
 
-  auto renamed = indexed.rename_levels({{"account", "acct"}});
-  auto reordered = renamed.reorder_levels({"region", "quarter", "acct"});
-  auto dropped = reordered.drop_levels({"quarter"});
+  auto renamed = indexed.label().rename({{"account", "acct"}});
+  auto reordered = renamed.label().order({"region", "quarter", "acct"});
+  auto dropped = reordered.label().drop({"quarter"});
   std::cout << "Renamed/reordered/dropped levels\n";
-  for (const auto& name : dropped.levels()) {
+  for (const auto& name : dropped.label().names()) {
     std::cout << "- " << name << "\n";
   }
 
-  auto reset = indexed.reset_cases(DataFrame::ResetCasesOptions{
+  auto reset = indexed.label().reset(DataFrame::ResetLabelOptions{
       .drop = false,
       .names = {"region_case", "account_case", "quarter_case"},
   });
   std::cout << "Reset cases back into ordinary features\n";
   std::cout << reset.features({"region_case", "account_case", "quarter_case", "sales"}).head(4) << "\n";
 
-  auto compact = sales.set_cases({"region", "account", "quarter"}, true);
+  auto compact = sales.label().set({"region", "account", "quarter"}, true);
   auto wide = compact.unstack("quarter");
   std::cout << "Unstack quarter into features\n";
   std::cout << wide << "\n";

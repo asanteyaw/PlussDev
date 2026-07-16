@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
   assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
   SplitOptions cv_split{};
-  cv_split.plan = CVPlanKind::KFold;
+  cv_split.plan = CVPlanKind::CrossVal;
   cv_split.folds = 5;
   cv_split.shuffle = true;
   cv_split.random.seed = 73;

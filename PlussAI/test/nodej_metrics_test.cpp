@@ -110,9 +110,9 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto report_or = classification_report(truth, pred, {0.0, 1.0, 2.0}, 0.0);
+    auto report_or = classification_summary(truth, pred, {0.0, 1.0, 2.0}, 0.0);
     if (!report_or.ok()) {
-      if (err) *err << "classification_report should succeed on valid multiclass labels\n";
+      if (err) *err << "classification_summary should succeed on valid multiclass labels\n";
       return false;
     }
     const ClassReport& report = report_or.value();
@@ -120,56 +120,122 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
     const auto precision = as_f64(report.precision);
     const auto recall = as_f64(report.recall);
     const auto f1 = as_f64(report.f1);
+    const auto specificity = as_f64(report.specificity);
+    const auto geometric = as_f64(report.geometric_mean);
+    const auto balance_quality = as_f64(report.balance_quality);
     const auto macro_avg = as_f64(report.macro_average);
     const auto weighted_avg = as_f64(report.weighted_average);
     const auto micro_avg = as_f64(report.micro_average);
+    const auto macro_balance = as_f64(report.macro_balance);
+    const auto weighted_balance = as_f64(report.weighted_balance);
     const auto accuracy = as_f64(report.accuracy);
 
     if (support.size() != 3 || !approx(support[0], 2.0) || !approx(support[1], 1.0) || !approx(support[2], 3.0)) {
-      if (err) *err << "classification_report should expose per-class support\n";
+      if (err) *err << "classification_summary should expose per-class support\n";
       return false;
     }
     if (!approx(precision[0], 2.0 / 3.0) || !approx(precision[1], 0.0) || !approx(precision[2], 2.0 / 3.0)
         || !approx(recall[0], 1.0) || !approx(recall[1], 0.0) || !approx(recall[2], 2.0 / 3.0)
         || !approx(f1[0], 0.8) || !approx(f1[1], 0.0) || !approx(f1[2], 2.0 / 3.0)) {
-      if (err) *err << "classification_report precision/recall/f1 should match known values\n";
+      if (err) *err << "classification_summary precision/recall/f1 should match known values\n";
       return false;
     }
     if (macro_avg.size() != 3 || !approx(macro_avg[0], 4.0 / 9.0) || !approx(macro_avg[1], 5.0 / 9.0)) {
-      if (err) *err << "classification_report macro averages should match reference values\n";
+      if (err) *err << "classification_summary macro averages should match reference values\n";
       return false;
     }
     if (weighted_avg.size() != 3 || !approx(weighted_avg[0], 5.0 / 9.0) || !approx(weighted_avg[1], 2.0 / 3.0)) {
-      if (err) *err << "classification_report weighted averages should match reference values\n";
+      if (err) *err << "classification_summary weighted averages should match reference values\n";
       return false;
     }
     if (micro_avg.size() != 3 || !approx(micro_avg[0], 2.0 / 3.0) || !approx(micro_avg[1], 2.0 / 3.0)
         || !approx(micro_avg[2], 2.0 / 3.0) || accuracy.size() != 1 || !approx(accuracy[0], 2.0 / 3.0)) {
-      if (err) *err << "classification_report micro average and accuracy should agree for single-label multiclass\n";
+      if (err) *err << "classification_summary micro average and accuracy should agree for single-label multiclass\n";
+      return false;
+    }
+    if (specificity.size() != 3 || !approx(specificity[0], 0.75) || !approx(specificity[1], 1.0)
+        || !approx(specificity[2], 2.0 / 3.0)) {
+      if (err) *err << "classification_summary specificity should match one-vs-rest reference values\n";
+      return false;
+    }
+    if (geometric.size() != 3 || !approx(geometric[0], std::sqrt(0.75)) || !approx(geometric[1], 0.0)
+        || !approx(geometric[2], 2.0 / 3.0)) {
+      if (err) *err << "classification_summary geometric mean should combine sensitivity and specificity\n";
+      return false;
+    }
+    if (balance_quality.size() != 3 || !approx(balance_quality[0], 0.76875) || !approx(balance_quality[1], 0.0)
+        || !approx(balance_quality[2], 4.0 / 9.0)) {
+      if (err) *err << "classification_summary balance quality should follow the Pluss aggregate formula\n";
+      return false;
+    }
+    if (macro_balance.size() != 3 || !approx(macro_balance[0], 29.0 / 36.0)
+        || !approx(macro_balance[1], (std::sqrt(0.75) + 2.0 / 3.0) / 3.0)
+        || !approx(macro_balance[2], (0.76875 + 4.0 / 9.0) / 3.0)) {
+      if (err) *err << "classification_summary macro balance aggregates should match reference values\n";
+      return false;
+    }
+    if (weighted_balance.size() != 3
+        || !approx(weighted_balance[0], (2.0 * 0.75 + 1.0 + 3.0 * (2.0 / 3.0)) / 6.0)) {
+      if (err) *err << "classification_summary weighted balance aggregates should use support weights\n";
       return false;
     }
 
     auto metric_vec_or = classification_metrics(
         truth,
         pred,
-        {MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::Precision, MetricKind::Recall, MetricKind::F1},
+        {MetricKind::Accuracy,
+         MetricKind::BalancedAccuracy,
+         MetricKind::Precision,
+         MetricKind::Recall,
+         MetricKind::Sensitivity,
+         MetricKind::F1,
+         MetricKind::Specificity,
+         MetricKind::GeometricMean,
+         MetricKind::BalanceQuality},
         ClassReportOptions{.zero_division = 0.0});
     if (!metric_vec_or.ok()) {
       if (err) *err << "classification_metrics should succeed on valid hard labels\n";
       return false;
     }
     const auto metrics = as_f64(metric_vec_or.value());
-    if (metrics.size() != 5 || !approx(metrics[0], 2.0 / 3.0) || !approx(metrics[1], 5.0 / 9.0)
-        || !approx(metrics[2], 4.0 / 9.0) || !approx(metrics[3], 5.0 / 9.0)) {
+    if (metrics.size() != 9 || !approx(metrics[0], 2.0 / 3.0) || !approx(metrics[1], 5.0 / 9.0)
+        || !approx(metrics[2], 4.0 / 9.0) || !approx(metrics[3], 5.0 / 9.0)
+        || !approx(metrics[4], 5.0 / 9.0) || !approx(metrics[6], 29.0 / 36.0)) {
       if (err) *err << "classification_metrics should return stable aggregate metric values\n";
       return false;
+    }
+
+    const Series weights = pluss::make_series(std::vector<double>{1.0, 3.0, 1.0, 1.0, 2.0, 4.0}, {6}, f64());
+    auto weighted_cm_or = confusion_table(
+        truth,
+        pred,
+        ConfusionOptions{.normalize = ConfusionNormalize::None,
+                         .label_order = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64()),
+                         .sample_weights = weights});
+    if (!weighted_cm_or.ok()) {
+      if (err) *err << "weighted confusion_table should succeed\n";
+      return false;
+    }
+    const auto weighted_cm = as_f64(weighted_cm_or.value().counts);
+    const std::vector<double> want_weighted_counts{5.0, 0.0, 0.0,
+                                                   0.0, 0.0, 4.0,
+                                                   1.0, 0.0, 2.0};
+    if (weighted_cm.size() != want_weighted_counts.size()) {
+      if (err) *err << "weighted confusion_table should remain 3x3\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < weighted_cm.size(); ++i) {
+      if (!approx(weighted_cm[i], want_weighted_counts[i])) {
+        if (err) *err << "weighted confusion_table counts should sum sample weights per cell\n";
+        return false;
+      }
     }
   }
 
   {
     const LabeledBatch batch = make_xor_batch();
     SplitOptions split{};
-    split.plan = CVPlanKind::KFold;
+    split.plan = CVPlanKind::CrossVal;
     split.folds = 4;
     split.shuffle = true;
     split.random.seed = 73;
@@ -187,6 +253,17 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
     const Series fold_scores = fold_scores_or.value().reshape({fold_scores_or.value().numel()});
     if (fold_scores.numel() != split.folds || !fold_scores.isfinite().all().item<bool>()) {
       if (err) *err << "cross_scores should return one finite score per fold\n";
+      return false;
+    }
+
+    auto gm_scores_or = cross_scores(linear_logistic_spec(), batch, MetricKind::GeometricMean, split, train);
+    if (!gm_scores_or.ok()) {
+      if (err) *err << "cross_scores should support geometric mean through estimator assess\n";
+      return false;
+    }
+    const Series gm_scores = gm_scores_or.value().reshape({gm_scores_or.value().numel()});
+    if (gm_scores.numel() != split.folds || !gm_scores.isfinite().all().item<bool>()) {
+      if (err) *err << "geometric mean cross_scores should return one finite score per fold\n";
       return false;
     }
 

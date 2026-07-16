@@ -109,7 +109,8 @@ auto engineered = sorted.assign({
 ## Daily resample
 
 ```cpp
-df.resample("timestamp", {"price", "volume"}, "D", "mean", 1, true);
+auto daily = df.ts({"price", "volume"}).resample(
+    "timestamp", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
 ```
 
 ## Excel workbook ingestion

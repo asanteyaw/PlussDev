@@ -1,6 +1,6 @@
 # PlussAI NodeJ + Lymph User Documentation
 
-This set follows a sklearn-style API reference pattern:
+This set follows a reference-style API reference pattern:
 
 - signature + parameter-by-parameter reference
 - return semantics + behavior notes

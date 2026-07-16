@@ -278,9 +278,9 @@ void test_corr_methods_and_plot3d() {
   const auto pearson = df.corr({"x", "y", "z"}, false);
   const auto spearman = df.corr({"x", "y", "z"}, DataFrame::CorrMethod::Spearman, false);
   const auto kendall = df.corr({"x", "y", "z"}, DataFrame::CorrMethod::KendallTau, false);
-  expect(pearson.ncases() == 3 && pearson.nfeats() == 3, "corr(pearson) should return square matrix");
-  expect(spearman.ncases() == 3 && spearman.nfeats() == 3, "corr(spearman) should return square matrix");
-  expect(kendall.ncases() == 3 && kendall.nfeats() == 3, "corr(kendall) should return square matrix");
+  expect(pearson.ncases() == 3 && pearson.nfeatures() == 3, "corr(pearson) should return square matrix");
+  expect(spearman.ncases() == 3 && spearman.nfeatures() == 3, "corr(spearman) should return square matrix");
+  expect(kendall.ncases() == 3 && kendall.nfeatures() == 3, "corr(kendall) should return square matrix");
 
   const auto fig_scatter3 = df.plot3d().scatter("x", "y", "z");
   expect(fig_scatter3.panes().front().traces().front().kind() == TraceKind::Cloud3,

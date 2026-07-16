@@ -129,11 +129,11 @@ TEST_CASE("aux split_fields and split_loaders provide train val test partitionin
   REQUIRE(loaders.test.sample_count() == 2);
 }
 
-TEST_CASE("aux time_series_split provides sklearn-style expanding or rolling windows", "[aux][dataloader]") {
-  const auto plan = pluss::loader::time_series_split_indices(
+TEST_CASE("aux temporal_split provides reference-style expanding or rolling windows", "[aux][dataloader]") {
+  const auto plan = pluss::loader::temporal_split_indices(
       10,
-      pluss::loader::TimeSeriesSplitOptions{
-          .n_splits = 3,
+      pluss::loader::TemporalSplitOptions{
+          .folds = 3,
           .test_size = 2,
           .max_train_size = 3,
           .gap = 0,
@@ -149,10 +149,10 @@ TEST_CASE("aux time_series_split provides sklearn-style expanding or rolling win
 
   const Series x = make_x();
   const Series y = make_y();
-  const auto split = pluss::loader::time_series_split_fields(
+  const auto split = pluss::loader::temporal_split_fields(
       {x, y},
-      pluss::loader::TimeSeriesSplitOptions{
-          .n_splits = 3,
+      pluss::loader::TemporalSplitOptions{
+          .folds = 3,
           .test_size = 2,
           .max_train_size = 3,
           .gap = 0,

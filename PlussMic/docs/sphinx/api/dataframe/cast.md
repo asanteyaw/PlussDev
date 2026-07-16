@@ -121,9 +121,9 @@ auto out = raw.cast({keep_note});
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="caselbl_.html">
+  <a class="prev-link" href="case_study.html">
     <span class="label">Previous</span>
-    <span class="title">caselbl_</span>
+    <span class="title">case_study</span>
   </a>
   <a class="next-link" href="clip.html">
     <span class="label">Next</span>

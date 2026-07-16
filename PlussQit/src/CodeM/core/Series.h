@@ -852,6 +852,26 @@ public:
   // Request transfer to another backend.
   Series platform(Platform target) const;
   TernaryCompareBuilder tri() const noexcept;
+  Series grouped_count(const Series& group_ids,
+                       std::int64_t group_count) const;
+  Series grouped_sum(const Series& group_ids,
+                     std::int64_t group_count) const;
+  Series grouped_mean(const Series& group_ids,
+                      std::int64_t group_count) const;
+  Series grouped_var(const Series& group_ids,
+                     std::int64_t group_count,
+                     std::int64_t ddof = 1) const;
+  Series grouped_std(const Series& group_ids,
+                     std::int64_t group_count,
+                     std::int64_t ddof = 1) const;
+  Series grouped_min(const Series& group_ids,
+                     std::int64_t group_count) const;
+  Series grouped_max(const Series& group_ids,
+                     std::int64_t group_count) const;
+  Series grouped_median(const Series& group_ids,
+                        std::int64_t group_count) const;
+  Series grouped_mode(const Series& group_ids,
+                      std::int64_t group_count) const;
 
 #ifdef PLUSS_ENABLE_TORCH
   ::torch::Tensor tensor() const;

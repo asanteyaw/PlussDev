@@ -226,10 +226,10 @@ auto schema = sales.rename("units", "quantity")
                  .reorder({"city", "price", "quantity"});
 std::cout << schema.to_string() << '\n';
 
-auto city_cases = sales.set_cases("city", true);
+auto city_cases = sales.label().set("city", true);
 std::cout << city_cases.features({"region", "units"}).to_string() << '\n';
 
-auto reset = city_cases.reset_cases("city_case").features({"city_case", "units"});
+auto reset = city_cases.label().reset("city_case").features({"city_case", "units"});
 std::cout << reset.to_string() << '\n';
 ```
 
@@ -301,9 +301,9 @@ changes the feature name, `drop({"region"})` removes the region feature, and
 `reorder({"city", "price", "quantity"})` arranges the full remaining feature
 set in the requested order.
 
-The fifth table shows `set_cases("city", true)`. City values become case labels,
+The fifth table shows `label().set("city", true)`. City values become case labels,
 and the original `city` feature is removed because `drop_feature` is `true`.
-The sixth table shows `reset_cases("city_case")`, which turns the case axis
+The sixth table shows `relabel().set("city_case")`, which turns the case axis
 back into a normal feature named `city_case` and restores default numeric case
 labels.
 

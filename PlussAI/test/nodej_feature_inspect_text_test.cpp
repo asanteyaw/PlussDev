@@ -239,7 +239,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     auto cv_or = pluss::ai::nodej::cross_assess_sparse_binary(sparse_bin_or.value(),
                                                                y_bin,
                                                                pluss::ai::nodej::SplitOptions{
-                                                                   .plan = pluss::ai::nodej::CVPlanKind::KFold,
+                                                                   .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
                                                                    .folds = 3,
                                                                    .shuffle = true,
                                                                    .random = pluss::ai::nodej::RandomState{.seed = 7, .deterministic = true},
@@ -258,7 +258,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
         sparse_bin_or.value(),
         y_bin,
         pluss::ai::nodej::SplitOptions{
-            .plan = pluss::ai::nodej::CVPlanKind::KFold,
+            .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
             .folds = 3,
             .shuffle = true,
             .random = pluss::ai::nodej::RandomState{.seed = 7, .deterministic = true},
@@ -278,7 +278,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
                                                            sparse_bin_or.value(),
                                                            y_bin,
                                                            pluss::ai::nodej::SplitOptions{
-                                                               .plan = pluss::ai::nodej::CVPlanKind::KFold,
+                                                               .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
                                                                .folds = 3,
                                                                .shuffle = true,
                                                                .random = pluss::ai::nodej::RandomState{.seed = 11, .deterministic = true},
@@ -303,7 +303,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
         sparse_bin_or.value(),
         y_bin,
         pluss::ai::nodej::SplitOptions{
-            .plan = pluss::ai::nodej::CVPlanKind::KFold,
+            .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
             .folds = 3,
             .shuffle = true,
             .random = pluss::ai::nodej::RandomState{.seed = 11, .deterministic = true},
@@ -349,7 +349,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     auto cv_or = pluss::ai::nodej::cross_assess_sparse_regression(sparse_reg_or.value(),
                                                                    y_reg,
                                                                    pluss::ai::nodej::SplitOptions{
-                                                                       .plan = pluss::ai::nodej::CVPlanKind::KFold,
+                                                                       .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
                                                                        .folds = 3,
                                                                        .shuffle = true,
                                                                        .random = pluss::ai::nodej::RandomState{.seed = 13, .deterministic = true},
@@ -393,7 +393,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
     auto cv_or = pluss::ai::nodej::cross_assess_sparse_multiclass(sparse_multi_or.value(),
                                                                    y_mc,
                                                                    pluss::ai::nodej::SplitOptions{
-                                                                       .plan = pluss::ai::nodej::CVPlanKind::StratifiedKFold,
+                                                                       .plan = pluss::ai::nodej::CVPlanKind::StratifiedCrossVal,
                                                                        .folds = 3,
                                                                        .shuffle = true,
                                                                        .random = pluss::ai::nodej::RandomState{.seed = 17, .deterministic = true},

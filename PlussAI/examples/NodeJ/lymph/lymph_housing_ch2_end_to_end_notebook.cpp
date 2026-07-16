@@ -36,7 +36,7 @@ int main() {
   fs::create_directories(model_dir);
 
   DataFrame housing = DataFrame::load_csv(data_path.string());
-  out.writef("rows={} features={}", housing.ncases(), housing.nfeats()).endln();
+  out.writef("rows={} features={}", housing.ncases(), housing.nfeatures()).endln();
   out.writeln("feature names", housing.features());
   housing.head(5);
   //========== End Cell 1 ========
@@ -95,11 +95,11 @@ int main() {
   const DataFrame train_cat = train_x_raw.note_features();
   const DataFrame test_cat = test_x_raw.note_features();
   const auto categorical_names = train_cat.features();
-  out.writef("numeric feature count={} categorical feature count={}", train_num.nfeats(), train_cat.nfeats()).endln();
-  if (train_num.nfeats() == 0) {
+  out.writef("numeric feature count={} categorical feature count={}", train_num.nfeatures(), train_cat.nfeatures()).endln();
+  if (train_num.nfeatures() == 0) {
     throw std::runtime_error("chapter2 demo: no numeric features resolved.");
   }
-  if (train_cat.nfeats() == 0) {
+  if (train_cat.nfeatures() == 0) {
     throw std::runtime_error("chapter2 demo: no categorical features resolved.");
   }
   if (categorical_names.empty()) {
@@ -139,13 +139,13 @@ int main() {
   const DataFrame test_cat_1hot = cat_encoder.map(test_cat);
   out.writeln("one-hot categories_", cat_encoder.categories_);
   out.writeln("one-hot mapped_names_", cat_encoder.mapped_names_);
-  out.writef("one-hot train features={} one-hot test features={}", train_cat_1hot.nfeats(), test_cat_1hot.nfeats()).endln();
+  out.writef("one-hot train features={} one-hot test features={}", train_cat_1hot.nfeatures(), test_cat_1hot.nfeatures()).endln();
   //========== End Cell 8 ========
 
   //========== Cell 9: Prepared Matrix For CV/Tuning ========
   const DataFrame train_prepared = train_num_scaled.combine(train_cat_1hot);
   const DataFrame test_prepared = test_num_scaled.combine(test_cat_1hot);
-  out.writef("prepared train features={} prepared test features={}", train_prepared.nfeats(), test_prepared.nfeats()).endln();
+  out.writef("prepared train features={} prepared test features={}", train_prepared.nfeatures(), test_prepared.nfeatures()).endln();
   //========== End Cell 9 ========
 
   //========== Cell 10: HARD GAP Notes ========
@@ -224,7 +224,7 @@ int main() {
   //========== Cell 12: Cross-Validation Comparison ========
   // Equivalent in spirit to sklearn cross_val_score model ranking.
   lymph::CrossValidationOptions cv_options{};
-  cv_options.plan = pluss::ai::nodej::CVPlanKind::KFold;
+  cv_options.plan = pluss::ai::nodej::CVPlanKind::CrossVal;
   cv_options.folds = 3;
   cv_options.shuffle = true;
   cv_options.random_state = 42;

@@ -93,7 +93,7 @@ int main() {
       {"", "assignment", DataFrame::SummaryOp::Std},
   }, false).to_string() << "\n\n";
 
-  std::cout << "ALIGN_CASELBL\n" << scratch.align_caselbl(grades.caselbl()).to_string() << "\n\n";
+  std::cout << "LABEL_ALIGN\n" << scratch.label().align(grades.label().values()).to_string() << "\n\n";
 
   std::cout << "ALL_AXIS0\n" << flags.all().to_string() << "\n\n";
   std::cout << "ALL_AXIS1\n" << flags.all(Axis::Case).to_string() << "\n\n";

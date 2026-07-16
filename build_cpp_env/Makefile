@@ -1428,6 +1428,19 @@ nn_training_parity_test/fast:
 .PHONY : nn_training_parity_test/fast
 
 #=============================================================================
+# Target rules for targets named nodej_balance_test
+
+# Build rule for target.
+nodej_balance_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_balance_test
+.PHONY : nodej_balance_test
+
+# fast build rule for target.
+nodej_balance_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_balance_test.dir/build.make PlussAI/test/CMakeFiles/nodej_balance_test.dir/build
+.PHONY : nodej_balance_test/fast
+
+#=============================================================================
 # Target rules for targets named nodej_bayes_kernel_test
 
 # Build rule for target.
@@ -1634,6 +1647,19 @@ nodej_tree_test: cmake_check_build_system
 nodej_tree_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_tree_test.dir/build.make PlussAI/test/CMakeFiles/nodej_tree_test.dir/build
 .PHONY : nodej_tree_test/fast
+
+#=============================================================================
+# Target rules for targets named nodej_weighted_family_test
+
+# Build rule for target.
+nodej_weighted_family_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_weighted_family_test
+.PHONY : nodej_weighted_family_test
+
+# fast build rule for target.
+nodej_weighted_family_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build
+.PHONY : nodej_weighted_family_test/fast
 
 #=============================================================================
 # Target rules for targets named rnn_fusion_test
@@ -5106,6 +5132,30 @@ plussmic_table_gap_benchmark/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/build
 .PHONY : plussmic_table_gap_benchmark/fast
 
+PlussAI/NodeJ/balance/balance.o: PlussAI/NodeJ/balance/balance.cpp.o
+.PHONY : PlussAI/NodeJ/balance/balance.o
+
+# target to build an object file
+PlussAI/NodeJ/balance/balance.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/balance/balance.cpp.o
+.PHONY : PlussAI/NodeJ/balance/balance.cpp.o
+
+PlussAI/NodeJ/balance/balance.i: PlussAI/NodeJ/balance/balance.cpp.i
+.PHONY : PlussAI/NodeJ/balance/balance.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/balance/balance.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/balance/balance.cpp.i
+.PHONY : PlussAI/NodeJ/balance/balance.cpp.i
+
+PlussAI/NodeJ/balance/balance.s: PlussAI/NodeJ/balance/balance.cpp.s
+.PHONY : PlussAI/NodeJ/balance/balance.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/balance/balance.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/balance/balance.cpp.s
+.PHONY : PlussAI/NodeJ/balance/balance.cpp.s
+
 PlussAI/NodeJ/classifiers/family_classifier.o: PlussAI/NodeJ/classifiers/family_classifier.cpp.o
 .PHONY : PlussAI/NodeJ/classifiers/family_classifier.o
 
@@ -7660,6 +7710,7 @@ help:
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
+	@echo "... nodej_balance_test"
 	@echo "... nodej_bayes_kernel_test"
 	@echo "... nodej_cv_tune_test"
 	@echo "... nodej_dataframe_bridge_test"
@@ -7676,6 +7727,7 @@ help:
 	@echo "... nodej_rigorous_suite_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
+	@echo "... nodej_weighted_family_test"
 	@echo "... nonparametric_hypothesis_test"
 	@echo "... object_pricing_test"
 	@echo "... ols_regression_test"
@@ -7939,6 +7991,9 @@ help:
 	@echo "... ts_vecm_catch2"
 	@echo "... ts_vecm_test"
 	@echo "... ts_vol_catch2"
+	@echo "... PlussAI/NodeJ/balance/balance.o"
+	@echo "... PlussAI/NodeJ/balance/balance.i"
+	@echo "... PlussAI/NodeJ/balance/balance.s"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.o"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.i"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.s"

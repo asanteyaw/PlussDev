@@ -227,7 +227,7 @@ std::string axis_value_key(const Thread& values, std::int64_t row) {
 
 DataFrameView DataFrame::transpose(bool render) const {
   const auto rows = ncases();
-  const auto cols = nfeats();
+  const auto cols = nfeatures();
 
   std::vector<Thread> src_columns;
   src_columns.reserve(features().size());
@@ -369,15 +369,15 @@ DataFrame DataFrame::stack(std::string feature_name,
   PLUSS_CHECK(!value_name.empty(), "DataFrame::stack: value_name cannot be empty");
   PLUSS_CHECK(feature_name != value_name,
               "DataFrame::stack: feature_name and value_name must differ");
-  PLUSS_CHECK(nfeats() > 0, "DataFrame::stack: expected at least one feature");
+  PLUSS_CHECK(nfeatures() > 0, "DataFrame::stack: expected at least one feature");
 
   std::vector<std::string> case_level_names;
   std::vector<Thread> case_level_values;
-  if (has_levels()) {
-    case_level_names = levels();
+  if (has_caselbls()) {
+    case_level_names = caselbls();
     case_level_values.reserve(case_level_names.size());
     for (const auto& name : case_level_names) {
-      case_level_values.push_back(level(name));
+      case_level_values.push_back(caselbl(name));
     }
   } else {
     case_level_names.push_back("case");
@@ -395,7 +395,7 @@ DataFrame DataFrame::stack(std::string feature_name,
   PLUSS_CHECK(output_names.insert(value_name).second,
               "DataFrame::stack: value_name collides with a case level or feature-name output");
 
-  const auto block_count = nfeats();
+  const auto block_count = nfeatures();
   std::vector<std::int64_t> tiled_rows(
       static_cast<std::size_t>(ncases() * block_count));
   for (std::int64_t block = 0; block < block_count; ++block) {
@@ -431,37 +431,37 @@ DataFrame DataFrame::stack(std::string feature_name,
   auto out = DataFrame(std::move(output));
   std::vector<std::string> case_features = case_level_names;
   case_features.push_back(feature_name);
-  SetCasesOptions options;
+  SetLabelOptions options;
   options.features = std::move(case_features);
   options.drop = true;
   options.verify = false;
   options.sort = false;
-  return out.set_cases(options).title(title());
+  return out.label().set(options).title(title());
 }
 
 DataFrame DataFrame::unstack(const UnstackOptions& options) const {
   PLUSS_CHECK(defined(), "DataFrame::unstack: frame is undefined");
-  PLUSS_CHECK(has_levels(), "DataFrame::unstack: current DataFrame has no case levels");
-  PLUSS_CHECK(!options.level.empty(), "DataFrame::unstack: level cannot be empty");
+  PLUSS_CHECK(has_caselbls(), "DataFrame::unstack: current DataFrame has no case labels");
+  PLUSS_CHECK(!options.label.empty(), "DataFrame::unstack: label cannot be empty");
   PLUSS_CHECK(ncases() > 0, "DataFrame::unstack: cannot unstack an empty frame");
 
-  const auto all_levels = levels();
-  PLUSS_CHECK(std::find(all_levels.begin(), all_levels.end(), options.level) != all_levels.end(),
-              "DataFrame::unstack: unknown case level '" + options.level + "'");
+  const auto all_levels = caselbls();
+  PLUSS_CHECK(std::find(all_levels.begin(), all_levels.end(), options.label) != all_levels.end(),
+              "DataFrame::unstack: unknown case label '" + options.label + "'");
 
   std::vector<std::string> remaining_levels;
   remaining_levels.reserve(all_levels.size());
   for (const auto& name : all_levels) {
-    if (name != options.level) {
+    if (name != options.label) {
       remaining_levels.push_back(name);
     }
   }
 
-  const auto pivot_values = level(options.level);
+  const auto pivot_values = caselbl(options.label);
   std::vector<Thread> remaining_values;
   remaining_values.reserve(remaining_levels.size());
   for (const auto& name : remaining_levels) {
-    remaining_values.push_back(level(name));
+    remaining_values.push_back(caselbl(name));
   }
 
   std::vector<std::string> row_keys;
@@ -511,7 +511,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
     output.emplace_back(remaining_levels[i], remaining_values[i].take(first_rows));
   }
 
-  const bool multi_value = nfeats() > 1;
+  const bool multi_value = nfeatures() > 1;
   std::unordered_set<std::string> out_names;
   for (const auto& level_name : remaining_levels) {
     out_names.insert(level_name);
@@ -534,7 +534,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
           ? value_feature + options.separator + column_keys[col]
           : column_keys[col];
       if (out_name.empty()) {
-        out_name = multi_value ? value_feature : options.level;
+        out_name = multi_value ? value_feature : options.label;
       }
       PLUSS_CHECK(out_names.insert(out_name).second,
                   "DataFrame::unstack: duplicate output feature '" + out_name + "'");
@@ -544,12 +544,12 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
 
   auto out = DataFrame(std::move(output));
   if (!remaining_levels.empty()) {
-    SetCasesOptions set_options;
+    SetLabelOptions set_options;
     set_options.features = remaining_levels;
     set_options.drop = options.drop;
     set_options.verify = false;
     set_options.sort = false;
-    out = out.set_cases(set_options);
+    out = out.label().set(set_options);
   }
   return out.title(title());
 }

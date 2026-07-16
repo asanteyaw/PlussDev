@@ -44,8 +44,8 @@ auto out = thread.interp(2);
     <span class="label">Previous</span>
     <span class="title">info_string</span>
   </a>
-  <a class="next-link" href="is_valid.html">
+  <a class="next-link" href="invalid.html">
     <span class="label">Next</span>
-    <span class="title">is_valid</span>
+    <span class="title">invalid</span>
   </a>
 </div>

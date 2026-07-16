@@ -122,9 +122,9 @@ auto out = missing.dropnull(options);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="drop_levels.html">
+  <a class="prev-link" href="drop_duplicates.html">
     <span class="label">Previous</span>
-    <span class="title">drop_levels</span>
+    <span class="title">drop_duplicates</span>
   </a>
   <a class="next-link" href="dtypes.html">
     <span class="label">Next</span>

@@ -1,13 +1,15 @@
 # NodeJ Full API Reference: Method Index
 
-Total method pages: **169**
-Total data-type pages: **34**
+Total method pages: **172**
+Total data-type pages: **37**
 
 ## Data Types
 
 ```{toctree}
 :maxdepth: 1
 
+api/type-balancetarget
+api/type-classmix
 api/type-classreport
 api/type-confusiontable
 api/type-crossassessreport
@@ -42,6 +44,7 @@ api/type-tuneledger
 api/type-tunereport
 api/type-tunetrialresult
 api/type-variancepruneresult
+api/type-weightplan
 ```
 
 ## Methods
@@ -52,7 +55,8 @@ api/type-variancepruneresult
 api/method-apply-learn-map
 api/method-apply-map
 api/method-check-ready-for-infer
-api/method-classification-report
+api/method-class-mix
+api/method-classification-summary
 api/method-classifierbase-task-kind
 api/method-confusion-table
 api/method-dependence-curve
@@ -170,6 +174,8 @@ api/method-quantilemap-dump-state
 api/method-quantilemap-load-state
 api/method-quantilemap-trained
 api/method-regressorbase-task-kind
+api/method-resolve-training-weights
+api/method-resolve-weight-plan
 api/method-restore
 api/method-robustscaler-dump-state
 api/method-robustscaler-load-state

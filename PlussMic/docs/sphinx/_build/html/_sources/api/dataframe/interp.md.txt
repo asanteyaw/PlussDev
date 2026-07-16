@@ -79,8 +79,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">insert</span>
   </a>
-  <a class="next-link" href="isnull.html">
+  <a class="next-link" href="invalid.html">
     <span class="label">Next</span>
-    <span class="title">isnull</span>
+    <span class="title">invalid</span>
   </a>
 </div>

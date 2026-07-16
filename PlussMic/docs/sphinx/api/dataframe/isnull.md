@@ -47,9 +47,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="interp.html">
+  <a class="prev-link" href="invalid.html">
     <span class="label">Previous</span>
-    <span class="title">interp</span>
+    <span class="title">invalid</span>
   </a>
   <a class="next-link" href="join.html">
     <span class="label">Next</span>

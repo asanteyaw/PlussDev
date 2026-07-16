@@ -105,8 +105,8 @@ int main() {
             << " test idx count=" << strat_or.value().test_indices.numel() << "\n";
 
   split.folds = 3;
-  auto fold_or = pluss::ai::nodej::fold_plan(dense.sample_count(), split);
-  if (!require_ok(fold_or, "fold_plan")) return 1;
+  auto fold_or = pluss::ai::nodej::crossval_plan(dense.sample_count(), split);
+  if (!require_ok(fold_or, "crossval_plan")) return 1;
   std::cout << "kfold folds=" << fold_or.value().folds.size() << "\n";
 
   SimpleImputer imputer(SimpleImputerOptions{

@@ -28,7 +28,7 @@ void run_comma_csv_demo() {
   std::cout << "\n=== Comma CSV demo: messy_data.csv ===\n";
   std::cout << df.to_string(demo_display()) << '\n';
 
-  const auto idx = df.caselbl().as_series().to_vec<std::int64_t>();
+  const auto idx = df.label().values().as_series().to_vec<std::int64_t>();
   std::cout << "\ncases() first=" << idx.front() << ", last=" << idx.back() << ", n=" << idx.size() << "\n";
 
   std::cout << "\n.head(5) output\n";

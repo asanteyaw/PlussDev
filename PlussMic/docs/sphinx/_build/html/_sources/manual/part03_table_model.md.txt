@@ -136,15 +136,15 @@ The case axis is the row label/index axis. It may be default integer labels or
 loaded from a feature.
 
 ```cpp
-auto cases = df.caselbl();
+auto cases = df.label().values();
 auto first_case = df.case_study(0);
 auto first_ten = df.case_study(0, 10);
 
-auto indexed = df.set_cases("id", true);
-auto reset = indexed.reset_cases("id");
+auto indexed = df.label().set("id", true);
+auto reset = indexed.label().reset("id");
 ```
 
-`set_cases("id", true)` uses `id` as the case axis and drops it from features.
+`label().set("id", true)` uses `id` as the case axis and drops it from features.
 Pass `false` to keep the feature as well.
 
 ## DataFrameView

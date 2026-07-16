@@ -48,7 +48,7 @@ West    Esi      84.0
 
 - `unique_cases(features)` keeps only the first row for each distinct key combination defined by `features`.
 - With no feature list, the full row payload is used as the duplicate key.
-- This is the row-filtering companion to `repeated_cases(...)`.
+- This is the row-filtering companion to `label().repeated(...)`.
 
 
 

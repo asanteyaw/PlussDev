@@ -562,11 +562,11 @@ TableMatrix build_dataframe_matrix(
     const EffectiveDisplayOptions& options,
     bool compact_columns) {
   const auto row_plan = build_row_plan(frame.ncases(), options);
-  const auto col_plan = build_col_plan(frame.nfeats(), options, compact_columns);
+  const auto col_plan = build_col_plan(frame.nfeatures(), options, compact_columns);
 
   const auto names = frame.features();
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_thread(frame.caselbl());
+  const auto display_cases = display_thread(frame.label().values());
   std::vector<Thread> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
@@ -1292,7 +1292,7 @@ std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
                                     std::string_view table_id) {
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_thread(frame.caselbl());
+  const auto display_cases = display_thread(frame.label().values());
   std::vector<Thread> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
@@ -1306,10 +1306,10 @@ std::string render_html_table_body_(const DataFrame& frame,
                       frame.ncases());
   body +=
       fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                  frame.nfeats());
+                  frame.nfeatures());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype(frame.caselbl())));
+      escape_html_(logical_dtype(frame.label().values())));
   body += "</div>";
 
   body += "<div class=\"table-wrap\"><div class=\"table-scroll\">";
@@ -1317,7 +1317,7 @@ std::string render_html_table_body_(const DataFrame& frame,
 
   std::size_t column_index = 0;
   if (options.show_case_index) {
-    const auto case_numeric = is_numeric_thread(frame.caselbl());
+    const auto case_numeric = is_numeric_thread(frame.label().values());
     body += fmt::format(
         "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">case</th>",
         case_numeric ? " num" : "",
@@ -1339,7 +1339,7 @@ std::string render_html_table_body_(const DataFrame& frame,
     body += fmt::format("<tr data-row-index=\"{}\">", row);
     if (options.show_case_index) {
       const auto case_value = thread_value_at(display_cases, row);
-      const auto case_numeric = is_numeric_thread(frame.caselbl());
+      const auto case_numeric = is_numeric_thread(frame.label().values());
       body += fmt::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
                           case_value == "NA" ? " missing" : "",
@@ -1366,7 +1366,7 @@ class DataFrameVirtualTableModel final
     : public pluss::view::VirtualTableModel {
  public:
   explicit DataFrameVirtualTableModel(const DataFrame& frame)
-      : cases_(display_thread(frame.caselbl())),
+      : cases_(display_thread(frame.label().values())),
         columns_(dataframe_columns_(frame)),
         names_(frame.features()),
         rows_(frame.ncases()) {
@@ -1481,11 +1481,11 @@ std::string render_virtual_html_table_(const DataFrame& frame,
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Features</div><div "
       "class=\"value\">{}</div></div>",
-      frame.nfeats());
+      frame.nfeatures());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div "
       "class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype(frame.caselbl())));
+      escape_html_(logical_dtype(frame.label().values())));
   body += "</div>";
   body +=
       "<div class=\"table-wrap\"><div class=\"table-scroll\"><table "
@@ -1514,7 +1514,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
                       atlas.ncases());
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                      atlas.nfeats());
+                      atlas.nfeatures());
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth Labels</div><div class=\"value\">{}</div></div>",
                       atlas.axis0_labels().has_value() ? escape_html_(logical_dtype(*atlas.axis0_labels()))
                                                        : "None");
@@ -1553,18 +1553,18 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   }
 
   return html_shell_(document_title_("Atlas", options),
-                     fmt::format("{} frames, {} cases, {} features", atlas.depth(), atlas.ncases(), atlas.nfeats()),
+                     fmt::format("{} frames, {} cases, {} features", atlas.depth(), atlas.ncases(), atlas.nfeatures()),
                      body,
                      options);
 }
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_thread(frame.caselbl());
+  const auto display_cases = display_thread(frame.label().values());
   const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.caselbl());
+  std::uint64_t memory_bytes = estimate_bytes(frame.label().values());
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto dtype = logical_dtype(cols[i]);
     dtype_counts[dtype] += 1;
@@ -1582,7 +1582,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
                       frame.ncases());
   body +=
       fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                  frame.nfeats());
+                  frame.nfeatures());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Range</div><div class=\"value\">{} <span class=\"muted\">to</span> {}</div></div>",
       escape_html_(first_case),
@@ -1623,7 +1623,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
 
   body += "</tbody></table></div></div>";
   return html_shell_(document_title_("DataFrame Info", options),
-                     fmt::format("{} cases, {} features", frame.ncases(), frame.nfeats()),
+                     fmt::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
                      body,
                      options);
 }
@@ -1707,7 +1707,7 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
   auto matrix = build_dataframe_matrix(frame, working, compact);
 
   while (estimate_matrix_width(matrix, working) > terminal_width) {
-    if (!compact && frame.nfeats() > 1) {
+    if (!compact && frame.nfeatures() > 1) {
       compact = true;
       matrix = build_dataframe_matrix(frame, working, compact);
       continue;
@@ -1739,7 +1739,7 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 
   std::string out = render_ascii_table(matrix, working, terminal_width);
   if (working.show_shape_footer) {
-    out += fmt::format("\n[{} cs x {} feat]", frame.ncases(), frame.nfeats());
+    out += fmt::format("\n[{} cs x {} feat]", frame.ncases(), frame.nfeatures());
   }
   return out;
 }
@@ -1755,7 +1755,7 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
   return render_html_table_(
       frame,
       document_title_("DataFrame", options),
-      fmt::format("{} cases, {} features", frame.ncases(), frame.nfeats()),
+      fmt::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
       options);
 }
 
@@ -1775,11 +1775,11 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_thread(frame.caselbl());
+  const auto display_cases = display_thread(frame.label().values());
   const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.caselbl());
+  std::uint64_t memory_bytes = estimate_bytes(frame.label().values());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto dtype = logical_dtype(cols[i]);
@@ -1800,7 +1800,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   summary.rows = {
       {"Class", "pluss::table::DataFrame"},
       {"Cases", fmt::format("{}", frame.ncases())},
-      {"Features", fmt::format("{}", frame.nfeats())},
+      {"Features", fmt::format("{}", frame.nfeatures())},
       {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
       {"Null Case Rows", fmt::format("{}", null_case_rows)},
       {"Dtypes", dtype_summary_line(dtype_counts)},
@@ -1849,7 +1849,7 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   const auto term = detect_terminal();
   const auto effective = resolve_effective_options(options, term, false);
   std::vector<std::string> lines;
-  lines.push_back(fmt::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.ncases(), atlas.nfeats()));
+  lines.push_back(fmt::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.ncases(), atlas.nfeatures()));
 
   const auto total = atlas.depth();
   const auto max_frames = std::max<std::int64_t>(2, effective.edge_rows + effective.tail_rows);
@@ -1911,7 +1911,7 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
     auto render_opts = options;
     render_opts.backend = backend;
     const std::int64_t rows = std::max<std::int64_t>(0, frame.ncases());
-    const std::int64_t columns = std::max<std::int64_t>(0, frame.nfeats());
+    const std::int64_t columns = std::max<std::int64_t>(0, frame.nfeatures());
     const bool use_virtual_table =
         backend == DisplayBackend::PlussWebView &&
         rows > 0 && columns > 0 &&
@@ -1927,7 +1927,7 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
                   frame,
                   document_title_("DataFrame", render_opts),
                   fmt::format("{} cases, {} features", frame.ncases(),
-                              frame.nfeats()),
+                              frame.nfeatures()),
                   render_opts)
             : render_html(frame, render_opts);
     if (use_virtual_table) {

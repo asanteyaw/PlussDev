@@ -22,7 +22,7 @@ int main() {
   read_opts.skipcases = {1, 2};
   read_opts.parse_dates = {"Price"};
   let df = DataFrame::load_csv(csv_path.string(), read_opts).rename("Price", "Date");
-  std::cout << "\n[Cell 1] Raw shape: [" << df.ncases() << " cs x " << df.nfeats() << " feat]\n";
+  std::cout << "\n[Cell 1] Raw shape: [" << df.ncases() << " cs x " << df.nfeatures() << " feat]\n";
   df.head(8);
 
   //========== Cell Two ===========
@@ -54,7 +54,7 @@ int main() {
       (df.features("Volume") + 1.0).log(),
   };
 
-  std::cout << "\nCleaned shape: [" << df.ncases() << " cs x " << df.nfeats() << " feat]\n";
+  std::cout << "\nCleaned shape: [" << df.ncases() << " cs x " << df.nfeatures() << " feat]\n";
   df.features({"Year", "Month", "DayOfWeek", "DailyRange", "OpenCloseSpread", "LogVolume"}).head(5);
 
   //========== Cell Three ===========
@@ -259,7 +259,7 @@ int main() {
       (ml_frame.features("Volume") / ml_frame.features("VolumePrev1")) - 1.0,
       (ml_frame.features("CloseNext1") / ml_frame.features("Close")) - 1.0,
   };
-  ml_frame = ml_frame.drop({"ClosePrev1", "ClosePrev5", "VolumePrev1", "CloseNext1"}).set_cases("Date", true);
+  ml_frame = ml_frame.drop({"ClosePrev1", "ClosePrev5", "VolumePrev1", "CloseNext1"}).label().set("Date", true);
 
   std::cout << "ML-ready rows: " << ml_frame.ncases() << "\n";
   ml_frame.head(6);

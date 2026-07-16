@@ -23,7 +23,7 @@ auto returns = df.features({"close", "volume"}).ts().returns(1);
 Use DataFrame resampling and reindexing when the operation needs a time axis:
 
 ```cpp
-auto values = df.set_cases("date", false).features({"close", "volume"});
+auto values = df.label().set("date", false).features({"close", "volume"});
 auto daily = values.ts().resample("D").mean();
 ```
 
@@ -322,7 +322,7 @@ Use the resampler object when you want time-series semantics closer to a
 grouped pipeline:
 
 ```cpp
-auto values = df.set_cases("date", false).features({"close", "volume"});
+auto values = df.label().set("date", false).features({"close", "volume"});
 auto ordered = values.ts().sort();
 auto seven_day = values.ts().rolling("7D", pluss::table::WindowStatistic::Mean);
 auto daily = values.ts().resample("D").mean();
@@ -357,21 +357,17 @@ When you already know the aggregation at the call site, the immediate overload
 still exists:
 
 ```cpp
-auto values = df.set_cases("date", false).features({"close", "volume"});
+auto values = df.label().set("date", false).features({"close", "volume"});
 auto daily = values.ts().resample(
     "D",
     pluss::subsp::stats::ts::ResampleOp::Mean,
     1);
 ```
 
-Both forms produce a `DataFrame` whose cases are the resample labels. In the
+The call returns a `DataFrame` whose cases are the resample labels. In the
 verified example later in this chapter, four half-day observations become two
-daily rows.
-
-The older `DataFrame::resample(time_feature, value_features, freq, op, step,
-render)` API still exists and returns a `DataFrameView`. That older helper is a
-frame-level bin-and-aggregate call. Prefer `df.ts(features).resample(...)` when
-you want the main time-series resampler surface.
+daily rows. Use `df.ts(features).resample(...)` as the main time-series
+resampler surface.
 
 ## As-frequency conversion
 
@@ -393,7 +389,7 @@ Use it when your downstream code expects a regular time grid.
 `insert_gaps` builds regular bins and aligns exact observations onto them:
 
 ```cpp
-auto with_gaps = df.set_cases("date", false).features({"close"}).ts().insert_gaps("H", 1);
+auto with_gaps = df.label().set("date", false).features({"close"}).ts().insert_gaps("H", 1);
 ```
 
 Rows with no exact source observation are emitted as undefined numeric
@@ -405,7 +401,7 @@ instead of connecting across missing intervals.
 Use `align_to` when you already have the target timeline:
 
 ```cpp
-auto aligned = df.set_cases("date", false).features({"close", "volume"}).ts().align_to(
+auto aligned = df.label().set("date", false).features({"close", "volume"}).ts().align_to(
     target_axis,
     pluss::table::TsAlignMode::Exact);
 ```
@@ -422,7 +418,7 @@ auto aligned = df.set_cases("date", false).features({"close", "volume"}).ts().al
 Use `reindex_time` when you also want to fill missing aligned values:
 
 ```cpp
-auto reindexed = df.set_cases("date", false).features({"close"}).ts().reindex_time(
+auto reindexed = df.label().set("date", false).features({"close"}).ts().reindex_time(
     target_axis,
     pluss::table::TsAlignMode::Exact,
     pluss::table::TsReindexFill::Forward);
@@ -441,7 +437,7 @@ auto reindexed = df.set_cases("date", false).features({"close"}).ts().reindex_ti
 If you use `Constant`, pass the constant value:
 
 ```cpp
-auto filled = df.set_cases("date", false).features({"close"}).ts().reindex_time(
+auto filled = df.label().set("date", false).features({"close"}).ts().reindex_time(
     target_axis,
     pluss::table::TsAlignMode::Exact,
     pluss::table::TsReindexFill::Constant,
@@ -472,6 +468,104 @@ Calendar features are often used for grouping, joins, or model features:
 ```cpp
 auto enriched = df.combine(cal, {DataFrame::CombineOp::Columns, "_cal", true});
 ```
+
+## Timeline spans
+
+Use `.tl().span(...)` when you need elapsed calendar distances between timeline
+values:
+
+```cpp
+auto start = pluss::table::Thread(pluss::make_timeline({
+    "2024-01-31T00:00:00Z",
+    "2024-02-29T00:00:00Z",
+    "2024-01-01T00:00:00Z"}));
+
+auto end = pluss::table::Thread(pluss::make_timeline({
+    "2024-02-01T00:00:00Z",
+    "2025-02-28T00:00:00Z",
+    "2024-01-05T00:00:00Z"}));
+
+auto days = start.tl().span(end, pluss::table::TimeUnit::Days);
+```
+
+`TimeUnit::Days` and smaller fixed units are elapsed UTC units. Calendar units
+such as `Months`, `Years`, and `BusinessDays` require matching time zones,
+because the answer depends on local calendar labels.
+
+For month and year spans, choose the rule explicitly:
+
+```cpp
+pluss::table::TimelineSpanOptions months;
+months.unit = pluss::table::TimeUnit::Months;
+months.mode = pluss::table::TimelineSpanMode::Complete;
+
+auto full_months = start.tl().span(end, months);
+
+months.mode = pluss::table::TimelineSpanMode::Boundary;
+auto crossed_month_labels = start.tl().span(end, months);
+```
+
+`TimelineSpanMode::Complete` counts fully completed calendar units. January 31
+to February 1 is `0` complete months. `TimelineSpanMode::Boundary` counts crossed
+calendar labels, so January 31 to February 1 crosses one month boundary.
+
+The default completion anchor is strict day-of-month matching. If your domain
+uses end-of-month accounting rules, opt in explicitly:
+
+```cpp
+months.mode = pluss::table::TimelineSpanMode::Complete;
+months.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
+
+auto accounting_months = start.tl().span(end, months);
+```
+
+With `MonthEnd`, January 31 to February 29 counts as one complete month, and
+February 29 to February 28 in a non-leap year counts as one complete year when
+the unit is `Years`.
+
+Business-day spans use an explicit calendar:
+
+```cpp
+pluss::table::TimelineSpanOptions business;
+business.unit = pluss::table::TimeUnit::BusinessDays;
+business.closed = pluss::table::TimelineSpanClosed::Right; // (start, end]
+business.calendar.name = "ExampleCorp";
+business.calendar.region = "CA-AB";
+business.calendar.holidays = {
+    pluss::make_timeline("2024-01-03T00:00:00Z")
+        .epoch_days()
+        .to_vec<std::int64_t>(0)};
+
+auto business_days = start.tl().span(end, business);
+```
+
+Use a built-in preset when your domain matches one of the supplied calendars:
+
+```cpp
+business.calendar = pluss::table::BusinessCalendar::monfri();
+business.calendar = pluss::table::BusinessCalendar::usa_federal(2026, 2026);
+business.calendar = pluss::table::BusinessCalendar::canada_federal(2026, 2026);
+business.calendar = pluss::table::BusinessCalendar::uk_bank(2026, 2026);
+business.calendar = pluss::table::BusinessCalendar::target2(2026, 2026);
+business.calendar = pluss::table::BusinessCalendar::nyse(2026, 2026);
+```
+
+Built-in presets intentionally stop at broad federal/national/market calendars.
+Provincial, territorial, state, municipal, and employer-specific calendars can
+be expressed by constructing a `BusinessCalendar` with custom holidays. This
+keeps the public API from growing a preset for every local jurisdiction.
+`uk_bank` currently means England/Wales bank holidays. `target2` means Euro
+TARGET closing days. `nyse` means New York Stock Exchange full-day closures; it
+is not the same as U.S. federal holidays.
+
+The default business calendar is Monday through Friday, with no holidays. The
+default interval is `(start, end]`: exclude the start date, include the end date.
+Set `closed` to `Left`, `Both`, or `Neither` when your domain needs a different
+convention. Holidays are local epoch-day labels, so generate them in the same
+timezone as the timeline being measured. If `BusinessCalendar::timezone` is
+provided, it must match the timeline timezone. Calendar and business spans also
+require the left and right timelines to have matching timezones; convert first
+when necessary.
 
 ## Lag blocks
 
@@ -555,7 +649,7 @@ std::cout << "rolling mean window 2:\n"
           << df.features("close").ts().rolling(2, pluss::table::WindowStatistic::Mean, {.min_count = 2}).to_string()
           << '\n';
 
-auto values = df.set_cases("date", false).features({"close", "volume"});
+auto values = df.label().set("date", false).features({"close", "volume"});
 auto daily = values.ts().resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
 std::cout << "daily mean:\n" << daily.to_string() << '\n';
 
@@ -630,7 +724,7 @@ The output demonstrates several important details:
 | One transformed value stream | `df.features("x").ts()` |
 | Several transformed value streams | `df.features({"x", "y"}).ts()` |
 | Resample one value stream and handle labels manually | `Thread::ts().resample(axis, ...)` |
-| Resample several value streams into a new frame | `df.set_cases("date").features({...}).ts().resample(...)` |
+| Resample several value streams into a new frame | `df.label().set("date").features({...}).ts().resample(...)` |
 | Add calendar model features | `df.features({"date"}).tl().year()` |
 | Build lagged model features | `df.features({...}).ts().lag_block(...)` |
 | Build rolling model features | `df.features({...}).ts().rolling_block(...)` |
@@ -688,7 +782,7 @@ return. Resample first when the calendar interval matters.
 This fails when `"date"` is not a `Timeline` or `TimeIndex`:
 
 ```cpp
-auto daily = df.set_cases("date", false).features({"close"}).ts().resample("D").mean();
+auto daily = df.label().set("date", false).features({"close"}).ts().resample("D").mean();
 ```
 
 Fix the schema first:
@@ -698,7 +792,7 @@ auto fixed = df.cast({
     pluss::table::DataFrame::CastSpec{
         "date", pluss::table::ThreadCastTarget::Timeline, {}},
 });
-auto daily = fixed.set_cases("date", false).features({"close"}).ts().resample("D").mean();
+auto daily = fixed.label().set("date", false).features({"close"}).ts().resample("D").mean();
 ```
 
 ### Rolling unsorted data

@@ -78,9 +78,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort_cases.html">
+  <a class="prev-link" href="slice.html">
     <span class="label">Previous</span>
-    <span class="title">sort_cases</span>
+    <span class="title">slice</span>
   </a>
   <a class="next-link" href="sql.html">
     <span class="label">Next</span>

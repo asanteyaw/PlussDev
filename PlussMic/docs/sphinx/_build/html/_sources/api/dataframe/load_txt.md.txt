@@ -93,8 +93,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">load_parquet</span>
   </a>
-  <a class="next-link" href="lor.html">
+  <a class="next-link" href="log.html">
     <span class="label">Next</span>
-    <span class="title">lor</span>
+    <span class="title">log</span>
   </a>
 </div>

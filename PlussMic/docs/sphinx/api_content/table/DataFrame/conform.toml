@@ -10,7 +10,7 @@ returns = """
 """
 
 see_also = [
-  "<a href=\"#align_caselbl\"><code>DataFrame::align_caselbl</code></a>: case-axis-only alignment.",
+  "<a href=\"#label\"><code>DataFrame::label().align</code></a>: case-label-only alignment.",
   "<a href=\"#combine\"><code>DataFrame::combine</code></a>: combine two already-compatible frames.",
   "<a href=\"#unify\"><code>DataFrame::unify</code></a>: key-based merge rather than structure conformance."
 ]
@@ -31,7 +31,7 @@ Reference frame whose structure should be mirrored.
 
 The result follows:
 - `other.features()` for feature order, and
-- `other.caselbl()` for case order.
+- `other.label().values()` for case-label order.
 """
 
 [[examples]]

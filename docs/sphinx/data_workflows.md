@@ -242,7 +242,8 @@ df.mean_by("job", "balance", 10, 1, true, true);
 For date/time features, use the time accessors and resampling helpers:
 
 ```cpp
-auto daily = df.resample("date", {"close", "volume"}, "D", "mean", 1, true);
+auto daily = df.ts({"close", "volume"}).resample(
+    "date", "D", pluss::subsp::stats::ts::ResampleOp::Mean);
 auto lagged = df.shift({"close"}, 1);
 auto rolling = df.rolling({
     {"close_5_mean", "close", pluss::table::ThreadWindowOp::RollingMean, 5, 3},
@@ -323,7 +324,7 @@ Before pushing a Pluss data workflow into a user-facing application:
 - Use typed loader options for non-trivial I/O.
 - Call `info()` and `describe()` during development to confirm inferred types.
 - Prefer `query` for readable predicates and explicit masks for custom C++ logic.
-- Keep case/index choices deliberate with `set_cases`, `reset_cases`, and loader
+- Keep case-label choices deliberate with `set_caselbl`, `reset_caselbl`, and loader
   `case_col` options.
 - Use non-mutating transforms in library code unless mutation is intentional.
 - Save intermediate artifacts with explicit filenames and formats.

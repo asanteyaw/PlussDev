@@ -76,9 +76,9 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   train.tolerance = 1e-8;
   model.learn_(batch, train);
 
-  const ConfusionTable cm = confusion_matrix(model, batch);
+  const ConfusionTable cm = confusion_table(model, batch);
   if (cm.counts.dim() != 2 || cm.counts.sizes()[0] != 2 || cm.counts.sizes()[1] != 2) {
-    if (err) *err << "lymph confusion_matrix(model,batch) should return 2x2 matrix on binary data\n";
+    if (err) *err << "lymph confusion_table(model,batch) should return 2x2 matrix on binary data\n";
     return false;
   }
 
@@ -102,7 +102,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   }
 
   CrossValidationOptions cv{};
-  cv.plan = CVPlanKind::KFold;
+  cv.plan = CVPlanKind::CrossVal;
   cv.folds = 4;
   cv.shuffle = true;
   cv.random_state = 73;
@@ -132,9 +132,9 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   WorkflowModel wf_model = linear_factory::logistic_regression(linear);
   wf_model.learn_(batch, train);
   pluss::ai::lymph::Workflow wf = make_pipeline(std::move(wf_model));
-  const ConfusionTable wf_cm = wf.confusion_matrix(batch);
+  const ConfusionTable wf_cm = wf.confusion_table(batch);
   if (wf_cm.counts.numel() != cm.counts.numel()) {
-    if (err) *err << "Workflow::confusion_matrix should mirror WorkflowModel wrapper behavior\n";
+    if (err) *err << "Workflow::confusion_table should mirror WorkflowModel wrapper behavior\n";
     return false;
   }
   const ClassReport wf_report = wf.classification_summary(batch);
@@ -184,7 +184,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     }
 
     SplitOptions sparse_split{};
-    sparse_split.plan = CVPlanKind::KFold;
+    sparse_split.plan = CVPlanKind::CrossVal;
     sparse_split.folds = 3;
     sparse_split.shuffle = true;
     sparse_split.random.seed = 17;

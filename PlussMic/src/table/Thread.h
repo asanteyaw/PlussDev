@@ -226,6 +226,13 @@ enum class TextAlign : std::uint8_t {
   Center = 2,
 };
 
+struct TextOptions {
+  bool regex{false};
+  bool case_sensitive{true};
+  std::int64_t limit{-1};
+  std::string prefix{"part"};
+};
+
 enum class ResultShape : std::uint8_t {
   Infer = 0,
   Reduce = 1,
@@ -238,6 +245,25 @@ enum class TimeUnit : std::uint8_t {
   Micros = 1,
   Millis = 2,
   Seconds = 3,
+  Days = 4,
+  Weeks = 5,
+  Months = 6,
+  Years = 7,
+  BusinessDays = 8,
+};
+
+using TimelineSpanMode = pluss::codeh::TimelineSpanMode;
+using TimelineSpanClosed = pluss::codeh::TimelineSpanClosed;
+using TimelineSpanAnchor = pluss::codeh::TimelineSpanAnchor;
+using BusinessCalendar = pluss::codeh::BusinessCalendar;
+
+struct TimelineSpanOptions {
+  TimeUnit unit{TimeUnit::Days};
+  TimelineSpanMode mode{TimelineSpanMode::Complete};
+  TimelineSpanAnchor anchor{TimelineSpanAnchor::DayOfMonth};
+  bool signed_result{true};
+  BusinessCalendar calendar{};
+  TimelineSpanClosed closed{TimelineSpanClosed::Right};
 };
 
 struct TimelineLocalizeOptions {
@@ -295,6 +321,7 @@ public:
   Thread notnull() const;
   Thread isnan() const;
   Thread isfinite() const;
+  Thread invalid() const;
 
   // Functional-by-default transforms.
   Thread fillna(double value) const;
@@ -437,6 +464,8 @@ public:
   DataFrame split(std::string_view delimiter,
                   std::int64_t limit = -1,
                   std::string prefix = "part") const;
+  DataFrame split(std::string_view pattern,
+                  const TextOptions& options) const;
   DataFrame partition(std::string_view separator,
                       std::string prefix = "part") const;
   Thread pad(std::int64_t width,
@@ -450,6 +479,9 @@ public:
   DataFrame indicate(std::string_view delimiter = "|",
                      std::string prefix = "") const;
   Thread replace(std::string_view from, std::string_view to) const;
+  Thread replace(std::string_view from,
+                 std::string_view to,
+                 const TextOptions& options) const;
   Thread put(const Thread& bool_mask, const Thread& value) const;
   Thread put(const Thread& bool_mask, double value) const;
   Thread put(const Thread& bool_mask, std::string_view value) const;
@@ -997,13 +1029,23 @@ public:
   Thread length() const;
   Thread starts(std::string_view prefix) const;
   Thread ends(std::string_view suffix) const;
+  Thread has(std::string_view needle,
+             const TextOptions& options = {}) const;
+  Thread count(std::string_view pattern) const;
+  Thread count(std::string_view pattern,
+               const TextOptions& options) const;
   Thread matches(std::string_view pattern, bool full = false) const;
   Thread fullmatch(std::string_view pattern) const;
+  DataFrame findall(std::string_view pattern) const;
+  DataFrame findall(std::string_view pattern,
+                    const TextOptions& options) const;
   DataFrame extract(std::string_view pattern,
                     pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
   DataFrame split(std::string_view delimiter,
                   std::int64_t limit = -1,
                   std::string prefix = "part") const;
+  DataFrame split(std::string_view pattern,
+                  const TextOptions& options) const;
   DataFrame partition(std::string_view separator,
                       std::string prefix = "part") const;
   Thread pad(std::int64_t width,
@@ -1016,6 +1058,10 @@ public:
   Thread encode(std::string_view encoding = "base64") const;
   DataFrame indicate(std::string_view delimiter = "|",
                      std::string prefix = "") const;
+  Thread replace(std::string_view from, std::string_view to) const;
+  Thread replace(std::string_view from,
+                 std::string_view to,
+                 const TextOptions& options) const;
 
 private:
   Thread base_{};
@@ -1046,6 +1092,10 @@ public:
   Thread fmt(std::string_view pattern) const;
   Thread iso() const;
   Thread epoch(TimeUnit unit = TimeUnit::Nanos) const;
+  Thread span(const Thread& other, const TimelineSpanOptions& options = {}) const;
+  Thread span(const Thread& other, TimeUnit unit) const;
+  Thread span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const;
+  Thread span(const pluss::Timeline& other, TimeUnit unit) const;
   Thread floor(std::string_view unit) const;
   Thread ceil(std::string_view unit) const;
   Thread round(std::string_view unit) const;

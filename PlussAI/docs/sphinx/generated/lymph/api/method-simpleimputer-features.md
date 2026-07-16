@@ -82,26 +82,27 @@ data=[0.63710967] cv_mae=pluss::Series(shape=[1], strides=[1], dtype=float64, pl
 ### Example 3 (Demo Pattern)
 
 ```cpp
-  std::cout << "numeric features: ";
-  for (const auto& n : numeric) std::cout << n << " ";
-  std::cout << "\n";
-  std::cout << "categorical features: ";
-  for (const auto& n : categorical) std::cout << n << " ";
-  std::cout << "\n";
-  auto ord = lymph::prep::OrdinalEncoder({.include_unknown_bucket = true, .one_based = true});
-  ord.features({"ocean_proximity"});
-  const auto ocean_ord = ord.learn_map(housing.features({"ocean_proximity"}));
-  auto lbl = lymph::prep::LabelEncoder({.include_unknown_bucket = true, .one_based = false});
-  const auto ocean_lbl = lbl.learn_map(housing.features("ocean_proximity"));
-  std::cout << "ordinal mapped names: ";
-  for (const auto& name : ord.mapped_names_) std::cout << name << " ";
-  std::cout << "\n";
-  std::cout << "label mapped names: ";
-  for (const auto& name : lbl.mapped_names_) std::cout << name << " ";
-  std::cout << "\n";
-  std::cout << "ordinal sample: " << ocean_ord << "\n";
-  std::cout << "label sample: " << ocean_lbl << "\n";
-  std::cout << "pred: " << pred << "\n";
+  const pluss::Series y = x.mul(2.0).add(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0, 0.0, 1.0}, {6}, f64));
+
+  const pluss::table::DataFrame housing({
+      {"median_income", pluss::table::Thread(x)},
+      {"ocean_proximity", cat},
+      {"target", pluss::table::Thread(y)},
+  });
+
+  const auto numeric = housing.series_features().features();
+  const auto categorical = housing.note_features().features();
+
+  pluss::ai::nodej::DataFrameBatchOptions data_options{};
+  data_options.feature_names = {"median_income", "ocean_proximity", "target"};
+  data_options.label_feature = "target";
+  data_options.note_policy = pluss::ai::nodej::DataNotePolicy::Hash;
+  data_options.layout = pluss::ai::nodej::ObservationLayout::Rows;
+
+  auto preprocessing = lymph::make_feature_transformer(
+      housing,
+      data_options,
+      std::vector<lymph::workflow::feature::Branch>{
 ```
 
 **Expected output**

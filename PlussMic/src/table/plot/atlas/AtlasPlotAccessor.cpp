@@ -497,7 +497,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
   }
 
   AtlasGrid3D out;
-  const auto& case_thread = frames[static_cast<std::size_t>(positions.front())].caselbl();
+  const auto& case_thread = frames[static_cast<std::size_t>(positions.front())].label().values();
   if (thread_prefers_labels(case_thread)) {
     out.x_axis = positional_axis(ncases);
     out.x_labels = thread_to_labels(case_thread);
@@ -557,7 +557,7 @@ struct ResolvedFrameAxis {
 ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
                                      std::optional<std::string_view> x_feature,
                                      std::string_view where) {
-  const auto& axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.caselbl();
+  const auto& axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
   const auto axis_label = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
   ResolvedFrameAxis axis;
   axis.label = axis_label;

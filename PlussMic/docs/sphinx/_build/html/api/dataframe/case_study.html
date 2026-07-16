@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
+    <script src="../../_static/api_nav.js?v=5a216172"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::caselbl" href="caselbl.html" />
+    <link rel="next" title="DataFrame::cast" href="cast.html" />
     <link rel="prev" title="DataFrame::bucketize" href="bucketize.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -50,14 +50,14 @@
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>pick</strong>
-Structured-case selector used when the DataFrame has named case levels created by <code class="docutils literal notranslate"><span class="pre">set_cases(...)</span></code>.</p>
+Structured-case selector used when the DataFrame has named case labels created by <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code>.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Use this overload for hierarchical case lookup rather than ordinary row slicing.
 
 Supported forms:
-- `.level = &quot;region&quot;, .value = &quot;West&quot;` selects every row whose named case level equals the supplied value.
-- `.levels = {&quot;region&quot;, &quot;quarter&quot;}, .values = {&quot;West&quot;, &quot;Q2&quot;}` matches several named case levels at once.
-- `.key = {&quot;East&quot;, &quot;201&quot;, &quot;Q2&quot;}` performs a full structured-key lookup using the current case-level order.
-- `.drop = true` removes the matched case level(s) from the returned structured case metadata after selection.
+- `.label = &quot;region&quot;, .value = &quot;West&quot;` selects every row whose named case label equals the supplied value.
+- `.caselbls = {&quot;region&quot;, &quot;quarter&quot;}, .values = {&quot;West&quot;, &quot;Q2&quot;}` matches several named case labels at once.
+- `.key = {&quot;East&quot;, &quot;201&quot;, &quot;Q2&quot;}` performs a full structured-key lookup using the current case-label order.
+- `.drop = true` removes the matched case caselbl(s) from the returned structured case metadata after selection.
 </pre></div>
 </div>
 <p><strong>rows</strong>
@@ -76,12 +76,12 @@ Row selector used for ordinary case-axis lookup and positional indexing.</p>
 Optional feature selector applied after the row selection has been resolved.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Supported forms:
 - `pluss::table::all_features()` keeps every feature in source order.
-- `pluss::table::col(&quot;name&quot;)` keeps one named feature.
-- `pluss::table::col(position)` keeps one feature by zero-based position.
-- `pluss::table::cols({&quot;a&quot;, &quot;b&quot;})` keeps named features in the requested order.
-- `pluss::table::cols({0, 2})` keeps feature positions in the requested order.
-- `pluss::table::cols(start, stop)` keeps a half-open positional feature slice `[start, stop)`.
-- `pluss::table::col_range(&quot;start&quot;, &quot;stop&quot;)` keeps an inclusive feature-name window from `start` through `stop`.
+- `pluss::table::feature(&quot;name&quot;)` keeps one named feature.
+- `pluss::table::feature(position)` keeps one feature by zero-based position.
+- `pluss::table::features({&quot;a&quot;, &quot;b&quot;})` keeps named features in the requested order.
+- `pluss::table::features({0, 2})` keeps feature positions in the requested order.
+- `pluss::table::features(start, stop)` keeps a half-open positional feature slice `[start, stop)`.
+- `pluss::table::feature_range(&quot;start&quot;, &quot;stop&quot;)` keeps an inclusive feature-name window from `start` through `stop`.
 </pre></div>
 </div>
 </section>
@@ -92,7 +92,7 @@ Always returns a <code class="docutils literal notranslate"><span class="pre">Da
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-level case lookup through <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> when the frame has hierarchical cases.</p>
+<p><code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-label case lookup through <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> when the frame has hierarchical cases.</p>
 </section>
 <section id="selector-rules">
 <h2>Selector Rules<a class="headerlink" href="#selector-rules" title="Link to this heading">¶</a></h2>
@@ -102,8 +102,8 @@ Always returns a <code class="docutils literal notranslate"><span class="pre">Da
 <li><p>Label selectors match against the current case axis returned by <code class="docutils literal notranslate"><span class="pre">caselbl()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">label(value)</span></code> returns every matching row, so duplicate case labels are preserved instead of collapsed.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">label_range(start,</span> <span class="pre">stop)</span></code> is inclusive on both ends and walks the current case-axis order.</p></li>
-<li><p>Feature-position slices are half-open, while <code class="docutils literal notranslate"><span class="pre">col_range(start,</span> <span class="pre">stop)</span></code> is inclusive on both ends.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> reads named case levels created by <code class="docutils literal notranslate"><span class="pre">set_cases(...)</span></code>; it does not inspect ordinary feature columns.</p></li>
+<li><p>Feature-position slices are half-open, while <code class="docutils literal notranslate"><span class="pre">feature_range(start,</span> <span class="pre">stop)</span></code> is inclusive on both ends.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> reads named case labels created by <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code>; it does not inspect ordinary feature columns.</p></li>
 <li><p>Partial <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> matches preserve the existing row order already stored on the frame.</p></li>
 <li><p>Because <code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> always returns a frame, you do not need separate <code class="docutils literal notranslate"><span class="pre">at(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">iat(...)</span></code> methods for single-cell access.</p></li>
 </ul>
@@ -178,7 +178,7 @@ Kumasi  middle  12.0   2.5
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">pos</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}),</span><span class="w"> </span><span class="n">cols</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">pos</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}),</span><span class="w"> </span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">}));</span>
 </pre></div>
 </div>
 </section>
@@ -226,7 +226,7 @@ Kumasi  middle  12.0   2.5
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">labels</span><span class="p">({</span><span class="s">&quot;D400&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A100&quot;</span><span class="p">}),</span><span class="w"> </span><span class="n">cols</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">labels</span><span class="p">({</span><span class="s">&quot;D400&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A100&quot;</span><span class="p">}),</span><span class="w"> </span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">}));</span>
 </pre></div>
 </div>
 </section>
@@ -250,7 +250,7 @@ Accra   10.0
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">label_range</span><span class="p">(</span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">col_range</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">label_range</span><span class="p">(</span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">feature_range</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">));</span>
 </pre></div>
 </div>
 </section>
@@ -275,7 +275,7 @@ north   5.0    5.0
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">mask</span><span class="p">(</span><span class="n">sales</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">10.0</span><span class="p">),</span><span class="w"> </span><span class="n">cols</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">mask</span><span class="p">(</span><span class="n">sales</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">10.0</span><span class="p">),</span><span class="w"> </span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">}));</span>
 </pre></div>
 </div>
 </section>
@@ -299,7 +299,7 @@ Kumasi  12.0
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">label</span><span class="p">(</span><span class="s">&quot;A100&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">col</span><span class="p">(</span><span class="s">&quot;price&quot;</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">label</span><span class="p">(</span><span class="s">&quot;A100&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">feature</span><span class="p">(</span><span class="s">&quot;price&quot;</span><span class="p">));</span>
 </pre></div>
 </div>
 </section>
@@ -322,7 +322,7 @@ Kumasi  12.0
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">pos</span><span class="p">(</span><span class="mi">-1</span><span class="p">),</span><span class="w"> </span><span class="n">cols</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">pos</span><span class="p">(</span><span class="mi">-1</span><span class="p">),</span><span class="w"> </span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">}));</span>
 </pre></div>
 </div>
 </section>
@@ -332,7 +332,7 @@ Kumasi  12.0
 Tamale  5.0
 </pre></div>
 </div>
-<p>Example 10. Match one structured case level with <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> after <code class="docutils literal notranslate"><span class="pre">set_cases(...)</span></code>.</p>
+<p>Example 10. Match one structured case label with <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> after <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
@@ -341,10 +341,10 @@ Tamale  5.0
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;cost&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">set_cases</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span>
 <span class="p">}).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">});</span>
 </pre></div>
@@ -366,7 +366,7 @@ Tamale  5.0
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;cost&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">})},</span>
-<span class="p">}).</span><span class="n">set_cases</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{</span>
 <span class="w">    </span><span class="p">.</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;201&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">},</span>
@@ -386,7 +386,7 @@ Tamale  5.0
 <h2>Behavior Notes<a class="headerlink" href="#behavior-notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">caselbl()</span></code> remains the accessor for the case axis itself. It no longer doubles as a row-selection API.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> is the structured-case overload. Use it only after <code class="docutils literal notranslate"><span class="pre">set_cases(...)</span></code> has created named case levels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> is the structured-case overload. Use it only after <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code> has created named case labels.</p></li>
 <li><p>Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.</p></li>
 <li><p>When you only want to preview a row window instead of materializing a selection result for later work, use <code class="docutils literal notranslate"><span class="pre">observe(...)</span></code>.</p></li>
 <li><p>If you already know the final feature order and only need column projection, <code class="docutils literal notranslate"><span class="pre">features({...})</span></code> is still the lighter-weight feature-only path.</p></li>
@@ -396,9 +396,9 @@ Tamale  5.0
     <span class="label">Previous</span>
     <span class="title">bucketize</span>
   </a>
-  <a class="next-link" href="caselbl.html">
+  <a class="next-link" href="cast.html">
     <span class="label">Next</span>
-    <span class="title">caselbl</span>
+    <span class="title">cast</span>
   </a>
 </div>
 </section>
@@ -452,7 +452,7 @@ Tamale  5.0
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
       <li>Previous: <a href="bucketize.html" title="previous chapter">DataFrame::bucketize</a></li>
-      <li>Next: <a href="caselbl.html" title="next chapter">DataFrame::caselbl</a></li>
+      <li>Next: <a href="cast.html" title="next chapter">DataFrame::cast</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

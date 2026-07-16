@@ -163,9 +163,9 @@ auto out = left.extend_cases(right, FrameMatchRule::Unite, true);
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="equals.html">
+  <a class="prev-link" href="exp.html">
     <span class="label">Previous</span>
-    <span class="title">equals</span>
+    <span class="title">exp</span>
   </a>
   <a class="next-link" href="factor.html">
     <span class="label">Next</span>

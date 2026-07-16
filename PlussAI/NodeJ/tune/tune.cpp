@@ -34,8 +34,12 @@ void populate_tune_ledger(TuneReport& report);
     case MetricKind::BalancedAccuracy:
     case MetricKind::Precision:
     case MetricKind::Recall:
+    case MetricKind::Sensitivity:
     case MetricKind::F1:
     case MetricKind::RocAuc:
+    case MetricKind::Specificity:
+    case MetricKind::GeometricMean:
+    case MetricKind::BalanceQuality:
     case MetricKind::R2:
       return true;
     case MetricKind::LogLoss:

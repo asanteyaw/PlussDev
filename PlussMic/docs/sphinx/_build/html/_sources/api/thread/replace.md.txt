@@ -36,6 +36,8 @@ Thread::replace(pluss::null_t from, const pluss::Timeline& to) -> Thread
 Thread::replace(pluss::null_t from, double to) -> Thread
 
 Thread::replace(std::string_view from, std::string_view to) -> Thread
+
+Thread::replace(std::string_view from, std::string_view to, const TextOptions& options) -> Thread
 ```
 
 ## What It Does
@@ -49,6 +51,9 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 
 **to**
     Boundary or replacement value used by this overload. Its type determines which payload family participates.
+
+**options**
+    Typed loader, renderer, SQL, plotting, or policy options for this overload.
 
 ## Returns
 
@@ -253,6 +258,19 @@ auto out = thread.replace("Tema", "Tamale");
 ["Accra", "Tema", "Kumasi"]
 ```
 Example 16. Apply `replace` to the current thread using explicit `from, to` arguments.
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = thread.replace("Tema", "Tamale");
+```
+
+### Output
+
+```text
+["Accra", "Tema", "Kumasi"]
+```
+Example 17. Pass an explicit options object to control the operation.
 
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));

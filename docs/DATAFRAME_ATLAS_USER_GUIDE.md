@@ -244,14 +244,14 @@ auto f = df.features("price");                // Thread
 auto subset = df.features({"price", "qty"});  // DataFrame subset
 ```
 
-Access case axis:
+Access case labels and cases:
 
 ```cpp
-auto case_axis = df.caselbl();           // Thread
-auto one_case_df = df.caselbl(10);       // single case as DataFrame
-auto case_slice = df.caselbl({5, 10});   // [5,10) as DataFrame
-auto cell1 = df.caselbl(3, 2);           // row+feature-index cell (string view materialized to string)
-auto cell2 = df.caselbl(3, "price");     // row+feature-name cell
+auto case_axis = df.label().values();    // Thread, pandas-index equivalent
+auto one_case_df = df.case_study(pluss::table::pos(10));
+auto case_slice = df.case_study(pluss::table::pos(5, 10)); // [5,10)
+auto cell1 = df.case_study(pluss::table::pos(3), pluss::table::feature(2));
+auto cell2 = df.case_study(pluss::table::pos(3), pluss::table::feature("price"));
 ```
 
 Extract underlying pluss payload type:
@@ -318,16 +318,16 @@ auto c = df.cast({
 
 The API uses focused canonical names:
 
-- **core naming**: `features`, `cases`, `sort_cases`, `tally`, `set_features`, `set`, `group_by`
+- **core naming**: `features`, `caselbl`, `sort_caselbl`, `tally`, `set_features`, `set`, `group_by`
 
 Complete method index (current public surface, grouped):
 
 - Access: `nrows`, `ncols`, `nfeatures`, `features`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
-- Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
+- Feature/case-label mutation: `set_features`, `set_features_`, `set`, `caselbl`, `caselbl_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `set_axis`, `set_caselbl`, `reset_caselbl`, `align_caselbl`, `align`
 - Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
 - Derivation/aggregation/grouping: `assign`, `transform`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `tally`, `describe`, `transpose`
 - Dimensional bridge: `unsqueeze` (DataFrame -> depth-1 Atlas), `squeeze` (Atlas -> DataFrame when depth==1)
-- Sorting/ranking: `sort_values`, `sort_cases`, `top`, `bottom`
+- Sorting/ranking: `sort_values`, `sort_caselbl`, `top`, `bottom`
 - Missing data: `isna`, `isnull`, `notna`, `notnull`, `fillna`, `fillna_`, `dropna`, `dropna_all`, `ffill`, `bfill`, `count_null_rows`
 - Type operations: `series`, `note`, `timeline`, `cast_series`, `cast_note`, `cast_timeline`, `cast_timeindex`, `cast`, `astype`
 - Window operations: `window`, `rolling`
@@ -447,7 +447,7 @@ auto pt = df.pivot_table("state", "severity", "distance", pluss::table::DataFram
 ```cpp
 auto a1 = df.sort_values({"price"});                  // ascending
 auto a2 = df.sort_values({{"price", false, true}});   // descending, nulls last
-auto a3 = df.sort_cases(false);                       // descending by case axis
+auto a3 = df.label().sort(false);                     // descending by case-label axis
 auto a4 = df.top("price", 10);                        // top-10 by feature
 auto a5 = df.bottom("price", 10);                     // bottom-10 by feature
 ```
@@ -507,18 +507,18 @@ auto v1 = df.iat(3, 2);
 auto v2 = df.at(3, "price");
 auto maybe_price = df.get("price");
 auto boot = df.sample(100, 42);
-auto dup = df.repeated_cases({"city"});
+auto dup = df.label().repeated({"city"});
 auto dedup = df.unique_cases({"city"});
-auto cased = df.set_cases("city", true);
-auto reset = cased.reset_cases("city_case");
-auto aligned = reset.align_cases(reset.caselbl());
+auto cased = df.label().set("city", true);
+auto reset = cased.label().reset("city_case");
+auto aligned = reset.label().align(reset.label().values());
 auto renamed = df.rename_features({{"price", "price_usd"}});
 auto relabeled = df.relabel_features({"feat_a", "feat_b", "feat_c"});
 auto relabeled2 = df.set_axis({"feat_a", "feat_b", "feat_c"});
 auto relabeled3 = df.set_axis({"feat_a", "feat_b", "feat_c"}); // alias
 auto conformed = df.conform_to(other_df);
 auto reindexed_like = df.reindex_like(other_df);
-auto reindexed_cases = df.reindex_cases(other_df.caselbl());
+auto reindexed_cases = df.label().align(other_df.label().values());
 auto stitched = left_df.stitch_on("id", right_df, "id", "_r");
 auto stitched2 = left_df.stitch_on({"id", "bucket"}, right_df, {"id", "bucket"}, "_r");
 ```
@@ -624,7 +624,7 @@ std::cout << at << "\n";
 ## 11. Practical Guidance
 
 - Use `features` and `cases` terminology consistently in user code.
-- Prefer focused methods (`query`, `assign`, `group_by`, `aggregate`, `sort_values`, `sort_cases`) over manual loops.
+- Prefer focused methods (`query`, `assign`, `group_by`, `aggregate`, `sort_values`, `sort_caselbl`) over manual loops.
 - Use `render=false` when composing display-returning methods programmatically.
 - Keep heavy numeric/text/datetime operations at Thread-level semantics and let DataFrame orchestrate.
 

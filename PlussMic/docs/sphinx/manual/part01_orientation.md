@@ -108,7 +108,7 @@ Use this language when reading APIs:
 
 - `features(...)` selects or returns columns.
 - `case_study(...)`, `observe(...)`, `slice(...)`, and `take(...)` operate in row space.
-- `set_cases(...)`, `reset_cases(...)`, and `align_cases(...)` manage the case axis.
+- `label().set(...)`, `relabel().set(...)`, and `align_cases(...)` manage the case axis.
 
 ## Functional style
 

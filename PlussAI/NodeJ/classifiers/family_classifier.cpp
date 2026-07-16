@@ -1,4 +1,5 @@
 #include "pluss/ai/nodej/builders.h"
+#include "pluss/ai/nodej/balance.h"
 
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
@@ -289,6 +290,7 @@ struct DenseFeatureMatrix {
 [[nodiscard]] Series knn_probability_cpu(const Series& query_rows,
                                          const Series& train_rows,
                                          const Series& y_train,
+                                         const Series& train_weight,
                                          std::int64_t k,
                                          bool distance_weighted) {
   const std::int64_t nq = query_rows.sizes()[0];
@@ -297,6 +299,7 @@ struct DenseFeatureMatrix {
   const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().to_vec<double>();
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(k, nt));
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   constexpr double eps = 1e-12;
@@ -327,32 +330,36 @@ struct DenseFeatureMatrix {
 
     if (distance_weighted) {
       double zero_sum = 0.0;
-      double zero_count = 0.0;
+      double zero_weight = 0.0;
       for (const auto& [d2, ti] : best) {
         if (d2 <= eps) {
-          zero_sum += yv[static_cast<std::size_t>(ti)];
-          zero_count += 1.0;
+          const double w = wv[static_cast<std::size_t>(ti)];
+          zero_sum += w * yv[static_cast<std::size_t>(ti)];
+          zero_weight += w;
         }
       }
-      if (zero_count > 0.0) {
-        out[static_cast<std::size_t>(qi)] = std::clamp(zero_sum / zero_count, 0.0, 1.0);
+      if (zero_weight > 0.0) {
+        out[static_cast<std::size_t>(qi)] = std::clamp(zero_sum / zero_weight, 0.0, 1.0);
         continue;
       }
 
       double wsum = 0.0;
       double ysum = 0.0;
       for (const auto& [d2, ti] : best) {
-        const double w = 1.0 / std::sqrt(d2 + eps);
+        const double w = wv[static_cast<std::size_t>(ti)] / std::sqrt(d2 + eps);
         wsum += w;
         ysum += w * yv[static_cast<std::size_t>(ti)];
       }
       out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? std::clamp(ysum / wsum, 0.0, 1.0) : 0.0;
     } else {
-      double sum = 0.0;
+      double wsum = 0.0;
+      double ysum = 0.0;
       for (const auto& [_, ti] : best) {
-        sum += yv[static_cast<std::size_t>(ti)];
+        const double w = wv[static_cast<std::size_t>(ti)];
+        wsum += w;
+        ysum += w * yv[static_cast<std::size_t>(ti)];
       }
-      out[static_cast<std::size_t>(qi)] = std::clamp(sum / static_cast<double>(kk), 0.0, 1.0);
+      out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? std::clamp(ysum / wsum, 0.0, 1.0) : 0.0;
     }
   }
 
@@ -362,6 +369,7 @@ struct DenseFeatureMatrix {
 [[nodiscard]] Series radius_probability_cpu(const Series& query_rows,
                                             const Series& train_rows,
                                             const Series& y_train,
+                                            const Series& train_weight,
                                             double radius,
                                             std::int64_t fallback_k,
                                             bool distance_weighted) {
@@ -371,6 +379,7 @@ struct DenseFeatureMatrix {
   const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
   const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().to_vec<double>();
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(fallback_k, nt));
   const double radius2 = radius * radius;
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
@@ -407,30 +416,35 @@ struct DenseFeatureMatrix {
 
     if (distance_weighted) {
       double zero_sum = 0.0;
-      double zero_count = 0.0;
+      double zero_weight = 0.0;
       for (const auto& [d2, ti] : selected) {
         if (d2 <= eps) {
-          zero_sum += yv[static_cast<std::size_t>(ti)];
-          zero_count += 1.0;
+          const double w = wv[static_cast<std::size_t>(ti)];
+          zero_sum += w * yv[static_cast<std::size_t>(ti)];
+          zero_weight += w;
         }
       }
-      if (zero_count > 0.0) {
-        out[static_cast<std::size_t>(qi)] = std::clamp(zero_sum / zero_count, 0.0, 1.0);
+      if (zero_weight > 0.0) {
+        out[static_cast<std::size_t>(qi)] = std::clamp(zero_sum / zero_weight, 0.0, 1.0);
         continue;
       }
       double wsum = 0.0;
       double ysum = 0.0;
       for (const auto& [d2, ti] : selected) {
-        const double w = 1.0 / std::sqrt(d2 + eps);
+        const double w = wv[static_cast<std::size_t>(ti)] / std::sqrt(d2 + eps);
         wsum += w;
         ysum += w * yv[static_cast<std::size_t>(ti)];
       }
       out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? std::clamp(ysum / wsum, 0.0, 1.0) : 0.0;
     } else {
-      double sum = 0.0;
-      for (const auto& [_, ti] : selected) sum += yv[static_cast<std::size_t>(ti)];
-      out[static_cast<std::size_t>(qi)] =
-          selected.empty() ? 0.0 : std::clamp(sum / static_cast<double>(selected.size()), 0.0, 1.0);
+      double wsum = 0.0;
+      double ysum = 0.0;
+      for (const auto& [_, ti] : selected) {
+        const double w = wv[static_cast<std::size_t>(ti)];
+        wsum += w;
+        ysum += w * yv[static_cast<std::size_t>(ti)];
+      }
+      out[static_cast<std::size_t>(qi)] = wsum > 0.0 ? std::clamp(ysum / wsum, 0.0, 1.0) : 0.0;
     }
   }
   return pluss::make_series(out, {nq}, f64_cpu());
@@ -439,6 +453,7 @@ struct DenseFeatureMatrix {
 [[nodiscard]] Series knn_probability_series(const Series& query_rows,
                                             const Series& train_rows,
                                             const Series& y_train,
+                                            const Series& train_weight,
                                             std::int64_t k,
                                             bool distance_weighted) {
   const std::int64_t sample_count = train_rows.sizes()[0];
@@ -452,9 +467,14 @@ struct DenseFeatureMatrix {
   const Series y_train_2d =
       y_train.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
   const Series y_knn = y_train_2d.gather(1, knn_idx);
+  const Series weight_train_2d =
+      train_weight.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
+  const Series weight_knn = weight_train_2d.gather(1, knn_idx).to(ScalarType::Float64);
 
   if (!distance_weighted) {
-    return y_knn.mean(1, false).clamp(0.0, 1.0);
+    const Series wsum = weight_knn.sum(1, false);
+    const Series ysum = y_knn.mul(weight_knn).sum(1, false);
+    return wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
   }
 
   constexpr double eps = 1e-12;
@@ -462,7 +482,7 @@ struct DenseFeatureMatrix {
   const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
   const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
   const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
-  const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
+  const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist)).mul(weight_knn);
   const Series wsum = weights.sum(1, false);
   const Series ysum = weights.mul(y_knn).sum(1, false);
   return wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
@@ -471,6 +491,7 @@ struct DenseFeatureMatrix {
 [[nodiscard]] Series radius_probability_series(const Series& query_rows,
                                                const Series& train_rows,
                                                const Series& y_train,
+                                               const Series& train_weight,
                                                double radius,
                                                std::int64_t fallback_k,
                                                bool distance_weighted) {
@@ -479,9 +500,11 @@ struct DenseFeatureMatrix {
   const Series dist2 = pairwise_distance2(query_rows, train_rows);
   const Series mask = dist2.le(radius * radius).to(ScalarType::Float64);
   const Series in_count = mask.sum(1, false).reshape({query_count});
-  const Series fallback = knn_probability_series(query_rows, train_rows, y_train, fallback_k, distance_weighted);
+  const Series fallback = knn_probability_series(query_rows, train_rows, y_train, train_weight, fallback_k, distance_weighted);
   const Series y_train_2d =
       y_train.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
+  const Series weight_train_2d =
+      train_weight.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
 
   Series radius_prob = Series::undefined();
   if (distance_weighted) {
@@ -489,13 +512,15 @@ struct DenseFeatureMatrix {
     const Series zero_mask = dist2.le(eps).to(ScalarType::Float64).mul(mask);
     const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
     const Series inv_dist = pluss::ones_like(dist2, ScalarType::Float64).div(dist2.sqrt().add(eps));
-    const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist).mul(mask));
+    const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist).mul(mask)).mul(weight_train_2d);
     const Series wsum = weights.sum(1, false);
     const Series ysum = weights.mul(y_train_2d).sum(1, false);
     radius_prob = wsum.gt(0.0).where(ysum.div(wsum), fallback);
   } else {
-    const Series ysum = y_train_2d.mul(mask).sum(1, false);
-    radius_prob = in_count.gt(0.0).where(ysum.div(in_count.clamp_min(1.0)), fallback);
+    const Series weights = weight_train_2d.mul(mask);
+    const Series wsum = weights.sum(1, false);
+    const Series ysum = y_train_2d.mul(weights).sum(1, false);
+    radius_prob = wsum.gt(0.0).where(ysum.div(wsum), fallback);
   }
 
   return in_count.gt(0.0).where(radius_prob, fallback).clamp(0.0, 1.0);
@@ -622,85 +647,6 @@ struct BinaryLabelEncoding {
     return Status::invalid_argument(std::string(where) + " requires positive_threshold in [0, 1].");
   }
   return Status::success();
-}
-
-[[nodiscard]] StatusOr<Series> resolve_training_weights(const LabeledBatch& batch,
-                                                        const TrainOptions& options,
-                                                        const BinaryLabelEncoding& labels,
-                                                        const char* where) {
-  const std::int64_t n = labels.y01.numel();
-  if (n <= 0) {
-    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires at least one training sample."));
-  }
-  const Platform platform = labels.y01.platform();
-  Series weights = pluss::ones({n}, f64_on(platform));
-
-  auto apply_sample_weight = [&](const Series& src, const char* label) -> Status {
-    if (!src.defined()) return Status::success();
-    if (src.numel() != n) {
-      return Status::shape_mismatch(std::string(where) + " " + label + " length must match sample count.");
-    }
-    Series w = src.to(platform, ScalarType::Float64).reshape({n});
-    if (!all_finite(w)) {
-      return Status::invalid_argument(std::string(where) + " " + label + " must be finite.");
-    }
-    if (w.le(0.0).any().item<bool>()) {
-      return Status::invalid_argument(std::string(where) + " " + label + " must be strictly positive.");
-    }
-    weights = weights.mul(w);
-    return Status::success();
-  };
-
-  Status sample_status = apply_sample_weight(batch.sample_weights, "batch.sample_weights");
-  if (!sample_status.ok()) return StatusOr<Series>(std::move(sample_status));
-  sample_status = apply_sample_weight(options.sample_weights, "TrainOptions.sample_weights");
-  if (!sample_status.ok()) return StatusOr<Series>(std::move(sample_status));
-
-  if (options.class_weight == ClassWeightMode::Balanced) {
-    const double pos = labels.y01.sum().item<double>();
-    const double neg = static_cast<double>(n) - pos;
-    if (!(pos > 0.0 && neg > 0.0)) {
-      return StatusOr<Series>(
-          Status::invalid_argument(std::string(where) + " balanced class weights require both classes to be present."));
-    }
-    const double w_pos = static_cast<double>(n) / (2.0 * pos);
-    const double w_neg = static_cast<double>(n) / (2.0 * neg);
-    const Series cw = labels.y01.mul(w_pos).add(labels.y01.mul(-1.0).add(1.0).mul(w_neg));
-    weights = weights.mul(cw);
-  } else if (options.class_weight == ClassWeightMode::Custom) {
-    if (!options.class_weights.defined()) {
-      return StatusOr<Series>(Status::invalid_argument(
-          std::string(where) + " TrainOptions.class_weights must be provided for ClassWeightMode::Custom."));
-    }
-    Series cw = options.class_weights.to(platform, ScalarType::Float64).reshape({options.class_weights.numel()});
-    if (cw.numel() != 2) {
-      return StatusOr<Series>(Status::shape_mismatch(
-          std::string(where) + " TrainOptions.class_weights must be length 2: [negative, positive]."));
-    }
-    if (!all_finite(cw) || cw.le(0.0).any().item<bool>()) {
-      return StatusOr<Series>(Status::invalid_argument(
-          std::string(where) + " TrainOptions.class_weights values must be finite and > 0."));
-    }
-    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, platform);
-    const Series idx1 = make_index_series(std::vector<std::int64_t>{1}, platform);
-    const double w_neg = cw.index_select(0, idx0).reshape({1}).item<double>();
-    const double w_pos = cw.index_select(0, idx1).reshape({1}).item<double>();
-    const Series per_sample = labels.y01.mul(w_pos).add(labels.y01.mul(-1.0).add(1.0).mul(w_neg));
-    weights = weights.mul(per_sample);
-  }
-
-  if (!all_finite(weights)) {
-    return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite training weights."));
-  }
-  if (weights.le(0.0).all().item<bool>()) {
-    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " produced zero total training weight."));
-  }
-
-  const double mean_w = weights.mean().item<double>();
-  if (std::isfinite(mean_w) && mean_w > 0.0) {
-    weights = weights.div(mean_w);
-  }
-  return StatusOr<Series>(weights);
 }
 
 [[nodiscard]] StatusOr<Series> fit_platt_calibrator(const Series& scores,
@@ -979,6 +925,29 @@ struct IsotonicCalibratorState {
   return StatusOr<Series>(pluss::make_series(std::move(out), {n}, f64_cpu()).to(scores.platform(), ScalarType::Float64));
 }
 
+[[nodiscard]] bool training_balance_requested(const TrainOptions& options) {
+  return options.balance.kind != BalanceTargetKind::Keep
+      || options.balance.clean != BalanceCleanKind::None;
+}
+
+[[nodiscard]] TrainOptions without_training_balance(TrainOptions options) {
+  options.balance = BalanceTarget{};
+  return options;
+}
+
+[[nodiscard]] StatusOr<LabeledBatch> resolve_classification_training_batch(const LabeledBatch& batch,
+                                                                           const TrainOptions& options,
+                                                                           const char* where) {
+  if (!training_balance_requested(options)) return StatusOr<LabeledBatch>(batch);
+  StatusOr<LabeledBatch> balanced_or = balance_rows(batch, options.balance, options.random);
+  if (!balanced_or.ok()) {
+    Status status = balanced_or.status();
+    status.message = std::string(where) + " balance: " + status.message;
+    return StatusOr<LabeledBatch>(std::move(status));
+  }
+  return balanced_or;
+}
+
 class NeighborClassifier final : public ClassifierBase {
 public:
   explicit NeighborClassifier(NeighborFamilyOptions options) : options_(options) {}
@@ -994,7 +963,12 @@ public:
     Status option_status = validate_neighbor_classifier_options(options_);
     if (!option_status.ok()) return option_status;
 
-    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "NeighborClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "NeighborClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "NeighborClassifier::learn");
     if (!matrix_or.ok()) return matrix_or.status();
     DenseFeatureMatrix matrix = matrix_or.move_value();
     if (has_nan(matrix.x_rows)) {
@@ -1002,9 +976,12 @@ public:
           "NeighborClassifier::learn does not support NaN features; apply a nodej::prep imputer before learn().");
     }
 
-    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "NeighborClassifier::learn");
+    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "NeighborClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
+    StatusOr<Series> train_weight_or = resolve_training_weights(labels.y01, fit_batch.sample_weights, fit_options);
+    if (!train_weight_or.ok()) return train_weight_or.status();
+    Series train_weight = train_weight_or.move_value();
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
@@ -1024,7 +1001,8 @@ public:
       scale_ = Series::undefined();
     }
     x_train_ = std::move(x_train);
-    y_train_ = labels.y01.reshape({sample_count_});
+    y_train_ = labels.y01.to(x_train_.platform(), ScalarType::Float64).reshape({sample_count_});
+    train_weight_ = train_weight.to(x_train_.platform(), ScalarType::Float64).reshape({sample_count_});
 
     negative_label_ = labels.negative;
     positive_label_ = labels.positive;
@@ -1057,13 +1035,14 @@ public:
       probs = radius_probability_series(x_query,
                                         x_train_,
                                         y_train_,
+                                        train_weight_,
                                         radius_,
                                         radius_fallback_k_,
                                         options_.distance_weighted);
     } else {
       const std::int64_t neighbor_count = std::min<std::int64_t>(k_, sample_count_);
       if (x_query.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
-        probs = knn_probability_cpu(x_query, x_train_, y_train_, neighbor_count, options_.distance_weighted);
+        probs = knn_probability_cpu(x_query, x_train_, y_train_, train_weight_, neighbor_count, options_.distance_weighted);
       } else {
         const Series dist2 = pairwise_distance2(x_query, x_train_);
         const Series sort_idx = dist2.argsort(1, false, true);
@@ -1073,6 +1052,9 @@ public:
         const Series y_train_2d =
             y_train_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
         const Series y_knn = y_train_2d.gather(1, knn_idx);
+        const Series train_weight_2d =
+            train_weight_.reshape({1, sample_count_}).expand(std::vector<std::int64_t>{matrix.sample_count, sample_count_});
+        const Series w_knn = train_weight_2d.gather(1, knn_idx).to(ScalarType::Float64);
 
         if (options_.distance_weighted) {
           constexpr double eps = 1e-12;
@@ -1080,12 +1062,14 @@ public:
           const Series zero_mask = d2_knn.le(eps).to(ScalarType::Float64);
           const Series has_zero = zero_mask.any(1, true).to(ScalarType::Float64);
           const Series inv_dist = pluss::ones_like(d2_knn, ScalarType::Float64).div(d2_knn.sqrt().add(eps));
-          const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist));
+          const Series weights = has_zero.mul(zero_mask).add(has_zero.mul(-1.0).add(1.0).mul(inv_dist)).mul(w_knn);
           const Series wsum = weights.sum(1, false);
           const Series ysum = weights.mul(y_knn).sum(1, false);
           probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
         } else {
-          probs = y_knn.mean(1, false).clamp(0.0, 1.0);
+          const Series wsum = w_knn.sum(1, false);
+          const Series ysum = y_knn.mul(w_knn).sum(1, false);
+          probs = wsum.gt(0.0).where(ysum.div(wsum), pluss::zeros_like(wsum, ScalarType::Float64)).clamp(0.0, 1.0);
         }
       }
     }
@@ -1161,11 +1145,12 @@ public:
                    static_cast<double>(static_cast<std::int64_t>(query_mode_)),
                    radius_,
                    static_cast<double>(radius_fallback_k_),
-                   2.0}),
+                   3.0}),
         x_train_,
         y_train_,
         mean_,
         scale_,
+        train_weight_,
     });
   }
 
@@ -1192,6 +1177,7 @@ public:
     y_train_ = state[2];
     mean_ = state[3];
     scale_ = state[4];
+    train_weight_ = state.size() >= 6 ? state[5] : pluss::ones({sample_count_}, f64_on(y_train_.platform()));
     return Status::success();
   }
 
@@ -1216,6 +1202,7 @@ private:
   std::int64_t radius_fallback_k_{1};
   Series x_train_ = Series::undefined();
   Series y_train_ = Series::undefined();
+  Series train_weight_ = Series::undefined();
   Series mean_ = Series::undefined();
   Series scale_ = Series::undefined();
   double negative_label_{0.0};
@@ -1256,7 +1243,12 @@ public:
     Status option_status = validate_tree_classifier_options(options_);
     if (!option_status.ok()) return option_status;
 
-    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "TreeClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "TreeClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "TreeClassifier::learn");
     if (!matrix_or.ok()) return matrix_or.status();
     DenseFeatureMatrix matrix = matrix_or.move_value();
     if (has_nan(matrix.x_rows)) {
@@ -1268,14 +1260,18 @@ public:
           "TreeClassifier::learn currently has a CPU-only implementation. Provide CPU features for tree learn().");
     }
 
-    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "TreeClassifier::learn");
+    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "TreeClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
+    StatusOr<Series> train_weight_or = resolve_training_weights(labels.y01, fit_batch.sample_weights, fit_options);
+    if (!train_weight_or.ok()) return train_weight_or.status();
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
     x_train_host_ = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
     y_train_host_ = labels.y01.to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
+    sample_weight_host_ =
+        train_weight_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
 
     nodes_.clear();
     nodes_.reserve(static_cast<std::size_t>(2 * sample_count_ + 1));
@@ -1289,6 +1285,7 @@ public:
 
     x_train_host_.clear();
     y_train_host_.clear();
+    sample_weight_host_.clear();
 
     negative_label_ = labels.negative;
     positive_label_ = labels.positive;
@@ -1457,6 +1454,7 @@ public:
     }
     x_train_host_.clear();
     y_train_host_.clear();
+    sample_weight_host_.clear();
     return Status::success();
   }
 
@@ -1495,14 +1493,28 @@ private:
     return y_train_host_[static_cast<std::size_t>(row)];
   }
 
+  [[nodiscard]] double sample_weight_at(std::int64_t row) const {
+    return sample_weight_host_[static_cast<std::size_t>(row)];
+  }
+
   std::int64_t build_node(const std::vector<std::int64_t>& indices, std::int64_t depth) {
     const std::int64_t n = static_cast<std::int64_t>(indices.size());
-    double positive_count = 0.0;
-    for (std::int64_t idx : indices) positive_count += y_train_at(idx);
+    double positive_weight = 0.0;
+    double total_weight = 0.0;
+    for (std::int64_t idx : indices) {
+      const double wi = sample_weight_at(idx);
+      positive_weight += wi * y_train_at(idx);
+      total_weight += wi;
+    }
+    if (!(total_weight > 0.0) || !std::isfinite(total_weight)) {
+      total_weight = static_cast<double>(std::max<std::int64_t>(n, 1));
+      positive_weight = 0.0;
+      for (std::int64_t idx : indices) positive_weight += y_train_at(idx);
+    }
 
-    const double parent_impurity = binary_class_impurity(positive_count, static_cast<double>(n), options_.criterion);
+    const double parent_impurity = binary_class_impurity(positive_weight, total_weight, options_.criterion);
     TreeNode node{};
-    node.leaf_positive_probability = positive_count / static_cast<double>(n);
+    node.leaf_positive_probability = std::clamp(positive_weight / total_weight, 0.0, 1.0);
 
     const std::int64_t node_index = static_cast<std::int64_t>(nodes_.size());
     nodes_.push_back(node);
@@ -1560,38 +1572,54 @@ private:
     SplitCandidate best{};
     best.feature = feature;
 
-    std::vector<std::pair<double, double>> values{};
+    struct WeightedFeatureValue {
+      double x = 0.0;
+      double weighted_y = 0.0;
+      double weight = 1.0;
+    };
+
+    std::vector<WeightedFeatureValue> values{};
     values.reserve(static_cast<std::size_t>(n));
-    double total_positive = 0.0;
+    double total_positive_weight = 0.0;
+    double total_weight = 0.0;
     for (std::int64_t idx : indices) {
       const double yi = y_train_at(idx);
-      total_positive += yi;
-      values.emplace_back(x_train_at(idx, feature), yi);
+      const double wi = sample_weight_at(idx);
+      total_positive_weight += wi * yi;
+      total_weight += wi;
+      values.push_back(WeightedFeatureValue{
+          .x = x_train_at(idx, feature),
+          .weighted_y = yi * wi,
+          .weight = wi,
+      });
     }
+    if (!(total_weight > 0.0) || !std::isfinite(total_weight)) return best;
     std::sort(values.begin(), values.end(),
               [](const auto& a, const auto& b) {
-                if (a.first != b.first) return a.first < b.first;
-                return a.second < b.second;
+                if (a.x != b.x) return a.x < b.x;
+                return a.weighted_y < b.weighted_y;
               });
-    if (values.front().first == values.back().first) return best;
+    if (values.front().x == values.back().x) return best;
 
-    double left_positive = 0.0;
+    double left_positive_weight = 0.0;
+    double left_weight = 0.0;
     for (std::int64_t i = 0; i < n - 1; ++i) {
-      left_positive += values[static_cast<std::size_t>(i)].second;
+      left_positive_weight += values[static_cast<std::size_t>(i)].weighted_y;
+      left_weight += values[static_cast<std::size_t>(i)].weight;
       const std::int64_t left_n = i + 1;
       const std::int64_t right_n = n - left_n;
       if (left_n < options_.min_samples_leaf || right_n < options_.min_samples_leaf) continue;
-      const double xi = values[static_cast<std::size_t>(i)].first;
-      const double xj = values[static_cast<std::size_t>(i + 1)].first;
+      const double xi = values[static_cast<std::size_t>(i)].x;
+      const double xj = values[static_cast<std::size_t>(i + 1)].x;
       if (xi == xj) continue;
 
-      const double right_positive = total_positive - left_positive;
-      const double left_impurity = binary_class_impurity(left_positive, static_cast<double>(left_n), options_.criterion);
-      const double right_impurity =
-          binary_class_impurity(right_positive, static_cast<double>(right_n), options_.criterion);
+      const double right_positive_weight = total_positive_weight - left_positive_weight;
+      const double right_weight = total_weight - left_weight;
+      if (!(left_weight > 0.0) || !(right_weight > 0.0)) continue;
+      const double left_impurity = binary_class_impurity(left_positive_weight, left_weight, options_.criterion);
+      const double right_impurity = binary_class_impurity(right_positive_weight, right_weight, options_.criterion);
       const double weighted_impurity =
-          (static_cast<double>(left_n) * left_impurity + static_cast<double>(right_n) * right_impurity)
-          / static_cast<double>(n);
+          (left_weight * left_impurity + right_weight * right_impurity) / total_weight;
       const double gain = parent_impurity - weighted_impurity;
       const double threshold = xi + (xj - xi) * 0.5;
 
@@ -1654,6 +1682,7 @@ private:
   std::int64_t feature_count_{0};
   std::vector<double> x_train_host_{};
   std::vector<double> y_train_host_{};
+  std::vector<double> sample_weight_host_{};
   std::vector<TreeNode> nodes_{};
   double negative_label_{0.0};
   double positive_label_{1.0};
@@ -1675,7 +1704,12 @@ public:
     Status option_status = validate_ensemble_classifier_options(options_);
     if (!option_status.ok()) return option_status;
 
-    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "EnsembleClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "EnsembleClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "EnsembleClassifier::learn");
     if (!matrix_or.ok()) return matrix_or.status();
     DenseFeatureMatrix matrix = matrix_or.move_value();
     if (has_nan(matrix.x_rows)) {
@@ -1687,9 +1721,11 @@ public:
           "EnsembleClassifier::learn currently has a CPU-only implementation. Provide CPU features for ensemble learn().");
     }
 
-    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "EnsembleClassifier::learn");
+    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "EnsembleClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
+    StatusOr<Series> train_weight_or = resolve_training_weights(labels.y01, fit_batch.sample_weights, fit_options);
+    if (!train_weight_or.ok()) return train_weight_or.status();
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
@@ -1701,6 +1737,18 @@ public:
         matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
     const std::vector<double> y_train_host =
         labels.y01.reshape({sample_count_}).to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+    std::vector<double> base_sample_weights =
+        train_weight_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
+    double base_weight_sum = std::accumulate(base_sample_weights.begin(), base_sample_weights.end(), 0.0);
+    if (!(base_weight_sum > 0.0) || !std::isfinite(base_weight_sum)) {
+      return Status::invalid_argument("EnsembleClassifier::learn requires strictly positive resolved sample weights.");
+    }
+    for (double& w : base_sample_weights) w /= base_weight_sum;
+
+    TrainOptions member_options = fit_options;
+    member_options.sample_weights = Series::undefined();
+    member_options.class_weight = ClassWeightMode::None;
+    member_options.class_weights = Series::undefined();
 
     const std::int64_t learner_count = options_.learners;
     const std::int64_t subsample_count =
@@ -1719,7 +1767,7 @@ public:
 
     auto train_bagged_member = [&](std::int64_t learner_index) -> StatusOr<EnsembleMember> {
       std::mt19937_64 rng(splitmix64(base_seed + static_cast<std::uint64_t>(learner_index)));
-      std::uniform_int_distribution<std::int64_t> row_dist(0, sample_count_ - 1);
+      std::discrete_distribution<std::int64_t> row_dist(base_sample_weights.begin(), base_sample_weights.end());
 
       std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
       std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
@@ -1757,7 +1805,7 @@ public:
         };
 
         auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{});
-        Status tree_status = tree->learn(sub_batch, options);
+        Status tree_status = tree->learn(sub_batch, member_options);
         if (!tree_status.ok()) continue;
         EnsembleMember member{};
         member.classifier_tree = std::move(tree);
@@ -1780,7 +1828,7 @@ public:
       };
 
       const double mean_label =
-          std::accumulate(y_train_host.begin(), y_train_host.end(), 0.0) / static_cast<double>(sample_count_);
+          std::inner_product(y_train_host.begin(), y_train_host.end(), base_sample_weights.begin(), 0.0);
       initial_score_ = logit(mean_label);
       std::vector<double> running_scores(static_cast<std::size_t>(sample_count_), initial_score_);
       std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
@@ -1791,7 +1839,7 @@ public:
 
       for (std::int64_t l = 0; l < learner_count; ++l) {
         std::vector<std::int64_t> row_ids =
-            draw_stochastic_boost_rows(rng, sample_count_, subsample_count);
+            draw_stochastic_boost_rows(rng, base_sample_weights, sample_count_, subsample_count);
         std::vector<double> residual_targets(static_cast<std::size_t>(subsample_count), 0.0);
         for (std::int64_t i = 0; i < subsample_count; ++i) {
           const std::int64_t row = row_ids[static_cast<std::size_t>(i)];
@@ -1817,7 +1865,7 @@ public:
         });
         if (!tree_or.ok()) return tree_or.status();
         std::unique_ptr<RegressorBase> tree = tree_or.move_value();
-        Status tree_status = tree->learn(sub_batch, options);
+        Status tree_status = tree->learn(sub_batch, member_options);
         if (!tree_status.ok()) {
           return Status::internal(
               "EnsembleClassifier::learn failed while fitting gradient-boost tree for learner "
@@ -1831,6 +1879,7 @@ public:
         Status update_status = apply_binomial_newton_leaf_updates(tree_state,
                                                                   x_train_host,
                                                                   y_train_host,
+                                                                  base_sample_weights,
                                                                   running_scores,
                                                                   row_ids,
                                                                   sample_count_,
@@ -1852,7 +1901,7 @@ public:
         learners_.push_back(std::move(member));
       }
     } else if (options_.method == EnsembleMethod::AdaBoost) {
-      std::vector<double> sample_weights(static_cast<std::size_t>(sample_count_), 1.0 / static_cast<double>(sample_count_));
+      std::vector<double> sample_weights = base_sample_weights;
       std::vector<std::int64_t> feature_ids(static_cast<std::size_t>(feature_count_));
       std::iota(feature_ids.begin(), feature_ids.end(), static_cast<std::int64_t>(0));
       const std::int64_t learner_features = feature_count_;
@@ -1879,7 +1928,7 @@ public:
           };
 
           auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{});
-          Status tree_status = tree->learn(sub_batch, options);
+          Status tree_status = tree->learn(sub_batch, member_options);
           if (!tree_status.ok()) continue;
 
           std::vector<double> probs{};
@@ -2307,6 +2356,7 @@ private:
   }
 
   [[nodiscard]] static std::vector<std::int64_t> draw_stochastic_boost_rows(std::mt19937_64& rng,
+                                                                             const std::vector<double>& sample_weights,
                                                                              std::int64_t sample_count,
                                                                              std::int64_t subsample_count) {
     if (subsample_count >= sample_count) {
@@ -2314,10 +2364,11 @@ private:
       std::iota(rows.begin(), rows.end(), static_cast<std::int64_t>(0));
       return rows;
     }
-    std::vector<std::int64_t> rows(static_cast<std::size_t>(sample_count), 0);
-    std::iota(rows.begin(), rows.end(), static_cast<std::int64_t>(0));
-    std::shuffle(rows.begin(), rows.end(), rng);
-    rows.resize(static_cast<std::size_t>(subsample_count));
+    std::vector<std::int64_t> rows(static_cast<std::size_t>(subsample_count), 0);
+    std::discrete_distribution<std::int64_t> dist(sample_weights.begin(), sample_weights.end());
+    for (std::int64_t i = 0; i < subsample_count; ++i) {
+      rows[static_cast<std::size_t>(i)] = dist(rng);
+    }
     return rows;
   }
 
@@ -2391,6 +2442,7 @@ private:
   [[nodiscard]] static Status apply_binomial_newton_leaf_updates(std::vector<Series>& tree_state,
                                                                  const std::vector<double>& x_host,
                                                                  const std::vector<double>& y01,
+                                                                 const std::vector<double>& sample_weights,
                                                                  const std::vector<double>& running_scores,
                                                                  const std::vector<std::int64_t>& inbag_rows,
                                                                  std::int64_t sample_count,
@@ -2435,8 +2487,9 @@ private:
       const std::size_t r = static_cast<std::size_t>(row);
       const std::size_t leaf = static_cast<std::size_t>(leaf_for_row[r]);
       const double prob = sigmoid_score(running_scores[r]);
-      numerator[leaf] += y01[r] - prob;
-      denominator[leaf] += prob * (1.0 - prob);
+      const double wi = sample_weights[r];
+      numerator[leaf] += wi * (y01[r] - prob);
+      denominator[leaf] += wi * prob * (1.0 - prob);
     }
 
     for (std::size_t i = 0; i < nodes.size(); ++i) {
@@ -2645,7 +2698,12 @@ public:
     Status option_status = validate_bayes_classifier_options(options_);
     if (!option_status.ok()) return option_status;
 
-    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "BayesClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "BayesClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "BayesClassifier::learn");
     if (!matrix_or.ok()) return matrix_or.status();
     DenseFeatureMatrix matrix = matrix_or.move_value();
     if (has_nan(matrix.x_rows)) {
@@ -2653,19 +2711,23 @@ public:
           "BayesClassifier::learn does not support NaN features; apply a nodej::prep imputer before learn().");
     }
 
-    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "BayesClassifier::learn");
+    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "BayesClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
+    StatusOr<Series> train_weight_or = resolve_training_weights(labels.y01, fit_batch.sample_weights, fit_options);
+    if (!train_weight_or.ok()) return train_weight_or.status();
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
     likelihood_ = resolved_bayes_likelihood(options_);
     const Series x = matrix.x_rows;
-    const Series y01 = labels.y01.reshape({sample_count_});
+    const Series y01 = labels.y01.to(x.platform(), ScalarType::Float64).reshape({sample_count_});
+    const Series sample_weight = train_weight_or.value().to(x.platform(), ScalarType::Float64).reshape({sample_count_});
     const Series ycol = y01.reshape({sample_count_, 1});
     const Series one = pluss::ones({sample_count_, 1}, Config{}.with_dtype(ScalarType::Float64).with_platform(x.platform()));
-    const Series mask1 = ycol;
-    const Series mask0 = one.sub(mask1);
+    const Series wcol = sample_weight.reshape({sample_count_, 1});
+    const Series mask1 = ycol.mul(wcol);
+    const Series mask0 = one.sub(ycol).mul(wcol);
 
     const double n1 = mask1.sum().item<double>();
     const double n0 = mask0.sum().item<double>();
@@ -2739,8 +2801,9 @@ public:
       return Status::invalid_argument("BayesClassifier::learn encountered unsupported BayesLikelihood.");
     }
 
-    prior0_ = n0 / static_cast<double>(sample_count_);
-    prior1_ = n1 / static_cast<double>(sample_count_);
+    const double total_weight = n0 + n1;
+    prior0_ = n0 / total_weight;
+    prior1_ = n1 / total_weight;
     negative_label_ = labels.negative;
     positive_label_ = labels.positive;
     label_dtype_ = labels.label_dtype;
@@ -2971,7 +3034,12 @@ public:
     Status option_status = validate_kernel_classifier_options(options_);
     if (!option_status.ok()) return option_status;
 
-    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "KernelClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "KernelClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "KernelClassifier::learn");
     if (!matrix_or.ok()) return matrix_or.status();
     DenseFeatureMatrix matrix = matrix_or.move_value();
     if (has_nan(matrix.x_rows)) {
@@ -2979,9 +3047,11 @@ public:
           "KernelClassifier::learn does not support NaN features; apply a nodej::prep imputer before learn().");
     }
 
-    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "KernelClassifier::learn");
+    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "KernelClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
+    StatusOr<Series> train_weight_or = resolve_training_weights(labels.y01, fit_batch.sample_weights, fit_options);
+    if (!train_weight_or.ok()) return train_weight_or.status();
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
@@ -2989,21 +3059,30 @@ public:
     const double nu_scale = options_.form == KernelForm::Nu ? std::max(1e-6, options_.nu) : 1.0;
     lambda_ = 1.0 / (options_.c * nu_scale);
     x_train_ = matrix.x_rows;
-    const Series y_pm1 = labels.y01.mul(2.0).sub(1.0).reshape({sample_count_, 1});
+    const Series sample_weight = train_weight_or.value().to(x_train_.platform(), ScalarType::Float64).reshape({sample_count_});
+    const Series sqrt_weight = sample_weight.sqrt().reshape({sample_count_});
+    const Series y_pm1 = labels.y01.to(x_train_.platform(), ScalarType::Float64).mul(2.0).sub(1.0).reshape({sample_count_, 1});
     const Series k_series = kernel_matrix(x_train_, x_train_, options_.kernel, gamma_);
-    StatusOr<Series> alpha_or = solve_kernel_dual_cg(k_series,
-                                                     y_pm1.reshape({sample_count_}),
+    const Series weighted_kernel = k_series.mul(sqrt_weight.reshape({sample_count_, 1}))
+                                      .mul(sqrt_weight.reshape({1, sample_count_}));
+    const Series weighted_rhs = y_pm1.reshape({sample_count_}).mul(sqrt_weight);
+    StatusOr<Series> beta_or = solve_kernel_dual_cg(weighted_kernel,
+                                                     weighted_rhs,
                                                      lambda_,
                                                      options.max_iterations,
                                                      options.tolerance,
                                                      "KernelClassifier::learn");
     Series alpha = Series::undefined();
-    if (alpha_or.ok()) {
-      alpha = alpha_or.move_value();
+    if (beta_or.ok()) {
+      alpha = beta_or.move_value().mul(sqrt_weight).reshape({sample_count_});
     } else {
       // Fallback for indefinite kernels (for example sigmoid/polynomial edge cases).
-      Series shifted = k_series.add(pluss::eye(sample_count_, sample_count_, f64_cpu()).to(x_train_.platform()).mul(lambda_));
-      alpha = pluss::subsp::math::linalg::pinverse(shifted, 1e-12).matmul(y_pm1).reshape({sample_count_});
+      Series shifted =
+          weighted_kernel.add(pluss::eye(sample_count_, sample_count_, f64_cpu()).to(x_train_.platform()).mul(lambda_));
+      const Series beta = pluss::subsp::math::linalg::pinverse(shifted, 1e-12)
+                              .matmul(weighted_rhs.reshape({sample_count_, 1}))
+                              .reshape({sample_count_});
+      alpha = beta.mul(sqrt_weight).reshape({sample_count_});
     }
     if (!all_finite(alpha)) {
       return Status::numerical_failure("KernelClassifier::learn produced non-finite dual coefficients.");
@@ -3435,6 +3514,8 @@ struct LinearPenalty {
   const Series tpr = tp.div(tpr_den.clamp_min(1.0)).mul(tpr_mask);
   const Series tnr = tn.div(tnr_den.clamp_min(1.0)).mul(tnr_mask);
   const Series bal_accuracy = tpr.add(tnr).mul(0.5);
+  const Series geometric_mean = tpr.mul(tnr).clamp_min(0.0).sqrt();
+  const Series balance_quality = geometric_mean.square().mul(tpr.sub(tnr).mul(0.1).add(1.0)).clamp_min(0.0);
   const Series precision_den = tp.add(fp);
   const Series precision_mask = precision_den.gt(0.0).to(ScalarType::Float64);
   const Series precision = tp.div(precision_den.clamp_min(1.0)).mul(precision_mask);
@@ -3502,10 +3583,20 @@ struct LinearPenalty {
         out.push_back(precision.reshape({1}));
         break;
       case MetricKind::Recall:
+      case MetricKind::Sensitivity:
         out.push_back(recall.reshape({1}));
         break;
       case MetricKind::F1:
         out.push_back(f1.reshape({1}));
+        break;
+      case MetricKind::Specificity:
+        out.push_back(tnr.reshape({1}));
+        break;
+      case MetricKind::GeometricMean:
+        out.push_back(geometric_mean.reshape({1}));
+        break;
+      case MetricKind::BalanceQuality:
+        out.push_back(balance_quality.reshape({1}));
         break;
       case MetricKind::RocAuc:
         out.push_back(roc_auc.reshape({1}));
@@ -3609,6 +3700,10 @@ struct LinearPenalty {
   Series precision_sum = pluss::zeros({1}, f64_on(platform));
   Series recall_sum = pluss::zeros({1}, f64_on(platform));
   Series f1_sum = pluss::zeros({1}, f64_on(platform));
+  Series specificity_sum = pluss::zeros({1}, f64_on(platform));
+  Series geometric_sum = pluss::zeros({1}, f64_on(platform));
+  Series balance_quality_sum = pluss::zeros({1}, f64_on(platform));
+  const Series n_scalar = pluss::ones({1}, f64_on(platform)).mul(static_cast<double>(n));
 
   for (std::int64_t ci = 0; ci < k; ++ci) {
     const Series idx = pluss::arange(ci, ci + 1, i64_cfg);
@@ -3618,24 +3713,36 @@ struct LinearPenalty {
     const Series tp = y_c.mul(yh_c).sum();
     const Series fp = y_c.mul(-1.0).add(1.0).mul(yh_c).sum();
     const Series fn = y_c.mul(yh_c.mul(-1.0).add(1.0)).sum();
+    const Series tn = n_scalar.sub(tp.add(fp).add(fn));
     const Series precision_den = tp.add(fp);
     const Series recall_den = tp.add(fn);
+    const Series specificity_den = tn.add(fp);
     const Series precision_mask = precision_den.gt(0.0).to(ScalarType::Float64);
     const Series recall_mask = recall_den.gt(0.0).to(ScalarType::Float64);
+    const Series specificity_mask = specificity_den.gt(0.0).to(ScalarType::Float64);
     const Series precision = tp.div(precision_den.clamp_min(1.0)).mul(precision_mask);
     const Series recall = tp.div(recall_den.clamp_min(1.0)).mul(recall_mask);
+    const Series specificity = tn.div(specificity_den.clamp_min(1.0)).mul(specificity_mask);
     const Series f1_den = precision.add(recall);
     const Series f1_mask = f1_den.gt(0.0).to(ScalarType::Float64);
     const Series f1 = precision.mul(recall).mul(2.0).div(f1_den.clamp_min(1.0)).mul(f1_mask);
+    const Series geometric = recall.mul(specificity).clamp_min(0.0).sqrt();
+    const Series balance_quality = geometric.square().mul(recall.sub(specificity).mul(0.1).add(1.0)).clamp_min(0.0);
     precision_sum = precision_sum.add(precision.reshape({1}));
     recall_sum = recall_sum.add(recall.reshape({1}));
     f1_sum = f1_sum.add(f1.reshape({1}));
+    specificity_sum = specificity_sum.add(specificity.reshape({1}));
+    geometric_sum = geometric_sum.add(geometric.reshape({1}));
+    balance_quality_sum = balance_quality_sum.add(balance_quality.reshape({1}));
   }
 
   const Series accuracy = y.eq(yh).to(ScalarType::Float64).mean().reshape({1});
   const Series macro_precision = precision_sum.div(k_scalar).reshape({1});
   const Series macro_recall = recall_sum.div(k_scalar).reshape({1});
   const Series macro_f1 = f1_sum.div(k_scalar).reshape({1});
+  const Series macro_specificity = specificity_sum.div(k_scalar).reshape({1});
+  const Series macro_geometric = geometric_sum.div(k_scalar).reshape({1});
+  const Series macro_balance_quality = balance_quality_sum.div(k_scalar).reshape({1});
   const Series balanced_accuracy = macro_recall.reshape({1});
 
   constexpr double eps = 1e-12;
@@ -3685,10 +3792,20 @@ struct LinearPenalty {
         out.push_back(macro_precision);
         break;
       case MetricKind::Recall:
+      case MetricKind::Sensitivity:
         out.push_back(macro_recall);
         break;
       case MetricKind::F1:
         out.push_back(macro_f1);
+        break;
+      case MetricKind::Specificity:
+        out.push_back(macro_specificity);
+        break;
+      case MetricKind::GeometricMean:
+        out.push_back(macro_geometric);
+        break;
+      case MetricKind::BalanceQuality:
+        out.push_back(macro_balance_quality);
         break;
       case MetricKind::LogLoss:
         out.push_back(logloss);
@@ -3731,7 +3848,12 @@ public:
     Status option_status = validate_linear_classifier_options(options_);
     if (!option_status.ok()) return option_status;
 
-    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "LinearClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "LinearClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "LinearClassifier::learn");
     if (!matrix_or.ok()) return matrix_or.status();
     DenseFeatureMatrix matrix = matrix_or.move_value();
     if (has_nan(matrix.x_rows)) {
@@ -3739,11 +3861,10 @@ public:
           "LinearClassifier::learn does not support NaN features; apply a nodej::prep imputer before learn().");
     }
 
-    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "LinearClassifier::learn");
+    StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "LinearClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
-    StatusOr<Series> sample_weight_or =
-        resolve_training_weights(batch, options, labels, "LinearClassifier::learn");
+    StatusOr<Series> sample_weight_or = resolve_training_weights(labels.y01, fit_batch.sample_weights, fit_options);
     if (!sample_weight_or.ok()) return sample_weight_or.status();
     const Series sample_weight = sample_weight_or.move_value();
 
@@ -4259,11 +4380,16 @@ public:
     if (options.max_iterations <= 0) return Status::invalid_argument("TrainOptions.max_iterations must be positive.");
     if (!(options.tolerance > 0.0)) return Status::invalid_argument("TrainOptions.tolerance must be positive.");
 
-    StatusOr<Series> classes_or = extract_sorted_classes(batch, batch.features.sample_count(), "OvRClassifier::learn");
+    StatusOr<LabeledBatch> fit_batch_or = resolve_classification_training_batch(batch, options, "OvRClassifier::learn");
+    if (!fit_batch_or.ok()) return fit_batch_or.status();
+    const LabeledBatch& fit_batch = fit_batch_or.value();
+    const TrainOptions fit_options = without_training_balance(options);
+
+    StatusOr<Series> classes_or = extract_sorted_classes(fit_batch, fit_batch.features.sample_count(), "OvRClassifier::learn");
     if (!classes_or.ok()) return classes_or.status();
     const Series classes = classes_or.move_value();
     const std::int64_t class_count = classes.numel();
-    const std::int64_t sample_count = batch.features.sample_count();
+    const std::int64_t sample_count = fit_batch.features.sample_count();
     const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(classes.platform());
 
     std::vector<std::unique_ptr<ClassifierBase>> models{};
@@ -4273,24 +4399,25 @@ public:
       StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_binary_classifier_impl(spec_);
       if (!model_or.ok()) return model_or.status();
       std::unique_ptr<ClassifierBase> model = model_or.move_value();
-      Status learn_status = model->learn(batch, options);
+      Status learn_status = model->learn(fit_batch, fit_options);
       if (!learn_status.ok()) return learn_status;
       models.push_back(std::move(model));
       multiclass_ = false;
     } else {
-      const Series y64 = batch.y.to(ScalarType::Float64).reshape({sample_count});
+      const Series y64 = fit_batch.y.to(ScalarType::Float64).reshape({sample_count});
       for (std::int64_t ci = 0; ci < class_count; ++ci) {
         const Series idx = pluss::arange(ci, ci + 1, i64_cfg);
         const Series cls_value = classes.index_select(0, idx).reshape({1});
         const Series y01 = y64.eq(cls_value).to(ScalarType::Float64);
         const LabeledBatch binary_batch{
-            .features = batch.features,
+            .features = fit_batch.features,
             .y = y01,
+            .sample_weights = fit_batch.sample_weights,
         };
         StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_binary_classifier_impl(spec_);
         if (!model_or.ok()) return model_or.status();
         std::unique_ptr<ClassifierBase> model = model_or.move_value();
-        Status learn_status = model->learn(binary_batch, options);
+        Status learn_status = model->learn(binary_batch, fit_options);
         if (!learn_status.ok()) return learn_status;
         models.push_back(std::move(model));
       }

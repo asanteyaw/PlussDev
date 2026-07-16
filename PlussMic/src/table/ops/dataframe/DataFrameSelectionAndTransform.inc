@@ -270,7 +270,7 @@ DataFrame DataFrame::sample_fraction_(double frac,
   PLUSS_CHECK(std::isfinite(frac), "DataFrame::sample: frac must be finite");
   PLUSS_CHECK(frac >= 0.0, "DataFrame::sample: frac must be >= 0");
   PLUSS_CHECK(replace || frac <= 1.0, "DataFrame::sample: frac > 1 requires replace = true");
-  const auto total = axis == Axis::Case ? ncases() : nfeats();
+  const auto total = axis == Axis::Case ? ncases() : nfeatures();
   const auto draw = static_cast<std::int64_t>(std::llround(frac * static_cast<double>(total)));
   return sample_impl_(draw, random_state, replace, axis);
 }
@@ -742,6 +742,26 @@ DataFrame DataFrameNoteAccessor::ends(std::string_view suffix) const {
                                   "DataFrame::note().ends");
 }
 
+DataFrame DataFrameNoteAccessor::has(std::string_view needle,
+                                     const TextOptions& options) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [needle, options](const Thread& value) { return value.note().has(needle, options); },
+                                  "DataFrame::note().has");
+}
+
+DataFrame DataFrameNoteAccessor::count(std::string_view pattern) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [pattern](const Thread& value) { return value.note().count(pattern); },
+                                  "DataFrame::note().count");
+}
+
+DataFrame DataFrameNoteAccessor::count(std::string_view pattern,
+                                       const TextOptions& options) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [pattern, options](const Thread& value) { return value.note().count(pattern, options); },
+                                  "DataFrame::note().count");
+}
+
 DataFrame DataFrameNoteAccessor::matches(std::string_view pattern, bool full) const {
   return transform_text_features_(frame_.impl_ref_(), features_,
                                   [pattern, full](const Thread& value) { return value.note().matches(pattern, full); },
@@ -752,13 +772,29 @@ DataFrame DataFrameNoteAccessor::fullmatch(std::string_view pattern) const {
   return matches(pattern, true);
 }
 
+DataFrame DataFrameNoteAccessor::findall(std::string_view pattern) const {
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().findall requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().findall: feature must be Note");
+  return expanded_text_result_(source.note().findall(pattern), frame_.label().values(), frame_.title());
+}
+
+DataFrame DataFrameNoteAccessor::findall(
+    std::string_view pattern,
+    const TextOptions& options) const {
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().findall requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().findall: feature must be Note");
+  return expanded_text_result_(source.note().findall(pattern, options), frame_.label().values(), frame_.title());
+}
+
 DataFrame DataFrameNoteAccessor::extract(
     std::string_view pattern,
     pluss::msharp::RangeView::Of<std::string_view> names) const {
   PLUSS_CHECK(features_.size() == 1, "DataFrame::note().extract requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().extract: feature must be Note");
-  return expanded_text_result_(source.note().extract(pattern, names), frame_.caselbl(), frame_.title());
+  return expanded_text_result_(source.note().extract(pattern, names), frame_.label().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::split(
@@ -768,7 +804,16 @@ DataFrame DataFrameNoteAccessor::split(
   PLUSS_CHECK(features_.size() == 1, "DataFrame::note().split requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().split: feature must be Note");
-  return expanded_text_result_(source.note().split(delimiter, limit, std::move(prefix)), frame_.caselbl(), frame_.title());
+  return expanded_text_result_(source.note().split(delimiter, limit, std::move(prefix)), frame_.label().values(), frame_.title());
+}
+
+DataFrame DataFrameNoteAccessor::split(
+    std::string_view pattern,
+    const TextOptions& options) const {
+  PLUSS_CHECK(features_.size() == 1, "DataFrame::note().split requires one feature");
+  const auto source = frame_.features(features_.front());
+  PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().split: feature must be Note");
+  return expanded_text_result_(source.note().split(pattern, options), frame_.label().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::partition(std::string_view separator,
@@ -776,7 +821,7 @@ DataFrame DataFrameNoteAccessor::partition(std::string_view separator,
   PLUSS_CHECK(features_.size() == 1, "DataFrame::note().partition requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().partition: feature must be Note");
-  return expanded_text_result_(source.note().partition(separator, std::move(prefix)), frame_.caselbl(), frame_.title());
+  return expanded_text_result_(source.note().partition(separator, std::move(prefix)), frame_.label().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::pad(std::int64_t width, TextAlign align, char fill) const {
@@ -811,7 +856,22 @@ DataFrame DataFrameNoteAccessor::indicate(std::string_view delimiter,
   PLUSS_CHECK(features_.size() == 1, "DataFrame::note().indicate requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == ThreadKind::Note, "DataFrame::note().indicate: feature must be Note");
-  return expanded_text_result_(source.note().indicate(delimiter, std::move(prefix)), frame_.caselbl(), frame_.title());
+  return expanded_text_result_(source.note().indicate(delimiter, std::move(prefix)), frame_.label().values(), frame_.title());
+}
+
+DataFrame DataFrameNoteAccessor::replace(std::string_view from,
+                                         std::string_view to) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [from, to](const Thread& value) { return value.note().replace(from, to); },
+                                  "DataFrame::note().replace");
+}
+
+DataFrame DataFrameNoteAccessor::replace(std::string_view from,
+                                         std::string_view to,
+                                         const TextOptions& options) const {
+  return transform_text_features_(frame_.impl_ref_(), features_,
+                                  [from, to, options](const Thread& value) { return value.note().replace(from, to, options); },
+                                  "DataFrame::note().replace");
 }
 
 DataFrameTimelineAccessor DataFrame::tl(std::string_view feature) const {
@@ -869,7 +929,7 @@ DataFrame DataFrameTimelineAccessor::map_(
       columns.emplace_back(name, source);
     }
   }
-  return DataFrame(std::move(columns), frame_.caselbl()).title(frame_.title());
+  return DataFrame(std::move(columns), frame_.label().values()).title(frame_.title());
 }
 
 DataFrame DataFrameTimelineAccessor::isnat() const {
@@ -954,6 +1014,57 @@ DataFrame DataFrameTimelineAccessor::iso() const {
 
 DataFrame DataFrameTimelineAccessor::epoch(TimeUnit unit) const {
   return map_([unit](const Thread& t) { return t.tl().epoch(unit); }, "DataFrame::tl().epoch");
+}
+
+DataFrame DataFrameTimelineAccessor::span(
+    const Thread& other,
+    const TimelineSpanOptions& options) const {
+  return map_([&](const Thread& t) { return t.tl().span(other, options); }, "DataFrame::tl().span");
+}
+
+DataFrame DataFrameTimelineAccessor::span(const Thread& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
+}
+
+DataFrame DataFrameTimelineAccessor::span(
+    const pluss::Timeline& other,
+    const TimelineSpanOptions& options) const {
+  return span(Thread(other), options);
+}
+
+DataFrame DataFrameTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
+}
+
+DataFrame DataFrameTimelineAccessor::span(
+    const DataFrame& other,
+    const TimelineSpanOptions& options) const {
+  std::vector<std::pair<std::string, Thread>> columns;
+  columns.reserve(static_cast<std::size_t>(frame_.nfeatures()));
+  std::unordered_set<std::string> selected(features_.begin(), features_.end());
+  for (const auto& name : frame_.features()) {
+    const auto source = frame_.features(name);
+    if (!selected.contains(name)) {
+      columns.emplace_back(name, source);
+      continue;
+    }
+    PLUSS_CHECK(is_time_like_thread_(source.kind()),
+                "DataFrame::tl().span: feature '" + name + "' is not Timeline/TimeIndex");
+    PLUSS_CHECK(other.has_feature(name),
+                "DataFrame::tl().span: other DataFrame is missing feature '" + name + "'");
+    columns.emplace_back(name, source.tl().span(other.features(name), options));
+  }
+  return DataFrame(std::move(columns), frame_.label().values()).title(frame_.title());
+}
+
+DataFrame DataFrameTimelineAccessor::span(const DataFrame& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
 }
 
 DataFrame DataFrameTimelineAccessor::floor(std::string_view unit) const {

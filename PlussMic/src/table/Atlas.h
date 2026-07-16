@@ -44,7 +44,7 @@ public:
 
   std::int64_t depth() const;
   std::int64_t ncases() const;
-  std::int64_t nfeats() const;
+  std::int64_t nfeatures() const;
 
   const std::vector<std::string>& column_names() const;
   const std::optional<Thread>& axis0_labels() const;
@@ -123,6 +123,10 @@ public:
   Atlas fmt(std::string_view pattern) const;
   Atlas iso() const;
   Atlas epoch(TimeUnit unit = TimeUnit::Nanos) const;
+  Atlas span(const Thread& other, const TimelineSpanOptions& options = {}) const;
+  Atlas span(const Thread& other, TimeUnit unit) const;
+  Atlas span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const;
+  Atlas span(const pluss::Timeline& other, TimeUnit unit) const;
   Atlas floor(std::string_view unit) const;
   Atlas ceil(std::string_view unit) const;
   Atlas round(std::string_view unit) const;

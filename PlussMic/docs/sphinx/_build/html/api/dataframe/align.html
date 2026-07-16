@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=a013cfe3"></script>
+    <script src="../../_static/api_nav.js?v=5a216172"></script>
     <script src="../../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="DataFrame::align_caselbl" href="align_caselbl.html" />
+    <link rel="next" title="DataFrame::all" href="all.html" />
     <link rel="prev" title="DataFrame::aggregate" href="aggregate.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -43,7 +43,7 @@
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">AlignSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">new_caselbl</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">new_label</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 <p>Realign the current frame to a target case axis, a target feature axis, or both at once.</p>
@@ -56,12 +56,12 @@
 <p>Structured alignment description used by the full overload.</p>
 <p><code class="docutils literal notranslate"><span class="pre">AlignSpec</span></code> has three public fields:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">caselbl</span></code>: optional target case labels. When present, the output rows are reordered and expanded to match these labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label</span></code>: optional target case labels. When present, the output rows are reordered and expanded to match these labels.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">features</span></code>: optional target feature order. When non-empty, the output features are emitted in exactly this order.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fill</span></code>: optional numeric fill scalar. When provided, newly introduced numeric gaps are filled with that value instead of remaining null.</p></li>
 </ul>
 <p>You do not need to populate every field. Leave the fields you do not care about at their defaults and specify only the axis you want to control.</p>
-<p><strong>new_caselbl</strong></p>
+<p><strong>new_label</strong></p>
 <p>Replacement case axis used by the case-label-only overload.</p>
 <p>Pass a note-backed or otherwise defined <code class="docutils literal notranslate"><span class="pre">Thread</span></code> containing the output row labels in the exact order you want. PlussMic will gather matching rows by label, insert missing rows for unmatched labels, and keep the existing feature set unchanged.</p>
 </section>
@@ -78,14 +78,14 @@ New frame whose case labels, feature order, and missing slots follow the request
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a href="align_caselbl.html"><code>DataFrame::align_caselbl</code></a>: shorter case-axis-only surface when you are not also conforming features.</p></li>
+<li><p><a href="#label().align"><code>DataFrame::label().align</code></a>: shorter case-axis-only surface when you are not also conforming features.</p></li>
 <li><p><a href="conform.html"><code>DataFrame::conform</code></a>: align this frame to another frame’s schema and labels in one call.</p></li>
 <li><p><a href="../thread/align.html"><code>Thread::align</code></a>: lower-level alignment for a single extracted column.</p></li>
 </ul>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">align(const</span> <span class="pre">Thread&amp;</span> <span class="pre">new_caselbl)</span></code> is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">align(const</span> <span class="pre">Thread&amp;</span> <span class="pre">new_label)</span></code> is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.</p>
 <p><code class="docutils literal notranslate"><span class="pre">align(const</span> <span class="pre">AlignSpec&amp;</span> <span class="pre">spec)</span></code> is the full structured form. Use it when you need to control target case labels, target feature order, and numeric fill behavior together.</p>
 <p>If a requested feature does not exist in the source frame, PlussMic creates a new missing feature in the output. If that new feature is numeric and <code class="docutils literal notranslate"><span class="pre">fill</span></code> is supplied, the introduced values are filled with that scalar.</p>
 <p>If a requested case label does not exist in the source frame, PlussMic inserts a new output row for that label. Matching rows are gathered by label rather than by original physical position.</p>
@@ -125,7 +125,7 @@ r1      | 1     10
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">AlignSpec</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">caselbl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="p">.</span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
 <span class="p">});</span>
 </pre></div>
@@ -178,7 +178,7 @@ r3   | 30    NA    3
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">AlignSpec</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">caselbl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">},</span>
 <span class="p">});</span>
 </pre></div>
@@ -204,7 +204,7 @@ r1   | 10    NA    1
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">AlignSpec</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">caselbl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}),</span>
 <span class="w">    </span><span class="p">.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">},</span>
 <span class="w">    </span><span class="p">.</span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
 <span class="p">});</span>
@@ -234,7 +234,7 @@ r1   | 10    0     1
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">})},</span>
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r1&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">case_driver</span><span class="p">.</span><span class="n">caselbl</span><span class="p">());</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">case_driver</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -283,7 +283,7 @@ r3   | 30
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})},</span>
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">caselbl</span><span class="p">());</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">());</span>
 </pre></div>
 </div>
 </section>
@@ -304,9 +304,9 @@ r3   | 3     30
     <span class="label">Previous</span>
     <span class="title">aggregate</span>
   </a>
-  <a class="next-link" href="align_caselbl.html">
+  <a class="next-link" href="all.html">
     <span class="label">Next</span>
-    <span class="title">align_caselbl</span>
+    <span class="title">all</span>
   </a>
 </div>
 </section>
@@ -361,7 +361,7 @@ r3   | 3     30
   <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
   <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
       <li>Previous: <a href="aggregate.html" title="previous chapter">DataFrame::aggregate</a></li>
-      <li>Next: <a href="align_caselbl.html" title="next chapter">DataFrame::align_caselbl</a></li>
+      <li>Next: <a href="all.html" title="next chapter">DataFrame::all</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

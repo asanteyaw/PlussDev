@@ -108,9 +108,9 @@ id  sales  city    profit
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="set_cases.html">
+  <a class="prev-link" href="set_axis.html">
     <span class="label">Previous</span>
-    <span class="title">set_cases</span>
+    <span class="title">set_axis</span>
   </a>
   <a class="next-link" href="set_features_.html">
     <span class="label">Next</span>

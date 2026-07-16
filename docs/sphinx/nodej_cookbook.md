@@ -265,7 +265,7 @@ if (!train_or.ok() || !test_or.ok()) throw std::runtime_error("slice failed");
 
 - deterministic train/test batches for fixed seed.
 
-## Recipe 6: Stratified K-Fold Cross Assessment
+## Recipe 6: Stratified And Repeated Stratified Cross Assessment
 
 ### API Signature
 
@@ -273,7 +273,7 @@ if (!train_or.ok() || !test_or.ok()) throw std::runtime_error("slice failed");
 
 ### Notes
 
-Use for robust estimate across folds and class-preserving splits.
+Use for robust estimates across class-preserving cross-validation partitions. Set `StratifiedCrossVal` with `repeats > 1` when you want multiple shuffled stratified passes.
 
 ### Inputs
 
@@ -285,15 +285,16 @@ Use for robust estimate across folds and class-preserving splits.
 
 ### Options
 
-- `SplitOptions.plan = StratifiedKFold`
+- `SplitOptions.plan = StratifiedCrossVal`
 - `SplitOptions.folds`
+- `SplitOptions.repeats`
 - `AssessOptions.metrics`
 
 ### Examples
 
 ```cpp
 nje::SplitOptions split{};
-split.plan = nje::CVPlanKind::StratifiedKFold;
+split.plan = nje::CVPlanKind::StratifiedCrossVal;
 split.folds = 5;
 split.stratified = true;
 split.random.seed = 11;
@@ -308,9 +309,24 @@ auto report_or = nje::cross_assess(
 if (!report_or.ok()) throw std::runtime_error(report_or.status().message);
 ```
 
+```cpp
+nje::SplitOptions repeated = split;
+repeated.plan = nje::CVPlanKind::StratifiedCrossVal;
+repeated.repeats = 3;
+
+auto repeated_or = nje::cross_assess(
+    spec,
+    batch,
+    repeated,
+    nje::TrainOptions{},
+    nje::AssessOptions{.metrics = {nje::MetricKind::Accuracy, nje::MetricKind::F1}});
+if (!repeated_or.ok()) throw std::runtime_error(repeated_or.status().message);
+```
+
 ### Expected output
 
-- per-fold metrics plus aggregate mean/std vectors.
+- stratified example: five fold reports plus aggregate mean/std vectors.
+- repeated example: fifteen fold reports when `folds = 5` and `repeats = 3`.
 
 ## Recipe 7: Spec Sweep Tuning
 
@@ -353,7 +369,7 @@ candidates.push_back({
 auto tune_or = nje::sweep(
     candidates,
     batch,
-    nje::SplitOptions{.plan = nje::CVPlanKind::KFold, .folds = 5},
+    nje::SplitOptions{.plan = nje::CVPlanKind::CrossVal, .folds = 5},
     {},
     nje::AssessOptions{.metrics = {nje::MetricKind::Rmse}},
     nje::MetricKind::Rmse,
@@ -405,7 +421,7 @@ nje::ProbeSpecSampler sampler = [](std::int64_t trial, std::uint64_t) -> nje::St
 auto probe_or = nje::probe(sampler,
                            30,
                            batch,
-                           nje::SplitOptions{.plan = nje::CVPlanKind::KFold, .folds = 5},
+                           nje::SplitOptions{.plan = nje::CVPlanKind::CrossVal, .folds = 5},
                            {},
                            nje::AssessOptions{.metrics = {nje::MetricKind::Rmse}},
                            nje::MetricKind::Rmse,

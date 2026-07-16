@@ -35,10 +35,9 @@ bool DataFrame::consume_stream_suppression_() const {
 }
 
 std::int64_t DataFrame::ncases() const { return impl_ref_().nrows_; }
-std::int64_t DataFrame::nfeats() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
-std::int64_t DataFrame::nfeatures() const { return nfeats(); }
+std::int64_t DataFrame::nfeatures() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
 std::pair<std::int64_t, std::int64_t> DataFrame::shape() const {
-  return {ncases(), nfeats()};
+  return {ncases(), nfeatures()};
 }
 
 DataFrame::DTypes::DTypes(std::vector<Entry> entries) : entries_(std::move(entries)) {}
@@ -151,6 +150,10 @@ const Thread& DataFrame::case_labels_() const { return impl_ref_().cases_; }
 
 const Thread& DataFrame::caselbl() const { return case_labels_(); }
 
+DataFrameLabelAccessor DataFrame::label() const {
+  return DataFrameLabelAccessor(*this);
+}
+
 DataFrame DataFrame::caselbl(const Thread& labels) const {
   return with_cases(labels);
 }
@@ -181,7 +184,7 @@ std::unordered_map<std::string, std::vector<std::int64_t>> build_case_lookup_(co
   std::unordered_map<std::string, std::vector<std::int64_t>> lookup;
   lookup.reserve(static_cast<std::size_t>(std::max<std::int64_t>(8, frame.ncases() * 2)));
   for (std::int64_t i = 0; i < frame.ncases(); ++i) {
-    lookup[thread_scalar_string_at(frame.caselbl(), i)].push_back(i);
+    lookup[thread_scalar_string_at(frame.label().values(), i)].push_back(i);
   }
   return lookup;
 }
@@ -311,14 +314,14 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
   std::vector<std::size_t> indices;
   switch (selector.kind) {
     case DataFrame::FeatureSelector::Kind::All:
-      indices.resize(static_cast<std::size_t>(frame.nfeats()));
+      indices.resize(static_cast<std::size_t>(frame.nfeatures()));
       std::iota(indices.begin(), indices.end(), static_cast<std::size_t>(0));
       return indices;
     case DataFrame::FeatureSelector::Kind::PositionScalar:
-      indices.push_back(static_cast<std::size_t>(normalize_row_index(selector.first, frame.nfeats())));
+      indices.push_back(static_cast<std::size_t>(normalize_row_index(selector.first, frame.nfeatures())));
       return indices;
     case DataFrame::FeatureSelector::Kind::PositionSlice: {
-      const auto [start, stop] = normalize_slice(selector.first, selector.second, frame.nfeats());
+      const auto [start, stop] = normalize_slice(selector.first, selector.second, frame.nfeatures());
       indices.reserve(static_cast<std::size_t>(stop - start));
       for (std::int64_t i = start; i < stop; ++i) {
         indices.push_back(static_cast<std::size_t>(i));
@@ -328,7 +331,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
     case DataFrame::FeatureSelector::Kind::PositionList:
       indices.reserve(selector.positions.size());
       for (const auto pos : selector.positions) {
-        indices.push_back(static_cast<std::size_t>(normalize_row_index(pos, frame.nfeats())));
+        indices.push_back(static_cast<std::size_t>(normalize_row_index(pos, frame.nfeatures())));
       }
       return indices;
     case DataFrame::FeatureSelector::Kind::NameScalar:
@@ -394,11 +397,11 @@ DataFrame project_feature_positions_(const DataFrame& frame, pluss::RangeView<st
 
 } // namespace
 
-bool DataFrame::has_levels() const {
+bool DataFrame::has_caselbls() const {
   return impl_ref_().case_axis_.defined();
 }
 
-std::vector<std::string> DataFrame::levels() const {
+std::vector<std::string> DataFrame::caselbls() const {
   const auto& src = impl_ref_();
   std::vector<std::string> out;
   out.reserve(src.case_axis_.levels.size());
@@ -408,18 +411,117 @@ std::vector<std::string> DataFrame::levels() const {
   return out;
 }
 
-Thread DataFrame::level(std::string_view name) const {
+Thread DataFrame::caselbl(std::string_view name) const {
   const auto& src = impl_ref_();
-  return src.case_axis_.levels[level_index_(src, name, "DataFrame::level")].values;
+  return src.case_axis_.levels[level_index_(src, name, "DataFrame::caselbl")].values;
 }
 
-Thread DataFrame::level(std::int64_t position) const {
+Thread DataFrame::caselbl(std::int64_t position) const {
   const auto& src = impl_ref_();
-  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::level: current DataFrame has no case levels");
+  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::caselbl: current DataFrame has no case labels");
   auto pos = position < 0 ? position + static_cast<std::int64_t>(src.case_axis_.levels.size()) : position;
   PLUSS_CHECK(pos >= 0 && pos < static_cast<std::int64_t>(src.case_axis_.levels.size()),
-              "DataFrame::level: level position out of bounds");
+              "DataFrame::caselbl: case-label position out of bounds");
   return src.case_axis_.levels[static_cast<std::size_t>(pos)].values;
+}
+
+DataFrameLabelAccessor::DataFrameLabelAccessor(const DataFrame& frame)
+    : frame_(frame) {}
+
+const Thread& DataFrameLabelAccessor::values() const {
+  return frame_.caselbl();
+}
+
+DataFrame DataFrameLabelAccessor::set(const Thread& labels) const {
+  return frame_.caselbl(labels);
+}
+
+bool DataFrameLabelAccessor::has() const {
+  return frame_.has_caselbls();
+}
+
+std::vector<std::string> DataFrameLabelAccessor::names() const {
+  return frame_.caselbls();
+}
+
+Thread DataFrameLabelAccessor::part(std::string_view name) const {
+  return frame_.caselbl(name);
+}
+
+Thread DataFrameLabelAccessor::part(std::int64_t position) const {
+  return frame_.caselbl(position);
+}
+
+DataFrame DataFrameLabelAccessor::set(std::string_view feature_name, bool drop_feature) const {
+  return frame_.set_caselbl(feature_name, drop_feature);
+}
+
+DataFrame DataFrameLabelAccessor::set(std::initializer_list<std::string_view> feature_names,
+                                      bool drop_features,
+                                      std::string_view separator) const {
+  return frame_.set_caselbl(feature_names, drop_features, separator);
+}
+
+DataFrame DataFrameLabelAccessor::set(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                                      bool drop_features,
+                                      std::string_view separator) const {
+  return frame_.set_caselbl(feature_names, drop_features, separator);
+}
+
+DataFrame DataFrameLabelAccessor::set(const DataFrame::SetLabelOptions& options) const {
+  return frame_.set_caselbl(options);
+}
+
+DataFrame DataFrameLabelAccessor::reset(std::string case_feature) const {
+  return frame_.reset_caselbl(std::move(case_feature));
+}
+
+DataFrame DataFrameLabelAccessor::reset(const DataFrame::ResetLabelOptions& options) const {
+  return frame_.reset_caselbl(options);
+}
+
+DataFrame DataFrameLabelAccessor::sort(bool ascending, bool nulls_last) const {
+  return frame_.sort_caselbl(ascending, nulls_last);
+}
+
+DataFrame DataFrameLabelAccessor::sort(const DataFrame::SortLabelOptions& options) const {
+  return frame_.sort_caselbl(options);
+}
+
+DataFrame DataFrameLabelAccessor::align(const Thread& new_label) const {
+  return frame_.align_caselbl(new_label);
+}
+
+DataFrame DataFrameLabelAccessor::align(const Thread& new_label, std::optional<double> fill) const {
+  return frame_.align_caselbl(new_label, fill);
+}
+
+DataFrame DataFrameLabelAccessor::rename(pluss::msharp::RangeView::Of<DataFrame::LabelRename> renames) const {
+  return frame_.rename_caselbls(renames);
+}
+
+DataFrame DataFrameLabelAccessor::rename(std::initializer_list<DataFrame::LabelRename> renames) const {
+  return frame_.rename_caselbls(renames);
+}
+
+DataFrame DataFrameLabelAccessor::order(pluss::msharp::RangeView::Of<std::string_view> names) const {
+  return frame_.order_caselbls(names);
+}
+
+DataFrame DataFrameLabelAccessor::order(std::initializer_list<std::string_view> names) const {
+  return frame_.order_caselbls(names);
+}
+
+DataFrame DataFrameLabelAccessor::drop(pluss::msharp::RangeView::Of<std::string_view> names) const {
+  return frame_.drop_caselbls(names);
+}
+
+DataFrame DataFrameLabelAccessor::drop(std::initializer_list<std::string_view> names) const {
+  return frame_.drop_caselbls(names);
+}
+
+pluss::Series DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return frame_.repeated_caselbl(features);
 }
 
 DataFrame DataFrame::case_study(const CaseSelector& rows) const {
@@ -428,26 +530,26 @@ DataFrame DataFrame::case_study(const CaseSelector& rows) const {
 
 DataFrame DataFrame::case_study(const CasePick& pick) const {
   const auto& src = impl_ref_();
-  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::case_study: current DataFrame has no case levels");
+  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::case_study: current DataFrame has no case labels");
 
-  std::vector<std::string> level_names = pick.levels;
+  std::vector<std::string> level_names = pick.names;
   std::vector<std::string> values = pick.values;
-  if (!pick.level.empty()) {
-    PLUSS_CHECK(level_names.empty(), "DataFrame::case_study: use either `level` or `levels`, not both");
-    level_names.push_back(pick.level);
+  if (!pick.label.empty()) {
+    PLUSS_CHECK(level_names.empty(), "DataFrame::case_study: use either `label` or `names`, not both");
+    level_names.push_back(pick.label);
     values.push_back(pick.value);
   }
   if (!pick.key.empty()) {
-    PLUSS_CHECK(level_names.empty(), "DataFrame::case_study: use either `key` or level/value selectors, not both");
+    PLUSS_CHECK(level_names.empty(), "DataFrame::case_study: use either `key` or case-label/value selectors, not both");
     PLUSS_CHECK(pick.key.size() == src.case_axis_.levels.size(),
-                "DataFrame::case_study: full key length must match case level count");
+                "DataFrame::case_study: full key length must match case-label count");
     for (const auto& level : src.case_axis_.levels) {
       level_names.push_back(level.name);
     }
     values = pick.key;
   }
-  PLUSS_CHECK(!level_names.empty(), "DataFrame::case_study: expected a level selector or full key");
-  PLUSS_CHECK(level_names.size() == values.size(), "DataFrame::case_study: levels/values length mismatch");
+  PLUSS_CHECK(!level_names.empty(), "DataFrame::case_study: expected a case-label selector or full key");
+  PLUSS_CHECK(level_names.size() == values.size(), "DataFrame::case_study: names/values length mismatch");
 
   std::vector<std::size_t> level_indices;
   level_indices.reserve(level_names.size());
@@ -479,7 +581,7 @@ DataFrame DataFrame::case_study(const CasePick& pick) const {
     for (const auto& name : level_names) {
       drop_views.push_back(name);
     }
-    out = out.drop_levels(pluss::msharp::RangeView::Of<std::string_view>(
+    out = out.drop_caselbls(pluss::msharp::RangeView::Of<std::string_view>(
         std::span<const std::string_view>(drop_views.data(), drop_views.size())));
   }
   return out;
@@ -626,25 +728,25 @@ DataFrame::FeatureSelector all_features() {
   return {};
 }
 
-DataFrame::FeatureSelector col(std::string_view name) {
+DataFrame::FeatureSelector feature(std::string_view name) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::NameScalar;
   out.names.emplace_back(name);
   return out;
 }
 
-DataFrame::FeatureSelector col(const char* name) {
-  return col(std::string_view{name != nullptr ? name : ""});
+DataFrame::FeatureSelector feature(const char* name) {
+  return feature(std::string_view{name != nullptr ? name : ""});
 }
 
-DataFrame::FeatureSelector col(std::int64_t position) {
+DataFrame::FeatureSelector feature(std::int64_t position) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::PositionScalar;
   out.first = position;
   return out;
 }
 
-DataFrame::FeatureSelector cols(std::initializer_list<std::string_view> names) {
+DataFrame::FeatureSelector features(std::initializer_list<std::string_view> names) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::NameList;
   out.names.reserve(names.size());
@@ -654,7 +756,7 @@ DataFrame::FeatureSelector cols(std::initializer_list<std::string_view> names) {
   return out;
 }
 
-DataFrame::FeatureSelector cols(pluss::RangeView<std::string_view> names) {
+DataFrame::FeatureSelector features(pluss::RangeView<std::string_view> names) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::NameList;
   out.names.reserve(names.size());
@@ -664,21 +766,21 @@ DataFrame::FeatureSelector cols(pluss::RangeView<std::string_view> names) {
   return out;
 }
 
-DataFrame::FeatureSelector cols(std::initializer_list<std::int64_t> positions) {
+DataFrame::FeatureSelector features(std::initializer_list<std::int64_t> positions) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::PositionList;
   out.positions.assign(positions.begin(), positions.end());
   return out;
 }
 
-DataFrame::FeatureSelector cols(pluss::RangeView<std::int64_t> positions) {
+DataFrame::FeatureSelector features(pluss::RangeView<std::int64_t> positions) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::PositionList;
   out.positions.assign(positions.begin(), positions.end());
   return out;
 }
 
-DataFrame::FeatureSelector cols(std::int64_t start, std::int64_t stop) {
+DataFrame::FeatureSelector features(std::int64_t start, std::int64_t stop) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::PositionSlice;
   out.first = start;
@@ -686,7 +788,7 @@ DataFrame::FeatureSelector cols(std::int64_t start, std::int64_t stop) {
   return out;
 }
 
-DataFrame::FeatureSelector col_range(std::string_view start, std::string_view stop) {
+DataFrame::FeatureSelector feature_range(std::string_view start, std::string_view stop) {
   DataFrame::FeatureSelector out;
   out.kind = DataFrame::FeatureSelector::Kind::NameSlice;
   out.names.emplace_back(start);
@@ -1287,7 +1389,7 @@ DataFrame DataFrame::sort_values(pluss::msharp::RangeView::Of<ArrangeSpec> specs
   return arrange(specs);
 }
 
-DataFrame DataFrame::sort_cases(bool ascending, bool nulls_last) const {
+DataFrame DataFrame::sort_caselbl(bool ascending, bool nulls_last) const {
   std::vector<std::int64_t> idx(static_cast<std::size_t>(ncases()));
   std::iota(idx.begin(), idx.end(), 0);
   const auto& case_axis = case_labels_();
@@ -1298,16 +1400,16 @@ DataFrame DataFrame::sort_cases(bool ascending, bool nulls_last) const {
   return take(idx);
 }
 
-DataFrame DataFrame::sort_cases(const SortCasesOptions& options) const {
+DataFrame DataFrame::sort_caselbl(const SortLabelOptions& options) const {
   const auto& src = impl_ref_();
-  if (options.levels.empty()) {
-    return sort_cases(options.ascending, options.nulls_last);
+  if (options.names.empty()) {
+    return sort_caselbl(options.ascending, options.nulls_last);
   }
-  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::sort_cases: current DataFrame has no case levels");
+  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::sort_caselbl: current DataFrame has no case labels");
   std::vector<std::size_t> level_indices;
-  level_indices.reserve(options.levels.size());
-  for (const auto& name : options.levels) {
-    level_indices.push_back(level_index_(src, name, "DataFrame::sort_cases"));
+  level_indices.reserve(options.names.size());
+  for (const auto& name : options.names) {
+    level_indices.push_back(level_index_(src, name, "DataFrame::sort_caselbl"));
   }
   std::vector<std::int64_t> idx(static_cast<std::size_t>(ncases()));
   std::iota(idx.begin(), idx.end(), 0);
@@ -1342,7 +1444,7 @@ DataFrame DataFrame::bottom(std::string_view feature_name, std::int64_t n) const
       .head(n, false);
 }
 
-pluss::Series DataFrame::repeated_cases(pluss::msharp::RangeView::Of<std::string_view> features) const {
+pluss::Series DataFrame::repeated_caselbl(pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
   std::vector<std::size_t> feature_idx;
   if (features.size() == 0) {
@@ -1353,7 +1455,7 @@ pluss::Series DataFrame::repeated_cases(pluss::msharp::RangeView::Of<std::string
     seen.reserve(features.size());
     for (const auto f : features) {
       const auto it = src.name_to_idx_.find(owned_name(f));
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::repeated_cases: unknown feature '" + owned_name(f) + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::repeated_caselbl: unknown feature '" + owned_name(f) + "'");
       if (seen.insert(it->second).second) {
         feature_idx.push_back(it->second);
       }
@@ -1384,53 +1486,53 @@ pluss::Series DataFrame::repeated_cases(pluss::msharp::RangeView::Of<std::string
 }
 
 DataFrame DataFrame::unique_cases(pluss::msharp::RangeView::Of<std::string_view> features) const {
-  return filter(repeated_cases(features).logical_not());
+  return filter(repeated_caselbl(features).logical_not());
 }
 
-DataFrame DataFrame::set_cases(std::string_view feature_name, bool drop_feature) const {
-  SetCasesOptions options;
+DataFrame DataFrame::set_caselbl(std::string_view feature_name, bool drop_feature) const {
+  SetLabelOptions options;
   options.features.emplace_back(feature_name);
   options.drop = drop_feature;
-  return set_cases(options);
+  return set_caselbl(options);
 }
 
-DataFrame DataFrame::set_cases(std::initializer_list<std::string_view> feature_names,
+DataFrame DataFrame::set_caselbl(std::initializer_list<std::string_view> feature_names,
                                bool drop_features,
                                std::string_view separator) const {
-  return set_cases(pluss::msharp::RangeView::Of<std::string_view>(feature_names),
+  return set_caselbl(pluss::msharp::RangeView::Of<std::string_view>(feature_names),
                    drop_features,
                    separator);
 }
 
-DataFrame DataFrame::set_cases(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+DataFrame DataFrame::set_caselbl(pluss::msharp::RangeView::Of<std::string_view> feature_names,
                                bool drop_features,
                                std::string_view separator) const {
-  SetCasesOptions options;
+  SetLabelOptions options;
   options.drop = drop_features;
   options.separator = std::string(separator);
   options.features.reserve(feature_names.size());
   for (const auto name : feature_names) {
     options.features.emplace_back(name);
   }
-  return set_cases(options);
+  return set_caselbl(options);
 }
 
-DataFrame DataFrame::set_cases(const SetCasesOptions& options) const {
+DataFrame DataFrame::set_caselbl(const SetLabelOptions& options) const {
   std::vector<std::string_view> feature_names;
   feature_names.reserve(options.features.size());
   for (const auto& name : options.features) {
     feature_names.push_back(name);
   }
-  PLUSS_CHECK(feature_names.size() > 0, "DataFrame::set_cases: expected at least one feature");
+  PLUSS_CHECK(feature_names.size() > 0, "DataFrame::set_caselbl: expected at least one feature");
 
   std::vector<std::string> names;
   names.reserve(feature_names.size());
   std::unordered_set<std::string> seen;
   for (const auto name_sv : feature_names) {
     const auto name = owned_name(name_sv);
-    PLUSS_CHECK(!name.empty(), "DataFrame::set_cases: feature name cannot be empty");
-    PLUSS_CHECK(has_feature(name), "DataFrame::set_cases: unknown feature '" + name + "'");
-    PLUSS_CHECK(seen.insert(name).second, "DataFrame::set_cases: duplicate feature '" + name + "'");
+    PLUSS_CHECK(!name.empty(), "DataFrame::set_caselbl: feature name cannot be empty");
+    PLUSS_CHECK(has_feature(name), "DataFrame::set_caselbl: unknown feature '" + name + "'");
+    PLUSS_CHECK(seen.insert(name).second, "DataFrame::set_caselbl: duplicate feature '" + name + "'");
     names.push_back(name);
   }
 
@@ -1445,7 +1547,7 @@ DataFrame DataFrame::set_cases(const SetCasesOptions& options) const {
     keys.reserve(static_cast<std::size_t>(ncases()));
     for (std::int64_t row = 0; row < ncases(); ++row) {
       const auto inserted = keys.insert(case_tuple_key_(axis, row)).second;
-      PLUSS_CHECK(inserted, "DataFrame::set_cases: duplicate structured case key found; set verify=false to allow duplicates");
+      PLUSS_CHECK(inserted, "DataFrame::set_caselbl: duplicate structured case-label key found; set verify=false to allow duplicates");
     }
   }
 
@@ -1479,16 +1581,16 @@ DataFrame DataFrame::set_cases(const SetCasesOptions& options) const {
     out = out.drop(pluss::msharp::RangeView::Of<std::string_view>(
         std::span<const std::string_view>(views.data(), views.size())));
   }
-  return options.sort ? out.sort_cases(SortCasesOptions{.levels = names}) : out;
+  return options.sort ? out.sort_caselbl(SortLabelOptions{.names = names}) : out;
 }
 
-DataFrame DataFrame::reset_cases(std::string case_feature) const {
-  ResetCasesOptions options;
+DataFrame DataFrame::reset_caselbl(std::string case_feature) const {
+  ResetLabelOptions options;
   options.names.push_back(std::move(case_feature));
-  return reset_cases(options);
+  return reset_caselbl(options);
 }
 
-DataFrame DataFrame::reset_cases(const ResetCasesOptions& options) const {
+DataFrame DataFrame::reset_caselbl(const ResetLabelOptions& options) const {
   const auto& src = impl_ref_();
   auto out = *this;
   if (!src.case_axis_.defined()) {
@@ -1501,7 +1603,7 @@ DataFrame DataFrame::reset_cases(const ResetCasesOptions& options) const {
 
   if (!options.drop) {
     PLUSS_CHECK(options.names.empty() || options.names.size() == src.case_axis_.levels.size(),
-                "DataFrame::reset_cases: replacement names must match case level count");
+                "DataFrame::reset_caselbl: replacement names must match case-label count");
     for (std::size_t i = 0; i < src.case_axis_.levels.size(); ++i) {
       std::string name;
       if (!options.names.empty()) {
@@ -1511,7 +1613,7 @@ DataFrame DataFrame::reset_cases(const ResetCasesOptions& options) const {
                    ? fmt::format("{}{}", options.prefix, i)
                    : src.case_axis_.levels[i].name;
       }
-      PLUSS_CHECK(!out.has_feature(name), "DataFrame::reset_cases: feature already exists '" + name + "'");
+      PLUSS_CHECK(!out.has_feature(name), "DataFrame::reset_caselbl: feature already exists '" + name + "'");
       auto level_values = src.case_axis_.levels[i].values;
       if (detail::has_display_labels(level_values)) {
         level_values = detail::clear_display_labels(level_values);
@@ -1526,55 +1628,55 @@ DataFrame DataFrame::reset_cases(const ResetCasesOptions& options) const {
       out.impl_ref_().names_, out.impl_ref_().columns_, default_cases(out.ncases()), out.title()));
 }
 
-DataFrame DataFrame::rename_levels(pluss::msharp::RangeView::Of<LevelRename> renames) const {
+DataFrame DataFrame::rename_caselbls(pluss::msharp::RangeView::Of<LabelRename> renames) const {
   const auto& src = impl_ref_();
-  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::rename_levels: current DataFrame has no case levels");
+  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::rename_caselbls: current DataFrame has no case levels");
   detail::CaseAxis axis = src.case_axis_;
   std::unordered_set<std::string> targets;
   for (const auto& rename : renames) {
-    PLUSS_CHECK(!rename.from.empty(), "DataFrame::rename_levels: source level cannot be empty");
-    PLUSS_CHECK(!rename.to.empty(), "DataFrame::rename_levels: target level cannot be empty");
-    const auto idx = level_index_(src, rename.from, "DataFrame::rename_levels");
+    PLUSS_CHECK(!rename.from.empty(), "DataFrame::rename_caselbls: source case label cannot be empty");
+    PLUSS_CHECK(!rename.to.empty(), "DataFrame::rename_caselbls: target case label cannot be empty");
+    const auto idx = level_index_(src, rename.from, "DataFrame::rename_caselbls");
     PLUSS_CHECK(targets.insert(rename.to).second,
-                "DataFrame::rename_levels: duplicate target level '" + rename.to + "'");
+                "DataFrame::rename_caselbls: duplicate target case label '" + rename.to + "'");
     axis.levels[idx].name = rename.to;
   }
   std::unordered_set<std::string> names;
   for (const auto& level : axis.levels) {
     PLUSS_CHECK(names.insert(level.name).second,
-                "DataFrame::rename_levels: duplicate case level name '" + level.name + "'");
+                "DataFrame::rename_caselbls: duplicate case-label name '" + level.name + "'");
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, src.columns_, src.cases_, src.title_, std::move(axis)));
 }
 
-DataFrame DataFrame::reorder_levels(pluss::msharp::RangeView::Of<std::string_view> names) const {
+DataFrame DataFrame::order_caselbls(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto& src = impl_ref_();
-  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::reorder_levels: current DataFrame has no case levels");
+  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::order_caselbls: current DataFrame has no case levels");
   PLUSS_CHECK(names.size() == src.case_axis_.levels.size(),
-              "DataFrame::reorder_levels: expected every case level exactly once");
+              "DataFrame::order_caselbls: expected every case level exactly once");
   detail::CaseAxis axis;
   axis.levels.reserve(names.size());
   std::unordered_set<std::string> seen;
   for (const auto name_sv : names) {
     const auto name = owned_name(name_sv);
     PLUSS_CHECK(seen.insert(name).second,
-                "DataFrame::reorder_levels: duplicate case level '" + name + "'");
-    axis.levels.push_back(src.case_axis_.levels[level_index_(src, name, "DataFrame::reorder_levels")]);
+                "DataFrame::order_caselbls: duplicate case label '" + name + "'");
+    axis.levels.push_back(src.case_axis_.levels[level_index_(src, name, "DataFrame::order_caselbls")]);
   }
   auto labels = make_note_thread(composite_case_labels_(axis, src.nrows_));
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, src.columns_, std::move(labels), src.title_, std::move(axis)));
 }
 
-DataFrame DataFrame::drop_levels(pluss::msharp::RangeView::Of<std::string_view> names) const {
+DataFrame DataFrame::drop_caselbls(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto& src = impl_ref_();
-  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::drop_levels: current DataFrame has no case levels");
+  PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::drop_caselbls: current DataFrame has no case levels");
   std::unordered_set<std::string> drop;
   drop.reserve(names.size());
   for (const auto name_sv : names) {
     const auto name = owned_name(name_sv);
-    level_index_(src, name, "DataFrame::drop_levels");
+    level_index_(src, name, "DataFrame::drop_caselbls");
     drop.insert(name);
   }
   detail::CaseAxis axis;
@@ -1702,7 +1804,7 @@ Thread remap_align_feature_(const Thread& source,
 
 DataFrame DataFrame::align(const AlignSpec& spec) const {
   const auto& src = impl_ref_();
-  const Thread target_caselbl = spec.caselbl.has_value() ? *spec.caselbl : src.cases_;
+  const Thread target_caselbl = spec.label.has_value() ? *spec.label : src.cases_;
   PLUSS_CHECK(target_caselbl.defined(), "DataFrame::align: target case labels are undefined");
 
   const auto target_features = align_target_features_(*this, spec, "DataFrame::align");
@@ -1722,15 +1824,15 @@ DataFrame DataFrame::align(const AlignSpec& spec) const {
 }
 
 DataFrame DataFrame::align(const Thread& new_caselbl) const {
-  return align(AlignSpec{.caselbl = new_caselbl});
+  return align(AlignSpec{.label = new_caselbl});
 }
 
 DataFrame DataFrame::align_caselbl(const Thread& new_caselbl) const {
-  return align(AlignSpec{.caselbl = new_caselbl});
+  return align(AlignSpec{.label = new_caselbl});
 }
 
 DataFrame DataFrame::align_caselbl(const Thread& new_caselbl, std::optional<double> fill) const {
-  return align(AlignSpec{.caselbl = new_caselbl, .fill = fill});
+  return align(AlignSpec{.label = new_caselbl, .fill = fill});
 }
 
 DataFrame DataFrame::join(const DataFrame& other, std::string collision_suffix) const {
@@ -2470,7 +2572,7 @@ DataFrame DataFrame::conform(const DataFrame& other) const {
   }
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
-  return out.align_caselbl(other.caselbl());
+  return out.label().align(other.label().values());
 }
 
 DataFrame DataFrame::unify(std::string_view left_on,

@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=a013cfe3"></script>
+    <script src="_static/api_nav.js?v=5a216172"></script>
     <script src="_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -1099,25 +1099,25 @@ Integer count, size, or positional result.</p>
     <span class="label">Previous</span>
     <span class="title">map_frames</span>
   </a>
-  <a class="next-link" href="#nfeats">
+  <a class="next-link" href="#nfeatures">
     <span class="label">Next</span>
-    <span class="title">nfeats</span>
+    <span class="title">nfeatures</span>
   </a>
 </div>
 </section>
 </section>
 </section>
-<section id="nfeats">
-<h3><code class="docutils literal notranslate"><span class="pre">nfeats</span></code><a class="headerlink" href="#nfeats" title="Link to this heading">¶</a></h3>
+<section id="nfeatures">
+<h3><code class="docutils literal notranslate"><span class="pre">nfeatures</span></code><a class="headerlink" href="#nfeatures" title="Link to this heading">¶</a></h3>
 <section id="id101">
 <h4>Signature<a class="headerlink" href="#id101" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">nfeats</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">nfeatures</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span>
 </pre></div>
 </div>
 </section>
 <section id="id102">
 <h4>What It Does<a class="headerlink" href="#id102" title="Link to this heading">¶</a></h4>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Returns a size/count summary for the current object without changing it.</p>
 </section>
 <section id="id103">
 <h4>Parameters<a class="headerlink" href="#id103" title="Link to this heading">¶</a></h4>
@@ -1139,7 +1139,7 @@ Integer count, size, or positional result.</p>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="p">({</span><span class="n">f0</span><span class="p">,</span><span class="w"> </span><span class="n">f1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">nfeats</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">nfeatures</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="id106">
@@ -1225,9 +1225,9 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#nfeats">
+  <a class="prev-link" href="#nfeatures">
     <span class="label">Previous</span>
-    <span class="title">nfeats</span>
+    <span class="title">nfeatures</span>
   </a>
   <a class="next-link" href="#relabel_depth">
     <span class="label">Next</span>

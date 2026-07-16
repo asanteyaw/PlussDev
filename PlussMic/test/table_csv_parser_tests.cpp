@@ -123,7 +123,7 @@ void test_comma_fixture_load_and_cases() {
   const auto df = DataFrame::load_csv(fixture_path("messy_data.csv").string(), options);
 
   expect(df.ncases() == 64, "comma fixture: nrows mismatch");
-  expect(df.nfeats() == 6, "comma fixture: ncols mismatch");
+  expect(df.nfeatures() == 6, "comma fixture: ncols mismatch");
   expect(df.has_feature("Business Case ID"), "comma fixture: missing Business Case ID");
   expect(df.features("Business Case ID").kind() == ThreadKind::Series, "comma fixture: expected numeric Series column");
   expect(df.features("Agency Name").kind() == ThreadKind::Note, "comma fixture: expected text Note column");
@@ -135,7 +135,7 @@ void test_comma_fixture_load_and_cases() {
   const auto agency_project = df.features("Agency Project ID");
   expect(pluss::table::detail::has_validity_mask(agency_project), "comma fixture: Agency Project ID should carry null mask");
 
-  const auto idx = df.caselbl().as_series().to_vec<std::int64_t>();
+  const auto idx = df.label().values().as_series().to_vec<std::int64_t>();
   expect(!idx.empty(), "comma fixture: cases unexpectedly empty");
   expect(idx.front() == 0, "comma fixture: cases must start at 0");
   expect(idx.back() == 63, "comma fixture: cases last value mismatch");
@@ -431,11 +431,11 @@ void test_semicolon_fixture_with_case_col() {
   const auto df = DataFrame::load_csv(fixture_path("bank-full.csv").string(), options);
 
   expect(df.ncases() == 40, "semicolon fixture: nrows mismatch");
-  expect(df.nfeats() == 3, "semicolon fixture: ncols mismatch when case_col is selected");
-  expect(df.caselbl().kind() == ThreadKind::Note, "semicolon fixture: expected text case axis");
+  expect(df.nfeatures() == 3, "semicolon fixture: ncols mismatch when case_col is selected");
+  expect(df.label().values().kind() == ThreadKind::Note, "semicolon fixture: expected text case axis");
   expect(df.features("age").kind() == ThreadKind::Series, "semicolon fixture: age should parse as Series");
 
-  expect(df.caselbl().kind() == ThreadKind::Note,
+  expect(df.label().values().kind() == ThreadKind::Note,
          "text-backed case axes should remain note-backed and require explicit conversion");
 
   pluss::table::display::DisplayOptions show_opts;
@@ -462,13 +462,13 @@ void test_bad_line_policy_and_locale_numeric_parsing() {
   options.decimal = ',';
   options.thousands = '.';
   options.parse_dates = {"when"};
-  options.na_values.insert("na");
+  options.na_values.insert({"na", "missing", "not collected", "--"});
   options.on_bad_lines = BadLinePolicy::Skip;
 
   const auto df = DataFrame::load_csv(path.string(), options);
 
   expect(df.ncases() == 4, "skip bad lines: expected malformed row to be removed");
-  expect(df.nfeats() == 5, "skip bad lines: ncols mismatch");
+  expect(df.nfeatures() == 5, "skip bad lines: ncols mismatch");
   expect(df.features("id").kind() == ThreadKind::Series, "id should parse as Series");
   expect(df.features("flag").kind() == ThreadKind::Series, "flag should parse as bool Series");
   expect(df.features("when").kind() == ThreadKind::Timeline, "when should parse as Timeline");
@@ -514,7 +514,7 @@ void test_usefeats_ncases_skipfooter_and_invalid_source() {
 
   const auto first_two = DataFrame::load_csv(path.string(), options);
   expect(first_two.ncases() == 2, "ncases option should cap accepted cases");
-  expect(first_two.nfeats() == 2, "usefeats_idx should project to two features");
+  expect(first_two.nfeatures() == 2, "usefeats_idx should project to two features");
 
   options.ncases.reset();
   options.skipfooter = 1;
@@ -659,12 +659,12 @@ void test_describe_numeric_summary() {
   const auto desc = df.describe(false);
 
   expect(desc.ncases() == 8, "describe should emit 8 statistic rows");
-  expect(desc.nfeats() == 4, "describe should include all numeric/bool columns");
-  expect(desc.caselbl().kind() == ThreadKind::Note, "describe cases should be textual labels");
+  expect(desc.nfeatures() == 4, "describe should include all numeric/bool columns");
+  expect(desc.label().values().kind() == ThreadKind::Note, "describe cases should be textual labels");
   expect(desc.features("age").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "describe stats should be float64");
 
-  const auto labels = desc.caselbl().as_note();
+  const auto labels = desc.label().values().as_note();
   expect(labels.at(0) == "count", "describe cases label[0] mismatch");
   expect(labels.at(1) == "mean", "describe cases label[1] mismatch");
   expect(labels.at(7) == "max", "describe cases label[7] mismatch");
@@ -827,7 +827,7 @@ void test_simple_load_config_api_and_auto_sep() {
       });
 
   expect(df.ncases() == 12, "config load: nrows mismatch");
-  expect(df.nfeats() > 5, "config load: auto separator should parse full semicolon file");
+  expect(df.nfeatures() > 5, "config load: auto separator should parse full semicolon file");
   expect(df.has_feature("age"), "config load: missing expected column");
 }
 
@@ -843,7 +843,7 @@ void test_first_class_loader_entrypoints() {
       "auto",
       8);
   expect(df_positional.ncases() == 8, "DataFrame::load_csv positional ncases mismatch");
-  expect(df_positional.caselbl().kind() == ThreadKind::Note, "DataFrame::load_csv positional case feature mismatch");
+  expect(df_positional.label().values().kind() == ThreadKind::Note, "DataFrame::load_csv positional case feature mismatch");
 
   const auto df_positional_short = DataFrame::load_csv(
       fixture_path("bank-full.csv").string(),
@@ -859,7 +859,7 @@ void test_first_class_loader_entrypoints() {
           {"features", {"age", "job"}},
       });
   expect(df_list_config.ncases() == 10, "DataFrame::load_csv config list nrows mismatch");
-  expect(df_list_config.nfeats() == 2, "DataFrame::load_csv config list should project two features");
+  expect(df_list_config.nfeatures() == 2, "DataFrame::load_csv config list should project two features");
 
   expect_throw(
       [&]() { (void)pluss::loader::load_parquet("not_implemented.parquet"); },
@@ -883,7 +883,7 @@ void test_col_names_none_and_save_as_csv() {
       });
 
   expect(df.ncases() == 3, "col names none: nrows mismatch");
-  expect(df.nfeats() == 2, "col names none: ncols mismatch");
+  expect(df.nfeatures() == 2, "col names none: ncols mismatch");
   expect(df.has_feature("feat_0"), "col names none: expected generated feat_0");
   expect(df.has_feature("feat_1"), "col names none: expected generated feat_1");
 
@@ -897,7 +897,7 @@ void test_col_names_none_and_save_as_csv() {
 
   const auto back = DataFrame::load_csv(out_path.string());
   expect(back.ncases() == df.ncases(), "save_as csv: roundtrip nrows mismatch");
-  expect(back.nfeats() == df.nfeats(), "save_as csv: roundtrip ncols mismatch");
+  expect(back.nfeatures() == df.nfeatures(), "save_as csv: roundtrip ncols mismatch");
 }
 
 void test_loader_unified_load_result_for_csv() {
@@ -922,7 +922,7 @@ void test_txt_loader_modes() {
           {"header", true},
       });
   expect(whitespace_df.ncases() == 2, "txt whitespace: nrows mismatch");
-  expect(whitespace_df.nfeats() == 4, "txt whitespace: ncols mismatch");
+  expect(whitespace_df.nfeatures() == 4, "txt whitespace: ncols mismatch");
   expect(whitespace_df.features("id").kind() == ThreadKind::Series, "txt whitespace: id should infer Series");
   expect(whitespace_df.features("city").kind() == ThreadKind::Note, "txt whitespace: city should infer Note");
   expect(whitespace_df.features("when").kind() == ThreadKind::Timeline, "txt whitespace: when should infer Timeline");
@@ -941,7 +941,7 @@ void test_txt_loader_modes() {
           {"header", true},
       });
   expect(fixed_df.ncases() == 2, "txt fixed-width: nrows mismatch");
-  expect(fixed_df.nfeats() == 3, "txt fixed-width: ncols mismatch");
+  expect(fixed_df.nfeatures() == 3, "txt fixed-width: ncols mismatch");
   expect(std::string(fixed_df.features("city").as_note().at(0)) == "Cape Coast",
          "txt fixed-width: city tokenization mismatch");
 
@@ -953,12 +953,12 @@ void test_txt_loader_modes() {
       "2\tTema\tfalse\n");
   const auto auto_df = DataFrame::load_txt(auto_path.string(), {{"header", true}});
   expect(auto_df.ncases() == 2, "txt auto: nrows mismatch");
-  expect(auto_df.nfeats() == 3, "txt auto: ncols mismatch");
+  expect(auto_df.nfeatures() == 3, "txt auto: ncols mismatch");
   expect(auto_df.features("flag").kind() == ThreadKind::Series, "txt auto: bool should infer Series");
 
   const auto txt_result = pluss::loader::load("txt", auto_path.string(), {{"header", true}});
   expect(txt_result.is_frame(), "loader::load(txt) should return frame");
-  expect(txt_result.dataframe().nfeats() == 3, "loader::load(txt) feature count mismatch");
+  expect(txt_result.dataframe().nfeatures() == 3, "loader::load(txt) feature count mismatch");
 }
 
 void test_json_loader_entrypoints() {
@@ -973,7 +973,7 @@ void test_json_loader_entrypoints() {
 
   const auto df = DataFrame::load_json(json_path.string());
   expect(df.ncases() == 3, "json loader: nrows mismatch");
-  expect(df.nfeats() == 4, "json loader: ncols mismatch");
+  expect(df.nfeatures() == 4, "json loader: ncols mismatch");
   expect(df.features("id").kind() == ThreadKind::Series, "json loader: id should infer Series");
   expect(df.features("city").kind() == ThreadKind::Note, "json loader: city should infer Note");
   expect(df.features("when").kind() == ThreadKind::Timeline, "json loader: when should infer Timeline");
@@ -1009,13 +1009,13 @@ void test_save_targets_and_save_as_parity() {
   df.save_txt(txt_path.string());
   const auto txt_back = DataFrame::load_txt(txt_path.string(), {{"header", true}});
   expect(txt_back.ncases() == df.ncases(), "save_txt -> load_txt row count mismatch");
-  expect(txt_back.nfeats() == df.nfeats(), "save_txt -> load_txt col count mismatch");
+  expect(txt_back.nfeatures() == df.nfeatures(), "save_txt -> load_txt col count mismatch");
 
   const auto json_path = write_temp_text_file("save_parity_df", "json", "");
   df.save_json(json_path.string());
   const auto json_back = DataFrame::load_json(json_path.string());
   expect(json_back.ncases() == df.ncases(), "save_json -> load_json row count mismatch");
-  expect(json_back.nfeats() == df.nfeats(), "save_json -> load_json col count mismatch");
+  expect(json_back.nfeatures() == df.nfeatures(), "save_json -> load_json col count mismatch");
 
   const auto txt_as_path = write_temp_text_file("save_as_txt_df", "txt", "");
   df.save_as("txt", txt_as_path.string(), {{"header", true}});
@@ -1049,7 +1049,7 @@ void test_parquet_save_and_load_parity() {
 
   const auto back = DataFrame::load_parquet(parquet_path.string());
   expect(back.ncases() == df.ncases(), "save_parquet -> load_parquet row count mismatch");
-  expect(back.nfeats() == df.nfeats(), "save_parquet -> load_parquet col count mismatch");
+  expect(back.nfeatures() == df.nfeatures(), "save_parquet -> load_parquet col count mismatch");
 }
 
 void test_feature_value_cases_values_and_save_defaults() {
@@ -1065,13 +1065,13 @@ void test_feature_value_cases_values_and_save_defaults() {
   expect(age_series.numel() == df.ncases(), "features(\"age\").value() length mismatch");
 
   const auto all_features = df.features();
-  expect(static_cast<std::int64_t>(all_features.size()) == df.nfeats(),
+  expect(static_cast<std::int64_t>(all_features.size()) == df.nfeatures(),
          "df.features() should return one name per feature");
 
   const auto out_default = write_temp_csv("saved_default", "");
   df.save_csv(out_default.string());
   const auto back_default = DataFrame::load_csv(out_default.string());
-  expect(back_default.nfeats() == df.nfeats(), "save_csv default should not add cases column");
+  expect(back_default.nfeatures() == df.nfeatures(), "save_csv default should not add cases column");
 }
 
 void test_transpose_shape_and_axes() {
@@ -1084,11 +1084,11 @@ void test_transpose_shape_and_axes() {
   const auto df = DataFrame::load_csv(path.string());
   const auto t = df.transpose(false);
 
-  expect(t.ncases() == df.nfeats(), "transpose should swap row/feature dimensions (rows)");
-  expect(t.nfeats() == df.ncases(), "transpose should swap row/feature dimensions (features)");
-  expect(t.caselbl().kind() == ThreadKind::Note, "transpose case axis should be Note-backed feature labels");
+  expect(t.ncases() == df.nfeatures(), "transpose should swap row/feature dimensions (rows)");
+  expect(t.nfeatures() == df.ncases(), "transpose should swap row/feature dimensions (features)");
+  expect(t.label().values().kind() == ThreadKind::Note, "transpose case axis should be Note-backed feature labels");
 
-  const auto tcases = t.caselbl().as_note();
+  const auto tcases = t.label().values().as_note();
   expect(std::string(tcases.at(0)) == "a", "transpose cases[0] should equal first source feature name");
   expect(std::string(tcases.at(2)) == "c", "transpose cases[last] should equal last source feature name");
 
@@ -1111,7 +1111,7 @@ void test_squeeze_unsqueeze_bridge() {
   const auto atlas = df.unsqueeze();
   expect(atlas.depth() == 1, "unsqueeze should produce depth-1 atlas");
   expect(atlas.ncases() == df.ncases(), "unsqueeze should preserve case count");
-  expect(atlas.nfeats() == df.nfeats(), "unsqueeze should preserve feature count");
+  expect(atlas.nfeatures() == df.nfeatures(), "unsqueeze should preserve feature count");
   expect(atlas.squeeze().equals(df), "squeeze(unsqueeze(df)) should roundtrip");
 
   const auto label = pluss::table::Thread(
@@ -1141,7 +1141,7 @@ void test_parallel_engine_matches_serial_engine() {
   const auto df_serial = DataFrame::load_csv(path, serial);
 
   expect(df_serial.ncases() == df_parallel.ncases(), "serial engine: nrows mismatch vs parallel");
-  expect(df_serial.nfeats() == df_parallel.nfeats(), "serial engine: ncols mismatch vs parallel");
+  expect(df_serial.nfeatures() == df_parallel.nfeatures(), "serial engine: ncols mismatch vs parallel");
   expect(df_serial.features() == df_parallel.features(),
          "serial engine: column names mismatch vs parallel");
 
@@ -1187,12 +1187,12 @@ void test_auto_engine_policy_switches_between_parallel_and_serial() {
   const auto df_auto_serial = DataFrame::load_csv(path, auto_serial);
 
   expect(df_auto_parallel.ncases() == df_parallel.ncases(), "auto(parallel policy): nrows mismatch");
-  expect(df_auto_parallel.nfeats() == df_parallel.nfeats(), "auto(parallel policy): ncols mismatch");
+  expect(df_auto_parallel.nfeatures() == df_parallel.nfeatures(), "auto(parallel policy): ncols mismatch");
   expect(df_auto_parallel.features() == df_parallel.features(),
          "auto(parallel policy): column names mismatch");
 
   expect(df_auto_serial.ncases() == df_serial.ncases(), "auto(serial policy): nrows mismatch");
-  expect(df_auto_serial.nfeats() == df_serial.nfeats(), "auto(serial policy): ncols mismatch");
+  expect(df_auto_serial.nfeatures() == df_serial.nfeatures(), "auto(serial policy): ncols mismatch");
   expect(df_auto_serial.features() == df_serial.features(),
          "auto(serial policy): column names mismatch");
 
@@ -1214,7 +1214,7 @@ void test_dataframe_sql_accessor() {
 
   const auto filtered = df.sql().execute(
       "SELECT age, job FROM df WHERE age >= 45 ORDER BY age DESC LIMIT 5");
-  expect(filtered.nfeats() == 2, "sql().execute: projected feature count mismatch");
+  expect(filtered.nfeatures() == 2, "sql().execute: projected feature count mismatch");
   expect(filtered.has_feature("age") && filtered.has_feature("job"),
          "sql().execute: projection should keep requested features");
   expect(filtered.ncases() <= 5, "sql().execute: LIMIT should cap row count");
@@ -1226,13 +1226,13 @@ void test_dataframe_sql_accessor() {
   const auto aliased = df.sql().execute(
       "SELECT age AS age_years FROM df LIMIT 3");
   expect(aliased.ncases() == 3, "sql().execute: LIMIT should apply to aliased projections");
-  expect(aliased.nfeats() == 1 && aliased.has_feature("age_years"),
+  expect(aliased.nfeatures() == 1 && aliased.has_feature("age_years"),
          "sql().execute: SELECT alias should rename output feature");
 
   const auto with_case = df.sql().execute(
       "SELECT case, age FROM df ORDER BY age ASC LIMIT 4 OFFSET 2");
   expect(with_case.ncases() == 4, "sql().execute: LIMIT/OFFSET row count mismatch");
-  expect(with_case.nfeats() == 2 && with_case.has_feature("case") && with_case.has_feature("age"),
+  expect(with_case.nfeatures() == 2 && with_case.has_feature("case") && with_case.has_feature("age"),
          "sql().execute: case projection should materialize as output feature");
   const auto sorted = df.sort_values({DataFrame::ArrangeSpec{"age", true, true}});
   const auto expected = sorted.slice(2, 6).features("age").as_series().to_vec<std::int64_t>();
@@ -1245,7 +1245,7 @@ void test_dataframe_sql_accessor() {
   const auto star_selected = df.sql().execute("SELECT * FROM df LIMIT 2");
   expect(star_selected.ncases() == 2,
          "sql().execute: SQL LIMIT should control result size directly");
-  expect(star_selected.nfeats() == df.nfeats(),
+  expect(star_selected.nfeatures() == df.nfeatures(),
          "sql().execute: SELECT * should project all dataframe features");
 
   const auto aliased_primary = df.sql().execute("SELECT prices.age FROM df AS prices LIMIT 1");
@@ -1258,7 +1258,7 @@ void test_dataframe_sql_accessor() {
   const auto with_case_alias = df.sql(DataFrame::SqlOptions{
       .case_axis_aliases = {"case", "idx"},
   }).execute("SELECT idx, age FROM df ORDER BY age DESC LIMIT 3");
-  expect(with_case_alias.nfeats() == 2 && with_case_alias.has_feature("idx") && with_case_alias.has_feature("age"),
+  expect(with_case_alias.nfeatures() == 2 && with_case_alias.has_feature("idx") && with_case_alias.has_feature("age"),
          "sql(options).execute: case_axis_aliases should expose case axis via configured alias");
   expect(with_case_alias.ncases() == 3,
          "sql(options).execute: SQL LIMIT should still apply with case alias projections");
@@ -1266,7 +1266,7 @@ void test_dataframe_sql_accessor() {
   const auto with_named_case_alias = df.sql(DataFrame::SqlOptions{
       .case_axis_aliases = {"row_id"},
   }).execute("SELECT row_id FROM df LIMIT 1");
-  expect(with_named_case_alias.nfeats() == 1 && with_named_case_alias.has_feature("row_id"),
+  expect(with_named_case_alias.nfeatures() == 1 && with_named_case_alias.has_feature("row_id"),
          "sql(options).execute: case_axis_aliases should support custom case-axis name");
 
   DataFrame::SqlOptions param_options;
@@ -1300,7 +1300,7 @@ void test_dataframe_sql_accessor() {
   const auto overwrite_dups = df.sql(DataFrame::SqlOptions{
       .collision_policy = DataFrame::SqlOptions::CollisionPolicy::Overwrite,
   }).execute(duplicate_projection);
-  expect(overwrite_dups.nfeats() == 1 && overwrite_dups.has_feature("v"),
+  expect(overwrite_dups.nfeatures() == 1 && overwrite_dups.has_feature("v"),
          "sql(options).execute: CollisionPolicy::Overwrite should keep one alias");
 
   const auto metrics = DataFrame({
@@ -1310,7 +1310,7 @@ void test_dataframe_sql_accessor() {
   const auto joined = df.sql(DataFrame::SqlOptions{
       .sources = {{"m", &metrics}},
   }).execute("SELECT df.age, m.score FROM df JOIN m ON df.age = m.age LIMIT 6");
-  expect(joined.nfeats() == 2 && joined.has_feature("df.age") && joined.has_feature("m.score"),
+  expect(joined.nfeatures() == 2 && joined.has_feature("df.age") && joined.has_feature("m.score"),
          "sql(options).execute: JOIN should project columns from bound sources");
   expect(joined.ncases() > 0 && joined.ncases() <= 6,
          "sql(options).execute: JOIN result row count should respect LIMIT");
@@ -1479,40 +1479,40 @@ void test_versatile_dataframe_families() {
   expect(std::string(pos_list.features("job").as_note().at(1)) == std::string(df.features("job").as_note().at(1)),
          "case_study(pos({..})) should preserve requested positional order");
 
-  const auto one_column = df.case_study(pluss::table::pos(0), pluss::table::col("job"));
-  expect(one_column.ncases() == 1 && one_column.nfeats() == 1,
-         "case_study(row, col(name)) should return a 1x1 frame");
+  const auto one_column = df.case_study(pluss::table::pos(0), pluss::table::feature("job"));
+  expect(one_column.ncases() == 1 && one_column.nfeatures() == 1,
+         "case_study(row, feature(name)) should return a 1x1 frame");
 
-  const auto one_column_by_pos = df.case_study(pluss::table::pos(0), pluss::table::col(1));
-  expect(one_column_by_pos.nfeats() == 1, "case_study(row, col(pos)) should project one feature");
+  const auto one_column_by_pos = df.case_study(pluss::table::pos(0), pluss::table::feature(1));
+  expect(one_column_by_pos.nfeatures() == 1, "case_study(row, feature(pos)) should project one feature");
   auto labeled_source = df.case_study(pluss::table::pos(0, 8));
-  auto labeled = labeled_source.caselbl(
+  auto labeled = labeled_source.label().set(
       pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs1", "cs3", "cs4", "cs5", "cs6", "cs7"})));
   const auto label_match = labeled.case_study(pluss::table::label("cs1"));
   expect(label_match.ncases() == 2, "case_study(label(...)) should return every matching case label");
 
-  const auto label_list = labeled.case_study(pluss::table::labels({"cs4", "cs1"}), pluss::table::cols({"job", "age"}));
-  expect(label_list.ncases() == 3 && label_list.nfeats() == 2,
-         "case_study(labels({...}), cols({...})) should preserve label order and selected features");
+  const auto label_list = labeled.case_study(pluss::table::labels({"cs4", "cs1"}), pluss::table::features({"job", "age"}));
+  expect(label_list.ncases() == 3 && label_list.nfeatures() == 2,
+         "case_study(labels({...}), features({...})) should preserve label order and selected features");
 
   const auto label_window = labeled.case_study(pluss::table::label_range("cs1", "cs4"));
   expect(label_window.ncases() == 4, "case_study(label_range(...)) should include both label endpoints");
-  const auto masked_rows = df.case_study(pluss::table::mask(df.features("age") > 30.0), pluss::table::cols({"age", "job"}));
-  expect(masked_rows.nfeats() == 2, "case_study(mask(...), cols({...})) should keep requested feature subset");
+  const auto masked_rows = df.case_study(pluss::table::mask(df.features("age") > 30.0), pluss::table::features({"age", "job"}));
+  expect(masked_rows.nfeatures() == 2, "case_study(mask(...), features({...})) should keep requested feature subset");
   expect(masked_rows.ncases() == df.filter(df.features("age") > 30.0).ncases(),
          "case_study(mask(...)) should match ordinary boolean row filtering");
 
-  const auto feature_span = df.case_study(pluss::table::pos(0, 2), pluss::table::cols(0, 2));
-  expect(feature_span.ncases() == 2 && feature_span.nfeats() == 2,
-         "case_study(..., cols(start, stop)) should use half-open positional feature slices");
+  const auto feature_span = df.case_study(pluss::table::pos(0, 2), pluss::table::features(0, 2));
+  expect(feature_span.ncases() == 2 && feature_span.nfeatures() == 2,
+         "case_study(..., features(start, stop)) should use half-open positional feature slices");
 
-  const auto feature_window = df.case_study(pluss::table::pos(0, 2), pluss::table::col_range("age", "job"));
-  expect(feature_window.nfeats() == 2, "case_study(..., col_range(...)) should use inclusive feature-name slices");
+  const auto feature_window = df.case_study(pluss::table::pos(0, 2), pluss::table::feature_range("age", "job"));
+  expect(feature_window.nfeatures() == 2, "case_study(..., feature_range(...)) should use inclusive feature-name slices");
 
   expect(df.get("job").has_value() && !df.get("not_a_feature").has_value(),
          "get(feature) should return optional thread only when feature exists");
   const auto sampled = df.sample(5, 7);
-  expect(sampled.ncases() == 5 && sampled.nfeats() == df.nfeats(),
+  expect(sampled.ncases() == 5 && sampled.nfeatures() == df.nfeatures(),
          "sample(n) should return n sampled cases with same feature count");
 
   const auto sorted_age = df.sort_values({"age"});
@@ -1521,8 +1521,8 @@ void test_versatile_dataframe_families() {
     expect(sorted_age_values[i - 1] <= sorted_age_values[i],
            "sort_values(feature) should sort ascending by default");
   }
-  const auto sorted_cases = df.sort_cases(false, true);
-  expect(sorted_cases.ncases() == df.ncases(), "sort_cases should preserve shape");
+  const auto sorted_cases = df.label().sort(false, true);
+  expect(sorted_cases.ncases() == df.ncases(), "label().sort should preserve shape");
 
   const auto top_age = df.top("age", 3);
   const auto bot_age = df.bottom("age", 3);
@@ -1531,14 +1531,14 @@ void test_versatile_dataframe_families() {
   const auto bot_vals = bot_age.features("age").as_series().to_vec<std::int64_t>();
   expect(top_vals.front() >= top_vals.back(), "top should sort descending by feature");
   expect(bot_vals.front() <= bot_vals.back(), "bottom should sort ascending by feature");
-  const auto dup_mask = df.repeated_cases({"job"});
-  expect(dup_mask.numel() == df.ncases(), "repeated_cases should emit bool mask over cases");
+  const auto dup_mask = df.label().repeated({"job"});
+  expect(dup_mask.numel() == df.ncases(), "label().repeated should emit bool mask over cases");
   const auto unique_job = df.unique_cases({"job"});
   expect(unique_job.ncases() > 0 && unique_job.ncases() <= df.ncases(),
          "unique_cases should retain only first case per key");
 
   const auto aggregated = df.aggregate({{"cases", "age", DataFrame::SummaryOp::Count}}, false);
-  expect(aggregated.ncases() == 1 && aggregated.nfeats() == 1,
+  expect(aggregated.ncases() == 1 && aggregated.nfeatures() == 1,
          "aggregate should produce one-row summary output");
   const auto grouped_alias = df.group_by(
       {"job"},
@@ -1547,7 +1547,7 @@ void test_versatile_dataframe_families() {
       },
       true,
       false);
-  expect(grouped_alias.nfeats() == 2 && grouped_alias.has_feature("cases"),
+  expect(grouped_alias.nfeatures() == 2 && grouped_alias.has_feature("cases"),
          "group_by should perform grouped aggregations");
   const auto pivot_path = write_temp_csv(
       "pivot_base",
@@ -1558,11 +1558,11 @@ void test_versatile_dataframe_families() {
       "TX,2,40\n");
   const auto pivot_df = DataFrame::load_csv(pivot_path.string());
   const auto pivoted = pivot_df.pivot("state", "severity", "distance", true, false);
-  expect(pivoted.ncases() == 2 && pivoted.nfeats() == 2, "pivot should reshape rows x unique feature labels");
+  expect(pivoted.ncases() == 2 && pivoted.nfeatures() == 2, "pivot should reshape rows x unique feature labels");
   const auto pivot_features = pivoted.features();
   expect(pivot_features.size() == 2, "pivot output should expose two pivoted features");
-  expect(pivoted.caselbl().kind() == ThreadKind::Note, "pivot should set cases to the pivot case feature values");
-  const auto pivot_cases = pivoted.caselbl().as_note();
+  expect(pivoted.label().values().kind() == ThreadKind::Note, "pivot should set cases to the pivot case feature values");
+  const auto pivot_cases = pivoted.label().values().as_note();
   std::int64_t row_ca = -1;
   std::int64_t row_tx = -1;
   for (std::int64_t i = 0; i < pivoted.ncases(); ++i) {
@@ -1588,7 +1588,7 @@ void test_versatile_dataframe_families() {
        std::fabs(tx1 - 30.0) < 1e-9);
   expect(layout_a || layout_b, "pivot should place values into correct case/feature cells");
   const auto pivoted_mean = pivot_df.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Mean, true, false);
-  expect(pivoted_mean.ncases() == 2 && pivoted_mean.nfeats() == 2,
+  expect(pivoted_mean.ncases() == 2 && pivoted_mean.nfeatures() == 2,
          "pivot_table(mean) should reshape with aggregated values");
 
   const auto pivot_dup_path = write_temp_csv(
@@ -1601,16 +1601,20 @@ void test_versatile_dataframe_families() {
                "pivot should throw on duplicate case/feature pairs");
   const auto pivot_dup_mean =
       pivot_dup.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Mean, true, false);
-  expect(pivot_dup_mean.ncases() == 1 && pivot_dup_mean.nfeats() == 1, "pivot_table should aggregate duplicate pairs");
+  expect(pivot_dup_mean.ncases() == 1 && pivot_dup_mean.nfeatures() == 1, "pivot_table should aggregate duplicate pairs");
   const auto d = pivot_dup_mean.features(pivot_dup_mean.features().front()).as_series().to_vec<double>();
   expect(std::fabs(d[0] - 11.0) < 1e-9, "pivot_table(mean) should aggregate duplicates correctly");
-  const auto case_df = df.features({"job", "age"}).set_cases("job", true);
-  expect(case_df.nfeats() == 1 && case_df.features()[0] == "age",
-         "set_cases(drop_feature=true) should move feature to case axis");
-  const auto case_reset = case_df.reset_cases("job_case");
-  expect(case_reset.has_feature("job_case"), "reset_cases should restore previous case axis as feature");
-  const auto re_aligned = case_reset.align_caselbl(case_reset.caselbl());
-  expect(re_aligned.ncases() == case_reset.ncases(), "align_caselbl should conform to provided case labels");
+  const auto pivot_dup_median =
+      pivot_dup.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Median, true, false);
+  const auto dm = pivot_dup_median.features(pivot_dup_median.features().front()).as_series().to_vec<double>();
+  expect(std::fabs(dm[0] - 11.0) < 1e-9, "pivot_table(median) should aggregate duplicates correctly");
+  const auto case_df = df.features({"job", "age"}).label().set("job", true);
+  expect(case_df.nfeatures() == 1 && case_df.features()[0] == "age",
+         "label().set(drop_feature=true) should move feature to case axis");
+  const auto case_reset = case_df.label().reset("job_case");
+  expect(case_reset.has_feature("job_case"), "label().reset should restore previous case axis as feature");
+  const auto re_aligned = case_reset.label().align(case_reset.label().values());
+  expect(re_aligned.ncases() == case_reset.ncases(), "label().align should conform to provided case labels");
   const auto jleft = df.features({"age", "job"}).head(6, false);
   const auto jright = df.features({"age", "balance"}).head(6, false);
   const auto joined = jleft.join(jright, "_r");
@@ -1634,27 +1638,27 @@ void test_versatile_dataframe_families() {
   const auto conformed = jleft.conform(reordered);
   expect(conformed.features() == reordered.features(),
          "conform should reorder features to match target frame");
-  expect(conformed.caselbl().size() == reordered.caselbl().size(),
+  expect(conformed.label().values().size() == reordered.label().values().size(),
          "conform should align case axis to target frame");
   const auto reindexed_like = jleft.conform(reordered);
   expect(reindexed_like.features() == reordered.features(),
          "conform should provide frame-shape matching");
-  const auto reindexed_cases = jleft.align_caselbl(jleft.caselbl());
+  const auto reindexed_cases = jleft.label().align(jleft.label().values());
   expect(reindexed_cases.ncases() == jleft.ncases(),
-         "align_caselbl should preserve existing labels when target matches");
+         "label().align should preserve existing labels when target matches");
   const auto align_base = DataFrame({
       {"A", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
       {"B", pluss::table::Thread(pluss::make_series({100.0, 200.0}))},
   }, pluss::make_note({"r1", "r2"}));
-  const auto aligned_labels = align_base.align_caselbl(pluss::table::Thread(pluss::make_note({"r2", "missing", "r1"})));
+  const auto aligned_labels = align_base.label().align(pluss::table::Thread(pluss::make_note({"r2", "missing", "r1"})));
   expect(aligned_labels.ncases() == 3 && aligned_labels.features("A").is_valid(0) &&
              !aligned_labels.features("A").is_valid(1) && aligned_labels.features("A").is_valid(2),
-         "align_caselbl should insert nulls for missing case labels");
+         "label().align should insert nulls for missing case labels");
   const auto aligned_label_vals = aligned_labels.features("A").as_series().to_vec<double>();
   expect(std::fabs(aligned_label_vals[0] - 20.0) < 1e-9 && std::fabs(aligned_label_vals[2] - 10.0) < 1e-9,
-         "align_caselbl should reorder matched case labels");
+         "label().align should reorder matched case labels");
   const auto align_filled =
-      align_base.align(DataFrame::AlignSpec{.caselbl = pluss::table::Thread(pluss::make_note({"r2", "missing"})),
+      align_base.align(DataFrame::AlignSpec{.label = pluss::table::Thread(pluss::make_note({"r2", "missing"})),
                                             .features = {"B", "C", "A"},
                                             .fill = 0.0});
   expect(align_filled.features()[0] == "B" && align_filled.features()[1] == "C" &&
@@ -1846,7 +1850,7 @@ void test_versatile_dataframe_families() {
   expect(df_backtick.query("`feat one` >= 2").ncases() == 1,
          "query(string): backtick identifiers should support spaced feature names");
   const auto with_copy = df.assign({{"age_copy", df.features("age")}});
-  expect(with_copy.nfeats() == df.nfeats() + 1, "assign(assignments) should append a new feature");
+  expect(with_copy.nfeatures() == df.nfeatures() + 1, "assign(assignments) should append a new feature");
   expect(with_copy.has_feature("age_copy"), "assign(assignments) missing assigned feature");
 
   const auto with_flag = df.assign({{
@@ -1872,7 +1876,7 @@ void test_versatile_dataframe_families() {
     }
     return feature;
   });
-  expect(transformed_all.ncases() == df.ncases() && transformed_all.nfeats() == df.nfeats(),
+  expect(transformed_all.ncases() == df.ncases() && transformed_all.nfeatures() == df.nfeatures(),
          "transform(all) should preserve frame shape");
   expect(transformed_all.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 1,
          "transform(all) should transform Series-backed features");
@@ -1910,21 +1914,21 @@ void test_versatile_dataframe_families() {
          "transform(feature, dataframe-fn) should evaluate against the full DataFrame");
 
   const auto selected_vec = df.features({"age", "job"});
-  expect(selected_vec.nfeats() == 2 && selected_vec.has_feature("age") && selected_vec.has_feature("job"),
+  expect(selected_vec.nfeatures() == 2 && selected_vec.has_feature("age") && selected_vec.has_feature("job"),
          "features({...}) should project requested features");
   const std::vector<std::string> selected_names = {"age", "job"};
   const auto selected_lvalue = df.features(selected_names);
-  expect(selected_lvalue.nfeats() == 2 && selected_lvalue.has_feature("age") && selected_lvalue.has_feature("job"),
+  expect(selected_lvalue.nfeatures() == 2 && selected_lvalue.has_feature("age") && selected_lvalue.has_feature("job"),
          "features(vector<string>) should project requested features");
   const std::vector<std::string> selected_one_name = {"age"};
   const auto selected_one_lvalue = df.features(selected_one_name);
-  expect(selected_one_lvalue.nfeats() == 1 && selected_one_lvalue.has_feature("age"),
+  expect(selected_one_lvalue.nfeatures() == 1 && selected_one_lvalue.has_feature("age"),
          "features(single-item vector<string>) should return one-column DataFrame");
   const auto selected_public = df.select({"age", "job"});
-  expect(selected_public.nfeats() == 2 && selected_public.has_feature("age") && selected_public.has_feature("job"),
+  expect(selected_public.nfeatures() == 2 && selected_public.has_feature("age") && selected_public.has_feature("job"),
          "select({...}) should project requested features");
   const auto selected_like = df.select_like("dur");
-  expect(selected_like.has_feature("duration") && selected_like.nfeats() >= 1,
+  expect(selected_like.has_feature("duration") && selected_like.nfeatures() >= 1,
          "select_like(\"dur\") should match substring in feature names");
   const auto selected_like_ci = df.select_like("JOB", false);
   expect(selected_like_ci.has_feature("job"),
@@ -1933,12 +1937,12 @@ void test_versatile_dataframe_families() {
   expect(selected_regex.has_feature("balance"),
          "select_regex(\"^ba\") should match regex on feature names");
   const auto selected_none = df.select_like("__definitely_not_a_feature__");
-  expect(selected_none.nfeats() == 0 && selected_none.ncases() == df.ncases(),
+  expect(selected_none.nfeatures() == 0 && selected_none.ncases() == df.ncases(),
          "select_like(no match) should return empty feature projection with preserved cases");
   expect_throw([&]() { (void)df.select_regex("[unclosed"); },
                "select_regex(invalid pattern) should throw");
   const auto dropped_vec = df.drop({"balance"});
-  expect(!dropped_vec.has_feature("balance") && dropped_vec.nfeats() == df.nfeats() - 1,
+  expect(!dropped_vec.has_feature("balance") && dropped_vec.nfeatures() == df.nfeatures() - 1,
          "drop({...}) should remove requested features");
 
   const auto renamed_map = selected_vec.rename({{"age", "age_new"}, {"job", "job_new"}});
@@ -1954,7 +1958,7 @@ void test_versatile_dataframe_families() {
       DataFrame::ArrangeSpec{"job", true, true},
       DataFrame::ArrangeSpec{"age", false, true},
   });
-  expect(sorted_multi.ncases() == df.ncases() && sorted_multi.nfeats() == df.nfeats(),
+  expect(sorted_multi.ncases() == df.ncases() && sorted_multi.nfeatures() == df.nfeatures(),
          "sort_values(ArrangeSpec[]) should preserve shape");
 
   const auto masked = df.filter(mask);
@@ -2039,18 +2043,18 @@ void test_versatile_dataframe_families() {
       },
       false);
   expect(summary.ncases() == 1, "summarize should produce one summary row");
-  expect(summary.nfeats() == 3, "summarize should emit requested output features");
+  expect(summary.nfeatures() == 3, "summarize should emit requested output features");
   expect(summary.features("cases").as_series().to_vec<std::int64_t>(0) == df.ncases(),
          "summarize count should match frame row count");
   expect(summary.features("jobs").as_series().to_vec<std::int64_t>(0) > 0,
          "summarize nunique should be positive for job feature");
 
   const auto text_only = df.note_features();
-  expect(text_only.nfeats() == 1 && text_only.has_feature("job"),
+  expect(text_only.nfeatures() == 1 && text_only.has_feature("job"),
          "note_features() should retain only Note-backed features");
 
   const auto numeric_only = df.series_features();
-  expect(numeric_only.nfeats() == 3 && numeric_only.has_feature("age")
+  expect(numeric_only.nfeatures() == 3 && numeric_only.has_feature("age")
              && numeric_only.has_feature("balance") && numeric_only.has_feature("duration"),
          "series_features() should retain Series-backed features");
 
@@ -2164,7 +2168,7 @@ void test_versatile_dataframe_families() {
          "feature({..}) should return DataFrame for multi-feature copy workflows");
 
   const auto temporal_only = df.timeline_features();
-  expect(temporal_only.nfeats() == 0, "timeline_features() should be empty when no temporal features exist");
+  expect(temporal_only.nfeatures() == 0, "timeline_features() should be empty when no temporal features exist");
 
   expect(df.features("age").as_series().numel() == df.ncases(), "as_series should expose Series payload");
   expect(df.features("job").as_note().numel() == df.ncases(), "as_note should expose Note payload");
@@ -2239,7 +2243,7 @@ void test_versatile_dataframe_families() {
                             }},
                        });
 
-  expect(tdf.timeline_features().nfeats() == 2,
+  expect(tdf.timeline_features().nfeatures() == 2,
          "timeline_features() should retain Timeline features after cast(Timeline)");
   expect(tdf.features("start").as_timeline().numel() == 2, "as_timeline should expose Timeline payload");
   const auto tdf_timeindex = tdf.cast({{
@@ -2247,7 +2251,7 @@ void test_versatile_dataframe_families() {
       pluss::table::ThreadCastTarget::TimeIndex,
       pluss::table::ThreadCastOptions{},
   }});
-  expect(tdf_timeindex.timeline_features().nfeats() == 2 && tdf_timeindex.has_feature("start")
+  expect(tdf_timeindex.timeline_features().nfeatures() == 2 && tdf_timeindex.has_feature("start")
              && tdf_timeindex.has_feature("end"),
          "timeline_features() should retain Timeline/TimeIndex-backed features");
   const auto shifted_tdf = tdf.shift({"start"}, 1, "D");
@@ -2255,7 +2259,7 @@ void test_versatile_dataframe_families() {
          "shift_time should preserve shape and update selected temporal feature");
 
   const auto shifted_age = df.shift({"age"}, 1);
-  expect(shifted_age.ncases() == df.ncases() && shifted_age.nfeats() == df.nfeats(),
+  expect(shifted_age.ncases() == df.ncases() && shifted_age.nfeatures() == df.nfeatures(),
          "shift(selected, periods) should preserve frame shape");
   expect(pluss::table::detail::has_validity_mask(shifted_age.features("age")),
          "shift should introduce null validity at shifted edge");
@@ -2301,13 +2305,13 @@ void test_versatile_dataframe_families() {
          "assign should mark Start_Hour membership against provided values");
 
   const auto job_counts = df.count_by("job", 5, true, false);
-  expect(job_counts.nfeats() == 2, "count_by should emit key + count features");
+  expect(job_counts.nfeatures() == 2, "count_by should emit key + count features");
   expect(job_counts.features()[0] == "job" && job_counts.features()[1] == "count",
          "count_by feature naming mismatch");
   expect(job_counts.ncases() <= 5, "count_by(top_n) should cap row count");
 
   const auto job_age_mean = df.mean_by("job", "age", 5, 1, true, false);
-  expect(job_age_mean.nfeats() == 3, "mean_by should emit group + mean + count features");
+  expect(job_age_mean.nfeatures() == 3, "mean_by should emit group + mean + count features");
   expect(job_age_mean.features()[0] == "job"
              && job_age_mean.features()[1] == "mean_age"
              && job_age_mean.features()[2] == "count",
@@ -2326,7 +2330,7 @@ void test_versatile_dataframe_families() {
       },
       true,
       false);
-  expect(grouped_job.nfeats() == 4, "group(single key) should emit key + requested aggregates");
+  expect(grouped_job.nfeatures() == 4, "group(single key) should emit key + requested aggregates");
   expect(grouped_job.has_feature("job") && grouped_job.has_feature("cases")
              && grouped_job.has_feature("age_mean") && grouped_job.has_feature("job_nunique"),
          "group(single key) missing expected output features");
@@ -2338,7 +2342,7 @@ void test_versatile_dataframe_families() {
       },
       true,
       false);
-  expect(grouped_multi.nfeats() == 3, "group(multi key) should emit all keys + aggregates");
+  expect(grouped_multi.nfeatures() == 3, "group(multi key) should emit all keys + aggregates");
   expect(grouped_multi.ncases() > 0, "group(multi key) should produce grouped rows");
 
   const auto left_small = df.features({"age", "job"}).head(6, false);
@@ -2346,7 +2350,7 @@ void test_versatile_dataframe_families() {
   const auto combined_features = left_small.combine(
       right_small,
       {DataFrame::CombineOp::Features, "_r", true});
-  expect(combined_features.nfeats() == 4,
+  expect(combined_features.nfeatures() == 4,
          "combine(features) should append right-hand features and resolve collisions");
   expect(combined_features.has_feature("age") && combined_features.has_feature("job")
              && combined_features.has_feature("age_r") && combined_features.has_feature("duration"),
@@ -2370,7 +2374,7 @@ void test_versatile_dataframe_families() {
          "combine(update, overwrite=false) should keep left feature values");
 
   const auto agg_out = df.aggregate({{"age_min", "age", DataFrame::SummaryOp::Min}}, false);
-  expect(agg_out.ncases() == 1 && agg_out.nfeats() == 1, "aggregate should summarize requested specs");
+  expect(agg_out.ncases() == 1 && agg_out.nfeatures() == 1, "aggregate should summarize requested specs");
 
   auto let_df = df.features({"age", "duration", "balance"});
   let_df.set("age_copy") = let_df.features("age");
@@ -2508,19 +2512,19 @@ void test_versatile_dataframe_families() {
   const auto reverse_floor_div = numeric.rfloordiv(120.0);
   const auto reverse_mod = numeric.rmod(120.0);
   const auto reverse_pow = numeric.rpow(2.0);
-  expect(reverse_add.ncases() == numeric.ncases() && reverse_add.nfeats() == numeric.nfeats(),
+  expect(reverse_add.ncases() == numeric.ncases() && reverse_add.nfeatures() == numeric.nfeatures(),
          "radd should preserve frame shape");
-  expect(reverse_mul.ncases() == numeric.ncases() && reverse_mul.nfeats() == numeric.nfeats(),
+  expect(reverse_mul.ncases() == numeric.ncases() && reverse_mul.nfeatures() == numeric.nfeatures(),
          "rmul should preserve frame shape");
-  expect(reverse_div.ncases() == numeric.ncases() && reverse_div.nfeats() == numeric.nfeats(),
+  expect(reverse_div.ncases() == numeric.ncases() && reverse_div.nfeatures() == numeric.nfeatures(),
          "rdiv should preserve frame shape");
-  expect(reverse_true_div.ncases() == numeric.ncases() && reverse_true_div.nfeats() == numeric.nfeats(),
+  expect(reverse_true_div.ncases() == numeric.ncases() && reverse_true_div.nfeatures() == numeric.nfeatures(),
          "rtruediv should preserve frame shape");
-  expect(reverse_floor_div.ncases() == numeric.ncases() && reverse_floor_div.nfeats() == numeric.nfeats(),
+  expect(reverse_floor_div.ncases() == numeric.ncases() && reverse_floor_div.nfeatures() == numeric.nfeatures(),
          "rfloordiv should preserve frame shape");
-  expect(reverse_mod.ncases() == numeric.ncases() && reverse_mod.nfeats() == numeric.nfeats(),
+  expect(reverse_mod.ncases() == numeric.ncases() && reverse_mod.nfeatures() == numeric.nfeatures(),
          "rmod should preserve frame shape");
-  expect(reverse_pow.ncases() == numeric.ncases() && reverse_pow.nfeats() == numeric.nfeats(),
+  expect(reverse_pow.ncases() == numeric.ncases() && reverse_pow.nfeatures() == numeric.nfeatures(),
          "rpow should preserve frame shape");
 
   const auto div_alias = numeric.div(2.0);
@@ -2528,15 +2532,15 @@ void test_versatile_dataframe_families() {
   const auto floor_div = numeric.floordiv(2.0);
   const auto mod_alias = numeric.mod(2.0);
   const auto pow_alias = numeric.pow(2.0);
-  expect(div_alias.ncases() == numeric.ncases() && div_alias.nfeats() == numeric.nfeats(),
+  expect(div_alias.ncases() == numeric.ncases() && div_alias.nfeatures() == numeric.nfeatures(),
          "divide alias should preserve frame shape");
-  expect(true_div.ncases() == numeric.ncases() && true_div.nfeats() == numeric.nfeats(),
+  expect(true_div.ncases() == numeric.ncases() && true_div.nfeatures() == numeric.nfeatures(),
          "truediv should preserve frame shape");
-  expect(floor_div.ncases() == numeric.ncases() && floor_div.nfeats() == numeric.nfeats(),
+  expect(floor_div.ncases() == numeric.ncases() && floor_div.nfeatures() == numeric.nfeatures(),
          "floordiv should preserve frame shape");
-  expect(mod_alias.ncases() == numeric.ncases() && mod_alias.nfeats() == numeric.nfeats(),
+  expect(mod_alias.ncases() == numeric.ncases() && mod_alias.nfeatures() == numeric.nfeatures(),
          "mod should preserve frame shape");
-  expect(pow_alias.ncases() == numeric.ncases() && pow_alias.nfeats() == numeric.nfeats(),
+  expect(pow_alias.ncases() == numeric.ncases() && pow_alias.nfeatures() == numeric.nfeatures(),
          "pow should preserve frame shape");
   const auto eq_self = numeric.eq(numeric);
   const auto ne_self = numeric.ne(numeric);
@@ -2594,7 +2598,7 @@ void test_versatile_dataframe_families() {
   const auto miss = DataFrame::load_csv(missing_path.string(), missing_opts);
 
   const auto miss_isnull = miss.isnull();
-  expect(miss_isnull.nfeats() == miss.nfeats(), "missing(isnull) should retain all features by default");
+  expect(miss_isnull.nfeatures() == miss.nfeatures(), "missing(isnull) should retain all features by default");
   expect(miss_isnull.features("score").as_series().scalar_type() == pluss::codem::ScalarType::Bool,
          "missing(isnull) should return bool mask features");
   expect(miss_isnull.features("score").as_series().to_vec<bool>(1),
@@ -2645,7 +2649,7 @@ void test_versatile_dataframe_families() {
 
   const auto miss_isna = miss.isnull({"score"});
   const auto miss_notna = miss.notnull({"score"});
-  expect(miss_isna.nfeats() == 1 && miss_notna.nfeats() == 1,
+  expect(miss_isna.nfeatures() == 1 && miss_notna.nfeatures() == 1,
          "isnull/notnull should support selected feature subsets");
   expect(miss_isna.features("score").as_series().to_vec<bool>(1),
          "isnull should mark null rows");
@@ -2806,7 +2810,7 @@ void test_versatile_dataframe_families() {
       .axis = Axis::Feature,
       .threshold = 3,
   });
-  expect(miss_drop_features.nfeats() == 2
+  expect(miss_drop_features.nfeatures() == 2
              && miss_drop_features.has_feature("id")
              && miss_drop_features.has_feature("label")
              && !miss_drop_features.has_feature("score"),
@@ -2889,7 +2893,7 @@ void test_versatile_dataframe_families() {
   }},
                                           false);
   expect(rolling_mean.ncases() == numeric.ncases(), "window(keep_input=false) should preserve case count");
-  expect(rolling_mean.nfeats() == 1, "window(keep_input=false) should emit only computed features");
+  expect(rolling_mean.nfeatures() == 1, "window(keep_input=false) should emit only computed features");
   expect(rolling_mean.has_feature("age_roll_mean"), "window should create requested output feature name");
   expect(rolling_mean.features("age_roll_mean").kind() == ThreadKind::Series,
          "window output should be Series-backed");
@@ -2915,7 +2919,7 @@ void test_versatile_dataframe_families() {
       1,
   }},
                                                        true);
-  expect(rolling_sum_keep_input.nfeats() == numeric.nfeats() + 1,
+  expect(rolling_sum_keep_input.nfeatures() == numeric.nfeatures() + 1,
          "rolling(keep_input=true) should append computed feature");
   expect(rolling_sum_keep_input.has_feature("age_rollsum_3"),
          "rolling default output name should use feature/op/window policy");
@@ -3382,7 +3386,7 @@ void test_corr_feature_projection_and_sort_chain() {
   });
 
   const auto corr = df.corr();
-  expect(corr.nfeats() == 3 && corr.ncases() == 3, "corr() should produce a square 3x3 matrix");
+  expect(corr.nfeatures() == 3 && corr.ncases() == 3, "corr() should produce a square 3x3 matrix");
 
   const auto sorted_target = corr.features("x").sort_values(/*ascending=*/false);
   const auto values = sorted_target.as_series().to_vec<double>();

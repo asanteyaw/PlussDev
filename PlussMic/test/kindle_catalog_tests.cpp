@@ -527,7 +527,7 @@ void test_archive_to_table_bridge() {
   const auto atlas_b = archive.to_table({}, false);
   expect(atlas_a.depth() == atlas_b.depth(), "Archive::to_table depth mismatch");
   expect(atlas_a.ncases() == atlas_b.ncases(), "Archive::to_table nrows mismatch");
-  expect(atlas_a.nfeats() == atlas_b.nfeats(), "Archive::to_table ncols mismatch");
+  expect(atlas_a.nfeatures() == atlas_b.nfeatures(), "Archive::to_table ncols mismatch");
 }
 
 } // namespace

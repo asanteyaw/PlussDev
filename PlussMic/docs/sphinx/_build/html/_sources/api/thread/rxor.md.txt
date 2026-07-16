@@ -45,8 +45,8 @@ auto out = thread.rxor(other);
     <span class="label">Previous</span>
     <span class="title">rtruediv</span>
   </a>
-  <a class="next-link" href="scan.html">
+  <a class="next-link" href="sample.html">
     <span class="label">Next</span>
-    <span class="title">scan</span>
+    <span class="title">sample</span>
   </a>
 </div>

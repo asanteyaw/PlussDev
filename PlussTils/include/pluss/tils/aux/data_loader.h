@@ -535,72 +535,72 @@ struct DataLoaderSplit {
   DataLoader test;
 };
 
-struct TimeSeriesSplitOptions {
-  std::int64_t n_splits{5};
+struct TemporalSplitOptions {
+  std::int64_t folds{5};
   std::optional<std::int64_t> test_size{};
   std::optional<std::int64_t> max_train_size{};
   std::int64_t gap{0};
   std::int64_t batch_dim{0};
 };
 
-struct TimeSeriesIndexFold {
+struct TemporalIndexFold {
   std::vector<std::int64_t> train_indices{};
   std::vector<std::int64_t> test_indices{};
 };
 
-struct TimeSeriesIndexSplit {
-  std::vector<TimeSeriesIndexFold> folds{};
+struct TemporalIndexSplit {
+  std::vector<TemporalIndexFold> folds{};
 };
 
-struct TimeSeriesFieldFold {
+struct TemporalFieldFold {
   std::vector<Series> train_fields{};
   std::vector<Series> test_fields{};
 };
 
-struct TimeSeriesFieldSplit {
-  std::vector<TimeSeriesFieldFold> folds{};
+struct TemporalFieldSplit {
+  std::vector<TemporalFieldFold> folds{};
 };
 
-struct TimeSeriesLoaderFold {
+struct TemporalLoaderFold {
   DataLoader train{};
   DataLoader test{};
 };
 
-struct TimeSeriesLoaderSplit {
-  std::vector<TimeSeriesLoaderFold> folds{};
+struct TemporalLoaderSplit {
+  std::vector<TemporalLoaderFold> folds{};
 };
 
-inline TimeSeriesIndexSplit time_series_split_indices(
+inline TemporalIndexSplit temporal_split_indices(
     std::int64_t sample_count,
-    TimeSeriesSplitOptions options = {}) {
-  PLUSS_CHECK(sample_count >= 2, "pluss::time_series_split_indices: sample_count must be >= 2");
-  PLUSS_CHECK(options.n_splits >= 2, "pluss::time_series_split_indices: n_splits must be >= 2");
-  PLUSS_CHECK(options.gap >= 0, "pluss::time_series_split_indices: gap must be >= 0");
+    TemporalSplitOptions options = {}) {
+  PLUSS_CHECK(sample_count >= 2, "pluss::temporal_split_indices: sample_count must be >= 2");
+  PLUSS_CHECK(options.folds >= 2, "pluss::temporal_split_indices: folds must be >= 2");
+  PLUSS_CHECK(options.gap >= 0, "pluss::temporal_split_indices: gap must be >= 0");
   if (options.test_size.has_value()) {
-    PLUSS_CHECK(*options.test_size > 0, "pluss::time_series_split_indices: test_size must be > 0 when provided");
+    PLUSS_CHECK(*options.test_size > 0, "pluss::temporal_split_indices: test_size must be > 0 when provided");
   }
   if (options.max_train_size.has_value()) {
     PLUSS_CHECK(
         *options.max_train_size > 0,
-        "pluss::time_series_split_indices: max_train_size must be > 0 when provided");
+        "pluss::temporal_split_indices: max_train_size must be > 0 when provided");
   }
 
-  const std::int64_t n_splits = options.n_splits;
-  const std::int64_t n_folds = n_splits + 1;
+  const std::int64_t folds = options.folds;
+  const std::int64_t n_folds = folds + 1;
   const std::int64_t test_size = options.test_size.value_or(sample_count / n_folds);
 
-  PLUSS_CHECK(test_size > 0, "pluss::time_series_split_indices: inferred test_size must be > 0");
+  PLUSS_CHECK(test_size > 0, "pluss::temporal_split_indices: inferred test_size must be > 0");
   PLUSS_CHECK(
       n_folds <= sample_count,
-      "pluss::time_series_split_indices: number of folds cannot exceed sample_count");
+      "pluss::temporal_split_indices: number of folds cannot exceed sample_count");
   PLUSS_CHECK(
-      sample_count - options.gap - (test_size * n_splits) > 0,
-      "pluss::time_series_split_indices: too many splits for sample_count/test_size/gap");
+      sample_count - options.gap - (test_size * folds) > 0,
+      "pluss::temporal_split_indices: too many splits for sample_count/test_size/gap");
 
-  TimeSeriesIndexSplit out;
-  out.folds.reserve(static_cast<std::size_t>(n_splits));
+  TemporalIndexSplit out;
+  out.folds.reserve(static_cast<std::size_t>(folds));
 
-  for (std::int64_t test_start = sample_count - n_splits * test_size;
+  for (std::int64_t test_start = sample_count - folds * test_size;
        test_start < sample_count;
        test_start += test_size) {
     const std::int64_t train_end = test_start - options.gap;
@@ -615,7 +615,7 @@ inline TimeSeriesIndexSplit time_series_split_indices(
     std::vector<std::int64_t> test_ids(static_cast<std::size_t>(test_size));
     std::iota(test_ids.begin(), test_ids.end(), test_start);
 
-    out.folds.push_back(TimeSeriesIndexFold{
+    out.folds.push_back(TemporalIndexFold{
         .train_indices = std::move(train_ids),
         .test_indices = std::move(test_ids),
     });
@@ -624,18 +624,18 @@ inline TimeSeriesIndexSplit time_series_split_indices(
   return out;
 }
 
-inline TimeSeriesFieldSplit time_series_split_fields(
+inline TemporalFieldSplit temporal_split_fields(
     const std::vector<Series>& fields,
-    TimeSeriesSplitOptions options = {}) {
+    TemporalSplitOptions options = {}) {
   std::int64_t sample_count = 0;
   const auto dims = detail::split_dims_for_fields_(fields, options.batch_dim, &sample_count);
-  auto index_plan = time_series_split_indices(sample_count, options);
+  auto index_plan = temporal_split_indices(sample_count, options);
 
-  TimeSeriesFieldSplit out;
+  TemporalFieldSplit out;
   out.folds.reserve(index_plan.folds.size());
 
   for (auto& fold : index_plan.folds) {
-    out.folds.push_back(TimeSeriesFieldFold{
+    out.folds.push_back(TemporalFieldFold{
         .train_fields = detail::index_fields_(fields, dims, fold.train_indices),
         .test_fields = detail::index_fields_(fields, dims, fold.test_indices),
     });
@@ -644,39 +644,39 @@ inline TimeSeriesFieldSplit time_series_split_fields(
   return out;
 }
 
-inline TimeSeriesFieldSplit time_series_split_fields(
+inline TemporalFieldSplit temporal_split_fields(
     std::initializer_list<Series> fields,
-    TimeSeriesSplitOptions options = {}) {
-  return time_series_split_fields(std::vector<Series>(fields), options);
+    TemporalSplitOptions options = {}) {
+  return temporal_split_fields(std::vector<Series>(fields), options);
 }
 
-inline TimeSeriesFieldSplit time_series_split_fields(
+inline TemporalFieldSplit temporal_split_fields(
     const SeriesDataset& dataset,
-    TimeSeriesSplitOptions options = {}) {
+    TemporalSplitOptions options = {}) {
   options.batch_dim = dataset.batch_dim();
-  return time_series_split_fields(dataset.fields(), options);
+  return temporal_split_fields(dataset.fields(), options);
 }
 
-inline TimeSeriesFieldSplit time_series_split_fields(
+inline TemporalFieldSplit temporal_split_fields(
     const Dataset& dataset,
-    TimeSeriesSplitOptions options = {}) {
+    TemporalSplitOptions options = {}) {
   options.batch_dim = dataset.batch_dim();
-  return time_series_split_fields(dataset.materialize_fields(), options);
+  return temporal_split_fields(dataset.materialize_fields(), options);
 }
 
-inline TimeSeriesLoaderSplit time_series_split_loaders(
+inline TemporalLoaderSplit temporal_split_loaders(
     const std::vector<Series>& fields,
-    TimeSeriesSplitOptions split_options = {},
+    TemporalSplitOptions split_options = {},
     DataLoaderOptions train_options = {},
     DataLoaderOptions test_options = {}) {
-  auto split = time_series_split_fields(fields, split_options);
+  auto split = temporal_split_fields(fields, split_options);
   train_options.batch_dim = split_options.batch_dim;
   test_options.batch_dim = split_options.batch_dim;
 
-  TimeSeriesLoaderSplit out;
+  TemporalLoaderSplit out;
   out.folds.reserve(split.folds.size());
   for (auto& fold : split.folds) {
-    out.folds.push_back(TimeSeriesLoaderFold{
+    out.folds.push_back(TemporalLoaderFold{
         .train = DataLoader(std::move(fold.train_fields), train_options),
         .test = DataLoader(std::move(fold.test_fields), test_options),
     });
@@ -684,30 +684,30 @@ inline TimeSeriesLoaderSplit time_series_split_loaders(
   return out;
 }
 
-inline TimeSeriesLoaderSplit time_series_split_loaders(
+inline TemporalLoaderSplit temporal_split_loaders(
     std::initializer_list<Series> fields,
-    TimeSeriesSplitOptions split_options = {},
+    TemporalSplitOptions split_options = {},
     DataLoaderOptions train_options = {},
     DataLoaderOptions test_options = {}) {
-  return time_series_split_loaders(std::vector<Series>(fields), split_options, train_options, test_options);
+  return temporal_split_loaders(std::vector<Series>(fields), split_options, train_options, test_options);
 }
 
-inline TimeSeriesLoaderSplit time_series_split_loaders(
+inline TemporalLoaderSplit temporal_split_loaders(
     const SeriesDataset& dataset,
-    TimeSeriesSplitOptions split_options = {},
+    TemporalSplitOptions split_options = {},
     DataLoaderOptions train_options = {},
     DataLoaderOptions test_options = {}) {
   split_options.batch_dim = dataset.batch_dim();
-  return time_series_split_loaders(dataset.fields(), split_options, train_options, test_options);
+  return temporal_split_loaders(dataset.fields(), split_options, train_options, test_options);
 }
 
-inline TimeSeriesLoaderSplit time_series_split_loaders(
+inline TemporalLoaderSplit temporal_split_loaders(
     const Dataset& dataset,
-    TimeSeriesSplitOptions split_options = {},
+    TemporalSplitOptions split_options = {},
     DataLoaderOptions train_options = {},
     DataLoaderOptions test_options = {}) {
   split_options.batch_dim = dataset.batch_dim();
-  return time_series_split_loaders(dataset.materialize_fields(), split_options, train_options, test_options);
+  return temporal_split_loaders(dataset.materialize_fields(), split_options, train_options, test_options);
 }
 
 inline DataLoaderSplit split_loaders(
@@ -776,16 +776,16 @@ using aux::DataLoaderOptions;
 using aux::DataLoaderSplit;
 using aux::DataSplit;
 using aux::DataSplitOptions;
-using aux::TimeSeriesSplitOptions;
-using aux::TimeSeriesIndexFold;
-using aux::TimeSeriesIndexSplit;
-using aux::TimeSeriesFieldFold;
-using aux::TimeSeriesFieldSplit;
-using aux::TimeSeriesLoaderFold;
-using aux::TimeSeriesLoaderSplit;
+using aux::TemporalSplitOptions;
+using aux::TemporalIndexFold;
+using aux::TemporalIndexSplit;
+using aux::TemporalFieldFold;
+using aux::TemporalFieldSplit;
+using aux::TemporalLoaderFold;
+using aux::TemporalLoaderSplit;
 using aux::split_fields;
 using aux::split_loaders;
-using aux::time_series_split_indices;
-using aux::time_series_split_fields;
-using aux::time_series_split_loaders;
+using aux::temporal_split_indices;
+using aux::temporal_split_fields;
+using aux::temporal_split_loaders;
 } // namespace pluss::loader

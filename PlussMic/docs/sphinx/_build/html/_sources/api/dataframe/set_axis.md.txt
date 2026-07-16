@@ -51,8 +51,8 @@ revenue  location  id_new
     <span class="label">Previous</span>
     <span class="title">set</span>
   </a>
-  <a class="next-link" href="set_cases.html">
+  <a class="next-link" href="set_features.html">
     <span class="label">Next</span>
-    <span class="title">set_cases</span>
+    <span class="title">set_features</span>
   </a>
 </div>

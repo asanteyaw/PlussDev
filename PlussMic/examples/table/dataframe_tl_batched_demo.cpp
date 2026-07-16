@@ -93,10 +93,10 @@ int main() {
   std::cout << "DataFrame tl floor\n" << rounded.head(4) << "\n";
   std::cout << "DataFrame tl localize with option struct\n" << localized.head(4) << "\n";
   
-  auto hierarchical_cases = renamed_all.set_cases({"region", "account"}, false, " / ");
+  auto hierarchical_cases = renamed_all.label().set({"region", "account"}, false, " / ");
   std::cout << "Composite case labels from multiple features\n" << hierarchical_cases.head(4) << "\n";
 
-  auto time_indexed = renamed_all.set_cases("event_time", false);
+  auto time_indexed = renamed_all.label().set("event_time", false);
   auto values = time_indexed.features({"sales", "expense", "margin"});
   std::cout << "Selected DataFrame ts sort by timeline cases\n"
             << values.ts().sort().head(4) << "\n";

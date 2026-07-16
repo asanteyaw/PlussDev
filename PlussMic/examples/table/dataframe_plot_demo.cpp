@@ -54,7 +54,7 @@ int main() {
   fig_scatter.save_pdf("plot_df_scatter.pdf");
 
   auto top_agencies = df.tally("Agency Name", /*top_n=*/8, /*dropna=*/true, /*render=*/false);
-  auto ranked_agencies = top_agencies.set_cases("Agency Name", /*drop_feature=*/false);
+  auto ranked_agencies = top_agencies.label().set("Agency Name", /*drop_feature=*/false);
   auto fig_bar = ranked_agencies.plot().bar("count");
   fig_bar.headline("Top Agencies by count");
   fig_bar.save_pdf("plot_df_bar.pdf");
@@ -68,7 +68,7 @@ int main() {
       {"sales", pluss::table::Thread(pluss::make_series({120.0, 135.0, 128.0, 150.0, 162.0, 171.0}))},
       {"forecast", pluss::table::Thread(pluss::make_series({118.0, 130.0, 132.0, 147.0, 158.0, 168.0}))},
       {"month", pluss::table::Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr", "May", "Jun"}))},
-  }).set_cases("month", /*drop_feature=*/false);
+  }).label().set("month", /*drop_feature=*/false);
 
   auto fig_monthly = monthly.plot().line({"sales", "forecast"});
   fig_monthly.headline("Sales vs forecast by month");

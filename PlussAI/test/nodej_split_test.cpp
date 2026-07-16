@@ -101,14 +101,14 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
     options.folds = 5;
     options.shuffle = false;
 
-    auto plan_or = pluss::ai::nodej::fold_plan(11, options);
+    auto plan_or = pluss::ai::nodej::crossval_plan(11, options);
     if (!plan_or.ok()) {
-      if (err) *err << "fold_plan should succeed for valid options\n";
+      if (err) *err << "crossval_plan should succeed for valid options\n";
       return false;
     }
     const auto& plan = plan_or.value();
     if (plan.folds.size() != 5) {
-      if (err) *err << "fold_plan should emit requested fold count\n";
+      if (err) *err << "crossval_plan should emit requested fold count\n";
       return false;
     }
 
@@ -117,7 +117,7 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
     for (std::size_t i = 0; i < plan.folds.size(); ++i) {
       const auto test = as_i64_vec(plan.folds[i].test_indices);
       if (test.size() != expected_sizes[i]) {
-        if (err) *err << "fold_plan test fold sizes should be balanced\n";
+        if (err) *err << "crossval_plan test fold sizes should be balanced\n";
         return false;
       }
       all_test.insert(all_test.end(), test.begin(), test.end());
@@ -125,11 +125,11 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
 
     std::sort(all_test.begin(), all_test.end());
     if (all_test.size() != 11 || all_test.front() != 0 || all_test.back() != 10) {
-      if (err) *err << "fold_plan should cover each observation exactly once in test folds\n";
+      if (err) *err << "crossval_plan should cover each observation exactly once in test folds\n";
       return false;
     }
     if (std::adjacent_find(all_test.begin(), all_test.end()) != all_test.end()) {
-      if (err) *err << "fold_plan test folds should be disjoint\n";
+      if (err) *err << "crossval_plan test folds should be disjoint\n";
       return false;
     }
   }
@@ -146,9 +146,9 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
                                                  1, 1, 1, 1, 1, 1},
                                              {12},
                                              i64());
-    auto plan_or = pluss::ai::nodej::strat_fold_plan(labels, options);
+    auto plan_or = pluss::ai::nodej::stratified_crossval_plan(labels, options);
     if (!plan_or.ok()) {
-      if (err) *err << "strat_fold_plan should succeed for valid labels\n";
+      if (err) *err << "stratified_crossval_plan should succeed for valid labels\n";
       return false;
     }
 
@@ -162,7 +162,7 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
         if (y[static_cast<std::size_t>(idx)] == 1) ++ones;
       }
       if (!(zeros == 2 && ones == 2)) {
-        if (err) *err << "strat_fold_plan should preserve class balance per fold in this setup\n";
+        if (err) *err << "stratified_crossval_plan should preserve class balance per fold in this setup\n";
         return false;
       }
     }
@@ -206,15 +206,15 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
     options.time_gap = 1;
     options.time_max_train_size = 4;
 
-    auto plan_or = pluss::ai::nodej::time_series_fold_plan(12, options);
+    auto plan_or = pluss::ai::nodej::ts_crossval_plan(12, options);
     if (!plan_or.ok()) {
-      if (err) *err << "time_series_fold_plan should succeed for valid options\n";
+      if (err) *err << "ts_crossval_plan should succeed for valid options\n";
       return false;
     }
 
     const auto& folds = plan_or.value().folds;
     if (folds.size() != 3) {
-      if (err) *err << "time_series_fold_plan should emit requested fold count\n";
+      if (err) *err << "ts_crossval_plan should emit requested fold count\n";
       return false;
     }
 
@@ -225,15 +225,15 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
       const auto train = as_i64_vec(folds[i].train_indices);
       const auto test = as_i64_vec(folds[i].test_indices);
       if (train.size() != expected_train_sizes[i] || test.size() != expected_test_sizes[i]) {
-        if (err) *err << "time_series_fold_plan should respect train/test window sizes\n";
+        if (err) *err << "ts_crossval_plan should respect train/test window sizes\n";
         return false;
       }
       if (test.front() != expected_test_start[i]) {
-        if (err) *err << "time_series_fold_plan should place contiguous test windows at expected starts\n";
+        if (err) *err << "ts_crossval_plan should place contiguous test windows at expected starts\n";
         return false;
       }
       if (!(train.back() + 1 < test.front())) {
-        if (err) *err << "time_series_fold_plan should enforce configured gap\n";
+        if (err) *err << "ts_crossval_plan should enforce configured gap\n";
         return false;
       }
     }
@@ -253,14 +253,14 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
                                                  60, 60},
                                              {12},
                                              i64());
-    auto plan_or = pluss::ai::nodej::group_fold_plan(groups, options);
+    auto plan_or = pluss::ai::nodej::group_crossval_plan(groups, options);
     if (!plan_or.ok()) {
-      if (err) *err << "group_fold_plan should succeed for valid groups\n";
+      if (err) *err << "group_crossval_plan should succeed for valid groups\n";
       return false;
     }
     const auto& folds = plan_or.value().folds;
     if (folds.size() != 3) {
-      if (err) *err << "group_fold_plan should emit requested fold count\n";
+      if (err) *err << "group_crossval_plan should emit requested fold count\n";
       return false;
     }
 
@@ -274,7 +274,7 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
         const std::int64_t g = group_values[static_cast<std::size_t>(idx)];
         const auto [it, inserted] = group_to_fold.emplace(g, static_cast<std::int64_t>(fold_id));
         if (!inserted && it->second != static_cast<std::int64_t>(fold_id)) {
-          if (err) *err << "group_fold_plan should keep each group in exactly one test fold\n";
+          if (err) *err << "group_crossval_plan should keep each group in exactly one test fold\n";
           return false;
         }
       }
@@ -282,7 +282,7 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
     std::sort(all_test.begin(), all_test.end());
     if (all_test.size() != 12 || all_test.front() != 0 || all_test.back() != 11
         || std::adjacent_find(all_test.begin(), all_test.end()) != all_test.end()) {
-      if (err) *err << "group_fold_plan should cover each sample exactly once in test folds\n";
+      if (err) *err << "group_crossval_plan should cover each sample exactly once in test folds\n";
       return false;
     }
   }
@@ -302,17 +302,17 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
                                                  6, 6},
                                              {13},
                                              i64());
-    auto plan_a = pluss::ai::nodej::group_fold_plan(groups, options);
-    auto plan_b = pluss::ai::nodej::group_fold_plan(groups, options);
+    auto plan_a = pluss::ai::nodej::group_crossval_plan(groups, options);
+    auto plan_b = pluss::ai::nodej::group_crossval_plan(groups, options);
     if (!plan_a.ok() || !plan_b.ok()) {
-      if (err) *err << "group_fold_plan should support shuffled deterministic splits\n";
+      if (err) *err << "group_crossval_plan should support shuffled deterministic splits\n";
       return false;
     }
     for (std::size_t i = 0; i < plan_a.value().folds.size(); ++i) {
       const auto ta = as_i64_vec(plan_a.value().folds[i].test_indices);
       const auto tb = as_i64_vec(plan_b.value().folds[i].test_indices);
       if (ta != tb) {
-        if (err) *err << "group_fold_plan should be reproducible for deterministic random state\n";
+        if (err) *err << "group_crossval_plan should be reproducible for deterministic random state\n";
         return false;
       }
     }
@@ -323,9 +323,9 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
     options.folds = 4;
     options.shuffle = false;
     const Series groups = pluss::make_series(std::vector<std::int64_t>{0, 0, 1, 1, 2, 2}, {6}, i64());
-    auto plan_or = pluss::ai::nodej::group_fold_plan(groups, options);
+    auto plan_or = pluss::ai::nodej::group_crossval_plan(groups, options);
     if (plan_or.ok() || plan_or.status().code != StatusCode::InvalidArgument) {
-      if (err) *err << "group_fold_plan should reject folds greater than distinct groups\n";
+      if (err) *err << "group_crossval_plan should reject folds greater than distinct groups\n";
       return false;
     }
   }

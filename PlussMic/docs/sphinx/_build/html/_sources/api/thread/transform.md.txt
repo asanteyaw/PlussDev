@@ -59,9 +59,9 @@ auto out = thread.transform({});
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_string.html">
+  <a class="prev-link" href="top.html">
     <span class="label">Previous</span>
-    <span class="title">to_string</span>
+    <span class="title">top</span>
   </a>
   <a class="next-link" href="truediv.html">
     <span class="label">Next</span>

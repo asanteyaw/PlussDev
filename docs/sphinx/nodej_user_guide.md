@@ -353,6 +353,7 @@ const nje::LabeledBatch batch = labeled_or.value();
 - `max_iterations`, `tolerance`
 - `warm_start`
 - `random.seed`, `random.deterministic`
+- `sample_weights`
 - `class_weight`, `class_weights`
 - `calibration`, `calibration_iterations`, `calibration_tolerance`
 
@@ -391,6 +392,51 @@ if (!metric_or.ok()) throw std::runtime_error(metric_or.status().message);
 ### Expected output
 
 - trained flow produces predictions and ordered metric vector.
+
+## Balance Core
+
+### API Signature
+
+- `class_mix(labels: Series) -> StatusOr<ClassMix>`
+- `resolve_weight_plan(labels: Series, batch_sample_weights: Series, options: TrainOptions) -> StatusOr<WeightPlan>`
+- `resolve_training_weights(labels: Series, batch_sample_weights: Series, options: TrainOptions) -> StatusOr<Series>`
+
+### Notes
+
+Balance handling starts with a shared NodeJ core. `class_mix` summarizes label frequencies and imbalance ratio. `resolve_weight_plan` combines sample weights from the batch, sample weights from `TrainOptions`, and `ClassWeightMode` into one normalized per-sample training vector. Estimators can consume this common result instead of each family reimplementing weighting rules.
+
+### Inputs
+
+- labels aligned to training rows
+- optional batch sample weights
+- `TrainOptions` containing weight controls
+
+### Output
+
+- `ClassMix` label-distribution diagnostics
+- `WeightPlan` with class weights, resolved sample weights, and final training weights
+- a final training-weight `Series` when only weights are needed
+
+### Options
+
+- `ClassWeightMode::None`
+- `ClassWeightMode::Balanced`
+- `ClassWeightMode::Custom`
+
+### Examples
+
+```cpp
+nje::TrainOptions train{};
+train.class_weight = nje::ClassWeightMode::Balanced;
+
+auto mix = nje::class_mix(batch.y);
+auto weights = nje::resolve_training_weights(batch.y, batch.sample_weights, train);
+```
+
+### Expected output
+
+- `mix.value().imbalance_ratio` is greater than `1.0` when one class has more rows than another.
+- `weights.value().numel()` matches the number of training rows.
 
 ## Workflow Composition (Transforms + Model)
 
@@ -516,16 +562,16 @@ const Series x_scaled = mapped_or.value();
 
 - `holdout_split(sample_count: int64, options: SplitOptions = {}) -> StatusOr<IndexSplit>`
 - `strat_holdout_split(labels: Series, options: SplitOptions = {}) -> StatusOr<IndexSplit>`
-- `fold_plan(sample_count: int64, options: SplitOptions = {}) -> StatusOr<SplitPlan>`
-- `strat_fold_plan(labels: Series, options: SplitOptions = {}) -> StatusOr<SplitPlan>`
-- `time_series_fold_plan(sample_count: int64, options: SplitOptions = {}) -> StatusOr<SplitPlan>`
+- `crossval_plan(sample_count: int64, options: SplitOptions = {}) -> StatusOr<SplitPlan>`
+- `stratified_crossval_plan(labels: Series, options: SplitOptions = {}) -> StatusOr<SplitPlan>`
+- `ts_crossval_plan(sample_count: int64, options: SplitOptions = {}) -> StatusOr<SplitPlan>`
 - `slice_feature_batch(in: FeatureBatch, indices: Series) -> StatusOr<FeatureBatch>`
 - `slice_labeled_batch(in: LabeledBatch, indices: Series) -> StatusOr<LabeledBatch>`
 - `cross_assess(spec: ModelSpec, batch: LabeledBatch, split: SplitOptions = {}, train_options: TrainOptions = {}, assess_options: AssessOptions = {}) -> StatusOr<CrossAssessReport>`
 
 ### Notes
 
-NodeJ separates split planning from evaluation execution so you can reuse indices and plans.
+NodeJ separates split planning from evaluation execution so you can reuse indices and plans. `StratifiedCrossVal` uses shuffled inner stratified partitions for each repetition.
 
 ### Inputs
 
@@ -543,6 +589,7 @@ NodeJ separates split planning from evaluation execution so you can reuse indice
 - `plan`
 - `holdout_fraction`
 - `folds`
+- `repeats`
 - `time_gap`, `time_test_size`, `time_max_train_size`
 - `stratified`, `reliability_defaults`, `shuffle`
 - `random.seed`, `random.deterministic`
@@ -551,7 +598,7 @@ NodeJ separates split planning from evaluation execution so you can reuse indice
 
 ```cpp
 nje::SplitOptions split{};
-split.plan = nje::CVPlanKind::KFold;
+split.plan = nje::CVPlanKind::CrossVal;
 split.folds = 5;
 split.random.seed = 19;
 split.random.deterministic = true;
@@ -563,9 +610,22 @@ if (!cv_or.ok()) throw std::runtime_error(cv_or.status().message);
 const auto report = cv_or.value();
 ```
 
+```cpp
+nje::SplitOptions repeated{};
+repeated.plan = nje::CVPlanKind::StratifiedCrossVal;
+repeated.folds = 5;
+repeated.repeats = 3;
+repeated.random.seed = 23;
+repeated.random.deterministic = true;
+
+auto plan_or = nje::stratified_crossval_plan(batch.y, repeated);
+if (!plan_or.ok()) throw std::runtime_error(plan_or.status().message);
+```
+
 ### Expected output
 
 - `report.mean_metrics` and `report.std_metrics` hold per-metric aggregates.
+- `plan_or.value().folds.size()` is `15`; each repetition preserves class balance across its five folds.
 
 ## Hyperparameter Search (Spec-Level)
 
@@ -610,7 +670,7 @@ candidates.push_back({
 
 auto tune_or = nje::sweep(candidates,
                           batch,
-                          nje::SplitOptions{.plan = nje::CVPlanKind::KFold, .folds = 5},
+                          nje::SplitOptions{.plan = nje::CVPlanKind::CrossVal, .folds = 5},
                           {},
                           nje::AssessOptions{.metrics = {nje::MetricKind::Rmse}},
                           nje::MetricKind::Rmse,

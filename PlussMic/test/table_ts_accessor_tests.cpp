@@ -287,7 +287,7 @@ void test_selection_first_note_tl_and_ts_time_rolling() {
       {"price", Thread(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
       {"volume", Thread(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
   });
-  auto values = df.set_cases("date", false).features({"price", "volume"});
+  auto values = df.label().set("date", false).features({"price", "volume"});
 
   auto rolling = values.ts().rolling("2D", WindowStatistic::Sum);
   const auto price = to_f64(rolling.features("price"));

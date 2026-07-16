@@ -53,7 +53,7 @@ Candidate returned Candidate(std::string in_name, Workflow in_workflow) :
 
 ```cpp
     nja::CrossValidationOptions cv_options{};
-    cv_options.plan = CVPlanKind::KFold;
+    cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.shuffle = true;
     cv_options.random_state = 73;

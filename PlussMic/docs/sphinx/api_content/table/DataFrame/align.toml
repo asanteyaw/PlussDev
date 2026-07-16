@@ -16,14 +16,14 @@ returns = """
 """
 
 see_also = [
-  "<a href=\"#align_caselbl\"><code>DataFrame::align_caselbl</code></a>: shorter case-axis-only surface when you are not also conforming features.",
+  "<a href=\"#label().align\"><code>DataFrame::label().align</code></a>: shorter case-axis-only surface when you are not also conforming features.",
   "<a href=\"#conform\"><code>DataFrame::conform</code></a>: align this frame to another frame's schema and labels in one call.",
   "<a href=\"../../thread_api_reference.md#align\"><code>Thread::align</code></a>: lower-level alignment for a single extracted column."
 ]
 
 notes = [
   """
-`align(const Thread& new_caselbl)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
+`align(const Thread& new_label)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
 """,
   """
 `align(const AlignSpec& spec)` is the full structured form. Use it when you need to control target case labels, target feature order, and numeric fill behavior together.
@@ -46,7 +46,7 @@ Structured alignment description used by the full overload.
 
 `AlignSpec` has three public fields:
 
-- `caselbl`: optional target case labels. When present, the output rows are reordered and expanded to match these labels.
+- `label`: optional target case labels. When present, the output rows are reordered and expanded to match these labels.
 - `features`: optional target feature order. When non-empty, the output features are emitted in exactly this order.
 - `fill`: optional numeric fill scalar. When provided, newly introduced numeric gaps are filled with that value instead of remaining null.
 
@@ -54,7 +54,7 @@ You do not need to populate every field. Leave the fields you do not care about 
 """
 
 [[parameters]]
-name = "new_caselbl"
+name = "new_label"
 body = """
 Replacement case axis used by the case-label-only overload.
 
@@ -95,7 +95,7 @@ auto base = DataFrame({
 }, pluss::make_note({"r1", "r2", "r3"}));
 
 auto out = base.align(DataFrame::AlignSpec{
-    .caselbl = pluss::make_note({"r2", "missing", "r1"}),
+    .label = pluss::make_note({"r2", "missing", "r1"}),
     .fill = 0.0,
 });
 """
@@ -146,7 +146,7 @@ auto base = DataFrame({
 }, pluss::make_note({"r1", "r2", "r3"}));
 
 auto out = base.align(DataFrame::AlignSpec{
-    .caselbl = pluss::make_note({"r3", "r1"}),
+    .label = pluss::make_note({"r3", "r1"}),
     .features = {"B", "C", "A"},
 });
 """
@@ -171,7 +171,7 @@ auto base = DataFrame({
 }, pluss::make_note({"r1", "r2", "r3"}));
 
 auto out = base.align(DataFrame::AlignSpec{
-    .caselbl = pluss::make_note({"r3", "r1"}),
+    .label = pluss::make_note({"r3", "r1"}),
     .features = {"B", "C", "A"},
     .fill = 0.0,
 });
@@ -200,7 +200,7 @@ auto case_driver = DataFrame({
     {"score", pluss::make_series({100.0, 200.0})},
 }, pluss::make_note({"r3", "r1"}));
 
-auto out = base.align(case_driver.caselbl());
+auto out = base.align(case_driver.label().values());
 """
 output = """
 =================
@@ -247,7 +247,7 @@ auto base = DataFrame({
     {"B", pluss::make_series({10.0, 20.0, 30.0})},
 }, pluss::make_note({"r1", "r2", "r3"}));
 
-auto out = base.align(base.caselbl());
+auto out = base.align(base.label().values());
 """
 output = """
 =================

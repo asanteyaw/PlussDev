@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <limits>
 #include <regex>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -932,6 +933,141 @@ static std::int64_t scalar_tick_utc(const Timeline& t) {
   return reinterpret_cast<const std::int64_t*>(t.unsafe_ticks().raw_data())[0];
 }
 
+static std::int64_t floor_div_i64(std::int64_t a, std::int64_t b) {
+  CODEM_CHECK(b > 0, "floor_div_i64: divisor must be positive");
+  std::int64_t q = a / b;
+  const std::int64_t r = a % b;
+  if (r != 0 && a < 0) {
+    --q;
+  }
+  return q;
+}
+
+static std::int64_t epoch_day_ymd_(int y, unsigned mo, unsigned d) {
+  return static_cast<std::int64_t>(
+      (sys_days{year{y} / month{mo} / day{d}}).time_since_epoch().count());
+}
+
+static int weekday_sun0_from_epoch_day_(std::int64_t day_label) {
+  const sys_days dp{days(day_label)};
+  return static_cast<int>(weekday(dp).c_encoding());
+}
+
+static int weekday_sun0_from_ymd_(int y, unsigned mo, unsigned d) {
+  return static_cast<int>(weekday(sys_days{year{y} / month{mo} / day{d}}).c_encoding());
+}
+
+static unsigned days_in_month_raw_(int y, unsigned mo) {
+  const auto first = sys_days(year{y} / month{mo} / day{1});
+  const auto next = (mo == 12) ? sys_days(year{y + 1} / month{1} / day{1})
+                               : sys_days(year{y} / month{mo + 1} / day{1});
+  return static_cast<unsigned>((next - first).count());
+}
+
+static std::int64_t observed_fixed_weekday_(int y, unsigned mo, unsigned d) {
+  const auto actual = epoch_day_ymd_(y, mo, d);
+  const int wd = weekday_sun0_from_ymd_(y, mo, d);
+  if (wd == 6) return actual - 1; // Saturday -> Friday
+  if (wd == 0) return actual + 1; // Sunday -> Monday
+  return actual;
+}
+
+static std::int64_t observed_fixed_forward_(int y, unsigned mo, unsigned d) {
+  auto out = epoch_day_ymd_(y, mo, d);
+  int wd = weekday_sun0_from_ymd_(y, mo, d);
+  while (wd == 0 || wd == 6) {
+    ++out;
+    wd = (wd + 1) % 7;
+  }
+  return out;
+}
+
+static std::int64_t nth_weekday_(int y, unsigned mo, int weekday_sun0, int nth) {
+  CODEM_CHECK(nth >= 1 && nth <= 5, "BusinessCalendar: nth weekday must be 1..5");
+  const int first_wd = weekday_sun0_from_ymd_(y, mo, 1);
+  const unsigned first = 1U + static_cast<unsigned>((weekday_sun0 - first_wd + 7) % 7);
+  const unsigned day_value = first + static_cast<unsigned>((nth - 1) * 7);
+  CODEM_CHECK(day_value <= days_in_month_raw_(y, mo), "BusinessCalendar: nth weekday does not exist");
+  return epoch_day_ymd_(y, mo, day_value);
+}
+
+static std::int64_t last_weekday_(int y, unsigned mo, int weekday_sun0) {
+  const unsigned last_day = days_in_month_raw_(y, mo);
+  const int last_wd = weekday_sun0_from_ymd_(y, mo, last_day);
+  const unsigned day_value = last_day - static_cast<unsigned>((last_wd - weekday_sun0 + 7) % 7);
+  return epoch_day_ymd_(y, mo, day_value);
+}
+
+static sys_days western_easter_(int y) {
+  // Meeus/Jones/Butcher Gregorian computus.
+  const int a = y % 19;
+  const int b = y / 100;
+  const int c = y % 100;
+  const int d = b / 4;
+  const int e = b % 4;
+  const int f = (b + 8) / 25;
+  const int g = (b - f + 1) / 3;
+  const int h = (19 * a + b - d - g + 15) % 30;
+  const int i = c / 4;
+  const int k = c % 4;
+  const int l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const int m = (a + 11 * h + 22 * l) / 451;
+  const int month_value = (h + l - 7 * m + 114) / 31;
+  const int day_value = ((h + l - 7 * m + 114) % 31) + 1;
+  return sys_days{year{y} / month{static_cast<unsigned>(month_value)} /
+                  day{static_cast<unsigned>(day_value)}};
+}
+
+static std::int64_t western_easter_offset_(int y, int offset_days) {
+  return static_cast<std::int64_t>((western_easter_(y) + days{offset_days}).time_since_epoch().count());
+}
+
+static void add_holiday_(std::set<std::int64_t>& out, std::int64_t day_label) {
+  out.insert(day_label);
+}
+
+static void add_observed_fixed_(std::set<std::int64_t>& out, int y, unsigned mo, unsigned d) {
+  add_holiday_(out, observed_fixed_weekday_(y, mo, d));
+}
+
+static void add_observed_fixed_forward_(std::set<std::int64_t>& out, int y, unsigned mo, unsigned d) {
+  add_holiday_(out, observed_fixed_forward_(y, mo, d));
+}
+
+static void add_christmas_boxing_forward_(std::set<std::int64_t>& out, int y) {
+  std::set<std::int64_t> used;
+  const auto christmas = epoch_day_ymd_(y, 12, 25);
+  const auto boxing = epoch_day_ymd_(y, 12, 26);
+  auto observed_christmas = christmas;
+  while (weekday_sun0_from_epoch_day_(observed_christmas) == 0 ||
+         weekday_sun0_from_epoch_day_(observed_christmas) == 6 ||
+         used.contains(observed_christmas)) {
+    ++observed_christmas;
+  }
+  used.insert(observed_christmas);
+  add_holiday_(out, observed_christmas);
+  auto observed_boxing = boxing;
+  while (weekday_sun0_from_epoch_day_(observed_boxing) == 0 ||
+         weekday_sun0_from_epoch_day_(observed_boxing) == 6 ||
+         used.contains(observed_boxing)) {
+    ++observed_boxing;
+  }
+  add_holiday_(out, observed_boxing);
+}
+
+static void add_unique_holidays_(BusinessCalendar& calendar, const std::set<std::int64_t>& days) {
+  calendar.holidays.assign(days.begin(), days.end());
+}
+
+static void check_calendar_year_range_(int year_start, int year_end, std::string_view where) {
+  CODEM_CHECK(year_start >= 1900 && year_start <= 2200,
+              std::string(where) + ": year_start must be in [1900, 2200]");
+  CODEM_CHECK(year_end >= 1900 && year_end <= 2200,
+              std::string(where) + ": year_end must be in [1900, 2200]");
+  CODEM_CHECK(year_start <= year_end,
+              std::string(where) + ": year_start must be <= year_end");
+}
+
 static Timeline scalar_from_utc_ns(std::int64_t ns_utc, std::string_view tz_name) {
   const std::array<std::int64_t, 1> flat{ns_utc};
   Timeline out = ops_internal::timeline_from_epoch_nanos(flat, {});
@@ -1284,6 +1420,409 @@ int TimelineBase::seconds_between(const Timeline& other) const {
   return static_cast<int>((b - a) / 1'000'000'000LL);
 }
 
+namespace {
+
+struct SpanFields {
+  int year{1970};
+  int month{1};
+  int day{1};
+};
+
+SpanFields span_fields_(std::int64_t ns_utc, const TimeZone& tz) {
+  int y = 1970;
+  int mo = 1;
+  int d = 1;
+  int hh = 0;
+  int mm = 0;
+  int ss = 0;
+  int nsec = 0;
+  epoch_nanos_to_local_fields(ns_utc, tz, y, mo, d, hh, mm, ss, nsec);
+  return {y, mo, d};
+}
+
+bool is_month_end_(const SpanFields& x) {
+  return x.day == static_cast<int>(days_in_month_ym(x.year, static_cast<unsigned>(x.month)));
+}
+
+std::int64_t complete_months_forward_(
+    const SpanFields& start,
+    const SpanFields& end,
+    TimelineSpanAnchor anchor) {
+  std::int64_t months =
+      static_cast<std::int64_t>(end.year - start.year) * 12LL +
+      static_cast<std::int64_t>(end.month - start.month);
+  if (end.day < start.day) {
+    const bool month_end_equivalent =
+        anchor == TimelineSpanAnchor::MonthEnd &&
+        is_month_end_(start) &&
+        is_month_end_(end);
+    if (!month_end_equivalent) {
+      --months;
+    }
+  }
+  return months;
+}
+
+std::int64_t complete_years_forward_(
+    const SpanFields& start,
+    const SpanFields& end,
+    TimelineSpanAnchor anchor) {
+  std::int64_t years = static_cast<std::int64_t>(end.year - start.year);
+  if (end.month < start.month ||
+      (end.month == start.month && end.day < start.day)) {
+    const bool month_end_equivalent =
+        anchor == TimelineSpanAnchor::MonthEnd &&
+        start.month == 2 &&
+        end.month == 2 &&
+        is_month_end_(start) &&
+        is_month_end_(end);
+    if (!month_end_equivalent) {
+      --years;
+    }
+  }
+  return years;
+}
+
+std::int64_t boundary_months_(const SpanFields& start, const SpanFields& end) {
+  return static_cast<std::int64_t>(end.year - start.year) * 12LL +
+         static_cast<std::int64_t>(end.month - start.month);
+}
+
+std::int64_t boundary_years_(const SpanFields& start, const SpanFields& end) {
+  return static_cast<std::int64_t>(end.year - start.year);
+}
+
+std::int64_t local_epoch_day_(std::int64_t ns_utc, const TimeZone& tz) {
+  const int off = tz.offset_minutes_at_utc(ns_utc);
+  const std::int64_t local_ns =
+      ns_utc + static_cast<std::int64_t>(off) * 60LL * 1'000'000'000LL;
+  return floor_div_i64(local_ns, 86'400'000'000'000LL);
+}
+
+int weekday_sun0_from_local_day_(std::int64_t local_day) {
+  const sys_days dp{days(local_day)};
+  return static_cast<int>(weekday(dp).c_encoding());
+}
+
+std::int64_t weekmask_popcount_(std::uint8_t weekmask) {
+  std::int64_t count = 0;
+  for (int wd = 0; wd < 7; ++wd) {
+    if (((weekmask >> wd) & std::uint8_t{1}) != 0) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+std::int64_t business_days_inclusive_(
+    std::int64_t first,
+    std::int64_t last,
+    const BusinessCalendar& calendar,
+    const std::set<std::int64_t>& holidays) {
+  if (last < first) {
+    return 0;
+  }
+  const std::int64_t n = last - first + 1;
+  const std::int64_t full_weeks = n / 7;
+  const std::int64_t rem = n % 7;
+  std::int64_t count = full_weeks * weekmask_popcount_(calendar.weekmask);
+  int wd = weekday_sun0_from_local_day_(first);
+  for (std::int64_t i = 0; i < rem; ++i) {
+    if (((calendar.weekmask >> wd) & std::uint8_t{1}) != 0) {
+      ++count;
+    }
+    wd = (wd + 1) % 7;
+  }
+  for (auto it = holidays.lower_bound(first);
+       it != holidays.end() && *it <= last;
+       ++it) {
+    const auto hwd = weekday_sun0_from_local_day_(*it);
+    if (((calendar.weekmask >> hwd) & std::uint8_t{1}) != 0) {
+      --count;
+    }
+  }
+  return count;
+}
+
+std::int64_t business_days_forward_(
+    std::int64_t start_ns,
+    std::int64_t end_ns,
+    const TimeZone& tz,
+    const TimelineSpanOptions& options,
+    const std::set<std::int64_t>& holidays) {
+  const auto start_day = local_epoch_day_(start_ns, tz);
+  const auto end_day = local_epoch_day_(end_ns, tz);
+  const bool include_start =
+      options.closed == TimelineSpanClosed::Left ||
+      options.closed == TimelineSpanClosed::Both;
+  const bool include_end =
+      options.closed == TimelineSpanClosed::Right ||
+      options.closed == TimelineSpanClosed::Both;
+  std::int64_t first = start_day + (include_start ? 0 : 1);
+  std::int64_t last = end_day - (include_end ? 0 : 1);
+  if (last < first) {
+    return 0;
+  }
+  return business_days_inclusive_(first, last, options.calendar, holidays);
+}
+
+void validate_span_options_(const Timeline& self,
+                            const Timeline& other,
+                            const TimelineSpanOptions& options) {
+  const bool calendar_unit =
+      options.unit == TimelineSpanUnit::Months ||
+      options.unit == TimelineSpanUnit::Years ||
+      options.unit == TimelineSpanUnit::BusinessDays;
+  if (calendar_unit) {
+    CODEM_CHECK(
+        std::string_view(self.tz()) == std::string_view(other.tz()),
+        "Timeline::span: calendar/business spans require matching timezones; convert first");
+  }
+  if (options.unit == TimelineSpanUnit::BusinessDays) {
+    CODEM_CHECK((options.calendar.weekmask & 0b10000000) == 0,
+                "Timeline::span(BusinessDays): BusinessCalendar.weekmask uses only 7 weekday bits");
+    CODEM_CHECK((options.calendar.weekmask & 0b01111111) != 0,
+                "Timeline::span(BusinessDays): BusinessCalendar.weekmask cannot be empty");
+    if (!options.calendar.timezone.empty()) {
+      CODEM_CHECK(
+          std::string_view(options.calendar.timezone) == std::string_view(self.tz()),
+          "Timeline::span(BusinessDays): BusinessCalendar.timezone must match Timeline timezone");
+    }
+    constexpr std::int64_t kMaxReasonableEpochDay = 20'000'000LL;
+    for (const auto h : options.calendar.holidays) {
+      CODEM_CHECK(h != Timeline::kNaT,
+                  "Timeline::span(BusinessDays): holidays must be local epoch-day labels, not NaT");
+      CODEM_CHECK(std::llabs(h) <= kMaxReasonableEpochDay,
+                  "Timeline::span(BusinessDays): holiday value is suspicious; holidays must be local epoch-day labels, not epoch nanos");
+    }
+  }
+}
+
+std::int64_t timeline_span_one_(
+    std::int64_t start_ns,
+    std::int64_t end_ns,
+    const TimeZone& tz,
+    const TimelineSpanOptions& options,
+    const std::set<std::int64_t>& holidays) {
+  if (start_ns == Timeline::kNaT || end_ns == Timeline::kNaT) {
+    return Timeline::kNaT;
+  }
+
+  constexpr std::int64_t kMicros = 1'000LL;
+  constexpr std::int64_t kMillis = 1'000'000LL;
+  constexpr std::int64_t kSeconds = 1'000'000'000LL;
+  constexpr std::int64_t kDays = 86'400'000'000'000LL;
+  constexpr std::int64_t kWeeks = 7LL * kDays;
+
+  const auto fixed_span = [&](std::int64_t denom) {
+    std::int64_t out = (end_ns - start_ns) / denom;
+    return options.signed_result ? out : std::llabs(out);
+  };
+
+  switch (options.unit) {
+    case TimelineSpanUnit::Nanos:
+      return options.signed_result ? (end_ns - start_ns) : std::llabs(end_ns - start_ns);
+    case TimelineSpanUnit::Micros:
+      return fixed_span(kMicros);
+    case TimelineSpanUnit::Millis:
+      return fixed_span(kMillis);
+    case TimelineSpanUnit::Seconds:
+      return fixed_span(kSeconds);
+    case TimelineSpanUnit::Days:
+      return fixed_span(kDays);
+    case TimelineSpanUnit::Weeks:
+      return fixed_span(kWeeks);
+    case TimelineSpanUnit::Months:
+    case TimelineSpanUnit::Years:
+    case TimelineSpanUnit::BusinessDays:
+      break;
+  }
+
+  const bool reversed = end_ns < start_ns;
+  const auto lo_ns = reversed ? end_ns : start_ns;
+  const auto hi_ns = reversed ? start_ns : end_ns;
+  const auto lo = span_fields_(lo_ns, tz);
+  const auto hi = span_fields_(hi_ns, tz);
+
+  std::int64_t magnitude = 0;
+  switch (options.unit) {
+    case TimelineSpanUnit::Months:
+      magnitude = options.mode == TimelineSpanMode::Boundary
+                    ? boundary_months_(lo, hi)
+                    : complete_months_forward_(lo, hi, options.anchor);
+      break;
+    case TimelineSpanUnit::Years:
+      magnitude = options.mode == TimelineSpanMode::Boundary
+                    ? boundary_years_(lo, hi)
+                    : complete_years_forward_(lo, hi, options.anchor);
+      break;
+    case TimelineSpanUnit::BusinessDays:
+      magnitude = business_days_forward_(lo_ns, hi_ns, tz, options, holidays);
+      break;
+    default:
+      CODEM_FAIL("Timeline::span: unsupported span unit");
+  }
+
+  if (!options.signed_result) {
+    return magnitude;
+  }
+  return reversed ? -magnitude : magnitude;
+}
+
+} // namespace
+
+BusinessCalendar BusinessCalendar::monfri() {
+  BusinessCalendar cal;
+  cal.weekmask = 0b0111110;
+  cal.name = "MonFri";
+  return cal;
+}
+
+BusinessCalendar BusinessCalendar::usa_federal(int year_start, int year_end) {
+  check_calendar_year_range_(year_start, year_end, "BusinessCalendar::usa_federal");
+  BusinessCalendar cal = monfri();
+  cal.name = "US Federal";
+  cal.region = "US";
+  std::set<std::int64_t> days;
+  for (int y = year_start; y <= year_end; ++y) {
+    add_observed_fixed_(days, y, 1, 1);   // New Year's Day
+    add_holiday_(days, nth_weekday_(y, 1, 1, 3));  // MLK Day
+    add_holiday_(days, nth_weekday_(y, 2, 1, 3));  // Washington's Birthday
+    add_holiday_(days, last_weekday_(y, 5, 1));    // Memorial Day
+    if (y >= 2021) {
+      add_observed_fixed_(days, y, 6, 19);          // Juneteenth
+    }
+    add_observed_fixed_(days, y, 7, 4);             // Independence Day
+    add_holiday_(days, nth_weekday_(y, 9, 1, 1));   // Labor Day
+    add_holiday_(days, nth_weekday_(y, 10, 1, 2));  // Columbus Day
+    add_observed_fixed_(days, y, 11, 11);           // Veterans Day
+    add_holiday_(days, nth_weekday_(y, 11, 4, 4));  // Thanksgiving
+    add_observed_fixed_(days, y, 12, 25);           // Christmas
+  }
+  add_unique_holidays_(cal, days);
+  return cal;
+}
+
+BusinessCalendar BusinessCalendar::canada_federal(int year_start, int year_end) {
+  check_calendar_year_range_(year_start, year_end, "BusinessCalendar::canada_federal");
+  BusinessCalendar cal = monfri();
+  cal.name = "Canada Federal";
+  cal.region = "CA";
+  std::set<std::int64_t> days;
+  for (int y = year_start; y <= year_end; ++y) {
+    add_observed_fixed_forward_(days, y, 1, 1);     // New Year's Day
+    add_holiday_(days, western_easter_offset_(y, -2)); // Good Friday
+    add_holiday_(days, last_weekday_(y, 5, 1));     // Victoria Day, Monday before May 25
+    add_observed_fixed_forward_(days, y, 7, 1);     // Canada Day
+    add_holiday_(days, nth_weekday_(y, 9, 1, 1));   // Labour Day
+    if (y >= 2021) {
+      add_observed_fixed_forward_(days, y, 9, 30);  // National Day for Truth and Reconciliation
+    }
+    add_holiday_(days, nth_weekday_(y, 10, 1, 2));  // Thanksgiving
+    add_observed_fixed_forward_(days, y, 11, 11);   // Remembrance Day
+    add_christmas_boxing_forward_(days, y);         // Christmas and Boxing Day
+  }
+  add_unique_holidays_(cal, days);
+  return cal;
+}
+
+BusinessCalendar BusinessCalendar::uk_bank(int year_start, int year_end) {
+  check_calendar_year_range_(year_start, year_end, "BusinessCalendar::uk_bank");
+  BusinessCalendar cal = monfri();
+  cal.name = "UK Bank Holidays England/Wales";
+  cal.region = "GB-EAW";
+  cal.timezone = "Europe/London";
+  std::set<std::int64_t> days;
+  for (int y = year_start; y <= year_end; ++y) {
+    add_holiday_(days, observed_fixed_forward_(y, 1, 1));   // New Year's Day substitute forward
+    add_holiday_(days, western_easter_offset_(y, -2));      // Good Friday
+    add_holiday_(days, western_easter_offset_(y, 1));       // Easter Monday
+    add_holiday_(days, nth_weekday_(y, 5, 1, 1));           // Early May bank holiday
+    add_holiday_(days, last_weekday_(y, 5, 1));             // Spring bank holiday
+    add_holiday_(days, last_weekday_(y, 8, 1));             // Summer bank holiday
+
+    add_christmas_boxing_forward_(days, y);
+  }
+  add_unique_holidays_(cal, days);
+  return cal;
+}
+
+BusinessCalendar BusinessCalendar::target2(int year_start, int year_end) {
+  check_calendar_year_range_(year_start, year_end, "BusinessCalendar::target2");
+  BusinessCalendar cal = monfri();
+  cal.name = "TARGET2";
+  cal.region = "EU";
+  cal.timezone = "UTC";
+  std::set<std::int64_t> days;
+  for (int y = year_start; y <= year_end; ++y) {
+    add_holiday_(days, epoch_day_ymd_(y, 1, 1));
+    add_holiday_(days, western_easter_offset_(y, -2)); // Good Friday
+    add_holiday_(days, western_easter_offset_(y, 1));  // Easter Monday
+    add_holiday_(days, epoch_day_ymd_(y, 5, 1));
+    add_holiday_(days, epoch_day_ymd_(y, 12, 25));
+    add_holiday_(days, epoch_day_ymd_(y, 12, 26));
+  }
+  add_unique_holidays_(cal, days);
+  return cal;
+}
+
+BusinessCalendar BusinessCalendar::nyse(int year_start, int year_end) {
+  check_calendar_year_range_(year_start, year_end, "BusinessCalendar::nyse");
+  BusinessCalendar cal = monfri();
+  cal.name = "NYSE";
+  cal.region = "US-NYSE";
+  cal.timezone = "America/New_York";
+  std::set<std::int64_t> days;
+  for (int y = year_start; y <= year_end; ++y) {
+    const auto new_year = epoch_day_ymd_(y, 1, 1);
+    const int new_year_wd = weekday_sun0_from_ymd_(y, 1, 1);
+    if (new_year_wd != 6) { // NYSE does not observe Saturday New Year's Day on prior Friday.
+      add_holiday_(days, new_year_wd == 0 ? new_year + 1 : new_year);
+    }
+    add_holiday_(days, nth_weekday_(y, 1, 1, 3));   // MLK Day
+    add_holiday_(days, nth_weekday_(y, 2, 1, 3));   // Washington's Birthday
+    add_holiday_(days, western_easter_offset_(y, -2)); // Good Friday
+    add_holiday_(days, last_weekday_(y, 5, 1));     // Memorial Day
+    if (y >= 2022) {
+      add_observed_fixed_(days, y, 6, 19);          // Juneteenth
+    }
+    add_observed_fixed_(days, y, 7, 4);             // Independence Day
+    add_holiday_(days, nth_weekday_(y, 9, 1, 1));   // Labor Day
+    add_holiday_(days, nth_weekday_(y, 11, 4, 4));  // Thanksgiving
+    add_observed_fixed_(days, y, 12, 25);           // Christmas
+  }
+  add_unique_holidays_(cal, days);
+  return cal;
+}
+
+pluss::codem::Series TimelineBase::span(
+    const Timeline& other,
+    const TimelineSpanOptions& options) const {
+  const auto& self = as_timeline(*this);
+  check_timeline_core(self.unsafe_ticks());
+  check_timeline_core(other.unsafe_ticks());
+
+  validate_span_options_(self, other, options);
+
+  std::set<std::int64_t> holidays(
+      options.calendar.holidays.begin(),
+      options.calendar.holidays.end());
+  const TimeZone tz = TimeZone::load(self.tz());
+  const auto shape =
+      pluss::codem::SeriesIterator::broadcast_shape(
+          self.unsafe_ticks().sizes(),
+          other.unsafe_ticks().sizes());
+  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  auto it = pluss::codem::SeriesIterator::binary(self.unsafe_ticks(), other.unsafe_ticks(), out);
+  const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
+  const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
+  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
+    op[oo] = timeline_span_one_(ap[ao], bp[bo], tz, options, holidays);
+  });
+  return out;
+}
+
 Timeline TimelineBase::concat(const Timeline& other) const {
   const auto& self = as_timeline(*this);
   CODEM_CHECK(std::string_view(self.tz()) == std::string_view(other.tz()),
@@ -1586,6 +2125,13 @@ pluss::codem::Series TimelineBase::epoch_millis() const {
 pluss::codem::Series TimelineBase::epoch_seconds() const {
   const auto& self = as_timeline(*this);
   auto flat = copy_epoch_scaled(self, 1'000'000'000LL);
+  std::vector<std::int64_t> shape(self.sizes().begin(), self.sizes().end());
+  return make_i64_series(flat, shape);
+}
+
+pluss::codem::Series TimelineBase::epoch_days() const {
+  const auto& self = as_timeline(*this);
+  auto flat = copy_epoch_scaled(self, 86'400'000'000'000LL);
   std::vector<std::int64_t> shape(self.sizes().begin(), self.sizes().end());
   return make_i64_series(flat, shape);
 }

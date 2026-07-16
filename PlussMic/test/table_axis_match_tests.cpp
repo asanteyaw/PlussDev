@@ -63,7 +63,7 @@ void test_union_matching_for_frame_math() {
   const auto positional = left.add(right);
   expect(positional.features() == std::vector<std::string>({"x", "y"}),
          "default frame arithmetic should preserve left feature labels under positional semantics");
-  expect(positional.caselbl().as_note().vector() ==
+  expect(positional.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "default frame arithmetic should preserve left case labels under positional semantics");
   expect(positional.features("x").as_series().to_vec<double>() ==
@@ -72,7 +72,7 @@ void test_union_matching_for_frame_math() {
   const auto result = left.add(right, {.align = pluss::table::AlignBy::Both});
   expect(result.features() == std::vector<std::string>({"x", "y", "z"}),
          "union matching should preserve left feature order and append right-only features");
-  expect(result.caselbl().as_note().vector() ==
+  expect(result.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "union matching should preserve left case order and append right-only cases");
 
@@ -111,7 +111,7 @@ void test_explicit_common_matching() {
 
   expect(matched.left.features() == std::vector<std::string>({"y"}),
          "common feature matching should retain shared features only");
-  expect(matched.left.caselbl().as_note().vector() ==
+  expect(matched.left.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A"}),
          "common case matching should retain shared cases only");
   expect(matched.left.features("y").as_series().to_vec<double>() ==
@@ -122,7 +122,7 @@ void test_explicit_common_matching() {
          "common matching should gather the corresponding right value");
 }
 
-void test_repeated_cases_pair_in_order() {
+void test_repeated_caselbl_pair_in_order() {
   const auto left = make_frame(
       {{"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
       {"A", "A"});
@@ -170,7 +170,7 @@ void test_case_aware_horizontal_composition() {
       {"B", "A"});
 
   const auto combined = left.combine(right);
-  expect(combined.caselbl().as_note().vector() ==
+  expect(combined.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "horizontal composition should match cases by label");
   expect(pluss::table::detail::validity_mask(combined.features("x"))->to_vec<bool>() ==
@@ -187,7 +187,7 @@ void test_case_aware_horizontal_composition() {
       make_frame(
           {{"x", Thread(pluss::make_series(std::vector<double>{9.0}))}},
           {"A"}));
-  expect(updated.caselbl().as_note().vector() ==
+  expect(updated.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "update should keep the left case axis");
   expect(updated.features("x").as_series().to_vec<double>() ==
@@ -213,7 +213,7 @@ void test_vertical_case_extension() {
   expect(extended.features() ==
              std::vector<std::string>({"x", "y", "z"}),
          "case extension should use the stable feature union");
-  expect(extended.caselbl().as_note().vector() ==
+  expect(extended.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B", "A"}),
          "case extension should append the full case axes");
   expect(pluss::table::detail::validity_mask(extended.features("x"))->to_vec<bool>() ==
@@ -227,7 +227,7 @@ void test_vertical_case_extension() {
       left.extend_cases(right, FrameMatchRule::Common, true);
   expect(common.features() == std::vector<std::string>({"y"}),
          "common case extension should retain shared features only");
-  expect(common.caselbl().as_series().to_vec<std::int64_t>() ==
+  expect(common.label().values().as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "fresh case extension should create one contiguous case axis");
 
@@ -298,12 +298,16 @@ void test_vectorized_group_reductions() {
       {"group", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
       {"value", Thread(pluss::make_series(
           std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
+      {"label", Thread(pluss::make_note({"x", "y", "z", "z", "w"}))},
   });
   const std::vector<DataFrame::GroupSpec> specs{
       {"n", "", DataFrame::GroupOp::Count},
       {"distinct", "value", DataFrame::GroupOp::Nunique},
       {"total", "value", DataFrame::GroupOp::Sum},
       {"average", "value", DataFrame::GroupOp::Mean},
+      {"middle", "value", DataFrame::GroupOp::Median},
+      {"num_mode", "value", DataFrame::GroupOp::Mode},
+      {"label_mode", "label", DataFrame::GroupOp::Mode},
       {"smallest", "value", DataFrame::GroupOp::Min},
       {"largest", "value", DataFrame::GroupOp::Max},
       {"spread", "value", DataFrame::GroupOp::Std},
@@ -329,6 +333,15 @@ void test_vectorized_group_reductions() {
   expect(grouped.features("average").as_series().to_vec<double>() ==
              std::vector<double>({2.0, 4.0}),
          "group mean should reduce by group id");
+  expect(grouped.features("middle").as_series().to_vec<double>() ==
+             std::vector<double>({2.0, 4.0}),
+         "group median should reduce by group id");
+  expect(grouped.features("num_mode").as_series().to_vec<double>() ==
+             std::vector<double>({1.0, 2.0}),
+         "group numeric mode should tie-break by first-seen row");
+  expect(grouped.features("label_mode").as_note().vector() ==
+             std::vector<std::string_view>({"x", "z"}),
+         "group note mode should reduce by group id");
   expect(grouped.features("smallest").as_series().to_vec<double>() ==
              std::vector<double>({1.0, 2.0}),
          "group minimum should reduce by group id");
@@ -343,6 +356,17 @@ void test_vectorized_group_reductions() {
   expect(std::abs(var_values[0] - 2.0) < 1e-12 &&
              std::abs(var_values[1] - 4.0) < 1e-12,
          "group variance should use sample degrees of freedom");
+
+  const auto pivot_frame = DataFrame({
+      {"case", Thread(pluss::make_note({"r1", "r1", "r2", "r2"}))},
+      {"feature", Thread(pluss::make_note({"c1", "c1", "c1", "c1"}))},
+      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 5.0, 2.0, 8.0}))},
+  });
+  const auto pivoted = pivot_frame.pivot_table(
+      "case", "feature", "value", DataFrame::GroupOp::Median, true, false);
+  expect(pivoted.features("c1").as_series().to_vec<double>() ==
+             std::vector<double>({3.0, 5.0}),
+         "pivot_table median should aggregate duplicate cells");
 }
 
 void test_lengthen_reshape() {
@@ -367,13 +391,13 @@ void test_lengthen_reshape() {
   expect(long_form.features("value").as_series().to_vec<double>() ==
              std::vector<double>({1.0, 2.0, 3.0, 4.0}),
          "lengthen should concatenate homogeneous value payloads");
-  expect(long_form.caselbl().as_series().to_vec<std::int64_t>() ==
+  expect(long_form.label().values().as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "lengthen should create fresh contiguous cases by default");
 
   const auto preserved =
       frame.lengthen({"id"}, {"a", "b"}, "source", "measure", false);
-  expect(preserved.caselbl().as_note().vector() ==
+  expect(preserved.label().values().as_note().vector() ==
              std::vector<std::string_view>({"C1", "C2", "C1", "C2"}),
          "lengthen should tile original cases when requested");
 
@@ -391,22 +415,22 @@ void test_hierarchical_case_axis_engine() {
       {"cost", Thread(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
   });
 
-  const auto indexed = frame.set_cases(
-      DataFrame::SetCasesOptions{
+  const auto indexed = frame.label().set(
+      DataFrame::SetLabelOptions{
           .features = {"region", "account"},
           .drop = false,
           .verify = true,
           .sort = false});
-  expect(indexed.has_levels(), "set_cases should attach structured case levels");
-  expect(indexed.levels() == std::vector<std::string>({"region", "account"}),
-         "set_cases should preserve level names");
-  expect(indexed.level("region").as_note().vector()[0] == "West",
-         "level(name) should expose a typed case level");
+  expect(indexed.label().has(), "label().set should attach structured case labels");
+  expect(indexed.label().names() == std::vector<std::string>({"region", "account"}),
+         "label().set should preserve case-label names");
+  expect(indexed.label().part("region").as_note().vector()[0] == "West",
+         "label().part(name) should expose a typed case label");
 
   const auto selected = indexed.case_study(
-      DataFrame::CasePick{.level = "region", .value = "West"});
+      DataFrame::CasePick{.label = "region", .value = "West"});
   expect(selected.ncases() == 2 &&
-             selected.level("account").as_series().to_vec<std::int64_t>() ==
+             selected.label().part("account").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({102, 101}),
          "case_study(level,value) should perform partial hierarchical selection");
 
@@ -418,55 +442,55 @@ void test_hierarchical_case_axis_engine() {
          "case_study(key) should match a full structured key");
 
   const auto projected = indexed.features({"sales", "cost"});
-  expect(projected.has_levels() && projected.levels() == indexed.levels(),
+  expect(projected.label().has() && projected.label().names() == indexed.label().names(),
          "feature selection should preserve hierarchical case metadata");
 
-  const auto sorted = indexed.sort_cases(
-      DataFrame::SortCasesOptions{.levels = {"region", "account"}});
-  expect(sorted.level("region").as_note().vector() ==
+  const auto sorted = indexed.label().sort(
+      DataFrame::SortLabelOptions{.names = {"region", "account"}});
+  expect(sorted.label().part("region").as_note().vector() ==
              std::vector<std::string_view>({"East", "East", "West", "West"}) &&
-             sorted.level("account").as_series().to_vec<std::int64_t>() ==
+             sorted.label().part("account").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({201, 202, 101, 102}),
-         "sort_cases(levels) should sort by typed case levels");
+         "label().sort(names) should sort by typed case labels");
 
   const std::vector<DataFrame::GroupSpec> specs{
       {"total", "sales", DataFrame::GroupOp::Sum},
       {"n", "", DataFrame::GroupOp::Count},
   };
   const auto grouped = static_cast<DataFrame>(
-      indexed.group_by(DataFrame::CaseGroup{.level = "region"}, specs));
+      indexed.group_by(DataFrame::LabelGroup{.label = "region"}, specs));
   expect(grouped.features("region").as_note().vector() ==
              std::vector<std::string_view>({"West", "East"}) &&
              grouped.features("total").as_series().to_vec<double>() ==
                  std::vector<double>({30.0, 70.0}),
-         "group_by(CaseGroup) should group by case levels without requiring key features");
+         "group_by(LabelGroup) should group by case levels without requiring key features");
 
-  const auto renamed = indexed.rename_levels({{"account", "acct"}});
-  expect(renamed.levels() == std::vector<std::string>({"region", "acct"}),
-         "rename_levels should rename a structured case level");
-  const auto reordered = renamed.reorder_levels({"acct", "region"});
-  expect(reordered.levels() == std::vector<std::string>({"acct", "region"}),
-         "reorder_levels should reorder structured case levels");
-  const auto dropped = reordered.drop_levels({"region"});
-  expect(dropped.levels() == std::vector<std::string>({"acct"}),
-         "drop_levels should remove selected structured case levels");
-  const auto reset = indexed.reset_cases(
-      DataFrame::ResetCasesOptions{.drop = false, .names = {"region_case", "account_case"}});
+  const auto renamed = indexed.label().rename({{"account", "acct"}});
+  expect(renamed.label().names() == std::vector<std::string>({"region", "acct"}),
+         "label().rename should rename a structured case label");
+  const auto reordered = renamed.label().order({"acct", "region"});
+  expect(reordered.label().names() == std::vector<std::string>({"acct", "region"}),
+         "label().order should reorder structured case labels");
+  const auto dropped = reordered.label().drop({"region"});
+  expect(dropped.label().names() == std::vector<std::string>({"acct"}),
+         "label().drop should remove selected structured case labels");
+  const auto reset = indexed.label().reset(
+      DataFrame::ResetLabelOptions{.drop = false, .names = {"region_case", "account_case"}});
   expect(reset.has_feature("region_case") && reset.has_feature("account_case") &&
-             !reset.has_levels(),
-         "reset_cases should materialize levels as ordinary features and clear hierarchy");
+             !reset.label().has(),
+         "label().reset should materialize case labels as ordinary features and clear hierarchy");
 
   const auto collision_left = DataFrame({
       {"region", Thread(pluss::make_note({"A"}))},
       {"account", Thread(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
       {"value", Thread(pluss::make_series(std::vector<double>{10.0}))},
-  }).set_cases({"region", "account"}, false, "\x1F")
+  }).label().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision_right = DataFrame({
       {"region", Thread(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
       {"account", Thread(pluss::make_note({"C"}))},
       {"value", Thread(pluss::make_series(std::vector<double>{1.0}))},
-  }).set_cases({"region", "account"}, false, "\x1F")
+  }).label().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision = collision_left.add(
       collision_right,
@@ -483,11 +507,11 @@ void test_stack_unstack_hierarchical_cases() {
       {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
       {"quarter", Thread(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
       {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-  }).set_cases({"region", "account", "quarter"}, true);
+  }).label().set({"region", "account", "quarter"}, true);
 
   const auto wide = frame.unstack("quarter");
-  expect(wide.has_levels() &&
-             wide.levels() == std::vector<std::string>({"region", "account"}) &&
+  expect(wide.label().has() &&
+             wide.label().names() == std::vector<std::string>({"region", "account"}) &&
              wide.features() == std::vector<std::string>({"Q1", "Q2"}) &&
              wide.features("Q1").as_series().to_vec<double>() ==
                  std::vector<double>({10.0, 30.0}) &&
@@ -496,8 +520,8 @@ void test_stack_unstack_hierarchical_cases() {
          "unstack should move one case level into wide features");
 
   const auto long_again = wide.stack("quarter", "sales");
-  expect(long_again.has_levels() &&
-             long_again.levels() == std::vector<std::string>({"region", "account", "quarter"}) &&
+  expect(long_again.label().has() &&
+             long_again.label().names() == std::vector<std::string>({"region", "account", "quarter"}) &&
              long_again.features("sales").as_series().to_vec<double>() ==
                  std::vector<double>({10.0, 30.0, 20.0, 40.0}),
          "stack should move features into the case hierarchy and keep typed values");
@@ -506,7 +530,7 @@ void test_stack_unstack_hierarchical_cases() {
       {"region", Thread(pluss::make_note({"West", "West"}))},
       {"quarter", Thread(pluss::make_note({"Q1", "Q1"}))},
       {"sales", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-  }).set_cases({"region", "quarter"}, true);
+  }).label().set({"region", "quarter"}, true);
   expect_throw([&]() { (void)duplicate.unstack("quarter"); },
                "unstack should reject duplicate output cells");
 }
@@ -689,8 +713,8 @@ void test_align_reindex_equivalent() {
       },
       {"r1", "r2"});
 
-  const auto cases = frame.align_caselbl(Thread(pluss::make_note({"r2", "missing", "r1"})));
-  expect(cases.caselbl().as_note().vector() ==
+  const auto cases = frame.label().align(Thread(pluss::make_note({"r2", "missing", "r1"})));
+  expect(cases.label().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing", "r1"}),
          "align_caselbl should conform the case-label axis exactly");
   const auto case_values = cases.features("A").as_series().to_vec<double>();
@@ -701,13 +725,13 @@ void test_align_reindex_equivalent() {
          "align_caselbl should mark missing case labels null");
 
   const auto both = frame.align(DataFrame::AlignSpec{
-      .caselbl = Thread(pluss::make_note({"r2", "missing"})),
+      .label = Thread(pluss::make_note({"r2", "missing"})),
       .features = {"B", "C", "A"},
       .fill = 0.0,
   });
   expect(both.features() == std::vector<std::string>({"B", "C", "A"}),
          "align should conform feature labels exactly");
-  expect(both.caselbl().as_note().vector() ==
+  expect(both.label().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing"}),
          "align should conform case labels exactly");
   expect(both.features("A").as_series().to_vec<double>() ==
@@ -722,12 +746,222 @@ void test_align_reindex_equivalent() {
          "align(fill) missing numeric features should be valid filled values");
 }
 
+void test_timeline_epoch_days_surface() {
+  const auto timeline = pluss::make_timeline({
+      "1970-01-01T00:00:00Z",
+      "1970-01-02T00:00:00Z",
+      "1970-01-03T00:00:00Z",
+  });
+  const auto thread_days =
+      Thread(timeline).tl().epoch(pluss::table::TimeUnit::Days);
+  expect(thread_days.as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "Thread::tl().epoch(TimeUnit::Days) should return epoch-day integers");
+
+  const auto frame = DataFrame({
+      {"when", Thread(timeline)},
+      {"value", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
+  });
+  const auto frame_days = frame.tl("when").epoch(pluss::table::TimeUnit::Days);
+  expect(frame_days.features("when").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 2}),
+         "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Thread::tl()");
+}
+
+void test_timeline_span_surface() {
+  const auto day = [](std::string_view iso) {
+    return pluss::make_timeline(iso).epoch_days().to_vec<std::int64_t>(0);
+  };
+  const auto has_day = [](const pluss::table::BusinessCalendar& calendar, std::int64_t label) {
+    return std::find(calendar.holidays.begin(), calendar.holidays.end(), label) != calendar.holidays.end();
+  };
+
+  const auto starts = Thread(pluss::make_timeline({
+      "2024-01-31T00:00:00Z",
+      "2024-02-29T00:00:00Z",
+      "2024-01-01T00:00:00Z",
+  }));
+  const auto ends = Thread(pluss::make_timeline({
+      "2024-02-01T00:00:00Z",
+      "2025-02-28T00:00:00Z",
+      "2024-01-05T00:00:00Z",
+  }));
+
+  expect(starts.tl().span(ends, pluss::table::TimeUnit::Days)
+             .as_series()
+             .to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1, 365, 4}),
+         "Thread::tl().span(Days) should use fixed UTC 24-hour spans");
+
+  pluss::table::TimelineSpanOptions complete_months;
+  complete_months.unit = pluss::table::TimeUnit::Months;
+  expect(starts.tl().span(ends, complete_months)
+             .as_series()
+             .to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 11, 0}),
+         "Thread::tl().span(Months, Complete) should count completed calendar months");
+
+  pluss::table::TimelineSpanOptions boundary_years;
+  boundary_years.unit = pluss::table::TimeUnit::Years;
+  boundary_years.mode = pluss::table::TimelineSpanMode::Boundary;
+  expect(starts.tl().span(ends, boundary_years)
+             .as_series()
+             .to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 1, 0}),
+         "Thread::tl().span(Years, Boundary) should count crossed year labels");
+
+  pluss::table::TimelineSpanOptions month_end_months;
+  month_end_months.unit = pluss::table::TimeUnit::Months;
+  month_end_months.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
+  expect(Thread(pluss::make_timeline({"2024-01-31T00:00:00Z"}))
+             .tl()
+             .span(Thread(pluss::make_timeline({"2024-02-29T00:00:00Z"})), month_end_months)
+             .as_series()
+             .to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1}),
+         "Thread::tl().span(Months, MonthEnd) should treat paired month ends as complete");
+
+  pluss::table::TimelineSpanOptions month_end_years;
+  month_end_years.unit = pluss::table::TimeUnit::Years;
+  month_end_years.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
+  expect(Thread(pluss::make_timeline({"2024-02-29T00:00:00Z"}))
+             .tl()
+             .span(Thread(pluss::make_timeline({"2025-02-28T00:00:00Z"})), month_end_years)
+             .as_series()
+             .to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1}),
+         "Thread::tl().span(Years, MonthEnd) should handle leap-day to February month-end");
+
+  const auto holiday =
+      pluss::make_timeline({"2024-01-03T00:00:00Z"}).epoch_days().to_vec<std::int64_t>(0);
+  pluss::table::TimelineSpanOptions business;
+  business.unit = pluss::table::TimeUnit::BusinessDays;
+  business.calendar.holidays = {holiday};
+  expect(starts.tl().span(ends, business).as_series().to_vec<std::int64_t>()[2] == 3,
+         "Thread::tl().span(BusinessDays) should honor explicit holiday calendars");
+
+  const auto business_start = Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
+  const auto business_end = Thread(pluss::make_timeline({"2024-01-05T00:00:00Z"}));
+  pluss::table::TimelineSpanOptions closed;
+  closed.unit = pluss::table::TimeUnit::BusinessDays;
+  closed.closed = pluss::table::TimelineSpanClosed::Right;
+  expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({4}),
+         "Thread::tl().span(BusinessDays, Right) should use (start,end]");
+  closed.closed = pluss::table::TimelineSpanClosed::Both;
+  expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({5}),
+         "Thread::tl().span(BusinessDays, Both) should use [start,end]");
+  closed.closed = pluss::table::TimelineSpanClosed::Neither;
+  expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({3}),
+         "Thread::tl().span(BusinessDays, Neither) should use (start,end)");
+
+  pluss::table::TimelineSpanOptions bad_weekmask;
+  bad_weekmask.unit = pluss::table::TimeUnit::BusinessDays;
+  bad_weekmask.calendar.weekmask = 0;
+  expect_throw(
+      [&] { (void)business_start.tl().span(business_end, bad_weekmask); },
+      "Thread::tl().span(BusinessDays) should reject empty business weekmasks");
+
+  pluss::table::TimelineSpanOptions bad_holiday;
+  bad_holiday.unit = pluss::table::TimeUnit::BusinessDays;
+  bad_holiday.calendar.holidays = {1'700'000'000'000'000'000LL};
+  expect_throw(
+      [&] { (void)business_start.tl().span(business_end, bad_holiday); },
+      "Thread::tl().span(BusinessDays) should reject holiday values that look like epoch nanos");
+
+  pluss::table::TimelineSpanOptions bad_calendar_tz;
+  bad_calendar_tz.unit = pluss::table::TimeUnit::BusinessDays;
+  bad_calendar_tz.calendar.timezone = "America/Edmonton";
+  expect_throw(
+      [&] { (void)business_start.tl().span(business_end, bad_calendar_tz); },
+      "Thread::tl().span(BusinessDays) should reject calendar timezone mismatches");
+
+  const auto edmonton_end = Thread(pluss::make_timeline({"2024-01-05T00:00:00Z"})
+                                      .tz_convert("America/Edmonton"));
+  expect_throw(
+      [&] { (void)business_start.tl().span(edmonton_end, business); },
+      "Thread::tl().span(BusinessDays) should reject timeline timezone mismatches");
+
+  const auto monfri = pluss::table::BusinessCalendar::monfri();
+  expect(monfri.weekmask == 0b0111110 && monfri.holidays.empty(),
+         "BusinessCalendar::monfri should be Monday-Friday with no holidays");
+
+  const auto us = pluss::table::BusinessCalendar::usa_federal(2026, 2026);
+  expect(has_day(us, day("2026-07-03T00:00:00Z")) &&
+             has_day(us, day("2026-10-12T00:00:00Z")) &&
+             has_day(us, day("2026-11-11T00:00:00Z")),
+         "BusinessCalendar::usa_federal should include observed Independence, Columbus, and Veterans holidays");
+
+  const auto ca = pluss::table::BusinessCalendar::canada_federal(2026, 2026);
+  expect(has_day(ca, day("2026-09-30T00:00:00Z")) &&
+             has_day(ca, day("2026-12-28T00:00:00Z")),
+         "BusinessCalendar::canada_federal should include Truth/Reconciliation and observed Boxing Day");
+
+  const auto uk = pluss::table::BusinessCalendar::uk_bank(2026, 2026);
+  expect(uk.timezone == "Europe/London" &&
+             has_day(uk, day("2026-04-03T00:00:00Z")) &&
+             has_day(uk, day("2026-04-06T00:00:00Z")) &&
+             has_day(uk, day("2026-05-04T00:00:00Z")) &&
+             has_day(uk, day("2026-08-31T00:00:00Z")),
+         "BusinessCalendar::uk_bank should include England/Wales bank holiday rules");
+
+  const auto target = pluss::table::BusinessCalendar::target2(2026, 2026);
+  expect(target.timezone == "UTC" &&
+             has_day(target, day("2026-05-01T00:00:00Z")) &&
+             has_day(target, day("2026-12-26T00:00:00Z")),
+         "BusinessCalendar::target2 should include TARGET closing days");
+
+  const auto nyse = pluss::table::BusinessCalendar::nyse(2026, 2026);
+  expect(nyse.timezone == "America/New_York" &&
+             has_day(nyse, day("2026-04-03T00:00:00Z")) &&
+             has_day(nyse, day("2026-06-19T00:00:00Z")) &&
+             !has_day(nyse, day("2026-10-12T00:00:00Z")) &&
+             !has_day(nyse, day("2026-11-11T00:00:00Z")),
+         "BusinessCalendar::nyse should include exchange holidays and exclude Columbus/Veterans closures");
+
+  pluss::table::TimelineSpanOptions nyse_span;
+  nyse_span.unit = pluss::table::TimeUnit::BusinessDays;
+  nyse_span.calendar = nyse;
+  expect(Thread(pluss::make_timeline({"2026-04-02T00:00:00Z"}).tz_convert("America/New_York"))
+             .tl()
+             .span(Thread(pluss::make_timeline({"2026-04-06T00:00:00Z"}).tz_convert("America/New_York")), nyse_span)
+             .as_series()
+             .to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({1}),
+         "BusinessCalendar::nyse should remove Good Friday from business-day spans");
+
+  const auto ny = pluss::make_timeline({"2026-07-01T12:00:00Z", "2026-01-01T12:00:00Z"})
+                      .tz_convert("America/New_York")
+                      .hour()
+                      .to_vec<std::int64_t>();
+  expect(ny == std::vector<std::int64_t>({8, 7}),
+         "TimeZone should support America/New_York DST and standard offsets");
+  const auto london = pluss::make_timeline({"2026-07-01T12:00:00Z", "2026-01-01T12:00:00Z"})
+                          .tz_convert("Europe/London")
+                          .hour()
+                          .to_vec<std::int64_t>();
+  expect(london == std::vector<std::int64_t>({13, 12}),
+         "TimeZone should support Europe/London DST and standard offsets");
+
+  const auto frame = DataFrame({
+      {"start", starts},
+      {"end", ends},
+  });
+  const auto frame_months =
+      frame.tl("start").span(frame.features("end"), complete_months);
+  expect(frame_months.features("start").as_series().to_vec<std::int64_t>() ==
+             std::vector<std::int64_t>({0, 11, 0}),
+         "DataFrame::tl().span should delegate through Thread::tl().span");
+}
+
 } // namespace
 
 int main() {
   test_union_matching_for_frame_math();
   test_explicit_common_matching();
-  test_repeated_cases_pair_in_order();
+  test_repeated_caselbl_pair_in_order();
   test_matching_rejects_incompatible_case_types();
   test_case_aware_horizontal_composition();
   test_vertical_case_extension();
@@ -741,5 +975,7 @@ int main() {
   test_streamed_csv_case_batches();
   test_case_aligned_set_and_reduction_axis_rules();
   test_align_reindex_equivalent();
+  test_timeline_epoch_days_surface();
+  test_timeline_span_surface();
   return 0;
 }

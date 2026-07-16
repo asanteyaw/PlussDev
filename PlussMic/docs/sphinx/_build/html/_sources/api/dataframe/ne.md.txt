@@ -217,8 +217,8 @@ id  sales
     <span class="label">Previous</span>
     <span class="title">ndistinct</span>
   </a>
-  <a class="next-link" href="nfeats.html">
+  <a class="next-link" href="nfeatures.html">
     <span class="label">Next</span>
-    <span class="title">nfeats</span>
+    <span class="title">nfeatures</span>
   </a>
 </div>

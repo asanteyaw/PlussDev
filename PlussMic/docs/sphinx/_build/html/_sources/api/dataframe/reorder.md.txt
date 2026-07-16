@@ -158,12 +158,12 @@ col_25  col_10  col_1  col_2  col_3  col_4  col_20  col_5  col_6  col_7  col_8  
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rename_levels.html">
+  <a class="prev-link" href="rename_.html">
     <span class="label">Previous</span>
-    <span class="title">rename_levels</span>
+    <span class="title">rename_</span>
   </a>
-  <a class="next-link" href="reorder_levels.html">
+  <a class="next-link" href="replace.html">
     <span class="label">Next</span>
-    <span class="title">reorder_levels</span>
+    <span class="title">replace</span>
   </a>
 </div>

@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     df = pluss::table::DataFrame::load_csv(csv_path);
   }
 
-  std::cout << "Loaded: [" << df.ncases() << " cs x " << df.nfeats() << " feat]\n";
+  std::cout << "Loaded: [" << df.ncases() << " cs x " << df.nfeatures() << " feat]\n";
   std::cout << "\n=== Initial Exploration ===\n";
   df.info();
   std::cout << "\n";

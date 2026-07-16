@@ -62,8 +62,8 @@ true
     <span class="label">Previous</span>
     <span class="title">all</span>
   </a>
-  <a class="next-link" href="as_note.html">
+  <a class="next-link" href="append.html">
     <span class="label">Next</span>
-    <span class="title">as_note</span>
+    <span class="title">append</span>
   </a>
 </div>

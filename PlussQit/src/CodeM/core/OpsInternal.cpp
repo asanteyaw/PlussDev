@@ -29,6 +29,7 @@
 #include "CodeM/native/cpu/CumKernels.h"
 #include "CodeM/native/cpu/AdvancedIndexingKernels.h"
 #include "CodeM/native/cpu/IndexingExtras.h"
+#include "CodeM/native/cpu/GroupedReductions.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/ViewInvariants.h"
 #include "CodeM/core/SeriesTape.h"
@@ -8998,6 +8999,166 @@ Series Series::scatter_reduce_amin(std::int64_t dim, const Series& index, const 
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   return ops_internal::scatter_reduce(*this, dim, index, src, "amin", include_self, true, initial_scalar);
+}
+
+namespace {
+
+bool grouped_numeric_dtype_(const Series& values) {
+  const auto dt = values.dtype();
+  return dt.scalar == ScalarType::Bool || dt.is_integral() || dt.is_floating();
+}
+
+ScalarType grouped_compute_dtype_(Platform platform) {
+  return platform == Platform::CPU ? ScalarType::Float64 : ScalarType::Float32;
+}
+
+void require_grouped_reduce_args_(
+    const Series& values,
+    const Series& group_ids,
+    std::int64_t group_count,
+    std::string_view where) {
+  PLUSS_CHECK(values.defined(), std::string(where) + ": values Series is undefined");
+  PLUSS_CHECK(group_ids.defined(), std::string(where) + ": group_ids Series is undefined");
+  PLUSS_CHECK(values.dim() == 1, std::string(where) + ": values must be 1D");
+  PLUSS_CHECK(group_ids.dim() == 1, std::string(where) + ": group_ids must be 1D");
+  PLUSS_CHECK(group_ids.numel() == values.numel(),
+              std::string(where) + ": group_ids length must match values length");
+  PLUSS_CHECK(group_count >= 0, std::string(where) + ": group_count must be non-negative");
+}
+
+Series grouped_ids_on_(const Series& group_ids, Platform platform) {
+  Series ids = group_ids;
+  if (ids.platform() != platform || ids.scalar_type() != ScalarType::Int64) {
+    ids = ids.to(platform, ScalarType::Int64);
+  }
+  return ids;
+}
+
+Series grouped_values_on_(const Series& values, Platform platform) {
+  return values.to(platform, grouped_compute_dtype_(platform));
+}
+
+} // namespace
+
+Series Series::grouped_count(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_count");
+  const auto ids = grouped_ids_on_(group_ids, platform());
+  const auto compute_dtype = grouped_compute_dtype_(platform());
+  const auto ones = Series::ones({numel()}, compute_dtype, platform());
+  auto counts = Series::zeros({group_count}, compute_dtype, platform()).scatter_add(0, ids, ones);
+  return counts.to(ScalarType::Int64);
+}
+
+Series Series::grouped_sum(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_sum");
+  PLUSS_CHECK(grouped_numeric_dtype_(*this),
+              "Series::grouped_sum: values must be bool, integral, or floating");
+  const auto ids = grouped_ids_on_(group_ids, platform());
+  const auto values = grouped_values_on_(*this, platform());
+  return Series::zeros({group_count}, values.scalar_type(), platform()).scatter_add(0, ids, values);
+}
+
+Series Series::grouped_mean(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  auto sums = grouped_sum(group_ids, group_count);
+  auto counts = grouped_count(group_ids, group_count).to(sums.scalar_type());
+  if (counts.platform() != sums.platform()) {
+    counts = counts.to(sums.platform());
+  }
+  return sums / counts;
+}
+
+Series Series::grouped_var(
+    const Series& group_ids,
+    std::int64_t group_count,
+    std::int64_t ddof) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  PLUSS_CHECK(ddof >= 0, "Series::grouped_var: ddof must be non-negative");
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_var");
+  PLUSS_CHECK(grouped_numeric_dtype_(*this),
+              "Series::grouped_var: values must be bool, integral, or floating");
+  const auto ids = grouped_ids_on_(group_ids, platform());
+  const auto values = grouped_values_on_(*this, platform());
+  auto counts = grouped_count(group_ids, group_count).to(values.scalar_type());
+  if (counts.platform() != values.platform()) {
+    counts = counts.to(values.platform());
+  }
+  auto sums = Series::zeros({group_count}, values.scalar_type(), platform()).scatter_add(0, ids, values);
+  auto squared_sums =
+      Series::zeros({group_count}, values.scalar_type(), platform()).scatter_add(0, ids, values * values);
+  return ((squared_sums - (sums * sums / counts)) /
+          (counts - static_cast<double>(ddof))).clamp_min(0.0);
+}
+
+Series Series::grouped_std(
+    const Series& group_ids,
+    std::int64_t group_count,
+    std::int64_t ddof) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return grouped_var(group_ids, group_count, ddof).sqrt();
+}
+
+Series Series::grouped_min(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_min");
+  PLUSS_CHECK(grouped_numeric_dtype_(*this),
+              "Series::grouped_min: values must be bool, integral, or floating");
+  const auto ids = grouped_ids_on_(group_ids, platform());
+  const auto values = grouped_values_on_(*this, platform());
+  return Series::full({group_count}, std::numeric_limits<double>::infinity(),
+                      values.scalar_type(), platform())
+      .scatter_reduce(0, ids, values, "amin", true);
+}
+
+Series Series::grouped_max(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_max");
+  PLUSS_CHECK(grouped_numeric_dtype_(*this),
+              "Series::grouped_max: values must be bool, integral, or floating");
+  const auto ids = grouped_ids_on_(group_ids, platform());
+  const auto values = grouped_values_on_(*this, platform());
+  return Series::full({group_count}, -std::numeric_limits<double>::infinity(),
+                      values.scalar_type(), platform())
+      .scatter_reduce(0, ids, values, "amax", true);
+}
+
+Series Series::grouped_median(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_median");
+  PLUSS_CHECK(grouped_numeric_dtype_(*this),
+              "Series::grouped_median: values must be bool, integral, or floating");
+  const auto values_cpu = to(Platform::CPU).contiguous();
+  const auto ids_cpu = group_ids.to(Platform::CPU, ScalarType::Int64).contiguous();
+  auto out = native::cpu::grouped_median(values_cpu, ids_cpu, group_count);
+  if (platform() == Platform::CPU) {
+    return out;
+  }
+  return out.to(ScalarType::Float32).to(platform());
+}
+
+Series Series::grouped_mode(const Series& group_ids, std::int64_t group_count) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  require_grouped_reduce_args_(*this, group_ids, group_count, "Series::grouped_mode");
+  PLUSS_CHECK(grouped_numeric_dtype_(*this),
+              "Series::grouped_mode: values must be bool, integral, or floating");
+  const auto values_cpu = to(Platform::CPU).contiguous();
+  const auto ids_cpu = group_ids.to(Platform::CPU, ScalarType::Int64).contiguous();
+  auto out = native::cpu::grouped_mode(values_cpu, ids_cpu, group_count);
+  if (platform() == Platform::CPU) {
+    return out;
+  }
+  return out.to(ScalarType::Float32).to(platform());
 }
 
 } // namespace pluss::codem::ops_internal

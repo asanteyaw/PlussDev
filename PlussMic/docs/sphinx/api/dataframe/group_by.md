@@ -5,7 +5,7 @@
 ## Signatures
 
 ```cpp
-DataFrame::group_by(const CaseGroup& keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = false) -> DataFrameView
+DataFrame::group_by(const LabelGroup& keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = false) -> DataFrameView
 
 DataFrame::group_by(pluss::RangeView<std::string_view> keys, pluss::RangeView<GroupSpec> specs, bool dropna_keys = true, bool render = false) -> DataFrameView
 

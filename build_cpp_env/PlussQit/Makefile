@@ -2332,6 +2332,30 @@ src/CodeM/native/cpu/GatherScatter.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/GatherScatter.cpp.s
 .PHONY : src/CodeM/native/cpu/GatherScatter.cpp.s
 
+src/CodeM/native/cpu/GroupedReductions.o: src/CodeM/native/cpu/GroupedReductions.cpp.o
+.PHONY : src/CodeM/native/cpu/GroupedReductions.o
+
+# target to build an object file
+src/CodeM/native/cpu/GroupedReductions.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/GroupedReductions.cpp.o
+.PHONY : src/CodeM/native/cpu/GroupedReductions.cpp.o
+
+src/CodeM/native/cpu/GroupedReductions.i: src/CodeM/native/cpu/GroupedReductions.cpp.i
+.PHONY : src/CodeM/native/cpu/GroupedReductions.i
+
+# target to preprocess a source file
+src/CodeM/native/cpu/GroupedReductions.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/GroupedReductions.cpp.i
+.PHONY : src/CodeM/native/cpu/GroupedReductions.cpp.i
+
+src/CodeM/native/cpu/GroupedReductions.s: src/CodeM/native/cpu/GroupedReductions.cpp.s
+.PHONY : src/CodeM/native/cpu/GroupedReductions.s
+
+# target to generate assembly for a file
+src/CodeM/native/cpu/GroupedReductions.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/GroupedReductions.cpp.s
+.PHONY : src/CodeM/native/cpu/GroupedReductions.cpp.s
+
 src/CodeM/native/cpu/IndexingExtras.o: src/CodeM/native/cpu/IndexingExtras.cpp.o
 .PHONY : src/CodeM/native/cpu/IndexingExtras.o
 
@@ -8481,6 +8505,9 @@ help:
 	@echo "... src/CodeM/native/cpu/GatherScatter.o"
 	@echo "... src/CodeM/native/cpu/GatherScatter.i"
 	@echo "... src/CodeM/native/cpu/GatherScatter.s"
+	@echo "... src/CodeM/native/cpu/GroupedReductions.o"
+	@echo "... src/CodeM/native/cpu/GroupedReductions.i"
+	@echo "... src/CodeM/native/cpu/GroupedReductions.s"
 	@echo "... src/CodeM/native/cpu/IndexingExtras.o"
 	@echo "... src/CodeM/native/cpu/IndexingExtras.i"
 	@echo "... src/CodeM/native/cpu/IndexingExtras.s"

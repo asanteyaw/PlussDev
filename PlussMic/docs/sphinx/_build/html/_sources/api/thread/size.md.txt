@@ -39,9 +39,9 @@ auto out = thread.size();
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="show.html">
+  <a class="prev-link" href="shuffle.html">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">shuffle</span>
   </a>
   <a class="next-link" href="skew.html">
     <span class="label">Next</span>

@@ -893,7 +893,7 @@ void enforce_row_limit(const DataFrame::SqlOptions& options,
 
 std::int64_t estimate_frame_bytes(const DataFrame& frame) {
   constexpr std::int64_t kCellHint = 16;
-  const auto cells = frame.ncases() * frame.nfeats();
+  const auto cells = frame.ncases() * frame.nfeatures();
   if (cells < 0) {
     return 0;
   }
@@ -936,7 +936,7 @@ DataFrame with_prefixed_columns(const DataFrame& frame, std::string_view prefix)
   for (const auto& name : names) {
     cols.emplace_back(std::string(prefix) + name, frame.features(name));
   }
-  return DataFrame(std::move(cols), frame.caselbl());
+  return DataFrame(std::move(cols), frame.label().values());
 }
 
 std::pair<std::string, std::string> resolve_join_keys(const DataFrame& left_frame,
@@ -999,7 +999,7 @@ DataFrame project_frame(const DataFrame& frame,
     const auto resolved_source = resolve_feature_reference(proj.source, source_prefixes);
     Thread col;
     if (is_case_projection(proj.source, options) && !frame.has_feature(resolved_source)) {
-      col = frame.caselbl();
+      col = frame.label().values();
     } else {
       col = frame.features(resolved_source);
     }
@@ -1031,7 +1031,7 @@ DataFrame project_frame(const DataFrame& frame,
     }
   }
 
-  return DataFrame(std::move(cols), frame.caselbl());
+  return DataFrame(std::move(cols), frame.label().values());
 }
 
 } // namespace
@@ -1099,7 +1099,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
   if (spec.order.has_value()) {
     auto order_feature = resolve_feature_reference(spec.order->feature, source_prefixes);
     if (iequals(order_feature, "case") && !out.has_feature("case")) {
-      out = out.sort_cases(spec.order->ascending, spec.order->nulls_last);
+      out = out.label().sort(spec.order->ascending, spec.order->nulls_last);
     } else {
       out = out.sort_values({
           DataFrame::ArrangeSpec{order_feature, spec.order->ascending, spec.order->nulls_last},

@@ -121,8 +121,8 @@ auto out = duplicates.drop_duplicates({"student"}, false, true);
     <span class="label">Previous</span>
     <span class="title">drop</span>
   </a>
-  <a class="next-link" href="drop_levels.html">
+  <a class="next-link" href="dropnull.html">
     <span class="label">Next</span>
-    <span class="title">drop_levels</span>
+    <span class="title">dropnull</span>
   </a>
 </div>

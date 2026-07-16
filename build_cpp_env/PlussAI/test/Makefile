@@ -487,6 +487,20 @@ nn_training_parity_test/fast:
 .PHONY : nn_training_parity_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule
+
+# Convenience name for target.
+nodej_balance_test: PlussAI/test/CMakeFiles/nodej_balance_test.dir/rule
+.PHONY : nodej_balance_test
+
+# fast build rule for target.
+nodej_balance_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_balance_test.dir/build.make PlussAI/test/CMakeFiles/nodej_balance_test.dir/build
+.PHONY : nodej_balance_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule
@@ -709,6 +723,20 @@ nodej_tree_test: PlussAI/test/CMakeFiles/nodej_tree_test.dir/rule
 nodej_tree_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_tree_test.dir/build.make PlussAI/test/CMakeFiles/nodej_tree_test.dir/build
 .PHONY : nodej_tree_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/rule
+
+# Convenience name for target.
+nodej_weighted_family_test: PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/rule
+.PHONY : nodej_weighted_family_test
+
+# fast build rule for target.
+nodej_weighted_family_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build
+.PHONY : nodej_weighted_family_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/rnn_fusion_test.dir/rule:
@@ -1242,6 +1270,30 @@ nn_training_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/nn_training_parity_test.cpp.s
 .PHONY : nn_training_parity_test.cpp.s
 
+nodej_balance_test.o: nodej_balance_test.cpp.o
+.PHONY : nodej_balance_test.o
+
+# target to build an object file
+nodej_balance_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_balance_test.dir/build.make PlussAI/test/CMakeFiles/nodej_balance_test.dir/nodej_balance_test.cpp.o
+.PHONY : nodej_balance_test.cpp.o
+
+nodej_balance_test.i: nodej_balance_test.cpp.i
+.PHONY : nodej_balance_test.i
+
+# target to preprocess a source file
+nodej_balance_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_balance_test.dir/build.make PlussAI/test/CMakeFiles/nodej_balance_test.dir/nodej_balance_test.cpp.i
+.PHONY : nodej_balance_test.cpp.i
+
+nodej_balance_test.s: nodej_balance_test.cpp.s
+.PHONY : nodej_balance_test.s
+
+# target to generate assembly for a file
+nodej_balance_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_balance_test.dir/build.make PlussAI/test/CMakeFiles/nodej_balance_test.dir/nodej_balance_test.cpp.s
+.PHONY : nodej_balance_test.cpp.s
+
 nodej_bayes_kernel_test.o: nodej_bayes_kernel_test.cpp.o
 .PHONY : nodej_bayes_kernel_test.o
 
@@ -1626,6 +1678,30 @@ nodej_tree_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_tree_test.dir/build.make PlussAI/test/CMakeFiles/nodej_tree_test.dir/nodej_tree_test.cpp.s
 .PHONY : nodej_tree_test.cpp.s
 
+nodej_weighted_family_test.o: nodej_weighted_family_test.cpp.o
+.PHONY : nodej_weighted_family_test.o
+
+# target to build an object file
+nodej_weighted_family_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/nodej_weighted_family_test.cpp.o
+.PHONY : nodej_weighted_family_test.cpp.o
+
+nodej_weighted_family_test.i: nodej_weighted_family_test.cpp.i
+.PHONY : nodej_weighted_family_test.i
+
+# target to preprocess a source file
+nodej_weighted_family_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/nodej_weighted_family_test.cpp.i
+.PHONY : nodej_weighted_family_test.cpp.i
+
+nodej_weighted_family_test.s: nodej_weighted_family_test.cpp.s
+.PHONY : nodej_weighted_family_test.s
+
+# target to generate assembly for a file
+nodej_weighted_family_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/build.make PlussAI/test/CMakeFiles/nodej_weighted_family_test.dir/nodej_weighted_family_test.cpp.s
+.PHONY : nodej_weighted_family_test.cpp.s
+
 rnn_fusion_test.o: rnn_fusion_test.cpp.o
 .PHONY : rnn_fusion_test.o
 
@@ -1710,6 +1786,7 @@ help:
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
+	@echo "... nodej_balance_test"
 	@echo "... nodej_bayes_kernel_test"
 	@echo "... nodej_cv_tune_test"
 	@echo "... nodej_dataframe_bridge_test"
@@ -1726,6 +1803,7 @@ help:
 	@echo "... nodej_rigorous_suite_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
+	@echo "... nodej_weighted_family_test"
 	@echo "... rnn_fusion_test"
 	@echo "... schedule_test"
 	@echo "... attention_transformer_test.o"
@@ -1791,6 +1869,9 @@ help:
 	@echo "... nn_training_parity_test.o"
 	@echo "... nn_training_parity_test.i"
 	@echo "... nn_training_parity_test.s"
+	@echo "... nodej_balance_test.o"
+	@echo "... nodej_balance_test.i"
+	@echo "... nodej_balance_test.s"
 	@echo "... nodej_bayes_kernel_test.o"
 	@echo "... nodej_bayes_kernel_test.i"
 	@echo "... nodej_bayes_kernel_test.s"
@@ -1839,6 +1920,9 @@ help:
 	@echo "... nodej_tree_test.o"
 	@echo "... nodej_tree_test.i"
 	@echo "... nodej_tree_test.s"
+	@echo "... nodej_weighted_family_test.o"
+	@echo "... nodej_weighted_family_test.i"
+	@echo "... nodej_weighted_family_test.s"
 	@echo "... rnn_fusion_test.o"
 	@echo "... rnn_fusion_test.i"
 	@echo "... rnn_fusion_test.s"

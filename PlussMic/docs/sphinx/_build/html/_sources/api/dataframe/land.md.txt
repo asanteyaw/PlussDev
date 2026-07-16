@@ -69,9 +69,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="kurtosis.html">
+  <a class="prev-link" href="label.html">
     <span class="label">Previous</span>
-    <span class="title">kurtosis</span>
+    <span class="title">label</span>
   </a>
   <a class="next-link" href="le.html">
     <span class="label">Next</span>

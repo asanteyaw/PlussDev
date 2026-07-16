@@ -75,10 +75,10 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::TimeIndex& value)
 }
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
-  PLUSS_CHECK(frame.nfeats() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
+  PLUSS_CHECK(frame.nfeatures() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
   const auto& names = frame.features();
   PLUSS_CHECK(names.size() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
-  return (*this = detail::with_display_labels(frame.features(names.front()), frame.caselbl()));
+  return (*this = detail::with_display_labels(frame.features(names.front()), frame.label().values()));
 }
 
 DataFrame::LetSlots::LetSlots(DataFrame& owner, std::vector<std::string> names, AlignOptions options)
@@ -143,7 +143,7 @@ DataFrame::LetSlots& DataFrame::LetSlots::operator=(const DataFrame& frame) {
   const auto& names = frame.features();
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(detail::with_display_labels(frame.features(name), frame.caselbl()));
+    cols.push_back(detail::with_display_labels(frame.features(name), frame.label().values()));
   }
   assign_from_threads(std::span<const Thread>(cols.data(), cols.size()));
   return *this;

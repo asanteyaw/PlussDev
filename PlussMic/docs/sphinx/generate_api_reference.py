@@ -882,7 +882,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'encoding': 'Text encoding used when reading or writing text-based files.',
         'on_bad_lines': 'Policy for malformed delimited rows during load. Common choices are to error, warn, or skip.',
         'new_cases': 'Replacement case labels in the exact order you want the rows to follow.',
-        'new_caselbl': 'Replacement case labels in the exact order you want the rows to follow.',
+        'new_label': 'Replacement case labels in the exact order you want the rows to follow.',
         'cases': 'Case-label thread to attach to the current object.',
         'rows': enum_note(
             'Selector describing which rows `case_study(...)` should return.',
@@ -901,12 +901,12 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Selector describing which feature columns `case_study(...)` should keep after resolving the row selection.',
             [
                 ('`pluss::table::all_features()`', 'Keep every feature in the same left-to-right order as the source frame.'),
-                ('`pluss::table::col("name")`', 'Keep one named feature.'),
-                ('`pluss::table::col(position)`', 'Keep one feature by zero-based position.'),
-                ('`pluss::table::cols({"a", "b"})`', 'Keep several named features in the requested order.'),
-                ('`pluss::table::cols({0, 2})`', 'Keep several feature positions in the requested order.'),
-                ('`pluss::table::cols(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
-                ('`pluss::table::col_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
+                ('`pluss::table::feature("name")`', 'Keep one named feature.'),
+                ('`pluss::table::feature(position)`', 'Keep one feature by zero-based position.'),
+                ('`pluss::table::features({"a", "b"})`', 'Keep several named features in the requested order.'),
+                ('`pluss::table::features({0, 2})`', 'Keep several feature positions in the requested order.'),
+                ('`pluss::table::features(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
+                ('`pluss::table::feature_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
             ],
         ),
         'drop_feature': 'When `true`, the feature promoted to cases is removed from the ordinary feature columns.',
@@ -1073,17 +1073,17 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         ('DataFrame', 'case_study', 'features'):
             enum_note('Selector describing which feature columns `case_study(...)` should keep after resolving the row selection.', [
                 ('`pluss::table::all_features()`', 'Keep every feature in the same left-to-right order as the source frame.'),
-                ('`pluss::table::col("name")`', 'Keep one named feature.'),
-                ('`pluss::table::col(position)`', 'Keep one feature by zero-based position.'),
-                ('`pluss::table::cols({"a", "b"})`', 'Keep several named features in the requested order.'),
-                ('`pluss::table::cols({0, 2})`', 'Keep several feature positions in the requested order.'),
-                ('`pluss::table::cols(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
-                ('`pluss::table::col_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
+                ('`pluss::table::feature("name")`', 'Keep one named feature.'),
+                ('`pluss::table::feature(position)`', 'Keep one feature by zero-based position.'),
+                ('`pluss::table::features({"a", "b"})`', 'Keep several named features in the requested order.'),
+                ('`pluss::table::features({0, 2})`', 'Keep several feature positions in the requested order.'),
+                ('`pluss::table::features(start, stop)`', 'A half-open positional feature slice `[start, stop)`.'),
+                ('`pluss::table::feature_range("start", "stop")`', 'An inclusive feature-name window from `start` through `stop`.'),
             ]),
-        ('DataFrame', 'level', 'name'):
-            'Case-level name to extract from a multi-level case axis. The returned thread has one value per row in the current frame order.',
-        ('DataFrame', 'level', 'position'):
-            'Zero-based case-level position to extract from a multi-level case axis. Negative positions count backward from the end.',
+        ('DataFrame', 'caselbl', 'name'):
+            'Structured case-label name to extract from a multi-label case axis. The returned thread has one value per row in the current frame order.',
+        ('DataFrame', 'caselbl', 'position'):
+            'Zero-based structured case-label position to extract from a multi-label case axis. Negative positions count backward from the end.',
         ('DataFrame', 'observe', 'row'):
             'Zero-based row position to preview as a one-row `DataFrameView`.',
         ('DataFrame', 'observe', 'start'):
@@ -1165,8 +1165,6 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Feature whose distinct values become the output row groups in the pivoted result.',
         ('DataFrame', 'pivot_table', 'case_feature'):
             'Feature whose distinct values become the output row groups in the pivoted summary result.',
-        ('DataFrame', 'reset_cases', 'case_feature'):
-            'Name to use for the restored case-axis feature when the current cases are materialized back into ordinary columns.',
         ('DataFrame', 'place', 'name'):
             'Feature name to insert or move.',
         ('DataFrame', 'place', 'feature'):
@@ -1238,9 +1236,9 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'SQL execution options such as engine or binding policy for the returned SQL accessor.',
         ('DataFrame', 'sort_values', 'features'):
             'Feature names used as sort keys when you want the same ascending/null policy for every key.',
-        ('DataFrame', 'sort_cases', 'ascending'):
+        ('DataFrame', 'label().sort', 'ascending'):
             'When `true`, case labels are sorted ascending. When `false`, they are sorted descending.',
-        ('DataFrame', 'sort_cases', 'nulls_last'):
+        ('DataFrame', 'label().sort', 'nulls_last'):
             'When `true`, null case labels are placed after observed labels. When `false`, they are placed first.',
         ('DataFrame', 'tail', 'n'):
             'Number of trailing rows to keep from the bottom of the frame.',
@@ -1272,25 +1270,14 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'Policy for nonexistent local times, such as `"raise"` or `"shift_forward"`.',
         ('DataFrame', 'round', 'unit'):
             'Temporal rounding unit such as `"hour"`, `"day"`, or `"month"`.',
-        ('DataFrame', 'resample', 'op'):
-            enum_note('Bin reduction to compute in each time bucket.', [
-                ('count', 'Count observed values within each bucket.'),
-                ('size', 'Count rows within each bucket, including missing values.'),
-                ('sum', 'Compute the numeric sum within each bucket.'),
-                ('mean', 'Compute the arithmetic mean within each bucket.'),
-                ('min', 'Compute the minimum within each bucket.'),
-                ('max', 'Compute the maximum within each bucket.'),
-                ('first', 'Take the first observed value within each bucket.'),
-                ('last', 'Take the last observed value within each bucket.'),
-            ]),
-        ('DataFrame', 'unstack', 'level'):
-            'Case level whose distinct values should become new output columns in the reshaped frame.',
+        ('DataFrame', 'unstack', 'caselbl'):
+            'Structured case label whose distinct values should become new output columns in the reshaped frame.',
         ('DataFrame', 'unstack', 'options'):
             enum_note('Unstack behavior bundle.', [
-                ('`level`', 'Case level whose distinct values are pivoted into output columns.'),
-                ('`drop`', 'When `true`, the remaining case levels stay as case levels instead of also staying as ordinary columns.'),
+                ('`caselbl`', 'Structured case label whose distinct values are pivoted into output columns.'),
+                ('`drop`', 'When `true`, the remaining case labels stay as case labels instead of also staying as ordinary columns.'),
                 ('`sort`', 'When `true`, the pivoted column labels are sorted before the new columns are built.'),
-                ('`separator`', 'Separator inserted between the source value-feature name and the pivoted level value when several value features are present.'),
+                ('`separator`', 'Separator inserted between the source value-feature name and the pivoted case-label value when several value features are present.'),
             ]),
         ('DataFrame', 'unify', 'right'):
             'Right-hand frame whose rows are matched against the left frame by the requested key features.',
@@ -1509,7 +1496,7 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
         'const ReorderSpec&':
             'Structured partial-order instruction that moves only selected features and preserves the relative order of every untouched feature.',
         'const UnstackOptions&':
-            'Structured reshape policy that selects the case level to pivot, whether remaining levels stay as row labels, whether pivoted columns are sorted, and how multi-value output names are separated.',
+            'Structured reshape policy that selects the case label to pivot, whether remaining labels stay as row labels, whether pivoted columns are sorted, and how multi-value output names are separated.',
     }
     lines = []
     for name, typ in params:
@@ -1531,7 +1518,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'bottom': 'Returns the rows with the smallest values in the selected feature.',
             'bucketize': 'Buckets numeric `Series` features into interval labels while preserving the rest of the frame unchanged.',
             'bounded': 'Computes variable-width window statistics where each row chooses its own bounds through a callback.',
-            'case_study': 'Selects rows and columns from a `DataFrame` using explicit positional, label-based, or boolean-mask selector objects. It is the single row/column indexing surface for table selection.',
+            'case_study': 'Selects cases and features from a `DataFrame` using explicit positional, label-based, or boolean-mask selector objects. It is the single case/feature indexing surface for table selection.',
             'catalogue': 'Builds a compact level-and-code encoding for a low-cardinality feature while preserving missingness.',
             'caselbl': 'Returns the current case axis itself. Use this when you want the row labels as data rather than selecting rows from the frame.',
             'combine': 'Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.',
@@ -1543,7 +1530,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'csmax': 'Computes one row-wise maximum across the selected numeric features.',
             'csmin': 'Computes one row-wise minimum across the selected numeric features.',
             'drop_duplicates': 'Removes duplicate rows, optionally considering only a selected feature subset.',
-            'drop_levels': 'Removes one or more named levels from a multi-level case axis.',
+            'label().drop': 'Removes one or more named case labels from a multi-label case axis.',
             'dropnull': 'Drops rows according to an explicit missing-data policy object.',
             'dtypes': 'Returns the public dtype summary for each current feature.',
             'duplicated': 'Builds a boolean mask marking which rows are duplicates of earlier or later rows under the selected keep policy.',
@@ -1597,7 +1584,6 @@ def generic_note(class_name: str, method: Method) -> str:
             'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
-            'has_levels': 'Reports whether the current case axis carries named levels rather than only a flat label thread.',
             'head': 'Returns the first `n` rows of the frame.',
             'height': 'Returns the row count of the current frame.',
             'iat': 'Returns one cell as text using positional row and positional feature coordinates.',
@@ -1608,21 +1594,17 @@ def generic_note(class_name: str, method: Method) -> str:
             'join': 'Adds compatible features from another frame, aligning rows by the shared case axis.',
             'kurtosis': 'Computes row-wise or column-wise sample kurtosis for numeric data.',
             'lengthen': 'Reshapes a wide frame into long form by tiling identifier features and stacking homogeneous value features.',
-            'level': 'Extracts one case-axis level as a full thread, which is useful after you build multi-level row labels with `set_cases({...})`.',
-            'levels': 'Lists the current case-level names in order from outermost to innermost.',
             'match': 'Returns a pair of frames whose cases and features have been matched according to explicit Pluss-native matching rules.',
             'matmul': 'Treats the numeric part of the frame as a matrix and returns the matrix product against another numeric frame.',
             'mask': 'Keeps original values where a boolean mask is false and substitutes new values where the mask is true.',
             'median': 'Computes per-feature medians for the selected numeric features.',
             'ncases': 'Returns the number of rows in the current frame.',
             'ndistinct': 'Counts distinct observed values or distinct value-combinations across the selected features.',
-            'nfeats': 'Returns the number of features in the current frame.',
+            'nfeatures': 'Returns the number of features in the current frame.',
             'note': 'Returns one named feature as a note-backed thread.',
             'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
-            'set_cases': 'Promotes one feature to become the case axis. With the default `drop_feature=true`, that feature stops being a normal column and becomes the row labels instead.',
-            'reset_cases': 'Materializes the current case axis as a normal feature, then restores the default positional cases `0..n-1`.',
-            'align_caselbl': 'Reorders rows so their case labels match the supplied `new_caselbl` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
-            'sort_cases': 'Sorts rows by the current case axis rather than by a data feature.',
+            'label().align': 'Reorders rows so their case labels match the supplied `new_label` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
+            'label().sort': 'Sorts rows by the current case-label axis rather than by a data feature.',
             'add_prefix': 'Prepends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
             'add_suffix': 'Appends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
             'max': 'Computes per-feature maxima for the selected numeric features.',
@@ -1644,10 +1626,10 @@ def generic_note(class_name: str, method: Method) -> str:
             'rename': 'Renames one feature without changing its values.',
             'rename_': 'Renames one feature in place without changing its values.',
             'rename': 'Renames one feature, several features, or the full feature axis without changing row values.',
-            'rename_levels': 'Renames one or more case-axis levels without changing row order or row values.',
+            'label().rename': 'Renames one or more structured case labels without changing row order or row values.',
             'reorder': 'Moves selected features into a new relative position while preserving row data and the untouched feature order.',
-            'reorder_levels': 'Reorders the current case-axis levels and recomputes the composite row labels from that new level order.',
-            'repeated_cases': 'Returns the rows whose current case labels are duplicates of an earlier row.',
+            'label().order': 'Reorders the current structured case labels and recomputes the composite row labels from that new order.',
+            'label().repeated': 'Returns a boolean mask whose true values mark duplicate case labels.',
             'replace': 'Replaces matched scalar or pluss-typed values across selected compatible features and returns the updated frame.',
             'rolling': 'Computes rolling-window features and returns them as a derived frame.',
             'reshuffle': 'Randomly permutes rows or features, depending on the selected axis.',
@@ -1692,7 +1674,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'ts': 'Returns the time-series accessor bound to one or more selected features.',
             'unique_cases': 'Keeps only the first occurrence of each case label and drops later duplicates.',
             'unify': 'Combines two frames by key values. Use `right_on=""` when both frames use the same key name, Pluss-native modes such as `"common"` or `"unite"` to choose retained keys, and `validate` for duplicate-key checks.',
-            'unstack': 'Pivots one case level out of a multi-level case axis so its distinct values become new output columns.',
+            'unstack': 'Pivots one structured case label out of a multi-label case axis so its distinct values become new output columns.',
             'unsqueeze': 'Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.',
             'query': 'Keeps only the rows that satisfy the supplied filter expression or mask-producing query.',
             'where': 'Keeps only the rows where the supplied boolean mask is true.',
@@ -2345,18 +2327,19 @@ def example_caption(class_name: str, method: Method) -> str:
             return 'Study one row by position.'
         if n == 'drop':
             return 'Drop the named columns and keep the remaining schema unchanged.'
-        if n == 'drop_levels':
+        if n == 'label().drop':
             if 'initializer_list<std::string_view>' in sig:
-                return 'Drop one or more case levels by naming them inline.'
-            return 'Drop one or more case levels from a reusable level-name range.'
+                return 'Drop one or more structured case labels by naming them inline.'
+            return 'Drop one or more structured case labels from a reusable name range.'
         if n == 'feature_ref':
             return 'Open a reusable column reference without copying the feature into a new frame.'
-        if n == 'level':
+        if n == 'caselbl':
             if 'std::string_view name' in sig:
-                return 'Extract one case level by its level name.'
-            return 'Extract one case level by its zero-based level position.'
-        if n == 'levels':
-            return 'List the current case-level names in order.'
+                return 'Extract one structured case-label component by name.'
+            if 'std::int64_t position' in sig:
+                return 'Extract one structured case-label component by zero-based position.'
+        if n == 'caselbls':
+            return 'List the current structured case-label names in order.'
         if n == 'matmul':
             return 'Multiply the numeric matrix represented by this frame with another numeric frame.'
         if n == 'mode':
@@ -2489,9 +2472,9 @@ def example_caption(class_name: str, method: Method) -> str:
         if n == 'select':
             return 'Project only the named columns into a new frame.'
         if n == 'unstack':
-            if 'std::string_view level' in sig:
-                return 'Pivot one named case level into output columns using the default unstack options.'
-            return 'Pivot one named case level into output columns while controlling drop, sort, and separator behavior.'
+            if 'std::string_view caselbl' in sig:
+                return 'Pivot one named case label into output columns using the default unstack options.'
+            return 'Pivot one named case label into output columns while controlling drop, sort, and separator behavior.'
         if n == 'update':
             return 'Overlay another aligned frame onto the current one and resolve collisions with the overwrite switch.'
         if n == 'info':
@@ -2780,10 +2763,10 @@ DF_SUFFIX_OUT = """id_2024  sales_2024  city_2024
 2        120.0       Tema
 3         90.0       Kumasi"""
 
-DF_WITH_CASES_OUT = """df.caselbl():
+DF_WITH_CASES_OUT = """df.label().values():
 [0, 1, 2]
 
-out.caselbl():
+out.label().values():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -2798,7 +2781,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.caselbl():
+out.label().values():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():
@@ -2807,10 +2790,10 @@ id  sales
 2   120.0
 3    90.0"""
 
-DF_RESET_CASES_OUT = """with_cases.caselbl():
+DF_RESET_CASES_OUT = """with_cases.label().values():
 ["Accra", "Tema", "Kumasi"]
 
-out.caselbl():
+out.label().values():
 [0, 1, 2]
 
 out.head():
@@ -2819,10 +2802,10 @@ id  sales  case
 2   120.0  Tema
 3    90.0  Kumasi"""
 
-DF_ALIGN_CASES_OUT = """df.caselbl():
+DF_ALIGN_CASES_OUT = """df.label().values():
 ["cs0", "cs1", "cs2"]
 
-out.caselbl():
+out.label().values():
 ["cs1", "cs0", "cs2"]
 
 out.head():
@@ -2944,7 +2927,7 @@ Kumasi  middle  12.0   2.5""",
         ),
         (
             'Reorder rows by explicit positions and keep only named features.',
-            base + '\n\nauto out = sales.case_study(pos({3, 0}), cols({"city", "price"}));',
+            base + '\n\nauto out = sales.case_study(pos({3, 0}), features({"city", "price"}));',
             """city    price
 Tamale  5.0
 Accra   3.0""",
@@ -2958,14 +2941,14 @@ Kumasi  middle  12.0   2.5""",
         ),
         (
             'Request several labels in your own order and project one feature subset.',
-            base + '\n\nauto out = labeled.case_study(labels({"D400", "A100"}), cols({"city", "units"}));',
+            base + '\n\nauto out = labeled.case_study(labels({"D400", "A100"}), features({"city", "units"}));',
             """city    units
 Tamale  5.0
 Accra   10.0""",
         ),
         (
             'Slice by case labels inclusively and slice features by name inclusively.',
-            base + '\n\nauto out = labeled.case_study(label_range("B200", "D400"), col_range("region", "price"));',
+            base + '\n\nauto out = labeled.case_study(label_range("B200", "D400"), feature_range("region", "price"));',
             """region  units  price
 south   7.0    4.0
 middle  12.0   2.5
@@ -2973,25 +2956,25 @@ north   5.0    5.0""",
         ),
         (
             'Use a boolean mask just like a filter, then keep only the columns you care about.',
-            base + '\n\nauto out = sales.case_study(mask(sales.features("units") >= 10.0), cols({"city", "units"}));',
+            base + '\n\nauto out = sales.case_study(mask(sales.features("units") >= 10.0), features({"city", "units"}));',
             """city    units
 Accra   10.0
 Kumasi  12.0""",
         ),
         (
             'Get a one-cell result without a separate scalar-only indexing method.',
-            base + '\n\nauto out = labeled.case_study(label("A100"), col("price"));',
+            base + '\n\nauto out = labeled.case_study(label("A100"), feature("price"));',
             """price
 3.0""",
         ),
         (
             'Count backward from the end with a negative row position.',
-            base + '\n\nauto out = sales.case_study(pos(-1), cols({"city", "price"}));',
+            base + '\n\nauto out = sales.case_study(pos(-1), features({"city", "price"}));',
             """city    price
 Tamale  5.0""",
         ),
         (
-            'Match one structured case level with `CasePick` after `set_cases(...)`.',
+            'Match one structured case label with `CasePick` after `label().set(...)`.',
             """using namespace pluss::table;
 
 auto indexed = DataFrame({
@@ -3000,10 +2983,10 @@ auto indexed = DataFrame({
     {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
     {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
     {"cost", pluss::make_series({4.0, 8.0, 12.0, 16.0})},
-}).set_cases({"region", "account", "quarter"}, false);
+}).label().set({"region", "account", "quarter"}, false);
 
 auto out = indexed.case_study(DataFrame::CasePick{
-    .level = "region",
+    .label = "region",
     .value = "West",
 }).features({"sales", "cost"});""",
             """sales  cost
@@ -3020,7 +3003,7 @@ auto indexed = DataFrame({
     {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
     {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
     {"cost", pluss::make_series({4.0, 8.0, 12.0, 16.0})},
-}).set_cases({"region", "account", "quarter"}, false);
+}).label().set({"region", "account", "quarter"}, false);
 
 auto out = indexed.case_study(DataFrame::CasePick{
     .key = {"East", "201", "Q2"},
@@ -3053,15 +3036,15 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('#### Parameters')
     lines.append('')
     lines.append('**pick**')
-    lines.append('    Structured-case selector used when the DataFrame has named case levels created by `set_cases(...)`.')
+    lines.append('    Structured-case selector used when the DataFrame has named case labels created by `label().set(...)`.')
     lines.append('')
     lines.append('    Use this overload for hierarchical case lookup rather than ordinary row slicing.')
     lines.append('')
     lines.append('    Supported forms:')
-    lines.append('    - `.level = "region", .value = "West"` selects every row whose named case level equals the supplied value.')
-    lines.append('    - `.levels = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case levels at once.')
-    lines.append('    - `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-level order.')
-    lines.append('    - `.drop = true` removes the matched case level(s) from the returned structured case metadata after selection.')
+    lines.append('    - `.label = "region", .value = "West"` selects every row whose named case label equals the supplied value.')
+    lines.append('    - `.caselbls = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case labels at once.')
+    lines.append('    - `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-label order.')
+    lines.append('    - `.drop = true` removes the matched case caselbl(s) from the returned structured case metadata after selection.')
     lines.append('')
     lines.append('**rows**')
     lines.append('    Row selector used for ordinary case-axis lookup and positional indexing.')
@@ -3080,12 +3063,12 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('')
     lines.append('    Supported forms:')
     lines.append('    - `pluss::table::all_features()` keeps every feature in source order.')
-    lines.append('    - `pluss::table::col("name")` keeps one named feature.')
-    lines.append('    - `pluss::table::col(position)` keeps one feature by zero-based position.')
-    lines.append('    - `pluss::table::cols({"a", "b"})` keeps named features in the requested order.')
-    lines.append('    - `pluss::table::cols({0, 2})` keeps feature positions in the requested order.')
-    lines.append('    - `pluss::table::cols(start, stop)` keeps a half-open positional feature slice `[start, stop)`.')
-    lines.append('    - `pluss::table::col_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.')
+    lines.append('    - `pluss::table::feature("name")` keeps one named feature.')
+    lines.append('    - `pluss::table::feature(position)` keeps one feature by zero-based position.')
+    lines.append('    - `pluss::table::features({"a", "b"})` keeps named features in the requested order.')
+    lines.append('    - `pluss::table::features({0, 2})` keeps feature positions in the requested order.')
+    lines.append('    - `pluss::table::features(start, stop)` keeps a half-open positional feature slice `[start, stop)`.')
+    lines.append('    - `pluss::table::feature_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.')
     lines.append('')
     lines.append('#### Returns')
     lines.append('')
@@ -3094,7 +3077,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('')
     lines.append('#### What It Does')
     lines.append('')
-    lines.append('`case_study(...)` is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-level case lookup through `CasePick` when the frame has hierarchical cases.')
+    lines.append('`case_study(...)` is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-label case lookup through `CasePick` when the frame has hierarchical cases.')
     lines.append('')
     lines.append('#### Selector Rules')
     lines.append('')
@@ -3103,8 +3086,8 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('- Label selectors match against the current case axis returned by `caselbl()`.')
     lines.append('- `label(value)` returns every matching row, so duplicate case labels are preserved instead of collapsed.')
     lines.append('- `label_range(start, stop)` is inclusive on both ends and walks the current case-axis order.')
-    lines.append('- Feature-position slices are half-open, while `col_range(start, stop)` is inclusive on both ends.')
-    lines.append('- `CasePick` reads named case levels created by `set_cases(...)`; it does not inspect ordinary feature columns.')
+    lines.append('- Feature-position slices are half-open, while `feature_range(start, stop)` is inclusive on both ends.')
+    lines.append('- `CasePick` reads named case labels created by `label().set(...)`; it does not inspect ordinary feature columns.')
     lines.append('- Partial `CasePick` matches preserve the existing row order already stored on the frame.')
     lines.append('- Because `case_study(...)` always returns a frame, you do not need separate `at(...)` or `iat(...)` methods for single-cell access.')
     lines.append('')
@@ -3133,7 +3116,7 @@ def render_case_study_page(overloads: list[Method], class_name: str) -> list[str
     lines.append('#### Behavior Notes')
     lines.append('')
     lines.append('- `caselbl()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.')
-    lines.append('- `CasePick` is the structured-case overload. Use it only after `set_cases(...)` has created named case levels.')
+    lines.append('- `CasePick` is the structured-case overload. Use it only after `label().set(...)` has created named case labels.')
     lines.append('- Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.')
     lines.append('- When you only want to preview a row window instead of materializing a selection result for later work, use `observe(...)`.')
     lines.append('- If you already know the final feature order and only need column projection, `features({...})` is still the lighter-weight feature-only path.')
@@ -3574,24 +3557,24 @@ summary | 8.333333333      1.040833
             ],
         )
 
-    if name == 'align_caselbl':
+    if name == 'label().align':
         return render_custom_method_page(
             class_name,
             name,
             overloads,
             'Reorders the current frame so its case axis follows the supplied case order. This is the row-alignment helper to use when you already know the target case ordering you want to conform to.',
             [
-                '`new_caselbl` : `Thread`',
+                '`new_label` : `Thread`',
                 '    Target case labels in the exact order you want the output rows to follow.',
             ],
             [
                 '`DataFrame`',
-                '    A new frame whose rows and case labels follow `new_caselbl`.',
+                '    A new frame whose rows and case labels follow `new_label`.',
             ],
             [
                 (
                     'Match one frame to the case order of another frame.',
-                    df_a_scratch_base() + '\n\nauto out = scratch.align_caselbl(grades.caselbl());',
+                    df_a_scratch_base() + '\n\nauto out = scratch.label().align(grades.label().values());',
                     """============
      | score
 ------------
@@ -4671,22 +4654,22 @@ def output_for(class_name: str, method: Method) -> str:
 Sheet2 -> [3 cs x 3 feat]"""
         if n in {'defined', 'unique'}:
             return 'true'
-        if n in {'nrows', 'ncols', 'nfeatures', 'nfeats', 'ncases', 'count_null_rows'}:
+        if n in {'nrows', 'ncols', 'nfeatures', 'ncases', 'count_null_rows'}:
             return '3'
         if n in {'column_names', 'feature_names'}:
             return '["id", "sales", "city"]'
-        if n == 'levels':
+        if n == 'caselbls':
             return '["student", "term"]'
         if n == 'caselbl':
             if 'const Thread& labels' in method.signature:
-                return """df.caselbl():
+                return """df.label().values():
 ["r0", "r1", "r2"]
 
-out.caselbl():
+out.label().values():
 ["cs0", "cs1", "cs2"]"""
             return '["r0", "r1", "r2"]'
         if n == 'caselbl_':
-            return """df.caselbl():
+            return """df.label().values():
 ["cs0", "cs1", "cs2"]
 
 df.head():
@@ -4716,7 +4699,7 @@ id  sales  city
         if n in {'with_cases'}:
             return DF_WITH_CASES_OUT
         if n in {'with_cases_'}:
-            return """df.caselbl():
+            return """df.label().values():
 ["cs0", "cs1", "cs2"]
 
 df.head():
@@ -4750,7 +4733,7 @@ id  sales  city
 Accra   1   100.0
 Tema    2   120.0
 Kumasi  3    90.0"""
-        if n == 'level':
+        if n == 'caselbl' and ('std::string_view name' in method.signature or 'std::int64_t position' in method.signature):
             return '["Ada", "Ada", "Kojo", "Kojo"]' if 'std::string_view name' in method.signature else '["mid", "final", "mid", "final"]'
         if n in {'drop'}:
             return DF_DROP_OUT
@@ -4817,14 +4800,10 @@ sales  city
 North   Ada      88.0
 West    Esi      84.0"""
             return DF_FILTER_OUT if n in {'where', 'filter', 'take'} else DF_BASE_OUT
-        if n in {'set_cases'}:
-            return DF_SET_CASES_OUT
-        if n in {'reset_cases'}:
-            return DF_RESET_CASES_OUT
-        if n in {'align_caselbl'}:
+        if n in {'label().align'}:
             return DF_ALIGN_CASES_OUT
         if n == 'match':
-            return """matched.left.caselbl():
+            return """matched.left.label().values():
 ["A", "C", "B"]
 
 matched.left.features():
@@ -4841,19 +4820,19 @@ r1  a        1.0
 r2  a        2.0
 r1  b        3.0
 r2  b        4.0"""
-        if n == 'repeated_cases':
+        if n == 'label().repeated':
             return '[false, true, false]'
-        if n in {'sort_values', 'sort_cases', 'reindex_like', 'reindex_cases', 'conform'}:
+        if n in {'sort_values', 'label().sort', 'reindex_like', 'reindex_cases', 'conform'}:
             if n == 'sort_values':
                 return """id  sales  city
 2   120.0  Tema
 1   100.0  Accra
 3    90.0  Kumasi"""
-            if n == 'sort_cases':
-                return """with_cases.caselbl():
+            if n == 'label().sort':
+                return """with_cases.label().values():
 ["cs2", "cs0", "cs1"]
 
-out.caselbl():
+out.label().values():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -5004,10 +4983,6 @@ false
 true"""
         if n in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
             return DF_BASE_OUT
-        if n in {'resample'}:
-            return """ts                   load
-2024-01-01T09:00:00Z  15.0
-2024-01-01T10:00:00Z  15.0"""
         if n in {'tz_convert', 'tz_localize', 'to_utc'}:
             return """ts
 2024-01-01T09:10:00Z
@@ -5310,10 +5285,10 @@ id  sales  city
             return 'true'
         if n == 'caselbl':
             if 'const Thread& labels' in method.signature:
-                return """thread.caselbl():
+                return """thread.label().values():
 ["row0", "row1", "row2"]
 
-out.caselbl():
+out.label().values():
 ["A", "B", "C"]"""
             return '["row0", "row1", "row2"]'
         if ret == 'Thread':
@@ -5826,7 +5801,7 @@ def df_case_levels_base() -> str:
     {\"term\", pluss::table::Thread(pluss::make_note({\"mid\", \"final\", \"mid\", \"final\"}))},
     {\"score\", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
-auto indexed = grades.set_cases({\"student\", \"term\"}, true, \"|\");"""
+auto indexed = grades.label().set({\"student\", \"term\"}, true, \"|\");"""
 
 
 def thread_series() -> str:
@@ -6188,15 +6163,15 @@ def example_for(class_name: str, method: Method) -> str:
         if n == 'caselbl':
             if 'const Thread& labels' in sig:
                 return df_base() + '\n\nauto labels = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.caselbl(labels);'
-            return df_base() + '\n\nauto out = df.caselbl();'
+            return df_base() + '\n\nauto out = df.label().values();'
         if n == 'caselbl_':
             return df_base() + '\n\nauto labels = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.caselbl_(labels);'
-        if n == 'levels':
-            return df_case_levels_base() + '\n\nauto out = indexed.levels();'
-        if n == 'level':
+        if n == 'caselbls':
+            return df_case_levels_base() + '\n\nauto out = indexed.label().names();'
+        if n == 'caselbl':
             if 'std::string_view name' in sig:
-                return df_case_levels_base() + '\n\nauto out = indexed.level("student");'
-            return df_case_levels_base() + '\n\nauto out = indexed.level(1);'
+                return df_case_levels_base() + '\n\nauto out = indexed.caselbl("student");'
+            return df_case_levels_base() + '\n\nauto out = indexed.caselbl(1);'
         if n in {'iloc','iat','at','get','has_feature','feature_ref'}:
             args = {
                 'iloc': '1' if 'start' not in sig else '0, 2',
@@ -6355,27 +6330,23 @@ def example_for(class_name: str, method: Method) -> str:
             if 'std::int64_t start, std::int64_t stop' in sig:
                 return df_base() + '\n\nauto preview = df.observe(0, 2, false);\npreview.show();'
             return df_base() + '\n\nauto preview = df.observe(1, false);\npreview.show();'
-        if n in {'sort_values','sort_cases','top','bottom','repeated_cases','unique_cases','set_cases','reset_cases','align_caselbl'}:
+        if n in {'sort_values','label().sort','top','bottom','label().repeated','unique_cases','label().align'}:
             if n == 'sort_values':
                 if 'ArrangeSpec' in sig:
                     return df_base() + '\n\nauto out = df.sort_values({{.feature = "sales", .ascending = false}});'
                 return df_base() + '\n\nauto out = df.sort_values({"sales"}, false, true);'
-            if n == 'sort_cases':
-                return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Thread(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.sort_cases(true, true);'
+            if n == 'label().sort':
+                return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Thread(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.label().sort(true, true);'
             if n == 'top':
                 return df_base() + '\n\nauto out = df.top("sales", 2);'
             if n == 'bottom':
                 return df_base() + '\n\nauto out = df.bottom("sales", 2);'
-            if n == 'repeated_cases':
-                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.repeated_cases();'
+            if n == 'label().repeated':
+                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.label().repeated();'
             if n == 'unique_cases':
                 return df_unique_subset() + '\n\nauto out = df.unique_cases({"campus"});'
-            if n == 'set_cases':
-                return df_base() + '\n\nauto out = df.set_cases("city");'
-            if n == 'reset_cases':
-                return df_base() + '\n\nauto with_cases = df.set_cases("city", true);\nauto out = with_cases.reset_cases("case");'
-            if n == 'align_caselbl':
-                return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_caselbl = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.align_caselbl(new_caselbl);'
+            if n == 'label().align':
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_label = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.label().align(new_label);'
         if n == 'match':
             return (
                 'auto left = pluss::table::DataFrame(\n'
@@ -6538,13 +6509,13 @@ def example_for(class_name: str, method: Method) -> str:
         if n == 'select_regex':
             return df_named_metrics() + '\n\nauto out = df.select_regex("^midterm_[12]$");'
         if n == 'unstack':
-            if 'std::string_view level' in sig:
+            if 'std::string_view caselbl' in sig:
                 return df_case_levels_base() + '\n\nauto out = indexed.unstack("term");'
             return (
                 df_case_levels_base()
                 + '\n\n'
                 + 'pluss::table::DataFrame::UnstackOptions options;\n'
-                + 'options.level = "term";\n'
+                + 'options.label = "term";\n'
                 + 'options.drop = true;\n'
                 + 'options.sort = true;\n'
                 + 'options.separator = "_";\n'
@@ -6621,9 +6592,7 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + '\n\nauto out = df.shuffle(7);'
         if n == 'reshuffle':
             return df_base() + '\n\nauto rows = df.reshuffle(0, 7);\nauto cols = df.reshuffle(1, 7);'
-        if n in {'tz_convert','tz_localize','to_utc','shift_time','floor_time','ceil_time','round_time','resample'}:
-            if n == 'resample':
-                return df_time() + '\n\nauto out = df.resample("ts", {"load"}, "1h", "mean", 1, false);'
+        if n in {'tz_convert','tz_localize','to_utc','shift_time','floor_time','ceil_time','round_time'}:
             if n == 'tz_convert':
                 return df_time_naive() + '\n\nauto localized = df.tz_localize({"ts"}, "UTC");\nauto out = localized.tz_convert({"ts"}, "UTC");'
             if n == 'tz_localize':
@@ -7338,7 +7307,7 @@ def example_for(class_name: str, method: Method) -> str:
             return (
                 'auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}))'
                 '.caselbl(pluss::table::Thread(pluss::make_note({"row0", "row1", "row2"})));\n\n'
-                'auto out = thread.caselbl();'
+                'auto out = thread.label().values();'
             )
         if n == 'caselbl_':
             return (
@@ -7941,11 +7910,11 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Numeric payloads and validity masks stay on their source platform; key hashing and arbitrary-value distinct counting require one bulk host materialization.',
                 'Output key features retain their original Thread kind and dtype.',
             ])
-        if class_name == 'DataFrame' and n == 'align_caselbl':
+        if class_name == 'DataFrame' and n == 'label().align':
             return bullets('Practical Behavior', [
-                '`align_caselbl(new_caselbl)` reorders rows by matching the existing case labels against `new_caselbl`.',
+                '`label().align(new_label)` reorders rows by matching the existing case labels against `new_label`.',
                 'Every requested case label must already exist or the call throws.',
-                'The output case axis is rewritten to `new_caselbl`, so both the row order and the labels now follow that target order.',
+                'The output case axis is rewritten to `new_label`, so both the row order and the labels now follow that target order.',
             ])
         if class_name == 'DataFrame' and n == 'match':
             return bullets('Matching Rules', [
@@ -8042,7 +8011,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'DataFrame' and n == 'conform':
             return bullets('Practical Behavior', [
-                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.caselbl()`.',
+                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.label().values()`.',
                 'Both frames must have the same feature count and the same feature name set.',
                 'Use this before arithmetic or updates when structure compatibility matters more than preserving the current order.',
             ])
@@ -8050,13 +8019,6 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`copy()` gives you a detached frame value for downstream edits.',
                 'Use it when you want to make the independence of the result explicit in user code or examples.',
-            ])
-        if class_name == 'DataFrame' and n == 'resample':
-            return bullets('Practical Behavior', [
-                '`resample(...)` groups rows into temporal bins and aggregates one value per bin and selected feature.',
-                '`count` ignores missing values, while `size` counts rows whether the value is missing or not.',
-                'For fixed frequencies, bins are anchored from the start of the local day rather than from the first observation timestamp.',
-                'Numeric reductions such as `mean`, `sum`, `min`, `max`, `first`, and `last` require numeric Series features.',
             ])
         if class_name == 'DataFrame' and n == 'tail':
             return bullets('Practical Behavior', [
@@ -8255,7 +8217,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`unique_cases(features)` keeps only the first row for each distinct key combination defined by `features`.',
                 'With no feature list, the full row payload is used as the duplicate key.',
-                'This is the row-filtering companion to `repeated_cases(...)`.',
+                'This is the row-filtering companion to `label().repeated(...)`.',
             ])
         if class_name == 'DataFrame' and n == 'unify':
             return bullets('Join Semantics', [

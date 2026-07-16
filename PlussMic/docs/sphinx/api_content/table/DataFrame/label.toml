@@ -1,0 +1,171 @@
+summary = """
+Return the DataFrame label machinery for inspecting and manipulating row labels.
+
+`label()` is PlussMic's public case-label surface. It centralizes the operations that are equivalent to pandas index machinery while keeping the word “case” available for the full row concept in Pluss data modelling.
+
+Use this surface instead of root-level `caselbl*` methods. The label accessor keeps case-label operations in one place:
+
+- `df.label().values()` returns the current case-label `Thread`.
+- `df.label().names()` returns structured label component names.
+- `df.label().has()` reports whether structured label metadata is present.
+- `df.label().part(name)` or `df.label().part(position)` extracts one structured label component.
+- `df.label().set(...)` promotes one or more features, or an explicit `Thread`, into case labels.
+- `df.label().reset(...)` materializes labels back into ordinary features.
+- `df.label().sort(...)` sorts rows by label values.
+- `df.label().align(...)` rebuilds the frame against a target label order.
+- `df.label().rename(...)`, `order(...)`, and `drop(...)` edit structured label metadata.
+- `df.label().repeated(...)` returns a duplicate-label mask.
+"""
+
+returns = """
+`DataFrameLabelAccessor`
+    Lightweight label accessor bound to the current frame.
+
+    Methods that inspect labels return `Thread`, `std::vector<std::string>`, `bool`, or duplicate masks as appropriate. Methods that transform labels return a new `DataFrame`; the source frame is not mutated.
+"""
+
+notes = [
+  """
+The label surface is about row labels only. Feature names still live on `df.features()`, `df.rename(...)`, `df.reorder(...)`, and related feature-axis methods.
+""",
+  """
+`label().values()` is the direct equivalent of the old DataFrame case-label getter. Row selection remains on `case_study(...)`.
+""",
+  """
+`label().set(feature, true)` promotes a feature into the case-label axis and drops that feature from ordinary columns. Pass `false` to preserve the source feature as data.
+""",
+  """
+Structured labels are useful for hierarchical case axes: region/account/quarter, date/symbol, campus/term, and similar multi-part row identifiers.
+"""
+]
+
+[[examples]]
+title = "Inspect the current case-label thread."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+});
+
+auto out = sales.label().values();
+"""
+output = """
+out:
+0
+1
+2
+"""
+
+[[examples]]
+title = "Promote one feature into the label axis."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+});
+
+auto out = sales.label().set("city", true);
+"""
+output = """
+================
+       | units
+----------------
+Accra  | 10
+Tema   | 7
+Kumasi | 12
+----------------
+[3 cs x 1 feat]
+"""
+
+[[examples]]
+title = "Build a structured label from multiple features."
+code = """
+using namespace pluss::table;
+
+auto scores = DataFrame({
+    {"campus", pluss::make_note({"north", "north", "south", "south"})},
+    {"term", pluss::make_note({"fall", "spring", "fall", "spring"})},
+    {"score", pluss::make_series({80.0, 82.0, 78.0, 88.0})},
+});
+
+auto out = scores.label().set({"campus", "term"}, true);
+auto names = out.label().names();
+"""
+output = """
+names:
+campus
+term
+"""
+
+[[examples]]
+title = "Align to an explicit label order."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+}).label().set("city", true);
+
+auto out = sales.label().align(Thread(pluss::make_note({"Tema", "Missing", "Accra"})));
+"""
+output = """
+================
+        | units
+----------------
+Tema    | 7
+Missing | NA
+Accra   | 10
+----------------
+[3 cs x 1 feat]
+"""
+
+[[examples]]
+title = "Rename, reorder, and drop structured label parts."
+code = """
+using namespace pluss::table;
+
+auto frame = DataFrame({
+    {"region", pluss::make_note({"west", "west", "east", "east"})},
+    {"account", pluss::make_series({101.0, 102.0, 201.0, 202.0})},
+    {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
+    {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
+}).label().set({"region", "account", "quarter"}, true);
+
+auto out = frame.label()
+    .rename({{"account", "acct"}})
+    .label().order({"region", "quarter", "acct"})
+    .label().drop({"quarter"});
+"""
+output = """
+out.label().names():
+region
+acct
+"""
+
+[[examples]]
+title = "Reset labels back into ordinary features."
+code = """
+using namespace pluss::table;
+
+auto sales = DataFrame({
+    {"city", pluss::make_note({"Accra", "Tema", "Kumasi"})},
+    {"units", pluss::make_series({10.0, 7.0, 12.0})},
+}).label().set("city", true);
+
+auto out = sales.label().reset("city_case");
+"""
+output = """
+=======================
+  | city_case  units
+-----------------------
+0 | Accra      10
+1 | Tema       7
+2 | Kumasi     12
+-----------------------
+[3 cs x 2 feat]
+"""

@@ -14,7 +14,7 @@ returns = """
 see_also = [
   "<a href=\"#window\"><code>DataFrame::window</code></a>: derive several named rolling features from explicit window specs.",
   "<a href=\"thread_api_reference.html#bounded\"><code>Thread::bounded</code></a>: apply the same custom-bounds idea to one thread directly.",
-  "<a href=\"#resample\"><code>DataFrame::resample</code></a>: aggregate by time bins instead of custom row bounds."
+  "<a href=\"#ts\"><code>DataFrame::ts</code></a>: open the time-series surface for time-bin resampling."
 ]
 
 notes = [

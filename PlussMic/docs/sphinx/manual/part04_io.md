@@ -141,13 +141,13 @@ options.case_col_idx = 0;
 After loading, inspect the case axis:
 
 ```cpp
-std::cout << df.caselbl().dtype() << '\n';
+std::cout << df.label().values().dtype() << '\n';
 ```
 
 Move a case axis back into the feature axis later with:
 
 ```cpp
-auto with_id_feature = df.reset_cases("id");
+auto with_id_feature = df.label().reset("id");
 ```
 
 ### Verified example: semicolon CSV with case column
@@ -174,7 +174,7 @@ options.ncases = 3;
 
 auto df = DataFrame::load_csv("sales.csv", options);
 std::cout << df.to_string() << '\n';
-std::cout << "case dtype=" << df.caselbl().dtype() << '\n';
+std::cout << "case dtype=" << df.label().values().dtype() << '\n';
 ```
 
 Output:

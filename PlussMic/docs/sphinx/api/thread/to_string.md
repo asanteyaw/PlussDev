@@ -44,8 +44,8 @@ auto out = thread.to_string();
     <span class="label">Previous</span>
     <span class="title">to_note_weekday</span>
   </a>
-  <a class="next-link" href="transform.html">
+  <a class="next-link" href="top.html">
     <span class="label">Next</span>
-    <span class="title">transform</span>
+    <span class="title">top</span>
   </a>
 </div>

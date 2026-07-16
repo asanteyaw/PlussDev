@@ -327,6 +327,20 @@ Thread Thread::isfinite() const {
   return Thread(finite);
 }
 
+Thread Thread::invalid() const {
+  Thread out;
+  if (kind() == ThreadKind::Series) {
+    auto invalid = as_series().isfinite().logical_not();
+    invalid = invalid.logical_or(isnull().as_series().to(invalid.platform()));
+    out = Thread(invalid);
+  } else {
+    out = isnull();
+  }
+  return detail::has_display_labels(*this)
+             ? detail::with_display_labels(out, detail::display_labels(*this))
+             : out;
+}
+
 Thread Thread::fillna(double value) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::fillna(double) is only valid for Series payload");
   const auto missing = notnull().as_series().logical_not();
@@ -1533,7 +1547,7 @@ ThreadView Thread::describe(bool render) const {
     std::string top_value = "NA";
     std::int64_t top_freq = 0;
     if (counts.ncases() > 0) {
-      const auto top = counts.case_study(pluss::table::pos(0), pluss::table::cols({"value", "count"}));
+      const auto top = counts.case_study(pluss::table::pos(0), pluss::table::features({"value", "count"}));
       top_value = std::string(top.features("value").as_note().at(0));
       top_freq = std::stoll(thread_scalar_string_at(top.features("count"), 0));
     }
@@ -2340,7 +2354,7 @@ Thread Thread::compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) c
 
 Thread Thread::compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const {
   PLUSS_CHECK(other.timeline().defined(), "Thread::compare(TimeIndex): rhs TimeIndex is undefined");
-  if (other.timeline().dim() == 0 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
+  if (other.size() == 1 && (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex)) {
     const auto& lhs = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
     return carry_case_labels_for_alignment_(
         Thread(

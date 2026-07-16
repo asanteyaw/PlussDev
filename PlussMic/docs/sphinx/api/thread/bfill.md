@@ -98,8 +98,8 @@ dtype: Series
     <span class="label">Previous</span>
     <span class="title">between</span>
   </a>
-  <a class="next-link" href="bounded.html">
+  <a class="next-link" href="bottom.html">
     <span class="label">Next</span>
-    <span class="title">bounded</span>
+    <span class="title">bottom</span>
   </a>
 </div>

@@ -3218,7 +3218,7 @@ StatusOr<std::vector<double>> OutlierIsolator::score_dense_(const Series& x,
     }
     const double avg_path = total_path / static_cast<double>(forest_.size());
     const double anomaly_score = std::exp2(-avg_path / norm);
-    scores[static_cast<std::size_t>(i)] = -anomaly_score; // sklearn-like score_samples: lower means more anomalous.
+    scores[static_cast<std::size_t>(i)] = -anomaly_score; // reference-aligned score_samples: lower means more anomalous.
   }
 
   return StatusOr<std::vector<double>>(std::move(scores));

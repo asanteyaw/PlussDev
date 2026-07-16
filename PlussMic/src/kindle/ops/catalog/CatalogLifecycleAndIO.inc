@@ -24,7 +24,7 @@ Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const Kindelize
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(frame.nfeatures()) + (policy.materialize_case_stream ? 1u : 0u));
 
-  const auto case_axis = frame.caselbl();
+  const auto case_axis = frame.label().values();
   for (const auto& key : frame.features()) {
     auto s = Stream::from_thread(frame.features(key),
                                  policy.attach_cases_to_streams ? std::optional<pluss::table::Thread>{case_axis}

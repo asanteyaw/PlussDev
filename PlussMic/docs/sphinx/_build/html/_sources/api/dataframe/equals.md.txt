@@ -88,8 +88,8 @@ false
     <span class="label">Previous</span>
     <span class="title">eq</span>
   </a>
-  <a class="next-link" href="extend_cases.html">
+  <a class="next-link" href="exp.html">
     <span class="label">Next</span>
-    <span class="title">extend_cases</span>
+    <span class="title">exp</span>
   </a>
 </div>

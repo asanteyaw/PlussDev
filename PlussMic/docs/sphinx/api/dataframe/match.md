@@ -44,7 +44,7 @@ auto matched = left.match(right);
 ### Output
 
 ```text
-matched.left.caselbl():
+matched.left.label().values():
 ["A", "C", "B"]
 
 matched.left.features():

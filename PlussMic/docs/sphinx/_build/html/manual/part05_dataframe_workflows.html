@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=b4e99555"></script>
+    <script src="../_static/api_nav.js?v=5a216172"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -236,10 +236,10 @@ placement. <code class="docutils literal notranslate"><span class="pre">top(feat
 <span class="w">                 </span><span class="p">.</span><span class="n">reorder</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quantity&quot;</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">schema</span><span class="p">.</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">city_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">city_cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">city_cases</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">}).</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">reset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city_cases</span><span class="p">.</span><span class="n">reset_cases</span><span class="p">(</span><span class="s">&quot;city_case&quot;</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city_case&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city_cases</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">reset</span><span class="p">(</span><span class="s">&quot;city_case&quot;</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city_case&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;units&quot;</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reset</span><span class="p">.</span><span class="n">to_string</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -306,9 +306,9 @@ then Accra because that is the order of the indices.</p>
 changes the feature name, <code class="docutils literal notranslate"><span class="pre">drop({&quot;region&quot;})</span></code> removes the region feature, and
 <code class="docutils literal notranslate"><span class="pre">reorder({&quot;city&quot;,</span> <span class="pre">&quot;price&quot;,</span> <span class="pre">&quot;quantity&quot;})</span></code> arranges the full remaining feature
 set in the requested order.</p>
-<p>The fifth table shows <code class="docutils literal notranslate"><span class="pre">set_cases(&quot;city&quot;,</span> <span class="pre">true)</span></code>. City values become case labels,
+<p>The fifth table shows <code class="docutils literal notranslate"><span class="pre">label().set(&quot;city&quot;,</span> <span class="pre">true)</span></code>. City values become case labels,
 and the original <code class="docutils literal notranslate"><span class="pre">city</span></code> feature is removed because <code class="docutils literal notranslate"><span class="pre">drop_feature</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.
-The sixth table shows <code class="docutils literal notranslate"><span class="pre">reset_cases(&quot;city_case&quot;)</span></code>, which turns the case axis
+The sixth table shows <code class="docutils literal notranslate"><span class="pre">relabel().set(&quot;city_case&quot;)</span></code>, which turns the case axis
 back into a normal feature named <code class="docutils literal notranslate"><span class="pre">city_case</span></code> and restores default numeric case
 labels.</p>
 </section>

@@ -37,7 +37,7 @@ namespace {
 
 [[nodiscard]] Status validate_fold_args(std::int64_t sample_count, const SplitOptions& options) {
   if (sample_count < 2) {
-    return Status::invalid_argument("fold_plan requires sample_count >= 2.");
+    return Status::invalid_argument("crossval_plan requires sample_count >= 2.");
   }
   if (options.folds < 2) {
     return Status::invalid_argument("SplitOptions.folds must be >= 2.");
@@ -117,7 +117,7 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
 }
 
 [[nodiscard]] std::int64_t holdout_test_count(std::int64_t sample_count, double holdout_fraction) {
-  // sklearn-like default: for float test_size, use ceil(n_samples * test_size)
+  // reference-aligned default: for float test_size, use ceil(n_samples * test_size)
   // when train_size is omitted.
   std::int64_t test_count = static_cast<std::int64_t>(std::ceil(static_cast<double>(sample_count) * holdout_fraction));
   test_count = std::max<std::int64_t>(1, test_count);
@@ -125,9 +125,9 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
   return test_count;
 }
 
-[[nodiscard]] pluss::loader::TimeSeriesSplitOptions to_time_series_options(const SplitOptions& options) {
-  pluss::loader::TimeSeriesSplitOptions out{};
-  out.n_splits = options.folds;
+[[nodiscard]] pluss::loader::TemporalSplitOptions to_temporal_options(const SplitOptions& options) {
+  pluss::loader::TemporalSplitOptions out{};
+  out.folds = options.folds;
   out.gap = options.time_gap;
   if (options.time_test_size > 0) out.test_size = options.time_test_size;
   if (options.time_max_train_size > 0) out.max_train_size = options.time_max_train_size;
@@ -266,7 +266,7 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
                                                                  std::vector<double>* unique_groups_out) {
   std::vector<double> unique_groups = sorted_unique_values(groups);
   if (unique_groups.empty()) {
-    return StatusOr<std::vector<std::int64_t>>(Status::invalid_argument("group_fold_plan requires at least one group."));
+    return StatusOr<std::vector<std::int64_t>>(Status::invalid_argument("group_crossval_plan requires at least one group."));
   }
 
   std::vector<std::int64_t> group_idx(groups.size(), 0);
@@ -275,7 +275,7 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
     if (value == 0.0) value = 0.0;
     const auto it = std::lower_bound(unique_groups.begin(), unique_groups.end(), value);
     if (it == unique_groups.end() || *it != value) {
-      return StatusOr<std::vector<std::int64_t>>(Status::internal("group_fold_plan: failed to encode group id."));
+      return StatusOr<std::vector<std::int64_t>>(Status::internal("group_crossval_plan: failed to encode group id."));
     }
     group_idx[i] = static_cast<std::int64_t>(it - unique_groups.begin());
   }
@@ -411,7 +411,7 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
   });
 }
 
-StatusOr<SplitPlan> fold_plan(std::int64_t sample_count, const SplitOptions& options) {
+StatusOr<SplitPlan> crossval_plan(std::int64_t sample_count, const SplitOptions& options) {
   Status args_status = validate_fold_args(sample_count, options);
   if (!args_status.ok()) return StatusOr<SplitPlan>(std::move(args_status));
 
@@ -447,19 +447,19 @@ StatusOr<SplitPlan> fold_plan(std::int64_t sample_count, const SplitOptions& opt
   return StatusOr<SplitPlan>(std::move(plan));
 }
 
-StatusOr<SplitPlan> time_series_fold_plan(std::int64_t sample_count, const SplitOptions& options) {
+StatusOr<SplitPlan> ts_crossval_plan(std::int64_t sample_count, const SplitOptions& options) {
   if (sample_count < 2) {
-    return StatusOr<SplitPlan>(Status::invalid_argument("time_series_fold_plan requires sample_count >= 2."));
+    return StatusOr<SplitPlan>(Status::invalid_argument("ts_crossval_plan requires sample_count >= 2."));
   }
   if (options.shuffle) {
     return StatusOr<SplitPlan>(
-        Status::invalid_argument("time_series_fold_plan requires SplitOptions.shuffle=false."));
+        Status::invalid_argument("ts_crossval_plan requires SplitOptions.shuffle=false."));
   }
 
-  const auto ts_opts = to_time_series_options(options);
-  pluss::loader::TimeSeriesIndexSplit plan_indices{};
+  const auto ts_opts = to_temporal_options(options);
+  pluss::loader::TemporalIndexSplit plan_indices{};
   try {
-    plan_indices = pluss::loader::time_series_split_indices(sample_count, ts_opts);
+    plan_indices = pluss::loader::temporal_split_indices(sample_count, ts_opts);
   } catch (const pluss::Error& e) {
     return StatusOr<SplitPlan>(Status::invalid_argument(e.what()));
   } catch (const std::exception& e) {
@@ -477,7 +477,7 @@ StatusOr<SplitPlan> time_series_fold_plan(std::int64_t sample_count, const Split
   return StatusOr<SplitPlan>(std::move(plan));
 }
 
-StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& options) {
+[[nodiscard]] static StatusOr<SplitPlan> stratified_crossval_once(const Series& labels, const SplitOptions& options) {
   StatusOr<std::vector<double>> labels_or = flatten_label_values(labels);
   if (!labels_or.ok()) return StatusOr<SplitPlan>(labels_or.status());
 
@@ -489,6 +489,12 @@ StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& op
 
   const std::int64_t fold_count = options.folds;
   std::vector<std::vector<std::int64_t>> buckets = class_partitions(label_values);
+  if (options.shuffle) {
+    NumpyRandomState rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+    for (auto& bucket : buckets) {
+      shuffle_like_numpy(bucket, rng);
+    }
+  }
   std::vector<std::vector<std::int64_t>> test_by_fold(static_cast<std::size_t>(fold_count));
 
   for (const auto& bucket : buckets) {
@@ -525,7 +531,34 @@ StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& op
   return StatusOr<SplitPlan>(std::move(plan));
 }
 
-StatusOr<SplitPlan> group_fold_plan(const Series& groups, const SplitOptions& options) {
+StatusOr<SplitPlan> stratified_crossval_plan(const Series& labels, const SplitOptions& options) {
+  if (options.repeats < 1) {
+    return StatusOr<SplitPlan>(
+        Status::invalid_argument("stratified_crossval_plan requires SplitOptions.repeats >= 1."));
+  }
+
+  SplitPlan out{};
+  out.folds.reserve(static_cast<std::size_t>(options.folds * options.repeats));
+  for (std::int64_t repeat = 0; repeat < options.repeats; ++repeat) {
+    SplitOptions repeat_options = options;
+    repeat_options.plan = CVPlanKind::StratifiedCrossVal;
+    repeat_options.stratified = true;
+    if (options.repeats > 1) {
+      repeat_options.shuffle = true;
+      repeat_options.random.seed = splitmix64(options.random.seed + static_cast<std::uint64_t>(repeat));
+    }
+
+    StatusOr<SplitPlan> repeat_plan_or = stratified_crossval_once(labels, repeat_options);
+    if (!repeat_plan_or.ok()) return StatusOr<SplitPlan>(repeat_plan_or.status());
+    SplitPlan repeat_plan = repeat_plan_or.move_value();
+    out.folds.insert(out.folds.end(),
+                     std::make_move_iterator(repeat_plan.folds.begin()),
+                     std::make_move_iterator(repeat_plan.folds.end()));
+  }
+  return StatusOr<SplitPlan>(std::move(out));
+}
+
+StatusOr<SplitPlan> group_crossval_plan(const Series& groups, const SplitOptions& options) {
   StatusOr<std::vector<double>> groups_or = flatten_group_values(groups);
   if (!groups_or.ok()) return StatusOr<SplitPlan>(groups_or.status());
 
@@ -543,7 +576,7 @@ StatusOr<SplitPlan> group_fold_plan(const Series& groups, const SplitOptions& op
   const std::int64_t fold_count = options.folds;
   if (fold_count > n_groups) {
     return StatusOr<SplitPlan>(Status::invalid_argument(
-        "group_fold_plan requires SplitOptions.folds <= number of distinct groups."));
+        "group_crossval_plan requires SplitOptions.folds <= number of distinct groups."));
   }
 
   SplitPlan plan{};
@@ -622,10 +655,10 @@ StatusOr<SplitPlan> group_fold_plan(const Series& groups, const SplitOptions& op
   return StatusOr<SplitPlan>(std::move(plan));
 }
 
-StatusOr<SplitPlan> group_fold_plan(pluss::msharp::RangeView::Of<std::int64_t> groups, const SplitOptions& options) {
+StatusOr<SplitPlan> group_crossval_plan(pluss::msharp::RangeView::Of<std::int64_t> groups, const SplitOptions& options) {
   const std::vector<std::int64_t> values(groups.begin(), groups.end());
   const Series group_series = pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, index_config());
-  return group_fold_plan(group_series, options);
+  return group_crossval_plan(group_series, options);
 }
 
 StatusOr<FeatureBatch> slice_feature_batch(const FeatureBatch& in, const Series& indices) {

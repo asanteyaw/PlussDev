@@ -59,6 +59,29 @@ using pluss::ScalarType;
   return StatusOr<Series>(flat);
 }
 
+[[nodiscard]] StatusOr<Series> normalize_sample_weights_1d(const Series& weights,
+                                                           std::int64_t expected,
+                                                           Platform platform,
+                                                           const char* where) {
+  if (!weights.defined()) {
+    return StatusOr<Series>(pluss::ones({expected}, f64_on(platform)));
+  }
+  const Series flat = weights.to(platform, ScalarType::Float64).reshape({weights.numel()});
+  if (flat.numel() != expected) {
+    return StatusOr<Series>(
+        Status::shape_mismatch(std::string(where) + " sample_weights length must match label length."));
+  }
+  if (!flat.isfinite().all().item<bool>()) {
+    return StatusOr<Series>(
+        Status::invalid_argument(std::string(where) + " sample_weights must be finite."));
+  }
+  if (!flat.ge(0.0).all().item<bool>()) {
+    return StatusOr<Series>(
+        Status::invalid_argument(std::string(where) + " sample_weights must be non-negative."));
+  }
+  return StatusOr<Series>(flat);
+}
+
 [[nodiscard]] StatusOr<Series> resolve_label_order(const Series& truth,
                                                    const Series& pred,
                                                    const Series& label_order,
@@ -115,7 +138,11 @@ using pluss::ScalarType;
         Status::invalid_argument("confusion_table predicted_labels contains values absent from label_order."));
   }
 
-  Series counts = truth_match.to(ScalarType::Float64).transpose(0, 1).matmul(pred_match.to(ScalarType::Float64));
+  StatusOr<Series> weights_or = normalize_sample_weights_1d(options.sample_weights, n, platform, "confusion_table");
+  if (!weights_or.ok()) return StatusOr<ConfusionTable>(weights_or.status());
+  const Series weights = weights_or.value().reshape({n, 1});
+  const Series pred_weighted = pred_match.to(ScalarType::Float64).mul(weights);
+  Series counts = truth_match.to(ScalarType::Float64).transpose(0, 1).matmul(pred_weighted);
   counts = counts.reshape({k, k});
 
   if (options.normalize == ConfusionNormalize::ByTruth) {
@@ -147,17 +174,31 @@ using pluss::ScalarType;
   return numer_f.div(denom_f.clamp_min(1.0)).mul(mask).add(fallback.mul(mask.mul(-1.0).add(1.0)));
 }
 
-[[nodiscard]] StatusOr<ClassReport> classification_report_impl(const Series& truth_labels,
-                                                               const Series& predicted_labels,
-                                                               const ClassReportOptions& options) {
+[[nodiscard]] Series balance_quality_score(const Series& sensitivity,
+                                           const Series& specificity,
+                                           double alpha,
+                                           bool square_base) {
+  const Series gm = sensitivity.mul(specificity).clamp_min(0.0).sqrt();
+  const Series base = square_base ? gm.square() : gm;
+  return base.mul(sensitivity.sub(specificity).mul(alpha).add(1.0)).clamp_min(0.0);
+}
+
+[[nodiscard]] StatusOr<ClassReport> classification_summary_impl(const Series& truth_labels,
+                                                                const Series& predicted_labels,
+                                                                const ClassReportOptions& options) {
   if (!(options.zero_division == 0.0 || options.zero_division == 1.0) || !std::isfinite(options.zero_division)) {
     return StatusOr<ClassReport>(
-        Status::invalid_argument("classification_report zero_division must be finite and equal to 0.0 or 1.0."));
+        Status::invalid_argument("classification_summary zero_division must be finite and equal to 0.0 or 1.0."));
+  }
+  if (!std::isfinite(options.balance_quality_alpha) || options.balance_quality_alpha < 0.0) {
+    return StatusOr<ClassReport>(
+        Status::invalid_argument("classification_summary balance_quality_alpha must be finite and non-negative."));
   }
 
   StatusOr<ConfusionTable> table_or =
       confusion_table_impl(truth_labels, predicted_labels, ConfusionOptions{.normalize = ConfusionNormalize::None,
-                                                                             .label_order = options.label_order});
+                                                                             .label_order = options.label_order,
+                                                                             .sample_weights = options.sample_weights});
   if (!table_or.ok()) return StatusOr<ClassReport>(table_or.status());
   const ConfusionTable& table = table_or.value();
 
@@ -172,23 +213,45 @@ using pluss::ScalarType;
   const Series f1 = safe_ratio(precision.mul(recall).mul(2.0), precision.add(recall), options.zero_division).reshape({k});
 
   const Series total = support.sum().reshape({1});
+  const Series fp = pred_support.sub(tp).reshape({k});
+  const Series tn = total.sub(support.add(pred_support).sub(tp)).reshape({k});
+  const Series specificity = safe_ratio(tn, tn.add(fp), options.zero_division).reshape({k});
+  const Series geometric_mean = recall.mul(specificity).clamp_min(0.0).sqrt().reshape({k});
+  const Series balance_quality = balance_quality_score(recall,
+                                                       specificity,
+                                                       options.balance_quality_alpha,
+                                                       options.square_balance_quality).reshape({k});
+
   const Series tp_sum = tp.sum().reshape({1});
   const Series fp_sum = pred_support.sum().reshape({1}).sub(tp_sum);
   const Series fn_sum = support.sum().reshape({1}).sub(tp_sum);
+  const Series tn_sum = tn.sum().reshape({1});
 
   const Series micro_p = safe_ratio(tp_sum, tp_sum.add(fp_sum), options.zero_division).reshape({1});
   const Series micro_r = safe_ratio(tp_sum, tp_sum.add(fn_sum), options.zero_division).reshape({1});
   const Series micro_f1 = safe_ratio(micro_p.mul(micro_r).mul(2.0), micro_p.add(micro_r), options.zero_division).reshape({1});
+  const Series micro_s = safe_ratio(tn_sum, tn_sum.add(fp_sum), options.zero_division).reshape({1});
+  const Series micro_gm = micro_r.mul(micro_s).clamp_min(0.0).sqrt().reshape({1});
+  const Series micro_bq = balance_quality_score(micro_r,
+                                                micro_s,
+                                                options.balance_quality_alpha,
+                                                options.square_balance_quality).reshape({1});
 
   const Series accuracy = safe_ratio(tp_sum, total, options.zero_division).reshape({1});
   const Series macro_p = precision.mean().reshape({1});
   const Series macro_r = recall.mean().reshape({1});
   const Series macro_f1 = f1.mean().reshape({1});
+  const Series macro_s = specificity.mean().reshape({1});
+  const Series macro_gm = geometric_mean.mean().reshape({1});
+  const Series macro_bq = balance_quality.mean().reshape({1});
 
   const Series weight = safe_ratio(support, total, 0.0).reshape({k});
   const Series weighted_p = precision.mul(weight).sum().reshape({1});
   const Series weighted_r = recall.mul(weight).sum().reshape({1});
   const Series weighted_f1 = f1.mul(weight).sum().reshape({1});
+  const Series weighted_s = specificity.mul(weight).sum().reshape({1});
+  const Series weighted_gm = geometric_mean.mul(weight).sum().reshape({1});
+  const Series weighted_bq = balance_quality.mul(weight).sum().reshape({1});
 
   ClassReport out{};
   out.labels = table.labels.to(platform, ScalarType::Float64).reshape({k});
@@ -196,10 +259,16 @@ using pluss::ScalarType;
   out.precision = precision.to(platform, ScalarType::Float64).reshape({k});
   out.recall = recall.to(platform, ScalarType::Float64).reshape({k});
   out.f1 = f1.to(platform, ScalarType::Float64).reshape({k});
+  out.specificity = specificity.to(platform, ScalarType::Float64).reshape({k});
+  out.geometric_mean = geometric_mean.to(platform, ScalarType::Float64).reshape({k});
+  out.balance_quality = balance_quality.to(platform, ScalarType::Float64).reshape({k});
   out.accuracy = accuracy.to(platform, ScalarType::Float64).reshape({1});
   out.micro_average = micro_p.unite({micro_r, micro_f1}, 0).reshape({3});
   out.macro_average = macro_p.unite({macro_r, macro_f1}, 0).reshape({3});
   out.weighted_average = weighted_p.unite({weighted_r, weighted_f1}, 0).reshape({3});
+  out.micro_balance = micro_s.unite({micro_gm, micro_bq}, 0).reshape({3});
+  out.macro_balance = macro_s.unite({macro_gm, macro_bq}, 0).reshape({3});
+  out.weighted_balance = weighted_s.unite({weighted_gm, weighted_bq}, 0).reshape({3});
   return StatusOr<ClassReport>(std::move(out));
 }
 
@@ -216,32 +285,32 @@ using pluss::ScalarType;
     plan.folds.push_back(holdout_or.move_value());
     return StatusOr<SplitPlan>(std::move(plan));
   }
-  if (split.plan == CVPlanKind::KFold) {
+  if (split.plan == CVPlanKind::CrossVal) {
     if (split.stratified && spec.task == TaskKind::Classification) {
-      return strat_fold_plan(batch.y, split);
+      return stratified_crossval_plan(batch.y, split);
     }
-    return fold_plan(batch.features.sample_count(), split);
+    return crossval_plan(batch.features.sample_count(), split);
   }
-  if (split.plan == CVPlanKind::StratifiedKFold) {
+  if (split.plan == CVPlanKind::StratifiedCrossVal) {
     if (spec.task != TaskKind::Classification) {
       return StatusOr<SplitPlan>(
-          Status::invalid_argument("cross_assess StratifiedKFold requires TaskKind::Classification."));
+          Status::invalid_argument("cross_assess StratifiedCrossVal requires TaskKind::Classification."));
     }
-    return strat_fold_plan(batch.y, split);
+    return stratified_crossval_plan(batch.y, split);
   }
-  if (split.plan == CVPlanKind::TimeSeries) {
-    return time_series_fold_plan(batch.features.sample_count(), split);
+  if (split.plan == CVPlanKind::TSCrossVal) {
+    return ts_crossval_plan(batch.features.sample_count(), split);
   }
-  if (split.plan == CVPlanKind::GroupKFold) {
+  if (split.plan == CVPlanKind::GroupCrossVal) {
     if (!split.groups.defined()) {
       return StatusOr<SplitPlan>(
-          Status::invalid_argument("cross_assess GroupKFold requires SplitOptions.groups to be defined."));
+          Status::invalid_argument("cross_assess GroupCrossVal requires SplitOptions.groups to be defined."));
     }
     if (split.groups.numel() != batch.features.sample_count()) {
       return StatusOr<SplitPlan>(
-          Status::shape_mismatch("cross_assess GroupKFold requires SplitOptions.groups length to match sample count."));
+          Status::shape_mismatch("cross_assess GroupCrossVal requires SplitOptions.groups length to match sample count."));
     }
-    return group_fold_plan(split.groups, split);
+    return group_crossval_plan(split.groups, split);
   }
   return StatusOr<SplitPlan>(Status::invalid_argument("cross_assess received unknown SplitOptions.plan."));
 }
@@ -250,7 +319,7 @@ using pluss::ScalarType;
   if (!split.reliability_defaults) return split;
   if (spec.task != TaskKind::Classification) return split;
   if (!split.stratified
-      && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::KFold)) {
+      && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::CrossVal)) {
     split.stratified = true;
   }
   return split;
@@ -521,28 +590,28 @@ StatusOr<ConfusionTable> confusion_table(const Series& truth_labels,
                               });
 }
 
-StatusOr<ClassReport> classification_report(const Series& truth_labels,
-                                            const Series& predicted_labels,
-                                            const ClassReportOptions& options) {
-  return classification_report_impl(truth_labels, predicted_labels, options);
+StatusOr<ClassReport> classification_summary(const Series& truth_labels,
+                                             const Series& predicted_labels,
+                                             const ClassReportOptions& options) {
+  return classification_summary_impl(truth_labels, predicted_labels, options);
 }
 
-StatusOr<ClassReport> classification_report(const Series& truth_labels,
-                                            const Series& predicted_labels,
-                                            pluss::msharp::RangeView::Of<double> label_order,
-                                            double zero_division) {
+StatusOr<ClassReport> classification_summary(const Series& truth_labels,
+                                             const Series& predicted_labels,
+                                             pluss::msharp::RangeView::Of<double> label_order,
+                                             double zero_division) {
   const Config cfg = truth_labels.defined()
                          ? f64_on(truth_labels.platform())
                          : Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series order = pluss::make_series(std::vector<double>(label_order.begin(), label_order.end()),
                                           {static_cast<std::int64_t>(label_order.size())},
                                           cfg);
-  return classification_report_impl(truth_labels,
-                                    predicted_labels,
-                                    ClassReportOptions{
-                                        .label_order = order,
-                                        .zero_division = zero_division,
-                                    });
+  return classification_summary_impl(truth_labels,
+                                     predicted_labels,
+                                     ClassReportOptions{
+                                         .label_order = order,
+                                         .zero_division = zero_division,
+                                     });
 }
 
 StatusOr<Series> classification_metrics(const Series& truth_labels,
@@ -554,7 +623,7 @@ StatusOr<Series> classification_metrics(const Series& truth_labels,
     requested = {MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::Precision, MetricKind::Recall, MetricKind::F1};
   }
 
-  StatusOr<ClassReport> report_or = classification_report_impl(truth_labels, predicted_labels, options);
+  StatusOr<ClassReport> report_or = classification_summary_impl(truth_labels, predicted_labels, options);
   if (!report_or.ok()) return StatusOr<Series>(report_or.status());
   const ClassReport& report = report_or.value();
   const Platform platform = report.accuracy.platform();
@@ -576,14 +645,24 @@ StatusOr<Series> classification_metrics(const Series& truth_labels,
         out.push_back(report.macro_average.index_select(0, idx0).reshape({1}));
         break;
       case MetricKind::Recall:
+      case MetricKind::Sensitivity:
         out.push_back(report.macro_average.index_select(0, idx1).reshape({1}));
         break;
       case MetricKind::F1:
         out.push_back(report.macro_average.index_select(0, idx2).reshape({1}));
         break;
+      case MetricKind::Specificity:
+        out.push_back(report.macro_balance.index_select(0, idx0).reshape({1}));
+        break;
+      case MetricKind::GeometricMean:
+        out.push_back(report.macro_balance.index_select(0, idx1).reshape({1}));
+        break;
+      case MetricKind::BalanceQuality:
+        out.push_back(report.macro_balance.index_select(0, idx2).reshape({1}));
+        break;
       default:
         return StatusOr<Series>(Status::invalid_argument(
-            "classification_metrics from hard labels supports Accuracy/BalancedAccuracy/Precision/Recall/F1 only. "
+            "classification_metrics from hard labels supports hard-label classification metrics only. "
             "Use classifier.assess(...) for probability-driven metrics."));
     }
   }
@@ -608,15 +687,15 @@ StatusOr<ConfusionTable> confusion_table(const ClassifierBase& classifier,
   return confusion_table_impl(batch.y, pred_or.move_value(), options);
 }
 
-StatusOr<ClassReport> classification_report(const ClassifierBase& classifier,
-                                            const LabeledBatch& batch,
-                                            const InferOptions& infer_options,
-                                            const ClassReportOptions& options) {
+StatusOr<ClassReport> classification_summary(const ClassifierBase& classifier,
+                                             const LabeledBatch& batch,
+                                             const InferOptions& infer_options,
+                                             const ClassReportOptions& options) {
   Status check = validate_labeled(batch);
   if (!check.ok()) return StatusOr<ClassReport>(std::move(check));
   StatusOr<Series> pred_or = classifier.infer(batch.features, infer_options);
   if (!pred_or.ok()) return StatusOr<ClassReport>(pred_or.status());
-  return classification_report_impl(batch.y, pred_or.move_value(), options);
+  return classification_summary_impl(batch.y, pred_or.move_value(), options);
 }
 
 StatusOr<Series> classification_metrics(const ClassifierBase& classifier,

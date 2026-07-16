@@ -131,7 +131,7 @@ int main() {
   const LabeledBatch batch = make_xor_batch();
 
   SplitOptions split{};
-  split.plan = CVPlanKind::KFold;
+  split.plan = CVPlanKind::CrossVal;
   split.folds = 4;
   split.shuffle = true;
   split.random.seed = 73;

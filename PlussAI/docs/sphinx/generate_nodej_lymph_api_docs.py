@@ -749,6 +749,8 @@ def param_description(param: ParamInfo, entry: ApiEntry) -> str:
     t = param.type_text.lower()
     if param.name == "self":
         return "Receiver object on which this method is invoked."
+    if "sample_weight" in n:
+        return "Optional per-row weights aligned to input observations."
     if any(k in n for k in ("x", "feature", "batch", "frame", "matrix", "data")):
         return "Input feature data used by this call."
     if any(k in n for k in ("y", "target", "label", "truth")):
@@ -858,6 +860,12 @@ def return_description(return_type: str) -> str:
 
 def note_for_entry(entry: ApiEntry, sig: SignatureInfo) -> str:
     n = entry.name.lower()
+    if n == "class_mix":
+        return "Summarizes class labels, class counts, class proportions, inverse-frequency weights, and imbalance ratio."
+    if n == "resolve_weight_plan":
+        return "Combines batch sample weights, training sample weights, and class-weight options into a reusable weight plan."
+    if n == "resolve_training_weights":
+        return "Returns normalized per-sample training weights from labels, optional sample weights, and class-weight options."
     if n == "labeled_batch_from_dataframe":
         return (
             "Builds a supervised `LabeledBatch` from a DataFrame. "

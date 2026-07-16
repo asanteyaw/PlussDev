@@ -54,8 +54,8 @@ id  revenue  city
     <span class="label">Previous</span>
     <span class="title">rename</span>
   </a>
-  <a class="next-link" href="rename_levels.html">
+  <a class="next-link" href="reorder.html">
     <span class="label">Next</span>
-    <span class="title">rename_levels</span>
+    <span class="title">reorder</span>
   </a>
 </div>

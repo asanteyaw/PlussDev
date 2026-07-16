@@ -1098,7 +1098,7 @@ void save_excel(const pluss::table::DataFrame& frame,
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {
-      row.push_back(thread_value_for_excel(frame.caselbl(), r, options.na_rep));
+      row.push_back(thread_value_for_excel(frame.label().values(), r, options.na_rep));
     }
     for (const auto& c : cols) {
       row.push_back(thread_value_for_excel(c, r, options.na_rep));

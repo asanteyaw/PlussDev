@@ -27,7 +27,7 @@ const detail::AtlasImpl& Atlas::impl_ref_() const {
 
 std::int64_t Atlas::depth() const { return static_cast<std::int64_t>(impl_ref_().frames_.size()); }
 std::int64_t Atlas::ncases() const { return impl_ref_().nrows_; }
-std::int64_t Atlas::nfeats() const { return impl_ref_().ncols_; }
+std::int64_t Atlas::nfeatures() const { return impl_ref_().ncols_; }
 
 const std::vector<std::string>& Atlas::column_names() const { return impl_ref_().names_; }
 const std::optional<Thread>& Atlas::axis0_labels() const { return impl_ref_().axis0_labels_; }
@@ -353,6 +353,33 @@ Atlas AtlasTimelineAccessor::epoch(TimeUnit unit) const {
     const auto views = atlas_tl_feature_views_(features_);
     return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).epoch(unit);
   }, "Atlas::tl().epoch");
+}
+
+Atlas AtlasTimelineAccessor::span(
+    const Thread& other,
+    const TimelineSpanOptions& options) const {
+  return map_([this, other, options](const DataFrame& frame) {
+    const auto views = atlas_tl_feature_views_(features_);
+    return frame.tl(pluss::msharp::RangeView::Of<std::string_view>(views)).span(other, options);
+  }, "Atlas::tl().span");
+}
+
+Atlas AtlasTimelineAccessor::span(const Thread& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
+}
+
+Atlas AtlasTimelineAccessor::span(
+    const pluss::Timeline& other,
+    const TimelineSpanOptions& options) const {
+  return span(Thread(other), options);
+}
+
+Atlas AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
 }
 
 Atlas AtlasTimelineAccessor::floor(std::string_view unit) const {

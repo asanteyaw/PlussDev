@@ -500,12 +500,12 @@ midterm_1  midterm_2  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="repeated_cases.html">
+  <a class="prev-link" href="reorder.html">
     <span class="label">Previous</span>
-    <span class="title">repeated_cases</span>
+    <span class="title">reorder</span>
   </a>
-  <a class="next-link" href="reset_cases.html">
+  <a class="next-link" href="reshuffle.html">
     <span class="label">Next</span>
-    <span class="title">reset_cases</span>
+    <span class="title">reshuffle</span>
   </a>
 </div>

@@ -37,6 +37,79 @@ DataFrameView DataFrame::aggregate(pluss::msharp::RangeView::Of<SummarySpec> spe
   return DataFrameView(summarize(specs, false), render, "aggregate", title());
 }
 
+double median_from_values_(std::vector<double>& values) {
+  PLUSS_CHECK(!values.empty(), "DataFrame::group median: empty value group");
+  const auto n = values.size();
+  const auto mid = n / 2;
+  std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid), values.end());
+  const auto upper = values[mid];
+  if (n % 2 != 0) {
+    return upper;
+  }
+  std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(mid - 1), values.end());
+  return (values[mid - 1] + upper) / 2.0;
+}
+
+Thread grouped_mode_thread_(
+    const Thread& values,
+    const std::vector<std::int64_t>& group_ids,
+    const std::vector<bool>& included,
+    std::int64_t group_count) {
+  PLUSS_CHECK(values.kind() == ThreadKind::Note,
+              "DataFrame::group mode: expected Note feature");
+  const auto valid = values.notnull().as_series().to_vec<bool>();
+
+  struct ModeBucket {
+    std::int64_t count{0};
+    std::int64_t first_row{0};
+  };
+
+  const auto host_values = values.as_note().vector();
+  std::vector<std::unordered_map<std::string, ModeBucket>> counts(
+      static_cast<std::size_t>(group_count));
+  for (std::int64_t row = 0; row < values.size(); ++row) {
+    if (!included[static_cast<std::size_t>(row)] ||
+        !valid[static_cast<std::size_t>(row)]) {
+      continue;
+    }
+    const auto group_id = group_ids[static_cast<std::size_t>(row)];
+    if (group_id < 0 || group_id >= group_count) {
+      continue;
+    }
+    auto& bucket =
+        counts[static_cast<std::size_t>(group_id)]
+              [std::string(host_values[static_cast<std::size_t>(row)])];
+    if (bucket.count == 0) {
+      bucket.first_row = row;
+    }
+    ++bucket.count;
+  }
+
+  std::vector<std::string> out_values(static_cast<std::size_t>(group_count));
+  std::vector<bool> out_valid(static_cast<std::size_t>(group_count), false);
+  for (std::int64_t group = 0; group < group_count; ++group) {
+    std::int64_t best_count = 0;
+    std::int64_t best_row = -1;
+    std::string best_value;
+    for (const auto& [value, bucket] : counts[static_cast<std::size_t>(group)]) {
+      if (bucket.count > best_count ||
+          (bucket.count == best_count &&
+           (best_row < 0 || bucket.first_row < best_row))) {
+        best_count = bucket.count;
+        best_row = bucket.first_row;
+        best_value = value;
+      }
+    }
+    if (best_row >= 0) {
+      out_values[static_cast<std::size_t>(group)] = std::move(best_value);
+      out_valid[static_cast<std::size_t>(group)] = true;
+    }
+  }
+  return Thread(
+      pluss::make_note(out_values),
+      bool_mask_from_values(out_valid, pluss::codem::Platform::CPU));
+}
+
 DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
                            pluss::msharp::RangeView::Of<GroupSpec> specs,
                            bool dropna_keys,
@@ -162,6 +235,13 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
       continue;
     }
 
+    if (spec.op == GroupOp::Mode && value_column.kind() == ThreadKind::Note) {
+      out_cols.emplace_back(
+          out_name,
+          grouped_mode_thread_(value_column, group_ids, included, group_count));
+      continue;
+    }
+
     pluss::codem::Platform platform = pluss::codem::Platform::CPU;
     if (has_feature && value_column.kind() == ThreadKind::Series) {
       platform = value_column.as_series().platform();
@@ -207,10 +287,6 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
             is_numeric_series_type(value_column.as_series()),
         "DataFrame::group: numeric aggregations require real numeric Series features");
     auto values = value_column.as_series().to(compute_dtype).masked_select(active);
-    auto sums = pluss::Series::zeros(
-        {group_count},
-        compute_dtype,
-        platform).scatter_add(0, ids, values);
     const auto zero_counts = pluss::Series::zeros(
         {group_count},
         compute_dtype,
@@ -221,42 +297,33 @@ DataFrame DataFrame::group(pluss::msharp::RangeView::Of<std::string_view> keys,
     pluss::Series result_validity = any_value;
     switch (spec.op) {
       case GroupOp::Sum:
-        result = sums;
+        result = values.grouped_sum(ids, group_count);
         break;
       case GroupOp::Mean:
-        result = sums / counts;
+        result = values.grouped_mean(ids, group_count);
+        break;
+      case GroupOp::Median:
+        result = values.grouped_median(ids, group_count);
         break;
       case GroupOp::Min:
-        result = pluss::Series::full(
-            {group_count},
-            std::numeric_limits<double>::infinity(),
-            compute_dtype,
-            platform).scatter_reduce(0, ids, values, "amin", true);
+        result = values.grouped_min(ids, group_count);
         break;
       case GroupOp::Max:
-        result = pluss::Series::full(
-            {group_count},
-            -std::numeric_limits<double>::infinity(),
-            compute_dtype,
-            platform).scatter_reduce(0, ids, values, "amax", true);
+        result = values.grouped_max(ids, group_count);
+        break;
+      case GroupOp::Mode:
+        result = values.grouped_mode(ids, group_count);
         break;
       case GroupOp::Std:
       case GroupOp::Var: {
-        auto squared_sums = pluss::Series::zeros(
-            {group_count},
-            compute_dtype,
-            platform).scatter_add(0, ids, values * values);
-        result = (
-            (squared_sums - (sums * sums / counts)) /
-            (counts - 1.0)).clamp_min(0.0);
+        result = spec.op == GroupOp::Std
+                     ? values.grouped_std(ids, group_count, 1)
+                     : values.grouped_var(ids, group_count, 1);
         const auto one_counts = pluss::Series::ones(
             {group_count},
             compute_dtype,
             platform);
         result_validity = counts.gt(one_counts);
-        if (spec.op == GroupOp::Std) {
-          result = result.sqrt();
-        }
         break;
       }
       case GroupOp::Count:
@@ -289,32 +356,32 @@ DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
                   render);
 }
 
-DataFrameView DataFrame::group_by(const CaseGroup& keys,
+DataFrameView DataFrame::group_by(const LabelGroup& keys,
                                   pluss::msharp::RangeView::Of<GroupSpec> specs,
                                   bool dropna_keys,
                                   bool render) const {
-  PLUSS_CHECK(has_levels(), "DataFrame::group_by(CaseGroup): current DataFrame has no case levels");
-  std::vector<std::string> level_names = keys.levels;
-  if (!keys.level.empty()) {
+  PLUSS_CHECK(has_caselbls(), "DataFrame::group_by(LabelGroup): current DataFrame has no case labels");
+  std::vector<std::string> level_names = keys.names;
+  if (!keys.label.empty()) {
     PLUSS_CHECK(level_names.empty(),
-                "DataFrame::group_by(CaseGroup): use either `level` or `levels`, not both");
-    level_names.push_back(keys.level);
+                "DataFrame::group_by(LabelGroup): use either `label` or `names`, not both");
+    level_names.push_back(keys.label);
   }
   PLUSS_CHECK(!level_names.empty(),
-              "DataFrame::group_by(CaseGroup): expected at least one case level");
+              "DataFrame::group_by(LabelGroup): expected at least one case label");
 
   auto keyed = *this;
   std::vector<std::string> temp_names;
   temp_names.reserve(level_names.size());
   for (const auto& level_name : level_names) {
     PLUSS_CHECK(!level_name.empty(),
-                "DataFrame::group_by(CaseGroup): level name cannot be empty");
+                "DataFrame::group_by(LabelGroup): case-label name cannot be empty");
     auto temp = "__pluss_case_level_" + level_name;
     std::int64_t suffix = 1;
     while (keyed.has_feature(temp)) {
       temp = fmt::format("__pluss_case_level_{}_{}", level_name, suffix++);
     }
-    auto level_values = level(level_name);
+    auto level_values = caselbl(level_name);
     if (detail::has_display_labels(level_values)) {
       level_values = detail::clear_display_labels(level_values);
     }
@@ -374,7 +441,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
                                      bool dropna_keys,
                                      bool render) const {
   PLUSS_CHECK(op == GroupOp::Count || op == GroupOp::Nunique || op == GroupOp::Sum || op == GroupOp::Mean ||
-                  op == GroupOp::Min || op == GroupOp::Max,
+                  op == GroupOp::Median || op == GroupOp::Min || op == GroupOp::Max,
               "DataFrame::pivot_table: unsupported aggregation op");
 
   const auto case_col = features(case_feature);
@@ -384,7 +451,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   const bool needs_numeric = (op != GroupOp::Count && op != GroupOp::Nunique);
   if (needs_numeric) {
     PLUSS_CHECK(value_col.kind() == ThreadKind::Series && is_number_series_type(value_col.as_series()),
-                "DataFrame::pivot_table: Sum/Mean/Min/Max require a numeric Series value feature");
+                "DataFrame::pivot_table: numeric aggregations require a numeric Series value feature");
   }
 
   const auto case_vals = case_col.has_validity_mask() ? case_col.clear_validity_mask() : case_col;
@@ -404,6 +471,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
     double max{0.0};
     bool has_numeric{false};
     std::unordered_set<std::string> uniq{};
+    std::vector<double> values{};
   };
 
   std::unordered_map<std::string, std::size_t> case_to_row;
@@ -465,6 +533,9 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
     const double x = value_numeric_ptr[r];
     agg.count += 1;
     agg.sum += x;
+    if (op == GroupOp::Median) {
+      agg.values.push_back(x);
+    }
     if (!agg.has_numeric) {
       agg.min = x;
       agg.max = x;
@@ -498,6 +569,10 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
         valid[r] = true;
       } else if (op == GroupOp::Mean && agg.count > 0) {
         vals[r] = agg.sum / static_cast<double>(agg.count);
+        valid[r] = true;
+      } else if (op == GroupOp::Median && !agg.values.empty()) {
+        auto values = agg.values;
+        vals[r] = median_from_values_(values);
         valid[r] = true;
       } else if (op == GroupOp::Min && agg.has_numeric) {
         vals[r] = agg.min;

@@ -130,8 +130,12 @@ namespace {
     case MetricKind::BalancedAccuracy:
     case MetricKind::Precision:
     case MetricKind::Recall:
+    case MetricKind::Sensitivity:
     case MetricKind::F1:
     case MetricKind::RocAuc:
+    case MetricKind::Specificity:
+    case MetricKind::GeometricMean:
+    case MetricKind::BalanceQuality:
     case MetricKind::R2:
       return true;
     case MetricKind::LogLoss:
@@ -177,7 +181,7 @@ namespace {
 [[nodiscard]] SplitOptions resolved_sparse_split_defaults(TaskKind task, SplitOptions split) {
   if (!split.reliability_defaults) return split;
   if (task != TaskKind::Classification) return split;
-  if (!split.stratified && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::KFold)) {
+  if (!split.stratified && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::CrossVal)) {
     split.stratified = true;
   }
   return split;
@@ -197,30 +201,30 @@ namespace {
     plan.folds.push_back(holdout_or.move_value());
     return StatusOr<SplitPlan>(std::move(plan));
   }
-  if (split.plan == CVPlanKind::KFold) {
-    if (split.stratified && task == TaskKind::Classification) return strat_fold_plan(y, split);
-    return fold_plan(sample_count, split);
+  if (split.plan == CVPlanKind::CrossVal) {
+    if (split.stratified && task == TaskKind::Classification) return stratified_crossval_plan(y, split);
+    return crossval_plan(sample_count, split);
   }
-  if (split.plan == CVPlanKind::StratifiedKFold) {
+  if (split.plan == CVPlanKind::StratifiedCrossVal) {
     if (task != TaskKind::Classification) {
       return StatusOr<SplitPlan>(
-          Status::invalid_argument("sparse cross assess StratifiedKFold requires classification task."));
+          Status::invalid_argument("sparse cross assess StratifiedCrossVal requires classification task."));
     }
-    return strat_fold_plan(y, split);
+    return stratified_crossval_plan(y, split);
   }
-  if (split.plan == CVPlanKind::TimeSeries) {
-    return time_series_fold_plan(sample_count, split);
+  if (split.plan == CVPlanKind::TSCrossVal) {
+    return ts_crossval_plan(sample_count, split);
   }
-  if (split.plan == CVPlanKind::GroupKFold) {
+  if (split.plan == CVPlanKind::GroupCrossVal) {
     if (!split.groups.defined()) {
       return StatusOr<SplitPlan>(
-          Status::invalid_argument("sparse cross assess GroupKFold requires SplitOptions.groups."));
+          Status::invalid_argument("sparse cross assess GroupCrossVal requires SplitOptions.groups."));
     }
     if (split.groups.numel() != sample_count) {
       return StatusOr<SplitPlan>(
-          Status::shape_mismatch("sparse cross assess GroupKFold requires groups length to match sample count."));
+          Status::shape_mismatch("sparse cross assess GroupCrossVal requires groups length to match sample count."));
     }
-    return group_fold_plan(split.groups, split);
+    return group_crossval_plan(split.groups, split);
   }
   return StatusOr<SplitPlan>(Status::invalid_argument("sparse cross assess received unknown SplitOptions.plan."));
 }
@@ -507,6 +511,8 @@ StatusOr<Series> SparseLinearBinaryClassifier::assess(const SparseCsrMatrix& csr
   const double tpr = rec;
   const double tnr = tn + fp > 0 ? static_cast<double>(tn) / static_cast<double>(tn + fp) : 0.0;
   const double bacc = 0.5 * (tpr + tnr);
+  const double geom = std::sqrt(std::max(0.0, tpr * tnr));
+  const double bquality = std::max(0.0, geom * geom * (1.0 + 0.1 * (tpr - tnr)));
 
   std::vector<double> out{};
   out.reserve(metrics.size());
@@ -516,11 +522,15 @@ StatusOr<Series> SparseLinearBinaryClassifier::assess(const SparseCsrMatrix& csr
       case MetricKind::BalancedAccuracy: out.push_back(bacc); break;
       case MetricKind::Precision: out.push_back(prec); break;
       case MetricKind::Recall: out.push_back(rec); break;
+      case MetricKind::Sensitivity: out.push_back(rec); break;
       case MetricKind::F1: out.push_back(f1); break;
+      case MetricKind::Specificity: out.push_back(tnr); break;
+      case MetricKind::GeometricMean: out.push_back(geom); break;
+      case MetricKind::BalanceQuality: out.push_back(bquality); break;
       case MetricKind::LogLoss: out.push_back(logloss); break;
       default:
         return StatusOr<Series>(Status::not_implemented(
-            "SparseLinearBinaryClassifier::assess currently supports Accuracy/BalancedAccuracy/Precision/Recall/F1/LogLoss."));
+            "SparseLinearBinaryClassifier::assess currently supports binary classification metrics and LogLoss."));
     }
   }
   return StatusOr<Series>(pluss::make_series(std::move(out), {static_cast<std::int64_t>(metrics.size())}, f64_cpu()));
@@ -873,33 +883,52 @@ StatusOr<Series> SparseLinearMultiClassifier::assess(const SparseCsrMatrix& csr,
   std::vector<double> class_recall(static_cast<std::size_t>(cls_count), 0.0);
   std::vector<double> class_precision(static_cast<std::size_t>(cls_count), 0.0);
   std::vector<double> class_f1(static_cast<std::size_t>(cls_count), 0.0);
+  std::vector<double> class_specificity(static_cast<std::size_t>(cls_count), 0.0);
+  std::vector<double> class_geometric(static_cast<std::size_t>(cls_count), 0.0);
+  std::vector<double> class_balance_quality(static_cast<std::size_t>(cls_count), 0.0);
   for (std::int64_t ci = 0; ci < cls_count; ++ci) {
-    double tp = 0.0, fp = 0.0, fn = 0.0;
+    double tp = 0.0, fp = 0.0, fn = 0.0, tn = 0.0;
     for (std::int64_t r = 0; r < csr.rows; ++r) {
       const bool p = pred_idx[static_cast<std::size_t>(r)] == ci;
       const bool t = truth_idx[static_cast<std::size_t>(r)] == ci;
       if (p && t) tp += 1.0;
       else if (p && !t) fp += 1.0;
       else if (!p && t) fn += 1.0;
+      else tn += 1.0;
     }
     const double prec = tp + fp > 0.0 ? tp / (tp + fp) : 0.0;
     const double rec = tp + fn > 0.0 ? tp / (tp + fn) : 0.0;
+    const double spec = tn + fp > 0.0 ? tn / (tn + fp) : 0.0;
     const double f1 = prec + rec > 0.0 ? 2.0 * prec * rec / (prec + rec) : 0.0;
+    const double geom = std::sqrt(std::max(0.0, rec * spec));
+    const double bquality = std::max(0.0, geom * geom * (1.0 + 0.1 * (rec - spec)));
     class_precision[static_cast<std::size_t>(ci)] = prec;
     class_recall[static_cast<std::size_t>(ci)] = rec;
     class_f1[static_cast<std::size_t>(ci)] = f1;
+    class_specificity[static_cast<std::size_t>(ci)] = spec;
+    class_geometric[static_cast<std::size_t>(ci)] = geom;
+    class_balance_quality[static_cast<std::size_t>(ci)] = bquality;
   }
   double macro_precision = 0.0;
   double macro_recall = 0.0;
   double macro_f1 = 0.0;
+  double macro_specificity = 0.0;
+  double macro_geometric = 0.0;
+  double macro_balance_quality = 0.0;
   for (std::int64_t ci = 0; ci < cls_count; ++ci) {
     macro_precision += class_precision[static_cast<std::size_t>(ci)];
     macro_recall += class_recall[static_cast<std::size_t>(ci)];
     macro_f1 += class_f1[static_cast<std::size_t>(ci)];
+    macro_specificity += class_specificity[static_cast<std::size_t>(ci)];
+    macro_geometric += class_geometric[static_cast<std::size_t>(ci)];
+    macro_balance_quality += class_balance_quality[static_cast<std::size_t>(ci)];
   }
   macro_precision /= static_cast<double>(cls_count);
   macro_recall /= static_cast<double>(cls_count);
   macro_f1 /= static_cast<double>(cls_count);
+  macro_specificity /= static_cast<double>(cls_count);
+  macro_geometric /= static_cast<double>(cls_count);
+  macro_balance_quality /= static_cast<double>(cls_count);
 
   std::vector<double> out{};
   out.reserve(metrics.size());
@@ -909,10 +938,14 @@ StatusOr<Series> SparseLinearMultiClassifier::assess(const SparseCsrMatrix& csr,
       case MetricKind::BalancedAccuracy: out.push_back(macro_recall); break;
       case MetricKind::Precision: out.push_back(macro_precision); break;
       case MetricKind::Recall: out.push_back(macro_recall); break;
+      case MetricKind::Sensitivity: out.push_back(macro_recall); break;
       case MetricKind::F1: out.push_back(macro_f1); break;
+      case MetricKind::Specificity: out.push_back(macro_specificity); break;
+      case MetricKind::GeometricMean: out.push_back(macro_geometric); break;
+      case MetricKind::BalanceQuality: out.push_back(macro_balance_quality); break;
       default:
         return StatusOr<Series>(Status::not_implemented(
-            "SparseLinearMultiClassifier::assess currently supports Accuracy/BalancedAccuracy/Precision/Recall/F1."));
+            "SparseLinearMultiClassifier::assess currently supports hard-label multiclass classification metrics."));
     }
   }
   return StatusOr<Series>(pluss::make_series(std::move(out), {static_cast<std::int64_t>(metrics.size())}, f64_cpu()));

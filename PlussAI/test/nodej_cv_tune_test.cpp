@@ -107,7 +107,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
   const LabeledBatch batch = make_xor_batch();
 
   SplitOptions split{};
-  split.plan = CVPlanKind::KFold;
+  split.plan = CVPlanKind::CrossVal;
   split.folds = 4;
   split.shuffle = true;
   split.random.seed = 73;
@@ -150,8 +150,60 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
   }
 
   {
+    SplitOptions repeated = split;
+    repeated.plan = CVPlanKind::StratifiedCrossVal;
+    repeated.folds = 4;
+    repeated.repeats = 3;
+    repeated.shuffle = true;
+    repeated.random.seed = 91;
+    repeated.random.deterministic = true;
+
+    auto plan_or = stratified_crossval_plan(batch.y, repeated);
+    if (!plan_or.ok()) {
+      if (err) *err << "stratified_crossval_plan should succeed for balanced classification labels\n";
+      return false;
+    }
+    const SplitPlan& repeated_plan = plan_or.value();
+    if (repeated_plan.folds.size() != static_cast<std::size_t>(repeated.folds * repeated.repeats)) {
+      if (err) *err << "stratified_crossval_plan should emit folds * repeats splits\n";
+      return false;
+    }
+    std::vector<std::int64_t> test_counts(16, 0);
+    const auto y = as_f64(batch.y);
+    for (const auto& fold : repeated_plan.folds) {
+      const auto test = as_i64(fold.test_indices);
+      std::int64_t positives = 0;
+      for (std::int64_t idx : test) {
+        ++test_counts[static_cast<std::size_t>(idx)];
+        if (y[static_cast<std::size_t>(idx)] > 0.5) ++positives;
+      }
+      if (test.size() != 4 || positives != 2) {
+        if (err) *err << "stratified_crossval_plan should preserve class balance in each fold\n";
+        return false;
+      }
+    }
+    for (std::int64_t count : test_counts) {
+      if (count != repeated.repeats) {
+        if (err) *err << "stratified_crossval_plan should test each sample once per repeat\n";
+        return false;
+      }
+    }
+
+    auto repeated_cv_or = cross_assess(linear_logistic_spec(), batch, repeated, train, assess);
+    if (!repeated_cv_or.ok()) {
+      if (err) *err << "cross_assess StratifiedCrossVal should succeed\n";
+      return false;
+    }
+    const CrossAssessReport& repeated_cv = repeated_cv_or.value();
+    if (repeated_cv.folds.size() != repeated_plan.folds.size() || !repeated_cv.mean_metrics.isfinite().all().item<bool>()) {
+      if (err) *err << "cross_assess StratifiedCrossVal should aggregate finite repeated fold metrics\n";
+      return false;
+    }
+  }
+
+  {
     SplitOptions group_split = split;
-    group_split.plan = CVPlanKind::GroupKFold;
+    group_split.plan = CVPlanKind::GroupCrossVal;
     group_split.folds = 4;
     group_split.shuffle = false;
     group_split.groups = pluss::make_series(std::vector<std::int64_t>{
@@ -168,12 +220,12 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
 
     auto cv_or = cross_assess(linear_logistic_spec(), batch, group_split, train, assess);
     if (!cv_or.ok()) {
-      if (err) *err << "cross_assess GroupKFold should succeed when groups are provided\n";
+      if (err) *err << "cross_assess GroupCrossVal should succeed when groups are provided\n";
       return false;
     }
     const CrossAssessReport& cv = cv_or.value();
     if (cv.folds.size() != 4) {
-      if (err) *err << "cross_assess GroupKFold should emit requested fold count\n";
+      if (err) *err << "cross_assess GroupCrossVal should emit requested fold count\n";
       return false;
     }
 
@@ -185,7 +237,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
         const std::int64_t g = groups[static_cast<std::size_t>(idx)];
         const auto [it, inserted] = group_to_fold.emplace(g, static_cast<std::int64_t>(fold_id));
         if (!inserted && it->second != static_cast<std::int64_t>(fold_id)) {
-          if (err) *err << "cross_assess GroupKFold should keep each group in exactly one test fold\n";
+          if (err) *err << "cross_assess GroupCrossVal should keep each group in exactly one test fold\n";
           return false;
         }
       }

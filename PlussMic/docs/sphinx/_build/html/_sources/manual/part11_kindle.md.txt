@@ -55,7 +55,7 @@ auto stripped = annotated.drop_meta("source");
 Cases:
 
 ```cpp
-auto with_cases = stream.with_cases(df.caselbl());
+auto with_cases = stream.with_cases(df.label().values());
 auto no_cases = with_cases.clear_cases();
 ```
 

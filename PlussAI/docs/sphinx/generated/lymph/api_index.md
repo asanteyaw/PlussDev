@@ -54,7 +54,7 @@ api/method-categoryindexer-learned
 api/method-categoryindexer-summary
 api/method-classification-summary
 api/method-compare-series
-api/method-confusion-matrix
+api/method-confusion-table
 api/method-copy-feature-route
 api/method-copy-range-values
 api/method-dependence-curve

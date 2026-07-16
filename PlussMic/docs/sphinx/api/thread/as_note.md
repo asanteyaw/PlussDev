@@ -57,9 +57,9 @@ dtype: Note
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="any.html">
+  <a class="prev-link" href="append.html">
     <span class="label">Previous</span>
-    <span class="title">any</span>
+    <span class="title">append</span>
   </a>
   <a class="next-link" href="as_series.html">
     <span class="label">Next</span>

@@ -116,7 +116,7 @@ const DataFrame test_s = scaler.map(test_df);
 - `learn_map` initializes state and returns transformed frame.
 - subsequent `map` calls succeed.
 
-## Stratified KFold On Regression
+## Stratified CrossVal On Regression
 
 ### API Signature
 
@@ -124,7 +124,7 @@ const DataFrame test_s = scaler.map(test_df);
 
 ### Notes
 
-`StratifiedKFold` is classification-only.
+`StratifiedCrossVal` is classification-only, including when `repeats > 1`.
 
 ### Inputs
 
@@ -132,7 +132,7 @@ const DataFrame test_s = scaler.map(test_df);
 
 ### Output
 
-- use `KFold` for regression
+- use `CrossVal` for regression
 
 ### Options
 
@@ -142,7 +142,7 @@ const DataFrame test_s = scaler.map(test_df);
 
 ```cpp
 auto cv = lym::CrossValidationOptions{
-    .plan = pluss::ai::nodej::CVPlanKind::KFold,
+    .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
     .folds = 5,
 };
 

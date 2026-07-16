@@ -48,7 +48,7 @@ learn_map returned pluss::table::DataFrame
 ### Example 2 (Demo Pattern)
 
 ```cpp
-  if (!require_ok(fold_or, "fold_plan")) return 1;
+  if (!require_ok(fold_or, "crossval_plan")) return 1;
   std::cout << "kfold folds=" << fold_or.value().folds.size() << "\n";
 
   SimpleImputer imputer(SimpleImputerOptions{

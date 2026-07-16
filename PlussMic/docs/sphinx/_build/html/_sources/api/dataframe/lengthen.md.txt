@@ -71,8 +71,8 @@ r2  b        4.0
     <span class="label">Previous</span>
     <span class="title">le</span>
   </a>
-  <a class="next-link" href="level.html">
+  <a class="next-link" href="load.html">
     <span class="label">Next</span>
-    <span class="title">level</span>
+    <span class="title">load</span>
   </a>
 </div>

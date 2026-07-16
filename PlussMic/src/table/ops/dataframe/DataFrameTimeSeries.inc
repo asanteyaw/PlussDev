@@ -52,10 +52,10 @@ pluss::TimeIndex require_time_axis_index_(const DataFrame& frame, std::string_vi
 }
 
 pluss::TimeIndex require_case_time_axis_index_(const DataFrame& frame, std::string_view where) {
-  const auto axis = frame.caselbl();
+  const auto axis = frame.label().values();
   PLUSS_CHECK(axis.defined(), std::string(where) + ": cases are undefined");
   PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
-              std::string(where) + ": cases must be Timeline/TimeIndex. Use df.set_cases(\"date\") first");
+              std::string(where) + ": cases must be Timeline/TimeIndex. Use df.label().set(\"date\") first");
   return axis.kind() == ThreadKind::TimeIndex ? axis.as_timeindex() : axis.as_timeline().to_timeindex(false);
 }
 
@@ -110,8 +110,8 @@ DataFrame ts_binary_frame_(const DataFrame& left,
                            const std::vector<std::string>& features,
                            TsAlignMode mode,
                            int op) {
-  const auto left_axis = left.caselbl();
-  const auto right_axis = right.caselbl();
+  const auto left_axis = left.label().values();
+  const auto right_axis = right.label().values();
   (void)time_axis_to_index_(left_axis, "DataFrameTsAccessor::binary");
   (void)time_axis_to_index_(right_axis, "DataFrameTsAccessor::binary");
 
@@ -191,7 +191,7 @@ DataFrame DataFrameTsAccessor::returns(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().returns(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::log_returns(std::int64_t periods) const {
@@ -200,7 +200,7 @@ DataFrame DataFrameTsAccessor::log_returns(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().log_returns(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::diff(std::int64_t periods) const {
@@ -209,7 +209,7 @@ DataFrame DataFrameTsAccessor::diff(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().diff(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::lag(std::int64_t periods) const {
@@ -218,7 +218,7 @@ DataFrame DataFrameTsAccessor::lag(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().lag(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::lead(std::int64_t periods) const {
@@ -227,7 +227,7 @@ DataFrame DataFrameTsAccessor::lead(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().lead(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::rolling(
@@ -239,7 +239,7 @@ DataFrame DataFrameTsAccessor::rolling(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().rolling(window, statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::rolling(
@@ -247,7 +247,7 @@ DataFrame DataFrameTsAccessor::rolling(
     WindowStatistic statistic,
     const StatisticOptions& options,
     WindowClosure closure) const {
-  const auto axis = frame_.caselbl();
+  const auto axis = frame_.label().values();
   (void)require_case_time_axis_index_(frame_, "DataFrameTsAccessor::rolling");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
@@ -278,7 +278,7 @@ DataFrame DataFrameTsAccessor::grouped(const Thread& groups,
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().grouped(groups, window, statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::expanding(
@@ -289,7 +289,7 @@ DataFrame DataFrameTsAccessor::expanding(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().expanding(statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::ewm(
@@ -305,7 +305,7 @@ DataFrame DataFrameTsAccessor::ewm(
     out.emplace_back(name, frame_.features(name).ts().ewm(
         alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods, double epsilon) const {
@@ -314,7 +314,7 @@ DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t 
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().zscore_rolling(window, min_periods, epsilon));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode, std::optional<double> constant) const {
@@ -323,7 +323,7 @@ DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mo
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().fill_gaps(mode, constant));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::sort(bool ascending, bool nulls_last) const {
@@ -333,7 +333,7 @@ DataFrame DataFrameTsAccessor::sort(bool ascending, bool nulls_last) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name));
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl()).sort_cases(ascending, nulls_last);
+  return make_frame_from_columns_(std::move(out), frame_.label().values()).label().sort(ascending, nulls_last);
 }
 
 DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view time_feature,
@@ -399,7 +399,7 @@ DataFrame DataFrameTsAccessor::resample(
     const pluss::TimeIndex::ResampleOptions& options,
     pluss::subsp::stats::ts::ResampleOp op) const {
   PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::resample: expected at least one feature");
-  const auto axis = frame_.caselbl();
+  const auto axis = frame_.label().values();
   (void)require_case_time_axis_index_(frame_, "DataFrameTsAccessor::resample");
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
@@ -493,7 +493,7 @@ DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Thr
 DataFrame DataFrameTsAccessor::align_to(const Thread& target_axis, TsAlignMode mode) const {
   const auto axis = require_time_axis_thread_(target_axis, "DataFrameTsAccessor::align_to");
   (void)require_case_time_axis_index_(frame_, "DataFrameTsAccessor::align_to");
-  const auto source_axis = frame_.caselbl();
+  const auto source_axis = frame_.label().values();
 
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
@@ -707,7 +707,7 @@ DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const {
   out.emplace_back(feature_suffix_(time_feature, "day"), axis.day());
   out.emplace_back(feature_suffix_(time_feature, "hour"), axis.hour());
   out.emplace_back(feature_suffix_(time_feature, "weekday"), axis.to_note_weekday());
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) const {
@@ -720,7 +720,7 @@ DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) con
       out.emplace_back(std::string(name) + "_" + block_name, block.features(block_name));
     }
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }
 
 DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windows,
@@ -733,5 +733,5 @@ DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windo
       out.emplace_back(std::string(name) + "_" + block_name, block.features(block_name));
     }
   }
-  return make_frame_from_columns_(std::move(out), frame_.caselbl());
+  return make_frame_from_columns_(std::move(out), frame_.label().values());
 }

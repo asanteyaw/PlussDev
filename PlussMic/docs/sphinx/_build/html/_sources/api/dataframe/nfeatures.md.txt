@@ -10,7 +10,7 @@ DataFrame::nfeatures() -> std::int64_t
 
 ## What It Does
 
-Returns a size/count summary for the current object without changing it.
+Returns the number of features in the current frame.
 
 ## Parameters
 
@@ -43,9 +43,9 @@ auto out = df.nfeatures();
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nfeats.html">
+  <a class="prev-link" href="ne.html">
     <span class="label">Previous</span>
-    <span class="title">nfeats</span>
+    <span class="title">ne</span>
   </a>
   <a class="next-link" href="note.html">
     <span class="label">Next</span>

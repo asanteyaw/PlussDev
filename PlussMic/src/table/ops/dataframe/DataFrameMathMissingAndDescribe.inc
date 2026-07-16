@@ -1356,7 +1356,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     const auto name = scoped.features().front();
     return scoped.features(name)
         .duplicated(keep_first, keep_last)
-        .caselbl(scoped.caselbl())
+        .caselbl(scoped.label().values())
         .with_display_name("duplicated");
   }
 
@@ -1381,7 +1381,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     }
   }
   return Thread(bool_series_from_keep(mask))
-      .caselbl(scoped.caselbl())
+      .caselbl(scoped.label().values())
       .with_display_name("duplicated");
 }
 
@@ -1512,11 +1512,16 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
     is_target[idx] = true;
   }
 
-  if (spec.op == MissingOp::IsNull || spec.op == MissingOp::NotNull) {
+  if (spec.op == MissingOp::IsNull || spec.op == MissingOp::NotNull ||
+      spec.op == MissingOp::Invalid) {
     std::vector<std::pair<std::string, Thread>> out_cols;
     out_cols.reserve(target_indices.size());
     for (const auto idx : target_indices) {
-      const auto mask = (spec.op == MissingOp::IsNull) ? src.columns_[idx].isnull() : src.columns_[idx].notnull();
+      const auto mask = spec.op == MissingOp::IsNull
+                            ? src.columns_[idx].isnull()
+                            : spec.op == MissingOp::NotNull
+                                  ? src.columns_[idx].notnull()
+                                  : src.columns_[idx].invalid();
       out_cols.emplace_back(src.names_[idx], mask);
     }
     std::vector<std::string> out_names;
@@ -1606,6 +1611,10 @@ DataFrame DataFrame::isnull(pluss::msharp::RangeView::Of<std::string_view> featu
 
 DataFrame DataFrame::notnull(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return missing(MissingOp::NotNull, features);
+}
+
+DataFrame DataFrame::invalid(pluss::msharp::RangeView::Of<std::string_view> features) const {
+  return missing(MissingOp::Invalid, features);
 }
 
 DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
@@ -2415,23 +2424,23 @@ DataFrame DataFrame::copy() const {
 }
 
 bool DataFrame::equals(const DataFrame& other) const {
-  if (ncases() != other.ncases() || nfeats() != other.nfeats()) {
+  if (ncases() != other.ncases() || nfeatures() != other.nfeatures()) {
     return false;
   }
   if (features() != other.features()) {
     return false;
   }
-  if (case_labels_().dtype() != other.caselbl().dtype()) {
+  if (case_labels_().dtype() != other.label().values().dtype()) {
     return false;
   }
   for (std::int64_t r = 0; r < ncases(); ++r) {
-    if (case_labels_().is_valid(r) != other.caselbl().is_valid(r)) {
+    if (case_labels_().is_valid(r) != other.label().values().is_valid(r)) {
       return false;
     }
     if (!case_labels_().is_valid(r)) {
       continue;
     }
-    if (thread_scalar_string_at(case_labels_(), r) != thread_scalar_string_at(other.caselbl(), r)) {
+    if (thread_scalar_string_at(case_labels_(), r) != thread_scalar_string_at(other.label().values(), r)) {
       return false;
     }
   }

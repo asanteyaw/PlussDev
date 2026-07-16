@@ -51,58 +51,58 @@ It supports primitives, STL containers, `optional`, `variant`, tuples, maps, and
 
 ### 1.1 API Signatures (Public)
 
-`pluss::OutputEngine OutputEngine(os_or_options)`  
+`pluss::OutputEngine OutputEngine(os_or_options)`
 Inputs:
 - `os_or_options`: output target (`std::ostream`) and/or `OutputOptions`.
 Output:
 - initialized `OutputEngine`.
 
-`OutputEngine::to(os) -> OutputEngine&`  
+`OutputEngine::to(os) -> OutputEngine&`
 Inputs:
 - `os`: new output stream sink.
 Output:
 - same engine (chainable).
 
-`OutputEngine::write(args...) -> OutputEngine&`  
+`OutputEngine::write(args...) -> OutputEngine&`
 Inputs:
 - `args...`: values to print separated by configured separator.
 Output:
 - same engine (chainable), no trailing newline.
 
-`OutputEngine::writeln(args...) -> OutputEngine&`  
+`OutputEngine::writeln(args...) -> OutputEngine&`
 Inputs:
 - `args...`: values to print.
 Output:
 - same engine (chainable), includes newline.
 
-`OutputEngine::writef(pattern, args...) -> OutputEngine&`  
+`OutputEngine::writef(pattern, args...) -> OutputEngine&`
 Inputs:
 - `pattern`: format pattern.
 - `args...`: values bound to the pattern.
 Output:
 - same engine (chainable), no trailing newline.
 
-`OutputEngine::writefln(pattern, args...) -> OutputEngine&`  
+`OutputEngine::writefln(pattern, args...) -> OutputEngine&`
 Inputs:
 - `pattern`: format pattern.
 - `args...`: values bound to the pattern.
 Output:
 - same engine (chainable), includes newline.
 
-`OutputEngine::endln() -> OutputEngine&`  
+`OutputEngine::endln() -> OutputEngine&`
 Inputs:
 - none.
 Output:
 - same engine (chainable), newline emitted.
 
-`OutputEngine::flush() -> OutputEngine&`  
+`OutputEngine::flush() -> OutputEngine&`
 Inputs:
 - none.
 Output:
 - same engine (chainable), stream flushed.
 
-`OutputEngine::log(level, args...) -> OutputEngine&`  
-`OutputEngine::{trace|debug|info|warn|error}(args...) -> OutputEngine&`  
+`OutputEngine::log(level, args...) -> OutputEngine&`
+`OutputEngine::{trace|debug|info|warn|error}(args...) -> OutputEngine&`
 Inputs:
 - `level`: log level (for `log`).
 - `args...`: message payload.
@@ -233,44 +233,44 @@ a 1 b 2
 
 ### 2.1 API Signatures (Public)
 
-`pluss::suppose(value) -> let_box<T>`  
+`pluss::suppose(value) -> let_box<T>`
 Inputs:
 - `value`: any value to start a pipeline.
 Output:
 - pipeline box that supports `then/transform/tap/into/value`.
 
-`pluss::suppose.as<To>(value) -> let_box<To>`  
+`pluss::suppose.as<To>(value) -> let_box<To>`
 Inputs:
 - `value`: source value.
 - `To`: target type.
 Output:
 - typed pipeline box.
 
-`let_box<T>::then(fn) -> let_box<U>`  
+`let_box<T>::then(fn) -> let_box<U>`
 Inputs:
 - `fn`: transform callable from current value to next value.
 Output:
 - new pipeline box with transformed type.
 
-`let_box<T>::tap(fn) -> let_box<T>`  
+`let_box<T>::tap(fn) -> let_box<T>`
 Inputs:
 - `fn`: side-effect callable.
 Output:
 - same value pipeline.
 
-`let_box<T>::into<U>() -> let_box<U>`  
+`let_box<T>::into<U>() -> let_box<U>`
 Inputs:
 - `U`: destination type.
 Output:
 - converted pipeline.
 
-`let_box<T>::value() -> T`  
+`let_box<T>::value() -> T`
 Inputs:
 - none.
 Output:
 - final materialized value.
 
-`let_as(T1, T2, ...) name = value`  
+`let_as(T1, T2, ...) name = value`
 Inputs:
 - allowed type set + initial value.
 Output:
@@ -345,14 +345,14 @@ ready
 
 ### 3.1 API Signatures (Public)
 
-`pluss::transmit(fn, value) -> mapped_value`  
+`pluss::transmit(fn, value) -> mapped_value`
 Inputs:
 - `fn`: unary callable.
 - `value`: scalar/object value.
 Output:
 - transformed value.
 
-`pluss::transmit(fn, range, opts = {}) -> std::vector<out_t>`  
+`pluss::transmit(fn, range, opts = {}) -> std::vector<out_t>`
 Inputs:
 - `fn`: unary callable (`fn(elem)` or `fn(elem, index)`).
 - `range`: iterable source.
@@ -360,19 +360,19 @@ Inputs:
 Output:
 - transformed vector.
 
-`pluss::transmit(fn, first, last, opts = {}) -> std::vector<out_t>`  
+`pluss::transmit(fn, first, last, opts = {}) -> std::vector<out_t>`
 Inputs:
 - iterator pair and transform callable.
 Output:
 - transformed vector.
 
-`pluss::transmit(fn, range_a, range_b) -> std::vector<out_t>`  
+`pluss::transmit(fn, range_a, range_b) -> std::vector<out_t>`
 Inputs:
 - binary callable + two ranges.
 Output:
 - zipped transform result (up to min length).
 
-`pluss::transmit_into(fn, range, out_it) -> OutIt`  
+`pluss::transmit_into(fn, range, out_it) -> OutIt`
 Inputs:
 - `fn`: transform callable.
 - `range`: source range.
@@ -481,10 +481,10 @@ parallel scheduling enabled for random-access sized range
 
 ### 4.1 API Signatures (Public)
 
-`pluss::transform_axis(fn, Series, axis, opts = {}) -> std::vector<out_t>`  
-`pluss::transform_axis(fn, Note, axis, opts = {}) -> std::vector<out_t>`  
-`pluss::transform_axis(fn, Timeline, axis, opts = {}) -> std::vector<out_t>`  
-`pluss::transform_axis(fn, TimeIndex, axis = 0, opts = {}) -> std::vector<out_t>`  
+`pluss::transform_axis(fn, Series, axis, opts = {}) -> std::vector<out_t>`
+`pluss::transform_axis(fn, Note, axis, opts = {}) -> std::vector<out_t>`
+`pluss::transform_axis(fn, Timeline, axis, opts = {}) -> std::vector<out_t>`
+`pluss::transform_axis(fn, TimeIndex, axis = 0, opts = {}) -> std::vector<out_t>`
 Inputs:
 - `fn`: callable applied to each axis slice.
 - data object: one of `Series`, `Note`, `Timeline`, `TimeIndex`.
@@ -575,25 +575,25 @@ Expected output:
 
 ### 5.1 API Signatures (Public)
 
-`pluss::rng_seed(seed) -> void`  
+`pluss::rng_seed(seed) -> void`
 Inputs:
 - `seed`: explicit global RNG seed.
 Output:
 - none.
 
-`pluss::rng_seed() -> std::uint64_t`  
+`pluss::rng_seed() -> std::uint64_t`
 Inputs:
 - none.
 Output:
 - current global RNG seed.
 
-`pluss::next_rng_seed() -> std::uint64_t`  
+`pluss::next_rng_seed() -> std::uint64_t`
 Inputs:
 - none.
 Output:
 - next deterministic seed in stream.
 
-`pluss::seed_or_next(seed) -> std::uint64_t`  
+`pluss::seed_or_next(seed) -> std::uint64_t`
 Inputs:
 - `seed`: requested seed (`0` means consume next seed).
 Output:
@@ -629,22 +629,22 @@ a != b, b != c
 
 ### 6.1 API Signatures (Public)
 
-`pluss::to_scalar<T>(x) -> T`  
+`pluss::to_scalar<T>(x) -> T`
 Inputs:
 - `x`: scalar `Series` (`numel() == 1`).
 - `T`: output scalar type.
 Output:
 - scalar value extracted as `T`.
 
-`pluss::as_f64(x) -> double`  
-`pluss::as_f32(x) -> float`  
-`pluss::as_bool(x) -> bool`  
-`pluss::as_i16(x) -> int16_t`  
-`pluss::as_i32(x) -> int32_t`  
-`pluss::as_i64(x) -> int64_t`  
-`pluss::as_u16(x) -> uint16_t`  
-`pluss::as_u32(x) -> uint32_t`  
-`pluss::as_u64(x) -> uint64_t`  
+`pluss::as_f64(x) -> double`
+`pluss::as_f32(x) -> float`
+`pluss::as_bool(x) -> bool`
+`pluss::as_i16(x) -> int16_t`
+`pluss::as_i32(x) -> int32_t`
+`pluss::as_i64(x) -> int64_t`
+`pluss::as_u16(x) -> uint16_t`
+`pluss::as_u32(x) -> uint32_t`
+`pluss::as_u64(x) -> uint64_t`
 Inputs:
 - `x`: scalar `Series`.
 Output:
@@ -684,20 +684,20 @@ Pathing is centered on a simple single-root API (`file_path(...)`) with two add-
 
 ### 7.1 API Signatures (Public)
 
-`pluss::loader::root_path() -> path`  
-`pluss::loader::set_root_path(root, resolve_mode = RootResolve::WorkingDirectory) -> void`  
+`pluss::loader::root_path() -> path`
+`pluss::loader::set_root_path(root, resolve_mode = RootResolve::WorkingDirectory) -> void`
 `pluss::loader::reset_root_path() -> void`
 
-`pluss::loader::path_policy() -> PathPolicy`  
+`pluss::loader::path_policy() -> PathPolicy`
 `pluss::loader::set_path_policy(policy) -> void`
 
-`pluss::loader::file_path(subpath, options = {}) -> PathRef`  
-`pluss::loader::file_dir(subpath, options = {}) -> DirRef`  
-`pluss::loader::absolute_path(path, options = {}) -> PathRef`  
+`pluss::loader::file_path(subpath, options = {}) -> PathRef`
+`pluss::loader::file_dir(subpath, options = {}) -> DirRef`
+`pluss::loader::absolute_path(path, options = {}) -> PathRef`
 `pluss::loader::join_path(base, parts...) -> path`
 
-`PathRef::string() -> std::string`  
-`DirRef::string() -> std::string`  
+`PathRef::string() -> std::string`
+`DirRef::string() -> std::string`
 `DirRef::file(subpath, options = {}) -> PathRef`
 
 `pluss::loader::PathContext` (add-on):
@@ -974,35 +974,35 @@ This section covers tensor mini-batching and split planning APIs.
 
 ### 8.1 Core API Signatures (Public)
 
-`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`  
+`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`
 Inputs:
 - `fields`: one or more aligned `Series` tensors.
 - `batch_dim`: sample axis.
 Output:
 - dataset object with indexable samples.
 
-`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`  
+`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`
 Inputs:
 - `dataset_or_fields`: `Dataset`, `SeriesDataset`, or raw `std::vector<Series>`.
 - `options`: batching/shuffle/seed/device/dtype/collation options.
 Output:
 - iterable batch loader.
 
-`DataLoader::next() -> optional<DataBatch>`  
+`DataLoader::next() -> optional<DataBatch>`
 Inputs:
 - none.
 Output:
 - next batch if available.
 
-`DataLoader::batch_at(batch_index) -> DataBatch`  
+`DataLoader::batch_at(batch_index) -> DataBatch`
 Inputs:
 - `batch_index`: zero-based batch position.
 Output:
 - deterministic batch view for that index.
 
-`DataBatch::x() -> Series`  
-`DataBatch::y() -> Series`  
-`DataBatch::fields -> std::vector<Series>`  
+`DataBatch::x() -> Series`
+`DataBatch::y() -> Series`
+`DataBatch::fields -> std::vector<Series>`
 Inputs:
 - none (or field index for `at(i)`).
 Output:
@@ -1010,28 +1010,28 @@ Output:
 
 ### 8.2 Split Planning API Signatures (Public)
 
-`pluss::loader::split_fields(fields, split_options) -> DataSplit`  
+`pluss::loader::split_fields(fields, split_options) -> DataSplit`
 Inputs:
 - `fields`: aligned tensors.
 - `split_options`: train/val ratios, shuffle, seed, batch axis.
 Output:
 - train/val/test field groups.
 
-`pluss::loader::split_loaders(fields, split_options, train_opts, val_opts, test_opts) -> DataLoaderSplit`  
+`pluss::loader::split_loaders(fields, split_options, train_opts, val_opts, test_opts) -> DataLoaderSplit`
 Inputs:
 - same `fields` and split policy plus loader options per split.
 Output:
 - ready-to-iterate train/val/test loaders.
 
-`pluss::loader::time_series_split_indices(n_samples, ts_options) -> TimeSeriesIndexSplit`  
+`pluss::loader::temporal_split_indices(n_samples, ts_options) -> TemporalIndexSplit`
 Inputs:
 - `n_samples`: total sample count.
 - `ts_options`: fold count, test window, train cap, gap.
 Output:
 - walk-forward index folds.
 
-`pluss::loader::time_series_split_fields(fields, ts_options) -> TimeSeriesFieldSplit`  
-`pluss::loader::time_series_split_loaders(fields, ts_options, train_opts, test_opts) -> TimeSeriesLoaderSplit`  
+`pluss::loader::temporal_split_fields(fields, ts_options) -> TemporalFieldSplit`
+`pluss::loader::temporal_split_loaders(fields, ts_options, train_opts, test_opts) -> TemporalLoaderSplit`
 Inputs:
 - time-ordered fields and fold options.
 Output:
@@ -1170,9 +1170,9 @@ Three loaders ready for train/val/test loops
 ### 8.9 Example G: time-series walk-forward indices
 
 ```cpp
-auto plan = pluss::loader::time_series_split_indices(
+auto plan = pluss::loader::temporal_split_indices(
   100,
-  {.n_splits = 4, .test_size = 10, .gap = 2}
+  {.folds = 4, .test_size = 10, .gap = 2}
 );
 
 pluss::OutputEngine out;
@@ -1191,9 +1191,9 @@ fold0 train <depends on options> test 10
 ### 8.10 Example H: time-series split to loaders
 
 ```cpp
-auto ts = pluss::loader::time_series_split_loaders(
+auto ts = pluss::loader::temporal_split_loaders(
   {x, y},
-  {.n_splits = 3, .test_size = 2, .gap = 0},
+  {.folds = 3, .test_size = 2, .gap = 0},
   {.batch_size = 2},
   {.batch_size = 2}
 );
@@ -1327,9 +1327,9 @@ int main() {
   auto X = pluss::make_series(x_raw, {24, 1});
   auto Y = pluss::make_series(y_raw, {24, 1});
 
-  auto folds = pluss::loader::time_series_split_loaders(
+  auto folds = pluss::loader::temporal_split_loaders(
     {X, Y},
-    {.n_splits = 4, .test_size = 4, .gap = 1},
+    {.folds = 4, .test_size = 4, .gap = 1},
     {.batch_size = 4},
     {.batch_size = 4}
   );
@@ -1488,7 +1488,7 @@ Actions:
 
 - `SeriesDataset`, `DataLoader`, `DataLoaderOptions`
 - `split_fields`, `split_loaders`
-- `time_series_split_indices/fields/loaders`
+- `temporal_split_indices/fields/loaders`
 
 ---
 

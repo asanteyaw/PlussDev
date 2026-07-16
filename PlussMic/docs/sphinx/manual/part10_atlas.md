@@ -29,7 +29,7 @@ Thread labels = pluss::make_note({"south", "other"});
 pluss::table::Atlas atlas({south, other}, labels);
 std::cout << "depth=" << atlas.depth()
           << ", ncases=" << atlas.ncases()
-          << ", nfeatures=" << atlas.nfeats() << '\n';
+          << ", nfeatures=" << atlas.nfeatures() << '\n';
 std::cout << atlas.loc("south").to_string() << '\n';
 
 auto catalog = sales.kindelize();
@@ -69,7 +69,7 @@ atlas.defined();
 atlas.empty();
 atlas.depth();
 atlas.ncases();
-atlas.nfeats();
+atlas.nfeatures();
 atlas.column_names();
 atlas.axis0_labels();
 atlas.show();

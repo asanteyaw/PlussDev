@@ -51,8 +51,8 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">kindelize</span>
   </a>
-  <a class="next-link" href="land.html">
+  <a class="next-link" href="label.html">
     <span class="label">Next</span>
-    <span class="title">land</span>
+    <span class="title">label</span>
   </a>
 </div>

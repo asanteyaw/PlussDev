@@ -54,8 +54,8 @@ id  sales  city
     <span class="label">Previous</span>
     <span class="title">skew</span>
   </a>
-  <a class="next-link" href="sort_cases.html">
+  <a class="next-link" href="sort_values.html">
     <span class="label">Next</span>
-    <span class="title">sort_cases</span>
+    <span class="title">sort_values</span>
   </a>
 </div>

@@ -112,9 +112,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="align_caselbl.html">
+  <a class="prev-link" href="align.html">
     <span class="label">Previous</span>
-    <span class="title">align_caselbl</span>
+    <span class="title">align</span>
   </a>
   <a class="next-link" href="any.html">
     <span class="label">Next</span>

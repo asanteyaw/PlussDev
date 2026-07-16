@@ -34,15 +34,10 @@ static unsigned nth_weekday_of_month(int y, unsigned m, int weekday_sun0, unsign
   return dom;
 }
 
-// DST rules for America/Edmonton (Mountain):
-// - Standard offset: -07:00
-// - DST offset:      -06:00
-// - DST starts: second Sunday in March at 02:00 local standard time
-// - DST ends:   first Sunday in November at 02:00 local DST time
-// These rules match modern North America (2007+). We apply them for all years.
-struct EdmontonRules {
-  static constexpr int kStd = -7 * 60;
-  static constexpr int kDst = -6 * 60;
+template <int StdOffsetMinutes, int DstOffsetMinutes>
+struct NorthAmericaDstRules {
+  static constexpr int kStd = StdOffsetMinutes;
+  static constexpr int kDst = DstOffsetMinutes;
 
   static sys_time<nanoseconds> dst_start_utc(int y) {
     // local standard time 02:00 -> UTC = local - offset
@@ -108,23 +103,98 @@ struct EdmontonRules {
   }
 };
 
+using EdmontonRules = NorthAmericaDstRules<-7 * 60, -6 * 60>;
+using NewYorkRules = NorthAmericaDstRules<-5 * 60, -4 * 60>;
+
+struct LondonRules {
+  static constexpr int kStd = 0;
+  static constexpr int kDst = 60;
+
+  static unsigned last_sunday_of_month(int y, unsigned m) {
+    const auto last_day = sys_days(year{y}/month{m}/std::chrono::last);
+    const auto wd = weekday{last_day};
+    return unsigned(day{year_month_day{last_day - days(wd.c_encoding())}.day()});
+  }
+
+  static sys_time<nanoseconds> dst_start_utc(int y) {
+    const unsigned dom = last_sunday_of_month(y, 3);
+    const auto utc = sys_days(year{y}/month{3}/day{dom}) + hours(1);
+    return sys_time<nanoseconds>(utc.time_since_epoch());
+  }
+
+  static sys_time<nanoseconds> dst_end_utc(int y) {
+    const unsigned dom = last_sunday_of_month(y, 10);
+    const auto utc = sys_days(year{y}/month{10}/day{dom}) + hours(1);
+    return sys_time<nanoseconds>(utc.time_since_epoch());
+  }
+
+  static int offset_minutes_at_utc(std::int64_t utc_ns) {
+    const auto tp = sys_time<nanoseconds>(nanoseconds(utc_ns));
+    const auto dp = floor<days>(tp);
+    const auto ymd = year_month_day(dp);
+    const int y = int(ymd.year());
+    const auto s = dst_start_utc(y);
+    const auto e = dst_end_utc(y);
+    return (tp >= s && tp < e) ? kDst : kStd;
+  }
+
+  static std::int64_t local_to_utc(std::int64_t local_ns, int fold, std::string_view nonexistent) {
+    const auto local_tp = sys_time<nanoseconds>(nanoseconds(local_ns));
+    const auto dp = floor<days>(local_tp);
+    const auto ymd = year_month_day(dp);
+    const int y = int(ymd.year());
+
+    const unsigned start_dom = last_sunday_of_month(y, 3);
+    const unsigned end_dom = last_sunday_of_month(y, 10);
+    const auto dst_start_local = sys_days(year{y}/month{3}/day{start_dom}) + hours(1);
+    const auto dst_end_local = sys_days(year{y}/month{10}/day{end_dom}) + hours(2);
+
+    const auto gap_begin = dst_start_local;
+    const auto gap_end = dst_start_local + hours(1);
+    if (local_tp >= gap_begin && local_tp < gap_end) {
+      if (nonexistent == "shift_forward") {
+        const auto shifted = gap_end;
+        return (sys_time<nanoseconds>(shifted.time_since_epoch()) - minutes(kDst)).time_since_epoch().count();
+      }
+      CODEM_FAIL("tz_localize: nonexistent local time (DST spring-forward gap)");
+    }
+
+    const auto overlap_begin = dst_end_local - hours(1);
+    const auto overlap_end = dst_end_local;
+    if (local_tp >= overlap_begin && local_tp < overlap_end) {
+      const int off = (fold == 0) ? kDst : kStd;
+      return (local_tp - minutes(off)).time_since_epoch().count();
+    }
+
+    const bool in_dst = (local_tp >= gap_end && local_tp < overlap_begin);
+    const int off = in_dst ? kDst : kStd;
+    return (local_tp - minutes(off)).time_since_epoch().count();
+  }
+};
+
 TimeZone TimeZone::load(std::string_view name) {
   const auto n = std::string(name);
   const auto nl = lower(name);
   if (n.empty() || nl == "utc") return TimeZone("UTC");
   if (nl == "america/edmonton") return TimeZone("America/Edmonton");
-  CODEM_FAIL("Unknown timezone: " + n + " (currently supported: UTC, America/Edmonton)");
+  if (nl == "america/new_york") return TimeZone("America/New_York");
+  if (nl == "europe/london") return TimeZone("Europe/London");
+  CODEM_FAIL("Unknown timezone: " + n + " (currently supported: UTC, America/Edmonton, America/New_York, Europe/London)");
 }
 
 int TimeZone::offset_minutes_at_utc(std::int64_t utc_epoch_nanos) const {
   if (name_ == "UTC") return 0;
   if (name_ == "America/Edmonton") return EdmontonRules::offset_minutes_at_utc(utc_epoch_nanos);
+  if (name_ == "America/New_York") return NewYorkRules::offset_minutes_at_utc(utc_epoch_nanos);
+  if (name_ == "Europe/London") return LondonRules::offset_minutes_at_utc(utc_epoch_nanos);
   return 0;
 }
 
 std::int64_t TimeZone::local_to_utc(std::int64_t local_epoch_nanos, int fold, std::string_view nonexistent) const {
   if (name_ == "UTC") return local_epoch_nanos;
   if (name_ == "America/Edmonton") return EdmontonRules::local_to_utc(local_epoch_nanos, fold, nonexistent);
+  if (name_ == "America/New_York") return NewYorkRules::local_to_utc(local_epoch_nanos, fold, nonexistent);
+  if (name_ == "Europe/London") return LondonRules::local_to_utc(local_epoch_nanos, fold, nonexistent);
   return local_epoch_nanos;
 }
 

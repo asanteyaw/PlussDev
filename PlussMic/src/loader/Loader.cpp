@@ -1919,7 +1919,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   }
   if (add_cases) {
     names.insert(names.begin(), case_label);
-    columns.insert(columns.begin(), frame.caselbl());
+    columns.insert(columns.begin(), frame.label().values());
   }
   PLUSS_CHECK(names.size() == columns.size(), "loader::save_parquet: column metadata size mismatch");
 
@@ -2259,7 +2259,7 @@ std::ostream& operator<<(std::ostream& os, const LoadResult& loaded) {
   os << fmt::format("Workbook({} sheets)", wb.size());
   for (std::size_t i = 0; i < wb.size(); ++i) {
     const auto& [name, frame] = wb[i];
-    os << fmt::format("\n  [{}] {} -> [{} cs x {} feat]", i, name, frame.ncases(), frame.nfeats());
+    os << fmt::format("\n  [{}] {} -> [{} cs x {} feat]", i, name, frame.ncases(), frame.nfeatures());
   }
   return os;
 }
@@ -2794,7 +2794,7 @@ std::vector<pluss::table::Thread> json_columns_with_cases(const pluss::table::Da
     columns.push_back(frame.features(name));
   }
   if (add_cases) {
-    columns.insert(columns.begin(), frame.caselbl());
+    columns.insert(columns.begin(), frame.label().values());
   }
   return columns;
 }

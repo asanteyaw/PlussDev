@@ -46,7 +46,7 @@ void validate_axis0_labels(const std::optional<Thread>& labels, std::int64_t dep
 
 void validate_schema_compat(const DataFrame& ref, const DataFrame& cur) {
   PLUSS_CHECK(ref.ncases() == cur.ncases(), "Atlas: all frames must have identical row count (strict cube)");
-  PLUSS_CHECK(ref.nfeats() == cur.nfeats(), "Atlas: all frames must have identical column count");
+  PLUSS_CHECK(ref.nfeatures() == cur.nfeatures(), "Atlas: all frames must have identical feature count");
   PLUSS_CHECK(ref.features() == cur.features(), "Atlas: all frames must have identical column names/order");
 
   const auto& ref_names = ref.features();
@@ -147,7 +147,7 @@ void detail::AtlasImpl::validate_() {
   const auto& ref = frames_.front();
   PLUSS_CHECK(ref.defined(), "Atlas: frame[0] is undefined");
   nrows_ = ref.ncases();
-  ncols_ = ref.nfeats();
+  ncols_ = ref.nfeatures();
   names_ = ref.features();
 
   for (std::size_t i = 0; i < frames_.size(); ++i) {

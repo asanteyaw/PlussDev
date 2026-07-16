@@ -25,13 +25,13 @@ For aux-backed loader/path/data-loader utilities:
 
 ### API Signature
 
-`pluss::loader::ConfigValue(value) -> ConfigValue`  
+`pluss::loader::ConfigValue(value) -> ConfigValue`
 Inputs:
 - `value`: one of `bool`, `int64`, `double`, `string`, `vector<string>`.
 Output:
 - typed config value.
 
-`pluss::loader::config_from(entries) -> Config`  
+`pluss::loader::config_from(entries) -> Config`
 Inputs:
 - `entries`: key/value list.
 Output:
@@ -63,9 +63,9 @@ cfg contains 4 keys with typed values
 
 ### API Signature
 
-`pluss::loader::load_csv(options) -> DataFrame`  
-`pluss::loader::load_csv(filepath, options = {}) -> DataFrame`  
-`pluss::loader::load_txt(filepath, config = {}) -> DataFrame`  
+`pluss::loader::load_csv(options) -> DataFrame`
+`pluss::loader::load_csv(filepath, options = {}) -> DataFrame`
+`pluss::loader::load_txt(filepath, config = {}) -> DataFrame`
 `pluss::loader::load_csv_records(records, options = {}) -> DataFrame`
 
 Inputs:
@@ -163,9 +163,9 @@ Case/index derived from "age"
 
 ### API Signature
 
-`pluss::loader::load_excel(filepath, options = {}) -> DataFrame`  
-`pluss::loader::load_excel_workbook(filepath, options = {}) -> Workbook`  
-`pluss::loader::load_excel(filepath, sheet_name, header = true) -> DataFrame`  
+`pluss::loader::load_excel(filepath, options = {}) -> DataFrame`
+`pluss::loader::load_excel_workbook(filepath, options = {}) -> Workbook`
+`pluss::loader::load_excel(filepath, sheet_name, header = true) -> DataFrame`
 `pluss::loader::load_excel(filepath, sheet_index, header = true) -> DataFrame`
 
 Inputs:
@@ -209,8 +209,8 @@ wb contains every sheet as (sheet_name, DataFrame)
 
 ### API Signature
 
-`pluss::loader::load_json(filepath, config = {}) -> DataFrame`  
-`pluss::loader::load_parquet(filepath, config = {}) -> DataFrame`  
+`pluss::loader::load_json(filepath, config = {}) -> DataFrame`
+`pluss::loader::load_parquet(filepath, config = {}) -> DataFrame`
 `pluss::loader::load(source_type, filepath, config = {}) -> LoadResult`
 
 Inputs:
@@ -250,11 +250,11 @@ Workbook-style loads expose sheet_names()
 
 ### API Signature
 
-`pluss::loader::save_csv(frame, filepath, config = {}) -> void`  
-`pluss::loader::save_excel(frame, filepath, config = {}) -> void`  
-`pluss::loader::save_txt(frame, filepath, config = {}) -> void`  
-`pluss::loader::save_json(frame, filepath, config = {}) -> void`  
-`pluss::loader::save_parquet(frame, filepath, config = {}) -> void`  
+`pluss::loader::save_csv(frame, filepath, config = {}) -> void`
+`pluss::loader::save_excel(frame, filepath, config = {}) -> void`
+`pluss::loader::save_txt(frame, filepath, config = {}) -> void`
+`pluss::loader::save_json(frame, filepath, config = {}) -> void`
+`pluss::loader::save_parquet(frame, filepath, config = {}) -> void`
 `pluss::loader::save_as(frame, target_type, filepath, config = {}) -> void`
 
 Inputs:
@@ -304,35 +304,35 @@ Use one of three root styles depending on workflow:
 
 Global local root:
 
-`set_root_path(root, resolve_mode = RootResolve::WorkingDirectory) -> void`  
-`root_path() -> path`  
-`reset_root_path() -> void`  
-`set_path_policy(policy) -> void`  
-`path_policy() -> PathPolicy`  
-`file_path(subpath, options = {}) -> PathRef`  
-`file_paths({...}, options = {}) -> std::vector<PathRef>`  
-`file_path_map({{"name","subpath"}, ...}, options = {}) -> std::unordered_map<std::string, PathRef>`  
-`file_dir(subpath, options = {}) -> DirRef`  
+`set_root_path(root, resolve_mode = RootResolve::WorkingDirectory) -> void`
+`root_path() -> path`
+`reset_root_path() -> void`
+`set_path_policy(policy) -> void`
+`path_policy() -> PathPolicy`
+`file_path(subpath, options = {}) -> PathRef`
+`file_paths({...}, options = {}) -> std::vector<PathRef>`
+`file_path_map({{"name","subpath"}, ...}, options = {}) -> std::unordered_map<std::string, PathRef>`
+`file_dir(subpath, options = {}) -> DirRef`
 `absolute_path(path, options = {}) -> PathRef`
 
 Scoped local root:
 
-`PathContext::from_root(root, resolve_mode = RootResolve::WorkingDirectory) -> PathContext`  
+`PathContext::from_root(root, resolve_mode = RootResolve::WorkingDirectory) -> PathContext`
 `ctx.file_path(...)`, `ctx.file_paths(...)`, `ctx.file_path_map(...)`, `ctx.file_dir(...)`, `ctx.absolute_path(...)`
 
 Scoped internet root:
 
-`UrlContext::from_root("https://...") -> UrlContext`  
-`u.root() -> std::string`  
-`u.file_path(subpath) -> UrlRef`  
-`u.file_paths({...}) -> std::vector<UrlRef>`  
+`UrlContext::from_root("https://...") -> UrlContext`
+`u.root() -> std::string`
+`u.file_path(subpath) -> UrlRef`
+`u.file_paths({...}) -> std::vector<UrlRef>`
 `u.file_path_map({...}) -> std::unordered_map<std::string, UrlRef>`
 
 String accessors:
 
-`PathRef::string() -> std::string`  
-`DirRef::string() -> std::string`  
-`DirRef::file(subpath, options = {}) -> PathRef`  
+`PathRef::string() -> std::string`
+`DirRef::string() -> std::string`
+`DirRef::file(subpath, options = {}) -> PathRef`
 `UrlRef::string() -> std::string`
 
 ### 6.3 Global root workflows (`set_root_path`)
@@ -548,13 +548,13 @@ These are documented in detail in [Aux User Guide](aux.md).
 
 Quick reminder signature:
 
-`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`  
-`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`  
-`pluss::loader::split_fields(...) -> DataSplit`  
-`pluss::loader::split_loaders(...) -> DataLoaderSplit`  
-`pluss::loader::time_series_split_indices(...) -> TimeSeriesIndexSplit`  
-`pluss::loader::time_series_split_fields(...) -> TimeSeriesFieldSplit`  
-`pluss::loader::time_series_split_loaders(...) -> TimeSeriesLoaderSplit`
+`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`
+`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`
+`pluss::loader::split_fields(...) -> DataSplit`
+`pluss::loader::split_loaders(...) -> DataLoaderSplit`
+`pluss::loader::temporal_split_indices(...) -> TemporalIndexSplit`
+`pluss::loader::temporal_split_fields(...) -> TemporalFieldSplit`
+`pluss::loader::temporal_split_loaders(...) -> TemporalLoaderSplit`
 
 ## 8. End-to-End Example (CSV -> filter -> save)
 

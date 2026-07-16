@@ -90,7 +90,7 @@ int main() {
       },
   };
   SplitOptions split{};
-  split.plan = CVPlanKind::KFold;
+  split.plan = CVPlanKind::CrossVal;
   split.folds = 3;
   split.shuffle = true;
   split.random.seed = 23;

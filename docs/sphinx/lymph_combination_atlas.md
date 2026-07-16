@@ -69,7 +69,8 @@ Numeric/Series sweep axes for completeness:
 
 `CrossValidationOptions`
 
-- `plan`: `{Holdout, KFold, StratifiedKFold, GroupKFold, TimeSeries}`
+- `plan`: `{Holdout, CrossVal, StratifiedCrossVal, TSCrossVal, GroupCrossVal}`
+- `repeats`: numeric axis for repeated stratified plans
 - `stratified`: `{false, true}`
 - `reliability_defaults`: `{false, true}`
 - `shuffle`: `{false, true}`
@@ -431,7 +432,7 @@ auto result = lym::selection::tune(
     x_train,
     y_train,
     lym::CrossValidationOptions{
-      .plan = pluss::ai::nodej::CVPlanKind::KFold,
+      .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
       .folds = 5,
       .stratified = false,
       .reliability_defaults = true,

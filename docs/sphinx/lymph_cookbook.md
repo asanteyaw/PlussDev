@@ -67,6 +67,7 @@ These options are shared across all Lymph workflows and models.
 - `plan`
 - `holdout_fraction`
 - `folds`
+- `repeats`
 - `stratified`
 - `reliability_defaults`
 - `shuffle`
@@ -270,7 +271,7 @@ Configure options (seed, contamination, forest size):
 ```cpp
 lym::prep::OutlierIsolatorOptions opts;
 opts.estimators = 300;
-opts.max_samples_auto = true;     // sklearn-style auto
+opts.max_samples_auto = true;     // reference-style auto
 opts.max_features_ratio = 0.8;
 opts.bootstrap = false;
 opts.contamination_auto = false;  // use explicit contamination
@@ -870,7 +871,7 @@ const auto ft = lym::make_feature_transformer(
 
 ## Model Selection Recipes
 
-### Recipe: K-fold shortlist and winner selection
+### Recipe: CrossVal Shortlist And Winner Selection
 
 #### API Signature
 
@@ -905,7 +906,7 @@ auto tuned = lym::selection::tune(
     std::move(candidates),
     x_train,
     y_train,
-    lym::CrossValidationOptions{.plan = pluss::ai::nodej::CVPlanKind::KFold, .folds = 5, .random_state = 123},
+    lym::CrossValidationOptions{.plan = pluss::ai::nodej::CVPlanKind::CrossVal, .folds = 5, .random_state = 123},
     {},
     pluss::ai::nodej::AssessOptions{.metrics = {pluss::ai::nodej::MetricKind::Rmse}},
     pluss::ai::nodej::MetricKind::Rmse,

@@ -130,6 +130,35 @@ bool read_random_state(BinaryReader& r, RandomState& rs) {
   return true;
 }
 
+void write_balance_target(BinaryWriter& w, const BalanceTarget& target) {
+  write_enum(w, target.kind);
+  w.pod(target.ratio);
+  w.series(target.counts);
+  write_enum(w, target.growth);
+  w.pod(target.neighbors);
+  write_enum(w, target.clean);
+  w.pod(target.clean_neighbors);
+  write_enum(w, target.clean_vote);
+  w.pod(static_cast<std::uint8_t>(target.protect_small_classes ? 1U : 0U));
+}
+
+bool read_balance_target(BinaryReader& r, BalanceTarget& target) {
+  std::uint8_t protect = 0;
+  if (!read_enum(r, target.kind)
+      || !r.pod(target.ratio)
+      || !r.series(target.counts)
+      || !read_enum(r, target.growth)
+      || !r.pod(target.neighbors)
+      || !read_enum(r, target.clean)
+      || !r.pod(target.clean_neighbors)
+      || !read_enum(r, target.clean_vote)
+      || !r.pod(protect)) {
+    return false;
+  }
+  target.protect_small_classes = protect != 0;
+  return true;
+}
+
 void write_train_options(BinaryWriter& w, const TrainOptions& options) {
   write_enum(w, options.layout);
   write_enum(w, options.missing);
@@ -147,6 +176,7 @@ void write_train_options(BinaryWriter& w, const TrainOptions& options) {
   w.pod(options.calibration_tolerance);
   w.series(options.parameter_lower_bounds);
   w.series(options.parameter_upper_bounds);
+  write_balance_target(w, options.balance);
 }
 
 bool read_train_options(BinaryReader& r, TrainOptions& options) {
@@ -167,7 +197,8 @@ bool read_train_options(BinaryReader& r, TrainOptions& options) {
       || !r.pod(options.calibration_iterations)
       || !r.pod(options.calibration_tolerance)
       || !r.series(options.parameter_lower_bounds)
-      || !r.series(options.parameter_upper_bounds)) {
+      || !r.series(options.parameter_upper_bounds)
+      || !read_balance_target(r, options.balance)) {
     return false;
   }
   options.warm_start = warm != 0;

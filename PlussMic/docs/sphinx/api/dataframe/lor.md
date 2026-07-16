@@ -69,9 +69,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="load_txt.html">
+  <a class="prev-link" href="log.html">
     <span class="label">Previous</span>
-    <span class="title">load_txt</span>
+    <span class="title">log</span>
   </a>
   <a class="next-link" href="lt.html">
     <span class="label">Next</span>

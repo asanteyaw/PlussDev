@@ -7,12 +7,12 @@
 ```cpp
 DataFrame::unstack(const UnstackOptions& options) -> DataFrame
 
-DataFrame::unstack(std::string_view level) -> DataFrame
+DataFrame::unstack(std::string_view label) -> DataFrame
 ```
 
 ## What It Does
 
-Pivots one case level out of a multi-level case axis so its distinct values become new output columns.
+Pivots one structured case label out of a multi-label case axis so its distinct values become new output columns.
 
 ## Parameters
 
@@ -20,13 +20,13 @@ Pivots one case level out of a multi-level case axis so its distinct values beco
     Unstack behavior bundle.
 
     Supported values:
-    - ``level``: Case level whose distinct values are pivoted into output columns.
-    - ``drop``: When `true`, the remaining case levels stay as case levels instead of also staying as ordinary columns.
+    - ``caselbl``: Structured case label whose distinct values are pivoted into output columns.
+    - ``drop``: When `true`, the remaining case labels stay as case labels instead of also staying as ordinary columns.
     - ``sort``: When `true`, the pivoted column labels are sorted before the new columns are built.
-    - ``separator``: Separator inserted between the source value-feature name and the pivoted level value when several value features are present.
+    - ``separator``: Separator inserted between the source value-feature name and the pivoted case-label value when several value features are present.
 
-**level**
-    Case level whose distinct values should become new output columns in the reshaped frame.
+**label**
+    Label or labels used by this overload.
 
 ## Returns
 
@@ -35,7 +35,7 @@ Pivots one case level out of a multi-level case axis so its distinct values beco
 
 ## Examples
 
-Example 1. Pivot one named case level into output columns while controlling drop, sort, and separator behavior.
+Example 1. Pivot one named case label into output columns while controlling drop, sort, and separator behavior.
 
 ```cpp
 auto grades = pluss::table::DataFrame({
@@ -43,10 +43,10 @@ auto grades = pluss::table::DataFrame({
     {"term", pluss::table::Thread(pluss::make_note({"mid", "final", "mid", "final"}))},
     {"score", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
-auto indexed = grades.set_cases({"student", "term"}, true, "|");
+auto indexed = grades.label().set({"student", "term"}, true, "|");
 
 pluss::table::DataFrame::UnstackOptions options;
-options.level = "term";
+options.label = "term";
 options.drop = true;
 options.sort = true;
 options.separator = "_";
@@ -60,7 +60,7 @@ score_mid  score_final
 88.0       91.0
 84.0       89.0
 ```
-Example 2. Pivot one named case level into output columns using the default unstack options.
+Example 2. Pivot one named case label into output columns while controlling drop, sort, and separator behavior.
 
 ```cpp
 auto grades = pluss::table::DataFrame({
@@ -68,9 +68,14 @@ auto grades = pluss::table::DataFrame({
     {"term", pluss::table::Thread(pluss::make_note({"mid", "final", "mid", "final"}))},
     {"score", pluss::table::Thread(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
-auto indexed = grades.set_cases({"student", "term"}, true, "|");
+auto indexed = grades.label().set({"student", "term"}, true, "|");
 
-auto out = indexed.unstack("term");
+pluss::table::DataFrame::UnstackOptions options;
+options.label = "term";
+options.drop = true;
+options.sort = true;
+options.separator = "_";
+auto out = indexed.unstack(options);
 ```
 
 ### Output

@@ -65,12 +65,42 @@ void test_statistics() {
   near(logged_x[1], std::log(2.0), 1e-6, "DataFrame::log should preserve numeric log values");
   const auto exp_x = frame.exp().features("x").as_series().to_vec<double>();
   near(exp_x[0], std::exp(1.0), 1e-5, "DataFrame::exp should delegate numeric features to Thread::exp");
+  const auto temporal = Thread(pluss::codeh::Timeline::fromSeries(pluss::make_series(
+      std::vector<std::int64_t>{
+          1'704'067'200'000'000'000LL,
+          pluss::codeh::Timeline::kNaT,
+          1'704'153'600'000'000'000LL,
+      },
+      {3})));
+  expect(temporal.isnull().as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, false}),
+         "Thread::isnull should treat Timeline NaT as null");
+  expect(temporal.notnull().as_series().to_vec<bool>() ==
+             std::vector<bool>({true, false, true}),
+         "Thread::notnull should treat Timeline NaT as missing");
+  expect(temporal.invalid().as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, false}),
+         "Thread::invalid should treat Timeline NaT as invalid");
+  const auto temporal_frame = DataFrame({{"when", temporal}});
+  expect(temporal_frame.isnull().features("when").as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, false}),
+         "DataFrame::isnull should delegate Timeline NaT handling through Thread::isnull");
+  expect(temporal_frame.invalid().features("when").as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, false}),
+         "DataFrame::invalid should delegate Timeline NaT handling through Thread::invalid");
+  const auto numeric_invalid = Thread(pluss::make_series(
+      std::vector<double>{1.0, std::numeric_limits<double>::quiet_NaN(),
+                          std::numeric_limits<double>::infinity(),
+                          -std::numeric_limits<double>::infinity()}));
+  expect(numeric_invalid.invalid().as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, true, true}),
+         "Thread::invalid should catch NaN and infinities for numeric Series");
 
   const auto axis_frame = DataFrame({
       {"A1", Thread(pluss::make_series(std::vector<double>{10, 20, 30, 40}))},
       {"A2", Thread(pluss::make_series(std::vector<double>{1, 2, 3, 4}))},
   }, Thread(pluss::make_note({"1001", "1002", "1003", "1004"})));
-  expect(pluss::table::detail::label_kind(axis_frame.caselbl()) == pluss::table::LabelKind::Case,
+  expect(pluss::table::detail::label_kind(axis_frame.label().values()) == pluss::table::LabelKind::Case,
          "DataFrame constructor labels should be case label provenance");
   const auto column_sum = axis_frame.features({"A1", "A2"}).sum();
   expect(column_sum.size() == 2,
@@ -408,7 +438,7 @@ void test_statistics() {
   const auto filter_mask = Thread(pluss::make_series(std::vector<bool>{true, false}))
                                .caselbl(Thread(pluss::make_note({"1003", "1001"})));
   const auto filtered_axis = axis_frame.filter(filter_mask);
-  expect(filtered_axis.caselbl().as_note().vector() ==
+  expect(filtered_axis.label().values().as_note().vector() ==
              std::vector<std::string_view>({"1003"}),
          "DataFrame::filter(Thread) should align Thread masks by case labels by default");
   bool filter_pos_threw = false;
@@ -852,7 +882,7 @@ void test_thread_delegation_and_advanced_windows() {
           .label = pluss::TimeIndex::ResampleLabel::Right,
       },
       pluss::subsp::stats::ts::ResampleOp::Sum);
-  expect(frame_right_labeled.caselbl().as_timeline().day().to_vec<std::int32_t>() ==
+  expect(frame_right_labeled.label().values().as_timeline().day().to_vec<std::int32_t>() ==
              std::vector<std::int32_t>({2, 3}) &&
              frame_right_labeled.features("x").as_series().to_vec<double>() ==
              std::vector<double>({3.0, 3.0}),
@@ -881,11 +911,11 @@ void test_thread_delegation_and_advanced_windows() {
   const auto lhs_frame = DataFrame({
       {"when", lhs_axis},
       {"x", lhs_values},
-  }).set_cases("when", true);
+  }).label().set("when", true);
   const auto rhs_frame = DataFrame({
       {"when", rhs_axis},
       {"x", rhs_values},
-  }).set_cases("when", true);
+  }).label().set("when", true);
   const auto frame_ts_sum = lhs_frame.ts("x").add(rhs_frame);
   expect(frame_ts_sum.features("x").is_valid(0) &&
              !frame_ts_sum.features("x").is_valid(1) &&
@@ -975,6 +1005,14 @@ void test_udfs_and_text() {
          "regex prefix match");
   expect(!text.note().fullmatch("[a-z]+").as_series().to_vec<bool>(0),
          "regex full match");
+  expect(text.note().has("BETA", {.case_sensitive = false})
+             .as_series().to_vec<bool>(1),
+         "case-insensitive literal text has");
+  expect(text.note().has("[A-Z][a-z]+-[0-9]+", {.regex = true})
+             .as_series().to_vec<bool>(1),
+         "regex text has");
+  expect(text.note().count("[0-9]").as_series().to_vec<std::int64_t>(0) == 2,
+         "regex text count");
   bool invalid_regex_rejected = false;
   try {
     (void)text.note().matches("(");
@@ -987,12 +1025,22 @@ void test_udfs_and_text() {
       text.note().extract("([A-Za-z]+)-([0-9]+)", {"word", "number"});
   expect(extracted.features("word").as_note().at(1) == "Beta",
          "regex capture");
+  const auto found_digits = text.note().findall("[0-9]");
+  expect(found_digits.features("match_1").as_note().at(1) == "0",
+         "regex findall expansion");
   const auto split = text.note().split("-");
   expect(split.features("part_1").as_note().at(0) == "10",
          "text split");
+  const auto regex_split =
+      text.note().split("[|-]", {.regex = true, .prefix = "piece"});
+  expect(regex_split.features("piece_1").as_note().at(2) == "blue",
+         "regex text split");
   const auto partition = text.note().partition("-");
   expect(partition.features("part_2").as_note().at(1) == "20",
          "text partition");
+  expect(text.note().replace("[0-9]+", "NUM", {.regex = true})
+             .as_note().at(0) == "alpha-NUM",
+         "regex text replace");
   expect(text.note().pad(10, pluss::table::TextAlign::Right, '.')
              .as_note().at(0) == "..alpha-10",
          "text padding");
@@ -1012,6 +1060,11 @@ void test_udfs_and_text() {
   expect(indicators.features("red").as_series().to_vec<bool>(2) &&
              indicators.features("blue").as_series().to_vec<bool>(2),
          "delimited text indicators");
+  const DataFrame text_frame({
+      {"raw", text},
+  });
+  expect(text_frame.note("raw").has("red").features("raw").as_series().to_vec<bool>(2),
+         "DataFrame note has delegates to Thread");
 
   const auto mapped = Thread(
       pluss::make_series(std::vector<double>{1, 2, 3}))

@@ -59,6 +59,7 @@ class DataFramePlotAccessor;
 class DataFramePlot3DAccessor;
 class DataFrameNoteAccessor;
 class DataFrameTimelineAccessor;
+class DataFrameLabelAccessor;
 class AtlasPlotAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
@@ -214,10 +215,12 @@ public:
     Nunique = 1,
     Sum = 2,
     Mean = 3,
-    Min = 4,
-    Max = 5,
-    Std = 6,
-    Var = 7,
+    Median = 4,
+    Min = 5,
+    Max = 6,
+    Std = 7,
+    Var = 8,
+    Mode = 9,
   };
 
   enum class CorrMethod : std::uint8_t {
@@ -234,6 +237,7 @@ public:
     DropAll = 4,
     IsNull = 5,
     NotNull = 6,
+    Invalid = 7,
   };
 
   enum class CombineOp : std::uint8_t {
@@ -292,7 +296,7 @@ public:
     bool nulls_last{true};
   };
 
-  struct SetCasesOptions {
+  struct SetLabelOptions {
     std::vector<std::string> features{};
     bool drop{false};
     bool verify{false};
@@ -300,45 +304,45 @@ public:
     std::string separator{"\x1F"};
   };
 
-  struct ResetCasesOptions {
+  struct ResetLabelOptions {
     bool drop{false};
     std::vector<std::string> names{};
     std::string prefix{"case"};
   };
 
   struct AlignSpec {
-    std::optional<Thread> caselbl{};
+    std::optional<Thread> label{};
     std::vector<std::string> features{};
     std::optional<double> fill{std::nullopt};
   };
 
   struct CasePick {
-    std::string level{};
+    std::string label{};
     std::string value{};
-    std::vector<std::string> levels{};
+    std::vector<std::string> names{};
     std::vector<std::string> values{};
     std::vector<std::string> key{};
     bool drop{false};
   };
 
-  struct SortCasesOptions {
-    std::vector<std::string> levels{};
+  struct SortLabelOptions {
+    std::vector<std::string> names{};
     bool ascending{true};
     bool nulls_last{true};
   };
 
-  struct LevelRename {
+  struct LabelRename {
     std::string from;
     std::string to;
   };
 
-  struct CaseGroup {
-    std::string level{};
-    std::vector<std::string> levels{};
+  struct LabelGroup {
+    std::string label{};
+    std::vector<std::string> names{};
   };
 
   struct UnstackOptions {
-    std::string level{};
+    std::string label{};
     bool drop{true};
     bool sort{true};
     std::string separator{"_"};
@@ -638,19 +642,12 @@ public:
   bool unique() const noexcept;
   std::int64_t height() const;
   std::int64_t ncases() const;
-  std::int64_t nfeats() const;
   std::int64_t nfeatures() const;
   std::pair<std::int64_t, std::int64_t> shape() const;
   MatrixValues matrix() const;
   const std::vector<std::string>& features() const;
   DTypes dtypes() const;
-  const Thread& caselbl() const;
-  DataFrame caselbl(const Thread& labels) const;
-  DataFrame& caselbl_(const Thread& labels);
-  bool has_levels() const;
-  std::vector<std::string> levels() const;
-  Thread level(std::string_view name) const;
-  Thread level(std::int64_t position) const;
+  DataFrameLabelAccessor label() const;
   DataFrame case_study(const CaseSelector& rows) const;
   DataFrame case_study(const CasePick& pick) const;
   DataFrame case_study(const CaseSelector& rows, const FeatureSelector& features) const;
@@ -733,42 +730,15 @@ public:
                         bool ascending = true,
                         bool nulls_last = true) const;
   DataFrame sort_values(pluss::msharp::RangeView::Of<ArrangeSpec> specs) const;
-  DataFrame sort_cases(bool ascending = true, bool nulls_last = true) const;
-  DataFrame sort_cases(const SortCasesOptions& options) const;
   DataFrame top(std::string_view feature, std::int64_t n) const;
   DataFrame bottom(std::string_view feature, std::int64_t n) const;
-  pluss::Series repeated_cases(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame unique_cases(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrameView observe(std::int64_t row, bool render = false) const;
   DataFrameView observe(std::int64_t start, std::int64_t stop, bool render = false) const;
-  DataFrame set_cases(std::string_view feature_name, bool drop_feature = false) const;
-  DataFrame set_cases(std::initializer_list<std::string_view> feature_names,
-                      bool drop_features = false,
-                      std::string_view separator = "\x1F") const;
-  DataFrame set_cases(pluss::msharp::RangeView::Of<std::string_view> feature_names,
-                      bool drop_features = false,
-                      std::string_view separator = "\x1F") const;
-  DataFrame set_cases(const SetCasesOptions& options) const;
-  DataFrame reset_cases(std::string case_feature = "case") const;
-  DataFrame reset_cases(const ResetCasesOptions& options) const;
-  DataFrame rename_levels(pluss::msharp::RangeView::Of<LevelRename> renames) const;
-  DataFrame rename_levels(std::initializer_list<LevelRename> renames) const {
-    return rename_levels(pluss::msharp::RangeView::Of<LevelRename>(renames));
-  }
-  DataFrame reorder_levels(pluss::msharp::RangeView::Of<std::string_view> names) const;
-  DataFrame reorder_levels(std::initializer_list<std::string_view> names) const {
-    return reorder_levels(pluss::msharp::RangeView::Of<std::string_view>(names));
-  }
-  DataFrame drop_levels(pluss::msharp::RangeView::Of<std::string_view> names) const;
-  DataFrame drop_levels(std::initializer_list<std::string_view> names) const {
-    return drop_levels(pluss::msharp::RangeView::Of<std::string_view>(names));
-  }
   FrameMatch match(const DataFrame& other,
                    const FrameMatchOptions& options = {}) const;
   DataFrame align(const AlignSpec& spec) const;
-  DataFrame align(const Thread& new_caselbl) const;
-  DataFrame align_caselbl(const Thread& new_caselbl) const;
-  DataFrame align_caselbl(const Thread& new_caselbl, std::optional<double> fill) const;
+  DataFrame align(const Thread& new_label) const;
   DataFrame join(const DataFrame& other, std::string collision_suffix = "_right") const;
   DataFrame update(const DataFrame& other, bool overwrite = true) const;
   DataFrame unify(std::string_view left_on,
@@ -969,7 +939,7 @@ public:
                          pluss::msharp::RangeView::Of<GroupSpec> specs,
                          bool dropna_keys = true,
                          bool render = false) const;
-  DataFrameView group_by(const CaseGroup& keys,
+  DataFrameView group_by(const LabelGroup& keys,
                          pluss::msharp::RangeView::Of<GroupSpec> specs,
                          bool dropna_keys = true,
                          bool render = false) const;
@@ -989,9 +959,9 @@ public:
   DataFrame stack(std::string feature_name = "feature",
                   std::string value_name = "value") const;
   DataFrame unstack(const UnstackOptions& options) const;
-  DataFrame unstack(std::string_view level) const {
+  DataFrame unstack(std::string_view label) const {
     UnstackOptions options;
-    options.level = std::string(level);
+    options.label = std::string(label);
     return unstack(options);
   }
   DataFrame extend_cases(const DataFrame& other,
@@ -1210,6 +1180,7 @@ public:
                     const WindowOptions& options = {}) const;
   DataFrame isnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame notnull(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame invalid(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   DataFrame cast(pluss::msharp::RangeView::Of<CastSpec> specs) const;
   DataFrame cast(
       std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const;
@@ -1456,10 +1427,45 @@ public:
                std::initializer_list<pluss::loader::ConfigEntry> config_entries) const;
 
 private:
+  friend class DataFrameLabelAccessor;
   explicit DataFrame(pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl);
   detail::DataFrameImpl& mut_impl_();
   const detail::DataFrameImpl& impl_ref_() const;
   const Thread& case_labels_() const;
+  const Thread& caselbl() const;
+  DataFrame caselbl(const Thread& labels) const;
+  DataFrame& caselbl_(const Thread& labels);
+  bool has_caselbls() const;
+  std::vector<std::string> caselbls() const;
+  Thread caselbl(std::string_view name) const;
+  Thread caselbl(std::int64_t position) const;
+  DataFrame sort_caselbl(bool ascending = true, bool nulls_last = true) const;
+  DataFrame sort_caselbl(const SortLabelOptions& options) const;
+  pluss::Series repeated_caselbl(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+  DataFrame set_caselbl(std::string_view feature_name, bool drop_feature = false) const;
+  DataFrame set_caselbl(std::initializer_list<std::string_view> feature_names,
+                        bool drop_features = false,
+                        std::string_view separator = "\x1F") const;
+  DataFrame set_caselbl(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                        bool drop_features = false,
+                        std::string_view separator = "\x1F") const;
+  DataFrame set_caselbl(const SetLabelOptions& options) const;
+  DataFrame reset_caselbl(std::string case_feature = "case") const;
+  DataFrame reset_caselbl(const ResetLabelOptions& options) const;
+  DataFrame rename_caselbls(pluss::msharp::RangeView::Of<LabelRename> renames) const;
+  DataFrame rename_caselbls(std::initializer_list<LabelRename> renames) const {
+    return rename_caselbls(pluss::msharp::RangeView::Of<LabelRename>(renames));
+  }
+  DataFrame order_caselbls(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame order_caselbls(std::initializer_list<std::string_view> names) const {
+    return order_caselbls(pluss::msharp::RangeView::Of<std::string_view>(names));
+  }
+  DataFrame drop_caselbls(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame drop_caselbls(std::initializer_list<std::string_view> names) const {
+    return drop_caselbls(pluss::msharp::RangeView::Of<std::string_view>(names));
+  }
+  DataFrame align_caselbl(const Thread& new_label) const;
+  DataFrame align_caselbl(const Thread& new_label, std::optional<double> fill) const;
   DataFrame with_cases(const Thread& cases) const;
   DataFrame& with_cases_(const Thread& cases);
   void suppress_next_stream_() const;
@@ -1509,6 +1515,44 @@ std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 std::ostream& operator<<(std::ostream& os, const DataFrame::DTypes& dtypes);
 void output_render(std::ostream& os, const DataFrame& frame);
 
+class DataFrameLabelAccessor {
+public:
+  explicit DataFrameLabelAccessor(const DataFrame& frame);
+
+  const Thread& values() const;
+  DataFrame set(const Thread& labels) const;
+  bool has() const;
+  std::vector<std::string> names() const;
+  Thread part(std::string_view name) const;
+  Thread part(std::int64_t position) const;
+
+  DataFrame set(std::string_view feature_name, bool drop_feature = false) const;
+  DataFrame set(std::initializer_list<std::string_view> feature_names,
+                bool drop_features = false,
+                std::string_view separator = "\x1F") const;
+  DataFrame set(pluss::msharp::RangeView::Of<std::string_view> feature_names,
+                bool drop_features = false,
+                std::string_view separator = "\x1F") const;
+  DataFrame set(const DataFrame::SetLabelOptions& options) const;
+
+  DataFrame reset(std::string case_feature = "case") const;
+  DataFrame reset(const DataFrame::ResetLabelOptions& options) const;
+  DataFrame sort(bool ascending = true, bool nulls_last = true) const;
+  DataFrame sort(const DataFrame::SortLabelOptions& options) const;
+  DataFrame align(const Thread& new_label) const;
+  DataFrame align(const Thread& new_label, std::optional<double> fill) const;
+  DataFrame rename(pluss::msharp::RangeView::Of<DataFrame::LabelRename> renames) const;
+  DataFrame rename(std::initializer_list<DataFrame::LabelRename> renames) const;
+  DataFrame order(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame order(std::initializer_list<std::string_view> names) const;
+  DataFrame drop(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame drop(std::initializer_list<std::string_view> names) const;
+  pluss::Series repeated(pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
+
+private:
+  DataFrame frame_{};
+};
+
 class DataFrameView final : public DataFrame {
 public:
   DataFrameView();
@@ -1557,13 +1601,23 @@ class DataFrameNoteAccessor {
   DataFrame length() const;
   DataFrame starts(std::string_view prefix) const;
   DataFrame ends(std::string_view suffix) const;
+  DataFrame has(std::string_view needle,
+                const TextOptions& options = {}) const;
+  DataFrame count(std::string_view pattern) const;
+  DataFrame count(std::string_view pattern,
+                  const TextOptions& options) const;
   DataFrame matches(std::string_view pattern, bool full = false) const;
   DataFrame fullmatch(std::string_view pattern) const;
+  DataFrame findall(std::string_view pattern) const;
+  DataFrame findall(std::string_view pattern,
+                    const TextOptions& options) const;
   DataFrame extract(std::string_view pattern,
                     pluss::msharp::RangeView::Of<std::string_view> names = {}) const;
   DataFrame split(std::string_view delimiter,
                   std::int64_t limit = -1,
                   std::string prefix = "part") const;
+  DataFrame split(std::string_view pattern,
+                  const TextOptions& options) const;
   DataFrame partition(std::string_view separator,
                       std::string prefix = "part") const;
   DataFrame pad(std::int64_t width,
@@ -1576,6 +1630,10 @@ class DataFrameNoteAccessor {
   DataFrame encode(std::string_view encoding = "base64") const;
   DataFrame indicate(std::string_view delimiter = "|",
                      std::string prefix = "") const;
+  DataFrame replace(std::string_view from, std::string_view to) const;
+  DataFrame replace(std::string_view from,
+                    std::string_view to,
+                    const TextOptions& options) const;
 
  private:
   DataFrame frame_{};
@@ -1607,6 +1665,12 @@ class DataFrameTimelineAccessor {
   DataFrame fmt(std::string_view pattern) const;
   DataFrame iso() const;
   DataFrame epoch(TimeUnit unit = TimeUnit::Nanos) const;
+  DataFrame span(const Thread& other, const TimelineSpanOptions& options = {}) const;
+  DataFrame span(const Thread& other, TimeUnit unit) const;
+  DataFrame span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const;
+  DataFrame span(const pluss::Timeline& other, TimeUnit unit) const;
+  DataFrame span(const DataFrame& other, const TimelineSpanOptions& options = {}) const;
+  DataFrame span(const DataFrame& other, TimeUnit unit) const;
   DataFrame floor(std::string_view unit) const;
   DataFrame ceil(std::string_view unit) const;
   DataFrame round(std::string_view unit) const;
@@ -1829,15 +1893,15 @@ DataFrame operator%(const DataFrame& lhs, const Thread& rhs);
 DataFrame operator%(const Thread& lhs, const DataFrame& rhs);
 
 DataFrame::FeatureSelector all_features();
-DataFrame::FeatureSelector col(std::string_view name);
-DataFrame::FeatureSelector col(const char* name);
-DataFrame::FeatureSelector col(std::int64_t position);
-DataFrame::FeatureSelector cols(std::initializer_list<std::string_view> names);
-DataFrame::FeatureSelector cols(pluss::RangeView<std::string_view> names);
-DataFrame::FeatureSelector cols(std::initializer_list<std::int64_t> positions);
-DataFrame::FeatureSelector cols(pluss::RangeView<std::int64_t> positions);
-DataFrame::FeatureSelector cols(std::int64_t start, std::int64_t stop);
-DataFrame::FeatureSelector col_range(std::string_view start, std::string_view stop);
+DataFrame::FeatureSelector feature(std::string_view name);
+DataFrame::FeatureSelector feature(const char* name);
+DataFrame::FeatureSelector feature(std::int64_t position);
+DataFrame::FeatureSelector features(std::initializer_list<std::string_view> names);
+DataFrame::FeatureSelector features(pluss::RangeView<std::string_view> names);
+DataFrame::FeatureSelector features(std::initializer_list<std::int64_t> positions);
+DataFrame::FeatureSelector features(pluss::RangeView<std::int64_t> positions);
+DataFrame::FeatureSelector features(std::int64_t start, std::int64_t stop);
+DataFrame::FeatureSelector feature_range(std::string_view start, std::string_view stop);
 
 } // namespace pluss::table
 

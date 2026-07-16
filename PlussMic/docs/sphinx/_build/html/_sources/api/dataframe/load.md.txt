@@ -171,9 +171,9 @@ id  sales  city
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="levels.html">
+  <a class="prev-link" href="lengthen.html">
     <span class="label">Previous</span>
-    <span class="title">levels</span>
+    <span class="title">lengthen</span>
   </a>
   <a class="next-link" href="load_csv.html">
     <span class="label">Next</span>

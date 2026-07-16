@@ -1,4 +1,5 @@
 #include "pluss/ai/nodej/online.h"
+#include "pluss/ai/nodej/balance.h"
 
 #include "pluss/codem/series_factory.h"
 
@@ -24,6 +25,29 @@ using pluss::ScalarType;
 
 [[nodiscard]] bool all_finite(const Series& x) {
   return x.isfinite().all().item<bool>();
+}
+
+[[nodiscard]] bool training_balance_requested(const TrainOptions& options) {
+  return options.balance.kind != BalanceTargetKind::Keep
+      || options.balance.clean != BalanceCleanKind::None;
+}
+
+[[nodiscard]] TrainOptions without_training_balance(TrainOptions options) {
+  options.balance = BalanceTarget{};
+  return options;
+}
+
+[[nodiscard]] StatusOr<LabeledBatch> resolve_online_training_batch(const LabeledBatch& batch,
+                                                                   const TrainOptions& options,
+                                                                   const char* where) {
+  if (!training_balance_requested(options)) return StatusOr<LabeledBatch>(batch);
+  StatusOr<LabeledBatch> balanced_or = ::pluss::ai::nodej::balance_rows(batch, options.balance, options.random);
+  if (!balanced_or.ok()) {
+    Status status = balanced_or.status();
+    status.message = std::string(where) + " balance: " + status.message;
+    return StatusOr<LabeledBatch>(std::move(status));
+  }
+  return balanced_or;
 }
 
 [[nodiscard]] bool has_nan(const Series& x) {
@@ -262,7 +286,10 @@ struct BinaryLabelEncoding {
   const Series f1 = precision.add(recall).gt(0.0).where(
       precision.mul(recall).mul(2.0).div(precision.add(recall)),
       zero);
-  const Series balanced = recall.add(tn.add(fp).gt(0.0).where(tn.div(tn.add(fp)), zero)).mul(0.5);
+  const Series specificity = tn.add(fp).gt(0.0).where(tn.div(tn.add(fp)), zero);
+  const Series balanced = recall.add(specificity).mul(0.5);
+  const Series geometric = recall.mul(specificity).clamp_min(0.0).sqrt();
+  const Series balance_quality = geometric.square().mul(recall.sub(specificity).mul(0.1).add(1.0)).clamp_min(0.0);
   const Series logloss = yb.mul(clipped.log()).add(yb.mul(-1.0).add(1.0).mul(clipped.mul(-1.0).add(1.0).log())).mul(-1.0).mean();
 
   std::vector<Series> out{};
@@ -279,10 +306,20 @@ struct BinaryLabelEncoding {
         out.push_back(precision.reshape({1}));
         break;
       case MetricKind::Recall:
+      case MetricKind::Sensitivity:
         out.push_back(recall.reshape({1}));
         break;
       case MetricKind::F1:
         out.push_back(f1.reshape({1}));
+        break;
+      case MetricKind::Specificity:
+        out.push_back(specificity.reshape({1}));
+        break;
+      case MetricKind::GeometricMean:
+        out.push_back(geometric.reshape({1}));
+        break;
+      case MetricKind::BalanceQuality:
+        out.push_back(balance_quality.reshape({1}));
         break;
       case MetricKind::LogLoss:
         out.push_back(logloss.reshape({1}));
@@ -397,14 +434,19 @@ Status OnlineLinearClassifier::learn(const LabeledBatch& batch, const TrainOptio
   Status opt_status = validate_classifier_online_options(options_);
   if (!opt_status.ok()) return opt_status;
 
-  StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(batch.features, "OnlineLinearClassifier::learn");
+  StatusOr<LabeledBatch> fit_batch_or = resolve_online_training_batch(batch, options, "OnlineLinearClassifier::learn");
+  if (!fit_batch_or.ok()) return fit_batch_or.status();
+  const LabeledBatch& fit_batch = fit_batch_or.value();
+  const TrainOptions fit_options = without_training_balance(options);
+
+  StatusOr<DenseFeatureMatrix> matrix_or = to_dense_rows(fit_batch.features, "OnlineLinearClassifier::learn");
   if (!matrix_or.ok()) return matrix_or.status();
   DenseFeatureMatrix matrix = matrix_or.move_value();
   if (has_nan(matrix.x_rows)) {
     return Status::invalid_argument("OnlineLinearClassifier::learn does not support NaN features.");
   }
 
-  StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "OnlineLinearClassifier::learn");
+  StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(fit_batch, matrix.sample_count, "OnlineLinearClassifier::learn");
   if (!labels_or.ok()) return labels_or.status();
   const BinaryLabelEncoding labels = labels_or.move_value();
 
@@ -422,7 +464,7 @@ Status OnlineLinearClassifier::learn(const LabeledBatch& batch, const TrainOptio
 
   const std::int64_t bootstrap_steps = std::max<std::int64_t>(1, options.max_iterations);
   for (std::int64_t i = 0; i < bootstrap_steps; ++i) {
-    Status s = advance(batch, options);
+    Status s = advance(fit_batch, fit_options);
     if (!s.ok()) return s;
   }
   return Status::success();

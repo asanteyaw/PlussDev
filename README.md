@@ -38,7 +38,7 @@ Doctrine:
 
 - Feature axis terminology: `features(...)`
 - Case axis terminology: `cases(...)`
-- Preferred methods: `sort_cases`, `tally`, `group_by`, `set_features`, `let`
+- Preferred methods: `sort_caselbl`, `tally`, `group_by`, `set_features`, `set`
 
 ## Loading and Saving
 

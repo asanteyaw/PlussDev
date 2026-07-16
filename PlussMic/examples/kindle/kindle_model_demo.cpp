@@ -277,7 +277,7 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
   const auto atlas_back = archive.tabelize();
   std::cout << "archive.tabelize depth: " << atlas_back.depth()
             << ", rows/frame: " << atlas_back.ncases()
-            << ", features/frame: " << atlas_back.nfeats() << "\n";
+            << ", features/frame: " << atlas_back.nfeatures() << "\n";
   std::cout << "archive.to_table (atlas renderer):\n";
   (void)archive.to_table({}, true);
 }

@@ -125,9 +125,9 @@ dtype: Series
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="bfill.html">
+  <a class="prev-link" href="bottom.html">
     <span class="label">Previous</span>
-    <span class="title">bfill</span>
+    <span class="title">bottom</span>
   </a>
   <a class="next-link" href="btw.html">
     <span class="label">Next</span>

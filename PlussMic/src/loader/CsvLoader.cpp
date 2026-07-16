@@ -1251,7 +1251,7 @@ void save_csv(const pluss::table::DataFrame& frame,
   for (std::int64_t r = 0; r < frame.ncases(); ++r) {
     bool first = true;
     if (include_cases) {
-      out << escape_csv_cell(thread_value_for_csv(frame.caselbl(), r, options), options);
+      out << escape_csv_cell(thread_value_for_csv(frame.label().values(), r, options), options);
       first = false;
     }
     for (const auto& col : cols) {
@@ -1429,7 +1429,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
       converted_any = true;
     }
     if (converted_any) {
-      auto cases = output.caselbl();
+      auto cases = output.label().values();
       std::vector<std::pair<std::string, pluss::table::Thread>> typed_columns;
       typed_columns.reserve(columns.size());
       for (std::size_t i = 0; i < columns.size(); ++i) {

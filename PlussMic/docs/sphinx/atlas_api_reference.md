@@ -1053,23 +1053,23 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">map_frames</span>
   </a>
-  <a class="next-link" href="#nfeats">
+  <a class="next-link" href="#nfeatures">
     <span class="label">Next</span>
-    <span class="title">nfeats</span>
+    <span class="title">nfeatures</span>
   </a>
 </div>
 
-### `nfeats`
+### `nfeatures`
 
 #### Signature
 
 ```cpp
-Atlas::nfeats() -> std::int64_t
+Atlas::nfeatures() -> std::int64_t
 ```
 
 #### What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns a size/count summary for the current object without changing it.
 
 #### Parameters
 
@@ -1093,7 +1093,7 @@ auto f1 = pluss::table::DataFrame({
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto out = atlas.nfeats();
+auto out = atlas.nfeatures();
 ```
 
 ##### Output
@@ -1179,9 +1179,9 @@ auto fig = atlas.plot(0).line("sales");
 Figure(line)
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#nfeats">
+  <a class="prev-link" href="#nfeatures">
     <span class="label">Previous</span>
-    <span class="title">nfeats</span>
+    <span class="title">nfeatures</span>
   </a>
   <a class="next-link" href="#relabel_depth">
     <span class="label">Next</span>

@@ -154,6 +154,20 @@ pluss::Series thread_non_missing_mask(const Thread& t) {
   auto valid = detail::has_validity_mask(t)
                    ? *detail::validity_mask(t)
                    : pluss::Series::ones({t.size()}, pluss::codem::ScalarType::Bool);
+  if (t.kind() == ThreadKind::Timeline) {
+    auto temporal_valid = t.as_timeline().isvalid();
+    if (temporal_valid.platform() != valid.platform()) {
+      temporal_valid = temporal_valid.to(valid.platform());
+    }
+    return valid.logical_and(temporal_valid);
+  }
+  if (t.kind() == ThreadKind::TimeIndex) {
+    auto temporal_valid = t.as_timeindex().timeline().isvalid();
+    if (temporal_valid.platform() != valid.platform()) {
+      temporal_valid = temporal_valid.to(valid.platform());
+    }
+    return valid.logical_and(temporal_valid);
+  }
   if (t.kind() != ThreadKind::Series) {
     return valid;
   }

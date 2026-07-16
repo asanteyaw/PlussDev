@@ -178,7 +178,7 @@ void example_06_csv_options(const std::filesystem::path& dir) {
 
   auto df = DataFrame::load_csv(path.string(), options);
   std::cout << df.to_string() << '\n';
-  std::cout << "case dtype=" << df.caselbl().dtype() << '\n';
+  std::cout << "case dtype=" << df.label().values().dtype() << '\n';
 }
 
 void example_07_thread_operations() {
@@ -201,7 +201,7 @@ void example_08_atlas_and_conversion() {
   Thread labels = pluss::make_note({"south", "other"});
 
   pluss::table::Atlas atlas({south, other}, labels);
-  std::cout << "depth=" << atlas.depth() << ", ncases=" << atlas.ncases() << ", nfeatures=" << atlas.nfeats() << '\n';
+  std::cout << "depth=" << atlas.depth() << ", ncases=" << atlas.ncases() << ", nfeatures=" << atlas.nfeatures() << '\n';
   std::cout << atlas.loc("south").to_string() << '\n';
 
   auto catalog = sales.kindelize();
@@ -254,10 +254,10 @@ void example_10_shape_and_schema() {
                    .reorder({"city", "price", "quantity"});
   std::cout << schema.to_string() << '\n';
 
-  auto city_cases = sales.set_cases("city", true);
+  auto city_cases = sales.label().set("city", true);
   std::cout << city_cases.features({"region", "units"}).to_string() << '\n';
 
-  auto reset = city_cases.reset_cases("city_case").features({"city_case", "units"});
+  auto reset = city_cases.label().reset("city_case").features({"city_case", "units"});
   std::cout << reset.to_string() << '\n';
 }
 
@@ -424,7 +424,7 @@ void example_16_time_series() {
   std::cout << "rolling mean window 2:\n"
             << df.features("close").ts().rolling(2, pluss::table::WindowStatistic::Mean, {.min_count = 2}).to_string() << '\n';
 
-  auto values = df.set_cases("date", false).features({"close", "volume"});
+  auto values = df.label().set("date", false).features({"close", "volume"});
   auto daily = values.ts().resample(
       "D", pluss::subsp::stats::ts::ResampleOp::Mean);
   std::cout << "daily mean:\n" << daily.to_string() << '\n';

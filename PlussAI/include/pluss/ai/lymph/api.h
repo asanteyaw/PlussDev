@@ -708,7 +708,11 @@ struct MetricReport {
   Series balanced_accuracy = Series::undefined();
   Series precision = Series::undefined();
   Series recall = Series::undefined();
+  Series sensitivity = Series::undefined();
   Series f1 = Series::undefined();
+  Series specificity = Series::undefined();
+  Series geometric_mean = Series::undefined();
+  Series balance_quality = Series::undefined();
   Series roc_auc = Series::undefined();
   Series logloss = Series::undefined();
   Series mse = Series::undefined();
@@ -772,9 +776,10 @@ struct BatchHoldoutSplit {
 [[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
 
 struct CrossValidationOptions {
-  CVPlanKind plan = CVPlanKind::KFold;
+  CVPlanKind plan = CVPlanKind::CrossVal;
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
+  std::int64_t repeats = 1;
   bool stratified = false;
   Series groups = Series::undefined();
   bool reliability_defaults = true;
@@ -799,6 +804,7 @@ struct CrossValidationReport {
   split.plan = cv.plan;
   split.holdout_fraction = cv.holdout_fraction;
   split.folds = cv.folds;
+  split.repeats = cv.repeats;
   split.stratified = cv.stratified;
   split.groups = cv.groups;
   split.reliability_defaults = cv.reliability_defaults;
@@ -819,6 +825,7 @@ struct CrossValidationReport {
   split.plan = cv.plan;
   split.holdout_fraction = cv.holdout_fraction;
   split.folds = cv.folds;
+  split.repeats = cv.repeats;
   split.stratified = cv.stratified;
   split.groups = cv.groups;
   split.reliability_defaults = cv.reliability_defaults;
@@ -853,34 +860,70 @@ struct CrossValidationReport {
   return cross_validate_score(spec, batch, metric, cv, train_options, assess_options);
 }
 
-[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
-                                                     const Series& predicted_labels,
-                                                     const ConfusionOptions& options = {}) {
-  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options), "confusion_matrix");
+[[nodiscard]] inline ClassMix class_mix(const Series& labels) {
+  return resolve(::pluss::ai::nodej::class_mix(labels), "class_mix");
 }
 
-[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
-                                                     const Series& predicted_labels,
-                                                     pluss::msharp::RangeView::Of<double> label_order,
-                                                     ConfusionNormalize normalize = ConfusionNormalize::None) {
+[[nodiscard]] inline WeightPlan resolve_weight_plan(const Series& labels,
+                                                    const Series& batch_sample_weights,
+                                                    const TrainOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::resolve_weight_plan(labels, batch_sample_weights, options),
+                 "resolve_weight_plan");
+}
+
+[[nodiscard]] inline Series resolve_training_weights(const Series& labels,
+                                                     const Series& batch_sample_weights = Series::undefined(),
+                                                     const TrainOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::resolve_training_weights(labels, batch_sample_weights, options),
+                 "resolve_training_weights");
+}
+
+[[nodiscard]] inline BalancePlan plan_balance(const Series& labels,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::plan_balance(labels, target, random), "plan_balance");
+}
+
+[[nodiscard]] inline BalancePlan plan_balance(const LabeledBatch& batch,
+                                              const BalanceTarget& target,
+                                              RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::plan_balance(batch, target, random), "plan_balance");
+}
+
+[[nodiscard]] inline LabeledBatch balance_rows(const LabeledBatch& batch,
+                                               const BalanceTarget& target,
+                                               RandomState random = {}) {
+  return resolve(::pluss::ai::nodej::balance_rows(batch, target, random), "balance_rows");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    const ConfusionOptions& options = {}) {
+  return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, options), "confusion_table");
+}
+
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    pluss::msharp::RangeView::Of<double> label_order,
+                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
   return resolve(::pluss::ai::nodej::confusion_table(truth_labels, predicted_labels, label_order, normalize),
-                 "confusion_matrix");
+                 "confusion_table");
 }
 
-[[nodiscard]] inline ConfusionTable confusion_matrix(const Series& truth_labels,
-                                                     const Series& predicted_labels,
-                                                     std::initializer_list<double> label_order,
-                                                     ConfusionNormalize normalize = ConfusionNormalize::None) {
-  return confusion_matrix(truth_labels,
-                          predicted_labels,
-                          pluss::msharp::RangeView::Of<double>(label_order),
-                          normalize);
+[[nodiscard]] inline ConfusionTable confusion_table(const Series& truth_labels,
+                                                    const Series& predicted_labels,
+                                                    std::initializer_list<double> label_order,
+                                                    ConfusionNormalize normalize = ConfusionNormalize::None) {
+  return ::pluss::ai::lymph::confusion_table(truth_labels,
+                                             predicted_labels,
+                                             pluss::msharp::RangeView::Of<double>(label_order),
+                                             normalize);
 }
 
 [[nodiscard]] inline ClassReport classification_summary(const Series& truth_labels,
                                                         const Series& predicted_labels,
                                                         const ClassReportOptions& options = {}) {
-  return resolve(::pluss::ai::nodej::classification_report(truth_labels, predicted_labels, options),
+  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, options),
                  "classification_summary");
 }
 
@@ -888,7 +931,7 @@ struct CrossValidationReport {
                                                         const Series& predicted_labels,
                                                         pluss::msharp::RangeView::Of<double> label_order,
                                                         double zero_division = 0.0) {
-  return resolve(::pluss::ai::nodej::classification_report(truth_labels, predicted_labels, label_order, zero_division),
+  return resolve(::pluss::ai::nodej::classification_summary(truth_labels, predicted_labels, label_order, zero_division),
                  "classification_summary");
 }
 
@@ -896,10 +939,10 @@ struct CrossValidationReport {
                                                         const Series& predicted_labels,
                                                         std::initializer_list<double> label_order,
                                                         double zero_division = 0.0) {
-  return classification_summary(truth_labels,
-                                predicted_labels,
-                                pluss::msharp::RangeView::Of<double>(label_order),
-                                zero_division);
+  return ::pluss::ai::lymph::classification_summary(truth_labels,
+                                                    predicted_labels,
+                                                    pluss::msharp::RangeView::Of<double>(label_order),
+                                                    zero_division);
 }
 
 [[nodiscard]] inline Series classification_metric_series(const Series& truth_labels,
@@ -924,6 +967,7 @@ struct CrossValidationReport {
   split.plan = options.plan;
   split.holdout_fraction = options.holdout_fraction;
   split.folds = options.folds;
+  split.repeats = options.repeats;
   split.stratified = options.stratified;
   split.groups = options.groups;
   split.reliability_defaults = options.reliability_defaults;
@@ -979,7 +1023,11 @@ struct CrossValidationReport {
       case MetricKind::BalancedAccuracy: report.balanced_accuracy = scalar; break;
       case MetricKind::Precision: report.precision = scalar; break;
       case MetricKind::Recall: report.recall = scalar; break;
+      case MetricKind::Sensitivity: report.sensitivity = scalar; break;
       case MetricKind::F1: report.f1 = scalar; break;
+      case MetricKind::Specificity: report.specificity = scalar; break;
+      case MetricKind::GeometricMean: report.geometric_mean = scalar; break;
+      case MetricKind::BalanceQuality: report.balance_quality = scalar; break;
       case MetricKind::RocAuc: report.roc_auc = scalar; break;
       case MetricKind::LogLoss: report.logloss = scalar; break;
       case MetricKind::Mse: report.mse = scalar; break;
@@ -1816,7 +1864,7 @@ public:
     refresh_linear_summary_();
   }
 
-  // Exposed linear summary for sklearn-like convenience.
+  // Exposed linear summary for reference-aligned convenience.
   Series coeff = Series::undefined();
   Series intercept = Series::undefined();
 
@@ -2445,7 +2493,11 @@ private:
         case MetricKind::BalancedAccuracy: report.balanced_accuracy = scalar; break;
         case MetricKind::Precision: report.precision = scalar; break;
         case MetricKind::Recall: report.recall = scalar; break;
+        case MetricKind::Sensitivity: report.sensitivity = scalar; break;
         case MetricKind::F1: report.f1 = scalar; break;
+        case MetricKind::Specificity: report.specificity = scalar; break;
+        case MetricKind::GeometricMean: report.geometric_mean = scalar; break;
+        case MetricKind::BalanceQuality: report.balance_quality = scalar; break;
         case MetricKind::RocAuc: report.roc_auc = scalar; break;
         case MetricKind::LogLoss: report.logloss = scalar; break;
         case MetricKind::Mse: report.mse = scalar; break;
@@ -2498,34 +2550,37 @@ private:
       plan.folds.push_back(holdout);
       return plan;
     }
-    if (split.plan == CVPlanKind::KFold) {
+    if (split.plan == CVPlanKind::CrossVal) {
       if (split.stratified && task == TaskKind::Classification) {
-        return resolve(pluss::ai::nodej::strat_fold_plan(batch.y, split), "strat_fold_plan");
+        return resolve(pluss::ai::nodej::stratified_crossval_plan(batch.y, split), "stratified_crossval_plan");
       }
-      return resolve(pluss::ai::nodej::fold_plan(batch.features.sample_count(), split), "fold_plan");
+      return resolve(pluss::ai::nodej::crossval_plan(batch.features.sample_count(), split), "crossval_plan");
     }
-    if (split.plan == CVPlanKind::StratifiedKFold) {
+    if (split.plan == CVPlanKind::StratifiedCrossVal) {
       if (task != TaskKind::Classification) {
-        ::pluss::throw_error("cross_validate(model,...): StratifiedKFold requires classification task.");
+        ::pluss::throw_error("cross_validate(model,...): StratifiedCrossVal requires classification task.");
       }
-      return resolve(pluss::ai::nodej::strat_fold_plan(batch.y, split), "strat_fold_plan");
+      return resolve(pluss::ai::nodej::stratified_crossval_plan(batch.y, split), "stratified_crossval_plan");
     }
-    if (split.plan == CVPlanKind::GroupKFold) {
+    if (split.plan == CVPlanKind::TSCrossVal) {
+      return resolve(pluss::ai::nodej::ts_crossval_plan(batch.features.sample_count(), split), "ts_crossval_plan");
+    }
+    if (split.plan == CVPlanKind::GroupCrossVal) {
       if (!split.groups.defined()) {
-        ::pluss::throw_error("cross_validate(model,...): GroupKFold requires CrossValidationOptions.groups.");
+        ::pluss::throw_error("cross_validate(model,...): GroupCrossVal requires CrossValidationOptions.groups.");
       }
       if (split.groups.numel() != batch.features.sample_count()) {
-        ::pluss::throw_error("cross_validate(model,...): GroupKFold requires groups length to match sample count.");
+        ::pluss::throw_error("cross_validate(model,...): GroupCrossVal requires groups length to match sample count.");
       }
-      return resolve(pluss::ai::nodej::group_fold_plan(split.groups, split), "group_fold_plan");
+      return resolve(pluss::ai::nodej::group_crossval_plan(split.groups, split), "group_crossval_plan");
     }
-    ::pluss::throw_error("cross_validate(model,...): only Holdout/KFold/StratifiedKFold/GroupKFold are currently supported.");
+    ::pluss::throw_error("cross_validate(model,...): only Holdout/CrossVal/StratifiedCrossVal/TSCrossVal/GroupCrossVal are currently supported.");
   };
 
   SplitOptions split = make_cross_validation_split_options(cv);
   if (split.reliability_defaults && task == TaskKind::Classification
       && !split.stratified
-      && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::KFold)) {
+      && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::CrossVal)) {
     split.stratified = true;
   }
   const SplitPlan plan = make_plan(split);
@@ -2651,12 +2706,12 @@ private:
   return cross_validate_score(*model.workflow().model_spec(), x, y, metric, cv, train_options, assess_options);
 }
 
-[[nodiscard]] inline ConfusionTable confusion_matrix(const WorkflowModel& model,
-                                                     const LabeledBatch& batch,
-                                                     const InferOptions& infer_options = {},
-                                                     const ConfusionOptions& options = {}) {
+[[nodiscard]] inline ConfusionTable confusion_table(const WorkflowModel& model,
+                                                    const LabeledBatch& batch,
+                                                    const InferOptions& infer_options = {},
+                                                    const ConfusionOptions& options = {}) {
   const Series predicted = model.infer(batch.features, infer_options);
-  return confusion_matrix(batch.y, predicted, options);
+  return ::pluss::ai::lymph::confusion_table(batch.y, predicted, options);
 }
 
 [[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
@@ -2664,7 +2719,7 @@ private:
                                                         const InferOptions& infer_options = {},
                                                         const ClassReportOptions& options = {}) {
   const Series predicted = model.infer(batch.features, infer_options);
-  return classification_summary(batch.y, predicted, options);
+  return ::pluss::ai::lymph::classification_summary(batch.y, predicted, options);
 }
 
 [[nodiscard]] inline Series classification_metric_series(const WorkflowModel& model,
@@ -2689,14 +2744,14 @@ private:
   return classification_metric_series(model, x, as_stratify_series(y), options);
 }
 
-[[nodiscard]] inline ConfusionTable confusion_matrix(const WorkflowModel& model,
-                                                     const pluss::table::DataFrame& x,
-                                                     const Series& y,
-                                                     const InferOptions& infer_options = {},
-                                                     const ConfusionOptions& options = {}) {
-  const auto names = cross_validate_default_feature_names_(x, "confusion_matrix(model,x,y)");
-  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "confusion_matrix(model,x,y)");
-  return confusion_matrix(model, batch, infer_options, options);
+[[nodiscard]] inline ConfusionTable confusion_table(const WorkflowModel& model,
+                                                    const pluss::table::DataFrame& x,
+                                                    const Series& y,
+                                                    const InferOptions& infer_options = {},
+                                                    const ConfusionOptions& options = {}) {
+  const auto names = cross_validate_default_feature_names_(x, "confusion_table(model,x,y)");
+  const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "confusion_table(model,x,y)");
+  return ::pluss::ai::lymph::confusion_table(model, batch, infer_options, options);
 }
 
 [[nodiscard]] inline ClassReport classification_summary(const WorkflowModel& model,
@@ -2706,7 +2761,7 @@ private:
                                                         const ClassReportOptions& options = {}) {
   const auto names = cross_validate_default_feature_names_(x, "classification_summary(model,x,y)");
   const LabeledBatch batch = cross_validate_labeled_from_xy_(x, y, names, "classification_summary(model,x,y)");
-  return classification_summary(model, batch, infer_options, options);
+  return ::pluss::ai::lymph::classification_summary(model, batch, infer_options, options);
 }
 
 struct FeatureSelectorOptions {
@@ -3426,27 +3481,27 @@ public:
     return model->assess(frame, data_options, options);
   }
 
-  [[nodiscard]] ConfusionTable confusion_matrix(const LabeledBatch& batch,
-                                                const InferOptions& infer_options = {},
-                                                const ConfusionOptions& options = {}) const {
-    ensure_model_("confusion_matrix");
-    return ::pluss::ai::lymph::confusion_matrix(*model, batch, infer_options, options);
+  [[nodiscard]] ConfusionTable confusion_table(const LabeledBatch& batch,
+                                               const InferOptions& infer_options = {},
+                                               const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_table");
+    return ::pluss::ai::lymph::confusion_table(*model, batch, infer_options, options);
   }
 
-  [[nodiscard]] ConfusionTable confusion_matrix(const pluss::table::DataFrame& x,
-                                                const Series& y,
-                                                const InferOptions& infer_options = {},
-                                                const ConfusionOptions& options = {}) const {
-    ensure_model_("confusion_matrix");
-    return ::pluss::ai::lymph::confusion_matrix(*model, x, y, infer_options, options);
+  [[nodiscard]] ConfusionTable confusion_table(const pluss::table::DataFrame& x,
+                                               const Series& y,
+                                               const InferOptions& infer_options = {},
+                                               const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_table");
+    return ::pluss::ai::lymph::confusion_table(*model, x, y, infer_options, options);
   }
 
-  [[nodiscard]] ConfusionTable confusion_matrix(const pluss::table::DataFrame& x,
-                                                const pluss::table::Thread& y,
-                                                const InferOptions& infer_options = {},
-                                                const ConfusionOptions& options = {}) const {
-    ensure_model_("confusion_matrix");
-    return ::pluss::ai::lymph::confusion_matrix(*model, x, as_stratify_series(y), infer_options, options);
+  [[nodiscard]] ConfusionTable confusion_table(const pluss::table::DataFrame& x,
+                                               const pluss::table::Thread& y,
+                                               const InferOptions& infer_options = {},
+                                               const ConfusionOptions& options = {}) const {
+    ensure_model_("confusion_table");
+    return ::pluss::ai::lymph::confusion_table(*model, x, as_stratify_series(y), infer_options, options);
   }
 
   [[nodiscard]] ClassReport classification_summary(const LabeledBatch& batch,
@@ -3977,7 +4032,7 @@ template <>
       }
       columns.emplace_back(std::move(out_name), pluss::table::Thread(col));
     }
-    return pluss::table::DataFrame(std::move(columns), frame.cases());
+    return pluss::table::DataFrame(std::move(columns), frame.label().values());
   }
 
   auto out = frame;
@@ -4725,7 +4780,7 @@ inline pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::Da
                                      : (name + "_index");
     columns.emplace_back(out_name, pluss::table::Thread(idx.reshape({frame.ncases()})));
   }
-  return pluss::table::DataFrame(std::move(columns), frame.cases());
+  return pluss::table::DataFrame(std::move(columns), frame.label().values());
 }
 
 inline Series prep::CategoryIndexer::learn_map(const pluss::table::Thread& feature,

@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=b4e99555"></script>
+    <script src="../_static/api_nav.js?v=5a216172"></script>
     <script src="../_static/layout.js?v=5a44cbdd"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -56,7 +56,7 @@ reference; it tells you where to look.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">save_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">save_txt</span></code>, <code class="docutils literal notranslate"><span class="pre">save_excel</span></code>, <code class="docutils literal notranslate"><span class="pre">save_json</span></code>, <code class="docutils literal notranslate"><span class="pre">save_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">save_as</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Inspect</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">nfeatures</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_names</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">describe</span></code>, <code class="docutils literal notranslate"><span class="pre">to_string</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">nfeatures</span></code>, <code class="docutils literal notranslate"><span class="pre">features</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">describe</span></code>, <code class="docutils literal notranslate"><span class="pre">to_string</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Select features</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">features</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">select_like</span></code>, <code class="docutils literal notranslate"><span class="pre">select_regex</span></code>, <code class="docutils literal notranslate"><span class="pre">series_features</span></code>, <code class="docutils literal notranslate"><span class="pre">note_features</span></code>, <code class="docutils literal notranslate"><span class="pre">timeline_features</span></code></p></td>
@@ -64,8 +64,8 @@ reference; it tells you where to look.</p>
 <tr class="row-even"><td><p>Manage features</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">insert</span></code>, <code class="docutils literal notranslate"><span class="pre">drop</span></code>, <code class="docutils literal notranslate"><span class="pre">reorder</span></code>, <code class="docutils literal notranslate"><span class="pre">rename</span></code>, <code class="docutils literal notranslate"><span class="pre">set_axis</span></code>, <code class="docutils literal notranslate"><span class="pre">add_prefix</span></code>, <code class="docutils literal notranslate"><span class="pre">add_suffix</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Manage cases</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">cases</span></code>, <code class="docutils literal notranslate"><span class="pre">set_cases</span></code>, <code class="docutils literal notranslate"><span class="pre">reset_cases</span></code>, <code class="docutils literal notranslate"><span class="pre">align_cases</span></code></p></td>
+<tr class="row-odd"><td><p>Manage case labels</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">label().values</span></code>, <code class="docutils literal notranslate"><span class="pre">label().set</span></code>, <code class="docutils literal notranslate"><span class="pre">label().reset</span></code>, <code class="docutils literal notranslate"><span class="pre">label().align</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Row selection</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">tail</span></code>, <code class="docutils literal notranslate"><span class="pre">view</span></code>, <code class="docutils literal notranslate"><span class="pre">cloc</span></code>, <code class="docutils literal notranslate"><span class="pre">slice</span></code>, <code class="docutils literal notranslate"><span class="pre">take</span></code>, <code class="docutils literal notranslate"><span class="pre">sample</span></code></p></td>
@@ -80,7 +80,7 @@ reference; it tells you where to look.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">transform</span></code>, <code class="docutils literal notranslate"><span class="pre">cast</span></code>, <code class="docutils literal notranslate"><span class="pre">astype</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Sort/rank</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sort_values</span></code>, <code class="docutils literal notranslate"><span class="pre">sort_cases</span></code>, <code class="docutils literal notranslate"><span class="pre">top</span></code>, <code class="docutils literal notranslate"><span class="pre">bottom</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sort_values</span></code>, <code class="docutils literal notranslate"><span class="pre">label().sort</span></code>, <code class="docutils literal notranslate"><span class="pre">top</span></code>, <code class="docutils literal notranslate"><span class="pre">bottom</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Missing data</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">isnull</span></code>, <code class="docutils literal notranslate"><span class="pre">notnull</span></code>, <code class="docutils literal notranslate"><span class="pre">fillna</span></code>, <code class="docutils literal notranslate"><span class="pre">dropnull</span></code>, <code class="docutils literal notranslate"><span class="pre">ffill</span></code>, <code class="docutils literal notranslate"><span class="pre">bfill</span></code></p></td>
@@ -202,7 +202,7 @@ reference; it tells you where to look.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Inspect</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">depth</span></code>, <code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">nfeats</span></code>, <code class="docutils literal notranslate"><span class="pre">column_names</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">depth</span></code>, <code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">nfeatures</span></code>, <code class="docutils literal notranslate"><span class="pre">column_names</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Access</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">frame</span></code>, <code class="docutils literal notranslate"><span class="pre">dloc</span></code>, <code class="docutils literal notranslate"><span class="pre">loc</span></code>, <code class="docutils literal notranslate"><span class="pre">frames</span></code>, <code class="docutils literal notranslate"><span class="pre">axis0_labels</span></code></p></td>

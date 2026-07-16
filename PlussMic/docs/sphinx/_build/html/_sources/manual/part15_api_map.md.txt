@@ -9,15 +9,15 @@ reference; it tells you where to look.
 | --- | --- |
 | Load | `load`, `load_csv`, `load_txt`, `load_excel`, `load_json`, `load_parquet` |
 | Save | `save_csv`, `save_txt`, `save_excel`, `save_json`, `save_parquet`, `save_as` |
-| Inspect | `defined`, `ncases`, `nfeatures`, `feature_names`, `info`, `describe`, `to_string` |
+| Inspect | `defined`, `ncases`, `nfeatures`, `features`, `info`, `describe`, `to_string` |
 | Select features | `features`, `select`, `select_like`, `select_regex`, `series_features`, `note_features`, `timeline_features` |
 | Manage features | `insert`, `drop`, `reorder`, `rename`, `set_axis`, `add_prefix`, `add_suffix` |
-| Manage cases | `cases`, `set_cases`, `reset_cases`, `align_cases` |
+| Manage case labels | `label().values`, `label().set`, `label().reset`, `label().align` |
 | Row selection | `head`, `tail`, `view`, `cloc`, `slice`, `take`, `sample` |
 | Filter | `where`, `filter`, `query` |
 | Derive | `assign`, `set_features`, `set` |
 | Transform | `transform`, `cast`, `astype` |
-| Sort/rank | `sort_values`, `sort_cases`, `top`, `bottom` |
+| Sort/rank | `sort_values`, `label().sort`, `top`, `bottom` |
 | Missing data | `isnull`, `notnull`, `fillna`, `dropnull`, `ffill`, `bfill` |
 | Arithmetic | `add`, `sub`, `mul`, `div`, `truediv`, `floordiv`, `mod`, `pow`, reverse variants |
 | Comparison | `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare` |
@@ -64,7 +64,7 @@ See [Thread API Reference](../thread_api_reference.md).
 
 | Task | Methods |
 | --- | --- |
-| Inspect | `defined`, `empty`, `depth`, `ncases`, `nfeats`, `column_names` |
+| Inspect | `defined`, `empty`, `depth`, `ncases`, `nfeatures`, `column_names` |
 | Access | `frame`, `dloc`, `loc`, `frames`, `axis0_labels` |
 | Slice depth | `head`, `tail`, `slice_frames`, `sort_depth` |
 | Align depth | `relabel_depth`, `align_depth` |

@@ -402,6 +402,221 @@ std::regex compile_regex_(std::string_view pattern,
   }
 }
 
+std::regex compile_regex_(std::string_view pattern,
+                          const TextOptions& options,
+                          std::string_view where) {
+  try {
+    auto flags = std::regex::ECMAScript;
+    if (!options.case_sensitive) {
+      flags |= std::regex::icase;
+    }
+    return std::regex(std::string(pattern), flags);
+  } catch (const std::regex_error& error) {
+    PLUSS_FAIL(
+        std::string(where) + ": invalid regular expression: " +
+        error.what());
+  }
+}
+
+std::string ascii_fold_(std::string_view value) {
+  std::string out(value);
+  std::transform(out.begin(), out.end(), out.begin(), [](unsigned char ch) {
+    return static_cast<char>(std::tolower(ch));
+  });
+  return out;
+}
+
+bool literal_has_(std::string_view text,
+                  std::string_view needle,
+                  bool case_sensitive) {
+  if (case_sensitive) {
+    return text.find(needle) != std::string_view::npos;
+  }
+  const auto folded_text = ascii_fold_(text);
+  const auto folded_needle = ascii_fold_(needle);
+  return folded_text.find(folded_needle) != std::string::npos;
+}
+
+std::string replace_literal_(
+    std::string_view text,
+    std::string_view from,
+    std::string_view to,
+    const TextOptions& options) {
+  if (from.empty()) {
+    return std::string(text);
+  }
+  std::string out(text);
+  std::string folded_out = options.case_sensitive ? std::string{} : ascii_fold_(out);
+  const auto folded_from = options.case_sensitive ? std::string{} : ascii_fold_(from);
+  std::size_t pos = 0;
+  std::int64_t replaced = 0;
+  while (options.limit < 0 || replaced < options.limit) {
+    const auto found =
+        options.case_sensitive
+            ? out.find(from, pos)
+            : folded_out.find(folded_from, pos);
+    if (found == std::string::npos) {
+      break;
+    }
+    out.replace(found, from.size(), to);
+    if (!options.case_sensitive) {
+      folded_out = ascii_fold_(out);
+    }
+    pos = found + to.size();
+    ++replaced;
+  }
+  return out;
+}
+
+std::string replace_regex_limited_(
+    std::string_view text,
+    const std::regex& expression,
+    std::string_view replacement,
+    std::int64_t limit) {
+  const std::string source(text);
+  if (limit < 0) {
+    return std::regex_replace(source, expression, std::string(replacement));
+  }
+  std::string out;
+  out.reserve(source.size());
+  std::sregex_iterator it(source.begin(), source.end(), expression);
+  const std::sregex_iterator end;
+  std::size_t last = 0;
+  std::int64_t replaced = 0;
+  for (; it != end && replaced < limit; ++it, ++replaced) {
+    const auto& match = *it;
+    out.append(source, last, static_cast<std::size_t>(match.position()) - last);
+    out += match.format(std::string(replacement));
+    last = static_cast<std::size_t>(match.position() + match.length());
+  }
+  out.append(source, last, std::string::npos);
+  return out;
+}
+
+std::vector<std::string> split_literal_limited_(
+    std::string_view text,
+    std::string_view delimiter,
+    std::int64_t limit) {
+  PLUSS_CHECK(!delimiter.empty(),
+              "Thread::split: delimiter cannot be empty");
+  std::vector<std::string> parts;
+  std::size_t pos = 0;
+  std::int64_t splits = 0;
+  while (limit < 0 || splits < limit) {
+    const auto found = text.find(delimiter, pos);
+    if (found == std::string_view::npos) {
+      break;
+    }
+    parts.emplace_back(text.substr(pos, found - pos));
+    pos = found + delimiter.size();
+    ++splits;
+  }
+  parts.emplace_back(text.substr(pos));
+  return parts;
+}
+
+std::vector<std::string> split_regex_limited_(
+    std::string_view text,
+    const std::regex& expression,
+    std::int64_t limit) {
+  const std::string source(text);
+  std::vector<std::string> parts;
+  std::sregex_token_iterator it(source.begin(), source.end(), expression, -1);
+  const std::sregex_token_iterator end;
+  if (limit < 0) {
+    for (; it != end; ++it) {
+      parts.push_back(it->str());
+    }
+    return parts;
+  }
+  std::sregex_iterator match_it(source.begin(), source.end(), expression);
+  const std::sregex_iterator match_end;
+  std::size_t pos = 0;
+  std::int64_t splits = 0;
+  for (; match_it != match_end && splits < limit; ++match_it, ++splits) {
+    const auto& match = *match_it;
+    parts.emplace_back(source.substr(pos, static_cast<std::size_t>(match.position()) - pos));
+    pos = static_cast<std::size_t>(match.position() + match.length());
+  }
+  parts.emplace_back(source.substr(pos));
+  return parts;
+}
+
+std::int64_t count_literal_(
+    std::string_view text,
+    std::string_view needle,
+    const TextOptions& options) {
+  if (needle.empty()) {
+    return 0;
+  }
+  const auto source = options.case_sensitive ? std::string(text) : ascii_fold_(text);
+  const auto target = options.case_sensitive ? std::string(needle) : ascii_fold_(needle);
+  std::int64_t count = 0;
+  std::size_t pos = 0;
+  while (options.limit < 0 || count < options.limit) {
+    const auto found = source.find(target, pos);
+    if (found == std::string::npos) {
+      break;
+    }
+    ++count;
+    pos = found + target.size();
+  }
+  return count;
+}
+
+std::int64_t count_regex_(
+    std::string_view text,
+    const std::regex& expression,
+    std::int64_t limit) {
+  const std::string source(text);
+  std::sregex_iterator it(source.begin(), source.end(), expression);
+  const std::sregex_iterator end;
+  std::int64_t count = 0;
+  for (; it != end && (limit < 0 || count < limit); ++it) {
+    ++count;
+  }
+  return count;
+}
+
+std::vector<std::string> findall_literal_(
+    std::string_view text,
+    std::string_view needle,
+    const TextOptions& options) {
+  std::vector<std::string> matches;
+  if (needle.empty()) {
+    return matches;
+  }
+  const auto source = options.case_sensitive ? std::string(text) : ascii_fold_(text);
+  const auto target = options.case_sensitive ? std::string(needle) : ascii_fold_(needle);
+  std::size_t pos = 0;
+  while (options.limit < 0 ||
+         static_cast<std::int64_t>(matches.size()) < options.limit) {
+    const auto found = source.find(target, pos);
+    if (found == std::string::npos) {
+      break;
+    }
+    matches.emplace_back(text.substr(found, needle.size()));
+    pos = found + target.size();
+  }
+  return matches;
+}
+
+std::vector<std::string> findall_regex_(
+    std::string_view text,
+    const std::regex& expression,
+    std::int64_t limit) {
+  const std::string source(text);
+  std::vector<std::string> matches;
+  std::sregex_iterator it(source.begin(), source.end(), expression);
+  const std::sregex_iterator end;
+  for (; it != end &&
+         (limit < 0 || static_cast<std::int64_t>(matches.size()) < limit);
+       ++it) {
+    matches.push_back(it->str());
+  }
+  return matches;
+}
+
 } // namespace
 
 ThreadValue Thread::covar(
@@ -1453,6 +1668,106 @@ Thread Thread::ends(std::string_view suffix) const {
   return note_bool_result_(*this, as_note().ends_with(suffix));
 }
 
+Thread note_has_(const Thread& source,
+                 std::string_view needle,
+                 const TextOptions& options) {
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "Thread::note().has: expected Note payload");
+  if (options.regex) {
+    if (options.case_sensitive) {
+      (void)compile_regex_(needle, "Thread::note().has");
+      return note_bool_result_(source, source.as_note().regex_search(needle));
+    }
+    const auto expression = compile_regex_(needle, options, "Thread::note().has");
+    std::vector<std::uint8_t> values;
+    values.reserve(static_cast<std::size_t>(source.size()));
+    for (std::int64_t row = 0; row < source.size(); ++row) {
+      const auto text = std::string(source.as_note().at(row));
+      values.push_back(
+          source.is_valid(row) && std::regex_search(text, expression) ? 1U : 0U);
+    }
+    return note_bool_result_(source, values);
+  }
+  if (options.case_sensitive) {
+    return note_bool_result_(source, source.as_note().contains(needle));
+  }
+  std::vector<std::uint8_t> values;
+  values.reserve(static_cast<std::size_t>(source.size()));
+  for (std::int64_t row = 0; row < source.size(); ++row) {
+    values.push_back(
+        source.is_valid(row) && literal_has_(source.as_note().at(row), needle, false)
+            ? 1U
+            : 0U);
+  }
+  return note_bool_result_(source, values);
+}
+
+Thread note_count_(const Thread& source,
+                   std::string_view pattern,
+                   const TextOptions& options) {
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "Thread::note().count: expected Note payload");
+  std::optional<std::regex> expression;
+  if (options.regex) {
+    expression = compile_regex_(pattern, options, "Thread::note().count");
+  }
+  auto output = pluss::Series::empty(
+      {source.size()}, pluss::codem::ScalarType::Int64);
+  auto* data = reinterpret_cast<std::int64_t*>(output.raw_data());
+  for (std::int64_t row = 0; row < source.size(); ++row) {
+    data[row] =
+        source.is_valid(row)
+            ? (options.regex
+                   ? count_regex_(source.as_note().at(row), *expression, options.limit)
+                   : count_literal_(source.as_note().at(row), pattern, options))
+            : 0;
+  }
+  return Thread(output, detail::validity_mask(source));
+}
+
+DataFrame note_findall_(const Thread& source,
+                        std::string_view pattern,
+                        const TextOptions& options) {
+  PLUSS_CHECK(source.kind() == ThreadKind::Note,
+              "Thread::note().findall: expected Note payload");
+  std::optional<std::regex> expression;
+  if (options.regex) {
+    expression = compile_regex_(pattern, options, "Thread::note().findall");
+  }
+  std::vector<std::vector<std::string>> rows;
+  rows.reserve(static_cast<std::size_t>(source.size()));
+  std::int64_t width = 0;
+  for (std::int64_t row = 0; row < source.size(); ++row) {
+    std::vector<std::string> matches;
+    if (source.is_valid(row)) {
+      matches =
+          options.regex
+              ? findall_regex_(source.as_note().at(row), *expression, options.limit)
+              : findall_literal_(source.as_note().at(row), pattern, options);
+    }
+    width = std::max<std::int64_t>(width, static_cast<std::int64_t>(matches.size()));
+    rows.push_back(std::move(matches));
+  }
+  std::vector<std::pair<std::string, Thread>> output;
+  output.reserve(static_cast<std::size_t>(width));
+  for (std::int64_t match = 0; match < width; ++match) {
+    std::vector<std::string> values(static_cast<std::size_t>(source.size()));
+    std::vector<bool> valid(static_cast<std::size_t>(source.size()), false);
+    for (std::int64_t row = 0; row < source.size(); ++row) {
+      const auto& row_matches = rows[static_cast<std::size_t>(row)];
+      if (match < static_cast<std::int64_t>(row_matches.size())) {
+        values[static_cast<std::size_t>(row)] =
+            row_matches[static_cast<std::size_t>(match)];
+        valid[static_cast<std::size_t>(row)] = true;
+      }
+    }
+    output.emplace_back(
+        "match_" + std::to_string(match),
+        Thread(pluss::make_note(values), bool_series_from_bools(valid)));
+  }
+  return DataFrame(std::move(output));
+}
+
 Thread Thread::matches(std::string_view pattern) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::matches: expected Note payload");
@@ -1547,6 +1862,50 @@ DataFrame Thread::split(
     }
     output.emplace_back(
         prefix + "_" + std::to_string(part),
+        Thread(pluss::make_note(values),
+               bool_series_from_bools(valid)));
+  }
+  return DataFrame(std::move(output));
+}
+
+DataFrame Thread::split(
+    std::string_view pattern,
+    const TextOptions& options) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note,
+              "Thread::split: expected Note payload");
+  std::vector<std::vector<std::string>> rows;
+  rows.reserve(static_cast<std::size_t>(size()));
+  std::int64_t width = 0;
+  std::optional<std::regex> expression;
+  if (options.regex) {
+    expression = compile_regex_(pattern, options, "Thread::split");
+  }
+  for (std::int64_t row = 0; row < size(); ++row) {
+    std::vector<std::string> parts;
+    if (is_valid(row)) {
+      parts =
+          options.regex
+              ? split_regex_limited_(as_note().at(row), *expression, options.limit)
+              : split_literal_limited_(as_note().at(row), pattern, options.limit);
+    }
+    width = std::max<std::int64_t>(width, static_cast<std::int64_t>(parts.size()));
+    rows.push_back(std::move(parts));
+  }
+  std::vector<std::pair<std::string, Thread>> output;
+  output.reserve(static_cast<std::size_t>(width));
+  for (std::int64_t part = 0; part < width; ++part) {
+    std::vector<std::string> values(static_cast<std::size_t>(size()));
+    std::vector<bool> valid(static_cast<std::size_t>(size()), false);
+    for (std::int64_t row = 0; row < size(); ++row) {
+      const auto& row_parts = rows[static_cast<std::size_t>(row)];
+      if (part < static_cast<std::int64_t>(row_parts.size())) {
+        values[static_cast<std::size_t>(row)] =
+            row_parts[static_cast<std::size_t>(part)];
+        valid[static_cast<std::size_t>(row)] = true;
+      }
+    }
+    output.emplace_back(
+        options.prefix + "_" + std::to_string(part),
         Thread(pluss::make_note(values),
                bool_series_from_bools(valid)));
   }
@@ -1677,6 +2036,34 @@ Thread Thread::encode(std::string_view encoding) const {
       "Thread::encode: encoding must be base64, hex, or url");
 }
 
+Thread Thread::replace(std::string_view from,
+                       std::string_view to,
+                       const TextOptions& options) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note,
+              "Thread::replace: expected Note payload");
+  if (!options.regex && options.case_sensitive && options.limit < 0) {
+    return Thread(as_note().replace(from, to), validity_mask());
+  }
+  if (options.regex && options.case_sensitive && options.limit < 0) {
+    (void)compile_regex_(from, "Thread::replace");
+    return Thread(as_note().regex_replace(from, to), validity_mask());
+  }
+  std::optional<std::regex> expression;
+  if (options.regex) {
+    expression = compile_regex_(from, options, "Thread::replace");
+  }
+  std::vector<std::string> values;
+  values.reserve(static_cast<std::size_t>(size()));
+  for (std::int64_t row = 0; row < size(); ++row) {
+    const auto text = as_note().at(row);
+    values.push_back(
+        options.regex
+            ? replace_regex_limited_(text, *expression, to, options.limit)
+            : replace_literal_(text, from, to, options));
+  }
+  return Thread(rebuild_note_like(as_note(), values), validity_mask());
+}
+
 DataFrame Thread::indicate(std::string_view delimiter,
                                   std::string prefix) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
@@ -1738,10 +2125,27 @@ Thread ThreadNoteAccessor::titlecase() const { return base_.titlecase(); }
 Thread ThreadNoteAccessor::length() const { return base_.length(); }
 Thread ThreadNoteAccessor::starts(std::string_view prefix) const { return base_.starts(prefix); }
 Thread ThreadNoteAccessor::ends(std::string_view suffix) const { return base_.ends(suffix); }
+Thread ThreadNoteAccessor::has(std::string_view needle, const TextOptions& options) const {
+  return note_has_(base_, needle, options);
+}
+Thread ThreadNoteAccessor::count(std::string_view pattern) const {
+  return note_count_(base_, pattern, {.regex = true});
+}
+Thread ThreadNoteAccessor::count(std::string_view pattern, const TextOptions& options) const {
+  return note_count_(base_, pattern, options);
+}
 Thread ThreadNoteAccessor::matches(std::string_view pattern, bool full) const {
   return full ? base_.fullmatch(pattern) : base_.matches(pattern);
 }
 Thread ThreadNoteAccessor::fullmatch(std::string_view pattern) const { return base_.fullmatch(pattern); }
+DataFrame ThreadNoteAccessor::findall(std::string_view pattern) const {
+  return note_findall_(base_, pattern, {.regex = true});
+}
+DataFrame ThreadNoteAccessor::findall(
+    std::string_view pattern,
+    const TextOptions& options) const {
+  return note_findall_(base_, pattern, options);
+}
 DataFrame ThreadNoteAccessor::extract(
     std::string_view pattern,
     pluss::msharp::RangeView::Of<std::string_view> names) const {
@@ -1752,6 +2156,11 @@ DataFrame ThreadNoteAccessor::split(
     std::int64_t limit,
     std::string prefix) const {
   return base_.split(delimiter, limit, std::move(prefix));
+}
+DataFrame ThreadNoteAccessor::split(
+    std::string_view pattern,
+    const TextOptions& options) const {
+  return base_.split(pattern, options);
 }
 DataFrame ThreadNoteAccessor::partition(
     std::string_view separator,
@@ -1775,6 +2184,15 @@ Thread ThreadNoteAccessor::encode(std::string_view encoding) const {
 }
 DataFrame ThreadNoteAccessor::indicate(std::string_view delimiter, std::string prefix) const {
   return base_.indicate(delimiter, std::move(prefix));
+}
+Thread ThreadNoteAccessor::replace(std::string_view from, std::string_view to) const {
+  return base_.replace(from, to);
+}
+Thread ThreadNoteAccessor::replace(
+    std::string_view from,
+    std::string_view to,
+    const TextOptions& options) const {
+  return base_.replace(from, to, options);
 }
 
 namespace {
@@ -1800,6 +2218,59 @@ pluss::Series tl_validity_(const Thread& base, std::string_view where) {
 Thread tl_series_(const Thread& base, const pluss::Series& values, std::string_view where) {
   auto out = Thread(values.reshape({base.size()}), tl_validity_(base, where));
   if (detail::has_display_labels(base)) {
+    out = detail::with_display_labels(out, detail::display_labels(base));
+  }
+  if (base.has_display_name()) {
+    out = out.with_display_name(base.display_name());
+  }
+  return out;
+}
+
+pluss::codeh::TimelineSpanUnit to_codeh_span_unit_(TimeUnit unit, std::string_view where) {
+  switch (unit) {
+    case TimeUnit::Nanos:
+      return pluss::codeh::TimelineSpanUnit::Nanos;
+    case TimeUnit::Micros:
+      return pluss::codeh::TimelineSpanUnit::Micros;
+    case TimeUnit::Millis:
+      return pluss::codeh::TimelineSpanUnit::Millis;
+    case TimeUnit::Seconds:
+      return pluss::codeh::TimelineSpanUnit::Seconds;
+    case TimeUnit::Days:
+      return pluss::codeh::TimelineSpanUnit::Days;
+    case TimeUnit::Weeks:
+      return pluss::codeh::TimelineSpanUnit::Weeks;
+    case TimeUnit::Months:
+      return pluss::codeh::TimelineSpanUnit::Months;
+    case TimeUnit::Years:
+      return pluss::codeh::TimelineSpanUnit::Years;
+    case TimeUnit::BusinessDays:
+      return pluss::codeh::TimelineSpanUnit::BusinessDays;
+  }
+  PLUSS_FAIL(std::string(where) + ": unknown TimeUnit");
+}
+
+pluss::codeh::TimelineSpanOptions to_codeh_span_options_(
+    const TimelineSpanOptions& options,
+    std::string_view where) {
+  pluss::codeh::TimelineSpanOptions out;
+  out.unit = to_codeh_span_unit_(options.unit, where);
+  out.mode = options.mode;
+  out.anchor = options.anchor;
+  out.signed_result = options.signed_result;
+  out.calendar = options.calendar;
+  out.closed = options.closed;
+  return out;
+}
+
+Thread tl_span_series_(
+    const Thread& base,
+    const Thread& other,
+    const pluss::Series& values,
+    std::string_view where) {
+  auto valid = tl_validity_(base, where).logical_and(tl_validity_(other, where));
+  auto out = Thread(values.reshape({values.numel()}), valid.reshape({values.numel()}));
+  if (values.numel() == base.size() && detail::has_display_labels(base)) {
     out = detail::with_display_labels(out, detail::display_labels(base));
   }
   if (base.has_display_name()) {
@@ -1937,8 +2408,45 @@ Thread ThreadTimelineAccessor::epoch(TimeUnit unit) const {
       return tl_series_(base_, t.epoch_millis(), "Thread::tl().epoch");
     case TimeUnit::Seconds:
       return tl_series_(base_, t.epoch_seconds(), "Thread::tl().epoch");
+    case TimeUnit::Days:
+      return tl_series_(base_, t.epoch_days(), "Thread::tl().epoch");
+    case TimeUnit::Weeks:
+    case TimeUnit::Months:
+    case TimeUnit::Years:
+    case TimeUnit::BusinessDays:
+      PLUSS_FAIL("Thread::tl().epoch: unit is span-only; use Thread::tl().span");
   }
   PLUSS_FAIL("Thread::tl().epoch: unknown TimeUnit");
+}
+
+Thread ThreadTimelineAccessor::span(
+    const Thread& other,
+    const TimelineSpanOptions& options) const {
+  const auto& left = tl_payload_(base_, "Thread::tl().span");
+  const auto& right = tl_payload_(other, "Thread::tl().span");
+  return tl_span_series_(
+      base_,
+      other,
+      left.span(right, to_codeh_span_options_(options, "Thread::tl().span")),
+      "Thread::tl().span");
+}
+
+Thread ThreadTimelineAccessor::span(const Thread& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
+}
+
+Thread ThreadTimelineAccessor::span(
+    const pluss::Timeline& other,
+    const TimelineSpanOptions& options) const {
+  return span(Thread(other), options);
+}
+
+Thread ThreadTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const {
+  TimelineSpanOptions options;
+  options.unit = unit;
+  return span(other, options);
 }
 
 Thread ThreadTimelineAccessor::floor(std::string_view unit) const {

@@ -11,7 +11,7 @@ returns = """
 
 see_also = [
   "<a href=\"#as_timeline\"><code>Thread::as_timeline</code></a>: expose a timeline payload instead of a time index.",
-  "<a href=\"dataframe_api_reference.html#resample\"><code>DataFrame::resample</code></a>: resample full frames by a temporal feature."
+  "<a href=\"dataframe_api_reference.html#ts\"><code>DataFrame::ts</code></a>: open the time-series surface for full-frame resampling."
 ]
 
 notes = [

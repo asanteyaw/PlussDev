@@ -590,8 +590,8 @@ Use `cross_validate` for one model/workflow. Use `selection::tune` for named wor
 
 ### Options
 
-- `CrossValidationOptions.plan`: `Holdout`, `KFold`, `StratifiedKFold`
-- `folds`, `holdout_fraction`, `stratified`, `shuffle`, `random_state`, `deterministic`
+- `CrossValidationOptions.plan`: `Holdout`, `CrossVal`, `StratifiedCrossVal`, `TSCrossVal`, `GroupCrossVal`
+- `folds`, `repeats`, `holdout_fraction`, `stratified`, `shuffle`, `random_state`, `deterministic`
 
 ### Examples
 
@@ -599,7 +599,7 @@ Use `cross_validate` for one model/workflow. Use `selection::tune` for named wor
 auto cv = lym::cross_validate(
     wf, x_train, y_train,
     lym::CrossValidationOptions{
-      .plan = pluss::ai::nodej::CVPlanKind::KFold,
+      .plan = pluss::ai::nodej::CVPlanKind::CrossVal,
       .folds = 5,
       .random_state = 11,
       .deterministic = true,
@@ -615,15 +615,27 @@ auto tuned = lym::selection::tune(
     std::move(cands),
     x_train,
     y_train,
-    lym::CrossValidationOptions{.plan = pluss::ai::nodej::CVPlanKind::KFold, .folds = 5},
+    lym::CrossValidationOptions{.plan = pluss::ai::nodej::CVPlanKind::CrossVal, .folds = 5},
     {},
     pluss::ai::nodej::AssessOptions{.metrics = {pluss::ai::nodej::MetricKind::Rmse}},
     pluss::ai::nodej::MetricKind::Rmse,
     pluss::ai::nodej::TuneObjectivePolicy::Minimize);
+
+auto repeated_cv = lym::cross_validate(
+    classifier_wf, x_class, y_class,
+    lym::CrossValidationOptions{
+      .plan = pluss::ai::nodej::CVPlanKind::StratifiedCrossVal,
+      .folds = 5,
+      .repeats = 3,
+      .random_state = 17,
+      .deterministic = true,
+    });
 ```
 
 ### Expected output
 
+- `cv.report.folds.size()` is `5` for the CrossVal example.
+- `repeated_cv.report.folds.size()` is `15`; repeated stratification is classification-only.
 - `cv.mean.rmse` and `cv.stdev.rmse` are defined.
 - `tuned.report.best_name` names the selected workflow.
 

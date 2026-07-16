@@ -13,15 +13,15 @@ DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& features)
 ## Parameters
 
 **pick**
-    Structured-case selector used when the DataFrame has named case levels created by `set_cases(...)`.
+    Structured-case selector used when the DataFrame has named case labels created by `label().set(...)`.
 
     Use this overload for hierarchical case lookup rather than ordinary row slicing.
 
     Supported forms:
-    - `.level = "region", .value = "West"` selects every row whose named case level equals the supplied value.
-    - `.levels = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case levels at once.
-    - `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-level order.
-    - `.drop = true` removes the matched case level(s) from the returned structured case metadata after selection.
+    - `.label = "region", .value = "West"` selects every row whose named case label equals the supplied value.
+    - `.caselbls = {"region", "quarter"}, .values = {"West", "Q2"}` matches several named case labels at once.
+    - `.key = {"East", "201", "Q2"}` performs a full structured-key lookup using the current case-label order.
+    - `.drop = true` removes the matched case caselbl(s) from the returned structured case metadata after selection.
 
 **rows**
     Row selector used for ordinary case-axis lookup and positional indexing.
@@ -40,12 +40,12 @@ DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& features)
 
     Supported forms:
     - `pluss::table::all_features()` keeps every feature in source order.
-    - `pluss::table::col("name")` keeps one named feature.
-    - `pluss::table::col(position)` keeps one feature by zero-based position.
-    - `pluss::table::cols({"a", "b"})` keeps named features in the requested order.
-    - `pluss::table::cols({0, 2})` keeps feature positions in the requested order.
-    - `pluss::table::cols(start, stop)` keeps a half-open positional feature slice `[start, stop)`.
-    - `pluss::table::col_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.
+    - `pluss::table::feature("name")` keeps one named feature.
+    - `pluss::table::feature(position)` keeps one feature by zero-based position.
+    - `pluss::table::features({"a", "b"})` keeps named features in the requested order.
+    - `pluss::table::features({0, 2})` keeps feature positions in the requested order.
+    - `pluss::table::features(start, stop)` keeps a half-open positional feature slice `[start, stop)`.
+    - `pluss::table::feature_range("start", "stop")` keeps an inclusive feature-name window from `start` through `stop`.
 
 ## Returns
 
@@ -54,7 +54,7 @@ DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& features)
 
 ## What It Does
 
-`case_study(...)` is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-level case lookup through `CasePick` when the frame has hierarchical cases.
+`case_study(...)` is the unified DataFrame indexing surface. It handles ordinary positional row access, case-label lookup, boolean-mask selection, feature projection, and structured multi-label case lookup through `CasePick` when the frame has hierarchical cases.
 
 ## Selector Rules
 
@@ -63,8 +63,8 @@ DataFrame::case_study(const CaseSelector& rows, const FeatureSelector& features)
 - Label selectors match against the current case axis returned by `caselbl()`.
 - `label(value)` returns every matching row, so duplicate case labels are preserved instead of collapsed.
 - `label_range(start, stop)` is inclusive on both ends and walks the current case-axis order.
-- Feature-position slices are half-open, while `col_range(start, stop)` is inclusive on both ends.
-- `CasePick` reads named case levels created by `set_cases(...)`; it does not inspect ordinary feature columns.
+- Feature-position slices are half-open, while `feature_range(start, stop)` is inclusive on both ends.
+- `CasePick` reads named case labels created by `label().set(...)`; it does not inspect ordinary feature columns.
 - Partial `CasePick` matches preserve the existing row order already stored on the frame.
 - Because `case_study(...)` always returns a frame, you do not need separate `at(...)` or `iat(...)` methods for single-cell access.
 
@@ -143,7 +143,7 @@ auto sales = DataFrame({
 auto labeled = sales.with_cases(
     pluss::make_note({"A100", "B200", "B200", "D400"}));
 
-auto out = sales.case_study(pos({3, 0}), cols({"city", "price"}));
+auto out = sales.case_study(pos({3, 0}), features({"city", "price"}));
 ```
 
 ### Output
@@ -195,7 +195,7 @@ auto sales = DataFrame({
 auto labeled = sales.with_cases(
     pluss::make_note({"A100", "B200", "B200", "D400"}));
 
-auto out = labeled.case_study(labels({"D400", "A100"}), cols({"city", "units"}));
+auto out = labeled.case_study(labels({"D400", "A100"}), features({"city", "units"}));
 ```
 
 ### Output
@@ -221,7 +221,7 @@ auto sales = DataFrame({
 auto labeled = sales.with_cases(
     pluss::make_note({"A100", "B200", "B200", "D400"}));
 
-auto out = labeled.case_study(label_range("B200", "D400"), col_range("region", "price"));
+auto out = labeled.case_study(label_range("B200", "D400"), feature_range("region", "price"));
 ```
 
 ### Output
@@ -248,7 +248,7 @@ auto sales = DataFrame({
 auto labeled = sales.with_cases(
     pluss::make_note({"A100", "B200", "B200", "D400"}));
 
-auto out = sales.case_study(mask(sales.features("units") >= 10.0), cols({"city", "units"}));
+auto out = sales.case_study(mask(sales.features("units") >= 10.0), features({"city", "units"}));
 ```
 
 ### Output
@@ -274,7 +274,7 @@ auto sales = DataFrame({
 auto labeled = sales.with_cases(
     pluss::make_note({"A100", "B200", "B200", "D400"}));
 
-auto out = labeled.case_study(label("A100"), col("price"));
+auto out = labeled.case_study(label("A100"), feature("price"));
 ```
 
 ### Output
@@ -299,7 +299,7 @@ auto sales = DataFrame({
 auto labeled = sales.with_cases(
     pluss::make_note({"A100", "B200", "B200", "D400"}));
 
-auto out = sales.case_study(pos(-1), cols({"city", "price"}));
+auto out = sales.case_study(pos(-1), features({"city", "price"}));
 ```
 
 ### Output
@@ -309,7 +309,7 @@ city    price
 Tamale  5.0
 ```
 
-Example 10. Match one structured case level with `CasePick` after `set_cases(...)`.
+Example 10. Match one structured case label with `CasePick` after `label().set(...)`.
 
 ```cpp
 using namespace pluss::table;
@@ -320,10 +320,10 @@ auto indexed = DataFrame({
     {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
     {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
     {"cost", pluss::make_series({4.0, 8.0, 12.0, 16.0})},
-}).set_cases({"region", "account", "quarter"}, false);
+}).label().set({"region", "account", "quarter"}, false);
 
 auto out = indexed.case_study(DataFrame::CasePick{
-    .level = "region",
+    .label = "region",
     .value = "West",
 }).features({"sales", "cost"});
 ```
@@ -347,7 +347,7 @@ auto indexed = DataFrame({
     {"quarter", pluss::make_note({"Q1", "Q2", "Q1", "Q2"})},
     {"sales", pluss::make_series({10.0, 20.0, 30.0, 40.0})},
     {"cost", pluss::make_series({4.0, 8.0, 12.0, 16.0})},
-}).set_cases({"region", "account", "quarter"}, false);
+}).label().set({"region", "account", "quarter"}, false);
 
 auto out = indexed.case_study(DataFrame::CasePick{
     .key = {"East", "201", "Q2"},
@@ -364,7 +364,7 @@ sales  cost
 ## Behavior Notes
 
 - `caselbl()` remains the accessor for the case axis itself. It no longer doubles as a row-selection API.
-- `CasePick` is the structured-case overload. Use it only after `set_cases(...)` has created named case levels.
+- `CasePick` is the structured-case overload. Use it only after `label().set(...)` has created named case labels.
 - Duplicate label matches are not deduplicated. If the case axis contains the same label twice, both rows are returned.
 - When you only want to preview a row window instead of materializing a selection result for later work, use `observe(...)`.
 - If you already know the final feature order and only need column projection, `features({...})` is still the lighter-weight feature-only path.
@@ -376,8 +376,8 @@ sales  cost
     <span class="label">Previous</span>
     <span class="title">bucketize</span>
   </a>
-  <a class="next-link" href="caselbl.html">
+  <a class="next-link" href="cast.html">
     <span class="label">Next</span>
-    <span class="title">caselbl</span>
+    <span class="title">cast</span>
   </a>
 </div>

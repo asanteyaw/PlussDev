@@ -24,6 +24,62 @@ namespace pluss::codeh {
 class Timeline;
 class TimeIndex;
 
+enum class TimelineSpanUnit : std::uint8_t {
+  Nanos = 0,
+  Micros = 1,
+  Millis = 2,
+  Seconds = 3,
+  Days = 4,
+  Weeks = 5,
+  Months = 6,
+  Years = 7,
+  BusinessDays = 8,
+};
+
+enum class TimelineSpanMode : std::uint8_t {
+  Complete = 0, // completed elapsed calendar units
+  Boundary = 1, // crossed calendar/unit labels
+};
+
+enum class TimelineSpanClosed : std::uint8_t {
+  Right = 0,   // (start, end]
+  Left = 1,    // [start, end)
+  Both = 2,    // [start, end]
+  Neither = 3, // (start, end)
+};
+
+enum class TimelineSpanAnchor : std::uint8_t {
+  DayOfMonth = 0, // strict calendar-day completion
+  MonthEnd = 1,   // treat last-day-of-month endpoints as equivalent
+};
+
+struct BusinessCalendar {
+  static BusinessCalendar monfri();
+  static BusinessCalendar usa_federal(int year_start, int year_end);
+  static BusinessCalendar canada_federal(int year_start, int year_end);
+  static BusinessCalendar uk_bank(int year_start, int year_end);
+  static BusinessCalendar target2(int year_start, int year_end);
+  static BusinessCalendar nyse(int year_start, int year_end);
+
+  // Bits use std::chrono::weekday::c_encoding(): Sunday=0, Monday=1, ..., Saturday=6.
+  // Default is Monday-Friday only. Holidays are local epoch-day labels in the
+  // Timeline timezone, e.g. values produced by tl().epoch(TimeUnit::Days).
+  std::uint8_t weekmask{0b0111110};
+  std::vector<std::int64_t> holidays{};
+  std::string name{"MonFri"};
+  std::string region{};
+  std::string timezone{};
+};
+
+struct TimelineSpanOptions {
+  TimelineSpanUnit unit{TimelineSpanUnit::Days};
+  TimelineSpanMode mode{TimelineSpanMode::Complete};
+  TimelineSpanAnchor anchor{TimelineSpanAnchor::DayOfMonth};
+  bool signed_result{true};
+  BusinessCalendar calendar{};
+  TimelineSpanClosed closed{TimelineSpanClosed::Right};
+};
+
 // Lightweight Timeline handle base (similar to CodeM::SeriesBase):
 // - cheap copy (Series is ref-counted)
 // - shared core invariants for all Timeline-like types
@@ -289,6 +345,9 @@ public:
   pluss::codem::Series epoch_micros() const;
   pluss::codem::Series epoch_millis() const;
   pluss::codem::Series epoch_seconds() const;
+  pluss::codem::Series epoch_days() const;
+  pluss::codem::Series span(const Timeline& other,
+                            const TimelineSpanOptions& options = {}) const;
 
   static Timeline from_epoch_seconds(const pluss::codem::Series& epoch_seconds,
                                      std::string_view tz_name = "UTC");

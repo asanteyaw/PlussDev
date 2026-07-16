@@ -526,6 +526,8 @@ std::string group_op_name(DataFrame::GroupOp op) {
       return "sum";
     case DataFrame::GroupOp::Mean:
       return "mean";
+    case DataFrame::GroupOp::Median:
+      return "median";
     case DataFrame::GroupOp::Min:
       return "min";
     case DataFrame::GroupOp::Max:
@@ -534,6 +536,8 @@ std::string group_op_name(DataFrame::GroupOp op) {
       return "std";
     case DataFrame::GroupOp::Var:
       return "var";
+    case DataFrame::GroupOp::Mode:
+      return "mode";
     default:
       return "group";
   }
@@ -1435,7 +1439,7 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), frame.caselbl());
+  return DataFrame(std::move(columns), frame.label().values());
 }
 
 DataFrame dataframe_math_frame(const DataFrame& lhs,
@@ -1471,20 +1475,20 @@ DataFrame fill_numeric_missing_for_alignment_(const DataFrame& frame, const Alig
   for (std::size_t i = 0; i < cols.size(); ++i) {
     out.emplace_back(names[i], fill_numeric_missing_for_alignment_(cols[i], options));
   }
-  return DataFrame(std::move(out), frame.caselbl()).title(frame.title());
+  return DataFrame(std::move(out), frame.label().values()).title(frame.title());
 }
 
 DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
                                    const DataFrame& rhs,
                                    std::string_view where) {
-  if (lhs.ncases() != rhs.ncases() || lhs.nfeats() != rhs.nfeats()) {
+  if (lhs.ncases() != rhs.ncases() || lhs.nfeatures() != rhs.nfeatures()) {
     throw ::pluss::Error(
         fmt::format("{}: positional frame alignment requires identical shape (lhs=({}, {}), rhs=({}, {}))",
                     where,
                     lhs.ncases(),
-                    lhs.nfeats(),
+                    lhs.nfeatures(),
                     rhs.ncases(),
-                    rhs.nfeats()));
+                    rhs.nfeatures()));
   }
   const auto rhs_cols = dataframe_columns_(rhs);
   const auto& lhs_names = lhs.features();
@@ -1493,7 +1497,7 @@ DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
   for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
     out.emplace_back(lhs_names[i], rhs_cols[i]);
   }
-  return DataFrame(std::move(out), lhs.caselbl()).title(rhs.title());
+  return DataFrame(std::move(out), lhs.label().values()).title(rhs.title());
 }
 
 FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
@@ -1504,13 +1508,13 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
     case AlignBy::Pos:
       return FrameMatch{lhs, positional_rhs_like_lhs_(lhs, rhs, where)};
     case AlignBy::Caselbl: {
-      if (lhs.nfeats() != rhs.nfeats()) {
+      if (lhs.nfeatures() != rhs.nfeatures()) {
         throw ::pluss::Error(fmt::format(
             "{}: AlignBy::Caselbl requires identical feature count for positional feature pairing "
             "(lhs={}, rhs={})",
             where,
-            lhs.nfeats(),
-            rhs.nfeats()));
+            lhs.nfeatures(),
+            rhs.nfeatures()));
       }
       const auto rhs_cols = dataframe_columns_(rhs);
       const auto& lhs_names = lhs.features();
@@ -1519,7 +1523,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
         renamed.emplace_back(lhs_names[i], rhs_cols[i]);
       }
-      const auto renamed_rhs = DataFrame(std::move(renamed), rhs.caselbl()).title(rhs.title());
+      const auto renamed_rhs = DataFrame(std::move(renamed), rhs.label().values()).title(rhs.title());
       return lhs.match(renamed_rhs, FrameMatchOptions{
           .cases = FrameMatchRule::Unite,
           .features = FrameMatchRule::KeepLeft,
@@ -1541,7 +1545,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
         relabeled.emplace_back(rhs_names[i], rhs_cols[i]);
       }
-      const auto relabeled_rhs = DataFrame(std::move(relabeled), lhs.caselbl()).title(rhs.title());
+      const auto relabeled_rhs = DataFrame(std::move(relabeled), lhs.label().values()).title(rhs.title());
       return lhs.match(relabeled_rhs, FrameMatchOptions{
           .cases = FrameMatchRule::KeepLeft,
           .features = FrameMatchRule::Unite,
@@ -1609,7 +1613,7 @@ DataFrame dataframe_math_frame(const DataFrame& lhs,
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), matched.left.caselbl()).title(lhs.title());
+  return DataFrame(std::move(columns), matched.left.label().values()).title(lhs.title());
 }
 
 Thread align_thread_to_feature_axis_(
@@ -1680,7 +1684,7 @@ Thread align_thread_to_case_axis_(
     positions[thread_scalar_string_at(labels, i)].push_back(i);
   }
 
-  const auto target_cases = frame.caselbl();
+  const auto target_cases = frame.label().values();
   std::unordered_map<std::string, std::size_t> seen;
   seen.reserve(static_cast<std::size_t>(frame.ncases()));
   std::vector<std::int64_t> rows;
@@ -1753,18 +1757,18 @@ DataFrame dataframe_math_thread(const DataFrame& frame,
       columns.emplace_back(names[i], reverse ? apply_math_thread_pair(aligned, cols[i], op)
                                              : apply_math_thread_pair(cols[i], aligned, op));
     }
-    return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+    return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
   }
 
   Thread aligned;
   switch (options.align) {
     case AlignBy::Pos:
-      if (other.size() != frame.nfeats()) {
+      if (other.size() != frame.nfeatures()) {
         throw ::pluss::Error(fmt::format(
             "DataFrame::math(Thread, Axis::Feature): positional alignment requires rhs length to match "
             "DataFrame features (rhs={}, features={})",
             other.size(),
-            frame.nfeats()));
+            frame.nfeatures()));
       }
       aligned = other;
       break;
@@ -1789,7 +1793,7 @@ DataFrame dataframe_math_thread(const DataFrame& frame,
         names[i],
         apply_math_thread_scalar(cols[i], values[i], op, reverse));
   }
-  return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+  return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
 }
 
 DataFrame dataframe_math_thread(const DataFrame& frame,
@@ -1844,7 +1848,7 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), frame.caselbl());
+  return DataFrame(std::move(columns), frame.label().values());
 }
 
 DataFrame dataframe_cmp_frame(const DataFrame& lhs,
@@ -1909,7 +1913,7 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs,
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), matched.left.caselbl()).title(lhs.title());
+  return DataFrame(std::move(columns), matched.left.label().values()).title(lhs.title());
 }
 
 DataFrame dataframe_cmp_thread(const DataFrame& frame,
@@ -1937,7 +1941,7 @@ DataFrame dataframe_cmp_thread(const DataFrame& frame,
         aligned = other;
         break;
       case AlignBy::Caselbl:
-        aligned = other.align(frame.caselbl(), options);
+        aligned = other.align(frame.label().values(), options);
         break;
       case AlignBy::Feature:
         PLUSS_FAIL("DataFrame::compare(Thread, Axis::Case): AlignBy::Feature is not valid for case-axis Thread alignment");
@@ -1948,18 +1952,18 @@ DataFrame dataframe_cmp_thread(const DataFrame& frame,
     for (std::size_t i = 0; i < cols.size(); ++i) {
       columns.emplace_back(names[i], apply_cmp_thread_pair(cols[i], aligned, op));
     }
-    return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+    return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
   }
 
   Thread aligned;
   switch (options.align) {
     case AlignBy::Pos:
-      if (other.size() != frame.nfeats()) {
+      if (other.size() != frame.nfeatures()) {
         throw ::pluss::Error(fmt::format(
             "DataFrame::compare(Thread, Axis::Feature): positional alignment requires rhs length to match "
             "DataFrame features (rhs={}, features={})",
             other.size(),
-            frame.nfeats()));
+            frame.nfeatures()));
       }
       aligned = other;
       break;
@@ -1982,7 +1986,7 @@ DataFrame dataframe_cmp_thread(const DataFrame& frame,
     }
     columns.emplace_back(names[i], apply_cmp_thread_scalar(cols[i], values[i], op));
   }
-  return DataFrame(std::move(columns), frame.caselbl()).title(frame.title());
+  return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
 }
 
 DataFrame dataframe_cmp_thread(const DataFrame& frame,
@@ -2089,7 +2093,7 @@ private:
   Thread resolve_feature(std::string_view ident) const {
     const auto low = lower_copy(owned_name(ident));
     if (low == "case" || low == "cases") {
-      return frame_.caselbl();
+      return frame_.label().values();
     }
     return frame_.features(ident);
   }

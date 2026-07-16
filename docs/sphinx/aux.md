@@ -23,24 +23,24 @@ Environment-variable helpers are documented in [PlussTils Env Guide](tils_env.md
 
 ### API Signature
 
-`pluss::OutputEngine OutputEngine(os_or_options)`  
+`pluss::OutputEngine OutputEngine(os_or_options)`
 Inputs:
 - `os_or_options`: optional output stream and/or `OutputOptions`.
 Output:
 - initialized output engine.
 
-`OutputEngine::write(args...) -> OutputEngine&`  
-`OutputEngine::writeln(args...) -> OutputEngine&`  
-`OutputEngine::writef(pattern, args...) -> OutputEngine&`  
-`OutputEngine::writefln(pattern, args...) -> OutputEngine&`  
+`OutputEngine::write(args...) -> OutputEngine&`
+`OutputEngine::writeln(args...) -> OutputEngine&`
+`OutputEngine::writef(pattern, args...) -> OutputEngine&`
+`OutputEngine::writefln(pattern, args...) -> OutputEngine&`
 Inputs:
 - values and optional format pattern.
 Output:
 - same engine for chaining.
 
-`OutputEngine::endln() -> OutputEngine&`  
-`OutputEngine::flush() -> OutputEngine&`  
-`OutputEngine::{trace|debug|info|warn|error}(args...) -> OutputEngine&`  
+`OutputEngine::endln() -> OutputEngine&`
+`OutputEngine::flush() -> OutputEngine&`
+`OutputEngine::{trace|debug|info|warn|error}(args...) -> OutputEngine&`
 Inputs:
 - none or log message payload.
 Output:
@@ -186,12 +186,12 @@ SimpleImputerSummary{feature_names=[...], statistics=pluss::Series(...)}
 
 ### API Signature
 
-`pluss::suppose(value) -> let_box<T>`  
-`pluss::suppose.as<To>(value) -> let_box<To>`  
-`let_box<T>::then(fn) -> let_box<U>`  
-`let_box<T>::tap(fn) -> let_box<T>`  
-`let_box<T>::into<U>() -> let_box<U>`  
-`let_box<T>::value() -> T`  
+`pluss::suppose(value) -> let_box<T>`
+`pluss::suppose.as<To>(value) -> let_box<To>`
+`let_box<T>::then(fn) -> let_box<U>`
+`let_box<T>::tap(fn) -> let_box<T>`
+`let_box<T>::into<U>() -> let_box<U>`
+`let_box<T>::value() -> T`
 `let_as(T1, T2, ...) x = value`
 
 ### Arguments
@@ -229,10 +229,10 @@ token=ok
 
 ### API Signature
 
-`pluss::transmit(fn, value) -> mapped_value`  
-`pluss::transmit(fn, range, opts = {}) -> std::vector<out_t>`  
-`pluss::transmit(fn, first, last, opts = {}) -> std::vector<out_t>`  
-`pluss::transmit(fn, range_a, range_b) -> std::vector<out_t>`  
+`pluss::transmit(fn, value) -> mapped_value`
+`pluss::transmit(fn, range, opts = {}) -> std::vector<out_t>`
+`pluss::transmit(fn, first, last, opts = {}) -> std::vector<out_t>`
+`pluss::transmit(fn, range_a, range_b) -> std::vector<out_t>`
 `pluss::transmit_into(fn, range, out_it) -> OutIt`
 
 ### Arguments
@@ -274,9 +274,9 @@ Expected output:
 
 ### API Signature
 
-`pluss::transform_axis(fn, Series, axis, opts = {}) -> std::vector<out_t>`  
-`pluss::transform_axis(fn, Note, axis, opts = {}) -> std::vector<out_t>`  
-`pluss::transform_axis(fn, Timeline, axis, opts = {}) -> std::vector<out_t>`  
+`pluss::transform_axis(fn, Series, axis, opts = {}) -> std::vector<out_t>`
+`pluss::transform_axis(fn, Note, axis, opts = {}) -> std::vector<out_t>`
+`pluss::transform_axis(fn, Timeline, axis, opts = {}) -> std::vector<out_t>`
 `pluss::transform_axis(fn, TimeIndex, axis = 0, opts = {}) -> std::vector<out_t>`
 
 ### Arguments
@@ -306,9 +306,9 @@ Expected output:
 
 ### API Signature
 
-`pluss::rng_seed(seed) -> void`  
-`pluss::rng_seed() -> std::uint64_t`  
-`pluss::next_rng_seed() -> std::uint64_t`  
+`pluss::rng_seed(seed) -> void`
+`pluss::rng_seed() -> std::uint64_t`
+`pluss::next_rng_seed() -> std::uint64_t`
 `pluss::seed_or_next(seed) -> std::uint64_t`
 
 ### Arguments
@@ -336,15 +336,15 @@ s1 != s2
 
 ### API Signature
 
-`pluss::to_scalar<T>(x) -> T`  
-`pluss::as_f64(x) -> double`  
-`pluss::as_f32(x) -> float`  
-`pluss::as_bool(x) -> bool`  
-`pluss::as_i16(x) -> int16_t`  
-`pluss::as_i32(x) -> int32_t`  
-`pluss::as_i64(x) -> int64_t`  
-`pluss::as_u16(x) -> uint16_t`  
-`pluss::as_u32(x) -> uint32_t`  
+`pluss::to_scalar<T>(x) -> T`
+`pluss::as_f64(x) -> double`
+`pluss::as_f32(x) -> float`
+`pluss::as_bool(x) -> bool`
+`pluss::as_i16(x) -> int16_t`
+`pluss::as_i32(x) -> int32_t`
+`pluss::as_i64(x) -> int64_t`
+`pluss::as_u16(x) -> uint16_t`
+`pluss::as_u32(x) -> uint32_t`
 `pluss::as_u64(x) -> uint64_t`
 
 ### Arguments
@@ -370,24 +370,24 @@ This is the `pluss::loader` data-loader family re-exported from aux (`DataLoader
 
 ### API Signature
 
-`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`  
-`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`  
-`DataLoader::next() -> optional<DataBatch>`  
-`DataLoader::batch_at(batch_index) -> DataBatch`  
-`DataLoader::batch_count() -> size_t`  
-`DataLoader::reset(reshuffle = true) -> DataLoader&`  
-`pluss::loader::split_fields(fields, split_opts) -> DataSplit`  
-`pluss::loader::split_loaders(...) -> DataLoaderSplit`  
-`pluss::loader::time_series_split_indices(...) -> TimeSeriesIndexSplit`  
-`pluss::loader::time_series_split_fields(...) -> TimeSeriesFieldSplit`  
-`pluss::loader::time_series_split_loaders(...) -> TimeSeriesLoaderSplit`
+`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`
+`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`
+`DataLoader::next() -> optional<DataBatch>`
+`DataLoader::batch_at(batch_index) -> DataBatch`
+`DataLoader::batch_count() -> size_t`
+`DataLoader::reset(reshuffle = true) -> DataLoader&`
+`pluss::loader::split_fields(fields, split_opts) -> DataSplit`
+`pluss::loader::split_loaders(...) -> DataLoaderSplit`
+`pluss::loader::temporal_split_indices(...) -> TemporalIndexSplit`
+`pluss::loader::temporal_split_fields(...) -> TemporalFieldSplit`
+`pluss::loader::temporal_split_loaders(...) -> TemporalLoaderSplit`
 
 ### Arguments
 
 - `batch_dim`: sample axis for each field.
 - `target_platform/target_dtype`: optional batch conversion.
 - `collate_fn`: post-batch transformation hook.
-- split helpers: ratio-based (`split_fields`) and time-aware folds (`time_series_split_*`).
+- split helpers: ratio-based (`split_fields`) and time-aware folds (`temporal_split_*`).
 
 ### Example A: mini-batch iteration
 

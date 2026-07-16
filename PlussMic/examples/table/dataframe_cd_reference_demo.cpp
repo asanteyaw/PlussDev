@@ -34,7 +34,7 @@ int main() {
       {"price", make_series({3.0, 4.0, 2.5, 5.0})},
   }).title("sales");
 
-  auto labeled = sales.caselbl(make_note({"A100", "B200", "B200", "D400"}));
+  auto labeled = sales.label().set(Thread(make_note({"A100", "B200", "B200", "D400"})));
 
   auto numeric_cases = DataFrame({
       {"student", make_note({"Ada", "Bola", "Chen"})},
@@ -95,7 +95,7 @@ int main() {
       {"campus", make_note({"north", "north", "south", "south"})},
       {"term", make_note({"fall", "spring", "fall", "spring"})},
       {"score", make_series({80.0, 82.0, 78.0, 88.0})},
-  }).set_cases({"campus", "term"}, true).title("levels");
+  }).label().set({"campus", "term"}, true).title("levels");
 
   auto duplicates = DataFrame({
       {"student", make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
@@ -112,12 +112,12 @@ int main() {
 
   print_block("CASE_STUDY_POS", labeled.case_study(pos(1)).to_string());
   print_block("CASE_STUDY_LABELS", labeled.case_study(labels({"B200", "A100"})).to_string());
-  print_block("CASE_STUDY_MASK_COLS",
+  print_block("CASE_STUDY_MASK_FEATURES",
               labeled.case_study(mask(labeled.features("region") == "south"),
-                                 cols({"city", "price"})).to_string());
+                                 features({"city", "price"})).to_string());
 
-  print_block("CASES", labeled.caselbl().to_string());
-  print_block("CASES_AS_SERIES", Thread(numeric_cases.caselbl().as_series()).to_string());
+  print_block("CASES", labeled.label().values().to_string());
+  print_block("CASES_AS_SERIES", Thread(numeric_cases.label().values().as_series()).to_string());
 
   print_block("CAST_DTYPES", raw.cast({
       {"student_id", ScalarType::Int64},
@@ -182,7 +182,7 @@ int main() {
   print_block("DROP_DUPLICATES_KEEP_LAST",
               duplicates.drop_duplicates({"student"}, false, true).to_string());
 
-  print_block("DROP_LEVELS", levels.drop_levels({"term"}).to_string());
+  print_block("DROP_LEVELS", levels.label().drop({"term"}).to_string());
   print_block("DROPNULL", missing.dropnull({"quiz", "final"}).to_string());
 
   print_dtypes("DTYPES", raw.dtypes());

@@ -48,8 +48,8 @@ true
     <span class="label">Previous</span>
     <span class="title">has</span>
   </a>
-  <a class="next-link" href="has_levels.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">has_levels</span>
+    <span class="title">head</span>
   </a>
 </div>

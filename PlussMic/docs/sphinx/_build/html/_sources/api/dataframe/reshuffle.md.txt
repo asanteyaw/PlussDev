@@ -65,9 +65,9 @@ Kumasi  3    90.0
 
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="reset_cases.html">
+  <a class="prev-link" href="replace.html">
     <span class="label">Previous</span>
-    <span class="title">reset_cases</span>
+    <span class="title">replace</span>
   </a>
   <a class="next-link" href="rfloordiv.html">
     <span class="label">Next</span>

@@ -21,6 +21,7 @@ api/thread/add
 api/thread/align
 api/thread/all
 api/thread/any
+api/thread/append
 api/thread/as_note
 api/thread/as_series
 api/thread/as_timeindex
@@ -28,6 +29,7 @@ api/thread/as_timeline
 api/thread/astype
 api/thread/between
 api/thread/bfill
+api/thread/bottom
 api/thread/bounded
 api/thread/btw
 api/thread/bucketize
@@ -86,6 +88,7 @@ api/thread/indicate
 api/thread/info
 api/thread/info_string
 api/thread/interp
+api/thread/invalid
 api/thread/is_valid
 api/thread/isfinite
 api/thread/isnan
@@ -142,6 +145,7 @@ api/thread/rstrip
 api/thread/rsub
 api/thread/rtruediv
 api/thread/rxor
+api/thread/sample
 api/thread/scan
 api/thread/se
 api/thread/select
@@ -149,6 +153,7 @@ api/thread/shape
 api/thread/shares_payload_with
 api/thread/shift
 api/thread/show
+api/thread/shuffle
 api/thread/size
 api/thread/skew
 api/thread/slice
@@ -166,6 +171,7 @@ api/thread/titlecase
 api/thread/tl
 api/thread/to_note_weekday
 api/thread/to_string
+api/thread/top
 api/thread/transform
 api/thread/truediv
 api/thread/ts

@@ -22,12 +22,14 @@ Builds train/test index partitions according to split-plan options.
 Option semantics used by this method:
 
 - `CrossValidationOptions` (`struct`):
-  - `CVPlanKind plan = CVPlanKind::KFold`
-    Controls fold/trial/count sizing.
+  - `CVPlanKind plan = CVPlanKind::CrossVal`
+    Option field used by this method.
   - `double holdout_fraction = 0.2`
     Option field used by this method.
   - `std::int64_t folds = 5`
     Controls fold/trial/count sizing.
+  - `std::int64_t repeats = 1`
+    Option field used by this method.
   - `bool stratified = false`
     Option field used by this method.
   - `Series groups = Series::undefined()`
